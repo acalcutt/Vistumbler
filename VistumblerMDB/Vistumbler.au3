@@ -994,6 +994,7 @@ Func _UpdateList()
 	$FoundTempAp = UBound($TempApArray) - 1
 	;If APs are found then check if it exists in the AP Table
 	If $FoundTempAp <> 0 Then
+		$newdata = 1 ;Set newdata flag so vistumbler prompts to save on exit
 		For $x = 1 To $FoundTempAp ;Go through New APs in Temp Table to check is it already exists in the AP table
 			$BSSID = $TempApArray[$x][1]
 			$SSID = $TempApArray[$x][2]
