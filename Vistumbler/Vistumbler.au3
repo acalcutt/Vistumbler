@@ -5915,11 +5915,13 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 					If $SpeakSigSayPecent = 1 Then $say &= '%'
 					If ProcessExists($SayProcess) = 0 Then;If Say.exe is still running, skip opening it again
 						If $SpeakType = 1 Then
-							$SayProcess = Run(@ScriptDir & '\say.exe /s="' & $say & '" /t=1')
+							$SayProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1', '', @SW_HIDE)
 							If @error Then $Error = 1
+							;ConsoleWrite($Error & @CRLF)
 						Else
-							$SayProcess = Run(@ScriptDir & '\say.exe /s="' & $say & '" /t=2')
+							$SayProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=2', '', @SW_HIDE)
 							If @error Then $Error = 1
+							;ConsoleWrite($Error & @CRLF)
 						EndIf
 					Else
 						$Error = 1
