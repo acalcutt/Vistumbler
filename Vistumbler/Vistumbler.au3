@@ -16,8 +16,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v8.1 pre-release 2'
-$last_modified = '07/20/2008'
+$version = 'v8.1 pre-release 3'
+$last_modified = '08/01/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
