@@ -3024,7 +3024,6 @@ Func _ImportOk()
 		$visfile = GUICtrlRead($vistumblerfileinput)
 		$vistumblerfile = FileOpen($visfile, 0)
 		If $vistumblerfile <> -1 Then
-			$totallines = _FileCountLines($visfile)
 			$begintime = TimerInit()
 			$currentline = 1
 			$AddAP = 0
@@ -3032,6 +3031,13 @@ Func _ImportOk()
 			$Loading = 1
 			Dim $TmpGPSArray_ID[1]
 			Dim $TmpGPSArray_NewID[1]
+			;Get Total number of lines
+			$totallines = 0
+			While 1
+				FileReadLine($vistumblerfile)
+				If @error = -1 Then ExitLoop
+				$totallines += 1
+			WEnd
 			For $Load = 1 To $totallines
 				
 				$linein = FileReadLine($vistumblerfile, $Load);Open Line in file
@@ -3213,7 +3219,7 @@ Func _ImportOk()
 							EndIf
 						EndIf
 					Else
-						ExitLoop
+						;ExitLoop
 					EndIf
 				EndIf
 				$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
@@ -3236,7 +3242,13 @@ Func _ImportOk()
 		$netstumblerfile = FileOpen($nsfile, 0)
 		
 		If $netstumblerfile <> -1 Then
-			$totallines = _FileCountLines($nsfile)
+			;Get Total number of lines
+			$totallines = 0
+			While 1
+				FileReadLine($nsfile)
+				If @error = -1 Then ExitLoop
+				$totallines += 1
+			WEnd
 			$begintime = TimerInit()
 			$currentline = 1
 			$AddAP = 0
