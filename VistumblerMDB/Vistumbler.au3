@@ -54,6 +54,7 @@ If @OSVersion <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only r
 Global $gdi_dll, $user32_dll
 Global $hDC
 
+Dim $NsOk
 Dim $kml_timer
 Dim $StartArraySize
 Dim $Debug
@@ -3059,11 +3060,12 @@ Func _ImportClose()
 EndFunc   ;==>_ImportClose
 
 Func _ImportOk()
+	GUICtrlSetData($percentlabel, $Text_Progress & ': Loading')
+	GUICtrlSetState($NsOk, $GUI_DISABLE)
 	If GUICtrlRead($RadVis) = 1 Then
 		$visfile = GUICtrlRead($vistumblerfileinput)
 		$vistumblerfile = FileOpen($visfile, 0)
 		If $vistumblerfile <> -1 Then
-			$totallines = _FileCountLines($visfile)
 			$begintime = TimerInit()
 			$currentline = 1
 			$AddAP = 0
@@ -3071,6 +3073,13 @@ Func _ImportOk()
 			$Loading = 1
 			Dim $TmpGPSArray_ID[1]
 			Dim $TmpGPSArray_NewID[1]
+			;Get Total number of lines
+			$totallines = 0
+			While 1
+				FileReadLine($vistumblerfile)
+				If @error = -1 Then ExitLoop
+				$totallines += 1
+			WEnd
 			For $Load = 1 To $totallines
 				
 				$linein = FileReadLine($vistumblerfile, $Load);Open Line in file
@@ -3324,7 +3333,7 @@ Func _ImportOk()
 							_ListViewAdd($Found_ListRow, '', '', '', '', '', '', '', '', '', '', '', '', '', $LoadLastActive_DTS, $ImLat, $ImLon, $MANUF, $LABEL)
 						EndIf
 					Else
-						ExitLoop
+						;ExitLoop
 					EndIf
 				EndIf
 				$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
@@ -3348,8 +3357,6 @@ Func _ImportOk()
 			EndIf
 			_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
 			_FixLineNumbers()
-			GUICtrlSetData($progressbar, 100)
-			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Done)
 		EndIf
 	ElseIf GUICtrlRead($RadNs) = 1 Then
 		Dim $BSSID_Array[1], $SSID_Array[1], $FirstSeen_Array[1], $LastSeen_Array[1], $SignalHist_Array[1], $Lat_Array[1], $Lon_Array[1], $Auth_Array[1], $Encr_Array[1], $Type_Array[1]
@@ -3357,7 +3364,13 @@ Func _ImportOk()
 		$netstumblerfile = FileOpen($nsfile, 0)
 		
 		If $netstumblerfile <> -1 Then
-			$totallines = _FileCountLines($nsfile)
+			;Get Total number of lines
+			$totallines = 0
+			While 1
+				FileReadLine($nsfile)
+				If @error = -1 Then ExitLoop
+				$totallines += 1
+			WEnd
 			$begintime = TimerInit()
 			$currentline = 1
 			$AddAP = 0
@@ -3514,11 +3527,11 @@ Func _ImportOk()
 			_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
 			_FixLineNumbers()
 			$Loading = 0
-			GUICtrlSetData($progressbar, 100)
-			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Done)
 		EndIf
 	EndIf
-
+	GUICtrlSetData($progressbar, 100)
+	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Done)
+	GUICtrlSetState($NsOk, $GUI_ENABLE)
 EndFunc   ;==>_ImportOk
 
 Func _WriteINI()

@@ -53,6 +53,7 @@ If @OSVersion <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only r
 Global $gdi_dll, $user32_dll
 Global $hDC
 
+Dim $NsOk
 Dim $kml_timer
 Dim $StartArraySize
 Dim $Debug
@@ -759,7 +760,7 @@ Dim $Encryption_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_E
 Dim $NetworkType_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_NetworkType)
 Dim $SSID_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_SSID)
 
-If $Load <> '' Then LoadList($Load)
+If $Load <> '' Then _LoadList($Load)
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PROGRAM RUNNING LOOP
@@ -2978,8 +2979,11 @@ EndFunc   ;==>_ExportToTXT
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
+Func LoadList()
+	_LoadList()
+EndFunc   ;==>LoadList
 
-Func LoadList($imfile = '')
+Func _LoadList($imfile = '')
 	GUISetState(@SW_MINIMIZE, $Vistumbler)
 	$GUI_Import = GUICreate($Text_ImportFromTXT, 510, 175, -1, -1)
 	GUISetBkColor($BackgroundColor)
@@ -3005,9 +3009,7 @@ Func LoadList($imfile = '')
 	GUICtrlSetOnEvent($NsCancel, "_ImportClose")
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_ImportClose')
 	If $imfile <> '' Then _ImportOk()
-	
-	
-EndFunc   ;==>LoadList
+EndFunc   ;==>_LoadList
 
 Func _ImportFileBrowse()
 	$file = FileOpenDialog("Select vistumbler File", $SaveDir, "Vistumbler TXT File (*.txt;*.vs1;*.ns1)", 1)
@@ -3020,6 +3022,8 @@ Func _ImportClose()
 EndFunc   ;==>_ImportClose
 
 Func _ImportOk()
+	GUICtrlSetData($percentlabel, $Text_Progress & ': Loading')
+	GUICtrlSetState($NsOk, $GUI_DISABLE)
 	If GUICtrlRead($RadVis) = 1 Then
 		$visfile = GUICtrlRead($vistumblerfileinput)
 		$vistumblerfile = FileOpen($visfile, 0)
@@ -3351,11 +3355,11 @@ Func _ImportOk()
 				$currentline += 1
 			WEnd
 			$Loading = 0
-			GUICtrlSetData($progressbar, 100)
-			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Done)
 		EndIf
 	EndIf
-
+	GUICtrlSetData($progressbar, 100)
+	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Done)
+	GUICtrlSetState($NsOk, $GUI_ENABLE)
 EndFunc   ;==>_ImportOk
 
 Func _WriteINI()
