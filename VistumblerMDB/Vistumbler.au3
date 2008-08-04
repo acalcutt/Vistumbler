@@ -32,6 +32,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include <String.au3>
 #include "CommMG.au3"
 #include "AccessCom.au3"
+#include "ZIP.au3"
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
 	RegWrite('HKCR\.vs1\', '', 'REG_SZ', 'Vistumbler')
@@ -601,6 +602,8 @@ $file = GUICtrlCreateMenu($Text_File)
 $SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
 $ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
+$ImportFromVSZ = GUICtrlCreateMenuItem("Import From VSZ", $file)
+$ExportFromVSZ = GUICtrlCreateMenuItem("Export From VSZ", $file)
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 $Edit = GUICtrlCreateMenu($Text_Edit)
 $ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
@@ -711,6 +714,8 @@ GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
 GUICtrlSetOnEvent($SaveAsTXT, '_ExportData')
 GUICtrlSetOnEvent($SaveAsDetailedTXT, '_ExportDetailedData')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
+GUICtrlSetOnEvent($ImportFromVSZ, '_ImportVSZ')
+GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
 ;Edit Menu
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 ;Optons Menu
@@ -2802,6 +2807,27 @@ Func _ExportData();Saves data to a selected file
 	EndIf
 EndFunc   ;==>_ExportData
 
+Func _ExportVSZ()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
+	DirCreate($SaveDir)
+	$timestamp = @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Vistumbler (*.VSZ)', '', $timestamp & '.VSZ')
+	If @error <> 1 Then
+		If StringInStr($file, '.VSZ') = 0 Then $file = $file & '.VSZ'
+		$vsz_temp_file = $TmpDir & 'data.zip'
+		$vsz_file = $file
+		$vs1_file = $TmpDir & 'data.vs1'
+		If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
+		If FileExists($vsz_file) Then FileDelete($vsz_file)
+		If FileExists($vs1_file) Then FileDelete($vs1_file)
+		_ExportDetailedTXT($vs1_file)
+		_Zip_Create($vsz_temp_file)
+		_Zip_AddFile($vsz_temp_file, $vs1_file)
+		FileMove($vsz_temp_file, $vsz_file)
+		FileDelete($vs1_file)
+	EndIf
+EndFunc   ;==>_ExportVSZ
+
 Func _ExportDetailedData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
 	DirCreate($SaveDir)
@@ -2963,6 +2989,22 @@ EndFunc   ;==>_ExportToTXT
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
+
+Func _ImportVSZ()
+	$vsz_file = FileOpenDialog("Select Vistumbler Zipped File", $SaveDir, "Vistumbler Zipped File (*.VSZ)", 1)
+	If @error <> 1 Then
+		If StringInStr($vsz_file, '.VSZ') = 0 Then $vsz_file = $vsz_file & '.VSZ'
+		$vsz_temp_file = $TmpDir & 'data.zip'
+		$vs1_file = $TmpDir & 'data.vs1'
+		If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
+		If FileExists($vs1_file) Then FileDelete($vs1_file)
+		FileCopy($vsz_file, $vsz_temp_file)
+		_Zip_Unzip($vsz_temp_file, 'data.vs1', $TmpDir)
+		AutoLoadList($vs1_file)
+		FileDelete($vsz_temp_file)
+		FileDelete($vs1_file)
+	EndIf
+EndFunc   ;==>_ImportVSZ
 
 Func AutoLoadList($imfile1 = "")
 	GUISetState(@SW_MINIMIZE, $Vistumbler)
@@ -4218,33 +4260,48 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 	$file &= '</Folder>' & @CRLF
 	
 	If $GpsTrack = 1 Then
-		$query = "SELECT Latitude, Longitude FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
+		$query = "SELECT Latitude, Longitude FROM GPS ORDER BY Date1, Time1"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundGpsMatch = UBound($GpsMatchArray) - 1
 		;ConsoleWrite('fgm-->' & $FoundGpsMatch & @CRLF)
 		If $FoundGpsMatch <> 0 Then
-			
-			$file &= '<Folder>' & @CRLF _
-					 & '<name>GPS Track</name>' & @CRLF _
-					 & '<Placemark>' & @CRLF _
-					 & '<name>GPS Track</name>' & @CRLF _
-					 & '<styleUrl>#Location</styleUrl>' & @CRLF _
-					 & '<LineString>' & @CRLF _
-					 & '<extrude>1</extrude>' & @CRLF _
-					 & '<tessellate>1</tessellate>' & @CRLF _
-					 & '<coordinates>' & @CRLF
 			For $exp = 1 To $FoundGpsMatch
 				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1])
 				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2])
+				$TrackStart = 0
 				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
-					$FoundApWithGps = 1
-					$file &= StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0' & @CRLF
+					If $TrackStart = 0 Then
+						$FoundApWithGps = 1
+						$TrackStart = 1
+						$file &= '<Folder>' & @CRLF _
+								 & '<name>GPS Track</name>' & @CRLF _
+								 & '<Placemark>' & @CRLF _
+								 & '<name>GPS Track</name>' & @CRLF _
+								 & '<styleUrl>#Location</styleUrl>' & @CRLF _
+								 & '<LineString>' & @CRLF _
+								 & '<extrude>1</extrude>' & @CRLF _
+								 & '<tessellate>1</tessellate>' & @CRLF _
+								 & '<coordinates>' & @CRLF _
+								 & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0' & @CRLF
+
+					Else
+						$file &= StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0' & @CRLF
+					EndIf
+				Else
+					If $TrackStart = 1 Then
+						$file &= '</coordinates>' & @CRLF _
+								 & '</LineString>' & @CRLF _
+								 & '</Placemark>' & @CRLF _
+								 & '</Folder>' & @CRLF
+					EndIf
 				EndIf
 			Next
-			$file &= '</coordinates>' & @CRLF _
-					 & '</LineString>' & @CRLF _
-					 & '</Placemark>' & @CRLF _
-					 & '</Folder>' & @CRLF
+			If $TrackStart = 1 Then
+				$file &= '</coordinates>' & @CRLF _
+						 & '</LineString>' & @CRLF _
+						 & '</Placemark>' & @CRLF _
+						 & '</Folder>' & @CRLF
+			EndIf
 		EndIf
 	EndIf
 	$file &= '</Document>' & @CRLF _
