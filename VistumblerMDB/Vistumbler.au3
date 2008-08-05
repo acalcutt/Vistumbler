@@ -17,7 +17,7 @@ $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
 $version = ' - Access Edition - Alpha 3'
-$last_modified = '08/01/2008'
+$last_modified = '08/05/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -35,6 +35,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include "ZIP.au3"
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
+	RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
 	RegWrite('HKCR\.vs1\', '', 'REG_SZ', 'Vistumbler')
 	RegWrite('HKCR\Vistumbler\shell\open\command\', '', 'REG_SZ', '"' & @ScriptFullPath & '" "%1"')
 	RegWrite('HKCR\Vistumbler\DefaultIcon\', '', 'REG_SZ', '"' & @ScriptDir & '\vs1_icon.ico"')
@@ -44,6 +45,7 @@ Dim $Load = ''
 For $loop = 1 To $CmdLine[0]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vs1' Then $Load = $CmdLine[$loop]
 Next
+
 ; Set a COM Error handler--------------------------------
 $oMyError = ObjEvent("AutoIt.Error", "MyErrFunc")
 ;Options-------------------------------------------------
@@ -69,6 +71,7 @@ Dim $VistumblerDB = $TmpDir & 'VistumblerDB.mdb'
 Dim $DB_OBJ
 Dim $APID = 0
 Dim $HISTID = 0
+Dim $GPS_ID = 0
 Dim $Recover = 0
 
 If FileExists($VistumblerDB) Then
@@ -2989,9 +2992,25 @@ EndFunc   ;==>_ExportToTXT
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
-
 Func _ImportVSZ()
-	$vsz_file = FileOpenDialog("Select Vistumbler Zipped File", $SaveDir, "Vistumbler Zipped File (*.VSZ)", 1)
+	_ImportVszFile()
+EndFunc   ;==>_ImportVSZ
+
+Func LoadList()
+	_LoadListGUI()
+EndFunc   ;==>LoadList
+
+Func AutoLoadList($imfile1 = "")
+	MsgBox(0, '', $imfile1)
+	If StringLower(StringTrimLeft($imfile1, StringLen($imfile1) - 4)) = '.vs1' Or StringUpper(StringTrimLeft($imfile1, StringLen($imfile1) - 3)) = 'TXT' Then
+		_LoadListGUI($imfile1)
+	ElseIf StringLower(StringTrimLeft($imfile1, StringLen($imfile1) - 4)) = '.vsz' Then
+		_ImportVszFile($imfile1)
+	EndIf
+EndFunc   ;==>AutoLoadList
+
+Func _ImportVszFile($vsz_file = '')
+	If $vsz_file = '' Then $vsz_file = FileOpenDialog("Select Vistumbler Zipped File", $SaveDir, "Vistumbler Zipped File (*.VSZ)", 1)
 	If @error <> 1 Then
 		If StringInStr($vsz_file, '.VSZ') = 0 Then $vsz_file = $vsz_file & '.VSZ'
 		$vsz_temp_file = $TmpDir & 'data.zip'
@@ -3000,13 +3019,13 @@ Func _ImportVSZ()
 		If FileExists($vs1_file) Then FileDelete($vs1_file)
 		FileCopy($vsz_file, $vsz_temp_file)
 		_Zip_Unzip($vsz_temp_file, 'data.vs1', $TmpDir)
-		AutoLoadList($vs1_file)
+		_LoadListGUI($vs1_file)
 		FileDelete($vsz_temp_file)
 		FileDelete($vs1_file)
 	EndIf
-EndFunc   ;==>_ImportVSZ
+EndFunc   ;==>_ImportVszFile
 
-Func AutoLoadList($imfile1 = "")
+Func _LoadListGUI($imfile1 = "")
 	GUISetState(@SW_MINIMIZE, $Vistumbler)
 	$GUI_Import = GUICreate($Text_ImportFromTXT, 510, 175, -1, -1)
 	GUISetBkColor($BackgroundColor)
@@ -3032,34 +3051,7 @@ Func AutoLoadList($imfile1 = "")
 	GUICtrlSetOnEvent($NsCancel, "_ImportClose")
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_ImportClose')
 	If $imfile1 <> '' Then _ImportOk()
-EndFunc   ;==>AutoLoadList
-
-Func LoadList()
-	GUISetState(@SW_MINIMIZE, $Vistumbler)
-	$GUI_Import = GUICreate($Text_ImportFromTXT, 510, 175, -1, -1)
-	GUISetBkColor($BackgroundColor)
-	GUICtrlCreateLabel($Text_ImportFromTXT, 10, 10, 200, 20)
-	$vistumblerfileinput = GUICtrlCreateInput('', 10, 30, 420, 20)
-	$browse1 = GUICtrlCreateButton($Text_Browse, 440, 30, 60, 20)
-	$RadVis = GUICtrlCreateRadio("Vistumbler File", 10, 55, 140, 20)
-	GUICtrlSetState($RadVis, $GUI_CHECKED)
-	$RadNs = GUICtrlCreateRadio("Netstumbler TXT File", 10, 75, 140, 20)
-	$NsOk = GUICtrlCreateButton($Text_ImportFromTXT, 150, 60, 100, 25)
-	$NsCancel = GUICtrlCreateButton($Text_Close, 260, 60, 100, 25)
-	$progressbar = GUICtrlCreateProgress(10, 95, 490, 10)
-	$percentlabel = GUICtrlCreateLabel($Text_Progress & ': ' & $Text_Ready, 10, 115, 200, 20)
-	$linetotal = GUICtrlCreateLabel($Text_LineTotal & ':', 10, 135, 200, 20)
-	$newlines = GUICtrlCreateLabel($Text_NewAPs & ':', 10, 155, 200, 20)
-	$minutes = GUICtrlCreateLabel($Text_Minutes & ':', 230, 115, 240, 20)
-	$linemin = GUICtrlCreateLabel($Text_LinesMin & ':', 230, 135, 240, 20)
-	$estimatedtime = GUICtrlCreateLabel($Text_EstimatedTimeRemaining & ':', 230, 155, 240, 20)
-	GUISetState()
-	
-	GUICtrlSetOnEvent($browse1, "_ImportFileBrowse")
-	GUICtrlSetOnEvent($NsOk, "_ImportOk")
-	GUICtrlSetOnEvent($NsCancel, "_ImportClose")
-	GUISetOnEvent($GUI_EVENT_CLOSE, '_ImportClose')
-EndFunc   ;==>LoadList
+EndFunc   ;==>_LoadListGUI
 
 Func _LoadMDB()
 	GUISetState(@SW_MINIMIZE, $Vistumbler)
