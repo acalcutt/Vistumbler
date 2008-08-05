@@ -796,7 +796,6 @@ If $Recover = 1 Then _RecoverMDB()
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PROGRAM RUNNING LOOP
 ;-------------------------------------------------------------------------------------------------------------------------------
-Dim $GPS_ID
 $UpdatedGPS = 0
 $UpdatedAPs = 0
 $UpdatedAutoKML = 0
@@ -2697,15 +2696,12 @@ EndFunc   ;==>_ViewInPhilsPHP
 
 Func _AddToYourWDB();Send data to phils wireless ap database
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
-
 	$WdbFile = $SaveDir & 'WDB_Export.VS1'
 	FileDelete($WdbFile)
 	_ExportDetailedTXT($WdbFile)
-	
 	$url_root = $PhilsWdbURL;"http://www.randomintervals.com/wifi/beta/db/import/?"
 	$url_data = "file=" & $WdbFile
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
-
 EndFunc   ;==>_AddToYourWDB
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -2809,27 +2805,6 @@ Func _ExportData();Saves data to a selected file
 		$newdata = 0
 	EndIf
 EndFunc   ;==>_ExportData
-
-Func _ExportVSZ()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
-	DirCreate($SaveDir)
-	$timestamp = @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Vistumbler (*.VSZ)', '', $timestamp & '.VSZ')
-	If @error <> 1 Then
-		If StringInStr($file, '.VSZ') = 0 Then $file = $file & '.VSZ'
-		$vsz_temp_file = $TmpDir & 'data.zip'
-		$vsz_file = $file
-		$vs1_file = $TmpDir & 'data.vs1'
-		If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
-		If FileExists($vsz_file) Then FileDelete($vsz_file)
-		If FileExists($vs1_file) Then FileDelete($vs1_file)
-		_ExportDetailedTXT($vs1_file)
-		_Zip_Create($vsz_temp_file)
-		_Zip_AddFile($vsz_temp_file, $vs1_file)
-		FileMove($vsz_temp_file, $vsz_file)
-		FileDelete($vs1_file)
-	EndIf
-EndFunc   ;==>_ExportVSZ
 
 Func _ExportDetailedData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
@@ -2989,6 +2964,27 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		FileWriteLine($savefile, $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpHighGpsSig & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpHighGpsLat & '|' & $ExpHighGpsLon & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $FirstDateTime & '|' & $LastDateTime & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpSigHist)
 	Next
 EndFunc   ;==>_ExportToTXT
+
+Func _ExportVSZ()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
+	DirCreate($SaveDir)
+	$timestamp = @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Vistumbler (*.VSZ)', '', $timestamp & '.VSZ')
+	If @error <> 1 Then
+		If StringInStr($file, '.VSZ') = 0 Then $file = $file & '.VSZ'
+		$vsz_temp_file = $TmpDir & 'data.zip'
+		$vsz_file = $file
+		$vs1_file = $TmpDir & 'data.vs1'
+		If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
+		If FileExists($vsz_file) Then FileDelete($vsz_file)
+		If FileExists($vs1_file) Then FileDelete($vs1_file)
+		_ExportDetailedTXT($vs1_file)
+		_Zip_Create($vsz_temp_file)
+		_Zip_AddFile($vsz_temp_file, $vs1_file)
+		FileMove($vsz_temp_file, $vsz_file)
+		FileDelete($vs1_file)
+	EndIf
+EndFunc   ;==>_ExportVSZ
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -3001,7 +2997,6 @@ Func LoadList()
 EndFunc   ;==>LoadList
 
 Func AutoLoadList($imfile1 = "")
-	MsgBox(0, '', $imfile1)
 	If StringLower(StringTrimLeft($imfile1, StringLen($imfile1) - 4)) = '.vs1' Or StringUpper(StringTrimLeft($imfile1, StringLen($imfile1) - 3)) = 'TXT' Then
 		_LoadListGUI($imfile1)
 	ElseIf StringLower(StringTrimLeft($imfile1, StringLen($imfile1) - 4)) = '.vsz' Then

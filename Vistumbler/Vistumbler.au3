@@ -17,7 +17,7 @@ $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
 $version = 'v8.1 pre-release 3'
-$last_modified = '08/01/2008'
+$last_modified = '08/05/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -31,12 +31,17 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include <Date.au3>
 #include <String.au3>
 #include "CommMG.au3"
+#include "ZIP.au3"
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
+	RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
 	RegWrite('HKCR\.vs1\', '', 'REG_SZ', 'Vistumbler')
 	RegWrite('HKCR\Vistumbler\shell\open\command\', '', 'REG_SZ', '"' & @ScriptFullPath & '" "%1"')
 	RegWrite('HKCR\Vistumbler\DefaultIcon\', '', 'REG_SZ', '"' & @ScriptDir & '\vs1_icon.ico"')
 EndIf
+
+$Hidden = 0
+HotKeySet("^h", "_HideVistumbler")
 
 Dim $Load = ''
 For $loop = 1 To $CmdLine[0]
@@ -53,6 +58,7 @@ If @OSVersion <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only r
 Global $gdi_dll, $user32_dll
 Global $hDC
 
+Dim $GPS_ID = 0
 Dim $NsOk
 Dim $kml_timer
 Dim $StartArraySize
@@ -579,6 +585,9 @@ $file = GUICtrlCreateMenu($Text_File)
 $SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
 $ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
+$ImportFromVSZ = GUICtrlCreateMenuItem("Import From VSZ", $file)
+$ExportFromVSZ = GUICtrlCreateMenuItem("Export From VSZ", $file)
+
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 $Edit = GUICtrlCreateMenu($Text_Edit)
 $ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
@@ -689,6 +698,8 @@ GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
 GUICtrlSetOnEvent($SaveAsTXT, '_ExportData')
 GUICtrlSetOnEvent($SaveAsDetailedTXT, '_ExportDetailedData')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
+GUICtrlSetOnEvent($ImportFromVSZ, '_ImportVSZ')
+GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
 ;Edit Menu
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 ;Optons Menu
@@ -760,12 +771,12 @@ Dim $Encryption_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_E
 Dim $NetworkType_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_NetworkType)
 Dim $SSID_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_SSID)
 
-If $Load <> '' Then _LoadList($Load)
+If $Load <> '' Then AutoLoadList($Load)
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PROGRAM RUNNING LOOP
 ;-------------------------------------------------------------------------------------------------------------------------------
-Dim $GPS_ID
+
 $UpdatedGPS = 0
 $UpdatedAPs = 0
 $UpdatedAutoKML = 0
@@ -2808,24 +2819,13 @@ EndFunc   ;==>_ViewInPhilsPHP
 
 Func _AddToYourWDB();Send data to phils wireless ap database
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
-
-	$WdbFile = $SaveDir & 'WDB_Export.txt'
+	$WdbFile = $SaveDir & 'WDB_Export.VS1'
 	FileDelete($WdbFile)
-	_ExportToWdbTXT($WdbFile)
-	
+	_ExportDetailedTXT($WdbFile)
 	$url_root = $PhilsWdbURL;"http://www.randomintervals.com/wifi/beta/db/import/?"
 	$url_data = "file=" & $WdbFile
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
-
 EndFunc   ;==>_AddToYourWDB
-
-Func _ExportToWdbTXT($savefile);writes vistumbler data to a txt file
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToTXT()') ;#Debug Display
-	For $save = 1 To $DataArray_BSSID[0]
-		GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $save & ' / ' & $DataArray_BSSID[0])
-		FileWriteLine($savefile, StringReplace($DataArray_SSID[$save], "'", "") & '|' & $DataArray_BSSID[$save] & '|' & $DataArray_Manu[$save] & '|' & $DataArray_HighGpsSig[$save] & '|' & $DataArray_Auth[$save] & '|' & $DataArray_Encr[$save] & '|' & $DataArray_Rad[$save] & '|' & $DataArray_Chan[$save] & '|' & _Format_GPS_DMM_to_DDD($DataArray_Lat[$save]) & '|' & _Format_GPS_DMM_to_DDD($DataArray_Lon[$save]) & '|' & $DataArray_BtX[$save] & '|' & $DataArray_OtX[$save] & '|' & $DataArray_FirstTime[$save] & '|' & $DataArray_LastTime[$save] & '|' & $DataArray_NetType[$save] & '|' & $DataArray_Label[$save] & '|' & $DataArray_SigHist[$save])
-	Next
-EndFunc   ;==>_ExportToWdbTXT
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTIONS
@@ -2976,19 +2976,68 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		FileWriteLine($savefile, $DataArray_SSID[$save] & '|' & $DataArray_BSSID[$save] & '|' & $DataArray_Manu[$save] & '|' & $DataArray_HighGpsSig[$save] & '|' & $DataArray_Auth[$save] & '|' & $DataArray_Encr[$save] & '|' & $DataArray_Rad[$save] & '|' & $DataArray_Chan[$save] & '|' & _GpsFormat($DataArray_Lat[$save]) & '|' & _GpsFormat($DataArray_Lon[$save]) & '|' & $DataArray_BtX[$save] & '|' & $DataArray_OtX[$save] & '|' & $DataArray_FirstTime[$save] & '|' & $DataArray_LastTime[$save] & '|' & $DataArray_NetType[$save] & '|' & $DataArray_Label[$save] & '|' & $DataArray_SigHist[$save])
 	Next
 EndFunc   ;==>_ExportToTXT
+
+Func _ExportVSZ()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
+	DirCreate($SaveDir)
+	$timestamp = @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Vistumbler (*.VSZ)', '', $timestamp & '.VSZ')
+	If @error <> 1 Then
+		If StringInStr($file, '.VSZ') = 0 Then $file = $file & '.VSZ'
+		$vsz_temp_file = $TmpDir & 'data.zip'
+		$vsz_file = $file
+		$vs1_file = $TmpDir & 'data.vs1'
+		If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
+		If FileExists($vsz_file) Then FileDelete($vsz_file)
+		If FileExists($vs1_file) Then FileDelete($vs1_file)
+		_ExportDetailedTXT($vs1_file)
+		_Zip_Create($vsz_temp_file)
+		_Zip_AddFile($vsz_temp_file, $vs1_file)
+		FileMove($vsz_temp_file, $vsz_file)
+		FileDelete($vs1_file)
+	EndIf
+EndFunc   ;==>_ExportVSZ
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
+Func _ImportVSZ()
+	_ImportVszFile()
+EndFunc   ;==>_ImportVSZ
+
 Func LoadList()
-	_LoadList()
+	_LoadListGUI()
 EndFunc   ;==>LoadList
 
-Func _LoadList($imfile = '')
+Func AutoLoadList($imfile1 = "")
+	If StringLower(StringTrimLeft($imfile1, StringLen($imfile1) - 4)) = '.vs1' Or StringUpper(StringTrimLeft($imfile1, StringLen($imfile1) - 3)) = '.txt' Then
+		_LoadListGUI($imfile1)
+	ElseIf StringLower(StringTrimLeft($imfile1, StringLen($imfile1) - 4)) = '.vsz' Then
+		_ImportVszFile($imfile1)
+	EndIf
+EndFunc   ;==>AutoLoadList
+
+Func _ImportVszFile($vsz_file = '')
+	If $vsz_file = '' Then $vsz_file = FileOpenDialog("Select Vistumbler Zipped File", $SaveDir, "Vistumbler Zipped File (*.VSZ)", 1)
+	If @error <> 1 Then
+		If StringInStr($vsz_file, '.VSZ') = 0 Then $vsz_file = $vsz_file & '.VSZ'
+		$vsz_temp_file = $TmpDir & 'data.zip'
+		$vs1_file = $TmpDir & 'data.vs1'
+		If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
+		If FileExists($vs1_file) Then FileDelete($vs1_file)
+		FileCopy($vsz_file, $vsz_temp_file)
+		_Zip_Unzip($vsz_temp_file, 'data.vs1', $TmpDir)
+		_LoadListGUI($vs1_file)
+		FileDelete($vsz_temp_file)
+		FileDelete($vs1_file)
+	EndIf
+EndFunc   ;==>_ImportVszFile
+
+Func _LoadListGUI($imfile1 = "")
 	GUISetState(@SW_MINIMIZE, $Vistumbler)
 	$GUI_Import = GUICreate($Text_ImportFromTXT, 510, 175, -1, -1)
 	GUISetBkColor($BackgroundColor)
 	GUICtrlCreateLabel($Text_ImportFromTXT, 10, 10, 200, 20)
-	$vistumblerfileinput = GUICtrlCreateInput($imfile, 10, 30, 420, 20)
+	$vistumblerfileinput = GUICtrlCreateInput($imfile1, 10, 30, 420, 20)
 	$browse1 = GUICtrlCreateButton($Text_Browse, 440, 30, 60, 20)
 	$RadVis = GUICtrlCreateRadio("Vistumbler File", 10, 55, 140, 20)
 	GUICtrlSetState($RadVis, $GUI_CHECKED)
@@ -3008,8 +3057,8 @@ Func _LoadList($imfile = '')
 	GUICtrlSetOnEvent($NsOk, "_ImportOk")
 	GUICtrlSetOnEvent($NsCancel, "_ImportClose")
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_ImportClose')
-	If $imfile <> '' Then _ImportOk()
-EndFunc   ;==>_LoadList
+	If $imfile1 <> '' Then _ImportOk()
+EndFunc   ;==>_LoadListGUI
 
 Func _ImportFileBrowse()
 	$file = FileOpenDialog("Select vistumbler File", $SaveDir, "Vistumbler TXT File (*.txt;*.vs1;*.ns1)", 1)
@@ -5953,3 +6002,15 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 		Return (0)
 	EndIf
 EndFunc   ;==>_SpeakSelectedSignal
+
+Func _HideVistumbler()
+	If $Hidden = 0 Then
+		ConsoleWrite("hide" & @CRLF)
+		GUISetState(@SW_HIDE, $Vistumbler)
+		$Hidden = 1
+	Else
+		ConsoleWrite("show" & @CRLF)
+		GUISetState(@SW_SHOW, $Vistumbler)
+		$Hidden = 0
+	EndIf
+EndFunc   ;==>_HideVistumbler
