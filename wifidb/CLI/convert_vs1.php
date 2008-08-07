@@ -2,7 +2,21 @@
 // 
 echo "=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-Vistumbler Summery Text to VS1 converter=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-\n";
 include('lib\\functions.php');
-$dir="C:\\imp\\text\\";
+
+// self aware of Script location and where to search for Txt files
+$dirs=$_SERVER['PHP_SELF'];
+$dir_exp = explode("\\", $dirs);
+$dir_c= count($dir_exp);
+foreach($dir_exp as $d)
+{
+	if($d == "convert_vs1.php"){continue;}
+	$dir .= $d."\\";
+}
+$dir.="text\\";
+
+/*
+$dir = " Place the DIR that you want searched Here after commenting out the above portion " ;
+*/
 
 echo "Directory: ".$dir."\n\n";
 echo "Files to Convert: \n";
@@ -37,7 +51,7 @@ foreach($file_a as $file)
 	echo '################=== Start conversion of '.$source.' ===################';
 	echo "\n";
 	convert_vs1($source, "file");
-//	function ( Source file , output destination type [file only at the moment MySQL support soon])
+//	function ( Source file , output destination type [ file only at the moment MySQL support soon ] )
 }
 
 ?>

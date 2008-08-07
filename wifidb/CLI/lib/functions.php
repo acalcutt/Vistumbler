@@ -36,6 +36,23 @@ return $return;
 
 function convert_vs1($source, $out)
 {
+
+// self aware of script location and where to put VS1 files.
+$dir_exp = explode("\\", $source);
+$dir_c = count($dir_exp);
+$script = $dir_exp[$dir_c-1];
+ if ($debug ==1 ){echo $script."\n";}
+foreach($dir_exp as $d)
+{
+	if($d == $script){continue;}
+	$dir .= $d."\\";
+}
+$dir.="vs1\\";
+
+/*
+$dir = " Place the DIR that you want the VS1 files to go,  after commenting out the above portion " ;
+*/
+
 // dfine time that the script started
 $start = date("H:i:s");
 $debug = 0;
@@ -55,8 +72,9 @@ $apdata=array();
 $src=explode("\\",$source);
 $f_max = count($src);
 $file_src = explode(".",$src[$f_max-1]);
-$file_ext = $file_src[0].'.vs1';
-$filename = ('C:\\imp\\text\\vs1\\'.$file_ext);
+$file_ext = $dir.$file_src[0].'.vs1';
+
+$filename = ( $file_ext );
 	if($debug == 1 ){echo $file_ext."\n".$filename."\n";}
 
 // define initial write and appends
@@ -87,6 +105,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 		$cc=0;
 		$complete++;
 		echo $complete."% - ";
+		if ($complete == 100 ){ echo "\n\n";}
 	}
 	
 	if ($debug ==1)
@@ -278,6 +297,6 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	$end = date("H:i:s");
 	$GPSS=count($gpsdata);
 	$APS=count($apdata);
-	echo "Total Number of Access Points : ".$APS."\nTotal Number of GPS Points : ".$GPSS."\n\n-------\nDONE!\n".$start."\n".$end."\n-------";
+	echo "Total Number of Access Points : ".$APS."\nTotal Number of GPS Points : ".$GPSS."\n\n-------\nDONE!\nStart Time : ".$start."\n Stop Time : ".$end."\n-------";
 }
 }
