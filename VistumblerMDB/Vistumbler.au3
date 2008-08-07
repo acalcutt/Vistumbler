@@ -44,6 +44,7 @@ EndIf
 Dim $Load = ''
 For $loop = 1 To $CmdLine[0]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vs1' Then $Load = $CmdLine[$loop]
+	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vsz' Then $Load = $CmdLine[$loop]
 Next
 
 ; Set a COM Error handler--------------------------------

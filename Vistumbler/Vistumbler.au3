@@ -40,12 +40,10 @@ If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe'
 	RegWrite('HKCR\Vistumbler\DefaultIcon\', '', 'REG_SZ', '"' & @ScriptDir & '\vs1_icon.ico"')
 EndIf
 
-$Hidden = 0
-HotKeySet("^h", "_HideVistumbler")
-
 Dim $Load = ''
 For $loop = 1 To $CmdLine[0]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vs1' Then $Load = $CmdLine[$loop]
+	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vsz' Then $Load = $CmdLine[$loop]
 Next
 ; Set a COM Error handler--------------------------------
 $oMyError = ObjEvent("AutoIt.Error", "MyErrFunc")
@@ -57,6 +55,10 @@ If @OSVersion <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only r
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
+
+Dim $MoveMode = False
+Dim $MoveArea = False
+Dim $DataChild_Width
 
 Dim $GPS_ID = 0
 Dim $NsOk
@@ -220,6 +222,7 @@ Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveD
 Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir)
 Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
+Dim $SplitPercent = IniRead($settings, 'Vistumbler', 'SplitPercent', '0.2')
 Dim $ComPort = IniRead($settings, 'Vistumbler', 'ComPort', 8)
 Dim $BAUD = IniRead($settings, 'Vistumbler', 'Baud', 4800)
 Dim $GpsTimeout = IniRead($settings, 'Vistumbler', 'GpsTimeout', 30000)
@@ -867,6 +870,7 @@ While 1
 		$UpdatedGpsDetailsPos = 1
 	EndIf
 
+	_TreeviewListviewResize()
 	If WinActive($Vistumbler) And _WinMoved() = 1 Then $Redraw = 1
 	If WinActive($Vistumbler) And $ResetSizes = 1 Then
 		_SetControlSizes()
@@ -2486,6 +2490,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 	$b = WinGetPos($DataChild) ;get child window size
 	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Or $Redraw = 1 Then
+		$DataChild_Width = $b[2]
 		If $Graph <> 0 Then
 			$Graphic_left = ($b[2] * 0.01)
 			$Graphic_width = Round(($b[2] * 0.99) - $Graphic_left)
@@ -2504,11 +2509,11 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			
 		Else
 			$TreeviewAPs_left = ($b[2] * 0.01)
-			$TreeviewAPs_width = ($b[2] * 0.20) - $TreeviewAPs_left
+			$TreeviewAPs_width = ($b[2] * $SplitPercent) - $TreeviewAPs_left
 			$TreeviewAPs_top = ($b[3] * 0.01)
 			$TreeviewAPs_height = ($b[3] * 0.99) - $TreeviewAPs_top
 			
-			$ListviewAPs_left = ($b[2] * 0.20) + 1
+			$ListviewAPs_left = ($b[2] * $SplitPercent) + 1
 			$ListviewAPs_width = ($b[2] * 0.99) - $ListviewAPs_left
 			$ListviewAPs_top = ($b[3] * 0.01)
 			$ListviewAPs_height = ($b[3] * 0.99) - $ListviewAPs_top
@@ -2522,6 +2527,36 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 		$Graph_old = $Graph
 	EndIf
 EndFunc   ;==>_SetControlSizes
+
+Func _TreeviewListviewResize()
+	$cursorInfo = GUIGetCursorInfo($Vistumbler)
+	If $cursorInfo[4] = $TreeviewAPs And $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 3 And $MoveMode = False Then
+		$MoveArea = True
+		GUISetCursor(13, 1);  13 = SIZEWE
+	ElseIf $cursorInfo[4] = $ListviewAPs And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 3 And $MoveMode = False Then
+		$MoveArea = True
+		GUISetCursor(13, 1);  13 = SIZEWE
+	Else
+		$MoveArea = False
+		GUISetCursor(2, 1);  2 = ARROW
+	EndIf
+	If $MoveArea = True And $cursorInfo[2] = 1 Then
+		$MoveMode = True
+	EndIf
+	If $MoveMode = True Then
+		GUISetCursor(13, 1);  13 = SIZEWE
+		$TreeviewAPs_width = $cursorInfo[0] - $TreeviewAPs_left
+		$SplitPercent = StringFormat('%0.2f', $TreeviewAPs_width / $ListviewAPs_width)
+		GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
+		$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
+		$ListviewAPs_width = ($DataChild_Width * 0.99) - $ListviewAPs_left
+		GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+	EndIf
+	If $MoveMode = True And $cursorInfo[2] = 0 Then
+		$MoveMode = False
+		GUISetCursor(2, 1);  2 = ARROW
+	EndIf
+EndFunc   ;==>_TreeviewListviewResize
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GRAPH FUNCTIONS
@@ -3458,6 +3493,7 @@ Func _WriteINI()
 		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
 	EndIf
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
+	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
 	IniWrite($settings, "Vistumbler", "ComPort", $ComPort)
 	IniWrite($settings, "Vistumbler", "Baud", $BAUD)
 	IniWrite($settings, "Vistumbler", "Sleeptime", $RefreshLoopTime)
@@ -6002,15 +6038,3 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 		Return (0)
 	EndIf
 EndFunc   ;==>_SpeakSelectedSignal
-
-Func _HideVistumbler()
-	If $Hidden = 0 Then
-		ConsoleWrite("hide" & @CRLF)
-		GUISetState(@SW_HIDE, $Vistumbler)
-		$Hidden = 1
-	Else
-		ConsoleWrite("show" & @CRLF)
-		GUISetState(@SW_SHOW, $Vistumbler)
-		$Hidden = 0
-	EndIf
-EndFunc   ;==>_HideVistumbler
