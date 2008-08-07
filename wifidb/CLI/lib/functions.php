@@ -254,7 +254,7 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 		$lat=$la.$lat_;}
 		if($long_=="00"){$long="0.0000";}else{
 		$long=$lo.$long_;}
-		echo "Lat : ".$lat." - Long : ".$long."\n";
+		if ($debug ==1 ){echo "Lat : ".$lat." - Long : ".$long."\n";}
 		
 		$gpsd = $n."|".$lat."|".$long."|".$gps["sats"]."|".$gps["date"]."|".$gps["time"]."\r\n";
 		if($debug == 1){ echo $gpsd;}
