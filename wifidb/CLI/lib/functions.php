@@ -236,12 +236,14 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	{
 		$latitude = explode(" ", $gps["lat"]);
 		$lat_front = explode(".", $latitude[1]);
-		$lat_back = 100*(".".$lat_front[1]);
+		$lat_back = ".".$lat_front[1];
+		$lat_back = $lat_back*10;
 		$lat_back = $lat_back*60;
 		
 		$longitude = explode(" ", $gps["long"]);
 		$long_front = explode(".",$longitude[1]);
-		$long_back = 100*(".".$long_front[1]);
+		$long_back = '.'.$long_front[1];
+		$long_back = $long_back*10;
 		$long_back = $long_back*60;
 		
 		$lat_ = $lat_front[0].$lat_back;
@@ -254,6 +256,7 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 		$lat=$la.$lat_;}
 		if($long_=="00"){$long="0.0000";}else{
 		$long=$lo.$long_;}
+
 		if ($debug ==1 ){echo "Lat : ".$lat." - Long : ".$long."\n";}
 		
 		$gpsd = $n."|".$lat."|".$long."|".$gps["sats"]."|".$gps["date"]."|".$gps["time"]."\r\n";
