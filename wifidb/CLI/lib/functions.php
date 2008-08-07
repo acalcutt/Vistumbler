@@ -300,3 +300,4 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	echo "Total Number of Access Points : ".$APS."\nTotal Number of GPS Points : ".$GPSS."\n\n-------\nDONE!\nStart Time : ".$start."\n Stop Time : ".$end."\n-------";
 }
 }
+?>
