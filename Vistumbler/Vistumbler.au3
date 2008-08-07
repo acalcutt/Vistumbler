@@ -17,7 +17,7 @@ $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
 $version = 'v8.1 pre-release 3'
-$last_modified = '08/05/2008'
+$last_modified = '08/07/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -59,6 +59,7 @@ Global $hDC
 Dim $MoveMode = False
 Dim $MoveArea = False
 Dim $DataChild_Width
+Dim $DataChild_Height
 
 Dim $GPS_ID = 0
 Dim $NsOk
@@ -223,6 +224,7 @@ Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir
 Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
 Dim $SplitPercent = IniRead($settings, 'Vistumbler', 'SplitPercent', '0.2')
+Dim $SplitHeightPercent = IniRead($settings, 'Vistumbler', 'SplitHeightPercent', '0.65')
 Dim $ComPort = IniRead($settings, 'Vistumbler', 'ComPort', 8)
 Dim $BAUD = IniRead($settings, 'Vistumbler', 'Baud', 4800)
 Dim $GpsTimeout = IniRead($settings, 'Vistumbler', 'GpsTimeout', 30000)
@@ -2491,15 +2493,16 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Or $Redraw = 1 Then
 		$DataChild_Width = $b[2]
+		$DataChild_Height = $b[3]
 		If $Graph <> 0 Then
 			$Graphic_left = ($b[2] * 0.01)
 			$Graphic_width = Round(($b[2] * 0.99) - $Graphic_left)
 			$Graphic_top = ($b[3] * 0.01)
-			$Graphic_height = Round(($b[3] * 0.64) - $Graphic_top)
+			$Graphic_height = Round(($b[3] * $SplitHeightPercent) - $Graphic_top)
 			
 			$ListviewAPs_left = ($b[2] * 0.01)
 			$ListviewAPs_width = Round(($b[2] * 0.99) - $ListviewAPs_left)
-			$ListviewAPs_top = ($b[3] * 0.65)
+			$ListviewAPs_top = ($b[3] * $SplitHeightPercent) + 1
 			$ListviewAPs_height = Round(($b[3] * 0.99) - $ListviewAPs_top)
 
 			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
@@ -2530,31 +2533,59 @@ EndFunc   ;==>_SetControlSizes
 
 Func _TreeviewListviewResize()
 	$cursorInfo = GUIGetCursorInfo($Vistumbler)
-	If $cursorInfo[4] = $TreeviewAPs And $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 3 And $MoveMode = False Then
-		$MoveArea = True
-		GUISetCursor(13, 1);  13 = SIZEWE
-	ElseIf $cursorInfo[4] = $ListviewAPs And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 3 And $MoveMode = False Then
-		$MoveArea = True
-		GUISetCursor(13, 1);  13 = SIZEWE
+	If $Graph = 0 Then
+		If $cursorInfo[4] = $TreeviewAPs And $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 3 And $MoveMode = False Then
+			$MoveArea = True
+			GUISetCursor(13, 1);  13 = SIZEWE
+		ElseIf $cursorInfo[4] = $ListviewAPs And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 3 And $MoveMode = False Then
+			$MoveArea = True
+			GUISetCursor(13, 1);  13 = SIZEWE
+		Else
+			$MoveArea = False
+			GUISetCursor(2, 1);  2 = ARROW
+		EndIf
+		If $MoveArea = True And $cursorInfo[2] = 1 Then
+			$MoveMode = True
+		EndIf
+		If $MoveMode = True Then
+			GUISetCursor(13, 1);  13 = SIZEWE
+			$TreeviewAPs_width = $cursorInfo[0] - $TreeviewAPs_left
+			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
+			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
+			$ListviewAPs_width = ($DataChild_Width * 0.99) - $ListviewAPs_left
+			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			$SplitPercent = StringFormat('%0.2f', $TreeviewAPs_width / $DataChild_Width)
+		EndIf
+		If $MoveMode = True And $cursorInfo[2] = 0 Then
+			$MoveMode = False
+			GUISetCursor(2, 1);  2 = ARROW
+		EndIf
 	Else
-		$MoveArea = False
-		GUISetCursor(2, 1);  2 = ARROW
-	EndIf
-	If $MoveArea = True And $cursorInfo[2] = 1 Then
-		$MoveMode = True
-	EndIf
-	If $MoveMode = True Then
-		GUISetCursor(13, 1);  13 = SIZEWE
-		$TreeviewAPs_width = $cursorInfo[0] - $TreeviewAPs_left
-		$SplitPercent = StringFormat('%0.2f', $TreeviewAPs_width / $ListviewAPs_width)
-		GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
-		$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
-		$ListviewAPs_width = ($DataChild_Width * 0.99) - $ListviewAPs_left
-		GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
-	EndIf
-	If $MoveMode = True And $cursorInfo[2] = 0 Then
-		$MoveMode = False
-		GUISetCursor(2, 1);  2 = ARROW
+		If $cursorInfo[1] > ($Graphic_top + 60) + $Graphic_height - 3 And $cursorInfo[1] < ($Graphic_top + 60) + $Graphic_height + 3 And $MoveMode = False Then
+			$MoveArea = True
+			GUISetCursor(11, 1);  11 = SIZENS
+		Else
+			$MoveArea = False
+			GUISetCursor(2, 1);  2 = ARROW
+		EndIf
+		If $MoveArea = True And $cursorInfo[2] = 1 Then
+			$MoveMode = True
+		EndIf
+		If $MoveMode = True Then
+			GUISetCursor(11, 1);  11 = SIZENS
+			$GraphArea_TopHeight = 60
+			$Graphic_height = $cursorInfo[1] - ($Graphic_top + $GraphArea_TopHeight)
+			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top + $GraphArea_TopHeight, $Graphic_width, $Graphic_height)
+			$ListviewAPs_top = $Graphic_top + $Graphic_height + 1
+			$ListviewAPs_height = $DataChild_Height - $ListviewAPs_top
+			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			$SplitHeightPercent = StringFormat('%0.2f', $Graphic_height / $DataChild_Height)
+			$Redraw = 1
+		EndIf
+		If $MoveMode = True And $cursorInfo[2] = 0 Then
+			$MoveMode = False
+			GUISetCursor(2, 1);  2 = ARROW
+		EndIf
 	EndIf
 EndFunc   ;==>_TreeviewListviewResize
 
@@ -3494,6 +3525,7 @@ Func _WriteINI()
 	EndIf
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
 	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
+	IniWrite($settings, "Vistumbler", "SplitHeightPercent", $SplitHeightPercent)
 	IniWrite($settings, "Vistumbler", "ComPort", $ComPort)
 	IniWrite($settings, "Vistumbler", "Baud", $BAUD)
 	IniWrite($settings, "Vistumbler", "Sleeptime", $RefreshLoopTime)
