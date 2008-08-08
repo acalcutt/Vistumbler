@@ -253,7 +253,6 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	{
 	
 //	GPS Convertion :
-		$long_back = 00.0000;
 		$latitude = explode(" ", $gps["lat"]);
 		$lat_front = explode(".", $latitude[1]);
 		$lat_back = "0.".$lat_front[1];
@@ -264,8 +263,6 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 		$long_front = explode(".",$longitude[1]);
 		$long_back = "0.".$long_front[1];
 		$long_back = $long_back*60;
-		
-		echo "Lat : ".$lat_back." - Long : ".$long_back."\n";
 		
 		$Lat_t= explode(".",$lat_back);
 		$Lat_c = strlen($Lat_t[0]);
