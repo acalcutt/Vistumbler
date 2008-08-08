@@ -1,5 +1,5 @@
 <?php
-$lastedit="8.6.2008";
+$lastedit="8.8.2008";
 $start="6.21.2008";
 $ver=array("Txt2VS1"=>"1.0", "chkgps"=>"1.0");
 $debug = 0;
@@ -12,7 +12,7 @@ foreach($gpsarray as $gps)
 	$test_t = $test["date"]."-".$test["time"]."-".$test["lat"]."-".$test["long"]; 
 	if ( $gps_t == $test_t )
 	{
-		if ($debug == 1 ) {
+		if ($GLOBALS["debug"] == 1 ) {
 			echo  "  Array data: ".$gps_t."\n";
 			echo  "Testing data: ".$test_t."\n.-.-.-.-.=.-.-.-.-.\n";
 			echo "-----=-----=-----\n|\n|\n"; 
@@ -21,7 +21,7 @@ foreach($gpsarray as $gps)
 		break;
 	}else
 	{
-		if ($debug == 1){
+		if ($GLOBALS["debug"] == 1){
 			echo  "  Array data: ".$gps_t."\n";
 			echo  "Testing data: ".$test_t."\n----\n";
 			echo "-----=-----\n";
@@ -40,7 +40,7 @@ function convert_vs1($source, $out)
 $dir_exp = explode("\\", $source);
 $dir_c = count($dir_exp);
 $script = $dir_exp[$dir_c-1];
- if ($debug ==1 ){echo $script."\n";}
+ if ($GLOBALS["debug"] ==1 ){echo $script."\n";}
 foreach($dir_exp as $d)
 {
 	if($d == $script){continue;}
@@ -73,7 +73,7 @@ $file_src = explode(".",$src[$f_max-1]);
 $file_ext = $dir.$file_src[0].'.vs1';
 
 $filename = ( $file_ext );
-	if($debug == 1 ){echo $file_ext."\n".$filename."\n";}
+	if($GLOBALS["debug"] == 1 ){echo $file_ext."\n".$filename."\n";}
 
 // define initial write and appends
 $filewrite = fopen($filename, "w");
@@ -85,8 +85,8 @@ $return = file($source);
 //create interval for progress
 $line = count($return);
 $stat_c = $line/100;
-if ($debug ==1){echo $stat_c."\n";}
-if ($debug ==1){echo $line."\n";}
+if ($GLOBALS["debug"] ==1){echo $stat_c."\n";}
+if ($GLOBALS["debug"] ==1){echo $line."\n";}
 
 // Start the main loop
 foreach($return as $ret)
@@ -106,7 +106,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 		if ($complete == 100 ){ echo "\n\n";}
 	}
 	
-	if ($debug ==1)
+	if ($GLOBALS["debug"] ==1)
 	{
 		echo $total."\n";
 	}
@@ -115,7 +115,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 	$date=$datetime[0];
 	$time=$datetime[1];
 	
-	if ($debug ==1)
+	if ($GLOBALS["debug"] ==1)
 	{echo $nn."\n";}
 	
 	// This is a temp array of data to be tested against the GPS array
@@ -131,7 +131,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 	if ($wifi[4]=="Open"&&$wifi[5]=="WEP"){$sectype="2";}
 	if ($wifi[4]=="WPA-Personal"){$sectype="3";}
 
-	if ($debug == 1 )
+	if ($GLOBALS["debug"] == 1 )
 	{
 		echo "\n\n+-+-+-+-+-+-\n".$gpsdata_t[0]["lat"]."+-\n".$gpsdata_t[0]["long"]."+-\n".$gpsdata_t[0]["sats"]."+-\n".$gpsdata_t[0]["date"]."+-\n".$gpsdata_t[0]["time"]."+-\n";	
 	}
@@ -140,7 +140,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 	{
 		$n++;
 		$N++;
-		if ($debug ==1)
+		if ($GLOBALS["debug"] ==1)
 		{echo "\$n = ".$n."\n\$N = ".$N."\n";}
 		$sig=$n.",".$wifi[3];
 		$gpsdata[$n]=array(
@@ -166,7 +166,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 							"label"=>$wifi[15],
 							"sig"=>$sig
 						);
-		if ($debug == 1 )
+		if ($GLOBALS["debug"] == 1 )
 		{
 			echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."+_\n".$gpsdata[$n]["long"]."+_\n".$gpsdata[$n]["sats"]."+_\n".$gpsdata[$n]["date"]."+_\n".$gpsdata[$n]["time"]."+_\n";	
 			echo "Access Point Number: ".$N."\n";
@@ -178,7 +178,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 		$gpschk = check_gps_array($gpsdata,$gpsdata_t[$nn]);
 		if ($gpschk===0)
 		{
-			if ($debug ==1)
+			if ($GLOBALS["debug"] ==1)
 			{echo "\$n = ".$n."\n\$N = ".$N."\n";}
 			$n++;
 			$N++;
@@ -206,7 +206,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 								"label"=>$wifi[15],
 								"sig"=>$sig
 							);
-			if ($debug == 1 )
+			if ($GLOBALS["debug"] == 1 )
 			{
 				echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."+_\n".$gpsdata[$n]["long"]."+_\n".$gpsdata[$n]["sats"]."+_\n".$gpsdata[$n]["date"]."+_\n".$gpsdata[$n]["time"]."+_\n";	
 				echo "Access Point Number: ".$N."\n";
@@ -214,11 +214,11 @@ if ($ret_count == 17)// test to see if the data is in correct format
 			}
 		}elseif($gpschk===1)
 		{
-			if ($debug ==1)
+			if ($GLOBALS["debug"] ==1)
 			{echo "\$n = ".$n."\n\$N = ".$N."\n";}
 			$N++;
 			$sig=$n.",".$wifi[3];
-			if ($debug ==1 ){echo "\nduplicate GPS data, not entered into array\n";}
+			if ($GLOBALS["debug"] ==1 ){echo "\nduplicate GPS data, not entered into array\n";}
 			$apdata[$N]=array("ssid"=>$wifi[0],
 							"mac"=>$wifi[1],
 							"man"=>$wifi[2],
@@ -232,7 +232,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 							"nt"=>$wifi[14],
 							"label"=>$wifi[15],
 							"sig"=>$sig);
-			if ($debug == 1 )
+			if ($GLOBALS["debug"] == 1 )
 			{
 				echo "Access Point Number: ".$N."\n";
 				echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."=-\n".$apdata[$N]["mac"]."=-\n".$apdata[$N]["auth"]."=-\n".$apdata[$N]["encry"]."=-\n".$apdata[$N]["sectype"]."=-\n".$apdata[$N]["radio"]."=-\n".$apdata[$N]["chan"]."=-\n".$apdata[$N]["btx"]."=-\n".$apdata[$N]["otx"]."=-\n".$apdata[$N]["nt"]."=-\n".$apdata[$N]["label"]."=-\n".$apdata[$N]["sig"]."\n";
@@ -293,10 +293,10 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 //	END GPS convert
 		
 		
-		if ($debug ==1 ){echo "Lat : ".$lat." - Long : ".$long."\n";}
+		if ($GLOBALS["debug"] ==1 ){echo "Lat : ".$lat." - Long : ".$long."\n";}
 		
 		$gpsd = $n."|".$lat."|".$long."|".$gps["sats"]."|".$gps["date"]."|".$gps["time"]."\r\n";
-		if($debug == 1){ echo $gpsd;}
+		if($GLOBALS["debug"] == 1){ echo $gpsd;}
 		fwrite($fileappend, $gpsd);
 		$n++;
 	}
@@ -306,7 +306,7 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	foreach($apdata as $ap)
 	{
 		$apd = $ap["ssid"]."|".$ap["mac"]."|".$ap["man"]."|".$ap["auth"]."|".$ap["encry"]."|".$ap["sectype"]."|".$ap["radio"]."|".$ap["chan"]."|".$ap["btx"]."|".$ap["otx"]."|".$ap["nt"]."|".$ap["label"]."|".$ap["sig"]."\r\n";
-		if($debug == 1){echo $apd;}
+		if($GLOBALS["debug"] == 1){echo $apd;}
 		fwrite($fileappend, $apd);
 		$n++;
 
