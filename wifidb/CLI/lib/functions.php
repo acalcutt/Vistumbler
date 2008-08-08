@@ -255,27 +255,43 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	{
 	
 //	GPS Convertion :
-		$latitude = explode(" ", $lat);
+		$long_back = 00.0000;
+		$latitude = explode(" ", $gps["lat"]);
 		$lat_front = explode(".", $latitude[1]);
-		$lat_back = ".".$lat_front[1];
+		$lat_back = "0.".$lat_front[1];
 		$lat_back = $lat_back*60;
 		
-		$longitude = explode(" ", $long);
+
+		$longitude = explode(" ", $gps["long"]);
 		$long_front = explode(".",$longitude[1]);
-		$long_back = '.'.$long_front[1];
+		$long_back = "0.".$long_front[1];
 		$long_back = $long_back*60;
 		
-		$lat_ = $lat_front[0]."0".$lat_back;
+		echo "Lat : ".$lat_back." - Long : ".$long_back."\n";
 		
-		$long_ =  $long_front[0]."0".$long_back;
+		$Lat_t= explode(".",$lat_back);
+		$Lat_c = strlen($Lat_t[0]);
+		if($Lat_c == 1){$lat_ = $lat_front[0]."0".$lat_back;}
+			else{$lat_ = $lat_front[0].$lat_back;}
+		
+		$Long_t= explode(".",$long_back);
+		$Long_c = strlen($Long_t[0]);
+		if($Long_c == 1){$long_ =  $long_front[0]."0".$long_back;}
+			else{$long_ =  $long_front[0].$long_back;}
+
+		
 		if($latitude[0] == "S")
 		{$la = "-";}
 		if($longitude[0]=="W")
 		{$lo = "-";}
-		if($lat_=="00"){$lat="0.0000";}else{
-		$lat=$la.$lat_;}
-		if($long_=="00"){$long="0.0000";}else{
-		$long=$lo.$long_;}
+		if($lat_==0){$lat="0.0000";}
+			else{
+				$lat=$la.$lat_;
+			}
+		if($long_==0){$long="0.0000";}
+			else{
+				$long=$lo.$long_;
+			}
 //	END GPS convert
 		
 		
