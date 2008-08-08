@@ -2,11 +2,10 @@
 $lastedit="8.6.2008";
 $start="6.21.2008";
 $ver=array("Txt2VS1"=>"1.0", "chkgps"=>"1.0");
-
+$debug = 0;
 
 function check_gps_array($gpsarray, $test)
 {
-$debug = 0;
 foreach($gpsarray as $gps)
 {
 	$gps_t =  $gps["date"]. "-".$gps["time"]. "-".$gps["lat"]. "-".$gps["long"];
@@ -55,7 +54,6 @@ $dir = " Place the DIR that you want the VS1 files to go,  after commenting out 
 
 // dfine time that the script started
 $start = date("H:i:s");
-$debug = 0;
 
 // counters
 $c=0;
