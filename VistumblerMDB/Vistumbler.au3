@@ -275,6 +275,7 @@ Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'RefreshTime', 2000)
 Dim $MapOpen = IniRead($settings, 'Vistumbler', 'MapOpen', 1)
 Dim $MapWEP = IniRead($settings, 'Vistumbler', 'MapWEP', 1)
 Dim $MapSec = IniRead($settings, 'Vistumbler', 'MapSec', 1)
+Dim $ShowTrack = IniRead($settings, 'Vistumbler', 'ShowTrack', 1)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 1)
 Dim $PhilsGraphURL = IniRead($settings, 'Vistumbler', 'PhilsGraphURL', 'http://www.randomintervals.com/wifi/?')
 Dim $PhilsWdbURL = IniRead($settings, 'Vistumbler', 'PhilsWdbURL', 'http://www.randomintervals.com/wifi/beta/db/import/?')
@@ -398,7 +399,9 @@ Dim $Text_Browse = IniRead($settings, 'GuiText', 'Browse', '&Browse')
 Dim $Text_File = IniRead($settings, 'GuiText', 'File', '&File')
 Dim $Text_SaveAsTXT = IniRead($settings, 'GuiText', 'SaveAsTXT', 'Save As TXT')
 Dim $Text_SaveAsVS1 = IniRead($settings, 'GuiText', 'SaveAsVS1', 'Save As VS1')
-Dim $Text_ImportFromTXT = IniRead($settings, 'GuiText', 'ImportFromTXT', 'Import From TXT')
+Dim $Text_SaveAsVSZ = IniRead($settings, 'GuiText', 'SaveAsVSZ', 'Save As VSZ')
+Dim $Text_ImportFromTXT = IniRead($settings, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
+Dim $Text_ImportFromVSZ = IniRead($settings, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
 Dim $Text_Exit = IniRead($settings, 'GuiText', 'Exit', 'E&xit')
 
 Dim $Text_Edit = IniRead($settings, 'GuiText', 'Edit', 'E&dit')
@@ -573,6 +576,7 @@ Dim $Text_SpeakUseVisSounds = IniRead($settings, 'GuiText', 'SpeakUseVisSounds',
 Dim $Text_SpeakUseSapi = IniRead($settings, 'GuiText', 'SpeakUseSapi', 'Use Microsoft Sound API')
 Dim $Text_SpeakSayPercent = IniRead($settings, 'GuiText', 'SpeakSayPercent', 'Say "Percent" after signal')
 Dim $Text_GpsTrackTime = IniRead($settings, 'GuiText', 'GpsTrackTime', 'Track Refresh Time')
+Dim $Text_SaveAllGpsData = IniRead($settings, 'GuiText', 'SaveAllGpsData', 'Save GPS data when no APs are active')
 
 ;Create-Array-Of-Manufactures----------------------------
 _ReadIniSectionToDB($manufini, "MANUFACURERS", $VistumblerDB, $DB_OBJ, "Manufacturers")
@@ -616,9 +620,10 @@ EndIf
 $file = GUICtrlCreateMenu($Text_File)
 $SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
+$ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
 $ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
-$ImportFromVSZ = GUICtrlCreateMenuItem("Import From VSZ", $file)
-$ExportFromVSZ = GUICtrlCreateMenuItem("Export From VSZ", $file)
+$ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
+
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 $Edit = GUICtrlCreateMenu($Text_Edit)
 $ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
@@ -643,12 +648,12 @@ $AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $Options)
 If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $Options)
 If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem("Save GPS data when no APs are active", $Options)
+$MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $Options)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
-Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 0)
+
 
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
 $SetMisc = GUICtrlCreateMenuItem($Text_VistumblerSettings, $SettingsMenu)
@@ -3706,6 +3711,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'MapOpen', $MapOpen)
 	IniWrite($settings, 'Vistumbler', 'MapWEP', $MapWEP)
 	IniWrite($settings, 'Vistumbler', 'MapSec', $MapSec)
+	IniWrite($settings, 'Vistumbler', 'ShowTrack', $ShowTrack)
 	IniWrite($settings, 'Vistumbler', 'Debug', $Debug)
 	IniWrite($settings, 'Vistumbler', 'GPSformat', $GPSformat)
 	IniWrite($settings, 'Vistumbler', 'PhilsGraphURL', $PhilsGraphURL)
@@ -3830,7 +3836,9 @@ Func _WriteINI()
 	IniWrite($settings, "GuiText", "File", $Text_File)
 	IniWrite($settings, "GuiText", "SaveAsTXT", $Text_SaveAsTXT)
 	IniWrite($settings, "GuiText", "SaveAsVS1", $Text_SaveAsVS1)
+	IniWrite($settings, "GuiText", "SaveAsVSZ", $Text_SaveAsVSZ)
 	IniWrite($settings, "GuiText", "ImportFromTXT", $Text_ImportFromTXT)
+	IniWrite($settings, "GuiText", "ImportFromVSZ", $Text_ImportFromVSZ)
 	IniWrite($settings, "GuiText", "Exit", $Text_Exit)
 	IniWrite($settings, "GuiText", "Edit", $Text_Edit)
 	IniWrite($settings, "GuiText", "ClearAll", $Text_ClearAll)
@@ -3994,6 +4002,7 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'SpeakUseSapi', $Text_SpeakUseSapi)
 	IniWrite($settings, 'GuiText', 'SpeakSayPercent', $Text_SpeakSayPercent)
 	IniWrite($settings, 'GuiText', 'GpsTrackTime', $Text_GpsTrackTime)
+	IniWrite($settings, 'GuiText', 'SaveAllGpsData', $Text_SaveAllGpsData)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5312,7 +5321,9 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_File = IniRead($newlanguagefile, 'GuiText', 'File', '&File')
 		$Text_SaveAsTXT = IniRead($newlanguagefile, 'GuiText', 'SaveAsTXT', 'Save As TXT')
 		$Text_SaveAsVS1 = IniRead($newlanguagefile, 'GuiText', 'SaveAsVS1', 'Save As VS1')
-		$Text_ImportFromTXT = IniRead($newlanguagefile, 'GuiText', 'ImportFromTXT', 'Import From TXT')
+		$Text_SaveAsVSZ = IniRead($newlanguagefile, 'GuiText', 'SaveAsVSZ', 'Save As VSZ')
+		$Text_ImportFromTXT = IniRead($newlanguagefile, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
+		$Text_ImportFromVSZ = IniRead($newlanguagefile, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
 		$Text_Exit = IniRead($newlanguagefile, 'GuiText', 'Exit', 'E&xit')
 		$Text_Edit = IniRead($newlanguagefile, 'GuiText', 'Edit', 'E&dit')
 		$Text_ClearAll = IniRead($newlanguagefile, 'GuiText', 'ClearAll', 'Clear All')
@@ -5476,6 +5487,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SpeakUseSapi = IniRead($newlanguagefile, 'GuiText', 'SpeakUseSapi', 'Use Microsoft Sound API')
 		$Text_SpeakSayPercent = IniRead($newlanguagefile, 'GuiText', 'SpeakSayPercent', 'Say "Percent" after signal')
 		$Text_GpsTrackTime = IniRead($newlanguagefile, 'GuiText', 'GpsTrackTime', 'Track Refresh Time')
+		$Text_SaveAllGpsData = IniRead($newlanguagefile, 'GuiText', 'SaveAllGpsData', 'Save GPS data when no APs are active')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -6214,9 +6226,9 @@ Func _RecoverMDB()
 	Next
 	
 	If $AddDirection = 0 Then
-		$v_sort = False;set descending
-	Else
 		$v_sort = True;set ascending
+	Else
+		$v_sort = False;set descending
 	EndIf
 	_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
 	_FixLineNumbers()
