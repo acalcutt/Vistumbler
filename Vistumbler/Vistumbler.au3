@@ -1,5 +1,6 @@
 #RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
@@ -16,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v8.1 pre-release 3'
-$last_modified = '08/07/2008'
+$version = 'v8.1'
+$last_modified = '08/10/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -248,6 +249,7 @@ Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'RefreshTime', 2000)
 Dim $MapOpen = IniRead($settings, 'Vistumbler', 'MapOpen', 1)
 Dim $MapWEP = IniRead($settings, 'Vistumbler', 'MapWEP', 1)
 Dim $MapSec = IniRead($settings, 'Vistumbler', 'MapSec', 1)
+Dim $ShowTrack = IniRead($settings, 'Vistumbler', 'ShowTrack', 1)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 1)
 Dim $PhilsGraphURL = IniRead($settings, 'Vistumbler', 'PhilsGraphURL', 'http://www.randomintervals.com/wifi/?')
 Dim $PhilsWdbURL = IniRead($settings, 'Vistumbler', 'PhilsWdbURL', 'http://www.randomintervals.com/wifi/beta/db/import/?')
@@ -371,7 +373,9 @@ Dim $Text_Browse = IniRead($settings, 'GuiText', 'Browse', '&Browse')
 Dim $Text_File = IniRead($settings, 'GuiText', 'File', '&File')
 Dim $Text_SaveAsTXT = IniRead($settings, 'GuiText', 'SaveAsTXT', 'Save As TXT')
 Dim $Text_SaveAsVS1 = IniRead($settings, 'GuiText', 'SaveAsVS1', 'Save As VS1')
-Dim $Text_ImportFromTXT = IniRead($settings, 'GuiText', 'ImportFromTXT', 'Import From TXT')
+Dim $Text_SaveAsVSZ = IniRead($settings, 'GuiText', 'SaveAsVSZ', 'Save As VSZ')
+Dim $Text_ImportFromTXT = IniRead($settings, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
+Dim $Text_ImportFromVSZ = IniRead($settings, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
 Dim $Text_Exit = IniRead($settings, 'GuiText', 'Exit', 'E&xit')
 
 Dim $Text_Edit = IniRead($settings, 'GuiText', 'Edit', 'E&dit')
@@ -585,13 +589,12 @@ Else
 	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]);Resize window to ini value
 EndIf
 
-
 $file = GUICtrlCreateMenu($Text_File)
 $SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
+$ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
 $ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
-$ImportFromVSZ = GUICtrlCreateMenuItem("Import From VSZ", $file)
-$ExportFromVSZ = GUICtrlCreateMenuItem("Export From VSZ", $file)
+$ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
 
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 $Edit = GUICtrlCreateMenu($Text_Edit)
@@ -2534,13 +2537,10 @@ EndFunc   ;==>_SetControlSizes
 Func _TreeviewListviewResize()
 	$cursorInfo = GUIGetCursorInfo($Vistumbler)
 	If $Graph = 0 Then
-		If $cursorInfo[4] = $TreeviewAPs And $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 3 And $MoveMode = False Then
+		If $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 5 And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 5 And $cursorInfo[1] > ($TreeviewAPs_top + 60) And $cursorInfo[1] < ($TreeviewAPs_top + 60) + $TreeviewAPs_height And $MoveMode = False Then
 			$MoveArea = True
 			GUISetCursor(13, 1);  13 = SIZEWE
-		ElseIf $cursorInfo[4] = $ListviewAPs And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 3 And $MoveMode = False Then
-			$MoveArea = True
-			GUISetCursor(13, 1);  13 = SIZEWE
-		Else
+		ElseIf $MoveArea = True Then
 			$MoveArea = False
 			GUISetCursor(2, 1);  2 = ARROW
 		EndIf
@@ -2561,10 +2561,10 @@ Func _TreeviewListviewResize()
 			GUISetCursor(2, 1);  2 = ARROW
 		EndIf
 	Else
-		If $cursorInfo[1] > ($Graphic_top + 60) + $Graphic_height - 3 And $cursorInfo[1] < ($Graphic_top + 60) + $Graphic_height + 3 And $MoveMode = False Then
+		If $cursorInfo[1] > ($Graphic_top + 60) + $Graphic_height - 5 And $cursorInfo[1] < ($Graphic_top + 60) + $Graphic_height + 5 And $MoveMode = False Then
 			$MoveArea = True
 			GUISetCursor(11, 1);  11 = SIZENS
-		Else
+		ElseIf $MoveArea = True Then
 			$MoveArea = False
 			GUISetCursor(2, 1);  2 = ARROW
 		EndIf
@@ -3549,6 +3549,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'MapOpen', $MapOpen)
 	IniWrite($settings, 'Vistumbler', 'MapWEP', $MapWEP)
 	IniWrite($settings, 'Vistumbler', 'MapSec', $MapSec)
+	IniWrite($settings, 'Vistumbler', 'ShowTrack', $ShowTrack)
 	IniWrite($settings, 'Vistumbler', 'Debug', $Debug)
 	IniWrite($settings, 'Vistumbler', 'GPSformat', $GPSformat)
 	IniWrite($settings, 'Vistumbler', 'PhilsGraphURL', $PhilsGraphURL)
@@ -3673,7 +3674,9 @@ Func _WriteINI()
 	IniWrite($settings, "GuiText", "File", $Text_File)
 	IniWrite($settings, "GuiText", "SaveAsTXT", $Text_SaveAsTXT)
 	IniWrite($settings, "GuiText", "SaveAsVS1", $Text_SaveAsVS1)
+	IniWrite($settings, "GuiText", "SaveAsVSZ", $Text_SaveAsVSZ)
 	IniWrite($settings, "GuiText", "ImportFromTXT", $Text_ImportFromTXT)
+	IniWrite($settings, "GuiText", "ImportFromVSZ", $Text_ImportFromVSZ)
 	IniWrite($settings, "GuiText", "Exit", $Text_Exit)
 	IniWrite($settings, "GuiText", "Edit", $Text_Edit)
 	IniWrite($settings, "GuiText", "ClearAll", $Text_ClearAll)
@@ -3855,7 +3858,7 @@ Func SaveToKML()
 	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox("Map Secure Networks", 15, 55, 240, 15)
 	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportKML_MapSec, $GUI_CHECKED)
 	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox("Draw Track", 15, 75, 240, 15)
-	;If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
+	If $ShowTrack = 1 Then GUICtrlSetState($GUI_ExportKML_DrawTrack, $GUI_CHECKED)
 	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox("Use Local Images", 15, 95, 240, 15)
 	If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
 	$GUI_ExportKML_OK = GUICtrlCreateButton("Ok", 40, 115, 81, 25, 0)
@@ -5279,7 +5282,9 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_File = IniRead($newlanguagefile, 'GuiText', 'File', '&File')
 		$Text_SaveAsTXT = IniRead($newlanguagefile, 'GuiText', 'SaveAsTXT', 'Save As TXT')
 		$Text_SaveAsVS1 = IniRead($newlanguagefile, 'GuiText', 'SaveAsVS1', 'Save As VS1')
-		$Text_ImportFromTXT = IniRead($newlanguagefile, 'GuiText', 'ImportFromTXT', 'Import From TXT')
+		$Text_SaveAsVSZ = IniRead($newlanguagefile, 'GuiText', 'SaveAsVSZ', 'Save As VSZ')
+		$Text_ImportFromTXT = IniRead($newlanguagefile, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
+		$Text_ImportFromVSZ = IniRead($newlanguagefile, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
 		$Text_Exit = IniRead($newlanguagefile, 'GuiText', 'Exit', 'E&xit')
 		$Text_Edit = IniRead($newlanguagefile, 'GuiText', 'Edit', 'E&dit')
 		$Text_ClearAll = IniRead($newlanguagefile, 'GuiText', 'ClearAll', 'Clear All')
