@@ -1,5 +1,6 @@
 #RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
@@ -10,14 +11,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.3 Beta
+;AutoIt Version: v3.2.13.7 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Access Edition - Alpha 3'
-$last_modified = '08/07/2008'
+$version = ' - Access Edition - Alpha 4'
+$last_modified = '08/10/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -208,6 +209,9 @@ Dim $UpdateAutoSave = 0
 Dim $CompassOpen = 0
 Dim $CompassGUI = 0
 Dim $SayProcess
+Dim $AutoKmlActiveProcess
+Dim $AutoKmlDeadProcess
+Dim $AutoKmlTrackProcess
 Dim $AutoKmlProcess
 
 Dim $TreeviewAPs_left, $TreeviewAPs_width, $TreeviewAPs_top, $TreeviewAPs_height
@@ -866,16 +870,16 @@ While 1
 	
 	If $AutoKML = 1 Then
 		If TimerDiff($kml_gps_timer) >= ($AutoKmlGpsTime * 1000) And $AutoKmlGpsTime <> 0 Then _AutoKmlGpsFile($GoogleEarth_GpsFile)
-		If TimerDiff($kml_dead_timer) >= ($AutoKmlDeadTime * 1000) And $AutoKmlDeadTime <> 0 Then
-			Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
+		If TimerDiff($kml_dead_timer) >= ($AutoKmlDeadTime * 1000) And $AutoKmlDeadTime <> 0 And ProcessExists($AutoKmlDeadProcess) = 0 Then
+			$AutoKmlDeadProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
 			$kml_dead_timer = TimerInit()
 		EndIf
-		If TimerDiff($kml_active_timer) >= ($AutoKmlActiveTime * 1000) And $AutoKmlActiveTime <> 0 Then
-			Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
+		If TimerDiff($kml_active_timer) >= ($AutoKmlActiveTime * 1000) And $AutoKmlActiveTime <> 0 And ProcessExists($AutoKmlActiveProcess) = 0 Then
+			$AutoKmlActiveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
 			$kml_active_timer = TimerInit()
 		EndIf
-		If TimerDiff($kml_track_timer) >= ($AutoKmlTrackTime * 1000) And $AutoKmlTrackTime <> 0 Then
-			Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_TrackFile & '" /t', '', @SW_HIDE)
+		If TimerDiff($kml_track_timer) >= ($AutoKmlTrackTime * 1000) And $AutoKmlTrackTime <> 0 And ProcessExists($AutoKmlTrackProcess) = 0 Then
+			$AutoKmlTrackProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_TrackFile & '" /t', '', @SW_HIDE)
 			$kml_track_timer = TimerInit()
 		EndIf
 	EndIf
@@ -2386,13 +2390,10 @@ EndFunc   ;==>_SetControlSizes
 Func _TreeviewListviewResize()
 	$cursorInfo = GUIGetCursorInfo($Vistumbler)
 	If $Graph = 0 Then
-		If $cursorInfo[4] = $TreeviewAPs And $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 3 And $MoveMode = False Then
+		If $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 5 And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 5 And $cursorInfo[1] > ($TreeviewAPs_top + 60) And $cursorInfo[1] < ($TreeviewAPs_top + 60) + $TreeviewAPs_height And $MoveMode = False Then
 			$MoveArea = True
 			GUISetCursor(13, 1);  13 = SIZEWE
-		ElseIf $cursorInfo[4] = $ListviewAPs And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 3 And $MoveMode = False Then
-			$MoveArea = True
-			GUISetCursor(13, 1);  13 = SIZEWE
-		Else
+		ElseIf $MoveArea = True Then
 			$MoveArea = False
 			GUISetCursor(2, 1);  2 = ARROW
 		EndIf
@@ -2413,10 +2414,10 @@ Func _TreeviewListviewResize()
 			GUISetCursor(2, 1);  2 = ARROW
 		EndIf
 	Else
-		If $cursorInfo[1] > ($Graphic_top + 60) + $Graphic_height - 3 And $cursorInfo[1] < ($Graphic_top + 60) + $Graphic_height + 3 And $MoveMode = False Then
+		If $cursorInfo[1] > ($Graphic_top + 60) + $Graphic_height - 5 And $cursorInfo[1] < ($Graphic_top + 60) + $Graphic_height + 5 And $MoveMode = False Then
 			$MoveArea = True
 			GUISetCursor(11, 1);  11 = SIZENS
-		Else
+		ElseIf $MoveArea = True Then
 			$MoveArea = False
 			GUISetCursor(2, 1);  2 = ARROW
 		EndIf
@@ -3450,9 +3451,9 @@ Func _ImportOk()
 			Next
 			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & 'Sorting List')
 			If $AddDirection = 0 Then
-				$v_sort = False;set descending
-			Else
 				$v_sort = True;set ascending
+			Else
+				$v_sort = False;set descending
 			EndIf
 			_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
 			_FixLineNumbers()
@@ -3619,9 +3620,9 @@ Func _ImportOk()
 			WEnd
 			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & 'Sorting List')
 			If $AddDirection = 0 Then
-				$v_sort = False;set descending
-			Else
 				$v_sort = True;set ascending
+			Else
+				$v_sort = False;set descending
 			EndIf
 			_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
 			_FixLineNumbers()
