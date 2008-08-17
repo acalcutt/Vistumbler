@@ -11,13 +11,14 @@
 #ce
 Const $sUDFVersion = 'CommMG.au3 V2.1 '
 #cs
- Version 2.1 Thanks to jps1x2 for the read/send bte array incentive and testing.
- Version 2.0.2 beta changed readbytearray so returns no of bytes read
- Version 2.0.1 beta
-               added _CommSendByteArray and _CommReadByteArray
-  Version 2.0 - added _CommSwitch. Can now use up to 4 ports.
-                added option for flow control = NONE to _CommSetPort
-				
+	Version 2.1.1 Added missing declarations which caused problems in scripts using Opt("MustDeclareVars",1) - thanks to Hannes
+	Version 2.1 Thanks to jps1x2 for the read/send bte array incentive and testing.
+	Version 2.0.2 beta changed readbytearray so returns no of bytes read
+	Version 2.0.1 beta
+	added _CommSendByteArray and _CommReadByteArray
+	Version 2.0 - added _CommSwitch. Can now use up to 4 ports.
+	added option for flow control = NONE to _CommSetPort
+	
 	AutoIt Version: 3.2.3++
 	Language:       English
 	
@@ -41,7 +42,7 @@ Const $sUDFVersion = 'CommMG.au3 V2.1 '
 	_CommSendByte
 	_CommSendBreak; not tested!!!!!!!!!!
 	_CommCloseport
-	_CommSwitch 
+	_CommSwitch
 	_CommSendByteArray
 	_CommReadByteArray
 	
@@ -66,19 +67,19 @@ Global $hDll
 
 ;===============================================================================
 Func _CommListPorts($iReturnType = 1)
-	Local $vDllAns,$lpres
+	Local $vDllAns, $lpres
 	If Not $fPortOpen Then
 		$hDll = DllOpen('commg.dll')
 		If $hDll = -1 Then
 			SetError(2)
-			$sErr = 'Failed to open commg.dll'
+			;$sErr = 'Failed to open commg.dll'
 			Return 0;failed
 		EndIf
 		$fPortOpen = True
 	EndIf
 	If $fPortOpen Then
-		$vDllAns = DllCall($hDll,'str','ListPorts')
-		if @error = 1 then
+		$vDllAns = DllCall($hDll, 'str', 'ListPorts')
+		If @error = 1 Then
 			SetError(1)
 			Return ''
 		Else
@@ -87,7 +88,7 @@ Func _CommListPorts($iReturnType = 1)
 			If $iReturnType = 1 Then
 				Return $vDllAns[0]
 			Else
-				Return StringSplit($vDllAns[0],'|')
+				Return StringSplit($vDllAns[0], '|')
 			EndIf
 			
 			
@@ -98,7 +99,7 @@ Func _CommListPorts($iReturnType = 1)
 	EndIf
 
 	
-EndFunc
+EndFunc   ;==>_CommListPorts
 
 
 
@@ -120,9 +121,9 @@ Func _CommGetVersion($iType = 1)
 	If $iType = 2 Then Return $sUDFVersion
 	
 	If $fPortOpen Then
-		$vDllAns = DllCall($hDll,'str','Version')
+		$vDllAns = DllCall($hDll, 'str', 'Version')
 		
-		if @error = 1 then
+		If @error = 1 Then
 			SetError(1)
 			ConsoleWrite('error in get version' & @CRLF)
 			Return ''
@@ -132,8 +133,8 @@ Func _CommGetVersion($iType = 1)
 			
 		EndIf
 	Else
-		$vDllAns = DllCall('commg.dll','str','Version')
-		if @error = 1 then
+		$vDllAns = DllCall('commg.dll', 'str', 'Version')
+		If @error = 1 Then
 			SetError(1)
 			ConsoleWrite('error in get version' & @CRLF)
 			Return ''
@@ -144,7 +145,7 @@ Func _CommGetVersion($iType = 1)
 	EndIf
 
 
-EndFunc
+EndFunc   ;==>_CommGetVersion
 
 ;===============================================================================
 ;
@@ -163,7 +164,7 @@ EndFunc
 Func _CommSwitch($channel)
 	Local $vDllAns
 
-	$vDllAns = DllCall($hDll,'int','switch','int',$channel)
+	$vDllAns = DllCall($hDll, 'int', 'switch', 'int', $channel)
 	If @error <> 0 Then
 		SetError(1)
 		Return -1
@@ -171,7 +172,7 @@ Func _CommSwitch($channel)
 		Return $vDllAns[0]
 	EndIf
 
-EndFunc
+EndFunc   ;==>_CommSwitch
 
 
 
@@ -188,8 +189,8 @@ EndFunc
 ;                  $iBits - integer:  number of bits in code to be transmitted
 ;                  $iParity - integer: 0=None,1=Odd,2=Even,3=Mark,4=Space
 ;                  $iStop - integer: number of stop bits, 1=1 stop bit 2 = 2 stop bits, 15 = 1.5 stop bits
-;                  $iFlow - integer: 0 sets hardware flow control, 
-;                                    1 sets XON XOFF control, 
+;                  $iFlow - integer: 0 sets hardware flow control,
+;                                    1 sets XON XOFF control,
 ;                                    2 sets NONE i.e. no flow control.
 ; Returns;  on success - returns 1 and sets $sErr to ''
 ;           on failure - returns 0 and with the error message in $sErr, and sets @error as follows
@@ -206,9 +207,9 @@ EndFunc
 ;Remarks     You cannot set the same COM port on more than one channel
 ;===========================================================================================================
 
-Func _CommSetPort($iPort,ByRef $sErr,$iBaud=9600,$iBits=8,$iPar=0,$iStop=1,$iFlow=0)
+Func _CommSetPort($iPort, ByRef $sErr, $iBaud = 9600, $iBits = 8, $iPar = 0, $iStop = 1, $iFlow = 0)
 	Local $vDllAns
-	$sMGBuffer = ''
+	Local $sMGBuffer = ''
 	$sErr = ''
 	If Not $fPortOpen Then
 		$hDll = DllOpen('commg.dll')
@@ -221,29 +222,29 @@ Func _CommSetPort($iPort,ByRef $sErr,$iBaud=9600,$iBits=8,$iPar=0,$iStop=1,$iFlo
 	EndIf
 	ConsoleWrite('port = ' & $iPort & ', baud = ' & $iBaud & ', bits = ' & $iBits & ', par = ' & $iPar & ', stop = ' & $iStop & ', flow = ' & $iFlow & @CRLF)
 	
-	$vDllAns = DllCall($hDll,'int','SetPort','int',$iPort,'int',$iBaud,'int',$iBits,'int',$iPar,'int',$iStop,'int',$iFlow)
-	if @error <> 0 then
+	$vDllAns = DllCall($hDll, 'int', 'SetPort', 'int', $iPort, 'int', $iBaud, 'int', $iBits, 'int', $iPar, 'int', $iStop, 'int', $iFlow)
+	If @error <> 0 Then
 		$sErr = 'dll SetPort call failed'
 		SetError(1)
 		Return 0
 	EndIf
 
-	if $vDllAns[0] < 0 Then
+	If $vDllAns[0] < 0 Then
 		SetError($vDllAns[0])
-		switch $vDllAns[0]
-			Case -1
+		Switch $vDllAns[0]
+			Case - 1
 				$sErr = 'undefined baud rate'
-			Case -2
+			Case - 2
 				$sErr = 'undefined stop bit number'
-			Case -4
+			Case - 4
 				$sErr = 'undefined data size'
-			Case -8
+			Case - 8
 				$sErr = 'port 0 not allowed'
-			Case -16
+			Case - 16
 				$sErr = 'port does not exist'
-			Case -32
+			Case - 32
 				$sErr = 'access denied, maybe port already in use'
-			Case -64
+			Case - 64
 				$sErr = 'unknown error accessing port'
 		EndSwitch
 		Return 0
@@ -251,7 +252,7 @@ Func _CommSetPort($iPort,ByRef $sErr,$iBaud=9600,$iBits=8,$iPar=0,$iStop=1,$iFlo
 		Return 1
 	EndIf
 	
-EndFunc
+EndFunc   ;==>_CommSetPort
 
 
 ;===================================================================================
@@ -267,9 +268,9 @@ EndFunc
 
 Func _CommPortConnection()
 	Local $vDllAns
-	$vDllAns = DllCall($hDll,'str','Connection');reply is port eg COM8
+	$vDllAns = DllCall($hDll, 'str', 'Connection');reply is port eg COM8
 
-   If @error <> 0 Then
+	If @error <> 0 Then
 		SetError(@error)
 		Return ''
 	Else
@@ -277,7 +278,7 @@ Func _CommPortConnection()
 	EndIf
 	
 	
-EndFunc
+EndFunc   ;==>_CommPortConnection
 
 
 
@@ -293,11 +294,11 @@ EndFunc
 ;           on failure - @error set to the error returned from DllCall
 ;======================================================================================
 
-Func _CommSendString($sMGString,$iWaitComplete=0)
+Func _CommSendString($sMGString, $iWaitComplete = 0)
 	;sends $sMGString on the currently open port
 	;returns 1 if ok, returns 0 if port not open/active
 	Local $vDllAns
-	$vDllAns = DllCall($hDll,'int','SendString','str',$sMGString,'int',$iWaitComplete)
+	$vDllAns = DllCall($hDll, 'int', 'SendString', 'str', $sMGString, 'int', $iWaitComplete)
 	If @error <> 0 Then
 		SetError(@error)
 		Return ''
@@ -305,7 +306,7 @@ Func _CommSendString($sMGString,$iWaitComplete=0)
 		Return $vDllAns[0]
 	EndIf
 
-EndFunc
+EndFunc   ;==>_CommSendString
 
 
 
@@ -325,7 +326,7 @@ Func _Commgetstring()
 	Local $vDllAns
 	;$sStr1 = ''
 	;$vDllAns = DllCall($hDll,'str','GetByte')
-	$vDllAns = DllCall($hDll,'str','GetString')
+	$vDllAns = DllCall($hDll, 'str', 'GetString')
 	
 	If @error <> 0 Then
 		SetError(1)
@@ -333,7 +334,7 @@ Func _Commgetstring()
 		Return ''
 	EndIf
 	Return $vDllAns[0]
-EndFunc
+EndFunc   ;==>_Commgetstring
 
 
 ;====================================================================================
@@ -356,13 +357,13 @@ EndFunc
 ;            received so far are returned and @error is set To -2.
 ;           on failure areturns any characters reeived and sets @error to 1
 ;======================================================================================
-Func _CommGetLine($sEndChar= @CR,$maxlen = 0, $maxtime = 0)
+Func _CommGetLine($sEndChar = @CR, $maxlen = 0, $maxtime = 0)
 	Local $vDllAns, $sLineRet, $sStr1, $waited, $sNextChar, $iSaveErr
 
 	$sStr1 = ''; $sMGBuffer
 	$waited = TimerInit()
 	
-	while 1;stringinstr($sStr1,$EndChar) = 0
+	While 1;stringinstr($sStr1,$EndChar) = 0
 		If TimerDiff($waited) > $maxtime And $maxtime > 0 Then
 			SetError(-2)
 			Return $sStr1
@@ -373,7 +374,7 @@ Func _CommGetLine($sEndChar= @CR,$maxlen = 0, $maxtime = 0)
 			SetError(-1)
 			Return $sStr1
 		EndIf
-		$ic =  _CommGetInputCount()
+		;$ic =  _CommGetInputCount()
 		$sNextChar = _CommReadChar()
 		$iSaveErr = @error
 		If $iSaveErr = 0 And $sNextChar <> '' Then
@@ -394,7 +395,7 @@ Func _CommGetLine($sEndChar= @CR,$maxlen = 0, $maxtime = 0)
 
 
 	Return $sStr1
-EndFunc
+EndFunc   ;==>_CommGetLine
 
 
 
@@ -411,7 +412,7 @@ EndFunc
 
 Func _CommGetInputCount()
 	Local $vDllAns
-	$vDllAns = DllCall($hDll,'str','GetInputCount')
+	$vDllAns = DllCall($hDll, 'str', 'GetInputCount')
 	
 	If @error <> 0 Then
 		SetError(1)
@@ -422,7 +423,7 @@ Func _CommGetInputCount()
 	EndIf
 
 	
-EndFunc
+EndFunc   ;==>_CommGetInputCount
 
 
 
@@ -437,7 +438,7 @@ EndFunc
 Func _CommGetOutputCount()
 	Local $vDllAns
 
-	$vDllAns = DllCall($hDll,'str','GetOutputCount')
+	$vDllAns = DllCall($hDll, 'str', 'GetOutputCount')
 	
 	If @error <> 0 Then
 		SetError(1)
@@ -447,7 +448,7 @@ Func _CommGetOutputCount()
 	EndIf
 
 	
-EndFunc
+EndFunc   ;==>_CommGetOutputCount
 
 
 ;================================================================================================
@@ -473,7 +474,7 @@ Func _CommReadByte($wait = 0)
 		EndIf
 	EndIf
 	
-	$vDllAns = DllCall($hDll,'str','GetByte')
+	$vDllAns = DllCall($hDll, 'str', 'GetByte')
 	
 	If @error <> 0 Then
 		SetError(2)
@@ -482,7 +483,7 @@ Func _CommReadByte($wait = 0)
 	;ConsoleWrite('byte read was ' & $vDllAns[0] & @CRLF)
 	Return $vDllAns[0]
 	
-EndFunc
+EndFunc   ;==>_CommReadByte
 
 ;============================================================================
 ;
@@ -498,17 +499,17 @@ EndFunc
 ;;NB could hang if nothing rec'd when wait is <> 0
 ;===============================================================================
 
-Func _CommReadChar($wait=0)
+Func _CommReadChar($wait = 0)
 	Local $sChar, $iErr
 
-	$schar = _CommReadByte($wait)
+	$sChar = _CommReadByte($wait)
 	$iErr = @error
 	If $iErr > 2 Then
 		SetError(1)
 		Return ''
 	EndIf
 	If $iErr == 0 Then Return Chr(Execute($sChar))
-EndFunc
+EndFunc   ;==>_CommReadChar
 
 
 ;============================================================================
@@ -516,7 +517,7 @@ EndFunc
 
 ; Description:    Sends the byte value of $byte. $byte must be in range 0 to 255
 ; Parameters:     $byte the byte to send.
-;                 $iWaitComplete - integer: if 0 then functions returns without 
+;                 $iWaitComplete - integer: if 0 then functions returns without
 ;                                  waiting for byte to be sent
 ;                                  If <> 0 then waits till byte sent.
 ; Returns:  on success returns 1
@@ -524,10 +525,10 @@ EndFunc
 ;
 ;;NB could hang if byte cannot be sent and $iWaitComplete <> 0
 ;===============================================================================
-Func _CommSendByte($byte,$iWaitComplete=0)
+Func _CommSendByte($byte, $iWaitComplete = 0)
 	Local $vDllAns
 
-	$vDllAns = DllCall($hDll,'int','SendByte','int',$byte,'int',$iWaitComplete)
+	$vDllAns = DllCall($hDll, 'int', 'SendByte', 'int', $byte, 'int', $iWaitComplete)
 	If @error <> 0 Then
 		SetError(1)
 		Return -1
@@ -535,7 +536,7 @@ Func _CommSendByte($byte,$iWaitComplete=0)
 		Return $vDllAns[0]
 	EndIf
 	
-EndFunc
+EndFunc   ;==>_CommSendByte
 
 
 ;===============================================================================
@@ -543,7 +544,7 @@ EndFunc
 
 ; Description:    Sends the bytes from address $pAddress
 ; Parameters:     $iNum the number of bytes to send.
-;                 $iWaitComplete - integer: if 0 then functions returns without 
+;                 $iWaitComplete - integer: if 0 then functions returns without
 ;                                  waiting for bytes to be sent
 ;                                 if <> 0 then waits untill all bytes are sent.
 ; Returns:  on success returns 1
@@ -553,16 +554,16 @@ EndFunc
 ;    could lose data if you send more bytes than the size of the outbuffer.
 ;    the output buffer size is 2048
 ;===============================================================================
-Func _CommSendByteArray($pAddr,$iNum,$iWait)
-  $vDllAns = DllCall($hDll,'int','SendByteArray','ptr',$pAddr,'int',$iNum,'int',$iWait)
-	If @error <> 0 Or  $vDllAns[0] = -1 Then
+Func _CommSendByteArray($pAddr, $iNum, $iWait)
+	Local $vDllAns = DllCall($hDll, 'int', 'SendByteArray', 'ptr', $pAddr, 'int', $iNum, 'int', $iWait)
+	If @error <> 0 Or $vDllAns[0] = -1 Then
 		SetError(1)
 		Return -1
 	Else
 		Return $vDllAns[0]
-	EndIf	
+	EndIf
 	
-EndFunc
+EndFunc   ;==>_CommSendByteArray
 
 
 
@@ -571,7 +572,7 @@ EndFunc
 ;
 ; Description:    Reads bytes and writes them to memory starting at address $pAddress
 ; Parameters:     $iNum the number of bytes to read.
-;                 $iWaitComplete - integer: if 0 and then the functions returns 
+;                 $iWaitComplete - integer: if 0 and then the functions returns
 ;                                   with the available bytes up to $iNum.
 ;                                  if 1 then waits untill the $iNum bytes received.
 ; Returns:  on success returns the Number of bytes read.
@@ -580,18 +581,18 @@ EndFunc
 ;;NB could hang if bytes are not received and $iWaitComplete <> 0
 ;    the input buffer size is 4096
 ;====================================================================================
-Func _CommReadByteArray($pAddr,$iNum,$iWait)
-  $vDllAns = DllCall($hDll,'int','ReadByteArray','ptr',$pAddr,'int',$iNum,'int',$iWait)
-	If @error <> 0 Or  $vDllAns[0] = -1 Then
+Func _CommReadByteArray($pAddr, $iNum, $iWait)
+	Local $vDllAns = DllCall($hDll, 'int', 'ReadByteArray', 'ptr', $pAddr, 'int', $iNum, 'int', $iWait)
+	If @error <> 0 Or $vDllAns[0] = -1 Then
 		SetError(1)
 		Return -1
 	Else
 		Return $vDllAns[0]
-	EndIf	
+	EndIf
 	
 	
 	
-EndFunc
+EndFunc   ;==>_CommReadByteArray
 
 
 
@@ -607,20 +608,20 @@ EndFunc
 ;===============================================================================
 Func _CommClearOutputBuffer()
 	
-	Local $vDllAns = DllCall($hDll,'int','ClearOutputBuffer')
+	Local $vDllAns = DllCall($hDll, 'int', 'ClearOutputBuffer')
 	
-EndFunc
+EndFunc   ;==>_CommClearOutputBuffer
 
 Func _CommClearInputBuffer()
-	$sMGBuffer = ''
-	Local $vDllAns = DllCall($hDll,'int','ClearInputBuffer')
+	Local $sMGBuffer = ''
+	Local $vDllAns = DllCall($hDll, 'int', 'ClearInputBuffer')
 	If @error <> 0 Then
 		Return -1
 	Else
 		Return 1
 	EndIf
 	
-EndFunc
+EndFunc   ;==>_CommClearInputBuffer
 
 
 ;===============================================================================
@@ -635,10 +636,10 @@ EndFunc
 Func _CommClosePort()
 	;_CommClearOutputBuffer()
 	;_CommClearInputBuffer()
-	DllCall($hDll,'int','CloseDown')
+	DllCall($hDll, 'int', 'CloseDown')
 	DllClose($hDll)
 	$fPortOpen = False
-EndFunc
+EndFunc   ;==>_CommClosePort
 
 
 
@@ -661,7 +662,7 @@ EndFunc
 
 ; Notes : Not tested!
 ;================================================================================================
-Func _CommSendBreak($iDowTime,$iUpTime);requires commg.dll v2.0 or later
+Func _CommSendBreak($iDowTime, $iUpTime);requires commg.dll v2.0 or later
 	Local $vDllAns
 	If $iDowTime = 0 Or $iUpTime = 0 Then
 		SetError(1)
@@ -672,7 +673,7 @@ Func _CommSendBreak($iDowTime,$iUpTime);requires commg.dll v2.0 or later
 		SetError(1)
 		Return 0
 	EndIf
-	$vDllAns = DllCall($hDll,'int','SendBreak','int',$iDowTime,'int',$iUpTime)
+	$vDllAns = DllCall($hDll, 'int', 'SendBreak', 'int', $iDowTime, 'int', $iUpTime)
 	If @error <> 0 Then
 		SetError(@error + 1)
 		Return 0
@@ -681,5 +682,4 @@ Func _CommSendBreak($iDowTime,$iUpTime);requires commg.dll v2.0 or later
 		Return 1;success
 	EndIf
 	
-EndFunc
-
+EndFunc   ;==>_CommSendBreak

@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Access Edition - Alpha 4'
-$last_modified = '08/10/2008'
+$version = ' - Access Edition - Alpha 5'
+$last_modified = '08/17/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -228,7 +228,7 @@ Dim $GUI_SpeakSignal, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPerce
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadNs
 
 Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1
-Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
+Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
@@ -252,9 +252,6 @@ Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
 Dim $SplitPercent = IniRead($settings, 'Vistumbler', 'SplitPercent', '0.2')
 Dim $SplitHeightPercent = IniRead($settings, 'Vistumbler', 'SplitHeightPercent', '0.65')
-Dim $ComPort = IniRead($settings, 'Vistumbler', 'ComPort', 8)
-Dim $BAUD = IniRead($settings, 'Vistumbler', 'Baud', 4800)
-Dim $GpsTimeout = IniRead($settings, 'Vistumbler', 'GpsTimeout', 30000)
 Dim $RefreshLoopTime = IniRead($settings, 'Vistumbler', 'Sleeptime', 1000)
 Dim $SortTime = IniRead($settings, 'Vistumbler', 'AutoSortTime', 60)
 Dim $AutoSort = IniRead($settings, 'Vistumbler', 'AutoSort', 0)
@@ -292,6 +289,13 @@ Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 0)
 
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
+
+Dim $ComPort = IniRead($settings, 'GpsSettings', 'ComPort', '4')
+Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
+Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
+Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
+Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
+Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 
 Dim $AutoKML_Alt = IniRead($settings, 'AutoKML', 'AutoKML_Alt', '4000')
 Dim $AutoKML_AltMode = IniRead($settings, 'AutoKML', 'AutoKML_AltMode', 'clampToGround')
@@ -577,6 +581,11 @@ Dim $Text_SpeakUseSapi = IniRead($settings, 'GuiText', 'SpeakUseSapi', 'Use Micr
 Dim $Text_SpeakSayPercent = IniRead($settings, 'GuiText', 'SpeakSayPercent', 'Say "Percent" after signal')
 Dim $Text_GpsTrackTime = IniRead($settings, 'GuiText', 'GpsTrackTime', 'Track Refresh Time')
 Dim $Text_SaveAllGpsData = IniRead($settings, 'GuiText', 'SaveAllGpsData', 'Save GPS data when no APs are active')
+Dim $Text_None = IniRead($settings, 'GuiText', 'None', 'None')
+Dim $Text_Even = IniRead($settings, 'GuiText', 'Even', 'Even')
+Dim $Text_Odd = IniRead($settings, 'GuiText', 'Odd', 'Odd')
+Dim $Text_Mark = IniRead($settings, 'GuiText', 'Mark', 'Mark')
+Dim $Text_Space = IniRead($settings, 'GuiText', 'Space', 'Space')
 
 ;Create-Array-Of-Manufactures----------------------------
 _ReadIniSectionToDB($manufini, "MANUFACURERS", $VistumblerDB, $DB_OBJ, "Manufacturers")
@@ -1503,7 +1512,7 @@ Func _GpsToggle();Turns GPS on or off
 	If $UseGPS = 1 Then
 		$TurnOffGPS = 1
 	Else
-		$openport = _OpenComPort($ComPort, $BAUD);Open The GPS COM port
+		$openport = _OpenComPort($ComPort, $BAUD, $PARITY, $DATABIT, $STOPBIT);Open The GPS COM port
 		If $openport = 1 Then
 			$UseGPS = 1
 			;GUICtrlSetState($SetGPS, $GUI_CHECKED)
@@ -1711,12 +1720,12 @@ EndFunc   ;==>_ClearAll
 ;                                                       GPS FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $s1 = 'N', $s2 = '8', $s3 = '1');Open specified COM port
+Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = '8', $sStopBit = '1', $sFlow = '0');Open specified COM port
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenComPort()') ;#Debug Display
 	If $UseNetcomm = 1 Then
 		$return = 0
 		$ComError = 0
-		$CommSettings = $sBAUD & ',' & $s1 & ',' & $s2 & ',' & $s3
+		$CommSettings = $sBAUD & ',' & $sPARITY & ',' & $sDataBit & ',' & $sStopBit
 		;	Create NETComm.ocx object
 		$NetComm = ObjCreate("NETCommOCX.NETComm")
 		If IsObj($NetComm) = 0 Then ;If $NetComm is not an object then netcomm ocx is probrably not installed
@@ -1734,8 +1743,18 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $s1 = 'N', $s2 = '8', $s3 = 
 		EndIf
 		Return ($return)
 	Else
-		Dim $iBits = 8, $iPar = 0, $iStop = 1, $iFlow = 0
-		$OpenedPort = _CommSetPort($CommPort, $sErr, $sBAUD, $iBits, $iPar, $iStop, $iFlow)
+		If $sPARITY = 'O' Then ;Odd
+			$iPar = '1'
+		ElseIf $sPARITY = 'E' Then ;Even
+			$iPar = '2'
+		ElseIf $sPARITY = 'M' Then ;Mark
+			$iPar = '3'
+		ElseIf $sPARITY = 'S' Then ;Space
+			$iPar = '4'
+		Else
+			$iPar = '0';None
+		EndIf
+		$OpenedPort = _CommSetPort($CommPort, $sErr, $sBAUD, $sDataBit, $iPar, $sStopBit, $sFlow)
 		If $OpenedPort = 1 Then
 			Return (1)
 		Else
@@ -3688,8 +3707,6 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
 	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
 	IniWrite($settings, "Vistumbler", "SplitHeightPercent", $SplitHeightPercent)
-	IniWrite($settings, "Vistumbler", "ComPort", $ComPort)
-	IniWrite($settings, "Vistumbler", "Baud", $BAUD)
 	IniWrite($settings, "Vistumbler", "Sleeptime", $RefreshLoopTime)
 	IniWrite($settings, "Vistumbler", "AutoSortTime", $SortTime)
 	IniWrite($settings, "Vistumbler", "AutoSort", $AutoSort)
@@ -3743,6 +3760,13 @@ Func _WriteINI()
 	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
 	IniWrite($settings, 'WindowPositions', 'CompassPosition', $CompassPosition)
 	IniWrite($settings, 'WindowPositions', 'GpsDetailsPosition', $GpsDetailsPosition)
+	
+	IniWrite($settings, 'GpsSettings', 'ComPort', $ComPort)
+	IniWrite($settings, 'GpsSettings', 'Baud', $BAUD)
+	IniWrite($settings, 'GpsSettings', 'Parity', $PARITY)
+	IniWrite($settings, 'GpsSettings', 'DataBit', $DATABIT)
+	IniWrite($settings, 'GpsSettings', 'StopBit', $STOPBIT)
+	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
 
 	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
 	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
@@ -4003,6 +4027,11 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'SpeakSayPercent', $Text_SpeakSayPercent)
 	IniWrite($settings, 'GuiText', 'GpsTrackTime', $Text_GpsTrackTime)
 	IniWrite($settings, 'GuiText', 'SaveAllGpsData', $Text_SaveAllGpsData)
+	IniWrite($settings, 'GuiText', 'None', $Text_None)
+	IniWrite($settings, 'GuiText', 'Even', $Text_Even)
+	IniWrite($settings, 'GuiText', 'Odd', $Text_Odd)
+	IniWrite($settings, 'GuiText', 'Mark', $Text_Mark)
+	IniWrite($settings, 'GuiText', 'Space', $Text_Space)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4735,12 +4764,27 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_Baud = GUICtrlCreateCombo("4800", 44, 250, 275, 25)
 	GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
-	;$FlowLabel = GUICtrlCreateLabel("Flow Control", 364, 180, 275, 15)
-	;$Combo3 = GUICtrlCreateCombo("Combo1", 364, 195, 275, 25)
-	;$ParityLabel = GUICtrlCreateLabel("Parity", 364, 235, 275, 15)
-	;$ParityCombo = GUICtrlCreateCombo("ParityCombo", 364, 250, 275, 25)
-	;$Label3 = GUICtrlCreateLabel("Stop Bits", 44, 290, 275, 15)
-	;$Combo2 = GUICtrlCreateCombo("Combo1", 41, 305, 275, 25)
+	$StopBitLabel = GUICtrlCreateLabel("Stop Bit", 44, 290, 275, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$GUI_StopBit = GUICtrlCreateCombo("1", 44, 305, 275, 25)
+	GUICtrlSetData(-1, "1.5|2", $STOPBIT)
+	If $PARITY = 'E' Then
+		$l_PARITY = $Text_Even
+	ElseIf $PARITY = 'M' Then
+		$l_PARITY = $Text_Mark
+	ElseIf $PARITY = 'O' Then
+		$l_PARITY = $Text_Odd
+	ElseIf $PARITY = 'S' Then
+		$l_PARITY = $Text_Space
+	Else
+		$l_PARITY = $Text_None
+	EndIf
+	$ParityLabel = GUICtrlCreateLabel("Parity", 364, 180, 275, 15)
+	$GUI_Parity = GUICtrlCreateCombo($Text_None, 364, 195, 275, 25)
+	GUICtrlSetData(-1, $Text_Even & '|' & $Text_Mark & '|' & $Text_Odd & '|' & $Text_Space, $l_PARITY)
+	$DataBitLabel = GUICtrlCreateLabel("Data Bit", 364, 235, 275, 15)
+	$GUI_DataBit = GUICtrlCreateCombo("4", 364, 250, 275, 25)
+	GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
 	$GroupGpsFormat = GUICtrlCreateGroup($Text_GPSFormat, 24, 360, 633, 50)
 	GUICtrlSetColor(-1, $TextColor)
 	If $GPSformat = 1 Then $DefForm = "dd.dddd"
@@ -5285,6 +5329,19 @@ Func _ApplySettingsGUI();Applys settings
 		If GUICtrlRead($GUI_Comport) <> $ComPort And $UseGPS = 1 Then _GpsToggle() ;If the port has changed and gps is turned on then turn off the gps (it will be re-enabled with the new port)
 		$ComPort = GUICtrlRead($GUI_Comport)
 		$BAUD = GUICtrlRead($GUI_Baud)
+		$STOPBIT = GUICtrlRead($GUI_StopBit)
+		$DATABIT = GUICtrlRead($GUI_DataBit)
+		If GUICtrlRead($GUI_Parity) = $Text_Even Then
+			$PARITY = 'E'
+		ElseIf GUICtrlRead($GUI_Parity) = $Text_Mark Then
+			$PARITY = 'M'
+		ElseIf GUICtrlRead($GUI_Parity) = $Text_Odd Then
+			$PARITY = 'O'
+		ElseIf GUICtrlRead($GUI_Parity) = $Text_Space Then
+			$PARITY = 'S'
+		Else ;GUICtrlRead($GUI_Parity) = 'None' Then
+			$PARITY = 'N'
+		EndIf
 		If GUICtrlRead($GUI_Format) = "dd.dddd" Then $GPSformat = 1
 		If GUICtrlRead($GUI_Format) = "dd mm ss" Then $GPSformat = 2
 		If GUICtrlRead($GUI_Format) = "ddmm.mmmm" Then $GPSformat = 3
@@ -5488,6 +5545,11 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SpeakSayPercent = IniRead($newlanguagefile, 'GuiText', 'SpeakSayPercent', 'Say "Percent" after signal')
 		$Text_GpsTrackTime = IniRead($newlanguagefile, 'GuiText', 'GpsTrackTime', 'Track Refresh Time')
 		$Text_SaveAllGpsData = IniRead($newlanguagefile, 'GuiText', 'SaveAllGpsData', 'Save GPS data when no APs are active')
+		$Text_None = IniRead($newlanguagefile, 'GuiText', 'None', 'None')
+		$Text_Even = IniRead($newlanguagefile, 'GuiText', 'Even', 'Even')
+		$Text_Odd = IniRead($newlanguagefile, 'GuiText', 'Odd', 'Odd')
+		$Text_Mark = IniRead($newlanguagefile, 'GuiText', 'Mark', 'Mark')
+		$Text_Space = IniRead($newlanguagefile, 'GuiText', 'Space', 'Space')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
