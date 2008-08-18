@@ -1,9 +1,14 @@
 This is a converter for the Vistumbler Summery Text file to the VS1 file.
 
 I wrote this script in windows, but it can run on any OS that you have PHP on.
+To run this scrip stand-alone all you need to do is download the PHP package from [url]http://us2.php.net/get/php-5.2.6-Win32.zip/from/a/mirror[/url]
 
+Browse to Y:\[Path to PHP]\bin\ 
+               -  Where Y is the drive you have PHP installed in and [Path to PHP] is where PHP is stored on the drive.
+Type "php X:\[Path to converter]\convert_vs1.php" 
+               -  Where X is the drive you have the converter stored and [Path to converter] is the folder that the converter lives in.
 
-The converter_vs1.php file searches the "text\" folder for vistumbler Text Summery files to convert
+The convert_vs1.php file searches the "text\" folder for vistumbler Text Summery files to convert
 It is self aware of where it is living so there is no need to configure it, unless you want it to 
 look in another Directory. 
 
@@ -67,7 +72,7 @@ This is the function that does all the work
 
 $source : the dir and file that you are converting
 
-"file"  : output the conversion to a VS1 file (I am working on having a database output too, via MySQL)
+"file"  : output the conversion to a VS1 file, [Supports "file", "File", or "FILE"] (I am working on having a database output too, via MySQL)
 
 
 

@@ -1,7 +1,13 @@
 <?php
-$lastedit="8.8.2008";
+#License Information------------------------------------
+#Copyright (C) 2008 Phillip Ferland
+#This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
+#This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#--------------------------------------------------------
+$lastedit="8.18.2008";
 $start="6.21.2008";
-$ver=array("Txt2VS1"=>"1.0", "chkgps"=>"1.0");
+$ver=array("convert_vs1"=>"1.0", "check_gps_array"=>"1.0");
 $debug = 0;
 
 function check_gps_array($gpsarray, $test)
@@ -129,7 +135,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 	// Create the Security Type number for the respective Access point
 	if ($wifi[4]=="Open"&&$wifi[5]=="None"){$sectype="1";}
 	if ($wifi[4]=="Open"&&$wifi[5]=="WEP"){$sectype="2";}
-	if ($wifi[4]=="WPA-Personal"){$sectype="3";}
+	if ($wifi[4]=="WPA-Personal" or $wifi[4] =="WPA2-Personal"){$sectype="3";}
 
 	if ($GLOBALS["debug"] == 1 )
 	{
