@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Access Edition - Alpha 5'
-$last_modified = '08/17/2008'
+$version = ' - Access Edition - Alpha 5.1'
+$last_modified = '08/24/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -186,7 +186,6 @@ Dim $NewApFound = 0
 Dim $ComError = 0
 Dim $newdata = 0
 Dim $o_old = 0
-Dim $RefreshNetworks = 0
 Dim $Loading = 0
 Dim $disconnected_time = -1
 Dim $SortColumn = -1
@@ -213,6 +212,7 @@ Dim $AutoKmlActiveProcess
 Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
 Dim $AutoKmlProcess
+Dim $RefreshWindowOpened
 
 Dim $TreeviewAPs_left, $TreeviewAPs_width, $TreeviewAPs_top, $TreeviewAPs_height
 Dim $ListviewAPs_left, $ListviewAPs_width, $ListviewAPs_top, $ListviewAPs_height
@@ -235,7 +235,7 @@ Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $
 Dim $LabAuth, $LabDate, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
-Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
+Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_CTWN, $GUI_RefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal
@@ -267,6 +267,7 @@ Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
 Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4F2")
+Dim $RefreshNetworks = IniRead($settings, 'Vistumbler', 'RefreshNetworks', 0)
 Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'RefreshTime', 2000)
 Dim $MapOpen = IniRead($settings, 'Vistumbler', 'MapOpen', 1)
 Dim $MapWEP = IniRead($settings, 'Vistumbler', 'MapWEP', 1)
@@ -482,7 +483,7 @@ Dim $Text_SpeedInKmh = IniRead($settings, 'GuiText', 'SpeedInKmh', 'Speed(km/h)'
 Dim $Text_TrackAngle = IniRead($settings, 'GuiText', 'TrackAngle', 'Track Angle')
 Dim $Text_Close = IniRead($settings, 'GuiText', 'Close', 'Close')
 Dim $Text_ConnectToWindowName = IniRead($settings, 'GuiText', 'ConnectToWindowName', 'Connect to a network')
-Dim $Text_RefreshNetworks = IniRead($settings, 'GuiText', 'RefreshingNetworks', 'Refreshing Networks')
+Dim $Text_RefreshNetworks = IniRead($settings, 'GuiText', 'RefreshingNetworks', 'Auto Refresh Networks')
 Dim $Text_Start = IniRead($settings, 'GuiText', 'Start', 'Start')
 Dim $Text_Stop = IniRead($settings, 'GuiText', 'Stop', 'Stop')
 Dim $Text_ConnectToWindowTitle = IniRead($settings, 'GuiText', 'ConnectToWindowTitle', '"Connect to" window title:')
@@ -642,6 +643,8 @@ $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 ;$SelectAll = GUICtrlCreateMenuItem("Select All", $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
+$RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
+If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
 $AutoSaveGUI = GUICtrlCreateMenuItem($Text_AutoSave, $Options)
 If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
 $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $Options)
@@ -681,7 +684,6 @@ $ExportToKML = GUICtrlCreateMenuItem($Text_ExportToKML, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
 
 $Extra = GUICtrlCreateMenu($Text_Extra)
-$RefreshMenuButton = GUICtrlCreateMenuItem($Text_Start & ' ' & $Text_RefreshNetworks, $Extra)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
 $GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $Extra)
 $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $Extra)
@@ -747,9 +749,10 @@ GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
 ;Edit Menu
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 ;Optons Menu
+GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
+GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
 GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
-GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
@@ -774,7 +777,6 @@ GUICtrlSetOnEvent($SetMacLabel, '_SettingsGUI_Lab')
 GUICtrlSetOnEvent($SetColumnWidths, '_SettingsGUI_Col')
 GUICtrlSetOnEvent($SetSearchWords, '_SettingsGUI_SW')
 ;Extra Menu
-GUICtrlSetOnEvent($RefreshMenuButton, '_RefreshNetworksGUI')
 GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
 GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
@@ -1489,6 +1491,18 @@ Func ScanToggle();Turns AP scanning on or off
 		$save_timer = TimerInit()
 	EndIf
 EndFunc   ;==>ScanToggle
+
+Func _AutoRefreshToggle()
+	If $RefreshNetworks = 1 Then
+		GUICtrlSetState($RefreshMenuButton, $GUI_UNCHECKED)
+		$RefreshNetworks = 0
+		WinClose($Text_ConnectToWindowName)
+	Else
+		GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
+		$RefreshNetworks = 1
+		$RefreshTimer = TimerInit()
+	EndIf
+EndFunc   ;==>_AutoRefreshToggle
 
 Func _AutoKmlToggle()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoKmlToggle()') ;#Debug Display
@@ -2802,68 +2816,26 @@ EndFunc   ;==>_AddToYourWDB
 ;                                                       REFRESH NETWORK FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _RefreshNetworksGUI(); GUI to turn GPS refresh on or off and set settings
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RefreshNetworksGUI()') ;#Debug Display
-	Opt("GUIOnEventMode", 0)
-
-	If $RefreshNetworks = 0 Then
-		$StartStop = $Text_Start
-		$RN_Title = $Text_Start & ' ' & $Text_RefreshNetworks
-	Else
-		$StartStop = $Text_Stop
-		$RN_Title = $Text_Stop & ' ' & $Text_RefreshNetworks
-	EndIf
-	
-	$RefreshGUI = GUICreate($RN_Title, 354, 136, -1, -1)
-	GUISetBkColor($BackgroundColor)
-	
-	$RL1 = GUICtrlCreateLabel($Text_ConnectToWindowTitle, 20, 24, 130, 17)
-	$RL2 = GUICtrlCreateLabel($Text_RefreshTime, 20, 56, 130, 17)
-	
-	$CTWN = GUICtrlCreateInput($Text_ConnectToWindowName, 160, 24, 177, 21)
-	
-	$RTime = GUICtrlCreateInput($RefreshTime, 160, 56, 177, 21)
-	$StartRefresh = GUICtrlCreateButton($StartStop, 80, 96, 81, 25, 0)
-	$CancelRefresh = GUICtrlCreateButton($Text_Cancel, 188, 94, 81, 25, 0)
-	GUISetState(@SW_SHOW)
-
-	While 1
-		$nMsg = GUIGetMsg()
-		Switch $nMsg
-			Case $GUI_EVENT_CLOSE
-				ExitLoop
-			Case $CancelRefresh
-				ExitLoop
-			Case $StartRefresh
-				If $RefreshNetworks = 0 Then
-					$RefreshNetworks = 1
-					GUICtrlSetData($RefreshMenuButton, $Text_Stop & ' ' & $Text_RefreshNetworks)
-					$RefreshTimer = TimerInit()
-					$RefreshTime = GUICtrlRead($RTime)
-					$Text_ConnectToWindowName = GUICtrlRead($CTWN)
-					ExitLoop
-				Else
-					$RefreshNetworks = 0
-					GUICtrlSetData($RefreshMenuButton, $Text_Start & ' ' & $Text_RefreshNetworks)
-					WinClose($Text_ConnectToWindowName)
-					ExitLoop
-				EndIf
-		EndSwitch
-	WEnd
-	Opt("GUIOnEventMode", 1)
-	GUIDelete($RefreshGUI)
-EndFunc   ;==>_RefreshNetworksGUI
-
 Func _RefreshNetworks();Automates clicking the refresh button on the windows 'connect to' window
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RefreshNetworks()') ;#Debug Display
-	;$WinActive =
+	If WinActive($Vistumbler) Then
+		$ActivateVistumbler = 1
+	Else
+		$ActivateVistumbler = 0
+	EndIf
 	If $Scan = 1 And $RefreshNetworks = 1 Then
 		If TimerDiff($RefreshTimer) >= $RefreshTime Then
-			If WinExists($Text_ConnectToWindowName) = 0 Then Run("RunDll32.exe van.dll,RunVAN")
+			If WinExists($Text_ConnectToWindowName) = 0 Then
+				Run("RunDll32.exe van.dll,RunVAN")
+				$RefreshWindowOpened = 1
+			EndIf
 			ControlClick($Text_ConnectToWindowName, "", $ConnectToButton)
 			$RefreshTimer = TimerInit()
 		EndIf
-		If WinActive($Text_ConnectToWindowName) = 1 Then WinActivate($title)
+		If WinActive($Text_ConnectToWindowName) And BitOR($ActivateVistumbler, $RefreshWindowOpened) Then
+			WinActivate($Vistumbler)
+			$RefreshWindowOpened = 0
+		EndIf
 	EndIf
 EndFunc   ;==>_RefreshNetworks
 
@@ -3721,6 +3693,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "ControlBackgroundColor", $ControlBackgroundColor)
 	IniWrite($settings, "Vistumbler", "TextColor", $TextColor)
 	IniWrite($settings, "Vistumbler", "Language", $DefaultLanguage)
+	IniWrite($settings, "Vistumbler", "RefreshNetworks", $RefreshNetworks)
 	IniWrite($settings, "Vistumbler", "RefreshTime", $RefreshTime)
 	IniWrite($settings, "Vistumbler", "ConnectToButton", $ConnectToButton)
 	IniWrite($settings, "Vistumbler", 'MapOpen', $MapOpen)
@@ -5100,10 +5073,20 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetData(-1, $Text_Decending, $SortDirectionDefault)
 	GUICtrlCreateLabel($Text_AutoSortEvery, 30, 290, 625, 15)
 	GUICtrlSetColor(-1, $TextColor)
-	$GUI_SortTime = GUICtrlCreateInput($SortTime, 30, 305, 115, 21)
-	GUICtrlCreateLabel($Text_Seconds, 150, 315, 505, 17)
+	$GUI_SortTime = GUICtrlCreateInput($SortTime, 30, 305, 115, 20)
+	GUICtrlCreateLabel($Text_Seconds, 150, 310, 505, 15)
 	GUICtrlSetColor(-1, $TextColor)
-	
+	GUICtrlCreateGroup($Text_RefreshNetworks, 16, 340, 650, 125);Auto Refresh Group
+	$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 360, 625, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
+	GUICtrlCreateLabel($Text_ConnectToWindowTitle, 30, 380, 615, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$GUI_CTWN = GUICtrlCreateInput($Text_ConnectToWindowName, 30, 395, 615, 20)
+	GUICtrlCreateLabel($Text_RefreshTime, 30, 420, 615, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 435, 115, 20)
+	GUICtrlCreateLabel($Text_Seconds, 150, 440, 505, 15)
 	
 	;AutoKML Tab
 	$Tab_AutoKML = GUICtrlCreateTabItem($Text_AutoKml & ' / ' & $Text_SpeakSignal)
@@ -5122,23 +5105,16 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlCreateLabel($Text_ActiveRefreshTime & '(s)', 30, 140, 115, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AutoKmlActiveTime = GUICtrlCreateInput($AutoKmlActiveTime, 30, 155, 115, 20)
-	;GUICtrlCreateLabel($Text_Seconds, 150, 160, 50, 15)
-	;GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($Text_DeadRefreshTime & '(s)', 155, 140, 115, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AutoKmlDeadTime = GUICtrlCreateInput($AutoKmlDeadTime, 155, 155, 115, 20)
-	;GUICtrlCreateLabel($Text_Seconds, 315, 160, 50, 15)
-	;GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($Text_GpsRefrshTime & '(s)', 280, 140, 115, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AutoKmlGpsTime = GUICtrlCreateInput($AutoKmlGpsTime, 280, 155, 115, 20)
-	;GUICtrlCreateLabel($Text_Seconds, 480, 160, 50, 15)
-	;GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($Text_GpsTrackTime & '(s)', 405, 140, 115, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AutoKmlTrackTime = GUICtrlCreateInput($AutoKmlTrackTime, 405, 155, 115, 20)
-	;GUICtrlCreateLabel($Text_Seconds, 480, 160, 50, 15)
-	;GUICtrlSetColor(-1, $TextColor)
+	
 	
 	GUICtrlCreateGroup($Text_FlyToSettings, 30, 180, 620, 90)
 	$GUI_KmlFlyTo = GUICtrlCreateCheckbox($Text_FlyToCurrentGps, 45, 200, 570, 15)
@@ -5706,6 +5682,11 @@ Func _ApplySettingsGUI();Applys settings
 		$SortTime = GUICtrlRead($GUI_SortTime)
 		If GUICtrlRead($GUI_AutoSort) = 4 And $AutoSort = 1 Then _AutoSortToggle()
 		If GUICtrlRead($GUI_AutoSort) = 1 And $AutoSort = 0 Then _AutoSortToggle()
+		;Auto Refresh
+		If GUICtrlRead($GUI_RefreshNetworks) = 4 And $RefreshNetworks = 1 Then _AutoRefreshToggle()
+		If GUICtrlRead($GUI_RefreshNetworks) = 1 And $RefreshNetworks = 0 Then _AutoRefreshToggle()
+		$Text_ConnectToWindowName = GUICtrlRead($GUI_CTWN)
+		$RefreshTime = (GUICtrlRead($GUI_RefreshTime) * 1000)
 	EndIf
 	If $Apply_AutoKML = 1 Then
 		If GUICtrlRead($AutoSaveKML) = 4 And $AutoKML = 1 Then _AutoKmlToggle()
