@@ -865,6 +865,7 @@ While 1
 			Else
 				$UpdatedAPs = 1 ;Set Update flag so APs do not get scanned again on this loop
 			EndIf
+			If $ScanResults > 0 Then $UpdateAutoSave = 1
 			;Refresh Networks If Enabled
 			If $RefreshNetworks = 1 Then _RefreshNetworks()
 		EndIf
@@ -1373,10 +1374,20 @@ Func _ClearAllAp()
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "DELETE * FROM Temp"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM TreeviewAUTH"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM TreeviewENCR"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM TreeviewCHAN"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM TreeviewNETTYPE"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM TreeviewSSID"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 
 	GUISwitch($DataChild)
 	_GUICtrlListView_Destroy($ListviewAPs)
-	$ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 	GUISwitch($Vistumbler)
 	_SetControlSizes()
@@ -1446,7 +1457,7 @@ Func _ExitVistumbler()
 	If $newdata = 1 Then ;If Access point data has changed since load/last save, ask user if they want to save the data
 		$savemsg = MsgBox(3, $Text_Save, $Text_SaveQuestion)
 		If $savemsg <> 2 Then
-			If $savemsg = 6 Then _ExportData()
+			If $savemsg = 6 Then _ExportDetailedData()
 			_Exit()
 		EndIf
 	Else
@@ -2427,7 +2438,7 @@ EndFunc   ;==>_SetControlSizes
 Func _TreeviewListviewResize()
 	$cursorInfo = GUIGetCursorInfo($Vistumbler)
 	If $Graph = 0 Then
-		If $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 5 And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 5 And $cursorInfo[1] > ($TreeviewAPs_top + 60) And $cursorInfo[1] < ($TreeviewAPs_top + 60) + $TreeviewAPs_height And $MoveMode = False Then
+		If WinActive($Vistumbler) And $cursorInfo[0] > $TreeviewAPs_left + $TreeviewAPs_width - 5 And $cursorInfo[0] < $TreeviewAPs_left + $TreeviewAPs_width + 5 And $cursorInfo[1] > ($TreeviewAPs_top + 60) And $cursorInfo[1] < ($TreeviewAPs_top + 60) + $TreeviewAPs_height And $MoveMode = False Then
 			$MoveArea = True
 			GUISetCursor(13, 1);  13 = SIZEWE
 		ElseIf $MoveArea = True Then
@@ -2451,7 +2462,7 @@ Func _TreeviewListviewResize()
 			GUISetCursor(2, 1);  2 = ARROW
 		EndIf
 	Else
-		If $cursorInfo[1] > ($Graphic_top + 60) + $Graphic_height - 5 And $cursorInfo[1] < ($Graphic_top + 60) + $Graphic_height + 5 And $MoveMode = False Then
+		If WinActive($Vistumbler) And $cursorInfo[1] > ($Graphic_top + 60) + $Graphic_height - 5 And $cursorInfo[1] < ($Graphic_top + 60) + $Graphic_height + 5 And $MoveMode = False Then
 			$MoveArea = True
 			GUISetCursor(11, 1);  11 = SIZENS
 		ElseIf $MoveArea = True Then
@@ -2849,11 +2860,12 @@ Func _OpenSaveFolder();Opens save folder in explorer
 EndFunc   ;==>_OpenSaveFolder
 
 Func _AutoSave();Autosaves data to a file name based on current time
+	ConsoleWrite("3" & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSave()') ;#Debug Display
 	DirCreate($SaveDirAuto)
 	FileDelete($AutoSaveFile)
-	$AutoSaveFile = $SaveDirAuto & 'AutoSave_' & @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC & '.txt'
-	_ExportToTXT($AutoSaveFile)
+	$AutoSaveFile = $SaveDirAuto & 'AutoSave_' & @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC & '.VS1'
+	_ExportDetailedTXT($AutoSaveFile)
 	$save_timer = TimerInit()
 EndFunc   ;==>_AutoSave
 
