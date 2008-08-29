@@ -4342,48 +4342,33 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 	$file &= '</Folder>' & @CRLF
 	
 	If $GpsTrack = 1 Then
-		$query = "SELECT Latitude, Longitude FROM GPS ORDER BY Date1, Time1"
+		$query = "SELECT Latitude, Longitude FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundGpsMatch = UBound($GpsMatchArray) - 1
 		;ConsoleWrite('fgm-->' & $FoundGpsMatch & @CRLF)
 		If $FoundGpsMatch <> 0 Then
+			
+			$file &= '<Folder>' & @CRLF _
+					 & '<name>GPS Track</name>' & @CRLF _
+					 & '<Placemark>' & @CRLF _
+					 & '<name>GPS Track</name>' & @CRLF _
+					 & '<styleUrl>#Location</styleUrl>' & @CRLF _
+					 & '<LineString>' & @CRLF _
+					 & '<extrude>1</extrude>' & @CRLF _
+					 & '<tessellate>1</tessellate>' & @CRLF _
+					 & '<coordinates>' & @CRLF
 			For $exp = 1 To $FoundGpsMatch
 				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1])
 				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2])
-				$TrackStart = 0
 				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
-					If $TrackStart = 0 Then
-						$FoundApWithGps = 1
-						$TrackStart = 1
-						$file &= '<Folder>' & @CRLF _
-								 & '<name>GPS Track</name>' & @CRLF _
-								 & '<Placemark>' & @CRLF _
-								 & '<name>GPS Track</name>' & @CRLF _
-								 & '<styleUrl>#Location</styleUrl>' & @CRLF _
-								 & '<LineString>' & @CRLF _
-								 & '<extrude>1</extrude>' & @CRLF _
-								 & '<tessellate>1</tessellate>' & @CRLF _
-								 & '<coordinates>' & @CRLF _
-								 & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0' & @CRLF
-
-					Else
-						$file &= StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0' & @CRLF
-					EndIf
-				Else
-					If $TrackStart = 1 Then
-						$file &= '</coordinates>' & @CRLF _
-								 & '</LineString>' & @CRLF _
-								 & '</Placemark>' & @CRLF _
-								 & '</Folder>' & @CRLF
-					EndIf
+					$FoundApWithGps = 1
+					$file &= StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0' & @CRLF
 				EndIf
 			Next
-			If $TrackStart = 1 Then
-				$file &= '</coordinates>' & @CRLF _
-						 & '</LineString>' & @CRLF _
-						 & '</Placemark>' & @CRLF _
-						 & '</Folder>' & @CRLF
-			EndIf
+			$file &= '</coordinates>' & @CRLF _
+					 & '</LineString>' & @CRLF _
+					 & '</Placemark>' & @CRLF _
+					 & '</Folder>' & @CRLF
 		EndIf
 	EndIf
 	$file &= '</Document>' & @CRLF _
