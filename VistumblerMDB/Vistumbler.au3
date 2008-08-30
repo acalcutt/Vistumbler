@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Access Edition - Alpha 5.1'
-$last_modified = '08/24/2008'
+$version = ' - Access Edition - Alpha 5.2'
+$last_modified = '08/30/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -240,6 +240,9 @@ Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_Refres
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal
 Dim $CWCB_Authentication, $CWIB_Authentication, $CWCB_Encryption, $CWIB_Encryption, $CWCB_NetType, $CWIB_NetType, $CWCB_Label, $CWIB_Label
+
+Dim $GUI_COPY, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
+
 ;Define Arrays
 Dim $Direction[23];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
 Dim $Direction2[3]
@@ -638,7 +641,7 @@ $Edit = GUICtrlCreateMenu($Text_Edit)
 $ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
 $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 ;$Cut = GUICtrlCreateMenuitem("Cut", $Edit)
-;$Copy = GUICtrlCreateMenuitem("Copy", $Edit)
+$Copy = GUICtrlCreateMenuItem("Copy", $Edit)
 ;$Delete = GUICtrlCreateMenuItem("Delete", $Edit)
 ;$SelectAll = GUICtrlCreateMenuItem("Select All", $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
@@ -748,6 +751,7 @@ GUICtrlSetOnEvent($ImportFromVSZ, '_ImportVSZ')
 GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
 ;Edit Menu
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
+GUICtrlSetOnEvent($Copy, '_CopyAP')
 ;Optons Menu
 GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
 GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
@@ -1206,15 +1210,16 @@ Func _UpdateList()
 			;Set APs Dead in AP table, Set New HistID
 			$HISTID += 1
 			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $Date & '|' & $time)
-			$query = "UPDATE AP SET Active = '0', LastHistID = '" & $HISTID & "' WHERE ApID = '" & $Found_APID & "'"
+			;$query = "UPDATE AP SET Active = '0', LastHistID = '" & $HISTID & "' WHERE ApID = '" & $Found_APID & "'"
+			$query = "UPDATE AP SET Active = '0' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		ElseIf $Found_Active = 0 Then
 			If $GraphDeadTime = 1 And $Scan = 1 Then
 				;Create New HistID, Update AP LastHistID
 				$HISTID += 1
 				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $Date & '|' & $time)
-				$query = "UPDATE AP SET LastHistID = '" & $HISTID & "' WHERE ApID = '" & $Found_APID & "'"
-				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				;$query = "UPDATE AP SET LastHistID = '" & $HISTID & "' WHERE ApID = '" & $Found_APID & "'"
+				;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			EndIf
 		EndIf
 	Next
@@ -1400,6 +1405,244 @@ Func _ClearAllAp()
 	$ClearAllAps = 0
 EndFunc   ;==>_ClearAllAp
 
+Func _CopyAP()
+	$CopySelected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	$query = "SELECT ApID FROM AP WHERE ListRow = '" & $CopySelected & "'"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	If $CopySelected <> -1 And $FoundApMatch <> 0 Then ;If a access point is selected in the listview, map its data
+		$CopyAPID = $ApMatchArray[1][1]
+		$GUI_COPY = GUICreate("Copy", 491, 249)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateGroup("Select what you want to copy", 8, 8, 473, 201)
+		$Copy_Line = GUICtrlCreateCheckbox($Column_Names_Line, 27, 29, 200, 15)
+		$Copy_BSSID = GUICtrlCreateCheckbox($Column_Names_BSSID, 27, 44, 200, 15)
+		$Copy_SSID = GUICtrlCreateCheckbox($Column_Names_SSID, 27, 59, 200, 15)
+		$Copy_CHAN = GUICtrlCreateCheckbox($Column_Names_Channel, 27, 75, 200, 15)
+		$Copy_AUTH = GUICtrlCreateCheckbox($Column_Names_Authentication, 27, 90, 200, 15)
+		$Copy_ENCR = GUICtrlCreateCheckbox($Column_Names_Encryption, 27, 105, 200, 15)
+		$Copy_NETTYPE = GUICtrlCreateCheckbox($Column_Names_NetworkType, 27, 120, 200, 15)
+		$Copy_RADTYPE = GUICtrlCreateCheckbox($Column_Names_RadioType, 27, 135, 200, 15)
+		$Copy_SIG = GUICtrlCreateCheckbox($Column_Names_Signal, 27, 151, 200, 15)
+		$Copy_LAB = GUICtrlCreateCheckbox($Column_Names_Label, 27, 166, 200, 15)
+		$Copy_MANU = GUICtrlCreateCheckbox($Column_Names_MANUF, 27, 181, 200, 15)
+		$Copy_LAT = GUICtrlCreateCheckbox($Column_Names_Latitude, 267, 29, 200, 15)
+		$Copy_LON = GUICtrlCreateCheckbox($Column_Names_Longitude, 267, 44, 200, 15)
+		$Copy_LATDMS = GUICtrlCreateCheckbox($Column_Names_LatitudeDMS, 267, 59, 200, 15)
+		$Copy_LONDMS = GUICtrlCreateCheckbox($Column_Names_LongitudeDMS, 267, 75, 200, 15)
+		$Copy_LATDMM = GUICtrlCreateCheckbox($Column_Names_LatitudeDMM, 267, 90, 200, 15)
+		$Copy_LONDMM = GUICtrlCreateCheckbox($Column_Names_LongitudeDMM, 267, 105, 200, 15)
+		$Copy_BTX = GUICtrlCreateCheckbox($Column_Names_BasicTransferRates, 267, 120, 200, 15)
+		$Copy_OTX = GUICtrlCreateCheckbox($Column_Names_OtherTransferRates, 267, 135, 200, 15)
+		$Copy_FirstActive = GUICtrlCreateCheckbox($Column_Names_FirstActive, 267, 151, 200, 15)
+		$Copy_LastActive = GUICtrlCreateCheckbox($Column_Names_LastActive, 267, 166, 200, 15)
+
+		$CopyOK = GUICtrlCreateButton($Text_Ok, 142, 216, 100, 25, 0)
+		$CopyCancel = GUICtrlCreateButton($Text_Cancel, 256, 216, 100, 25, 0)
+		GUISetState(@SW_SHOW)
+		
+		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseCopyGUI')
+		GUICtrlSetOnEvent($CopyCancel, '_CloseCopyGUI')
+		GUICtrlSetOnEvent($CopyOK, '_CopyOK')
+	Else
+		MsgBox(0, $Text_Error, $Text_NoApSelected)
+	EndIf
+EndFunc   ;==>_CopyAP
+
+Func _CloseCopyGUI()
+	GUIDelete($GUI_COPY)
+EndFunc   ;==>_CloseCopyGUI
+
+Func _CopyOK()
+	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, NETTYPE, RADTYPE, LABEL, MANU, HighGpsHistID, BTX, OTX, FirstHistID, LastHistID FROM AP WHERE ApID = '" & $CopyAPID & "'"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	ConsoleWrite($CopyAPID & '-' & $FoundApMatch & @CRLF)
+	If $FoundApMatch <> 0 Then
+		$CopyText = ''
+		If GUICtrlRead($Copy_Line) = 1 Then
+			$CopyText = $ApMatchArray[1][1]
+		EndIf
+		If GUICtrlRead($Copy_BSSID) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][2]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][2]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_SSID) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][3]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][3]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_CHAN) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][4]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][4]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_AUTH) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][5]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][5]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_ENCR) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][6]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][6]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_NETTYPE) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][7]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][7]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_RADTYPE) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][8]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][8]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_SIG) = 1 Then
+			$LastHistID = Round($ApMatchArray[1][15])
+			$query = "SELECT Signal FROM Hist Where HistID = '" & $LastHistID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpSig = $HistMatchArray[1][1]
+			If $CopyText = '' Then
+				$CopyText = $ExpSig
+			Else
+				$CopyText &= '|' & $ExpSig
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_LAB) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][9]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][9]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_MANU) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][10]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][10]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_LAT) = 1 Or GUICtrlRead($Copy_LON) = 1 Or GUICtrlRead($Copy_LATDMS) = 1 Or GUICtrlRead($Copy_LONDMS) = 1 Or GUICtrlRead($Copy_LATDMM) = 1 Or GUICtrlRead($Copy_LONDMM) = 1 Then
+			$HighGpsHistID = Round($ApMatchArray[1][11])
+			If $HighGpsHistID = 0 Then
+				$CopyLat = 'N 0.0000'
+				$CopyLon = 'E 0.0000'
+			Else
+				$query = "SELECT GpsId FROM Hist Where HistID = '" & $HighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$CopyLat = $GpsMatchArray[1][1]
+				$CopyLon = $GpsMatchArray[1][2]
+			EndIf
+			If GUICtrlRead($Copy_LAT) = 1 Then
+				If $CopyText = '' Then
+					$CopyText = _Format_GPS_DMM_to_DDD($CopyLat)
+				Else
+					$CopyText &= '|' & _Format_GPS_DMM_to_DDD($CopyLat)
+				EndIf
+			EndIf
+			If GUICtrlRead($Copy_LON) = 1 Then
+				If $CopyText = '' Then
+					$CopyText = _Format_GPS_DMM_to_DDD($CopyLon)
+				Else
+					$CopyText &= '|' & _Format_GPS_DMM_to_DDD($CopyLon)
+				EndIf
+			EndIf
+			If GUICtrlRead($Copy_LATDMS) = 1 Then
+				If $CopyText = '' Then
+					$CopyText = _Format_GPS_DMM_to_DMS($CopyLat)
+				Else
+					$CopyText &= '|' & _Format_GPS_DMM_to_DMS($CopyLat)
+				EndIf
+			EndIf
+			If GUICtrlRead($Copy_LONDMS) = 1 Then
+				If $CopyText = '' Then
+					$CopyText = _Format_GPS_DMM_to_DMS($CopyLon)
+				Else
+					$CopyText &= '|' & _Format_GPS_DMM_to_DMS($CopyLon)
+				EndIf
+			EndIf
+			If GUICtrlRead($Copy_LATDMM) = 1 Then
+				If $CopyText = '' Then
+					$CopyText = $CopyLat
+				Else
+					$CopyText &= '|' & $CopyLat
+				EndIf
+			EndIf
+			If GUICtrlRead($Copy_LONDMM) = 1 Then
+				If $CopyText = '' Then
+					$CopyText = $CopyLon
+				Else
+					$CopyText &= '|' & $CopyLon
+				EndIf
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_BTX) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][12]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][12]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_OTX) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][13]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][13]
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_FirstActive) = 1 Then
+			$FirstHistID = $ApMatchArray[1][14]
+			$query = "SELECT GpsID FROM Hist Where HistID = '" & $FirstHistID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpGID = $HistMatchArray[1][1]
+			$query = "SELECT Date1, Time1 FROM Gps Where GpsID = '" & $ExpGID & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpDate = $GpsMatchArray[1][1]
+			$ExpTime = $GpsMatchArray[1][2]
+			If $CopyText = '' Then
+				$CopyText = $ExpDate & ' ' & $ExpTime
+			Else
+				$CopyText &= '|' & $ExpDate & ' ' & $ExpTime
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_LastActive) = 1 Then
+			$LastHistID = $ApMatchArray[1][15]
+			$query = "SELECT GpsID FROM Hist Where HistID = '" & $LastHistID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpGID = $HistMatchArray[1][1]
+			$query = "SELECT Date1, Time1 FROM Gps Where GpsID = '" & $ExpGID & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpDate = $GpsMatchArray[1][1]
+			$ExpTime = $GpsMatchArray[1][2]
+			If $CopyText = '' Then
+				$CopyText = $ExpDate & ' ' & $ExpTime
+			Else
+				$CopyText &= '|' & $ExpDate & ' ' & $ExpTime
+			EndIf
+		EndIf
+		ClipPut($CopyText)
+	EndIf
+	_CloseCopyGUI()
+EndFunc   ;==>_CopyOK
+
 Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FixLineNumbers()') ;#Debug Display
 	$ListViewSize = _GUICtrlListView_GetItemCount($ListviewAPs) - 1; Get List Size
@@ -1454,7 +1697,7 @@ EndFunc   ;==>_CloseToggle
 
 Func _ExitVistumbler()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExitVistumbler()') ;#Debug Display
-	If $newdata = 1 Then ;If Access point data has changed since load/last save, ask user if they want to save the data
+	If $newdata = 1 Then ;If Access point data has changed since /last save, ask user if they want to save the data
 		$savemsg = MsgBox(3, $Text_Save, $Text_SaveQuestion)
 		If $savemsg <> 2 Then
 			If $savemsg = 6 Then _ExportDetailedData()
@@ -3108,7 +3351,7 @@ Func _LoadListGUI($imfile1 = "")
 	$RadVis = GUICtrlCreateRadio("Vistumbler File", 10, 55, 140, 20)
 	GUICtrlSetState($RadVis, $GUI_CHECKED)
 	$RadNs = GUICtrlCreateRadio("Netstumbler TXT File", 10, 75, 140, 20)
-	$NsOk = GUICtrlCreateButton($Text_ImportFromTXT, 150, 60, 100, 25)
+	$NsOk = GUICtrlCreateButton($Text_Ok, 150, 60, 100, 25)
 	$NsCancel = GUICtrlCreateButton($Text_Close, 260, 60, 100, 25)
 	$progressbar = GUICtrlCreateProgress(10, 95, 490, 10)
 	$percentlabel = GUICtrlCreateLabel($Text_Progress & ': ' & $Text_Ready, 10, 115, 200, 20)
@@ -3321,7 +3564,12 @@ Func _ImportOk()
 										$query = "UPDATE AP SET HighGpsHistId = '" & $DBHighGpsHistId & "' WHERE ApID = '" & $Found_APID & "'"
 										_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 									EndIf
-
+									
+									If $ImpSig <> '0' Then
+										$query = "UPDATE AP SET LastHistId = '" & $HISTID & "' WHERE ApID = '" & $Found_APID & "'"
+										_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+									EndIf
+									
 									_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $NewGID & '|' & $ImpSig & '|' & $ImpDate & '|' & $ImpTime)
 									_ListViewAdd($Found_ListRow, '', '', '', '', '', '', '', '', '', '', '', '', '', $datetimestamp, $ImLat, $ImLon, $MANUF, $LABEL)
 								EndIf
