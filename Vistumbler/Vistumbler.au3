@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v8.1'
-$last_modified = '08/10/2008'
+$version = 'v8.11'
+$last_modified = '08/31/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1073,7 +1073,7 @@ Func _AddData($addpos, $Active, $BSSID, $SSID, $Auth, $Encr, $SecType, $Sig, $Hi
 	If $SigHist = '' Then $SigHist = $Sig
 	$StripedBSSID = StringReplace($BSSID, ':', '')
 	$MANUF = _FindManufacturer($StripedBSSID)
-	$LABEL = _SetLables($StripedBSSID)
+	$LABEL = _SetLabels($StripedBSSID)
 
 	;Add Into Listview
 	_ListViewAdd($addpos, $line, $Active, $BSSID, $SSID, $Auth, $Encr, $Sig, $Chan, $Rad, $BtX, $OtX, $NetType, $FirstTime, $LastTime, $lat, $lon, $MANUF, $LABEL)
@@ -1151,7 +1151,7 @@ Func _UpdateData($arraypos, $line, $Active, $BSSID, $SSID, $Auth, $Encr, $Sig, $
 	If $ResetMANUF = 1 Or $ResetLABEL = 1 Then
 		$StripedBSSID = StringReplace($DataArray_BSSID[$arraypos], ':', '');Strip ":"'s out of mac address
 		If $ResetMANUF = 1 Then $MANUF = _FindManufacturer(StringTrimRight($StripedBSSID, 6));Set Manufacturer
-		If $ResetLABEL = 1 Then $LABEL = _SetLables($StripedBSSID);
+		If $ResetLABEL = 1 Then $LABEL = _SetLabels($StripedBSSID);
 	EndIf
 	
 	If $SigHist <> '' Then
@@ -1555,8 +1555,8 @@ Func _FindManufacturer($findmac);Returns Manufacturer for given Mac Address
 	Return ($return)
 EndFunc   ;==>_FindManufacturer
 
-Func _SetLables($findmac);Returns Label for given Mac Address
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetLables()') ;#Debug Display
+Func _SetLabels($findmac);Returns Label for given Mac Address
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetLabels()') ;#Debug Display
 	Dim $return = $Text_Unknown
 	For $searchlabellist = 1 To $label_mac[0]
 		If StringStripWS(StringUpper($label_mac[$searchlabellist]), 3) = StringStripWS(StringUpper($findmac), 3) Then
@@ -1565,7 +1565,7 @@ Func _SetLables($findmac);Returns Label for given Mac Address
 		EndIf
 	Next
 	Return ($return)
-EndFunc   ;==>_SetLables
+EndFunc   ;==>_SetLabels
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       TOGGLE/BUTTON FUNCTIONS
@@ -1948,7 +1948,7 @@ Func _GetGPS(); Recieves data from gps device
 		WEnd
 	Else ;Use CommMG.dll instead of the netcomm ocx (less stable, but works with x64)
 		While 1
-			$dataline = StringStripWS(_CommGetLine(), 8);Read data line from GPS
+			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
 			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
 			If StringInStr($dataline, "GPGGA") Then
 				_GPGGA($dataline);Split GPGGA data from data string
@@ -5467,7 +5467,7 @@ Func _ApplySettingsGUI();Applys settings
 		For $m = 1 To $manu_mac[0]
 			IniWrite($manufini, "MANUFACURERS", $manu_mac[$m], $manu_manu[$m])
 		Next
-		;Set flag so lables get reset
+		;Set flag so Labels get reset
 		$ResetManLabel = 1
 	EndIf
 	If $Apply_Lab = 1 Then
@@ -5487,7 +5487,7 @@ Func _ApplySettingsGUI();Applys settings
 		For $m = 1 To $label_mac[0]
 			IniWrite($labelsini, "LABELS", $label_mac[$m], $label_label[$m])
 		Next
-		;Set flag so lables get reset
+		;Set flag so Labels get reset
 		$ResetMacLabel = 1
 	EndIf
 	If $Apply_Column = 1 Then
