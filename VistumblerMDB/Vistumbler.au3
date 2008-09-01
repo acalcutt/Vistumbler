@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Access Edition - Alpha 5.3'
+$version = ' - Access Edition - Alpha 5.4'
 $last_modified = '08/31/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -2081,7 +2081,7 @@ Func _GetGPS(); Recieves data from gps device
 				$disconnected_time = TimerInit() ;reset gps turn off timer
 			Else
 				If $disconnected_time = -1 Then $disconnected_time = TimerInit()
-				If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 5 seconds, turn off gps
+				If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
 					$disconnected_time = -1
 					$return = 0
 					_TurnOffGPS()
@@ -2096,8 +2096,18 @@ Func _GetGPS(); Recieves data from gps device
 			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
 			If StringInStr($dataline, "GPGGA") Then
 				_GPGGA($dataline);Split GPGGA data from data string
+				$disconnected_time = -1
 			ElseIf StringInStr($dataline, "GPRMC") Then
 				_GPRMC($dataline);Split GPRMC data from data string
+				$disconnected_time = -1
+			Else
+				If $disconnected_time = -1 Then $disconnected_time = TimerInit()
+				If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
+					$disconnected_time = -1
+					$return = 0
+					_TurnOffGPS()
+					SoundPlay($SoundDir & $error_sound, 0)
+				EndIf
 			EndIf
 			If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
 			If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
