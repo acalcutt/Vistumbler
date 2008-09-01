@@ -23,7 +23,6 @@ $last_modified = '09/01/2008'
 
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
 $NewVersionFile = @ScriptDir & '\temp\versions.ini'
-$SVN_ROOT = 'http://vistumbler.svn.sourceforge.net/svnroot/vistumbler/VistumblerMDB/'
 $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
 $data = ''
 
@@ -34,7 +33,7 @@ GUISetState(@SW_SHOW)
 
 DirCreate(@ScriptDir & '\temp\')
 FileDelete($NewVersionFile)
-InetGet($SVN_ROOT & 'versions.ini', $NewVersionFile)
+InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
 If FileExists($NewVersionFile) Then
 	$fv = IniReadSection($NewVersionFile, "FileVersions")
 	If Not @error Then 

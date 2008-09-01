@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Access Edition - Alpha 5.4'
-$last_modified = '08/31/2008'
+$version = ' - Access Edition - Alpha 5.5'
+$last_modified = '09/1/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -84,7 +84,6 @@ Dim $DataChild_Height
 
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
 $NewVersionFile = @ScriptDir & '\temp\versions.ini'
-$SVN_ROOT = 'http://vistumbler.svn.sourceforge.net/svnroot/vistumbler/VistumblerMDB/'
 $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
 
 If _CheckForUpdates() = 1 Then
@@ -1135,7 +1134,7 @@ Func _UpdateList()
 			ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
 				$Found_APID = $ApMatchArray[1][1]
 				$Found_ListRow = $ApMatchArray[1][2]
-				$Found_HighGpsHistId = $ApMatchArray[1][12]
+				$Found_HighGpsHistId = $ApMatchArray[1][14]
 				$HISTID += 1
 				;Get Current GPS/Date/Time Information
 				$query = "SELECT * FROM GPS WHERE GpsID = '" & $GPS_ID & "'"
@@ -1147,7 +1146,9 @@ Func _UpdateList()
 				$New_Time = $GpsMatchArray[1][6]
 				$New_DateTime = $New_Date & ' ' & $New_Time
 				;Set Highest GPS History ID
+				ConsoleWrite('NEWLAT:' & $New_Lat & ' - NEWLON:' & $New_Lon & @CRLF)
 				If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then ;If new latitude and longitude are valid
+					ConsoleWrite('GPSHISTID:' & $Found_HighGpsHistId & @CRLF)
 					If $Found_HighGpsHistId = 0 Then ;If old HighGpsHistId is blank then use the new Hist ID
 						$DBLat = $New_Lat
 						$DBLon = $New_Lon
@@ -1164,8 +1165,10 @@ Func _UpdateList()
 						$Found_Lat = $GpsMatchArray[1][1]
 						$Found_Lon = $GpsMatchArray[1][2]
 						$Found_NumSat = $GpsMatchArray[1][3]
+						ConsoleWrite('NEWSAT:' & $New_NumSat & ' - OLDSAT:' & $Found_NumSat & @CRLF)
 						If $New_NumSat >= $Found_NumSat Then ;If the New Number of satalites is greater or eqaul to the old number of satalites
 							If $New_NumSat = $Found_NumSat Then ;If the number of satalites are equal, use the position with the higher signal
+								ConsoleWrite('SIG:' & $SIG & ' - OLDSIG:' & $Found_Sig & @CRLF)
 								If $SIG >= $Found_Sig Then
 									$DBHighGpsHistId = $HISTID
 									$DBLat = $New_Lat
@@ -4742,7 +4745,11 @@ Func _StartGoogleAutoKmlRefresh()
 			MsgBox(0, $Text_Error, "Google earth file does not exist or is set wrong in the AutoKML settings")
 		EndIf
 	Else
-		MsgBox(0, $Text_Error, "AutoKML is not yet started. please start it first")
+		$updatemsg = MsgBox(4, $Text_Error, 'AutoKML is not yet started. Would you like to turn it on now?')
+		If $updatemsg = 6 Then
+			_AutoKmlToggle()
+			_StartGoogleAutoKmlRefresh()
+		EndIf
 	EndIf
 EndFunc   ;==>_StartGoogleAutoKmlRefresh
 
@@ -6586,7 +6593,7 @@ Func _CheckForUpdates()
 	$UpdatesAvalible = 0
 	DirCreate(@ScriptDir & '\temp\')
 	FileDelete($NewVersionFile)
-	InetGet($SVN_ROOT & 'versions.ini', $NewVersionFile)
+	InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
 	If FileExists($NewVersionFile) Then
 		$fv = IniReadSection($NewVersionFile, "FileVersions")
 		If Not @error Then
