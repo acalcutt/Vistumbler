@@ -87,7 +87,10 @@ $NewVersionFile = @ScriptDir & '\temp\versions.ini'
 $SVN_ROOT = 'http://vistumbler.svn.sourceforge.net/svnroot/vistumbler/VistumblerMDB/'
 $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
 
-If _CheckForUpdates() = 1 Then _StartUpdate()
+If _CheckForUpdates() = 1 Then
+	$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
+	If $updatemsg <> 6 Then _StartUpdate()
+EndIf
 
 If FileExists($VistumblerDB) Then
 	$recovermsg = MsgBox(4, 'Recover?', 'Old DB Found. Would you like to recover it?')
@@ -702,6 +705,12 @@ $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $Extra)
 $ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_PhilsWDB, $Extra)
 
+$Help = GUICtrlCreateMenu("Help")
+$VistumblerHome = GUICtrlCreateMenuItem("Vistumbler Home", $Help)
+$VistumblerForum = GUICtrlCreateMenuItem("Vistumbler Forum", $Help)
+$VistumblerWiki = GUICtrlCreateMenuItem("Vistumbler Wiki", $Help)
+$UpdateVistumbler = GUICtrlCreateMenuItem("Check For Updates", $Help)
+
 $GraphicGUI = GUICreate("", 895.72, 386.19, 10, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
 GUISetBkColor($ControlBackgroundColor)
 
@@ -795,6 +804,11 @@ GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
 GUICtrlSetOnEvent($OpenKmlNetworkLink, '_StartGoogleAutoKmlRefresh')
 GUICtrlSetOnEvent($ViewInPhilsPHP, '_ViewInPhilsPHP')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
+;Help Menu
+GUICtrlSetOnEvent($VistumblerHome, '_OpenVistumblerHome')
+GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
+GUICtrlSetOnEvent($VistumblerWiki, '_OpenVistumblerWiki')
+GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 
 ;Other
 GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
@@ -3110,6 +3124,21 @@ Func _RefreshNetworks();Automates clicking the refresh button on the windows 'co
 		EndIf
 	EndIf
 EndFunc   ;==>_RefreshNetworks
+
+Func _OpenVistumblerHome();Opens Vistumbler Website
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerHome() ') ;#Debug Display
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://www.vistumbler.net')
+EndFunc   ;==>_OpenVistumblerHome
+
+Func _OpenVistumblerForum();Opens Vistumbler Forum
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerForum() ') ;#Debug Display
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://forum.vistumbler.net')
+EndFunc   ;==>_OpenVistumblerForum
+
+Func _OpenVistumblerWiki();Opens Vistumbler Wiki
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerWiki() ') ;#Debug Display
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://vistumbler.wiki.sourceforge.net')
+EndFunc   ;==>_OpenVistumblerWiki
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER SAVE FUNCTIONS
@@ -6539,6 +6568,15 @@ Func _RecoverMDB()
 	_FixLineNumbers()
 EndFunc   ;==>_RecoverMDB
 
+Func _MenuUpdate()
+	If _CheckForUpdates() = 1 Then
+		$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
+		If $updatemsg <> 6 Then _StartUpdate()
+	Else
+		MsgBox(0, 'Done', 'No Updates Avalible')
+	EndIf
+EndFunc   ;==>_MenuUpdate
+
 Func _StartUpdate()
 	Run(@ScriptDir & "\update.exe")
 	Exit
@@ -6564,10 +6602,6 @@ Func _CheckForUpdates()
 				EndIf
 			Next
 		EndIf
-	EndIf
-	If $UpdatesAvalible = 1 Then
-		$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
-		If $updatemsg <> 6 Then $UpdatesAvalible = 0
 	EndIf
 	Return ($UpdatesAvalible)
 EndFunc   ;==>_CheckForUpdates
