@@ -85,6 +85,7 @@ Dim $DataChild_Height
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
 $NewVersionFile = @ScriptDir & '\temp\versions.ini'
 $SVN_ROOT = 'http://vistumbler.svn.sourceforge.net/svnroot/vistumbler/VistumblerMDB/'
+$VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
 
 If _CheckForUpdates() = 1 Then _StartUpdate()
 
@@ -6538,14 +6539,8 @@ Func _RecoverMDB()
 	_FixLineNumbers()
 EndFunc   ;==>_RecoverMDB
 
-Func _StartUpdate($iDelay = 0)
-	Local $sCmdFile
-	FileDelete($TmpDir & "update.bat")
-	$sCmdFile = 'ping -n ' & $iDelay & ' 127.0.0.1 > nul' & @CRLF _
-			 & 'start "' & @ScriptDir & '\update.exe"' & @CRLF _
-			 & 'exit'
-	FileWrite($TmpDir & "update.bat", $sCmdFile)
-	Run($TmpDir & "update.bat", $TmpDir, @SW_HIDE)
+Func _StartUpdate()
+	Run(@ScriptDir & "\update.exe")
 	Exit
 EndFunc   ;==>_StartUpdate
 
@@ -6561,10 +6556,15 @@ Func _CheckForUpdates()
 				$filename = $fv[$i][0]
 				$version = $fv[$i][1]
 				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $version Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
+					If $filename = 'update.exe' Then InetGet($VIEWSVN_ROOT & $filename & '?revision=' & $version, @ScriptDir & '\' & $filename)
 					$UpdatesAvalible = 1
 				EndIf
 			Next
 		EndIf
+	EndIf
+	If $UpdatesAvalible = 1 Then
+		$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
+		If $updatemsg <> 6 Then $UpdatesAvalible = 0
 	EndIf
 	Return ($UpdatesAvalible)
 EndFunc   ;==>_CheckForUpdates
