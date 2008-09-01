@@ -28,33 +28,35 @@ If FileExists($NewVersionFile) Then
 			$filename = $fv[$i][0]
 			$filename_web = StringReplace($filename, '\', '/')
 			$version = $fv[$i][1]
-			If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $version Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
-				If StringInStr($filename, '\') Then
-					$struct = StringSplit($filename, '\')
-					For $cp = 1 to $struct[0] - 1
-						If $cp = 1 Then 
-							$dirstruct = $struct[$cp]
-						Else
-							$dirstruct &= '\' & $struct[$cp]
-						EndIf
-						DirCreate(@ScriptDir & '\' & $dirstruct)
-					Next
-				EndIf
-				$getfile = InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename)
-				If $getfile = 1 Then
-					IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
-					$data = 'New File:' & $filename & @CRLF & $data
-					GUICtrlSetData($UpdateEdit, $data)
-					;ConsoleWrite('New File:' & $filename & @CRLF)
+			If $filename <> 'update.exe' Then
+				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $version Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
+					If StringInStr($filename, '\') Then
+						$struct = StringSplit($filename, '\')
+						For $cp = 1 to $struct[0] - 1
+							If $cp = 1 Then 
+								$dirstruct = $struct[$cp]
+							Else
+								$dirstruct &= '\' & $struct[$cp]
+							EndIf
+							DirCreate(@ScriptDir & '\' & $dirstruct)
+						Next
+					EndIf
+					$getfile = InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename)
+					If $getfile = 1 Then
+						IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
+						$data = 'New File:' & $filename & @CRLF & $data
+						GUICtrlSetData($UpdateEdit, $data)
+						;ConsoleWrite('New File:' & $filename & @CRLF)
+					Else
+						$data = 'Error Downloading New File:' & $filename & @CRLF & $data
+						GUICtrlSetData($UpdateEdit, $data)
+						;ConsoleWrite('Error Downloading New File:' & $filename & @CRLF)
+					EndIf
 				Else
-					$data = 'Error Downloading New File:' & $filename & @CRLF & $data
+					$data = 'No Change In File:' & $filename & @CRLF & $data
 					GUICtrlSetData($UpdateEdit, $data)
-					;ConsoleWrite('Error Downloading New File:' & $filename & @CRLF)
+					;ConsoleWrite('No Change In File:' & $filename & @CRLF)
 				EndIf
-			Else
-				$data = 'No Change In File:' & $filename & @CRLF & $data
-				GUICtrlSetData($UpdateEdit, $data)
-				;ConsoleWrite('No Change In File:' & $filename & @CRLF)
 			EndIf
 		Next
 	EndIf

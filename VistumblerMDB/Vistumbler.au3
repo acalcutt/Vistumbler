@@ -6556,7 +6556,10 @@ Func _CheckForUpdates()
 				$filename = $fv[$i][0]
 				$version = $fv[$i][1]
 				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $version Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
-					If $filename = 'update.exe' Then InetGet($VIEWSVN_ROOT & $filename & '?revision=' & $version, @ScriptDir & '\' & $filename)
+					If $filename = 'update.exe' Then
+						$getfile = InetGet($VIEWSVN_ROOT & $filename & '?revision=' & $version, @ScriptDir & '\' & $filename)
+						If $getfile = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
+					EndIf
 					$UpdatesAvalible = 1
 				EndIf
 			Next
