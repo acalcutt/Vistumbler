@@ -89,7 +89,7 @@ $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/Vistumb
 
 If _CheckForUpdates() = 1 Then
 	$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
-	If $updatemsg <> 6 Then _StartUpdate()
+	If $updatemsg = 6 Then _StartUpdate()
 EndIf
 
 If FileExists($VistumblerDB) Then
@@ -6571,7 +6571,7 @@ EndFunc   ;==>_RecoverMDB
 Func _MenuUpdate()
 	If _CheckForUpdates() = 1 Then
 		$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
-		If $updatemsg <> 6 Then _StartUpdate()
+		If $updatemsg = 6 Then _StartUpdate()
 	Else
 		MsgBox(0, 'Done', 'No Updates Avalible')
 	EndIf
