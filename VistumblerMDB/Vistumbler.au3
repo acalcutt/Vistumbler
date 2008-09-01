@@ -34,6 +34,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include "CommMG.au3"
 #include "AccessCom.au3"
 #include "ZIP.au3"
+
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
 	RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
@@ -80,6 +81,12 @@ Dim $MoveMode = False
 Dim $MoveArea = False
 Dim $DataChild_Width
 Dim $DataChild_Height
+
+$CurrentVersionFile = @ScriptDir & '\versions.ini'
+$NewVersionFile = @ScriptDir & '\temp\versions.ini'
+$SVN_ROOT = 'http://vistumbler.svn.sourceforge.net/svnroot/vistumbler/VistumblerMDB/'
+
+If _CheckForUpdates() = 1 Then _StartUpdate()
 
 If FileExists($VistumblerDB) Then
 	$recovermsg = MsgBox(4, 'Recover?', 'Old DB Found. Would you like to recover it?')
@@ -6530,3 +6537,34 @@ Func _RecoverMDB()
 	_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
 	_FixLineNumbers()
 EndFunc   ;==>_RecoverMDB
+
+Func _StartUpdate($iDelay = 0)
+	Local $sCmdFile
+	FileDelete($TmpDir & "update.bat")
+	$sCmdFile = 'ping -n ' & $iDelay & ' 127.0.0.1 > nul' & @CRLF _
+			 & 'start "' & @ScriptDir & '\update.exe"' & @CRLF _
+			 & 'exit'
+	FileWrite($TmpDir & "update.bat", $sCmdFile)
+	Run($TmpDir & "update.bat", $TmpDir, @SW_HIDE)
+	Exit
+EndFunc   ;==>_StartUpdate
+
+Func _CheckForUpdates()
+	$UpdatesAvalible = 0
+	DirCreate(@ScriptDir & '\temp\')
+	FileDelete($NewVersionFile)
+	InetGet($SVN_ROOT & 'versions.ini', $NewVersionFile)
+	If FileExists($NewVersionFile) Then
+		$fv = IniReadSection($NewVersionFile, "FileVersions")
+		If Not @error Then
+			For $i = 1 To $fv[0][0]
+				$filename = $fv[$i][0]
+				$version = $fv[$i][1]
+				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $version Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
+					$UpdatesAvalible = 1
+				EndIf
+			Next
+		EndIf
+	EndIf
+	Return ($UpdatesAvalible)
+EndFunc   ;==>_CheckForUpdates
