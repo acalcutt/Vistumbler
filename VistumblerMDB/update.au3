@@ -26,8 +26,9 @@ $NewVersionFile = @ScriptDir & '\temp\versions.ini'
 $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
 $data = ''
 
-$UpdateGUI = GUICreate("Updating Vistumbler", 300, 300)
-$UpdateEdit = GUICtrlCreateEdit("", 8, 8, 280, 280)
+$UpdateGUI = GUICreate("Updating Vistumbler", 350, 300)
+$datalabel = GUICtrlCreateLabel("", 10, 10, 330, 15)
+$UpdateEdit = GUICtrlCreateEdit("", 10, 30, 330, 260)
 
 GUISetState(@SW_SHOW)
 
@@ -57,7 +58,9 @@ If FileExists($NewVersionFile) Then
 						$getfileerror = 0
 						InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename, 1, 1)
 						While @InetGetActive
-							GUICtrlSetData($UpdateEdit, 'Updating ' & $filename & '. Downloaded ' & @InetGetBytesRead / 1000 & 'kB' & @CRLF & $data)
+							$txt = 'Updating ' & $filename & '. Downloaded ' & @InetGetBytesRead / 1000 & 'kB'
+							GUICtrlSetData($datalabel, $txt)
+							Sleep(5)
 						Wend
 						If @InetGetBytesRead = -1 Then $getfileerror = 1
 						If $getfileerror = 0 Then
@@ -70,6 +73,7 @@ If FileExists($NewVersionFile) Then
 							GUICtrlSetData($UpdateEdit, $data)
 							;ConsoleWrite('Error Downloading New File:' & $filename & @CRLF)
 						EndIf
+						GUICtrlSetData($datalabel, '')
 				Else
 					$data = 'No Change In File:' & $filename & @CRLF & $data
 					GUICtrlSetData($UpdateEdit, $data)
