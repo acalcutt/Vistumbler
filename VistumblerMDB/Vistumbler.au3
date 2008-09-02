@@ -3149,6 +3149,7 @@ EndFunc   ;==>_OpenVistumblerWiki
 
 Func _OpenSaveFolder();Opens save folder in explorer
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenSaveFolder() ') ;#Debug Display
+	DirCreate($SaveDir)
 	Run('RunDll32.exe url.dll,FileProtocolHandler "' & $SaveDir & '"')
 EndFunc   ;==>_OpenSaveFolder
 
