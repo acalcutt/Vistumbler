@@ -54,17 +54,22 @@ If FileExists($NewVersionFile) Then
 							DirCreate(@ScriptDir & '\' & $dirstruct)
 						Next
 					EndIf
-					$getfile = InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename)
-					If $getfile = 1 Then
-						IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
-						$data = 'New File:' & $filename & @CRLF & $data
-						GUICtrlSetData($UpdateEdit, $data)
-						;ConsoleWrite('New File:' & $filename & @CRLF)
-					Else
-						$data = 'Error Downloading New File:' & $filename & @CRLF & $data
-						GUICtrlSetData($UpdateEdit, $data)
-						;ConsoleWrite('Error Downloading New File:' & $filename & @CRLF)
-					EndIf
+						$getfileerror = 0
+						InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename, 1, 1)
+						While @InetGetActive
+							GUICtrlSetData($UpdateEdit, 'Updating ' & $filename & '. Downloaded ' & @InetGetBytesRead / 1000 & 'kB' & @CRLF & $data)
+						Wend
+						If @InetGetBytesRead = -1 Then $getfileerror = 1
+						If $getfileerror = 0 Then
+							IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
+							$data = 'New File:' & $filename & @CRLF & $data
+							GUICtrlSetData($UpdateEdit, $data)
+							;ConsoleWrite('New File:' & $filename & @CRLF)
+						Else
+							$data = 'Error Downloading New File:' & $filename & @CRLF & $data
+							GUICtrlSetData($UpdateEdit, $data)
+							;ConsoleWrite('Error Downloading New File:' & $filename & @CRLF)
+						EndIf
 				Else
 					$data = 'No Change In File:' & $filename & @CRLF & $data
 					GUICtrlSetData($UpdateEdit, $data)
