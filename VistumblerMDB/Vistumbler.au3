@@ -14,11 +14,11 @@
 ;AutoIt Version: v3.2.13.7 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/10/2007'
-$Script_Name = 'Vistumbler'
+$Script_Name = 'Vistumbler (MDB Edition)'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Access Edition - Alpha 5.5'
-$last_modified = '09/1/2008'
+$version = ' - Alpha 6'
+$last_modified = '09/09/2008 <-- Woohoo...its my BDAY'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1146,9 +1146,7 @@ Func _UpdateList()
 				$New_Time = $GpsMatchArray[1][6]
 				$New_DateTime = $New_Date & ' ' & $New_Time
 				;Set Highest GPS History ID
-				ConsoleWrite('NEWLAT:' & $New_Lat & ' - NEWLON:' & $New_Lon & @CRLF)
 				If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then ;If new latitude and longitude are valid
-					ConsoleWrite('GPSHISTID:' & $Found_HighGpsHistId & @CRLF)
 					If $Found_HighGpsHistId = 0 Then ;If old HighGpsHistId is blank then use the new Hist ID
 						$DBLat = $New_Lat
 						$DBLon = $New_Lon
@@ -1165,10 +1163,8 @@ Func _UpdateList()
 						$Found_Lat = $GpsMatchArray[1][1]
 						$Found_Lon = $GpsMatchArray[1][2]
 						$Found_NumSat = $GpsMatchArray[1][3]
-						ConsoleWrite('NEWSAT:' & $New_NumSat & ' - OLDSAT:' & $Found_NumSat & @CRLF)
 						If $New_NumSat >= $Found_NumSat Then ;If the New Number of satalites is greater or eqaul to the old number of satalites
 							If $New_NumSat = $Found_NumSat Then ;If the number of satalites are equal, use the position with the higher signal
-								ConsoleWrite('SIG:' & $SIG & ' - OLDSIG:' & $Found_Sig & @CRLF)
 								If $SIG >= $Found_Sig Then
 									$DBHighGpsHistId = $HISTID
 									$DBLat = $New_Lat
@@ -1312,7 +1308,6 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	$query = "SELECT Pos FROM TreeviewCHAN WHERE Name = '" & $channel_treeviewname & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundTreeMatch = UBound($TreeMatchArray) - 1
-	;ConsoleWrite($FoundTreeMatch & '-' & $query)
 	If $FoundTreeMatch = 0 Then
 		$channel_treeviewposition = _GUICtrlTreeView_InsertItem($TreeviewAPs, $channel_treeviewname, $channel_tree)
 		_AddRecord($VistumblerDB, "TreeviewCHAN", $DB_OBJ, $channel_treeviewposition & '|' & $channel_treeviewname)
@@ -1482,7 +1477,6 @@ Func _CopyOK()
 	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, NETTYPE, RADTYPE, LABEL, MANU, HighGpsHistID, BTX, OTX, FirstHistID, LastHistID FROM AP WHERE ApID = '" & $CopyAPID & "'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
-	ConsoleWrite($CopyAPID & '-' & $FoundApMatch & @CRLF)
 	If $FoundApMatch <> 0 Then
 		$CopyText = ''
 		If GUICtrlRead($Copy_Line) = 1 Then
@@ -2192,12 +2186,39 @@ Func _FormatGpsDate($Date)
 	Return ($m & "/" & $d & "/" & $y)
 EndFunc   ;==>_FormatGpsDate
 
+Func _CheckGpsChecksum($checkdata);Checks if GPS Data Checksum is correct. Returns 1 if it is correct, else Returns 0
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CheckGpsChecksum') ;#Debug Display
+	$end = 0
+	$calc_checksum = 0
+	$checkdata_checksum = ''
+	$gps_data_split = StringSplit($checkdata, '');Seperate all characters of data and put them into an array
+	For $gds = 1 To $gps_data_split[0]
+		If $gps_data_split[$gds] <> '$' And $gps_data_split[$gds] <> '*' And $end = 0 Then
+			If $calc_checksum = 0 Then ;If $calc_checksum is equal 0, set $calc_checksum to the ascii value of this character
+				$calc_checksum = Asc($gps_data_split[$gds])
+			Else;If $calc_checksum is not equal 0 then XOR the new character ascii value with the $calc_checksum value
+				$calc_checksum = BitXOR($calc_checksum, Asc($gps_data_split[$gds]))
+			EndIf
+		ElseIf $gps_data_split[$gds] = '*' Then ;If the checksum has been reached, set the $end flag
+			$end = 1
+		ElseIf $end = 1 And StringIsAlNum($gps_data_split[$gds]) Then ;if the end flag is equal 1 and the character is alpha-numeric then add the character to the end of $checkdata_checksum
+			$checkdata_checksum &= $gps_data_split[$gds]
+		EndIf
+	Next
+	$calc_checksum = Hex($calc_checksum, 2)
+	If $calc_checksum = $checkdata_checksum Then ;If the calculated checksum matches the given checksum then Return 1, Else Return 0
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+EndFunc   ;==>_CheckGpsChecksum
+
 Func _GPGGA($data);Strips data from a gps $GPGGA data string
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GPGGA()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $data)
-	$GPGGA_Split = StringSplit($data, ",");
-	If $GPGGA_Split[0] >= 14 Then
-		If StringInStr($GPGGA_Split[$GPGGA_Split[0]], "*") Then
+	If _CheckGpsChecksum($data) = 1 Then
+		$GPGGA_Split = StringSplit($data, ",");
+		If $GPGGA_Split[0] >= 14 Then
 			$Temp_Quality = $GPGGA_Split[7]
 			If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then
 				$Temp_FixTime = _FormatGpsTime($GPGGA_Split[2])
@@ -2217,9 +2238,9 @@ EndFunc   ;==>_GPGGA
 Func _GPRMC($data);Strips data from a gps $GPRMC data string
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GPRMC()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $data)
-	$GPRMC_Split = StringSplit($data, ",")
-	If $GPRMC_Split[0] >= 11 Then
-		If StringInStr($GPRMC_Split[$GPRMC_Split[0]], "*") Then
+	If _CheckGpsChecksum($data) = 1 Then
+		$GPRMC_Split = StringSplit($data, ",")
+		If $GPRMC_Split[0] >= 11 Then
 			$Temp_Status = $GPRMC_Split[3]
 			If $Temp_Status = "A" Then
 				$Temp_FixTime2 = _FormatGpsTime($GPRMC_Split[2])
@@ -2430,9 +2451,9 @@ Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 		GUISetBkColor($BackgroundColor)
 		$GpsCurrentDataGUI = GUICtrlCreateLabel('', 8, 5, 550, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GPGGA_Quality = GUICtrlCreateLabel($Text_Quality & ":", 32, 22, 235, 15)
+		$GPGGA_Quality = GUICtrlCreateLabel($Text_Quality & ":", 310, 22, 180, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GPRMC_Status = GUICtrlCreateLabel($Text_Status & ":", 310, 22, 180, 15)
+		$GPRMC_Status = GUICtrlCreateLabel($Text_Status & ":", 32, 22, 235, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateGroup("GPRMC", 8, 40, 273, 145)
 		GUICtrlSetColor(-1, $TextColor)
@@ -3034,7 +3055,6 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 		$query = "SELECT ApID, SSID, BSSID, AUTH, ENCR, RADTYPE, NETTYPE, CHAN, BTX, OTX, MANU, LABEL, HighGpsHistID FROM AP WHERE ListRow = '" & $Selected & "'"
 		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundListRowMatch = UBound($ListRowMatchArray) - 1
-		;ConsoleWrite($FoundListRowMatch & '-' & $query)
 		If $FoundListRowMatch <> 0 Then
 			$Found_APID = $ListRowMatchArray[1][1]
 			$Found_SSID = $ListRowMatchArray[1][2]
@@ -3057,7 +3077,6 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 				$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $Found_HighGpsHistId & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$FoundHistMatch = UBound($HistMatchArray) - 1
-				;ConsoleWrite($FoundHistMatch & '-' & $query)
 				$Found_HighGpsID = $HistMatchArray[1][1]
 				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $Found_HighGpsID & "'"
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -3154,7 +3173,6 @@ Func _OpenSaveFolder();Opens save folder in explorer
 EndFunc   ;==>_OpenSaveFolder
 
 Func _AutoSave();Autosaves data to a file name based on current time
-	ConsoleWrite("3" & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSave()') ;#Debug Display
 	DirCreate($SaveDirAuto)
 	FileDelete($AutoSaveFile)
@@ -3883,7 +3901,6 @@ Func _ImportOk()
 									$query = "SELECT GpsID, Signal FROM Hist WHERE HistID = '" & $Found_HighGpsHistId & "'"
 									$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 									$FoundHistMatch = UBound($HistMatchArray) - 1
-									;ConsoleWrite('^' & $FoundHistMatch & ' - ' & $query & @CRLF)
 									$Found_GpsID = $HistMatchArray[1][1]
 									$Found_Sig = $HistMatchArray[1][2]
 									
@@ -4644,7 +4661,6 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 		$query = "SELECT Latitude, Longitude FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundGpsMatch = UBound($GpsMatchArray) - 1
-		;ConsoleWrite('fgm-->' & $FoundGpsMatch & @CRLF)
 		If $FoundGpsMatch <> 0 Then
 			
 			$file &= '<Folder>' & @CRLF _
@@ -6445,18 +6461,15 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 	$Error = 0
 	If $SpeakSignal = 1 Then; If the signal speaking is turned on
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
-		;ConsoleWrite('Selected-' & $Selected & @CRLF)
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
 			$query = "SELECT LastHistID FROM AP WHERE ListRow = '" & $Selected & "'"
 			$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$FoundApMatch = UBound($ApMatchArray) - 1
-			;ConsoleWrite('LastHistID-' & $query & @CRLF)
 			If $FoundApMatch <> 0 Then
 				$PlayHistID = $ApMatchArray[1][1]
 				$query = "SELECT Signal FROM Hist WHERE HistID = '" & $PlayHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$FoundHistMatch = UBound($HistMatchArray) - 1
-				;ConsoleWrite('Signal-' & $FoundHistMatch & @CRLF)
 				If $FoundHistMatch <> 0 Then
 					$say = $HistMatchArray[1][1]
 					If $SpeakSigSayPecent = 1 Then $say &= '%'
@@ -6464,11 +6477,9 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 						If $SpeakType = 1 Then
 							$SayProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1', '', @SW_HIDE)
 							If @error Then $Error = 1
-							;ConsoleWrite($Error & @CRLF)
 						Else
 							$SayProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=2', '', @SW_HIDE)
 							If @error Then $Error = 1
-							;ConsoleWrite($Error & @CRLF)
 						EndIf
 					Else
 						$Error = 1
@@ -6493,7 +6504,6 @@ Func _RecoverMDB()
 	$query = "UPDATE AP SET ListRow = '-1'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
-	;ConsoleWrite($query & @CRLF)
 	$LoadApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
 	For $imp = 1 To $FoundLoadApMatch
@@ -6516,10 +6526,7 @@ Func _RecoverMDB()
 		$ImpLastHistID = $LoadApMatchArray[$imp][16] - 0
 		$ImpLastGpsID = $LoadApMatchArray[$imp][17] - 0
 		$ImpActive = $LoadApMatchArray[$imp][18]
-		
-		
-		;ConsoleWrite('imp-' & $ImpApID & 'fh-' & $ImpFirstHistID & 'lh-' & $ImpLastHistID & @CRLF)
-		
+
 		;Get GPS Position
 		If $ImpHighGpsHistID = 0 Then
 			$ImpLat = 'N 0.0000'
