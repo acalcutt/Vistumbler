@@ -7,7 +7,7 @@
 ;--------------------------------------------------------
 
 Global $oMyError = ObjEvent("AutoIt.Error", "MyErrFuncADO")
-#region Main
+#Region Main
 #include-once
 #include <Misc.au3>
 #include <File.au3>
@@ -16,14 +16,14 @@ Global $oMyError = ObjEvent("AutoIt.Error", "MyErrFuncADO")
 #include <GuiListView.au3>
 Global $formatT = "Text(50)", $formatD = "Date", $data2 = @MON & "/" & @MDAY & "/" & StringRight(@YEAR, 2)
 ;global 	$hndListView_Array1Box_Display = GUICtrlCreateListView($sTemp, 0, 16, $Width, $Height - 40, $LVS_SHOWSELALWAYS, BitOR($LVS_EX_GRIDLINES, $LVS_EX_HEADERDRAGDROP, $LVS_EX_FULLROWSELECT, $LVS_EX_REGIONAL))
-#endregion Main
+#EndRegion Main
 
 Func _CreateDB($s_dbname, $USRName = "", $PWD = "")
 	$newMdb = ObjCreate("ADOX.Catalog");
-	$newMdb.Create ("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" & $s_dbname & ';')
+	$newMdb.Create("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" & $s_dbname & ';')
 ;~ 	$newMdb.Create ("Provider=Microsoft.Jet.OLEDB.4.0; Data Source="&$s_dbname&';UID=' & $USRName & ';PWD=' & $PWD)
 ;~ 	$newMdb.Create ("Driver={Microsoft Access Driver (*.mdb)};Dbq="&$s_dbname&';UID=' & $USRName & ';PWD=' & $PWD)
-	$newmdb.ActiveConnection.Close
+	$newMdb.ActiveConnection.Close
 	;$newmdb.Close
 EndFunc   ;==>_CreateDB
 
@@ -34,7 +34,7 @@ Func _ExecuteMDB($s_dbname, $addConn, $sQuery, $i_adoMDB = 1, $USRName = "", $PW
 	Else
 		$i_NeedToCloseInFunc = 0
 	EndIf
-	Return $addConn.execute ($sQuery)
+	Return $addConn.Execute($sQuery)
 EndFunc   ;==>_ExecuteMDB
 
 Func _CopyTableToDB($s_dbname, $s_Tablename, $sNewDB, ByRef $addConn, ByRef $addConn2, $i_adoMDB = 1, $USRName = "", $PWD = "");(byref $sDB1, $sDbTable1, $sNewTable,$i_Execute=1)
@@ -54,7 +54,7 @@ Func _CopyTableToDB($s_dbname, $s_Tablename, $sNewDB, ByRef $addConn, ByRef $add
 	_AccessCloseConn($addConn2)
 	;COPY========================================================
 	$queryCommand = "SELECT * INTO " & $s_Tablename & " IN '" & $sNewDB & "' FROM " & $s_Tablename;&" IN '" & $s_dbname &"'"
-	$addConn.Execute ($queryCommand)
+	$addConn.Execute($queryCommand)
 	;CRHANGE2========================================================
 	_AccessConnectConn($sNewDB, $addConn2, 0)
 	If $i_NeedToCloseInFunc = 1 Then $addConn.Close
@@ -71,7 +71,7 @@ Func _CopyTableInDB($s_dbname, $s_Tablename, $sNewTable, ByRef $addConn, $i_adoM
 	If _TableExists($addConn, $s_dbname, $sNewTable) Then _DropTable($s_dbname, $sNewTable, $addConn)
 	;COPY========================================================
 	$queryCommand = "SELECT * INTO " & $sNewTable & " IN '" & $s_dbname & "' FROM " & $s_Tablename;&" IN '" & $s_dbname &"'"
-	$addConn.Execute ($queryCommand)
+	$addConn.Execute($queryCommand)
 	;CRHANGE2========================================================
 	If $i_NeedToCloseInFunc Then $addConn.Close
 EndFunc   ;==>_CopyTableInDB
@@ -84,10 +84,10 @@ Func _FieldNames($s_dbname, $s_Tablename, ByRef $o_adoCon, $i_adoMDB = 1, $USRNa
 		$i_NeedToCloseInFunc = 0
 	EndIf
 	$o_adoRs = ObjCreate("ADODB.Recordset")
-	$o_adoRs.Open ("SELECT * FROM " & $s_Tablename, $o_adoCon)
+	$o_adoRs.Open("SELECT * FROM " & $s_Tablename, $o_adoCon)
 	$name = ""
 	For $i = 1 To $o_adoRs.Fields.Count
-		$name = $name & $o_adoRs.Fields ($i - 1).Name & "|"
+		$name = $name & $o_adoRs.Fields($i - 1).Name & "|"
 	Next
 	$o_adoRs.Close
 	If $i_NeedToCloseInFunc Then $o_adoCon.Close
@@ -103,12 +103,12 @@ Func _GetFieldNames($s_dbname, $s_Tablename, ByRef $o_adoCon, $i_adoMDB = 1, $US
 	EndIf
 	Dim $ret[1]
 	$o_adoRs = ObjCreate("ADODB.Recordset")
-	$o_adoRs.Open ("SELECT * FROM " & $s_Tablename, $o_adoCon)
+	$o_adoRs.Open("SELECT * FROM " & $s_Tablename, $o_adoCon)
 	$name = ""
 	For $i = 1 To $o_adoRs.Fields.Count
 		;$name = $name & $o_adoRs.Fields ($i - 1).Name & @CRLF
 		ReDim $ret[UBound($ret, 1) + 1]
-		$ret[UBound($ret, 1) - 1] = $o_adoRs.Fields ($i - 1).Name
+		$ret[UBound($ret, 1) - 1] = $o_adoRs.Fields($i - 1).Name
 	Next
 	$o_adoRs.Close
 	If $i_NeedToCloseInFunc Then $o_adoCon.Close
@@ -162,7 +162,7 @@ Func _CreateTable($s_dbname, $s_Tablename, ByRef $addConn, $i_adoMDB = 1, $USRNa
 	Else
 		$i_NeedToCloseInFunc = 0
 	EndIf
-	$addConn.Execute ("CREATE TABLE " & $s_Tablename)
+	$addConn.Execute("CREATE TABLE " & $s_Tablename)
 	If $i_NeedToCloseInFunc Then $addConn.Close
 EndFunc   ;==>_CreateTable
 
@@ -173,13 +173,13 @@ Func _DropTable($s_dbname, $s_Tablename, ByRef $addConn, $i_adoMDB = 1, $USRName
 	Else
 		$i_NeedToCloseInFunc = 0
 	EndIf
-	$addConn.Execute ("DROP TABLE " & $s_Tablename)
+	$addConn.Execute("DROP TABLE " & $s_Tablename)
 	If $i_NeedToCloseInFunc Then $addConn.Close
 EndFunc   ;==>_DropTable
 
 Func _CreatMultipleFields($s_dbname, $s_Tablename, ByRef $o_adoCon, $s_Fields, $i_adoMDB = 1, $USRName = "", $PWD = "")
 	$s_fields_array = StringSplit($s_Fields, '|')
-	For $fs = 1 to  $s_fields_array[0]
+	For $fs = 1 To $s_fields_array[0]
 		$field_item_array = StringSplit($s_fields_array[$fs], ' ')
 		If $field_item_array[0] = 2 Then
 			$fieldname = $field_item_array[1]
@@ -190,7 +190,7 @@ Func _CreatMultipleFields($s_dbname, $s_Tablename, ByRef $o_adoCon, $s_Fields, $
 		EndIf
 		_CreateField($s_dbname, $s_Tablename, $fieldname, $format, $o_adoCon, $i_adoMDB, $USRName, $PWD)
 	Next
-EndFunc
+EndFunc   ;==>_CreatMultipleFields
 
 Func _CreateField($s_dbname, $s_Tablename, $s_Fieldname, $format, ByRef $o_adoCon, $i_adoMDB = 1, $USRName = "", $PWD = "")
 	If Not IsObj($o_adoCon) Then
@@ -200,7 +200,7 @@ Func _CreateField($s_dbname, $s_Tablename, $s_Fieldname, $format, ByRef $o_adoCo
 		$i_NeedToCloseInFunc = 0
 	EndIf
 	;if not _FieldExists($addField, $s_Tablename, $s_Fieldname) then
-	$o_adoCon.Execute ("ALTER TABLE " & $s_Tablename & " ADD " & $s_Fieldname & " " & $format)
+	$o_adoCon.Execute("ALTER TABLE " & $s_Tablename & " ADD " & $s_Fieldname & " " & $format)
 	If $i_NeedToCloseInFunc Then $o_adoCon.Close
 EndFunc   ;==>_CreateField
 
@@ -214,11 +214,11 @@ Func _AccessAddData($s_dbname, $s_Tablename, $s_Fieldname, $s_i_value, ByRef $o_
 	$o_adoRs = ObjCreate("ADODB.Recordset")
 	$o_adoRs.CursorType = 1
 	$o_adoRs.LockType = 3
-	$o_adoRs.Open ("SELECT * FROM " & $s_Tablename, $o_adoCon)
+	$o_adoRs.Open("SELECT * FROM " & $s_Tablename, $o_adoCon)
 ;~ 	MsgBox(0, "_AccessAddData", "$o_adoRs.Recordcount=" & $o_adoRs.RecordCount+1)
 	$o_adoRs.AddNew
 ;~ 	$o_adoRs.Fields ("ROWID").Value = $o_adoRs.RecordCount+1
-	$o_adoRs.Fields ($s_Fieldname).Value = $s_i_value
+	$o_adoRs.Fields($s_Fieldname).Value = $s_i_value
 	$o_adoRs.Update
 	$o_adoRs.Close
 	If $i_NeedToCloseInFunc Then $o_adoCon.Close
@@ -235,11 +235,11 @@ Func _ReadOneField($q_sql, $s_dbname, $s_field, ByRef $o_adoCon, $i_adoMDB = 1, 
 	$o_adoRs = ObjCreate("ADODB.Recordset")
 	$o_adoRs.CursorType = 1
 	$o_adoRs.LockType = 3
-	$o_adoRs.Open ($q_sql, $o_adoCon)
+	$o_adoRs.Open($q_sql, $o_adoCon)
 	With $o_adoRs
 		If .RecordCount Then
 			While Not .EOF
-				$_output = $_output & .Fields ($s_field).Value & @CRLF
+				$_output = $_output & .Fields($s_field).Value & @CRLF
 				.MoveNext
 			WEnd
 		EndIf
@@ -259,13 +259,13 @@ Func _AddEntireRecord($s_dbname, $s_Tablename1, $ar_array, ByRef $o_adoCon, $ar_
 	$o_adoRs = ObjCreate("ADODB.Recordset")
 	$o_adoRs.CursorType = 1
 	$o_adoRs.LockType = 3
-	$o_adoRs.Open ("SELECT * FROM " & $s_Tablename1, $o_adoCon)
+	$o_adoRs.Open("SELECT * FROM " & $s_Tablename1, $o_adoCon)
 	$records = $ar_array[0][0]
 	$records = UBound($ar_array) - 1
 	For $i = 1 To $records
 		$o_adoRs.AddNew
 		For $x = 1 To UBound($ar_array, 2) - 1
-			$o_adoRs.Fields ($x - 1).Value = $ar_array[$i][$x]
+			$o_adoRs.Fields($x - 1).Value = $ar_array[$i][$x]
 		Next
 ;~ 		$o_adoRs.Fields ("ROWID").Value = $o_adoRs.RecordCount+1
 		$o_adoRs.Update
@@ -294,12 +294,12 @@ Func _AddRecord($s_dbname, $s_Tablename1, ByRef $o_adoCon, $ar_array, $ar_FieldF
 	$o_adoRs = ObjCreate("ADODB.Recordset")
 	$o_adoRs.CursorType = 1
 	$o_adoRs.LockType = 3
-	$o_adoRs.Open ("SELECT * FROM " & $s_Tablename1, $o_adoCon)
+	$o_adoRs.Open("SELECT * FROM " & $s_Tablename1, $o_adoCon)
 ;~ 	MsgBox(0, "_AddRecord", "$o_adoRs.Recordcount=" & $o_adoRs.RecordCount+1)
 	$o_adoRs.AddNew
 ;~ 	$o_adoRs.Fields ("ROWID").Value = $o_adoRs.RecordCount+1
 	For $x = 1 To UBound($ar_array) - 1
-		$o_adoRs.Fields ($x - 1).Value = $ar_array[$x]
+		$o_adoRs.Fields($x - 1).Value = $ar_array[$x]
 	Next
 	$o_adoRs.Update
 	$o_adoRs.Close
@@ -317,7 +317,7 @@ Func _DeleteRecord($s_dbname, $s_Tablename1, $i_DeleteCount, ByRef $o_adoCon, $i
 	$o_adoRs.CursorType = 1
 	$o_adoRs.LockType = 3
 	Local $a = 1
-	$o_adoRs.Open ("SELECT * FROM " & $s_Tablename1, $o_adoCon)
+	$o_adoRs.Open("SELECT * FROM " & $s_Tablename1, $o_adoCon)
 	With $o_adoRs
 		If .RecordCount Then
 			.MoveFirst
@@ -351,8 +351,8 @@ EndFunc   ;==>_ArrayViewQueryTable
 Func _AccessConnectConn($s_dbname, ByRef $o_adoCon, $i_adoMDB = 1, $USRName = "", $PWD = "")
 	;MsgBox(0, "$USRName/$PWD", $USRName&@lf&$PWD)
 	$o_adoCon = ObjCreate("ADODB.Connection")
-	If Not $i_adoMDB Then $o_adoCon.Open ("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" & $s_dbname & ";User Id=" & $USRName & ";Password=" & $PWD & ";")
-	If $i_adoMDB Then $o_adoCon.Open ("Driver={Microsoft Access Driver (*.mdb)};Dbq=" & $s_dbname & ';UID=' & $USRName & ';PWD=' & $PWD)
+	If Not $i_adoMDB Then $o_adoCon.Open("Provider=Microsoft.Jet.OLEDB.4.0; Data Source=" & $s_dbname & ";User Id=" & $USRName & ";Password=" & $PWD & ";")
+	If $i_adoMDB Then $o_adoCon.Open("Driver={Microsoft Access Driver (*.mdb)};Dbq=" & $s_dbname & ';UID=' & $USRName & ';PWD=' & $PWD)
 	Return $o_adoCon
 EndFunc   ;==>_AccessConnectConn
 Func _AccessCloseConn($o_adoCon)
@@ -369,19 +369,19 @@ Func _RecordSearch($s_dbname, $_query, ByRef $o_adoCon, $i_adoMDB = 1, $USRName 
 	$o_adoRs = ObjCreate("ADODB.Recordset")
 	$o_adoRs.CursorType = 1
 	$o_adoRs.LockType = 3
-	$o_adoRs.Open ($_query, $o_adoCon)
+	$o_adoRs.Open($_query, $o_adoCon)
 	With $o_adoRs
 		Dim $_output[.RecordCount + 1][.Fields.Count + 1]
 		$_output[0][0] = .RecordCount
 		For $i = 1 To .Fields.Count
-			$_output[0][$i] = .Fields ($i - 1).Name
+			$_output[0][$i] = .Fields($i - 1).Name
 		Next
 		If $o_adoRs.RecordCount Then
 			$z = 0
 			While Not .EOF
 				$z = $z + 1
 				For $x = 1 To .Fields.Count
-					$_output[$z][$x] = .Fields ($x - 1).Value
+					$_output[$z][$x] = .Fields($x - 1).Value
 				Next
 				.MoveNext
 			WEnd
@@ -413,10 +413,10 @@ Func _AccessUpdateData(ByRef $o_adoCon, $s_dbname, $s_query, $u_field, $u_newval
 	$o_adoRs = ObjCreate("ADODB.Recordset")
 	$o_adoRs.CursorType = 1
 	$o_adoRs.LockType = 3
-	$o_adoRs.Open ($s_query)
+	$o_adoRs.Open($s_query)
 	;$strSearch = $adCol & ' = ' & $adQuery
 	;$o_adoRs.Find ($strSearch)
 	$o_adoRs($u_field) = $u_newvalue
 	$o_adoRs.Update
 	If $i_NeedToCloseInFunc Then $o_adoCon.Close
-EndFunc
+EndFunc   ;==>_AccessUpdateData

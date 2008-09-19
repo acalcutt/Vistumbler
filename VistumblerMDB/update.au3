@@ -82,6 +82,24 @@ If FileExists($NewVersionFile) Then
 			EndIf
 		Next
 	EndIf
+	
+	$rm = IniReadSection($NewVersionFile, "RemovedFiles")
+	If Not @error Then
+		For $i = 1 To $rm[0][0]
+			$filename = $rm[$i][0]
+			$filefullpath = @ScriptDir & '\' & $filename
+			If FileExists($filefullpath) Then 
+				If FileDelete($filefullpath) = 1 Then
+					$data = 'Deleted File:' & $filename & @CRLF & $data
+					GUICtrlSetData($UpdateEdit, $data)
+					IniDelete ($CurrentVersionFile, 'FileVersions' , $filename)
+				Else
+					$data = 'Error Deleting File:' & $filename & @CRLF & $data
+					GUICtrlSetData($UpdateEdit, $data)
+				EndIf
+			EndIf
+		Next
+	EndIf
 EndIf
 
 $updatemsg = MsgBox(4, 'Done', 'Done. Would you like to load vistumbler?')

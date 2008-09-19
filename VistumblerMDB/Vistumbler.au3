@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler (MDB Edition)'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Alpha 6'
-$last_modified = '09/09/2008 <-- Woohoo...its my BDAY'
+$version = ' - Alpha 7'
+$last_modified = '09/19/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -173,6 +173,7 @@ Dim $GoogleEarth_GpsFile = $TmpDir & 'autokml_gps.kml'
 Dim $GoogleEarth_TrackFile = $TmpDir & 'autokml_track.kml'
 Dim $GoogleEarth_OpenFile = $TmpDir & 'autokml_networklink.kml'
 Dim $tempfile = $TmpDir & "netsh_tmp.txt"
+Dim $tempfile_showint = $TmpDir & "netsh_si_tmp.txt"
 Dim $DefaultSaveDir = @ScriptDir & '\Save\'
 Dim $SettingsDir = @ScriptDir & '\Settings\'
 Dim $LanguageDir = @ScriptDir & '\Languages\'
@@ -200,7 +201,7 @@ Dim $Loading = 0
 Dim $disconnected_time = -1
 Dim $SortColumn = -1
 Dim $GUIList
-Dim $TempFileArray, $NetComm, $OpenArray, $headers, $MANUF, $LABEL, $SigHist
+Dim $TempFileArray, $TempFileArrayShowInt, $NetComm, $OpenArray, $headers, $MANUF, $LABEL, $SigHist
 Dim $SSID, $NetworkType, $Authentication, $Encryption, $BSSID, $Signal, $RadioType, $Channel, $BasicTransferRates, $OtherTransferRates
 Dim $addposition, $newlat, $newlon, $LatTest, $gps, $winpos
 Dim $sort_timer
@@ -218,6 +219,7 @@ Dim $UpdateAutoSave = 0
 Dim $CompassOpen = 0
 Dim $CompassGUI = 0
 Dim $SayProcess
+Dim $AutoSaveProcess
 Dim $AutoKmlActiveProcess
 Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
@@ -407,6 +409,7 @@ Dim $SearchWord_Open = IniRead($settings, 'SearchWords', 'Open', 'Open')
 Dim $SearchWord_Wep = IniRead($settings, 'SearchWords', 'WEP', 'WEP')
 Dim $SearchWord_Infrastructure = IniRead($settings, 'SearchWords', 'Infrastructure', 'Infrastructure')
 Dim $SearchWord_Adhoc = IniRead($settings, 'SearchWords', 'Adhoc', 'Adhoc')
+;Dim $SearchWord_Cipher = IniRead($settings, 'SearchWords', 'Cipher', 'Cipher')
 
 Dim $Text_Ok = IniRead($settings, 'GuiText', 'Ok', '&Ok')
 Dim $Text_Cancel = IniRead($settings, 'GuiText', 'Cancel', 'C&ancel')
@@ -654,6 +657,7 @@ $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 $Copy = GUICtrlCreateMenuItem("Copy", $Edit)
 ;$Delete = GUICtrlCreateMenuItem("Delete", $Edit)
 ;$SelectAll = GUICtrlCreateMenuItem("Select All", $Edit)
+$SelectConnected = GUICtrlCreateMenuItem("Select Connected AP", $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
 $RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
@@ -768,6 +772,7 @@ GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
 ;Edit Menu
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 GUICtrlSetOnEvent($Copy, '_CopyAP')
+GUICtrlSetOnEvent($SelectConnected, '_SelectConnectedAp')
 ;Optons Menu
 GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
 GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
@@ -910,17 +915,20 @@ While 1
 	EndIf
 	
 	If $AutoKML = 1 Then
-		If TimerDiff($kml_gps_timer) >= ($AutoKmlGpsTime * 1000) And $AutoKmlGpsTime <> 0 Then _AutoKmlGpsFile($GoogleEarth_GpsFile)
+		If TimerDiff($kml_gps_timer) >= ($AutoKmlGpsTime * 1000) And $AutoKmlGpsTime <> 0 Then
+			_AutoKmlGpsFile($GoogleEarth_GpsFile)
+			$kml_gps_timer = TimerInit()
+		EndIf
 		If TimerDiff($kml_dead_timer) >= ($AutoKmlDeadTime * 1000) And $AutoKmlDeadTime <> 0 And ProcessExists($AutoKmlDeadProcess) = 0 Then
-			$AutoKmlDeadProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
+			$AutoKmlDeadProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
 			$kml_dead_timer = TimerInit()
 		EndIf
 		If TimerDiff($kml_active_timer) >= ($AutoKmlActiveTime * 1000) And $AutoKmlActiveTime <> 0 And ProcessExists($AutoKmlActiveProcess) = 0 Then
-			$AutoKmlActiveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
+			$AutoKmlActiveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
 			$kml_active_timer = TimerInit()
 		EndIf
 		If TimerDiff($kml_track_timer) >= ($AutoKmlTrackTime * 1000) And $AutoKmlTrackTime <> 0 And ProcessExists($AutoKmlTrackProcess) = 0 Then
-			$AutoKmlTrackProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_TrackFile & '" /t', '', @SW_HIDE)
+			$AutoKmlTrackProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_TrackFile & '" /t', '', @SW_HIDE)
 			$kml_track_timer = TimerInit()
 		EndIf
 	EndIf
@@ -1019,7 +1027,7 @@ Func _ScanAccessPoints()
 					$NewAP = 1
 					$BSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
 				EndIf
-				If StringInStr($TempFileArray[$loop], $SearchWord_Signal) Then $Signal = StringReplace(StringStripWS($temp[2], 3), '%', '')
+				If StringInStr($TempFileArray[$loop], $SearchWord_Signal) Then $Signal = StringStripWS(StringReplace($temp[2], '%', ''), 3)
 				If StringInStr($TempFileArray[$loop], $SearchWord_RadioType) Then $RadioType = StringStripWS($temp[2], 3)
 				If StringInStr($TempFileArray[$loop], $SearchWord_Channel) Then $Channel = StringStripWS($temp[2], 3)
 				If StringInStr($TempFileArray[$loop], $SearchWord_BasicRates) Then $BasicTransferRates = StringStripWS($temp[2], 3)
@@ -1741,6 +1749,7 @@ Func _Exit()
 	FileDelete($GoogleEarth_TrackFile)
 	FileDelete($VistumblerDB)
 	FileDelete($tempfile)
+	FileDelete($tempfile_showint)
 	If $AutoSaveDel = 1 Then FileDelete($AutoSaveFile)
 	If $UseGPS = 1 Then ;If GPS is active, stop it so the COM port does not stay open
 		_TurnOffGPS()
@@ -2066,6 +2075,105 @@ Func _GetGPS(); Recieves data from gps device
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GetGPS()') ;#Debug Display
 	$timeout = TimerInit()
 	$return = 1
+	$FoundData = 0
+	
+	$maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
+	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
+	
+	Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
+	Dim $Temp_Quality = 0, $Temp_Status = "V"
+	
+	While 1 ;Loop to extract gps data untill location is found or timout time is reached
+		If $UseGPS = 0 Then ExitLoop
+		If $UseNetcomm = 1 Then ;Use Netcomm ocx to get data (more stable right now)
+			If $NetComm.InBufferCount Then
+				$Buffer = $NetComm.InBufferCount
+				If $Buffer > 75 And $LatTest = 0 And TimerDiff($timeout) < $maxtime Then
+					$inputdata = $NetComm.inputdata
+					If StringInStr($inputdata, '$') And StringInStr($inputdata, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+						$FoundData = 1
+						$gps = StringSplit($inputdata, @CR);Split data string by CR and put data into the $gps array
+						For $readloop = 1 To $gps[0];go through array
+							$gpsline = StringStripWS($gps[$readloop], 3)
+							If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline);Show data line in "GPS Details" GUI if it is open
+							If StringInStr($gpsline, '$') And StringInStr($gpsline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+								If StringInStr($gpsline, "$GPGGA") Then
+									_GPGGA($gpsline);Split GPGGA data from data string
+								ElseIf StringInStr($gpsline, "$GPRMC") Then
+									_GPRMC($gpsline);Split GPRMC data from data string
+								EndIf
+							EndIf
+							If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
+							If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
+						Next
+					EndIf
+				EndIf
+			EndIf
+		Else ;Use CommMG.dll instead of the netcomm ocx (less stable, but works with x64)
+			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
+			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
+			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+				$FoundData = 1
+				If StringInStr($dataline, "$GPGGA") Then
+					_GPGGA($dataline);Split GPGGA data from data string
+					$disconnected_time = -1
+				ElseIf StringInStr($dataline, "$GPRMC") Then
+					_GPRMC($dataline);Split GPRMC data from data string
+					$disconnected_time = -1
+				EndIf
+			EndIf
+		EndIf
+		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
+		If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
+	WEnd
+	If $FoundData = 1 Then
+		$disconnected_time = -1
+		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then ;If the GPGGA data has a fix(1) then write data to perminant variables
+			If $FixTime <> $Temp_FixTime Then $GPGGA_Update = TimerInit()
+			$FixTime = $Temp_FixTime
+			$Latitude = $Temp_Lat
+			$Longitude = $Temp_Lon
+			$NumberOfSatalites = $Temp_NumberOfSatalites
+			$HorDilPitch = $Temp_HorDilPitch
+			$Alt = $Temp_Alt
+			$AltS = $Temp_AltS
+			$Geo = $Temp_Geo
+			$GeoS = $Temp_GeoS
+		EndIf
+		If $Temp_Status = "A" Then ;If the GPRMC data is Active(A) then write data to perminant variables
+			If $FixTime2 <> $Temp_FixTime2 Then $GPRMC_Update = TimerInit()
+			$FixTime2 = $Temp_FixTime2
+			$Latitude2 = $Temp_Lat2
+			$Longitude2 = $Temp_Lon2
+			$SpeedInKnots = $Temp_SpeedInKnots
+			$SpeedInMPH = $Temp_SpeedInMPH
+			$SpeedInKmH = $Temp_SpeedInKmH
+			$TrackAngle = $Temp_TrackAngle
+			$FixDate = $Temp_FixDate
+		EndIf
+	Else
+		If $disconnected_time = -1 Then $disconnected_time = TimerInit()
+		If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
+			$disconnected_time = -1
+			$return = 0
+			_TurnOffGPS()
+			SoundPlay($SoundDir & $error_sound, 0)
+		EndIf
+	EndIf
+
+	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
+	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
+	_DrawCompassLine($TrackAngle)
+	
+	If $TurnOffGPS = 1 Then _TurnOffGPS()
+	
+	Return ($return)
+EndFunc   ;==>_GetGPS
+
+Func _GetGPS2(); Recieves data from gps device
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GetGPS()') ;#Debug Display
+	$timeout = TimerInit()
+	$return = 1
 	
 	$maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
 	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
@@ -2078,25 +2186,30 @@ Func _GetGPS(); Recieves data from gps device
 			If $UseGPS = 0 Then ExitLoop
 			If $NetComm.InBufferCount Then
 				$Buffer = $NetComm.InBufferCount
-				If $Buffer > 100 And $LatTest = 0 And TimerDiff($timeout) < $maxtime Then
+				If $Buffer > 75 And $LatTest = 0 And TimerDiff($timeout) < $maxtime Then
 					$inputdata = $NetComm.inputdata
-					$gps = StringSplit($inputdata, "$")
-					For $readloop = 1 To $gps[0]
-						If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gps[$readloop]);Show data line in "GPS Details" GUI if it is open
-						If StringInStr($gps[$readloop], "GPGGA") Then
-							_GPGGA($gps[$readloop]);Split GPGGA data from data string
-						ElseIf StringInStr($gps[$readloop], "GPRMC") Then
-							_GPRMC($gps[$readloop]);Split GPRMC data from data string
-						EndIf
-						If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
-						If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
-					Next
+					If StringInStr($inputdata, '$') And StringInStr($inputdata, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+						$gps = StringSplit($inputdata, @CR);Split data string by CR and put data into the $gps array
+						For $readloop = 1 To $gps[0];go through array
+							$gpsline = StringStripWS($gps[$readloop], 3)
+							If StringInStr($gpsline, '$') And StringInStr($gpsline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+								If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline);Show data line in "GPS Details" GUI if it is open
+								If StringInStr($gpsline, "$GPGGA") Then
+									_GPGGA($gpsline);Split GPGGA data from data string
+								ElseIf StringInStr($gpsline, "$GPRMC") Then
+									_GPRMC($gpsline);Split GPRMC data from data string
+								EndIf
+								If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
+							EndIf
+							If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
+						Next
+					EndIf
 				EndIf
 				If TimerDiff($timeout) > $maxtime Then
 					GUICtrlSetData($msgdisplay, 'GPS Timeout')
 					ExitLoop
 				EndIf
-				Sleep($maxtime / 10)
+				Sleep(100)
 				$disconnected_time = TimerInit() ;reset gps turn off timer
 			Else
 				If $disconnected_time = -1 Then $disconnected_time = TimerInit()
@@ -2113,10 +2226,10 @@ Func _GetGPS(); Recieves data from gps device
 		While 1
 			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
 			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
-			If StringInStr($dataline, "GPGGA") Then
+			If StringInStr($dataline, "$GPGGA") Then
 				_GPGGA($dataline);Split GPGGA data from data string
 				$disconnected_time = -1
-			ElseIf StringInStr($dataline, "GPRMC") Then
+			ElseIf StringInStr($dataline, "$GPRMC") Then
 				_GPRMC($dataline);Split GPRMC data from data string
 				$disconnected_time = -1
 			Else
@@ -2163,7 +2276,7 @@ Func _GetGPS(); Recieves data from gps device
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
 	
 	Return ($return)
-EndFunc   ;==>_GetGPS
+EndFunc   ;==>_GetGPS2
 
 Func _FormatGpsTime($time)
 	$time = StringTrimRight($time, 4)
@@ -3177,8 +3290,10 @@ Func _AutoSave();Autosaves data to a file name based on current time
 	DirCreate($SaveDirAuto)
 	FileDelete($AutoSaveFile)
 	$AutoSaveFile = $SaveDirAuto & 'AutoSave_' & @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC & '.VS1'
-	_ExportDetailedTXT($AutoSaveFile)
-	$save_timer = TimerInit()
+	If ProcessExists($AutoSaveProcess) = 0 Then
+		$AutoSaveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=d /f="' & $AutoSaveFile & '"', '', @SW_HIDE)
+		$save_timer = TimerInit()
+	EndIf
 EndFunc   ;==>_AutoSave
 
 Func _ExportData();Saves data to a selected file
@@ -3530,7 +3645,7 @@ Func _ImportOk()
 
 						EndIf
 					ElseIf $loadlist[0] = 13 Then ;If String is VS1 data line
-						$found = 0
+						$Found = 0
 						$SSID = StringStripWS($loadlist[1], 3)
 						$BSSID = StringStripWS($loadlist[2], 3)
 						$Authentication = StringStripWS($loadlist[4], 3)
@@ -3585,7 +3700,7 @@ Func _ImportOk()
 									Else
 										$DBHighGpsHistId = 0
 									EndIf
-									
+									ConsoleWrite('-' & $DBHighGpsHistId & @CRLF)
 									$DBAddPos = $APID - 1
 									
 									_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGID & '|' & $ImpSig & '|' & $ImpDate & '|' & $ImpTime)
@@ -3602,11 +3717,11 @@ Func _ImportOk()
 									If $Found_HighGpsHistId = 0 Then
 										If $ImpLat <> 'N 0.0000' And $ImpLon <> 'E 0.0000' Then
 											$DBHighGpsHistId = $HISTID
-											
 										Else
 											$DBHighGpsHistId = 0
 										EndIf
 									Else
+										ConsoleWrite($Found_HighGpsHistId & @CRLF)
 										$query = "SELECT GpsID, Signal FROM Hist WHERE HistID = '" & $Found_HighGpsHistId & "'"
 										$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 										$FoundHistMatch = UBound($HistMatchArray) - 1
@@ -3620,7 +3735,7 @@ Func _ImportOk()
 										If $ImpNumSat >= $Found_NumSat Then
 											$DBHighGpsHistId = $HISTID
 										Else
-											$DBHighGpsHistId = $Found_NumSat
+											$DBHighGpsHistId = $Found_HighGpsHistId
 										EndIf
 									EndIf
 									
@@ -3645,7 +3760,7 @@ Func _ImportOk()
 							EndIf
 						Next
 					ElseIf $loadlist[0] = 17 Then ; If string is TXT data line
-						$found = 0
+						$Found = 0
 						$SSID = StringStripWS($loadlist[1], 3)
 						$BSSID = StringStripWS($loadlist[2], 3)
 						$HighGpsSignal = StringStripWS($loadlist[4], 3)
@@ -3801,7 +3916,7 @@ Func _ImportOk()
 			$AddGID = 0
 			$Loading = 1
 			While 1
-				$found = 0
+				$Found = 0
 				$linein = FileReadLine($netstumblerfile);Open Line in file
 				If @error = -1 Then ExitLoop ;If end of lines reached, exit loop
 				If StringInStr($linein, "# $DateGMT:") Then ;If the date tag is found, reformat and set date
@@ -4703,6 +4818,14 @@ Func _StartGoogleAutoKmlRefresh()
 	FileDelete($kml)
 	If $AutoKML = 1 Then
 		If FileExists($GoogleEarth_EXE) Then
+			$RefAutoKmlGpsTime = Round($AutoKmlGpsTime / 2)
+			$RefAutoKmlActiveTime = Round($AutoKmlActiveTime / 2)
+			$RefAutoKmlDeadTime = Round($AutoKmlDeadTime / 2)
+			$RefAutoKmlTrackTime = Round($AutoKmlTrackTime / 2)
+			If $RefAutoKmlGpsTime < 1 Then $RefAutoKmlGpsTime = 1
+			If $RefAutoKmlActiveTime < 1 Then $RefAutoKmlActiveTime = 1
+			If $RefAutoKmlDeadTime < 1 Then $RefAutoKmlDeadTime = 1
+			If $RefAutoKmlTrackTime < 1 Then $RefAutoKmlTrackTime = 1
 			$file = '<?xml version="1.0" encoding="UTF-8"?>' & @CRLF _
 					 & '<kml xmlns="http://earth.google.com/kml/2.2">' & @CRLF _
 					 & '	<Document>' & @CRLF _
@@ -4714,7 +4837,7 @@ Func _StartGoogleAutoKmlRefresh()
 				$file &= '			<Url>' & @CRLF _ ;GPS Position
 						 & '				<href>' & $GoogleEarth_GpsFile & '</href>' & @CRLF _
 						 & '				<refreshMode>onInterval</refreshMode>' & @CRLF _
-						 & '				<refreshInterval>' & $AutoKmlGpsTime / 2 & '</refreshInterval>' & @CRLF _
+						 & '				<refreshInterval>' & $RefAutoKmlGpsTime & '</refreshInterval>' & @CRLF _
 						 & '			</Url>' & @CRLF _
 						 & '		</NetworkLink>' & @CRLF
 			EndIf
@@ -4724,7 +4847,7 @@ Func _StartGoogleAutoKmlRefresh()
 						 & '			<Url>' & @CRLF _ ;AP List
 						 & '				<href>' & $GoogleEarth_ActiveFile & '</href>' & @CRLF _
 						 & '				<refreshMode>onInterval</refreshMode>' & @CRLF _
-						 & '				<refreshInterval>' & $AutoKmlActiveTime / 2 & '</refreshInterval>' & @CRLF _
+						 & '				<refreshInterval>' & $RefAutoKmlActiveTime & '</refreshInterval>' & @CRLF _
 						 & '			</Url>' & @CRLF _
 						 & '		</NetworkLink>' & @CRLF
 			EndIf
@@ -4734,7 +4857,7 @@ Func _StartGoogleAutoKmlRefresh()
 						 & '			<Url>' & @CRLF _ ;AP List
 						 & '				<href>' & $GoogleEarth_DeadFile & '</href>' & @CRLF _
 						 & '				<refreshMode>onInterval</refreshMode>' & @CRLF _
-						 & '				<refreshInterval>' & $AutoKmlDeadTime / 2 & '</refreshInterval>' & @CRLF _
+						 & '				<refreshInterval>' & $RefAutoKmlDeadTime & '</refreshInterval>' & @CRLF _
 						 & '			</Url>' & @CRLF _
 						 & '		</NetworkLink>' & @CRLF
 			EndIf
@@ -4744,7 +4867,7 @@ Func _StartGoogleAutoKmlRefresh()
 						 & '			<Url>' & @CRLF _ ;AP List
 						 & '				<href>' & $GoogleEarth_TrackFile & '</href>' & @CRLF _
 						 & '				<refreshMode>onInterval</refreshMode>' & @CRLF _
-						 & '				<refreshInterval>' & $AutoKmlTrackTime / 2 & '</refreshInterval>' & @CRLF _
+						 & '				<refreshInterval>' & $RefAutoKmlTrackTime & '</refreshInterval>' & @CRLF _
 						 & '			</Url>' & @CRLF _
 						 & '		</NetworkLink>' & @CRLF
 			EndIf
@@ -4753,9 +4876,9 @@ Func _StartGoogleAutoKmlRefresh()
 			FileWrite($kml, $file)
 			If Not @error Then
 				If $AutoKmlGpsTime <> 0 Then _AutoKmlGpsFile($GoogleEarth_GpsFile)
-				If $AutoKmlDeadTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
-				If $AutoKmlActiveTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
-				If $AutoKmlTrackTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\ExportAutoKML.exe') & ' /k="' & $GoogleEarth_TrackFile & '" /t', '', @SW_HIDE)
+				If $AutoKmlDeadTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
+				If $AutoKmlActiveTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & '/t=k /f="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
+				If $AutoKmlTrackTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_TrackFile & '" /t', '', @SW_HIDE)
 				Run('"' & $GoogleEarth_EXE & '" "' & $kml & '"')
 			EndIf
 		Else
@@ -6507,6 +6630,7 @@ Func _RecoverMDB()
 	$LoadApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
 	For $imp = 1 To $FoundLoadApMatch
+		GUICtrlSetData($msgdisplay, 'Recovering: ' & ' ' & $imp & ' / ' & $FoundLoadApMatch)
 		$APID += 1
 		$ImpApID = $LoadApMatchArray[$imp][1]
 		$ImpSSID = $LoadApMatchArray[$imp][2]
@@ -6620,3 +6744,52 @@ Func _CheckForUpdates()
 	EndIf
 	Return ($UpdatesAvalible)
 EndFunc   ;==>_CheckForUpdates
+
+Func _SelectConnectedAp()
+	$return = 0
+	FileDelete($tempfile_showint)
+	;_RunDOS($netsh & ' wlan show interfaces > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
+	_RunDOS('netsh wlan show interfaces > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
+	$showintarraysize = _FileReadToArray($tempfile_showint, $TempFileArrayShowInt);read the tempfile into the '$TempFileArrayShowInt' Araay
+	If $showintarraysize = 1 Then
+		For $strip_ws = 1 To $TempFileArrayShowInt[0]
+			$TempFileArrayShowInt[$strip_ws] = StringStripWS($TempFileArrayShowInt[$strip_ws], 3)
+		Next
+		
+		Dim $IntState, $IntSSID, $IntBSSID, $IntChan, $IntAuth;, $IntEncr, $IntRad
+		For $loop = 1 To $TempFileArrayShowInt[0]
+			$temp = StringSplit(StringStripWS($TempFileArrayShowInt[$loop], 3), ":")
+			;_ArrayDisplay($temp)
+			If IsArray($temp) Then
+				;If $temp[0] >= 2 Then ConsoleWrite($temp[1] & '-' & $temp[2] & @CRLF)
+				If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_SSID) And StringInStr($TempFileArrayShowInt[$loop], $SearchWord_BSSID) <> 1 Then $IntSSID = StringStripWS($temp[2], 3)
+				If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_BSSID) Then
+					Dim $Signal = '', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
+					$NewAP = 1
+					$IntBSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
+				EndIf
+				If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_Channel) Then $IntChan = StringStripWS($temp[2], 3)
+				If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_Authentication) Then $IntAuth = StringStripWS($temp[2], 3)
+				;If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_Cipher) Then $IntEncr = StringStripWS($temp[2], 3)
+				;If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_RadioType) Then $IntRad = StringStripWS($temp[2], 3)
+			EndIf
+		Next
+		If $IntBSSID <> '' Then
+			$return = 1
+			$query = "SELECT ListRow FROM AP WHERE BSSID = '" & $IntBSSID & "' And SSID ='" & StringReplace($IntSSID, "'", "''") & "' And CHAN = '" & $IntChan & "' And AUTH = '" & $IntAuth & "'"
+			$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundApMatch = UBound($ApMatchArray) - 1
+			If $FoundApMatch > 0 Then
+				$Found_ListRow = $ApMatchArray[1][1]
+				_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_FOCUSED, $LVIS_FOCUSED)
+				_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_SELECTED, $LVIS_SELECTED)
+				GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+			Else
+				MsgBox(0, $Text_Error, "Active AP not found in list" & @CRLF & @CRLF & $Column_Names_BSSID & ':' & $IntBSSID & @CRLF & $Column_Names_SSID & ':' & $IntSSID & @CRLF & $Column_Names_Channel & ':' & $IntChan & @CRLF & $Column_Names_Authentication & ':' & $IntAuth)
+			EndIf
+		Else
+			MsgBox(0, $Text_Error, "No Active AP found")
+		EndIf
+	EndIf
+	Return ($return)
+EndFunc   ;==>_SelectConnectedAp

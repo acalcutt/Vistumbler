@@ -1,6 +1,7 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=icon.ico
+#AutoIt3Wrapper_Version=Beta
+#AutoIt3Wrapper_icon=icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2008 Andrew Calcutt
@@ -64,6 +65,10 @@ For $loop = 1 To $CmdLine[0]
 	If StringInStr($CmdLine[$loop], '/t') Then
 		$filesplit = StringSplit($CmdLine[$loop], "=")
 		If $filesplit[0] = 2 Then $filetype = $filesplit[2]
+	EndIf
+	If StringInStr($CmdLine[$loop], '/a') Then
+		$MapActiveAPs = 1
+		$MapAccessPoints = 1
 	EndIf
 	If StringInStr($CmdLine[$loop], '/d') Then
 		$MapDeadAPs = 1
