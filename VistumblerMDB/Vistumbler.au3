@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler (MDB Edition)'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Alpha 7'
-$last_modified = '09/19/2008'
+$version = ' - Alpha 7.1'
+$last_modified = '09/27/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -6748,8 +6748,8 @@ EndFunc   ;==>_CheckForUpdates
 Func _SelectConnectedAp()
 	$return = 0
 	FileDelete($tempfile_showint)
-	;_RunDOS($netsh & ' wlan show interfaces > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
-	_RunDOS('netsh wlan show interfaces > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
+	_RunDOS($netsh & ' wlan show interfaces > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
+	;_RunDOS('netsh wlan show interfaces > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
 	$showintarraysize = _FileReadToArray($tempfile_showint, $TempFileArrayShowInt);read the tempfile into the '$TempFileArrayShowInt' Araay
 	If $showintarraysize = 1 Then
 		For $strip_ws = 1 To $TempFileArrayShowInt[0]

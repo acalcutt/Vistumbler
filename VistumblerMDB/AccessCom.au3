@@ -370,23 +370,25 @@ Func _RecordSearch($s_dbname, $_query, ByRef $o_adoCon, $i_adoMDB = 1, $USRName 
 	$o_adoRs.CursorType = 1
 	$o_adoRs.LockType = 3
 	$o_adoRs.Open($_query, $o_adoCon)
-	With $o_adoRs
-		Dim $_output[.RecordCount + 1][.Fields.Count + 1]
-		$_output[0][0] = .RecordCount
-		For $i = 1 To .Fields.Count
-			$_output[0][$i] = .Fields($i - 1).Name
-		Next
-		If $o_adoRs.RecordCount Then
-			$z = 0
-			While Not .EOF
-				$z = $z + 1
-				For $x = 1 To .Fields.Count
-					$_output[$z][$x] = .Fields($x - 1).Value
-				Next
-				.MoveNext
-			WEnd
-		EndIf
-	EndWith
+	$r_count = $o_adoRs.RecordCount
+	$f_count = $o_adoRs.Fields.Count
+	
+	Dim $_output[$r_count + 1][$f_count + 1]
+	$_output[0][0] = $r_count
+	For $i = 1 To $f_count
+		$_output[0][$i] = $o_adoRs.Fields($i - 1).Name
+	Next
+	
+	If $r_count Then
+		$z = 0
+		While Not $o_adoRs.EOF
+			$z = $z + 1
+			For $x = 1 To $f_count
+				$_output[$z][$x] = $o_adoRs.Fields($x - 1).Value
+			Next
+			$o_adoRs.MoveNext
+		WEnd
+	EndIf
 	$o_adoRs.Close
 	If $i_NeedToCloseInFunc Then $o_adoCon.Close
 	Return $_output
