@@ -14,11 +14,11 @@
 ;AutoIt Version: v3.2.13.7 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/10/2007'
-$Script_Name = 'Vistumbler (MDB Edition)'
+$Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = ' - Alpha 7.1'
-$last_modified = '09/27/2008'
+$version = '9.0 Beta 1'
+$last_modified = '09/29/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -81,91 +81,6 @@ Dim $MoveMode = False
 Dim $MoveArea = False
 Dim $DataChild_Width
 Dim $DataChild_Height
-
-$CurrentVersionFile = @ScriptDir & '\versions.ini'
-$NewVersionFile = @ScriptDir & '\temp\versions.ini'
-$VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
-
-If _CheckForUpdates() = 1 Then
-	$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
-	If $updatemsg = 6 Then _StartUpdate()
-EndIf
-
-If FileExists($VistumblerDB) Then
-	$recovermsg = MsgBox(4, 'Recover?', 'Old DB Found. Would you like to recover it?')
-	If $recovermsg = 6 Then
-		$Recover = 1
-		_AccessConnectConn($VistumblerDB, $DB_OBJ)
-		$query = "SELECT HistID FROM Hist"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$HISTID = UBound($HistMatchArray) - 1
-		$query = "SELECT GpsID FROM GPS"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$GPS_ID = UBound($GpsMatchArray) - 1
-		$query = "DELETE * FROM TreeviewAUTH"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		$query = "DELETE * FROM TreeviewCHAN"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		$query = "DELETE * FROM TreeviewENCR"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		$query = "DELETE * FROM TreeviewNETTYPE"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		$query = "DELETE * FROM TreeviewSSID"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		$APID = 0
-	Else
-		FileDelete($VistumblerDB)
-		_CreateDB($VistumblerDB)
-		_AccessConnectConn($VistumblerDB, $DB_OBJ)
-		_CreateTable($VistumblerDB, 'GPS', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'AP', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'Hist', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'Temp', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'Manufacturers', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'Labels', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewAUTH', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewCHAN', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewENCR', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewSSID', $DB_OBJ)
-		_CreatMultipleFields($VistumblerDB, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
-		_CreatMultipleFields($VistumblerDB, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)| TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
-		_CreatMultipleFields($VistumblerDB, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
-		_CreatMultipleFields($VistumblerDB, 'Temp', $DB_OBJ, 'BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|Signal TEXT(4)|Date1 TEXT(50)|Time1 TEXT(50)')
-		_CreatMultipleFields($VistumblerDB, 'Manufacturers', $DB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'Labels', $DB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewAUTH', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewCHAN', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewENCR', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	EndIf
-Else
-	_CreateDB($VistumblerDB)
-	_AccessConnectConn($VistumblerDB, $DB_OBJ)
-	_CreateTable($VistumblerDB, 'GPS', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'AP', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'Hist', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'Temp', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'Manufacturers', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'Labels', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewAUTH', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewCHAN', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewENCR', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewSSID', $DB_OBJ)
-	_CreatMultipleFields($VistumblerDB, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($VistumblerDB, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)| TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
-	_CreatMultipleFields($VistumblerDB, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($VistumblerDB, 'Temp', $DB_OBJ, 'BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|Signal TEXT(4)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($VistumblerDB, 'Manufacturers', $DB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'Labels', $DB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewAUTH', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewCHAN', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewENCR', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-EndIf
 
 Dim $GoogleEarth_ActiveFile = $TmpDir & 'autokml_active.kml'
 Dim $GoogleEarth_DeadFile = $TmpDir & 'autokml_dead.kml'
@@ -244,7 +159,7 @@ Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, 
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
-Dim $LabAuth, $LabDate, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop
+Dim $LabAuth, $LabDate, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_CTWN, $GUI_RefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
@@ -255,6 +170,10 @@ Dim $CWCB_Authentication, $CWIB_Authentication, $CWCB_Encryption, $CWIB_Encrypti
 
 Dim $GUI_COPY, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
 
+$CurrentVersionFile = @ScriptDir & '\versions.ini'
+$NewVersionFile = @ScriptDir & '\temp\versions.ini'
+$VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
+
 ;Define Arrays
 Dim $Direction[23];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
 Dim $Direction2[3]
@@ -263,6 +182,7 @@ Dim $Direction2[3]
 Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
 Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir)
+Dim $AutoCheckForUpdates = IniRead($settings, 'Vistumbler', 'AutoCheckForUpdates', 1)
 Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
 Dim $SplitPercent = IniRead($settings, 'Vistumbler', 'SplitPercent', '0.2')
@@ -602,6 +522,89 @@ Dim $Text_Even = IniRead($settings, 'GuiText', 'Even', 'Even')
 Dim $Text_Odd = IniRead($settings, 'GuiText', 'Odd', 'Odd')
 Dim $Text_Mark = IniRead($settings, 'GuiText', 'Mark', 'Mark')
 Dim $Text_Space = IniRead($settings, 'GuiText', 'Space', 'Space')
+
+If $AutoCheckForUpdates = 1 Then
+	If _CheckForUpdates() = 1 Then
+		$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
+		If $updatemsg = 6 Then _StartUpdate()
+	EndIf
+EndIf
+
+If FileExists($VistumblerDB) Then
+	$recovermsg = MsgBox(4, 'Recover?', 'Old DB Found. Would you like to recover it?')
+	If $recovermsg = 6 Then
+		$Recover = 1
+		_AccessConnectConn($VistumblerDB, $DB_OBJ)
+		$query = "SELECT HistID FROM Hist"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$HISTID = UBound($HistMatchArray) - 1
+		$query = "SELECT GpsID FROM GPS"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$GPS_ID = UBound($GpsMatchArray) - 1
+		$query = "DELETE * FROM TreeviewAUTH"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		$query = "DELETE * FROM TreeviewCHAN"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		$query = "DELETE * FROM TreeviewENCR"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		$query = "DELETE * FROM TreeviewNETTYPE"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		$query = "DELETE * FROM TreeviewSSID"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		$APID = 0
+	Else
+		FileDelete($VistumblerDB)
+		_CreateDB($VistumblerDB)
+		_AccessConnectConn($VistumblerDB, $DB_OBJ)
+		_CreateTable($VistumblerDB, 'GPS', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'AP', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'Hist', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'Temp', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'Manufacturers', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'Labels', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'TreeviewAUTH', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'TreeviewCHAN', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'TreeviewENCR', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'TreeviewSSID', $DB_OBJ)
+		_CreatMultipleFields($VistumblerDB, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
+		_CreatMultipleFields($VistumblerDB, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)| TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
+		_CreatMultipleFields($VistumblerDB, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
+		_CreatMultipleFields($VistumblerDB, 'Temp', $DB_OBJ, 'BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|Signal TEXT(4)|Date1 TEXT(50)|Time1 TEXT(50)')
+		_CreatMultipleFields($VistumblerDB, 'Manufacturers', $DB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
+		_CreatMultipleFields($VistumblerDB, 'Labels', $DB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
+		_CreatMultipleFields($VistumblerDB, 'TreeviewAUTH', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+		_CreatMultipleFields($VistumblerDB, 'TreeviewCHAN', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+		_CreatMultipleFields($VistumblerDB, 'TreeviewENCR', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+		_CreatMultipleFields($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+		_CreatMultipleFields($VistumblerDB, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	EndIf
+Else
+	_CreateDB($VistumblerDB)
+	_AccessConnectConn($VistumblerDB, $DB_OBJ)
+	_CreateTable($VistumblerDB, 'GPS', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'AP', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'Hist', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'Temp', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'Manufacturers', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'Labels', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'TreeviewAUTH', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'TreeviewCHAN', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'TreeviewENCR', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'TreeviewSSID', $DB_OBJ)
+	_CreatMultipleFields($VistumblerDB, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($VistumblerDB, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)| TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
+	_CreatMultipleFields($VistumblerDB, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($VistumblerDB, 'Temp', $DB_OBJ, 'BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|Signal TEXT(4)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($VistumblerDB, 'Manufacturers', $DB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'Labels', $DB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'TreeviewAUTH', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'TreeviewCHAN', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'TreeviewENCR', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+EndIf
 
 ;Create-Array-Of-Manufactures----------------------------
 _ReadIniSectionToDB($manufini, "MANUFACURERS", $VistumblerDB, $DB_OBJ, "Manufacturers")
@@ -1742,6 +1745,14 @@ Func _Exit()
 	GUISetState(@SW_HIDE, $Vistumbler)
 	_AccessCloseConn($DB_OBJ)
 	_WriteINI(); Write current settings to back to INI file
+	$PID = -1
+	$CloseTimer = TimerInit()
+	While $PID <> 0
+		$PID = ProcessExists("Export.exe")
+		ProcessClose($PID)
+		ConsoleWrite($PID & ' - ' & TimerDiff($CloseTimer) & @CRLF)
+		If TimerDiff($CloseTimer) >= 10000 Then ExitLoop
+	WEnd
 	FileDelete($GoogleEarth_ActiveFile)
 	FileDelete($GoogleEarth_DeadFile)
 	FileDelete($GoogleEarth_GpsFile)
@@ -3700,7 +3711,6 @@ Func _ImportOk()
 									Else
 										$DBHighGpsHistId = 0
 									EndIf
-									ConsoleWrite('-' & $DBHighGpsHistId & @CRLF)
 									$DBAddPos = $APID - 1
 									
 									_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGID & '|' & $ImpSig & '|' & $ImpDate & '|' & $ImpTime)
@@ -3721,7 +3731,6 @@ Func _ImportOk()
 											$DBHighGpsHistId = 0
 										EndIf
 									Else
-										ConsoleWrite($Found_HighGpsHistId & @CRLF)
 										$query = "SELECT GpsID, Signal FROM Hist WHERE HistID = '" & $Found_HighGpsHistId & "'"
 										$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 										$FoundHistMatch = UBound($HistMatchArray) - 1
@@ -4118,6 +4127,7 @@ Func _WriteINI()
 	Else
 		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
 	EndIf
+	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
 	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
 	IniWrite($settings, "Vistumbler", "SplitHeightPercent", $SplitHeightPercent)
@@ -4588,6 +4598,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 			$file &= '<Folder>' & @CRLF _
 					 & '<name>Open Access Points</name>' & @CRLF
 			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
 				$ExpSSID = $ApMatchArray[$exp][1]
 				$ExpBSSID = $ApMatchArray[$exp][2]
 				$ExpNET = $ApMatchArray[$exp][3]
@@ -4652,6 +4663,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 			$file &= '<Folder>' & @CRLF _
 					 & '<name>Wep Access Points</name>' & @CRLF
 			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving WEP AP ' & $exp & '/' & $FoundApMatch)
 				$ExpSSID = $ApMatchArray[$exp][1]
 				$ExpBSSID = $ApMatchArray[$exp][2]
 				$ExpNET = $ApMatchArray[$exp][3]
@@ -4715,6 +4727,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 			$file &= '<Folder>' & @CRLF _
 					 & '<name>Secure Access Points</name>' & @CRLF
 			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving Secure AP ' & $exp & '/' & $FoundApMatch)
 				$ExpSSID = $ApMatchArray[$exp][1]
 				$ExpBSSID = $ApMatchArray[$exp][2]
 				$ExpNET = $ApMatchArray[$exp][3]
@@ -4788,6 +4801,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 					 & '<tessellate>1</tessellate>' & @CRLF _
 					 & '<coordinates>' & @CRLF
 			For $exp = 1 To $FoundGpsMatch
+				GUICtrlSetData($msgdisplay, 'Saving Gps Position ' & $exp & '/' & $FoundGpsMatch)
 				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1])
 				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2])
 				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
@@ -5143,6 +5157,9 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 236, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 251, 300, 21)
+	$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox("Automatically Check For Updates", 31, 285, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
 	$GroupMiscPHP = GUICtrlCreateGroup($Text_PHPgraphing, 16, 328, 649, 121)
 	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($Text_PhilsPHPgraph, 31, 349, 620, 15)
@@ -6090,6 +6107,11 @@ Func _ApplySettingsGUI();Applys settings
 		$BackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_BKColor))
 		$ControlBackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_CBKColor))
 		$TextColor = '0x' & StringUpper(GUICtrlRead($GUI_TextColor))
+		If GUICtrlRead($GUI_AutoCheckForUpdates) = 1 Then
+			$AutoCheckForUpdates = 1
+		Else
+			$AutoCheckForUpdates = 0
+		EndIf
 		$RefreshLoopTime = GUICtrlRead($GUI_RefreshLoop)
 		$PhilsGraphURL = GUICtrlRead($GUI_PhilsGraphURL)
 		$PhilsWdbURL = GUICtrlRead($GUI_PhilsWdbURL)
