@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 1'
+$version = '9.0 Beta 1.1'
 $last_modified = '09/29/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -4536,6 +4536,7 @@ Func SaveToKML()
 EndFunc   ;==>SaveToKML
 
 Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsTrack = 0)
+	$FoundApWithGps = 0
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveKML()') ;#Debug Display
 	If StringInStr($kml, '.kml') = 0 Then $kml = $kml & '.kml'
 	FileDelete($kml)
@@ -4551,7 +4552,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 	If $KmlUseLocalImages = 1 Then
 		$file &= '<href>' & $ImageDir & 'secure.png</href>' & @CRLF
 	Else
-		$file &= '<href>http://www.vistumbler.net/images/program-images/secure.png</href>' & @CRLF
+		$file &= '<href>http://vistumbler.sourceforge.net/images/program-images/secure.png</href>' & @CRLF
 	EndIf
 	$file &= '</Icon>' & @CRLF _
 			 & '</IconStyle>' & @CRLF _
@@ -4563,7 +4564,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 	If $KmlUseLocalImages = 1 Then
 		$file &= '<href>' & $ImageDir & 'secure-wep.png</href>' & @CRLF
 	Else
-		$file &= '<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>' & @CRLF
+		$file &= '<href>http://vistumbler.sourceforge.net/images/program-images/secure-wep.png</href>' & @CRLF
 	EndIf
 	$file &= '</Icon>' & @CRLF _
 			 & '</IconStyle>' & @CRLF _
@@ -4575,7 +4576,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 	If $KmlUseLocalImages = 1 Then
 		$file &= '<href>' & $ImageDir & 'open.png</href>' & @CRLF
 	Else
-		$file &= '<href>http://www.vistumbler.net/images/program-images/open.png</href>' & @CRLF
+		$file &= '<href>http://vistumbler.sourceforge.net/images/program-images/open.png</href>' & @CRLF
 	EndIf
 	$file &= '</Icon>' & @CRLF _
 			 & '</IconStyle>' & @CRLF _
