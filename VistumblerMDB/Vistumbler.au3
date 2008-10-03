@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 1.1'
-$last_modified = '09/29/2008'
+$version = '9.0 Beta 1.2'
+$last_modified = '10/02/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1010,47 +1010,49 @@ Func _ScanAccessPoints()
 	_RunDOS($netsh & ' wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
 	$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
 	If $arrayadded = 1 Then
+		;Strip out whitespace before and after text on each line
 		For $stripws = 1 To $TempFileArray[0]
 			$TempFileArray[$stripws] = StringStripWS($TempFileArray[$stripws], 3)
 		Next
-		
+		;Go through each line to get data
 		For $loop = 1 To $TempFileArray[0]
 			$temp = StringSplit(StringStripWS($TempFileArray[$loop], 3), ":")
-			;_ArrayDisplay($temp)
 			If IsArray($temp) Then
-				If StringInStr($TempFileArray[$loop], $SearchWord_SSID) And StringInStr($TempFileArray[$loop], $SearchWord_BSSID) <> 1 Then
-					$SSID = StringStripWS($temp[2], 3)
-					Dim $NetworkType = '', $Authentication = '', $Encryption = '', $BSSID = ''
-				EndIf
-				If StringInStr($TempFileArray[$loop], $SearchWord_NetworkType) Then $NetworkType = StringStripWS($temp[2], 3)
-				If StringInStr($TempFileArray[$loop], $SearchWord_Authentication) Then $Authentication = StringStripWS($temp[2], 3)
-				If StringInStr($TempFileArray[$loop], $SearchWord_Encryption) Then $Encryption = StringStripWS($temp[2], 3)
-				If StringInStr($TempFileArray[$loop], $SearchWord_BSSID) Then
-					Dim $Signal = '', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
-					$NewAP = 1
-					$BSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
-				EndIf
-				If StringInStr($TempFileArray[$loop], $SearchWord_Signal) Then $Signal = StringStripWS(StringReplace($temp[2], '%', ''), 3)
-				If StringInStr($TempFileArray[$loop], $SearchWord_RadioType) Then $RadioType = StringStripWS($temp[2], 3)
-				If StringInStr($TempFileArray[$loop], $SearchWord_Channel) Then $Channel = StringStripWS($temp[2], 3)
-				If StringInStr($TempFileArray[$loop], $SearchWord_BasicRates) Then $BasicTransferRates = StringStripWS($temp[2], 3)
-				If StringInStr($TempFileArray[$loop], $SearchWord_OtherRates) Then $OtherTransferRates = StringStripWS($temp[2], 3)
-				
-				$Update = 0
-				If $loop = $TempFileArray[0] Then
-					$Update = 1
-				Else
-					If StringInStr($TempFileArray[$loop + 1], $SearchWord_SSID) Or StringInStr($TempFileArray[$loop + 1], $SearchWord_BSSID) Then $Update = 1
-				EndIf
-				
-				If $Update = 1 And $NewAP = 1 And $BSSID <> '' Then
-					$NewAP = 0
-					If $BSSID <> "" Then
-						$FoundAPs += 1
-						_AddRecord($VistumblerDB, "Temp", $DB_OBJ, $BSSID & '|' & $SSID & '|' & $Channel & '|' & $Authentication & '|' & $Encryption & '|' & $NetworkType & '|' & $RadioType & '|' & $BasicTransferRates & '|' & $OtherTransferRates & '|' & $Signal & '|' & $ScanDate & '|' & $ScanTime)
+				If $temp[0] = 2 Then
+					If StringInStr($TempFileArray[$loop], $SearchWord_SSID) And StringInStr($TempFileArray[$loop], $SearchWord_BSSID) <> 1 Then
+						$SSID = StringStripWS($temp[2], 3)
+						Dim $NetworkType = '', $Authentication = '', $Encryption = '', $BSSID = ''
+					EndIf
+					If StringInStr($TempFileArray[$loop], $SearchWord_NetworkType) Then $NetworkType = StringStripWS($temp[2], 3)
+					If StringInStr($TempFileArray[$loop], $SearchWord_Authentication) Then $Authentication = StringStripWS($temp[2], 3)
+					If StringInStr($TempFileArray[$loop], $SearchWord_Encryption) Then $Encryption = StringStripWS($temp[2], 3)
+					If StringInStr($TempFileArray[$loop], $SearchWord_Signal) Then $Signal = StringStripWS(StringReplace($temp[2], '%', ''), 3)
+					If StringInStr($TempFileArray[$loop], $SearchWord_RadioType) Then $RadioType = StringStripWS($temp[2], 3)
+					If StringInStr($TempFileArray[$loop], $SearchWord_Channel) Then $Channel = StringStripWS($temp[2], 3)
+					If StringInStr($TempFileArray[$loop], $SearchWord_BasicRates) Then $BasicTransferRates = StringStripWS($temp[2], 3)
+					If StringInStr($TempFileArray[$loop], $SearchWord_OtherRates) Then $OtherTransferRates = StringStripWS($temp[2], 3)
+				ElseIf $temp[0] = 7 Then
+					If StringInStr($TempFileArray[$loop], $SearchWord_BSSID) Then
+						Dim $Signal = '', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
+						$NewAP = 1
+						$BSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
 					EndIf
 				EndIf
-
+			EndIf
+			
+			$Update = 0
+			If $loop = $TempFileArray[0] Then
+				$Update = 1
+			Else
+				If StringInStr($TempFileArray[$loop + 1], $SearchWord_SSID) Or StringInStr($TempFileArray[$loop + 1], $SearchWord_BSSID) Then $Update = 1
+			EndIf
+			
+			If $Update = 1 And $NewAP = 1 And $BSSID <> '' Then
+				$NewAP = 0
+				If $BSSID <> "" Then
+					$FoundAPs += 1
+					_AddRecord($VistumblerDB, "Temp", $DB_OBJ, $BSSID & '|' & $SSID & '|' & $Channel & '|' & $Authentication & '|' & $Encryption & '|' & $NetworkType & '|' & $RadioType & '|' & $BasicTransferRates & '|' & $OtherTransferRates & '|' & $Signal & '|' & $ScanDate & '|' & $ScanTime)
+				EndIf
 			EndIf
 		Next
 		Return ($FoundAPs)
