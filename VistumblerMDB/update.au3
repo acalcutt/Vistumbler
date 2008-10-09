@@ -13,28 +13,68 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v1.0'
-$last_modified = '09/01/2008'
+$version = 'v2.0'
+$origional_date = '09/01/2008'
+$last_modified = '10/09/2008'
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #Include <Array.au3>
 
-$CurrentVersionFile = @ScriptDir & '\versions.ini'
-$NewVersionFile = @ScriptDir & '\temp\versions.ini'
-$VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
-$data = ''
+Dim $LoadVersionFile
+Dim $NewVersionFile = @ScriptDir & '\temp\versions.ini'
+Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
+Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
+Dim $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
+Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
+Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
+Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
+Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4F2")
 
+$data = 'Loading Data File'
 $UpdateGUI = GUICreate("Updating Vistumbler", 350, 300)
+GUISetBkColor($BackgroundColor)
 $datalabel = GUICtrlCreateLabel("", 10, 10, 330, 15)
-$UpdateEdit = GUICtrlCreateEdit("", 10, 30, 330, 260)
-
+GUICtrlSetColor(-1, $TextColor)
+$UpdateEdit = GUICtrlCreateEdit($data, 10, 30, 330, 260)
+GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 GUISetState(@SW_SHOW)
 
-DirCreate(@ScriptDir & '\temp\')
-FileDelete($NewVersionFile)
-InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
+For $loop = 1 To $CmdLine[0]
+	If StringInStr($CmdLine[$loop], '/s') Then
+		$filesplit = StringSplit($CmdLine[$loop], "=")
+		If $filesplit[0] = 2 Then $LoadVersionFile = $filesplit[2]
+	EndIf
+Next
+
+If $LoadVersionFile <> '' And FileExists($LoadVersionFile) Then 
+	$NewVersionFile = $LoadVersionFile
+	$data = 'Using local file : ' & $NewVersionFile & @CRLF & $data
+	GUICtrlSetData($UpdateEdit, $data)
+Else
+	FileDelete($NewVersionFile)
+	DirCreate(@ScriptDir & '\temp\')
+	If $CheckForBetaUpdates = 1 Then
+		$data = 'Downloading Beta Versions File' & @CRLF & $data
+		GUICtrlSetData($UpdateEdit, $data)
+		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile)
+		If $get = 0 Then FileDelete($NewVersionFile)
+	Else
+		$data = 'Downloading Versions File' & @CRLF & $data
+		GUICtrlSetData($UpdateEdit, $data)
+		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
+		If $get = 0 Then FileDelete($NewVersionFile)
+	EndIf
+	If FileExists($NewVersionFile) Then
+		$data = 'Versions File Downloaded' & @CRLF & $data
+		GUICtrlSetData($UpdateEdit, $data)
+	Else
+		$data = 'Error Downloading Versions File' & @CRLF & $data
+		GUICtrlSetData($UpdateEdit, $data)
+	EndIf
+EndIf
+
 If FileExists($NewVersionFile) Then
 	$fv = IniReadSection($NewVersionFile, "FileVersions")
 	If Not @error Then 
@@ -82,7 +122,6 @@ If FileExists($NewVersionFile) Then
 			EndIf
 		Next
 	EndIf
-	
 	$rm = IniReadSection($NewVersionFile, "RemovedFiles")
 	If Not @error Then
 		For $i = 1 To $rm[0][0]
@@ -100,6 +139,7 @@ If FileExists($NewVersionFile) Then
 			EndIf
 		Next
 	EndIf
+	FileDelete($NewVersionFile)
 EndIf
 
 $updatemsg = MsgBox(4, 'Done', 'Done. Would you like to load vistumbler?')

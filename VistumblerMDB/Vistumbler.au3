@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 1.2'
-$last_modified = '10/02/2008'
+$version = '9.0 Beta 2'
+$last_modified = '10/09/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -159,7 +159,7 @@ Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, 
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
-Dim $LabAuth, $LabDate, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates
+Dim $LabAuth, $LabDate, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_CTWN, $GUI_RefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
@@ -183,6 +183,7 @@ Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
 Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir)
 Dim $AutoCheckForUpdates = IniRead($settings, 'Vistumbler', 'AutoCheckForUpdates', 1)
+Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 1)
 Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
 Dim $SplitPercent = IniRead($settings, 'Vistumbler', 'SplitPercent', '0.2')
@@ -1994,7 +1995,7 @@ EndFunc   ;==>_GraphDeadTimeToggle
 
 Func _AutoSaveToggle();Turns auto save on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveToggle()') ;#Debug Display
-	If GUICtrlRead($AutoSaveGUI) = 65 Then
+	If $AutoSave = 1 Then
 		GUICtrlSetState($AutoSaveGUI, $GUI_UNCHECKED)
 		$AutoSave = 0
 	Else
@@ -2005,12 +2006,12 @@ EndFunc   ;==>_AutoSaveToggle
 
 Func _AutoSortToggle();Turns auto sort on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSortToggle()') ;#Debug Display
-	If GUICtrlRead($AutoSortGUI) = 65 Then
+	If $AutoSort = 1 Then
 		GUICtrlSetState($AutoSortGUI, $GUI_UNCHECKED)
 		$AutoSort = 0
 	Else
 		GUICtrlSetState($AutoSortGUI, $GUI_CHECKED)
-		$AutoSave = 1
+		$AutoSort = 1
 		$sort_timer = TimerInit()
 	EndIf
 EndFunc   ;==>_AutoSortToggle
@@ -4130,6 +4131,7 @@ Func _WriteINI()
 		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
 	EndIf
 	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
+	IniWrite($settings, "Vistumbler", "CheckForBetaUpdates", $CheckForBetaUpdates)
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
 	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
 	IniWrite($settings, "Vistumbler", "SplitHeightPercent", $SplitHeightPercent)
@@ -5163,6 +5165,9 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox("Automatically Check For Updates", 31, 285, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
+	$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox("Check For Beta Updates", 353, 285, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
 	$GroupMiscPHP = GUICtrlCreateGroup($Text_PHPgraphing, 16, 328, 649, 121)
 	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($Text_PhilsPHPgraph, 31, 349, 620, 15)
@@ -5516,6 +5521,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AutoSort = GUICtrlCreateCheckbox($Text_AutoSort, 30, 190, 625, 15)
 	GUICtrlSetColor(-1, $TextColor)
+	ConsoleWrite($AutoSort & @CRLF)
 	If $AutoSort = 1 Then GUICtrlSetState($GUI_AutoSort, $GUI_CHECKED)
 	GUICtrlCreateLabel($Text_SortBy, 30, 210, 625, 15)
 	GUICtrlSetColor(-1, $TextColor)
@@ -6115,6 +6121,11 @@ Func _ApplySettingsGUI();Applys settings
 		Else
 			$AutoCheckForUpdates = 0
 		EndIf
+		If GUICtrlRead($GUI_CheckForBetaUpdates) = 1 Then
+			$CheckForBetaUpdates = 1
+		Else
+			$CheckForBetaUpdates = 0
+		EndIf
 		$RefreshLoopTime = GUICtrlRead($GUI_RefreshLoop)
 		$PhilsGraphURL = GUICtrlRead($GUI_PhilsGraphURL)
 		$PhilsWdbURL = GUICtrlRead($GUI_PhilsWdbURL)
@@ -6144,6 +6155,7 @@ Func _ApplySettingsGUI();Applys settings
 		
 		$SortBy = GUICtrlRead($GUI_SortBy)
 		$SortTime = GUICtrlRead($GUI_SortTime)
+		ConsoleWrite(GUICtrlRead($GUI_AutoSort) & '-' & $AutoSort)
 		If GUICtrlRead($GUI_AutoSort) = 4 And $AutoSort = 1 Then _AutoSortToggle()
 		If GUICtrlRead($GUI_AutoSort) = 1 And $AutoSort = 0 Then _AutoSortToggle()
 		;Auto Refresh
@@ -6742,7 +6754,7 @@ Func _MenuUpdate()
 EndFunc   ;==>_MenuUpdate
 
 Func _StartUpdate()
-	Run(@ScriptDir & "\update.exe")
+	Run(@ScriptDir & '\update.exe /s="' & $NewVersionFile & '"')
 	Exit
 EndFunc   ;==>_StartUpdate
 
@@ -6750,7 +6762,13 @@ Func _CheckForUpdates()
 	$UpdatesAvalible = 0
 	DirCreate(@ScriptDir & '\temp\')
 	FileDelete($NewVersionFile)
-	InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
+	If $CheckForBetaUpdates = 1 Then
+		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile)
+		If $get = 0 Then FileDelete($NewVersionFile)
+	Else
+		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
+		If $get = 0 Then FileDelete($NewVersionFile)
+	EndIf
 	If FileExists($NewVersionFile) Then
 		$fv = IniReadSection($NewVersionFile, "FileVersions")
 		If Not @error Then
