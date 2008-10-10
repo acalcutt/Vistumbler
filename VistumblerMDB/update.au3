@@ -32,7 +32,7 @@ Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
 Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4F2")
 
-$data = 'Loading Data File'
+$data = 'Loading Versions File'
 $UpdateGUI = GUICreate("Updating Vistumbler", 350, 300)
 GUISetBkColor($BackgroundColor)
 $datalabel = GUICtrlCreateLabel("", 10, 10, 330, 15)
