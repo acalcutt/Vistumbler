@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 2'
-$last_modified = '10/09/2008'
+$version = '9.0 Beta 2.1'
+$last_modified = '10/10/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -128,6 +128,7 @@ Dim $base_add = 0, $data, $data_old, $Graph = 0, $Graph_old, $ResetSizes = 1, $R
 Dim $LastSelected = -1
 Dim $save_timer
 Dim $AutoSaveFile
+Dim $SaveDbOnExit = 0
 Dim $ClearAllAps = 0
 Dim $UpdateAutoKml = 0
 Dim $UpdateAutoSave = 0
@@ -344,6 +345,7 @@ Dim $Text_SaveAsVSZ = IniRead($settings, 'GuiText', 'SaveAsVSZ', 'Save As VSZ')
 Dim $Text_ImportFromTXT = IniRead($settings, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
 Dim $Text_ImportFromVSZ = IniRead($settings, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
 Dim $Text_Exit = IniRead($settings, 'GuiText', 'Exit', 'E&xit')
+Dim $Text_ExitSaveDb = IniRead($settings, 'GuiText', 'ExitSaveDb', 'Exit (Save DB)')
 
 Dim $Text_Edit = IniRead($settings, 'GuiText', 'Edit', 'E&dit')
 Dim $Text_ClearAll = IniRead($settings, 'GuiText', 'ClearAll', 'Clear All')
@@ -523,16 +525,26 @@ Dim $Text_Even = IniRead($settings, 'GuiText', 'Even', 'Even')
 Dim $Text_Odd = IniRead($settings, 'GuiText', 'Odd', 'Odd')
 Dim $Text_Mark = IniRead($settings, 'GuiText', 'Mark', 'Mark')
 Dim $Text_Space = IniRead($settings, 'GuiText', 'Space', 'Space')
+Dim $Text_Update = IniRead($settings, 'GuiText', 'Update', 'Update')
+Dim $Text_UpdateMsg = IniRead($settings, 'GuiText', 'UpdateMsg', 'Update Found. Would you like to update vistumbler?')
+Dim $Text_Recover = IniRead($settings, 'GuiText', 'Recover', 'Recover')
+Dim $Text_RecoverMsg = IniRead($settings, 'GuiText', 'RecoverMsg', 'Old DB Found. Would you like to recover it?')
+Dim $Text_SelectConnectedAP = IniRead($settings, 'GuiText', 'SelectConnectedAP', 'Select Connected AP')
+Dim $Text_VistumblerHome = IniRead($settings, 'GuiText', 'VistumblerHome', 'Vistumbler Home')
+Dim $Text_VistumblerForum = IniRead($settings, 'GuiText', 'VistumblerForum', 'Vistumbler Forum')
+Dim $Text_VistumblerWiki = IniRead($settings, 'GuiText', 'VistumblerWiki', 'Vistumbler Wiki')
+Dim $Text_CheckForUpdates = IniRead($settings, 'GuiText', 'CheckForUpdates', 'Check For Updates')
+Dim $Text_SelectWhatToCopy = IniRead($settings, 'GuiText', 'SelectWhatToCopy', 'Select what you want to copy')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
-		$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
+		$updatemsg = MsgBox(4, $Text_Update, $Text_UpdateMsg)
 		If $updatemsg = 6 Then _StartUpdate()
 	EndIf
 EndIf
 
 If FileExists($VistumblerDB) Then
-	$recovermsg = MsgBox(4, 'Recover?', 'Old DB Found. Would you like to recover it?')
+	$recovermsg = MsgBox(4, $Text_Recover, $Text_RecoverMsg)
 	If $recovermsg = 6 Then
 		$Recover = 1
 		_AccessConnectConn($VistumblerDB, $DB_OBJ)
@@ -654,6 +666,7 @@ $ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
 $ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
 
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
+$ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
 $Edit = GUICtrlCreateMenu($Text_Edit)
 $ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
 $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
@@ -661,7 +674,7 @@ $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 $Copy = GUICtrlCreateMenuItem("Copy", $Edit)
 ;$Delete = GUICtrlCreateMenuItem("Delete", $Edit)
 ;$SelectAll = GUICtrlCreateMenuItem("Select All", $Edit)
-$SelectConnected = GUICtrlCreateMenuItem("Select Connected AP", $Edit)
+$SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
 $RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
@@ -684,8 +697,6 @@ $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $Options)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-
-
 
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
 $SetMisc = GUICtrlCreateMenuItem($Text_VistumblerSettings, $SettingsMenu)
@@ -713,10 +724,10 @@ $ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_PhilsWDB, $Extra)
 
 $Help = GUICtrlCreateMenu("Help")
-$VistumblerHome = GUICtrlCreateMenuItem("Vistumbler Home", $Help)
-$VistumblerForum = GUICtrlCreateMenuItem("Vistumbler Forum", $Help)
-$VistumblerWiki = GUICtrlCreateMenuItem("Vistumbler Wiki", $Help)
-$UpdateVistumbler = GUICtrlCreateMenuItem("Check For Updates", $Help)
+$VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
+$VistumblerForum = GUICtrlCreateMenuItem($Text_VistumblerForum, $Help)
+$VistumblerWiki = GUICtrlCreateMenuItem($Text_VistumblerWiki, $Help)
+$UpdateVistumbler = GUICtrlCreateMenuItem($Text_CheckForUpdates, $Help)
 
 $GraphicGUI = GUICreate("", 895.72, 386.19, 10, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
 GUISetBkColor($ControlBackgroundColor)
@@ -768,6 +779,7 @@ GUICtrlSetOnEvent($GraphButton1, '_GraphToggle')
 GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
 ;File Menu
 GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
+GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($SaveAsTXT, '_ExportData')
 GUICtrlSetOnEvent($SaveAsDetailedTXT, '_ExportDetailedData')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
@@ -1446,9 +1458,9 @@ Func _CopyAP()
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	If $CopySelected <> -1 And $FoundApMatch <> 0 Then ;If a access point is selected in the listview, map its data
 		$CopyAPID = $ApMatchArray[1][1]
-		$GUI_COPY = GUICreate("Copy", 491, 249)
+		$GUI_COPY = GUICreate($Text_Copy, 491, 249)
 		GUISetBkColor($BackgroundColor)
-		GUICtrlCreateGroup("Select what you want to copy", 8, 8, 473, 201)
+		GUICtrlCreateGroup($Text_SelectWhatToCopy, 8, 8, 473, 201)
 		$Copy_Line = GUICtrlCreateCheckbox($Column_Names_Line, 27, 29, 200, 15)
 		$Copy_BSSID = GUICtrlCreateCheckbox($Column_Names_BSSID, 27, 44, 200, 15)
 		$Copy_SSID = GUICtrlCreateCheckbox($Column_Names_SSID, 27, 59, 200, 15)
@@ -1728,6 +1740,11 @@ Func _CloseToggle() ;Sets Close to 1 to exit vistumbler
 	$Close = 1
 EndFunc   ;==>_CloseToggle
 
+Func _ExitSaveDB()
+	$SaveDbOnExit = 1
+	_CloseToggle()
+EndFunc   ;==>_ExitSaveDB
+
 Func _ExitVistumbler()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExitVistumbler()') ;#Debug Display
 	If $newdata = 1 Then ;If Access point data has changed since /last save, ask user if they want to save the data
@@ -1761,9 +1778,9 @@ Func _Exit()
 	FileDelete($GoogleEarth_GpsFile)
 	FileDelete($GoogleEarth_OpenFile)
 	FileDelete($GoogleEarth_TrackFile)
-	FileDelete($VistumblerDB)
 	FileDelete($tempfile)
 	FileDelete($tempfile_showint)
+	If $SaveDbOnExit <> 1 Then FileDelete($VistumblerDB)
 	If $AutoSaveDel = 1 Then FileDelete($AutoSaveFile)
 	If $UseGPS = 1 Then ;If GPS is active, stop it so the COM port does not stay open
 		_TurnOffGPS()
@@ -4293,6 +4310,7 @@ Func _WriteINI()
 	IniWrite($settings, "GuiText", "ImportFromTXT", $Text_ImportFromTXT)
 	IniWrite($settings, "GuiText", "ImportFromVSZ", $Text_ImportFromVSZ)
 	IniWrite($settings, "GuiText", "Exit", $Text_Exit)
+	IniWrite($settings, "GuiText", "ExitSaveDb", $Text_ExitSaveDb)
 	IniWrite($settings, "GuiText", "Edit", $Text_Edit)
 	IniWrite($settings, "GuiText", "ClearAll", $Text_ClearAll)
 	IniWrite($settings, "GuiText", "Cut", $Text_Cut)
@@ -4461,6 +4479,16 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'Odd', $Text_Odd)
 	IniWrite($settings, 'GuiText', 'Mark', $Text_Mark)
 	IniWrite($settings, 'GuiText', 'Space', $Text_Space)
+	IniWrite($settings, 'GuiText', 'Update', $Text_Update)
+	IniWrite($settings, 'GuiText', 'UpdateMsg', $Text_UpdateMsg)
+	IniWrite($settings, 'GuiText', 'Recover', $Text_Recover)
+	IniWrite($settings, 'GuiText', 'RecoverMsg', $Text_RecoverMsg)
+	IniWrite($settings, 'GuiText', 'SelectConnectedAP', $Text_SelectConnectedAP)
+	IniWrite($settings, 'GuiText', 'VistumblerHome', $Text_VistumblerHome)
+	IniWrite($settings, 'GuiText', 'VistumblerForum', $Text_VistumblerForum)
+	IniWrite($settings, 'GuiText', 'VistumblerWiki', $Text_VistumblerWiki)
+	IniWrite($settings, 'GuiText', 'CheckForUpdates', $Text_CheckForUpdates)
+	IniWrite($settings, 'GuiText', 'SelectWhatToCopy', $Text_SelectWhatToCopy)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5822,6 +5850,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_ImportFromTXT = IniRead($newlanguagefile, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
 		$Text_ImportFromVSZ = IniRead($newlanguagefile, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
 		$Text_Exit = IniRead($newlanguagefile, 'GuiText', 'Exit', 'E&xit')
+		$Text_ExitSaveDb = IniRead($newlanguagefile, 'GuiText', 'ExitSaveDb', 'Exit (Save DB)')
 		$Text_Edit = IniRead($newlanguagefile, 'GuiText', 'Edit', 'E&dit')
 		$Text_ClearAll = IniRead($newlanguagefile, 'GuiText', 'ClearAll', 'Clear All')
 		$Text_Cut = IniRead($newlanguagefile, 'GuiText', 'Cut', 'Cut')
@@ -5990,18 +6019,29 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Odd = IniRead($newlanguagefile, 'GuiText', 'Odd', 'Odd')
 		$Text_Mark = IniRead($newlanguagefile, 'GuiText', 'Mark', 'Mark')
 		$Text_Space = IniRead($newlanguagefile, 'GuiText', 'Space', 'Space')
+		$Text_Update = IniRead($newlanguagefile, 'GuiText', 'Update', 'Update')
+		$Text_UpdateMsg = IniRead($newlanguagefile, 'GuiText', 'UpdateMsg', 'Update Found. Would you like to update vistumbler?')
+		$Text_Recover = IniRead($newlanguagefile, 'GuiText', 'Recover', 'Recover')
+		$Text_RecoverMsg = IniRead($newlanguagefile, 'GuiText', 'RecoverMsg', 'Old DB Found. Would you like to recover it?')
+		$Text_SelectConnectedAP = IniRead($newlanguagefile, 'GuiText', 'SelectConnectedAP', 'Select Connected AP')
+		$Text_VistumblerHome = IniRead($newlanguagefile, 'GuiText', 'VistumblerHome', 'Vistumbler Home')
+		$Text_VistumblerForum = IniRead($newlanguagefile, 'GuiText', 'VistumblerForum', 'Vistumbler Forum')
+		$Text_VistumblerWiki = IniRead($newlanguagefile, 'GuiText', 'VistumblerWiki', 'Vistumbler Wiki')
+		$Text_CheckForUpdates = IniRead($newlanguagefile, 'GuiText', 'CheckForUpdates', 'Check For Updates')
+		$Text_SelectWhatToCopy = IniRead($newlanguagefile, 'GuiText', 'SelectWhatToCopy', 'Select what you want to copy')
+		
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
 		;Remove all current Mac address/manus in the array
-		$query = "DELETE * FROM Manufactures"
+		$query = "DELETE * FROM Manufacturers"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		;Rewrite Mac address/labels from listview into the array
 		$itemcount = _GUICtrlListView_GetItemCount($GUI_Manu_List) - 1; Get List Size
 		For $findloop = 0 To $itemcount
 			$o_manu_mac = StringUpper(StringReplace(_GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 0), '"', ''))
 			$o_manu = _GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 1)
-			_AddRecord($VistumblerDB, "Manufactures", $DB_OBJ, $o_manu_mac & '|' & $o_manu)
+			_AddRecord($VistumblerDB, "Manufacturers", $DB_OBJ, $o_manu_mac & '|' & $o_manu)
 		Next
 		;rewrite manufacturer ini
 		IniDelete($manufini, "MANUFACURERS")
@@ -6338,6 +6378,7 @@ EndFunc   ;==>_EditManu_Ok
 Func _RemoveManu();Removed manufactuer from list
 	$Apply_Manu = 1
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Manu_List)
+	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem($GUI_Manu_List, $EditLine)
 EndFunc   ;==>_RemoveManu
 
 Func _AddLabel();Adds new label to settings gui label list
