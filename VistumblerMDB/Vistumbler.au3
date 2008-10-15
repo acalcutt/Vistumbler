@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 2.1'
-$last_modified = '10/10/2008'
+$version = '9.0 Beta 2.2'
+$last_modified = '10/15/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -187,6 +187,7 @@ Dim $AutoCheckForUpdates = IniRead($settings, 'Vistumbler', 'AutoCheckForUpdates
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 1)
 Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
+Dim $DefaultApapter = IniRead($settings, 'Vistumbler', 'DefaultApapter', 'Default')
 Dim $SplitPercent = IniRead($settings, 'Vistumbler', 'SplitPercent', '0.2')
 Dim $SplitHeightPercent = IniRead($settings, 'Vistumbler', 'SplitHeightPercent', '0.65')
 Dim $RefreshLoopTime = IniRead($settings, 'Vistumbler', 'Sleeptime', 1000)
@@ -535,6 +536,7 @@ Dim $Text_VistumblerForum = IniRead($settings, 'GuiText', 'VistumblerForum', 'Vi
 Dim $Text_VistumblerWiki = IniRead($settings, 'GuiText', 'VistumblerWiki', 'Vistumbler Wiki')
 Dim $Text_CheckForUpdates = IniRead($settings, 'GuiText', 'CheckForUpdates', 'Check For Updates')
 Dim $Text_SelectWhatToCopy = IniRead($settings, 'GuiText', 'SelectWhatToCopy', 'Select what you want to copy')
+Dim $Text_Default = IniRead($settings, 'GuiText', 'Default', 'Default')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -714,6 +716,32 @@ $ExportToTXT2 = GUICtrlCreateMenuItem($Text_ExportToTXT, $Export)
 $ExportToVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1, $Export)
 $ExportToKML = GUICtrlCreateMenuItem($Text_ExportToKML, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
+
+Dim $found_adapter = 0
+Dim $NetworkAdapters[2]
+$Interfaces = GUICtrlCreateMenu("Interface")
+$menuid = GUICtrlCreateMenuItem($Text_Default, $Interfaces)
+$NetworkAdapters[1] = $menuid
+GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
+;Get network interfaces and add the to the interface menu
+$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
+For $object In $colNIC
+	$adaptername = $object.NetConnectionID
+	$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
+	_ArrayAdd($NetworkAdapters, $menuid)
+	GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
+	If $DefaultApapter = $adaptername Then
+		$found_adapter = 1
+		GUICtrlSetState($menuid, $GUI_CHECKED)
+	EndIf
+Next
+$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
+;If the old default network adapter is not found, set vistumbler to use the default adapter
+If $found_adapter = 0 Then
+	$DefaultApapter = $Text_Default
+	GUICtrlSetState($NetworkAdapters[1], $GUI_CHECKED)
+EndIf
 
 $Extra = GUICtrlCreateMenu($Text_Extra)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
@@ -1020,7 +1048,12 @@ Func _ScanAccessPoints()
 	$FoundAPs = 0
 	;RunWait("net restart Wlansvc", '', @SW_HIDE)
 	FileDelete($tempfile)
-	_RunDOS($netsh & ' wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+	If $DefaultApapter = $Text_Default Then
+		_RunDOS($netsh & ' wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+	Else
+		_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+	EndIf
+	
 	$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
 	If $arrayadded = 1 Then
 		;Strip out whitespace before and after text on each line
@@ -4150,6 +4183,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
 	IniWrite($settings, "Vistumbler", "CheckForBetaUpdates", $CheckForBetaUpdates)
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
+	IniWrite($settings, "Vistumbler", "DefaultApapter", $DefaultApapter)
 	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
 	IniWrite($settings, "Vistumbler", "SplitHeightPercent", $SplitHeightPercent)
 	IniWrite($settings, "Vistumbler", "Sleeptime", $RefreshLoopTime)
@@ -4489,6 +4523,7 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'VistumblerWiki', $Text_VistumblerWiki)
 	IniWrite($settings, 'GuiText', 'CheckForUpdates', $Text_CheckForUpdates)
 	IniWrite($settings, 'GuiText', 'SelectWhatToCopy', $Text_SelectWhatToCopy)
+	IniWrite($settings, 'GuiText', 'Default', $Text_Default)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -6029,7 +6064,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_VistumblerWiki = IniRead($newlanguagefile, 'GuiText', 'VistumblerWiki', 'Vistumbler Wiki')
 		$Text_CheckForUpdates = IniRead($newlanguagefile, 'GuiText', 'CheckForUpdates', 'Check For Updates')
 		$Text_SelectWhatToCopy = IniRead($newlanguagefile, 'GuiText', 'SelectWhatToCopy', 'Select what you want to copy')
-		
+		$Text_Default = IniRead($newlanguagefile, 'GuiText', 'Default', 'Default')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -6877,3 +6912,16 @@ Func _SelectConnectedAp()
 	EndIf
 	Return ($return)
 EndFunc   ;==>_SelectConnectedAp
+
+Func _InterfaceChanged()
+	$menuid = @GUI_CtrlId
+	For $uc = 1 To $NetworkAdapters[0]
+		If $NetworkAdapters[$uc] = $menuid Then
+			GUICtrlSetState($NetworkAdapters[$uc], $GUI_CHECKED)
+		Else
+			GUICtrlSetState($NetworkAdapters[$uc], $GUI_UNCHECKED)
+		EndIf
+	Next
+	$DefaultApapter = GUICtrlRead(@GUI_CtrlId, 1)
+	ConsoleWrite(@GUI_CtrlId & '-' & GUICtrlRead(@GUI_CtrlId, 1) & " was selected." & @CRLF)
+EndFunc   ;==>_InterfaceChanged
