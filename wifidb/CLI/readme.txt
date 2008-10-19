@@ -1,6 +1,14 @@
 This is a converter for the Vistumbler Summery Text file to the VS1 file.
 
 I wrote this script in windows, but it can run on any OS that you have PHP on.
+
+There are two ways to run this, script based PHP or the packaged EXE. The EXE there is no need to have PHP installed, 
+the script file, you will need PHP installed.
+
+To run the exe just put the properly formated Txt file from Vistumbler in the TXT folder, double click the converter.exe file to run it. 
+Or go to a command propmt and run it via that.
+
+
 To run this scrip stand-alone all you need to do is download the PHP package from [url]http://us2.php.net/get/php-5.2.6-Win32.zip/from/a/mirror[/url]
 
 Browse to Y:\[Path to PHP]\bin\ 
@@ -9,61 +17,8 @@ Type "php X:\[Path to converter]\convert_vs1.php"
                -  Where X is the drive you have the converter stored and [Path to converter] is the folder that the converter lives in.
 
 The convert_vs1.php file searches the "text\" folder for vistumbler Text Summery files to convert
-It is self aware of where it is living so there is no need to configure it, unless you want it to 
-look in another Directory. 
+It is self aware of where it is living so there is no need to configure it
 
-To do so just comment out:
-
-/*	
-	$dirs=$_SERVER['PHP_SELF'];
-	$dir_exp = explode("\\", $dirs);
-	$dir_c= count($dir_exp);
-	foreach($dir_exp as $d)
-	{
-		if($d == "convert_vs1.php")
-		{
-			continue;
-		}
-		$dir .= $d."\\";
-	}
-	$dir.="text\\";
-*/
-
-and uncomment: 
-
-// $dir = "Place the DIR that you want searched Here after commenting out the above portion" ;
-
-
-===================================================================
-
-To change where the output of the VS1 file goes do the same for functions.php
-
-comment out:
-
-/*
-	$dir_exp = explode("\\", $source);
-	$dir_c = count($dir_exp);
-	$script = $dir_exp[$dir_c-1];
-	if ($debug ==1 )
-	{
-		echo $script."\n";
-	}
-	foreach($dir_exp as $d)
-	{	
-		if($d == $script)
-		{
-			continue;
-		}
-		$dir .= $d."\\";
-	}
-	$dir.="vs1\\";
-*/
-
-and uncomment:
-
-/*
-$dir = " Place the DIR that you want the VS1 files to go,  after commenting out the above portion " ;
-*/
 
 ===================================================================
 
@@ -73,7 +28,6 @@ This is the function that does all the work
 $source : the dir and file that you are converting
 
 "file"  : output the conversion to a VS1 file, [Supports "file", "File", or "FILE"] (I am working on having a database output too, via MySQL)
-
 
 
 
@@ -109,3 +63,27 @@ DONE!
 Start Time : 11:48:16
  Stop Time : 11:51:38
 -------
+
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release, no GPS conversion yet, just a file converter.
+
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Fixed most of the GPS issues, is now converting from DD.dddd to DDMM.mmmm(DDDmm.mmmm also supported)
+==============================
