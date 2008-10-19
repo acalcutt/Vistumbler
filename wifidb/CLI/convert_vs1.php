@@ -1,5 +1,6 @@
 <?php
-error_reporting(E_ALL);
+$TOTAL_START=date("H:i:s");
+#error_reporting(E_ALL);
 $debug = 0;
 $lastedit="9.22.2008";
 $start="6.21.2008";
@@ -43,7 +44,6 @@ while (!(($file = readdir($dh)) == false))
 }
 echo "\n\n";
 closedir($dh);
-
 foreach($file_a as $file)
 {
 	$source = $textdir.$file;
@@ -53,6 +53,8 @@ foreach($file_a as $file)
 //	function ( Source file , output destination type [ file only at the moment MySQL support soon ] )
 }
 
+$TOTAL_END = date("H:i:s");
+echo "\nTOTAL Running time::\n\nStart: ".$TOTAL_START."\nStop : ".$TOTAL_END."\n";
 
 
 
@@ -90,19 +92,9 @@ return $return;
 
 function convert_vs1($source, $out)
 {
-
-// self aware of script location and where to put VS1 files.
-
-$dir = getcwd();
-$dir.="\\vs1\\";
-
-/*
-$dir = " Place the DIR that you want the VS1 files to go,  after commenting out the above portion " ;
-*/
-
+$dir = $GLOBALS['vs1dir'];
 // dfine time that the script started
 $start = date("H:i:s");
-
 // counters
 $c=0;
 $cc=0;
@@ -114,14 +106,14 @@ $complete=0;
 $return = file($source);
 //Access point and GPS Data Array
 $apdata=array();
-
+global $gpsdata;
 // create file name of VS1 file from the name of the Txt file, 
 $src=explode("\\",$source);
 $f_max = count($src);
 $file_src = explode(".",$src[$f_max-1]);
 $file_ext = $dir.$file_src[0].'.vs1';
 
-$filename = ( $file_ext );
+$filename = $file_ext;
 	if($GLOBALS["debug"] == 1 ){echo $file_ext."\n".$filename."\n";}
 
 // define initial write and appends
@@ -131,7 +123,7 @@ $fileappend = fopen($filename, "a");
 
 //create interval for progress
 $line = count($return);
-$stat_c = $line/100;
+$stat_c = $line/97;
 if ($GLOBALS["debug"] ==1){echo $stat_c."\n";}
 if ($GLOBALS["debug"] ==1){echo $line."\n";}
 
@@ -175,7 +167,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 		echo "\n\n+-+-+-+-+-+-\n".$gpsdata_t["lat"]."+-\n".$gpsdata_t["long"]."+-\n".$gpsdata_t["sats"]."+-\n".$gpsdata_t["date"]."+-\n".$gpsdata_t["time"]."+-\n";	
 	}
 	
-	if (!isset($gpsdata))
+	if (is_null($gpsdata))
 	{
 		$n++;
 		$N++;
@@ -293,8 +285,6 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	{
 	//	GPS Convertion :
 		$latitude = explode(" ", $gps["lat"]);
-		$old_lat = $wifi[8];
-		$old_long = $wifi[9];
 		$gps["lat"]="";
 		$lat_front = explode(".", $latitude[1]);
 		$lat_left = strlen($lat_front[0]);
@@ -306,80 +296,76 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 		
 		if($lat_left == 2 && $long_left == 2)
 		{
-			$lat_back = "0.".$lat_front[1];
-			$lat_back = $lat_back*60;
+			$lat_back = "0.".$lat_front[1]; // add a 0. to the begining of the number to make it a decmal
+			$lat_back = $lat_back*60; // multiply the decimal to to convert it to minuets
 			
-			$long_back = "0.".$long_front[1];
-			$long_back = $long_back*60;
-			$Lat_t= explode(".",$lat_back);
-			$Lat_c = strlen($Lat_t[0]);
+			$Lat_temp  = explode(".",$lat_back); //get the numbers before the decimal place.
+			$Lat_temp_ = strlen($Lat_temp[0]); //find out how long it is before the decimal
+			$back_lat  = strlen($Lat_temp[1]);
 			
-			if($Lat_c == 1)
-			{
-				$lat_ = $lat_front[0]."0".$lat_back;
-			}
-			else
-			{
-				$lat_ = $lat_front[0].$lat_back;
-			}
-		
-			$Long_t = explode(".",$long_back);
-			$Long_c = strlen($Long_t[0]);
-			if($Long_c == 1){$long_ =  $long_front[0]."0".$long_back;}
+			if($back_lat > 4){$Lat_temp[1] = substr_replace($Lat_temp[1],"",4);}
+			
+			if($Lat_temp_ == 1){$lat_ = $lat_front[0]."0".$lat_back;}
+				else{$lat_ = $lat_front[0].$lat_back;}
+		//////////////////// END LAT CONVERSION ////////////////////
+
+		//////////////////// START LONG CONVERSION ////////////////////
+			$long_back = "0.".$long_front[1]; //// add a 0. to the begining of the number to make it a decmal
+			$long_back = $long_back*60; // multiply the decimal to to convert it to minuets
+			
+			$Long_temp = explode(".",$long_back); //get the numbers before the decimal place.
+			$Long_temp_ = strlen($Long_temp[0]);
+			$back_long = strlen($Long_temp[1]);
+			if($back_long > 4){$Long_temp[1]= substr_replace($Long_temp[1],"",4);}
+			
+			if($Long_temp_ == 1){$long_ =  $long_front[0]."0".$long_back;}
 				else{$long_ =  $long_front[0].$long_back;}
-			if($latitude[0] == "S")
-			{$la = "-";}else{$la="";}
-			if($longitude[0]=="W")
-			{$lo = "-";}else{$lo="";}
 			
-			if($lat_==0){$lat="0.0000";}
-				else{
-					$gps["lat"]=$la.$lat_;
-				}
+			if($latitude[0] == "S"){$la = "-";}
+				else{$la="";}
+			if($longitude[0]=="W"){$lo = "-";}
+				else{$lo="";}
 			
-			if($long_==0){$long="0.0000";}
-				else{
-					$gps["long"]=$lo.$long_;
-				}
+			if($lat_==0){$gps["lat"]="0.0000";}
+				else{$gps["lat"]=$la.$lat_;}
+			
+			if($long_==0){$gps["long"]="0.0000";}
+				else{$gps["long"]=$lo.$long_;}
+		//////////////////// END LONG CONVERSION ////////////////////
+
 		}elseif($lat_left == 4 && $long_left == 4)
 		{
-			if($latitude[0] == "S")
-			{$la = "-";}else{$la="";}
-			
-			if($longitude[0]=="W")
-			{$lo = "-";}else{$lo="";}
+			if($latitude[0] == "S"){$la = "-";}
+				else{$la="";}			
+			if($longitude[0]=="W"){$lo = "-";}
+				else{$lo="";}
 			
 			$long = $lo."".$long_front[0].".".$long_front[1];
-		#	echo $old_lat."\n";
 			
 			$lat = $la."".$lat_front[0].".".$lat_front[1];
-		#	echo $old_long."\n";
-#			echo "\n".$lat;
-#			echo "\n".$long;
-			if($lat == NULL){$gps["lat"]="N 0.0000";}else{
-			$gps["long"]= $long;}
-			if($long == NULL){$gps["long"]="W 0.0000";}else{
-			$gps["lat"]= $lat;}
+			
+			if($lat == NULL){$gps["lat"]="N 0.0000";}
+				else{$gps["long"]= $long;}
+			
+			if($long == NULL){$gps["long"]="W 0.0000";}
+				else{$gps["lat"]= $lat;}
 			
 		}elseif($lat_left == 1 && $long_left == 1)
 		{
-			if($latitude[0] == "S")
-			{$la = "-";}else{$la="";}
+			if($latitude[0] == "S"){$la = "-";}
+				else{$la="";}
 			
-			if($longitude[0]=="W")
-			{$lo = "-";}else{$lo="";}
+			if($longitude[0]=="W"){$lo = "-";}
+				else{$lo="";}
 			
 			$long = $lo."".$long_front[0].".".$long_front[1];
-		#	echo $old_lat."\n";
 			
 			$lat = $la."".$lat_front[0].".".$lat_front[1];
-		#	echo $old_long."\n";
-#			echo "\n".$lat;
-#			echo "\n".$long;
-			if($lat == NULL){$gps["lat"]="N 0.0000";}else{
-			$gps["long"]= $long;}
-			if($long == NULL){$gps["long"]="W 0.0000";}else{
-			$gps["lat"]= $lat;}
+		
+			if($lat == NULL){$gps["lat"]="N 0.0000";}
+				else{$gps["long"]= $long;}
+			if($long == NULL){$gps["long"]="W 0.0000";}
+				else{$gps["lat"]= $lat;}
 		}
 
 //	END GPS convert
