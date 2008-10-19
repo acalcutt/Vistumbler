@@ -332,7 +332,44 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 			if($long_==0){$gps["long"]="0.0000";}
 				else{$gps["long"]=$lo.$long_;}
 		//////////////////// END LONG CONVERSION ////////////////////
+		}elseif($lat_left == 3 && $long_left == 3)
+		{
+			$lat_back = "0.".$lat_front[1]; // add a 0. to the begining of the number to make it a decmal
+			$lat_back = $lat_back*60; // multiply the decimal to to convert it to minuets
+			
+			$Lat_temp  = explode(".",$lat_back); //get the numbers before the decimal place.
+			$Lat_temp_ = strlen($Lat_temp[0]); //find out how long it is before the decimal
+			$back_lat  = strlen($Lat_temp[1]);
+			
+			if($back_lat > 4){$Lat_temp[1] = substr_replace($Lat_temp[1],"",4);}
+			
+			if($Lat_temp_ == 0){$lat_ = $lat_front[0]."0".$lat_back;}
+				else{$lat_ = $lat_front[0].$lat_back;}
+		//////////////////// END LAT CONVERSION ////////////////////
 
+		//////////////////// START LONG CONVERSION ////////////////////
+			$long_back = "0.".$long_front[1]; //// add a 0. to the begining of the number to make it a decmal
+			$long_back = $long_back*60; // multiply the decimal to to convert it to minuets
+			
+			$Long_temp = explode(".",$long_back); //get the numbers before the decimal place.
+			$Long_temp_ = strlen($Long_temp[0]);
+			$back_long = strlen($Long_temp[1]);
+			if($back_long > 4){$Long_temp[1]= substr_replace($Long_temp[1],"",4);}
+			
+			if($Long_temp_ == 0){$long_ =  $long_front[0]."0".$long_back;}
+				else{$long_ =  $long_front[0].$long_back;}
+			
+			if($latitude[0] == "S"){$la = "-";}
+				else{$la="";}
+			if($longitude[0]=="W"){$lo = "-";}
+				else{$lo="";}
+			
+			if($lat_==0){$gps["lat"]="0.0000";}
+				else{$gps["lat"]=$la.$lat_;}
+			
+			if($long_==0){$gps["long"]="0.0000";}
+				else{$gps["long"]=$lo.$long_;}
+		//////////////////// END LONG CONVERSION ////////////////////
 		}elseif($lat_left == 4 && $long_left == 4)
 		{
 			if($latitude[0] == "S"){$la = "-";}
