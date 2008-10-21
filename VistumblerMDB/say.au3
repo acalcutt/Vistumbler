@@ -1,5 +1,6 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_icon=icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
@@ -8,24 +9,29 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.3 Beta
+;AutoIt Version: v3.2.13.7 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/19/2008'
 $Script_Name = 'SayText'
-$Script_Website = 'http://www.TechIdiots.net'
-$Script_Function = 'Uses Sound files to say a number from 0 - 100 or Uses Microsoft SAPI to say anything'
-$version = 'v1.0'
-$last_modified = '07/19/2008'
+$Script_Website = 'http://www.Vistumbler.net'
+$Script_Function = 'Uses Sound files, Microsoft SAPI, or MIDI sounds to say a number from 0 - 100'
+$version = 'v2.0'
+$last_modified = '10/20/2008'
 ;--------------------------------------------------------
 #include <String.au3>
+#include <Midiudf.au3>
+
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $say = ''
 Dim $type = 2
-Dim $SayPercent
+Dim $SayPercent = 0
+Dim $Instrument = 0
+Dim $MidiWaitTime = 500
+
 
 ;<-- Start Command Line Input -->
 For $loop = 1 To $CmdLine[0]
-	If StringInStr($CmdLine[$loop], '/s') Then ;Set ini file
+	If StringInStr($CmdLine[$loop], '/s') Then
 		$saysplit = StringSplit($CmdLine[$loop], '=')
 		$say = $saysplit[2]
 	EndIf
@@ -33,8 +39,19 @@ For $loop = 1 To $CmdLine[0]
 		$typesplit = StringSplit($CmdLine[$loop], '=')
 		$type = $typesplit[2]
 	EndIf
+	If StringInStr($CmdLine[$loop], '/p') Then
+		$SayPercent = 1
+	EndIf
+	If StringInStr($CmdLine[$loop], '/i') Then
+		$instumentsplit = StringSplit($CmdLine[$loop], '=')
+		$Instrument = $instumentsplit[2]
+	EndIf
+	If StringInStr($CmdLine[$loop], '/w') Then
+		$waitsplit = StringSplit($CmdLine[$loop], '=')
+		$MidiWaitTime = $waitsplit[2]
+	EndIf
 	If StringInStr($CmdLine[$loop], '/?') Then
-		MsgBox(0, '', '/s="thing to say"' & @CRLF & @CRLF & '/t=1     Vistumbler Sounds' & @CRLF & '/t=2     Microsoft SAPI')
+		MsgBox(0, '', '/s="thing to say"' & @CRLF & @CRLF & '/t=1     Vistumbler Sounds' & @CRLF & '/t=2     Microsoft SAPI' & @CRLF & '/t=3     Midi' & @CRLF & @CRLF & '/i=	Midi Instrument number' & @CRLF & @CRLF & '/w=	Midi Instrument play time' & @CRLF & @CRLF & '/p	say percent')
 		Exit
 	EndIf
 Next
@@ -42,22 +59,16 @@ Next
 
 If $say <> '' Then
 	If $type = 1 Then
-		If StringTrimLeft($say, StringLen($say) - 1) = '%' Then
-			$sayvis = StringTrimRight($say, 1)
-			$SayPercent = 1
-		Else
-			$sayvis = $say
-			$SayPercent = 0
-		EndIf
-		If StringIsInt($sayvis) = 1 And StringLen($sayvis) <= 3 Then _SpeakSignal($sayvis)
+		If StringIsInt($say) = 1 And StringLen($say) <= 3 Then _SpeakSignal($say)
 	ElseIf $type = 2 Then
+		If $SayPercent = 1 Then $say &= '%'
 		_TalkOBJ($say)
+	ElseIf $type = 3 Then
+		_PlayMidi($Instrument, $say, $MidiWaitTime)
 	EndIf
 EndIf
-
 Exit
-		
-		
+				
 Func _TalkOBJ($s_text)
 	Local $o_speech = ObjCreate("SAPI.SpVoice")
 	$o_speech.Speak($s_text)
@@ -139,4 +150,367 @@ Func _SpeakSignal($SpeakNum);Says then signal given
 		EndIf
 	EndIf
 	If $SayPercent = 1 Then SoundPlay($SoundDir & 'percent.wav', 1)
-EndFunc   ;==>_SpeakSignal		
+EndFunc   ;==>_SpeakSignal
+
+Func _PlayMidi($Instument = 0, $Signal = 0, $Sleeptime = 500)
+	$open = _midiOutOpen ()
+	_MidiOutShortMsg ($open, 256 * $Instument + 192) ;Select Instrument
+	If $Signal > 0 And $Signal <= 9 Then 
+		$PitchOn = $A0_NOTEON
+	ElseIf $Signal >= 10 And $Signal <= 14  Then 
+		$PitchOn = $A0SHARP_NOTEON
+	ElseIf $Signal = 15 Then 
+		$PitchOn = $B0_NOTEON
+	ElseIf $Signal = 16 Then 
+		$PitchOn = $C1_NOTEON
+	ElseIf $Signal = 17 Then 
+		$PitchOn = $C1SHARP_NOTEON
+	ElseIf $Signal = 18 Then 
+		$PitchOn = $D1_NOTEON
+	ElseIf $Signal = 19 Then 
+		$PitchOn = $D1SHARP_NOTEON
+	ElseIf $Signal = 20 Then 
+		$PitchOn = $E1_NOTEON
+	ElseIf $Signal = 21 Then 
+		$PitchOn = $F1_NOTEON
+	ElseIf $Signal = 22 Then 
+		$PitchOn = $F1SHARP_NOTEON
+	ElseIf $Signal = 23 Then 
+		$PitchOn = $G1_NOTEON
+	ElseIf $Signal = 24 Then 
+		$PitchOn = $G1SHARP_NOTEON
+	ElseIf $Signal = 25 Then 
+		$PitchOn = $A1_NOTEON
+	ElseIf $Signal = 26 Then 
+		$PitchOn = $A1SHARP_NOTEON
+	ElseIf $Signal = 27 Then 
+		$PitchOn = $B1_NOTEON
+	ElseIf $Signal = 28 Then 
+		$PitchOn = $C2_NOTEON
+	ElseIf $Signal = 29 Then 
+		$PitchOn = $C2SHARP_NOTEON
+	ElseIf $Signal = 30 Then 
+		$PitchOn = $D2_NOTEON
+	ElseIf $Signal = 31 Then 
+		$PitchOn = $D2SHARP_NOTEON
+	ElseIf $Signal = 32 Then 
+		$PitchOn = $E2_NOTEON
+	ElseIf $Signal = 33 Then 
+		$PitchOn = $F2_NOTEON
+	ElseIf $Signal = 34 Then 
+		$PitchOn = $F2SHARP_NOTEON
+	ElseIf $Signal = 35 Then 
+		$PitchOn = $G2_NOTEON
+	ElseIf $Signal = 36 Then 
+		$PitchOn = $G2SHARP_NOTEON
+	ElseIf $Signal = 37 Then 
+		$PitchOn = $A2_NOTEON
+	ElseIf $Signal = 38 Then 
+		$PitchOn = $A2SHARP_NOTEON
+	ElseIf $Signal = 39 Then 
+		$PitchOn = $B2_NOTEON
+	ElseIf $Signal = 40 Then 
+		$PitchOn = $C3_NOTEON
+	ElseIf $Signal = 41 Then 
+		$PitchOn = $C3SHARP_NOTEON
+	ElseIf $Signal = 42 Then 
+		$PitchOn = $D3_NOTEON
+	ElseIf $Signal = 43 Then 
+		$PitchOn = $D3SHARP_NOTEON
+	ElseIf $Signal = 44 Then 
+		$PitchOn = $E3_NOTEON
+	ElseIf $Signal = 45 Then 
+		$PitchOn = $F3_NOTEON
+	ElseIf $Signal = 46 Then 
+		$PitchOn = $F3SHARP_NOTEON
+	ElseIf $Signal = 47 Then 
+		$PitchOn = $G3_NOTEON
+	ElseIf $Signal = 48 Then 
+		$PitchOn = $G3SHARP_NOTEON
+	ElseIf $Signal = 49 Then 
+		$PitchOn = $A3_NOTEON
+	ElseIf $Signal = 50 Then 
+		$PitchOn = $A3SHARP_NOTEON
+	ElseIf $Signal = 51 Then 
+		$PitchOn = $B3_NOTEON
+	ElseIf $Signal = 52 Then 
+		$PitchOn = $C4_NOTEON
+	ElseIf $Signal = 53 Then 
+		$PitchOn = $C4SHARP_NOTEON
+	ElseIf $Signal = 54 Then 
+		$PitchOn = $D4_NOTEON
+	ElseIf $Signal = 55 Then 
+		$PitchOn = $D4SHARP_NOTEON
+	ElseIf $Signal = 56 Then 
+		$PitchOn = $E4_NOTEON
+	ElseIf $Signal = 57 Then 
+		$PitchOn = $F4_NOTEON
+	ElseIf $Signal = 58 Then 
+		$PitchOn = $F4SHARP_NOTEON
+	ElseIf $Signal = 59 Then 
+		$PitchOn = $G4_NOTEON
+	ElseIf $Signal = 60 Then 
+		$PitchOn = $G4SHARP_NOTEON
+	ElseIf $Signal = 61 Then 
+		$PitchOn = $A4_NOTEON
+	ElseIf $Signal = 62 Then 
+		$PitchOn = $A4SHARP_NOTEON
+	ElseIf $Signal = 63 Then 
+		$PitchOn = $B4_NOTEON
+	ElseIf $Signal = 64 Then 
+		$PitchOn = $C5_NOTEON
+	ElseIf $Signal = 65 Then 
+		$PitchOn = $C5SHARP_NOTEON
+	ElseIf $Signal = 66 Then 
+		$PitchOn = $D5_NOTEON
+	ElseIf $Signal = 67 Then 
+		$PitchOn = $D5SHARP_NOTEON
+	ElseIf $Signal = 68 Then 
+		$PitchOn = $E5_NOTEON
+	ElseIf $Signal = 69 Then 
+		$PitchOn = $F5_NOTEON
+	ElseIf $Signal = 70 Then 
+		$PitchOn = $F5SHARP_NOTEON
+	ElseIf $Signal = 71 Then 
+		$PitchOn = $G5_NOTEON
+	ElseIf $Signal = 72 Then 
+		$PitchOn = $G5SHARP_NOTEON
+	ElseIf $Signal = 73 Then 
+		$PitchOn = $A5_NOTEON
+	ElseIf $Signal = 74 Then 
+		$PitchOn = $A5SHARP_NOTEON
+	ElseIf $Signal = 75 Then 
+		$PitchOn = $B5_NOTEON
+	ElseIf $Signal = 76 Then 
+		$PitchOn = $C6_NOTEON
+	ElseIf $Signal = 77 Then 
+		$PitchOn = $C6SHARP_NOTEON
+	ElseIf $Signal = 78 Then 
+		$PitchOn = $D6_NOTEON
+	ElseIf $Signal = 79 Then 
+		$PitchOn = $D6SHARP_NOTEON
+	ElseIf $Signal = 80 Then 
+		$PitchOn = $E6_NOTEON
+	ElseIf $Signal = 81 Then 
+		$PitchOn = $F6_NOTEON
+	ElseIf $Signal = 82 Then 
+		$PitchOn = $F6SHARP_NOTEON
+	ElseIf $Signal = 83 Then 
+		$PitchOn = $G6_NOTEON
+	ElseIf $Signal = 84 Then 
+		$PitchOn = $G6SHARP_NOTEON
+	ElseIf $Signal = 85 Then 
+		$PitchOn = $A6_NOTEON
+	ElseIf $Signal = 86 Then 
+		$PitchOn = $A6SHARP_NOTEON
+	ElseIf $Signal = 87 Then 
+		$PitchOn = $B6_NOTEON
+	ElseIf $Signal = 88 Then 
+		$PitchOn = $C7_NOTEON
+	ElseIf $Signal = 89 Then 
+		$PitchOn = $C7SHARP_NOTEON
+	ElseIf $Signal = 90 Then 
+		$PitchOn = $D7_NOTEON
+	ElseIf $Signal = 91 Then 
+		$PitchOn = $D7SHARP_NOTEON
+	ElseIf $Signal = 92 Then 
+		$PitchOn = $E7_NOTEON
+	ElseIf $Signal = 93 Then 
+		$PitchOn = $F7_NOTEON
+	ElseIf $Signal = 94 Then 
+		$PitchOn = $F7SHARP_NOTEON
+	ElseIf $Signal = 95 Then 
+		$PitchOn = $G7_NOTEON
+	ElseIf $Signal = 96 Then 
+		$PitchOn = $G7SHARP_NOTEON
+	ElseIf $Signal = 97 Then 
+		$PitchOn = $A7_NOTEON
+	ElseIf $Signal = 98 Then 
+		$PitchOn = $A7SHARP_NOTEON
+	ElseIf $Signal = 99 Then 
+		$PitchOn = $B7_NOTEON
+	ElseIf $Signal = 100 Then 
+		$PitchOn = $C8_NOTEON
+	EndIf
+	_midioutshortmsg ($open, $PitchOn);Start playing Instrument
+	Sleep($Sleeptime)
+	If $Signal > 0 And $Signal <= 9 Then 
+		$PitchOff = $A0_NOTEOFF
+	ElseIf $Signal >= 10 And $Signal <= 14  Then 
+		$PitchOff = $A0SHARP_NOTEOFF
+	ElseIf $Signal = 15 Then 
+		$PitchOff = $B0_NOTEOFF
+	ElseIf $Signal = 16 Then 
+		$PitchOff = $C1_NOTEOFF
+	ElseIf $Signal = 17 Then 
+		$PitchOff = $C1SHARP_NOTEOFF
+	ElseIf $Signal = 18 Then 
+		$PitchOff = $D1_NOTEOFF
+	ElseIf $Signal = 19 Then 
+		$PitchOff = $D1SHARP_NOTEOFF
+	ElseIf $Signal = 20 Then 
+		$PitchOff = $E1_NOTEOFF
+	ElseIf $Signal = 21 Then 
+		$PitchOff = $F1_NOTEOFF
+	ElseIf $Signal = 22 Then 
+		$PitchOff = $F1SHARP_NOTEOFF
+	ElseIf $Signal = 23 Then 
+		$PitchOff = $G1_NOTEOFF
+	ElseIf $Signal = 24 Then 
+		$PitchOff = $G1SHARP_NOTEOFF
+	ElseIf $Signal = 25 Then 
+		$PitchOff = $A1_NOTEOFF
+	ElseIf $Signal = 26 Then 
+		$PitchOff = $A1SHARP_NOTEOFF
+	ElseIf $Signal = 27 Then 
+		$PitchOff = $B1_NOTEOFF
+	ElseIf $Signal = 28 Then 
+		$PitchOff = $C2_NOTEOFF
+	ElseIf $Signal = 29 Then 
+		$PitchOff = $C2SHARP_NOTEOFF
+	ElseIf $Signal = 30 Then 
+		$PitchOff = $D2_NOTEOFF
+	ElseIf $Signal = 31 Then 
+		$PitchOff = $D2SHARP_NOTEOFF
+	ElseIf $Signal = 32 Then 
+		$PitchOff = $E2_NOTEOFF
+	ElseIf $Signal = 33 Then 
+		$PitchOff = $F2_NOTEOFF
+	ElseIf $Signal = 34 Then 
+		$PitchOff = $F2SHARP_NOTEOFF
+	ElseIf $Signal = 35 Then 
+		$PitchOff = $G2_NOTEOFF
+	ElseIf $Signal = 36 Then 
+		$PitchOff = $G2SHARP_NOTEOFF
+	ElseIf $Signal = 37 Then 
+		$PitchOff = $A2_NOTEOFF
+	ElseIf $Signal = 38 Then 
+		$PitchOff = $A2SHARP_NOTEOFF
+	ElseIf $Signal = 39 Then 
+		$PitchOff = $B2_NOTEOFF
+	ElseIf $Signal = 40 Then 
+		$PitchOff = $C3_NOTEOFF
+	ElseIf $Signal = 41 Then 
+		$PitchOff = $C3SHARP_NOTEOFF
+	ElseIf $Signal = 42 Then 
+		$PitchOff = $D3_NOTEOFF
+	ElseIf $Signal = 43 Then 
+		$PitchOff = $D3SHARP_NOTEOFF
+	ElseIf $Signal = 44 Then 
+		$PitchOff = $E3_NOTEOFF
+	ElseIf $Signal = 45 Then 
+		$PitchOff = $F3_NOTEOFF
+	ElseIf $Signal = 46 Then 
+		$PitchOff = $F3SHARP_NOTEOFF
+	ElseIf $Signal = 47 Then 
+		$PitchOff = $G3_NOTEOFF
+	ElseIf $Signal = 48 Then 
+		$PitchOff = $G3SHARP_NOTEOFF
+	ElseIf $Signal = 49 Then 
+		$PitchOff = $A3_NOTEOFF
+	ElseIf $Signal = 50 Then 
+		$PitchOff = $A3SHARP_NOTEOFF
+	ElseIf $Signal = 51 Then 
+		$PitchOff = $B3_NOTEOFF
+	ElseIf $Signal = 52 Then 
+		$PitchOff = $C4_NOTEOFF
+	ElseIf $Signal = 53 Then 
+		$PitchOff = $C4SHARP_NOTEOFF
+	ElseIf $Signal = 54 Then 
+		$PitchOff = $D4_NOTEOFF
+	ElseIf $Signal = 55 Then 
+		$PitchOff = $D4SHARP_NOTEOFF
+	ElseIf $Signal = 56 Then 
+		$PitchOff = $E4_NOTEOFF
+	ElseIf $Signal = 57 Then 
+		$PitchOff = $F4_NOTEOFF
+	ElseIf $Signal = 58 Then 
+		$PitchOff = $F4SHARP_NOTEOFF
+	ElseIf $Signal = 59 Then 
+		$PitchOff = $G4_NOTEOFF
+	ElseIf $Signal = 60 Then 
+		$PitchOff = $G4SHARP_NOTEOFF
+	ElseIf $Signal = 61 Then 
+		$PitchOff = $A4_NOTEOFF
+	ElseIf $Signal = 62 Then 
+		$PitchOff = $A4SHARP_NOTEOFF
+	ElseIf $Signal = 63 Then 
+		$PitchOff = $B4_NOTEOFF
+	ElseIf $Signal = 64 Then 
+		$PitchOff = $C5_NOTEOFF
+	ElseIf $Signal = 65 Then 
+		$PitchOff = $C5SHARP_NOTEOFF
+	ElseIf $Signal = 66 Then 
+		$PitchOff = $D5_NOTEOFF
+	ElseIf $Signal = 67 Then 
+		$PitchOff = $D5SHARP_NOTEOFF
+	ElseIf $Signal = 68 Then 
+		$PitchOff = $E5_NOTEOFF
+	ElseIf $Signal = 69 Then 
+		$PitchOff = $F5_NOTEOFF
+	ElseIf $Signal = 70 Then 
+		$PitchOff = $F5SHARP_NOTEOFF
+	ElseIf $Signal = 71 Then 
+		$PitchOff = $G5_NOTEOFF
+	ElseIf $Signal = 72 Then 
+		$PitchOff = $G5SHARP_NOTEOFF
+	ElseIf $Signal = 73 Then 
+		$PitchOff = $A5_NOTEOFF
+	ElseIf $Signal = 74 Then 
+		$PitchOff = $A5SHARP_NOTEOFF
+	ElseIf $Signal = 75 Then 
+		$PitchOff = $B5_NOTEOFF
+	ElseIf $Signal = 76 Then 
+		$PitchOff = $C6_NOTEOFF
+	ElseIf $Signal = 77 Then 
+		$PitchOff = $C6SHARP_NOTEOFF
+	ElseIf $Signal = 78 Then 
+		$PitchOff = $D6_NOTEOFF
+	ElseIf $Signal = 79 Then 
+		$PitchOff = $D6SHARP_NOTEOFF
+	ElseIf $Signal = 80 Then 
+		$PitchOff = $E6_NOTEOFF
+	ElseIf $Signal = 81 Then 
+		$PitchOff = $F6_NOTEOFF
+	ElseIf $Signal = 82 Then 
+		$PitchOff = $F6SHARP_NOTEOFF
+	ElseIf $Signal = 83 Then 
+		$PitchOff = $G6_NOTEOFF
+	ElseIf $Signal = 84 Then 
+		$PitchOff = $G6SHARP_NOTEOFF
+	ElseIf $Signal = 85 Then 
+		$PitchOff = $A6_NOTEOFF
+	ElseIf $Signal = 86 Then 
+		$PitchOff = $A6SHARP_NOTEOFF
+	ElseIf $Signal = 87 Then 
+		$PitchOff = $B6_NOTEOFF
+	ElseIf $Signal = 88 Then 
+		$PitchOff = $C7_NOTEOFF
+	ElseIf $Signal = 89 Then 
+		$PitchOff = $C7SHARP_NOTEOFF
+	ElseIf $Signal = 90 Then 
+		$PitchOff = $D7_NOTEOFF
+	ElseIf $Signal = 91 Then 
+		$PitchOff = $D7SHARP_NOTEOFF
+	ElseIf $Signal = 92 Then 
+		$PitchOff = $E7_NOTEOFF
+	ElseIf $Signal = 93 Then 
+		$PitchOff = $F7_NOTEOFF
+	ElseIf $Signal = 94 Then 
+		$PitchOff = $F7SHARP_NOTEOFF
+	ElseIf $Signal = 95 Then 
+		$PitchOff = $G7_NOTEOFF
+	ElseIf $Signal = 96 Then 
+		$PitchOff = $G7SHARP_NOTEOFF
+	ElseIf $Signal = 97 Then 
+		$PitchOff = $A7_NOTEOFF
+	ElseIf $Signal = 98 Then 
+		$PitchOff = $A7SHARP_NOTEOFF
+	ElseIf $Signal = 99 Then 
+		$PitchOff = $B7_NOTEOFF
+	ElseIf $Signal = 100 Then 
+		$PitchOff = $C8_NOTEOFF
+	EndIf	
+	_midioutshortmsg ($open, $PitchOff)
+	_MidiOutClose ($open)
+EndFunc

@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 2.2'
-$last_modified = '10/15/2008'
+$version = '9.0 Beta 2.3'
+$last_modified = '10/20/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -151,7 +151,7 @@ Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_La
 Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $AutoKmlDeadHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
-Dim $GUI_SpeakSignal, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime
+Dim $GUI_SpeakSignal, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadNs
 
@@ -221,6 +221,8 @@ Dim $SpeakSignal = IniRead($settings, 'Vistumbler', 'SpeakSignal', 0)
 Dim $SpeakSigSayPecent = IniRead($settings, 'Vistumbler', 'SpeakSigSayPecent', 1)
 Dim $SpeakSigTime = IniRead($settings, 'Vistumbler', 'SpeakSigTime', 2000)
 Dim $SpeakType = IniRead($settings, 'Vistumbler', 'SpeakType', 2)
+Dim $Midi_Instument = IniRead($settings, 'Vistumbler', 'Midi_Instument', 56)
+Dim $Midi_PlayTime = IniRead($settings, 'Vistumbler', 'Midi_PlayTime', 500)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 0)
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
@@ -4218,6 +4220,8 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'SpeakSigSayPecent', $SpeakSigSayPecent)
 	IniWrite($settings, "Vistumbler", 'SpeakSigTime', $SpeakSigTime)
 	IniWrite($settings, "Vistumbler", 'SpeakType', $SpeakType)
+	IniWrite($settings, "Vistumbler", 'Midi_Instument', $Midi_Instument)
+	IniWrite($settings, "Vistumbler", 'Midi_PlayTime', $Midi_PlayTime)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
 	
 	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
@@ -5666,24 +5670,37 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	$GUI_AutoKml_Tilt = GUICtrlCreateInput($AutoKML_Tilt, 525, 235, 110, 20)
 	;Speak Signal Options
 	GUICtrlCreateGroup($Text_SpeakSignal, 16, 290, 650, 145)
-	$GUI_SpeakSignal = GUICtrlCreateCheckbox($Text_SpeakSignal, 30, 310, 625, 15)
+	$GUI_SpeakSignal = GUICtrlCreateCheckbox($Text_SpeakSignal, 30, 310, 200, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	If $SpeakSignal = 1 Then GUICtrlSetState($GUI_SpeakSignal, $GUI_CHECKED)
-	$GUI_SpeakSoundsVis = GUICtrlCreateRadio($Text_SpeakUseVisSounds, 30, 330, 625, 15)
-	$GUI_SpeakSoundsSapi = GUICtrlCreateRadio($Text_SpeakUseSapi, 30, 350, 625, 15)
+	$GUI_SpeakSoundsVis = GUICtrlCreateRadio($Text_SpeakUseVisSounds, 30, 330, 200, 15)
+	$GUI_SpeakSoundsSapi = GUICtrlCreateRadio($Text_SpeakUseSapi, 30, 350, 200, 15)
+	$GUI_SpeakSoundsMidi = GUICtrlCreateRadio('MIDI', 30, 370, 200, 15)
 	GUICtrlSetColor($GUI_SpeakSoundsVis, $TextColor)
 	GUICtrlSetColor($GUI_SpeakSoundsSapi, $TextColor)
+	GUICtrlSetColor($GUI_SpeakSoundsMidi, $TextColor)
 	If $SpeakType = 1 Then
 		GUICtrlSetState($GUI_SpeakSoundsVis, $GUI_CHECKED)
-	Else
+	ElseIf $SpeakType = 2 Then
 		GUICtrlSetState($GUI_SpeakSoundsSapi, $GUI_CHECKED)
+	ElseIf $SpeakType = 3 Then
+		GUICtrlSetState($GUI_SpeakSoundsMidi, $GUI_CHECKED)
 	EndIf
-	$GUI_SpeakPercent = GUICtrlCreateCheckbox($Text_SpeakSayPercent, 30, 370, 625, 15)
-	GUICtrlSetColor(-1, $TextColor)
-	If $SpeakSigSayPecent = 1 Then GUICtrlSetState($GUI_SpeakPercent, $GUI_CHECKED)
 	GUICtrlCreateLabel('Speak Refresh Time' & '(ms)', 30, 390, 150, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_SpeakSigTime = GUICtrlCreateInput($SpeakSigTime, 30, 405, 150, 20)
+	GUICtrlSetColor(-1, $TextColor)
+	$GUI_SpeakPercent = GUICtrlCreateCheckbox($Text_SpeakSayPercent, 200, 405, 200, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	If $SpeakSigSayPecent = 1 Then GUICtrlSetState($GUI_SpeakPercent, $GUI_CHECKED)
+	
+	GUICtrlCreateLabel('MIDI Instrument #', 400, 310, 150, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$GUI_Midi_Instument = GUICtrlCreateInput($Midi_Instument, 400, 325, 150, 20)
+	GUICtrlSetColor(-1, $TextColor)
+	GUICtrlCreateLabel('MIDI Play Time (ms)', 400, 355, 150, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 400, 370, 150, 20)
 	GUICtrlSetColor(-1, $TextColor)
 	
 	GUICtrlCreateTabItem("")
@@ -6270,8 +6287,10 @@ Func _ApplySettingsGUI();Applys settings
 		If GUICtrlRead($GUI_SpeakSignal) = 1 And $SpeakSignal = 0 Then _SpeakSigToggle();Turn on speak signal
 		If GUICtrlRead($GUI_SpeakSoundsVis) = 1 Then
 			$SpeakType = 1 ;Set Vistumbler Sounds as default speak signal interface
-		Else
-			$SpeakType = 2 ;Set SAPI default speak signal interface
+		ElseIf GUICtrlRead($GUI_SpeakSoundsSapi) = 1 Then
+			$SpeakType = 2 ;Set SAPI as default speak signal interface
+		ElseIf GUICtrlRead($GUI_SpeakSoundsMidi) = 1 Then
+			$SpeakType = 3 ;Set MIDI as default speak signal interface
 		EndIf
 		If GUICtrlRead($GUI_SpeakPercent) = 1 Then
 			$SpeakSigSayPecent = 1;Say Percent
@@ -6279,6 +6298,8 @@ Func _ApplySettingsGUI();Applys settings
 			$SpeakSigSayPecent = 0;Don't say percent
 		EndIf
 		$SpeakSigTime = GUICtrlRead($GUI_SpeakSigTime)
+		$Midi_Instument = GUICtrlRead($GUI_Midi_Instument)
+		$Midi_PlayTime = GUICtrlRead($GUI_Midi_PlayTime)
 	EndIf
 
 	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1
@@ -6708,13 +6729,20 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 				$FoundHistMatch = UBound($HistMatchArray) - 1
 				If $FoundHistMatch <> 0 Then
 					$say = $HistMatchArray[1][1]
-					If $SpeakSigSayPecent = 1 Then $say &= '%'
 					If ProcessExists($SayProcess) = 0 Then;If Say.exe is still running, skip opening it again
 						If $SpeakType = 1 Then
-							$SayProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1', '', @SW_HIDE)
+							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1'
+							If $SpeakSigSayPecent = 1 Then $run &= ' /p'
+							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
 							If @error Then $Error = 1
-						Else
-							$SayProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=2', '', @SW_HIDE)
+						ElseIf $SpeakType = 2 Then
+							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=2'
+							If $SpeakSigSayPecent = 1 Then $run &= ' /p'
+							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+							If @error Then $Error = 1
+						ElseIf $SpeakType = 3 Then
+							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=3 /i=' & $Midi_Instument & ' /w=' & $Midi_PlayTime
+							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
 							If @error Then $Error = 1
 						EndIf
 					Else
