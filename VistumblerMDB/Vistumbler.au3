@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 2.3'
-$last_modified = '10/20/2008'
+$version = '9.0 Beta 2.4'
+$last_modified = '10/21/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -135,6 +135,7 @@ Dim $UpdateAutoSave = 0
 Dim $CompassOpen = 0
 Dim $CompassGUI = 0
 Dim $SayProcess
+Dim $MidiProcess
 Dim $AutoSaveProcess
 Dim $AutoKmlActiveProcess
 Dim $AutoKmlDeadProcess
@@ -223,6 +224,7 @@ Dim $SpeakSigTime = IniRead($settings, 'Vistumbler', 'SpeakSigTime', 2000)
 Dim $SpeakType = IniRead($settings, 'Vistumbler', 'SpeakType', 2)
 Dim $Midi_Instument = IniRead($settings, 'Vistumbler', 'Midi_Instument', 56)
 Dim $Midi_PlayTime = IniRead($settings, 'Vistumbler', 'Midi_PlayTime', 500)
+Dim $Midi_PlatForActiveAps = IniRead($settings, 'Vistumbler', 'Midi_PlatForActiveAps', 0)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 0)
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
@@ -699,6 +701,8 @@ $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $Options)
 If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GUI_MidiActiveAps = GUICtrlCreateMenuItem("Play MIDI sounds for all active APs", $Options)
+If $Midi_PlatForActiveAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $Options)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
@@ -831,6 +835,7 @@ GUICtrlSetOnEvent($SortTree, '_SortTree')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
+GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
 GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
 ;Export Menu
 GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
@@ -940,6 +945,23 @@ While 1
 				Sleep(1000)
 			Else
 				$UpdatedAPs = 1 ;Set Update flag so APs do not get scanned again on this loop
+				If $Midi_PlatForActiveAps = 1 And ProcessExists($MidiProcess) = 0 Then
+					$query = "SELECT Signal FROM Temp"
+					$TempApArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$FoundTempAp = UBound($TempApArray) - 1
+					If $FoundTempAp <> 0 Then
+						$PlaySignals = ''
+						For $mp = 1 To $FoundTempAp
+							If $mp <> 1 Then $PlaySignals &= '-'
+							$PlaySignals &= $TempApArray[$mp][1]
+						Next
+						ConsoleWrite($PlaySignals & @CRLF)
+						If $PlaySignals <> '' Then
+							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /ms=' & $PlaySignals & ' /t=4 /i=' & $Midi_Instument & ' /w=' & $Midi_PlayTime
+							$MidiProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+						EndIf
+					EndIf
+				EndIf
 			EndIf
 			If $ScanResults > 0 Then $UpdateAutoSave = 1
 			;Refresh Networks If Enabled
@@ -1851,6 +1873,16 @@ Func _AutoRefreshToggle()
 		$RefreshTimer = TimerInit()
 	EndIf
 EndFunc   ;==>_AutoRefreshToggle
+
+Func _ActiveApMidiToggle()
+	If $Midi_PlatForActiveAps = 1 Then
+		GUICtrlSetState($GUI_MidiActiveAps, $GUI_UNCHECKED)
+		$Midi_PlatForActiveAps = 0
+	Else
+		GUICtrlSetState($GUI_MidiActiveAps, $GUI_CHECKED)
+		$Midi_PlatForActiveAps = 1
+	EndIf
+EndFunc   ;==>_ActiveApMidiToggle
 
 Func _AutoKmlToggle()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoKmlToggle()') ;#Debug Display
@@ -4222,6 +4254,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'SpeakType', $SpeakType)
 	IniWrite($settings, "Vistumbler", 'Midi_Instument', $Midi_Instument)
 	IniWrite($settings, "Vistumbler", 'Midi_PlayTime', $Midi_PlayTime)
+	IniWrite($settings, "Vistumbler", 'Midi_PlatForActiveAps', $Midi_PlatForActiveAps)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
 	
 	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
@@ -6719,16 +6752,21 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 	If $SpeakSignal = 1 Then; If the signal speaking is turned on
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
-			$query = "SELECT LastHistID FROM AP WHERE ListRow = '" & $Selected & "'"
+			$query = "SELECT LastHistID, Active FROM AP WHERE ListRow = '" & $Selected & "'"
 			$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$FoundApMatch = UBound($ApMatchArray) - 1
 			If $FoundApMatch <> 0 Then
 				$PlayHistID = $ApMatchArray[1][1]
+				$ApIsActive = $ApMatchArray[1][2]
 				$query = "SELECT Signal FROM Hist WHERE HistID = '" & $PlayHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$FoundHistMatch = UBound($HistMatchArray) - 1
 				If $FoundHistMatch <> 0 Then
-					$say = $HistMatchArray[1][1]
+					If $ApIsActive = 1 Then
+						$say = $HistMatchArray[1][1]
+					Else
+						$say = '0'
+					EndIf
 					If ProcessExists($SayProcess) = 0 Then;If Say.exe is still running, skip opening it again
 						If $SpeakType = 1 Then
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1'
