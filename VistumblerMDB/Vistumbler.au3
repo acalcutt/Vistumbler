@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 2.4'
-$last_modified = '10/21/2008'
+$version = '9.0 Beta 3'
+$last_modified = '10/22/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -695,14 +695,14 @@ $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
 If $SpeakSignal = 1 Then GUICtrlSetState($SpeakApSignal, $GUI_CHECKED)
+$GUI_MidiActiveAps = GUICtrlCreateMenuItem("Play MIDI sounds for all active APs", $Options)
+If $Midi_PlatForActiveAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $Options)
 If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $Options)
 If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GUI_MidiActiveAps = GUICtrlCreateMenuItem("Play MIDI sounds for all active APs", $Options)
-If $Midi_PlatForActiveAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $Options)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
@@ -920,9 +920,12 @@ $Speech_Timer = TimerInit()
 While 1
 	If BitAND($UseGPS = 1, $UpdatedGPS <> 1) Or BitAND($Scan = 1, $UpdatedAPs <> 1) Then
 		$ScanResults = 0
+		
 		;Set TimeStamps
-		$timestamp = @HOUR & ':' & @MIN & ':' & @SEC
-		$datestamp = @MON & '-' & @MDAY & '-' & @YEAR
+		$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
+		$datestamp = $dt[1]
+		$timestamp = $dt[2]
+		
 		
 		If $UseGPS = 1 And $UpdatedGPS <> 1 Then ; If 'Use GPS' is checked then scan gps and display information
 			$GetGpsSuccess = _GetGPS();Scan for GPS if GPS enabled
@@ -1066,8 +1069,11 @@ EndFunc   ;==>MyErrFunc
 
 Func _ScanAccessPoints()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, ' _ScanAccessPoints()') ;#Debug Display
-	$ScanDate = @MON & '-' & @MDAY & '-' & @YEAR
-	$ScanTime = @HOUR & ':' & @MIN & ':' & @SEC
+	;Set TimeStamps
+	$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
+	$ScanDate = $dt[1]
+	$ScanTime = $dt[2]
+	
 	$NewAP = 0
 	$FoundAPs = 0
 	;RunWait("net restart Wlansvc", '', @SW_HIDE)
@@ -1306,8 +1312,9 @@ Func _UpdateList()
 		$Found_ListRow = $ApMatchArray[$resetdead][2]
 		$Found_Active = $ApMatchArray[$resetdead][3]
 		$Found_LastGpsID = $ApMatchArray[$resetdead][4]
-		$Date = @MON & '-' & @MDAY & '-' & @YEAR
-		$time = @HOUR & ':' & @MIN & ':' & @SEC
+		$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
+		$Date = $dt[1]
+		$time = $dt[2]
 		If $Found_Active = 1 Then
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
@@ -1374,10 +1381,16 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 	If $Add_LongitudeDMM <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_LongitudeDMM, $column_LongitudeDMM)
 	If $Add_BasicTransferRates <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BasicTransferRates, $column_BasicTransferRates)
 	If $Add_OtherTransferRates <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_OtherTransferRates, $column_OtherTransferRates)
-	If $Add_FirstAcvtive <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_FirstAcvtive, $column_FirstActive)
-	If $Add_LastActive <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_LastActive, $column_LastActive)
 	If $Add_NetworkType <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_NetworkType, $column_NetworkType)
 	If $Add_Label <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Label, $column_Label)
+	If $Add_FirstAcvtive <> '' Then
+		$LTD = StringSplit($Add_FirstAcvtive, ' ')
+		_GUICtrlListView_SetItemText($ListviewAPs, $line, _DateTimeUtcConvert($LTD[1], $LTD[2], 0), $column_FirstActive)
+	EndIf
+	If $Add_LastActive <> '' Then
+		$LTD = StringSplit($Add_LastActive, ' ')
+		_GUICtrlListView_SetItemText($ListviewAPs, $line, _DateTimeUtcConvert($LTD[1], $LTD[2], 0), $column_LastActive)
+	EndIf
 EndFunc   ;==>_ListViewAdd
 
 Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioType, $BasicTransferRates, $OtherTransferRates, $NetworkType, $MANUF, $LABEL)
@@ -3426,12 +3439,12 @@ EndFunc   ;==>_ExportDetailedData
 
 Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
-	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 1.0")
+	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 1.1")
 	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
 
 	;Export GIDs
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date|Time")
+	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC)|Time(UTC)")
 	FileWriteLine($savefile, "# -------------------------------------------------")
 	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS"
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -3494,7 +3507,7 @@ EndFunc   ;==>_ExportDetailedTXT
 
 Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToTXT()') ;#Debug Display
-	FileWriteLine($savefile, "# Vistumbler TXT - Export Version 1.0")
+	FileWriteLine($savefile, "# Vistumbler TXT - Export Version 1.1")
 	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
 	FileWriteLine($savefile, "# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 	FileWriteLine($savefile, "# SSID|BSSID|MANUFACTURER|Highest Signal w/GPS|Authetication|Encryption|Radio Type|Channel|Latitude|Longitude|Basic Transfer Rates|Other Transfer Rates|First Seen|Last Seen|Network Type|Label|Signal History")
@@ -3995,26 +4008,28 @@ Func _ImportOk()
 		EndIf
 	ElseIf GUICtrlRead($RadNs) = 1 Then
 		Dim $BSSID_Array[1], $SSID_Array[1], $FirstSeen_Array[1], $LastSeen_Array[1], $SignalHist_Array[1], $Lat_Array[1], $Lon_Array[1], $Auth_Array[1], $Encr_Array[1], $Type_Array[1]
+
 		$nsfile = GUICtrlRead($vistumblerfileinput)
 		$netstumblerfile = FileOpen($nsfile, 0)
 		
 		If $netstumblerfile <> -1 Then
 			;Get Total number of lines
 			$totallines = 0
+			
 			While 1
-				FileReadLine($nsfile)
+				FileReadLine($netstumblerfile)
 				If @error = -1 Then ExitLoop
 				$totallines += 1
 			WEnd
+			ConsoleWrite($totallines & @CRLF)
 			$begintime = TimerInit()
-			$currentline = 1
 			$AddAP = 0
 			$AddGID = 0
 			$Loading = 1
-			While 1
-				$Found = 0
-				$linein = FileReadLine($netstumblerfile);Open Line in file
-				If @error = -1 Then ExitLoop ;If end of lines reached, exit loop
+			
+			For $Load = 1 To $totallines
+				$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
+				If @error = -1 Then ExitLoop
 				If StringInStr($linein, "# $DateGMT:") Then ;If the date tag is found, reformat and set date
 					$Date = StringTrimLeft($linein, 12)
 					$datereformat = StringSplit($Date, "-")
@@ -4141,17 +4156,16 @@ Func _ImportOk()
 					EndIf
 				EndIf
 				$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
-				$percent = ($currentline / $totallines) * 100
+				$percent = ($Load / $totallines) * 100
 				GUICtrlSetData($progressbar, $percent)
 				GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
-				GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
+				GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($Load / $min, 1))
 				GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
 				GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-				GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline & "/" & $totallines)
-				GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($currentline / $min, 1), 1))
+				GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $Load & "/" & $totallines)
+				GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($Load / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($Load / $min, 1), 1))
 				_ReduceMemory()
-				$currentline += 1
-			WEnd
+			Next
 			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & 'Sorting List')
 			If $AddDirection = 0 Then
 				$v_sort = True;set ascending
@@ -5597,6 +5611,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlCreateLabel($SearchWord_Adhoc, 353, 365, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$SearchWord_Adhoc_GUI = GUICtrlCreateInput($SearchWord_Adhoc, 353, 380, 300, 20)
+	$GuiGuessSearchwords = GUICtrlCreateButton("Guess Netsh Searchwords", 353, 420, 300, 20)
 	$swdesc = GUICtrlCreateGroup($Text_Description, 24, 56, 633, 65)
 	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($Text_NetshMsg, 32, 72, 618, 41)
@@ -5796,6 +5811,8 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetOnEvent($CWCB_FirstActive, '_SetWidthValue_FirstActive')
 	GUICtrlSetOnEvent($CWCB_LastActive, '_SetWidthValue_LastActive')
 	GUICtrlSetOnEvent($LanguageBox, '_LanguageChanged')
+	
+	GUICtrlSetOnEvent($GuiGuessSearchwords, '_GuessNetshSearchwords')
 
 	GUISetState(@SW_SHOW)
 EndFunc   ;==>_SettingsGUI
@@ -5864,6 +5881,8 @@ Func _LanguageChanged();Sets language information in gui if language changed
 	GUICtrlSetData($SearchWord_Wep_GUI, IniRead($languagefile, 'SearchWords', 'Wep', 'WEP'))
 	GUICtrlSetData($SearchWord_Infrastructure_GUI, IniRead($languagefile, 'SearchWords', 'Infrastructure', 'Infrastructure'))
 	GUICtrlSetData($SearchWord_Adhoc_GUI, IniRead($languagefile, 'SearchWords', 'Adhoc', 'Adhoc'))
+	GUICtrlSetData($SearchWord_Adhoc_GUI, IniRead($languagefile, 'SearchWords', 'Adhoc', 'Adhoc'))
+	GUICtrlSetData($GUI_CTWN, IniRead($languagefile, 'GuiText', 'ConnectToWindowName', 'Connect to a network'))
 EndFunc   ;==>_LanguageChanged
 
 Func _CloseSettingsGUI();closes settings gui
@@ -6003,7 +6022,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SpeedInKmh = IniRead($newlanguagefile, 'GuiText', 'SpeedInKmh', 'Speed(km/h)')
 		$Text_TrackAngle = IniRead($newlanguagefile, 'GuiText', 'TrackAngle', 'Track Angle')
 		$Text_Close = IniRead($newlanguagefile, 'GuiText', 'Close', 'Track Close')
-		$Text_ConnectToWindowName = IniRead($newlanguagefile, 'GuiText', 'ConnectToWindowName', 'Connect to a network')
+		;$Text_ConnectToWindowName = IniRead($newlanguagefile, 'GuiText', 'ConnectToWindowName', 'Connect to a network'); Set in Auto Tab and changed by _Language Changed
 		$Text_RefreshNetworks = IniRead($newlanguagefile, 'GuiText', 'StartRefreshingNetworks', 'Refreshing Networks')
 		$Text_Start = IniRead($newlanguagefile, 'GuiText', 'Start', 'Start')
 		$Text_Stop = IniRead($newlanguagefile, 'GuiText', 'Stop', 'Stop')
@@ -6707,41 +6726,22 @@ Func _GUICtrlTab_SetBkColor($hWnd, $hSysTab32, $sBkColor) ;Function used to set 
 	GUICtrlSetState(-1, $GUI_DISABLE)
 EndFunc   ;==>_GUICtrlTab_SetBkColor
 
-Func _TimeLocalToGmt($time)
-	$timesplit = StringSplit($time, ':')
-	If $timesplit[0] = 3 Then
-		$hour = $timesplit[1]
-		$min = $timesplit[2]
-		$sec = $timesplit[3]
-
-		$tzinfo = _Date_Time_GetTimeZoneInformation()
-		$Offset = $tzinfo[1] / 60
-		$hour = $hour + $Offset
-		
-		If $hour > 24 Then $hour = $hour - 12
-		Return ($hour & ":" & $min & ":" & $sec)
+Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DateTimeUtcConvert()') ;#Debug Display
+	$DateSplit = StringSplit($Date, '-')
+	$TimeSplit = StringSplit($time, ':')
+	If $DateSplit[0] = 3 And $TimeSplit[0] = 3 Then
+		$tSystem = _Date_Time_EncodeSystemTime($DateSplit[1], $DateSplit[2], $DateSplit[3], $TimeSplit[1], $TimeSplit[2], $TimeSplit[3])
+		If $ConvertToUTC = 1 Then
+			$rtime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
+		Else
+			$rtime = _Date_Time_SystemTimeToTzSpecificLocalTime(DllStructGetPtr($tSystem))
+		EndIf
+		Return (StringReplace(_Date_Time_SystemTimeToDateTimeStr($rtime), '/', '-'))
 	Else
-		Return ("00:00:00")
+		Return ('00-00-00 00:00:00')
 	EndIf
-EndFunc   ;==>_TimeLocalToGmt
-
-Func _TimeGmtToLocal($time)
-	$timesplit = StringSplit($time, ':')
-	If $timesplit[0] = 3 Then
-		$hour = $timesplit[1]
-		$min = $timesplit[2]
-		$sec = $timesplit[3]
-
-		$tzinfo = _Date_Time_GetTimeZoneInformation()
-		$Offset = $tzinfo[1] / 60
-		$hour = $hour - $Offset
-		
-		If $hour < 0 Then $hour = $hour + 24
-		Return ($hour & ":" & $min & ":" & $sec)
-	Else
-		Return ("00:00:00")
-	EndIf
-EndFunc   ;==>_TimeGmtToLocal
+EndFunc   ;==>_DateTimeUtcConvert
 
 Func _ReduceMemory() ;http://www.autoitscript.com/forum/index.php?showtopic=14070&view=findpost&p=96101
 	DllCall("psapi.dll", 'int', 'EmptyWorkingSet', 'long', -1)
@@ -6991,3 +6991,86 @@ Func _InterfaceChanged()
 	$DefaultApapter = GUICtrlRead(@GUI_CtrlId, 1)
 	ConsoleWrite(@GUI_CtrlId & '-' & GUICtrlRead(@GUI_CtrlId, 1) & " was selected." & @CRLF)
 EndFunc   ;==>_InterfaceChanged
+
+Func _GuessNetshSearchwords()
+	$count = 0
+	FileDelete($tempfile)
+	If $DefaultApapter = $Text_Default Then
+		_RunDOS('netsh wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+	Else
+		_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+	EndIf
+
+	$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
+	If $arrayadded = 1 Then
+		;Strip out whitespace before and after text on each line
+		For $stripws = 1 To $TempFileArray[0]
+			$TempFileArray[$stripws] = StringStripWS($TempFileArray[$stripws], 3)
+		Next
+		
+		For $loop = 1 To $TempFileArray[0]
+			$temp = StringSplit(StringStripWS($TempFileArray[$loop], 3), ":")
+			If IsArray($temp) Then
+				If $temp[0] = 2 Or $temp[0] = 7 Then
+					$count += 1
+					If $count = 1 Then
+						$GSearchword_Adapter = StringStripWS($temp[1], 3)
+					ElseIf $count = 2 Then
+						$GSearchWord_SSID = StringStripWS($temp[1], 3)
+						If StringInStr($GSearchWord_SSID, ' ') Then
+							$SSID_Split = StringSplit($GSearchWord_SSID, ' ')
+							If $SSID_Split[0] = 2 Then $GSearchWord_SSID = $SSID_Split[1]
+						EndIf
+					ElseIf $count = 3 Then
+						$GSearchWord_NetworkType = StringStripWS($temp[1], 3)
+					ElseIf $count = 4 Then
+						$GSearchWord_Authentication = StringStripWS($temp[1], 3)
+					ElseIf $count = 5 Then
+						$GSearchWord_Encryption = StringStripWS($temp[1], 3)
+					ElseIf $count = 6 Then
+						$GSearchWord_BSSID = StringStripWS($temp[1], 3)
+						If StringInStr($GSearchWord_BSSID, ' ') Then
+							$BSSID_Split = StringSplit($GSearchWord_BSSID, ' ')
+							If $BSSID_Split[0] = 2 Then $GSearchWord_BSSID = $BSSID_Split[1]
+						EndIf
+					ElseIf $count = 7 Then
+						$GSearchWord_Signal = StringStripWS($temp[1], 3)
+					ElseIf $count = 8 Then
+						$GSearchWord_RadioType = StringStripWS($temp[1], 3)
+					ElseIf $count = 9 Then
+						$GSearchWord_Channel = StringStripWS($temp[1], 3)
+					ElseIf $count = 10 Then
+						$GSearchWord_BasicRates = StringStripWS($temp[1], 3)
+					ElseIf $count = 11 Then
+						$GSearchWord_OtherRates = StringStripWS($temp[1], 3)
+					EndIf
+				EndIf
+			EndIf
+		Next
+		ConsoleWrite('Adapter : ' & $GSearchword_Adapter & @CRLF & _
+				'SSID : ' & $GSearchWord_SSID & @CRLF & _
+				'NetType : ' & $GSearchWord_NetworkType & @CRLF & _
+				'Auth : ' & $GSearchWord_Authentication & @CRLF & _
+				'Encr : ' & $GSearchWord_Encryption & @CRLF & _
+				'BSSID : ' & $GSearchWord_BSSID & @CRLF & _
+				'Sig : ' & $GSearchWord_Signal & @CRLF & _
+				'Rad : ' & $GSearchWord_RadioType & @CRLF & _
+				'Chan : ' & $GSearchWord_Channel & @CRLF & _
+				'BTX : ' & $GSearchWord_BasicRates & @CRLF & _
+				'OTX : ' & $GSearchWord_OtherRates & @CRLF)
+
+		
+		GUICtrlSetData($SearchWord_SSID_GUI, $GSearchWord_SSID)
+		GUICtrlSetData($SearchWord_NetType_GUI, $GSearchWord_NetworkType)
+		GUICtrlSetData($SearchWord_Authentication_GUI, $GSearchWord_Authentication)
+		GUICtrlSetData($SearchWord_Encryption_GUI, $GSearchWord_Encryption)
+		GUICtrlSetData($SearchWord_BSSID_GUI, $GSearchWord_BSSID)
+		GUICtrlSetData($SearchWord_Signal_GUI, $GSearchWord_Signal)
+		GUICtrlSetData($SearchWord_RadioType_GUI, $GSearchWord_RadioType)
+		GUICtrlSetData($SearchWord_Channel_GUI, $GSearchWord_Channel)
+		GUICtrlSetData($SearchWord_BasicRates_GUI, $GSearchWord_BasicRates)
+		GUICtrlSetData($SearchWord_OtherRates_GUI, $GSearchWord_OtherRates)
+		
+		MsgBox(0, 'Information', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
+	EndIf
+EndFunc   ;==>_GuessNetshSearchwords
