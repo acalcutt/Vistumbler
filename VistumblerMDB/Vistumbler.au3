@@ -11,14 +11,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.7 Beta
+;AutoIt Version: v3.2.13.9 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 3'
-$last_modified = '10/22/2008'
+$version = '9.0 Beta 3.1'
+$last_modified = '10/26/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -161,7 +161,7 @@ Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, 
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
-Dim $LabAuth, $LabDate, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
+Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_CTWN, $GUI_RefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
@@ -201,7 +201,7 @@ Dim $SortBy = IniRead($settings, 'Vistumbler', 'SortCombo', 'Sort by SSID')
 Dim $SortDirection = IniRead($settings, 'Vistumbler', 'AscDecDefault', 1)
 Dim $SoundOnAP = IniRead($settings, 'Vistumbler', 'PlaySoundOnNewAP', 0)
 Dim $new_AP_sound = IniRead($settings, 'Vistumbler', 'NewAP_Sound', 'new_ap.wav')
-Dim $error_sound = IniRead($settings, 'Vistumbler', 'Error_Sound', 'error.wav')
+Dim $ErrorFlag_sound = IniRead($settings, 'Vistumbler', 'Error_Sound', 'error.wav')
 Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
@@ -2268,7 +2268,7 @@ Func _GetGPS(); Recieves data from gps device
 			$disconnected_time = -1
 			$return = 0
 			_TurnOffGPS()
-			SoundPlay($SoundDir & $error_sound, 0)
+			SoundPlay($SoundDir & $ErrorFlag_sound, 0)
 		EndIf
 	EndIf
 
@@ -2328,7 +2328,7 @@ Func _GetGPS2(); Recieves data from gps device
 					$disconnected_time = -1
 					$return = 0
 					_TurnOffGPS()
-					SoundPlay($SoundDir & $error_sound, 0)
+					SoundPlay($SoundDir & $ErrorFlag_sound, 0)
 				EndIf
 			EndIf
 			If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
@@ -2349,7 +2349,7 @@ Func _GetGPS2(); Recieves data from gps device
 					$disconnected_time = -1
 					$return = 0
 					_TurnOffGPS()
-					SoundPlay($SoundDir & $error_sound, 0)
+					SoundPlay($SoundDir & $ErrorFlag_sound, 0)
 				EndIf
 			EndIf
 			If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
@@ -4243,7 +4243,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "SortCombo", $SortBy)
 	IniWrite($settings, "Vistumbler", "AscDecDefault", $SortDirection)
 	IniWrite($settings, "Vistumbler", "NewAP_Sound", $new_AP_sound)
-	IniWrite($settings, "Vistumbler", "Error_Sound", $error_sound)
+	IniWrite($settings, "Vistumbler", "Error_Sound", $ErrorFlag_sound)
 	IniWrite($settings, "Vistumbler", "NewApPosistion", $AddDirection)
 	IniWrite($settings, "Vistumbler", "BackgroundColor", $BackgroundColor)
 	IniWrite($settings, "Vistumbler", "ControlBackgroundColor", $ControlBackgroundColor)
@@ -5366,9 +5366,13 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$LabAuth = GUICtrlCreateLabel(IniRead($languagefile, 'Info', 'Author', ''), 40, 112, 580, 17)
 	GUICtrlSetColor(-1, $TextColor)
-	GUICtrlCreateGroup($Text_LanguageDate, 32, 150, 601, 41)
+	GUICtrlCreateGroup($Text_LanguageDate, 32, 150, 300, 41)
 	GUICtrlSetColor(-1, $TextColor)
-	$LabDate = GUICtrlCreateLabel(IniRead($languagefile, 'Info', 'Date', ''), 40, 166, 580, 17)
+	$LabDate = GUICtrlCreateLabel(IniRead($languagefile, 'Info', 'Date', ''), 40, 166, 280, 17)
+	GUICtrlSetColor(-1, $TextColor)
+	GUICtrlCreateGroup("Language Code", 340, 150, 300, 41)
+	GUICtrlSetColor(-1, $TextColor)
+	$LabWinCode = GUICtrlCreateLabel(IniRead($languagefile, 'Info', 'WindowsLanguageCode', ''), 350, 166, 280, 17)
 	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateGroup($Text_LanguageDescription, 34, 200, 601, 121)
 	GUICtrlSetColor(-1, $TextColor)
@@ -5865,6 +5869,7 @@ Func _LanguageChanged();Sets language information in gui if language changed
 	$languagefile = $LanguageDir & $Language & ".ini"
 	GUICtrlSetData($LabAuth, IniRead($languagefile, 'Info', 'Author', ''))
 	GUICtrlSetData($LabDate, IniRead($languagefile, 'Info', 'Date', ''))
+	GUICtrlSetData($LabWinCode, IniRead($languagefile, 'Info', 'WindowsLanguageCode', ''))
 	GUICtrlSetData($LabDesc, IniRead($languagefile, 'Info', 'Description', ''))
 	GUICtrlSetData($SearchWord_SSID_GUI, IniRead($languagefile, 'SearchWords', 'SSID', 'SSID'))
 	GUICtrlSetData($SearchWord_BSSID_GUI, IniRead($languagefile, 'SearchWords', 'BSSID', 'BSSID'))
@@ -6748,7 +6753,7 @@ Func _ReduceMemory() ;http://www.autoitscript.com/forum/index.php?showtopic=1407
 EndFunc   ;==>_ReduceMemory
 
 Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal strenth
-	$Error = 0
+	$ErrorFlag = 0
 	If $SpeakSignal = 1 Then; If the signal speaking is turned on
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
@@ -6772,25 +6777,25 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1'
 							If $SpeakSigSayPecent = 1 Then $run &= ' /p'
 							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
-							If @error Then $Error = 1
+							If @error Then $ErrorFlag = 1
 						ElseIf $SpeakType = 2 Then
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=2'
 							If $SpeakSigSayPecent = 1 Then $run &= ' /p'
 							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
-							If @error Then $Error = 1
+							If @error Then $ErrorFlag = 1
 						ElseIf $SpeakType = 3 Then
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=3 /i=' & $Midi_Instument & ' /w=' & $Midi_PlayTime
 							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
-							If @error Then $Error = 1
+							If @error Then $ErrorFlag = 1
 						EndIf
 					Else
-						$Error = 1
+						$ErrorFlag = 1
 					EndIf
 				EndIf
 			EndIf
 		EndIf
 	EndIf
-	If $Error = 0 Then
+	If $ErrorFlag = 0 Then
 		Return (1)
 	Else
 		Return (0)
