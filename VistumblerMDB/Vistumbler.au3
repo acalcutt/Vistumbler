@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 3.1'
+$version = '9.0 Beta 3.11'
 $last_modified = '10/26/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -5370,7 +5370,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$LabDate = GUICtrlCreateLabel(IniRead($languagefile, 'Info', 'Date', ''), 40, 166, 280, 17)
 	GUICtrlSetColor(-1, $TextColor)
-	GUICtrlCreateGroup("Language Code", 340, 150, 300, 41)
+	GUICtrlCreateGroup("Language Code", 340, 150, 293, 41)
 	GUICtrlSetColor(-1, $TextColor)
 	$LabWinCode = GUICtrlCreateLabel(IniRead($languagefile, 'Info', 'WindowsLanguageCode', ''), 350, 166, 280, 17)
 	GUICtrlSetColor(-1, $TextColor)
