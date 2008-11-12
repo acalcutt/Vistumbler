@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 3.11'
-$last_modified = '10/26/2008'
+$version = '9.0 Beta 4'
+$last_modified = '11/11/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -541,6 +541,12 @@ Dim $Text_VistumblerWiki = IniRead($settings, 'GuiText', 'VistumblerWiki', 'Vist
 Dim $Text_CheckForUpdates = IniRead($settings, 'GuiText', 'CheckForUpdates', 'Check For Updates')
 Dim $Text_SelectWhatToCopy = IniRead($settings, 'GuiText', 'SelectWhatToCopy', 'Select what you want to copy')
 Dim $Text_Default = IniRead($settings, 'GuiText', 'Default', 'Default')
+Dim $Text_PlayMidiSounds = IniRead($settings, 'GuiText', 'PlayMidiSounds', 'Play MIDI sounds for all active APs')
+Dim $Text_Interface = IniRead($settings, 'GuiText', 'Interface', 'Interface')
+Dim $Text_LanguageCode = IniRead($settings, 'GuiText', 'LanguageCode', 'Language Code')
+Dim $Text_AutoCheckUpdates = IniRead($settings, 'GuiText', 'AutoCheckUpdates', 'Automatically Check For Updates')
+Dim $Text_CheckBetaUpdates = IniRead($settings, 'GuiText', 'CheckBetaUpdates', 'Check For Beta Updates')
+Dim $Text_GuessSearchwords = IniRead($settings, 'GuiText', 'GuessSearchwords', 'Guess Netsh Searchwords')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -695,7 +701,7 @@ $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
 If $SpeakSignal = 1 Then GUICtrlSetState($SpeakApSignal, $GUI_CHECKED)
-$GUI_MidiActiveAps = GUICtrlCreateMenuItem("Play MIDI sounds for all active APs", $Options)
+$GUI_MidiActiveAps = GUICtrlCreateMenuItem($Text_PlayMidiSounds, $Options)
 If $Midi_PlatForActiveAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $Options)
 If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
@@ -725,7 +731,7 @@ $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
 
 Dim $found_adapter = 0
 Dim $NetworkAdapters[2]
-$Interfaces = GUICtrlCreateMenu("Interface")
+$Interfaces = GUICtrlCreateMenu($Text_Interface)
 $menuid = GUICtrlCreateMenuItem($Text_Default, $Interfaces)
 $NetworkAdapters[1] = $menuid
 GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
@@ -1085,6 +1091,7 @@ Func _ScanAccessPoints()
 	EndIf
 	
 	$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
+
 	If $arrayadded = 1 Then
 		;Strip out whitespace before and after text on each line
 		For $stripws = 1 To $TempFileArray[0]
@@ -1252,21 +1259,19 @@ Func _UpdateList()
 						$Found_Lat = $GpsMatchArray[1][1]
 						$Found_Lon = $GpsMatchArray[1][2]
 						$Found_NumSat = $GpsMatchArray[1][3]
-						If $New_NumSat >= $Found_NumSat Then ;If the New Number of satalites is greater or eqaul to the old number of satalites
-							If $New_NumSat = $Found_NumSat Then ;If the number of satalites are equal, use the position with the higher signal
-								If $SIG >= $Found_Sig Then
-									$DBHighGpsHistId = $HISTID
-									$DBLat = $New_Lat
-									$DBLon = $New_Lon
-								Else
-									$DBHighGpsHistId = $Found_HighGpsHistId
-									$DBLat = $Found_Lat
-									$DBLon = $Found_Lon
-								EndIf
-							Else ;If New Number of satalites is greater than the old, use new position
+						If $New_NumSat > $Found_NumSat Then ;If the New Number of satalites is greater or eqaul to the old number of satalites
+							$DBHighGpsHistId = $HISTID
+							$DBLat = $New_Lat
+							$DBLon = $New_Lon
+						ElseIf $New_NumSat = $Found_NumSat Then ;If the number of satalites are equal, use the position with the higher signal
+							If $SIG > $Found_Sig Then
 								$DBHighGpsHistId = $HISTID
 								$DBLat = $New_Lat
 								$DBLon = $New_Lon
+							Else
+								$DBHighGpsHistId = $Found_HighGpsHistId
+								$DBLat = $Found_Lat
+								$DBLon = $Found_Lon
 							EndIf
 						Else ;If the Old Number of satalites is greater than the new, use the old position
 							$DBHighGpsHistId = $Found_HighGpsHistId
@@ -1361,14 +1366,20 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 		$LonDDD = ''
 	EndIf
 	
-	If $Add_Signal <> '' Then $Add_Signal = $Add_Signal & '%'
+	If $Add_Signal <> '' Then
+		If $Add_Signal = 0 Then
+			$AddDb = ''
+		Else
+			$AddDb = '(' & Round(-70 + (20 * Log10($Add_Signal / (100 - $Add_Signal)))) & 'dB)'
+		EndIf
+	EndIf
 
 	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Line, $column_Line)
 	If $Add_Active <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Active, $column_Active)
 	If $Add_SSID <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_SSID, $column_SSID)
 	If $Add_BSSID <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BSSID, $column_BSSID)
-	If $Add_MANU <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF)
-	If $Add_Signal <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Signal, $column_Signal)
+	If $Add_MANU <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF) ; Round(-30 + (20 * Log10(($Add_Signal / 100) / (100 - $Add_Signal))))
+	If $Add_Signal <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Signal & '% ' & $AddDb, $column_Signal) ; (-100 + (10 * Log($Add_Signal)))
 	If $Add_Authentication <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Authentication, $column_Authentication)
 	If $Add_Encryption <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Encryption, $column_Encryption)
 	If $Add_RadioType <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RadioType, $column_RadioType)
@@ -1400,6 +1411,8 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	$Encryption_treeviewname = $Encryption
 	$Authentication_treeviewname = $Authentication
 	$NetworkType_treeviewname = $NetworkType
+	
+	_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 	
 	$query = "SELECT Pos FROM TreeviewCHAN WHERE Name = '" & $channel_treeviewname & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -1464,6 +1477,9 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	_TreeViewApInfo($Encryption_subtreeviewposition, $Encryption_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($Authentication_subtreeviewposition, $Authentication_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($NetworkType_subtreeviewposition, $NetworkType_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
+
+	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
+
 	;Return Treeview positions
 	Return ($channel_subtreeviewposition & '|' & $SSID_subtreeviewposition & '|' & $Encryption_subtreeviewposition & '|' & $Authentication_subtreeviewposition & '|' & $NetworkType_subtreeviewposition)
 EndFunc   ;==>_TreeViewAdd
@@ -3787,7 +3803,6 @@ Func _ImportOk()
 								$ImpSig = $GidSigSplit[2]
 								$NewGID = $TmpGPSArray_NewID[$ImpGID]
 								
-								
 								$query = "SELECT Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = '" & $NewGID & "'"
 								$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 								$ImpLat = $GpsMatchArray[1][1]
@@ -3798,7 +3813,7 @@ Func _ImportOk()
 								$datetimestamp = $ImpDate & ' ' & $ImpTime
 
 								;Check If AP Is Already It DB. If it is, updated it. If it is not, add it
-								$query = "SELECT ApID, ListRow, HighGpsHistId FROM AP WHERE BSSID = '" & $BSSID & "' And SSID = '" & StringReplace($SSID, "'", "''") & "' And AUTH = '" & $Authentication & "' And ENCR = '" & $Encryption & "' And CHAN = '" & $Channel & "' And RADTYPE = '" & $RadioType & "'"
+								$query = "SELECT ApID, ListRow, HighGpsHistId, MANU, LABEL FROM AP WHERE BSSID = '" & $BSSID & "' And SSID = '" & StringReplace($SSID, "'", "''") & "' And AUTH = '" & $Authentication & "' And ENCR = '" & $Encryption & "' And CHAN = '" & $Channel & "' And RADTYPE = '" & $RadioType & "'"
 								$LoadApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 								$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
 								If $FoundLoadApMatch = 0 Then ;Add AP Data
@@ -3822,7 +3837,9 @@ Func _ImportOk()
 									$HISTID += 1
 									$Found_APID = $LoadApMatchArray[1][1]
 									$Found_ListRow = $LoadApMatchArray[1][2]
-									$Found_HighGpsHistId = $LoadApMatchArray[1][3] + 0
+									$Found_HighGpsHistId = $LoadApMatchArray[1][3]
+									$Found_MANU = $LoadApMatchArray[1][4]
+									$Found_LABEL = $LoadApMatchArray[1][5]
 									
 									If $Found_HighGpsHistId = 0 Then
 										If $ImpLat <> 'N 0.0000' And $ImpLon <> 'E 0.0000' Then
@@ -3840,14 +3857,18 @@ Func _ImportOk()
 										$query = "SELECT NumOfSats FROM GPS WHERE GpsID = '" & $Found_GpsID & "'"
 										$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 										$Found_NumSat = $GpsMatchArray[1][1]
-										
-										If $ImpNumSat >= $Found_NumSat Then
+										If $ImpNumSat > $Found_NumSat Then
 											$DBHighGpsHistId = $HISTID
+										ElseIf $ImpNumSat = $Found_NumSat Then
+											If $ImpSig > $Found_Sig Then
+												$DBHighGpsHistId = $HISTID
+											Else
+												$DBHighGpsHistId = $Found_HighGpsHistId
+											EndIf
 										Else
 											$DBHighGpsHistId = $Found_HighGpsHistId
 										EndIf
 									EndIf
-									
 									If $Found_HighGpsHistId = $DBHighGpsHistId Or $DBHighGpsHistId = 0 Then
 										$ImLat = ''
 										$ImLon = ''
@@ -3858,13 +3879,28 @@ Func _ImportOk()
 										_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 									EndIf
 									
-									If $ImpSig <> '0' Then
+									If $ImpSig = '0' Then
+										$ImTime = ''
+									Else
 										$query = "UPDATE AP SET LastHistId = '" & $HISTID & "' WHERE ApID = '" & $Found_APID & "'"
 										_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+										$ImTime = $datetimestamp
+									EndIf
+									
+									If $Found_MANU = $MANUF Then
+										$ImManu = ''
+									Else
+										$ImManu = $MANUF
+									EndIf
+									
+									If $Found_LABEL = $LABEL Then
+										$ImLab = ''
+									Else
+										$ImLab = $LABEL
 									EndIf
 									
 									_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $NewGID & '|' & $ImpSig & '|' & $ImpDate & '|' & $ImpTime)
-									_ListViewAdd($Found_ListRow, '', '', '', '', '', '', '', '', '', '', '', '', '', $datetimestamp, $ImLat, $ImLon, $MANUF, $LABEL)
+									_ListViewAdd($Found_ListRow, '', '', '', '', '', '', '', '', '', '', '', '', '', $ImTime, $ImLat, $ImLon, $ImManu, $ImLab)
 								EndIf
 							EndIf
 						Next
@@ -4575,6 +4611,12 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'CheckForUpdates', $Text_CheckForUpdates)
 	IniWrite($settings, 'GuiText', 'SelectWhatToCopy', $Text_SelectWhatToCopy)
 	IniWrite($settings, 'GuiText', 'Default', $Text_Default)
+	IniWrite($settings, 'GuiText', 'PlayMidiSounds', $Text_PlayMidiSounds)
+	IniWrite($settings, 'GuiText', 'Interface', $Text_Interface)
+	IniWrite($settings, 'GuiText', 'LanguageCode', $Text_LanguageCode)
+	IniWrite($settings, 'GuiText', 'AutoCheckUpdates', $Text_AutoCheckUpdates)
+	IniWrite($settings, 'GuiText', 'CheckBetaUpdates', $Text_CheckBetaUpdates)
+	IniWrite($settings, 'GuiText', 'GuessSearchwords', $Text_GuessSearchwords)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5276,10 +5318,10 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 236, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 251, 300, 21)
-	$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox("Automatically Check For Updates", 31, 285, 300, 15)
+	$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 31, 285, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
-	$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox("Check For Beta Updates", 353, 285, 300, 15)
+	$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 285, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
 	$GroupMiscPHP = GUICtrlCreateGroup($Text_PHPgraphing, 16, 328, 649, 121)
@@ -5370,7 +5412,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$LabDate = GUICtrlCreateLabel(IniRead($languagefile, 'Info', 'Date', ''), 40, 166, 280, 17)
 	GUICtrlSetColor(-1, $TextColor)
-	GUICtrlCreateGroup("Language Code", 340, 150, 293, 41)
+	GUICtrlCreateGroup($Text_LanguageCode, 340, 150, 293, 41)
 	GUICtrlSetColor(-1, $TextColor)
 	$LabWinCode = GUICtrlCreateLabel(IniRead($languagefile, 'Info', 'WindowsLanguageCode', ''), 350, 166, 280, 17)
 	GUICtrlSetColor(-1, $TextColor)
@@ -5615,7 +5657,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlCreateLabel($SearchWord_Adhoc, 353, 365, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$SearchWord_Adhoc_GUI = GUICtrlCreateInput($SearchWord_Adhoc, 353, 380, 300, 20)
-	$GuiGuessSearchwords = GUICtrlCreateButton("Guess Netsh Searchwords", 353, 420, 300, 20)
+	$GuiGuessSearchwords = GUICtrlCreateButton($Text_GuessSearchwords, 353, 420, 300, 20)
 	$swdesc = GUICtrlCreateGroup($Text_Description, 24, 56, 633, 65)
 	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($Text_NetshMsg, 32, 72, 618, 41)
@@ -6139,6 +6181,13 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_CheckForUpdates = IniRead($newlanguagefile, 'GuiText', 'CheckForUpdates', 'Check For Updates')
 		$Text_SelectWhatToCopy = IniRead($newlanguagefile, 'GuiText', 'SelectWhatToCopy', 'Select what you want to copy')
 		$Text_Default = IniRead($newlanguagefile, 'GuiText', 'Default', 'Default')
+		$Text_PlayMidiSounds = IniRead($newlanguagefile, 'GuiText', 'PlayMidiSounds', 'Play MIDI sounds for all active APs')
+		$Text_Interface = IniRead($newlanguagefile, 'GuiText', 'Interface', 'Interface')
+		$Text_LanguageCode = IniRead($newlanguagefile, 'GuiText', 'LanguageCode', 'Language Code')
+		$Text_AutoCheckUpdates = IniRead($newlanguagefile, 'GuiText', 'AutoCheckUpdates', 'Automatically Check For Updates')
+		$Text_CheckBetaUpdates = IniRead($newlanguagefile, 'GuiText', 'CheckBetaUpdates', 'Check For Beta Updates')
+		$Text_GuessSearchwords = IniRead($newlanguagefile, 'GuiText', 'GuessSearchwords', 'Guess Netsh Searchwords')
+		
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -7079,3 +7128,7 @@ Func _GuessNetshSearchwords()
 		MsgBox(0, 'Information', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
 	EndIf
 EndFunc   ;==>_GuessNetshSearchwords
+
+Func Log10($x)
+	Return Log($x) / Log(10) ;10 is the base
+EndFunc   ;==>Log10
