@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 4'
+$version = '9.0 Beta 4.1'
 $last_modified = '11/11/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -924,15 +924,16 @@ $kml_track_timer = TimerInit()
 $ReleaseMemory_Timer = TimerInit()
 $Speech_Timer = TimerInit()
 While 1
+	;Get GPS and AP Information
 	If BitAND($UseGPS = 1, $UpdatedGPS <> 1) Or BitAND($Scan = 1, $UpdatedAPs <> 1) Then
 		$ScanResults = 0
 		
-		;Set TimeStamps
+		;Set TimeStamps (UTC Values)
 		$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
 		$datestamp = $dt[1]
 		$timestamp = $dt[2]
 		
-		
+		;Get GPS Information (if enabled)
 		If $UseGPS = 1 And $UpdatedGPS <> 1 Then ; If 'Use GPS' is checked then scan gps and display information
 			$GetGpsSuccess = _GetGPS();Scan for GPS if GPS enabled
 			If $GetGpsSuccess = 1 Then
@@ -946,6 +947,7 @@ While 1
 			EndIf
 		EndIf
 		
+		;Get AP Information (if enabled)
 		If $Scan = 1 And $UpdatedAPs <> 1 Then
 			;Scan For New Aps
 			$ScanResults = _ScanAccessPoints();Scan for Access Points if scanning enabled
@@ -954,6 +956,7 @@ While 1
 				Sleep(1000)
 			Else
 				$UpdatedAPs = 1 ;Set Update flag so APs do not get scanned again on this loop
+				;Play Midi Sounds for all active APs (if enabled)
 				If $Midi_PlatForActiveAps = 1 And ProcessExists($MidiProcess) = 0 Then
 					$query = "SELECT Signal FROM Temp"
 					$TempApArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -976,13 +979,13 @@ While 1
 			;Refresh Networks If Enabled
 			If $RefreshNetworks = 1 Then _RefreshNetworks()
 		EndIf
-		
-		If BitAND($Scan = 1, $ScanResults > 0) Or BitAND($UseGPS = 1, $SaveGpsWithNoAps = 1) Then ;Add GpsID if Scanning and AP was found or if Using GPS and Save GPS With No APs is on
+		;Add GpsID if Scanning and AP was found or if Using GPS and 'Save GPS With No APs' option is on
+		If BitAND($Scan = 1, $ScanResults > 0) Or BitAND($UseGPS = 1, $SaveGpsWithNoAps = 1) Then
 			$GPS_ID += 1
 			_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
 		EndIf
 	EndIf
-
+	;Speak Signal of selected AP (if enabled)
 	If $SpeakSignal = 1 And $Scan = 1 And $UpdatedSpeechSig = 0 And TimerDiff($Speech_Timer) >= $SpeakSigTime Then
 		$SpeakSuccess = _SpeakSelectedSignal()
 		If $SpeakSuccess = 1 Then
@@ -991,6 +994,7 @@ While 1
 		EndIf
 	EndIf
 	
+	;Export KML files for AutoKML Google Earth Tracking (if enabled)
 	If $AutoKML = 1 Then
 		If TimerDiff($kml_gps_timer) >= ($AutoKmlGpsTime * 1000) And $AutoKmlGpsTime <> 0 Then
 			_AutoKmlGpsFile($GoogleEarth_GpsFile)
@@ -1010,36 +1014,46 @@ While 1
 		EndIf
 	EndIf
 	
+	;Sort Listview (if enabled)
 	If $AutoSort = 1 And TimerDiff($sort_timer) >= ($SortTime * 1000) Then _Sort($SortBy)
 	If $AutoSave = 1 And $UpdateAutoSave = 1 And TimerDiff($save_timer) >= ($SaveTime * 1000) Then
 		_AutoSave()
 		$UpdateAutoSave = 0
 	EndIf
 	
+	;Check Compass Window Position
 	If WinActive($CompassGUI) And $CompassOpen = 1 And $UpdatedCompassPos = 0 Then
 		$c = WinGetPos($CompassGUI)
 		If $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] <> $CompassPosition Then $CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] ;If the $CompassGUI has moved or resized, set $CompassPosition to current window size
 		$UpdatedCompassPos = 1
 	EndIf
+	
+	;Check GPS Details Windows Position
 	If WinActive($GpsDetailsGUI) And $GpsDetailsOpen = 1 And $UpdatedGpsDetailsPos = 0 Then
 		$g = WinGetPos($GpsDetailsGUI)
 		If $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
 		$UpdatedGpsDetailsPos = 1
 	EndIf
-
+	
+	;Resize Controls / Control Resize Monitoring
 	_TreeviewListviewResize()
 
+	;Check If Vistumbler Window has moved to tell the graph to redraw
 	If WinActive($Vistumbler) And _WinMoved() = 1 Then $Redraw = 1
+	
+	;If the vistumbler window has been resized, redraw the window controls
 	If WinActive($Vistumbler) And $ResetSizes = 1 Then
 		_SetControlSizes()
 		$ResetSizes = 0
 		$Redraw = 1
 	EndIf
 	
+	;Flag Actions
 	If $Close = 1 Then _ExitVistumbler() ;If the close flag has been set, exit visumbler
-	If $SortColumn <> -1 Then _HeaderSort($SortColumn)
-	If $ClearAllAps = 1 Then _ClearAllAp()
+	If $SortColumn <> -1 Then _HeaderSort($SortColumn);Sort clicked listview column
+	If $ClearAllAps = 1 Then _ClearAllAp();Clear all access points
 	
+	;Release Memory (Working Set)
 	If TimerDiff($ReleaseMemory_Timer) > 30000 Then
 		_ReduceMemory()
 		$ReleaseMemory_Timer = TimerInit()
@@ -1308,7 +1322,11 @@ Func _UpdateList()
 	Else
 		$LastActiveGID = $GPS_ID
 	EndIf
-	$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "'"
+	If $GraphDeadTime = 1 Then
+		$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "'"
+	Else
+		$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "' And Active = '1'"
+	EndIf
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	;Set APs Dead in Listview
@@ -1326,7 +1344,6 @@ Func _UpdateList()
 			;Set APs Dead in AP table, Set New HistID
 			$HISTID += 1
 			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $Date & '|' & $time)
-			;$query = "UPDATE AP SET Active = '0', LastHistID = '" & $HISTID & "' WHERE ApID = '" & $Found_APID & "'"
 			$query = "UPDATE AP SET Active = '0' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		ElseIf $Found_Active = 0 Then
@@ -1334,8 +1351,6 @@ Func _UpdateList()
 				;Create New HistID, Update AP LastHistID
 				$HISTID += 1
 				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $Date & '|' & $time)
-				;$query = "UPDATE AP SET LastHistID = '" & $HISTID & "' WHERE ApID = '" & $Found_APID & "'"
-				;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			EndIf
 		EndIf
 	Next
