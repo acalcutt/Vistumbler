@@ -24,7 +24,7 @@
 <!--BODY-->
 
 
-<form action="" method="post" enctype="multipart/form-data">
+<form action="install.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Install</h2>
   <h4>Please Read <a target="_blank" href="notes.html">these notes</a> before installing the Wireless Database</h4>
 <?php
