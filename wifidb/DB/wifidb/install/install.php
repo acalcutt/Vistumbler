@@ -108,6 +108,7 @@ $sqls =	"CREATE TABLE wifi0 ("
   ."  ssid varchar(25) NOT NULL,"
   ."  mac varchar(25) NOT NULL,"
   ."  chan varchar(2) NOT NULL,"
+  ."  sectype varchar(1) NOT NULL,"
   ."  radio varchar(1) NOT NULL,"
   ."  auth varchar(25) NOT NULL,"
   ."  encry varchar(25) NOT NULL,"
@@ -137,11 +138,11 @@ echo "<tr><td>Failure..........</td><td>CREATE TABLE `links`</td></tr>";}
 
 #Insert data into links table
 $sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
-		."(1, '<a class=\"links\" href=\"/$root/\">Main Page</a>'),"
-		."(2, '<a class=\"links\" href=\"/$root/all.php\">View All AP\'s</a>'),"
-		."(3, '<a class=\"links\" href=\"/$root/import/\">Import AP\'s</a>'),"
-		."(4, '<a class=\"links\" href=\"/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
-		."(5, '<a class=\"links\" href=\"/$root/ver.php\">WiFiDB Version</a>');";
+		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php\">View All AP\'s</a>'),"
+		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import AP\'s</a>'),"
+		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(5, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>');";
 $IN_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($IN_TB_LN_Re)
@@ -256,7 +257,7 @@ echo "<tr><td>Failure..........</td><td>Adding DataBase names</td></tr>";}
 
 #add sql Connection info
 $AD_CF_SC_Re = fwrite($fileappend, "#---------------- SQL Connection Info ----------------#\r\n"
-							."$"."conn 			=	 'mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\")';\r\n\r\n");
+							."$"."conn 			=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
 if($AD_CF_SU_Re)
 {echo "<tr><td>Success..........</td><td>Add SQL Connection Info</td></tr>";}
 else{
