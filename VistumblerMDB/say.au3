@@ -1,7 +1,7 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=Beta
-#AutoIt3Wrapper_icon=icon.ico
+#AutoIt3Wrapper_Version=beta
+#AutoIt3Wrapper_icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2008 Andrew Calcutt
@@ -9,17 +9,17 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.7 Beta
+;AutoIt Version: v3.2.13.9 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/19/2008'
 $Script_Name = 'SayText'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Uses Sound files, Microsoft SAPI, or MIDI sounds to say a number from 0 - 100'
-$version = 'v2.1'
-$last_modified = '10/21/2008'
+$version = 'v2.2'
+$last_modified = '11/15/2008'
 ;--------------------------------------------------------
 #include <String.au3>
-#include <Midiudf.au3>
+#include "UDFs\Midiudf.au3"
 
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $say = ''

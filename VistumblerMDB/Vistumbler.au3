@@ -1,7 +1,7 @@
 #RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=Beta
-#AutoIt3Wrapper_Icon=icon.ico
+#AutoIt3Wrapper_Version=beta
+#AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 4.5'
+$version = '9.0 Beta 5'
 $last_modified = '11/15/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -31,9 +31,9 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include <GDIPlus.au3>
 #include <Date.au3>
 #include <String.au3>
-#include "CommMG.au3"
-#include "AccessCom.au3"
-#include "ZIP.au3"
+#include "UDFs\CommMG.au3"
+#include "UDFs\AccessCom.au3"
+#include "UDFs\ZIP.au3"
 
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then

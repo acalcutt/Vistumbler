@@ -1,7 +1,7 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=Beta
-#AutoIt3Wrapper_icon=icon.ico
+#AutoIt3Wrapper_Version=beta
+#AutoIt3Wrapper_icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2008 Andrew Calcutt
@@ -9,16 +9,16 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.3 Beta
+;AutoIt Version: v3.2.13.9 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Save'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports a KML based on input options'
-$version = 'v1.0'
-$last_modified = '08/01/2008'
+$version = 'v1.1'
+$last_modified = '11/15/2008'
 ;--------------------------------------------------------
-#include "AccessCom.au3"
-#include "ZIP.au3"
+#include "UDFs\AccessCom.au3"
+#include "UDFs\ZIP.au3"
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $DB_OBJ
