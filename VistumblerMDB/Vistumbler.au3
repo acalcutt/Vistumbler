@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 5'
-$last_modified = '11/15/2008'
+$version = '9.0 Beta 5.1'
+$last_modified = '11/17/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -228,6 +228,7 @@ Dim $Midi_PlatForActiveAps = IniRead($settings, 'Vistumbler', 'Midi_PlatForActiv
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 0)
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
+Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 
 Dim $ComPort = IniRead($settings, 'GpsSettings', 'ComPort', '4')
 Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
@@ -530,6 +531,9 @@ Dim $Text_Even = IniRead($settings, 'GuiText', 'Even', 'Even')
 Dim $Text_Odd = IniRead($settings, 'GuiText', 'Odd', 'Odd')
 Dim $Text_Mark = IniRead($settings, 'GuiText', 'Mark', 'Mark')
 Dim $Text_Space = IniRead($settings, 'GuiText', 'Space', 'Space')
+Dim $Text_StopBit = IniRead($settings, 'GuiText', 'StopBit', 'Stop Bit')
+Dim $Text_Parity = IniRead($settings, 'GuiText', 'Parity', 'Parity')
+Dim $Text_DataBit = IniRead($settings, 'GuiText', 'DataBit', 'Data Bit')
 Dim $Text_Update = IniRead($settings, 'GuiText', 'Update', 'Update')
 Dim $Text_UpdateMsg = IniRead($settings, 'GuiText', 'UpdateMsg', 'Update Found. Would you like to update vistumbler?')
 Dim $Text_Recover = IniRead($settings, 'GuiText', 'Recover', 'Recover')
@@ -547,6 +551,24 @@ Dim $Text_LanguageCode = IniRead($settings, 'GuiText', 'LanguageCode', 'Language
 Dim $Text_AutoCheckUpdates = IniRead($settings, 'GuiText', 'AutoCheckUpdates', 'Automatically Check For Updates')
 Dim $Text_CheckBetaUpdates = IniRead($settings, 'GuiText', 'CheckBetaUpdates', 'Check For Beta Updates')
 Dim $Text_GuessSearchwords = IniRead($settings, 'GuiText', 'GuessSearchwords', 'Guess Netsh Searchwords')
+Dim $Text_Help = IniRead($settings, 'GuiText', 'Help', 'Help')
+Dim $Text_ErrorScanningNetsh = IniRead($settings, 'GuiText', 'ErrorScanningNetsh', 'Error scanning netsh')
+Dim $Text_GpsErrorBufferEmpty = IniRead($settings, 'GuiText', 'GpsErrorBufferEmpty', 'GPS Error. Buffer Empty for more than 10 seconds. GPS was probrably disconnected. GPS has been stopped')
+Dim $Text_GpsErrorStopped = IniRead($settings, 'GuiText', 'GpsErrorStopped', 'GPS Error. GPS has been stopped')
+Dim $Text_ShowSignalDB = IniRead($settings, 'GuiText', 'ShowSignalDB', 'Show Signal dB (Estimated)')
+Dim $Text_SortingList = IniRead($settings, 'GuiText', 'SortingList', 'Sorting List')
+Dim $Text_Loading = IniRead($settings, 'GuiText', 'Loading', 'Loading')
+Dim $Text_MapOpenNetworks = IniRead($settings, 'GuiText', 'MapOpenNetworks', 'Map Open Networks')
+Dim $Text_MapWepNetworks = IniRead($settings, 'GuiText', 'MapWepNetworks', 'Map WEP Networks')
+Dim $Text_MapSecureNetworks = IniRead($settings, 'GuiText', 'MapSecureNetworks', 'Map Secure Networks')
+Dim $Text_DrawTrack = IniRead($settings, 'GuiText', 'DrawTrack', 'Draw Track')
+Dim $Text_UseLocalImages = IniRead($settings, 'GuiText', 'UseLocalImages', 'Use Local Images')
+Dim $Text_MIDI = IniRead($settings, 'GuiText', 'MIDI', 'MIDI')
+Dim $Text_MidiInstrumentNumber = IniRead($settings, 'GuiText', 'MidiInstrumentNumber', 'MIDI Instrument #')
+Dim $Text_MidiPlayTime = IniRead($settings, 'GuiText', 'MidiPlayTime', 'MIDI Play Time')
+Dim $Text_SpeakRefreshTime = IniRead($settings, 'GuiText', 'SpeakRefreshTime', 'Speak Refresh Time')
+Dim $Text_Information = IniRead($settings, 'GuiText', 'Information', 'Information')
+Dim $Text_AddedGuessedSearchwords = IniRead($settings, 'GuiText', 'AddedGuessedSearchwords', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -683,7 +705,7 @@ $Edit = GUICtrlCreateMenu($Text_Edit)
 $ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
 $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 ;$Cut = GUICtrlCreateMenuitem("Cut", $Edit)
-$Copy = GUICtrlCreateMenuItem("Copy", $Edit)
+$Copy = GUICtrlCreateMenuItem($Text_Copy, $Edit)
 ;$Delete = GUICtrlCreateMenuItem("Delete", $Edit)
 ;$SelectAll = GUICtrlCreateMenuItem("Select All", $Edit)
 $SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
@@ -697,6 +719,8 @@ $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $Options)
 If $AutoSort = 1 Then GUICtrlSetState($AutoSortGUI, $GUI_CHECKED)
 $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $Options)
+If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
@@ -763,7 +787,7 @@ $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $Extra)
 $ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_PhilsWDB, $Extra)
 
-$Help = GUICtrlCreateMenu("Help")
+$Help = GUICtrlCreateMenu($Text_Help)
 $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
 $VistumblerForum = GUICtrlCreateMenuItem($Text_VistumblerForum, $Help)
 $VistumblerWiki = GUICtrlCreateMenuItem($Text_VistumblerWiki, $Help)
@@ -834,6 +858,7 @@ GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
 GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
 GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
+GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
@@ -904,8 +929,9 @@ Dim $Encryption_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_E
 Dim $NetworkType_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_NetworkType)
 Dim $SSID_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_SSID)
 
-If $Load <> '' Then AutoLoadList($Load)
 If $Recover = 1 Then _RecoverMDB()
+
+If $Load <> '' Then AutoLoadList($Load)
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PROGRAM RUNNING LOOP
@@ -941,8 +967,8 @@ While 1
 				GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
 				$UpdatedGPS = 1
 			Else
-				If $UseNetcomm = 1 Then GUICtrlSetData($msgdisplay, 'GPS Error. Buffer Empty for more than 10 seconds. GPS was probrably disconnected. GPS has been stopped')
-				If $UseNetcomm = 0 Then GUICtrlSetData($msgdisplay, 'GPS Error. GPS has been stopped')
+				If $UseNetcomm = 1 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorBufferEmpty)
+				If $UseNetcomm = 0 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorStopped)
 				Sleep(1000)
 			EndIf
 		EndIf
@@ -952,7 +978,7 @@ While 1
 			;Scan For New Aps
 			$ScanResults = _ScanAccessPoints();Scan for Access Points if scanning enabled
 			If $ScanResults = -1 Then
-				GUICtrlSetData($msgdisplay, 'Error scanning netsh')
+				GUICtrlSetData($msgdisplay, $Text_ErrorScanningNetsh)
 				Sleep(1000)
 			Else
 				$UpdatedAPs = 1 ;Set Update flag so APs do not get scanned again on this loop
@@ -1411,7 +1437,7 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 	EndIf
 	
 	If $Add_Signal <> '' Then
-		If $Add_Signal = 0 Then
+		If $Add_Signal = 0 Or $ShowEstimatedDB = 0 Then
 			$AddDb = ''
 		Else
 			$AddDb = '(' & Round(-70 + (20 * Log10($Add_Signal / (100 - $Add_Signal)))) & 'dB)'
@@ -1422,8 +1448,8 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 	If $Add_Active <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Active, $column_Active)
 	If $Add_SSID <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_SSID, $column_SSID)
 	If $Add_BSSID <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BSSID, $column_BSSID)
-	If $Add_MANU <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF) ; Round(-30 + (20 * Log10(($Add_Signal / 100) / (100 - $Add_Signal))))
-	If $Add_Signal <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Signal & '% ' & $AddDb, $column_Signal) ; (-100 + (10 * Log($Add_Signal)))
+	If $Add_MANU <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF)
+	If $Add_Signal <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Signal & '% ' & $AddDb, $column_Signal)
 	If $Add_Authentication <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Authentication, $column_Authentication)
 	If $Add_Encryption <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Encryption, $column_Encryption)
 	If $Add_RadioType <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RadioType, $column_RadioType)
@@ -1521,7 +1547,7 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	_TreeViewApInfo($Encryption_subtreeviewposition, $Encryption_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($Authentication_subtreeviewposition, $Authentication_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($NetworkType_subtreeviewposition, $NetworkType_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
-
+	
 	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 
 	;Return Treeview positions
@@ -1981,7 +2007,6 @@ Func _GpsToggle();Turns GPS on or off
 		$openport = _OpenComPort($ComPort, $BAUD, $PARITY, $DATABIT, $STOPBIT);Open The GPS COM port
 		If $openport = 1 Then
 			$UseGPS = 1
-			;GUICtrlSetState($SetGPS, $GUI_CHECKED)
 			GUICtrlSetData($GpsButton, $Text_StopGPS)
 			$GPGGA_Update = TimerInit()
 			$GPRMC_Update = TimerInit()
@@ -2001,7 +2026,6 @@ Func _TurnOffGPS();Turns off GPS, resets variable
 	$Longitude = 'E 0.0000'
 	$NumberOfSatalites = '00'
 	_CloseComPort($ComPort) ;Close The GPS COM port
-	;GUICtrlSetState($SetGPS, $GUI_UNCHECKED)
 	GUICtrlSetData($GpsButton, $Text_UseGPS)
 	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_TurnOffGPS
@@ -2173,6 +2197,17 @@ Func _AutoSortToggle();Turns auto sort on or off
 	EndIf
 EndFunc   ;==>_AutoSortToggle
 
+Func _ShowDbToggle();Turns Estimated DB value on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ShowDbToggle()') ;#Debug Display
+	If $ShowEstimatedDB = 1 Then
+		GUICtrlSetState($ShowEstDb, $GUI_UNCHECKED)
+		$ShowEstimatedDB = 0
+	Else
+		GUICtrlSetState($ShowEstDb, $GUI_CHECKED)
+		$ShowEstimatedDB = 1
+	EndIf
+EndFunc   ;==>_ShowDbToggle
+
 Func _ResetSizes()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ResetSizes()') ;#Debug Display
 	$ResetSizes = 1
@@ -2341,114 +2376,6 @@ Func _GetGPS(); Recieves data from gps device
 	Return ($return)
 EndFunc   ;==>_GetGPS
 
-Func _GetGPS2(); Recieves data from gps device
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GetGPS()') ;#Debug Display
-	$timeout = TimerInit()
-	$return = 1
-	
-	$maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
-	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
-	
-	Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
-	Dim $Temp_Quality = 0, $Temp_Status = "V"
-	
-	If $UseNetcomm = 1 Then ;Use Netcomm ocx to get data (more stable right now)
-		While 1 ;Loop to extract gps data untill location is found or timout time is reached
-			If $UseGPS = 0 Then ExitLoop
-			If $NetComm.InBufferCount Then
-				$Buffer = $NetComm.InBufferCount
-				If $Buffer > 75 And $LatTest = 0 And TimerDiff($timeout) < $maxtime Then
-					$inputdata = $NetComm.inputdata
-					If StringInStr($inputdata, '$') And StringInStr($inputdata, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-						$gps = StringSplit($inputdata, @CR);Split data string by CR and put data into the $gps array
-						For $readloop = 1 To $gps[0];go through array
-							$gpsline = StringStripWS($gps[$readloop], 3)
-							If StringInStr($gpsline, '$') And StringInStr($gpsline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-								If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline);Show data line in "GPS Details" GUI if it is open
-								If StringInStr($gpsline, "$GPGGA") Then
-									_GPGGA($gpsline);Split GPGGA data from data string
-								ElseIf StringInStr($gpsline, "$GPRMC") Then
-									_GPRMC($gpsline);Split GPRMC data from data string
-								EndIf
-								If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
-							EndIf
-							If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
-						Next
-					EndIf
-				EndIf
-				If TimerDiff($timeout) > $maxtime Then
-					GUICtrlSetData($msgdisplay, 'GPS Timeout')
-					ExitLoop
-				EndIf
-				Sleep(100)
-				$disconnected_time = TimerInit() ;reset gps turn off timer
-			Else
-				If $disconnected_time = -1 Then $disconnected_time = TimerInit()
-				If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
-					$disconnected_time = -1
-					$return = 0
-					_TurnOffGPS()
-					SoundPlay($SoundDir & $ErrorFlag_sound, 0)
-				EndIf
-			EndIf
-			If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
-		WEnd
-	Else ;Use CommMG.dll instead of the netcomm ocx (less stable, but works with x64)
-		While 1
-			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
-			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
-			If StringInStr($dataline, "$GPGGA") Then
-				_GPGGA($dataline);Split GPGGA data from data string
-				$disconnected_time = -1
-			ElseIf StringInStr($dataline, "$GPRMC") Then
-				_GPRMC($dataline);Split GPRMC data from data string
-				$disconnected_time = -1
-			Else
-				If $disconnected_time = -1 Then $disconnected_time = TimerInit()
-				If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
-					$disconnected_time = -1
-					$return = 0
-					_TurnOffGPS()
-					SoundPlay($SoundDir & $ErrorFlag_sound, 0)
-				EndIf
-			EndIf
-			If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
-			If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
-		WEnd
-	EndIf
-	
-	If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then ;If the GPGGA data has a fix(1) then write data to perminant variables
-		If $FixTime <> $Temp_FixTime Then $GPGGA_Update = TimerInit()
-		$FixTime = $Temp_FixTime
-		$Latitude = $Temp_Lat
-		$Longitude = $Temp_Lon
-		$NumberOfSatalites = $Temp_NumberOfSatalites
-		$HorDilPitch = $Temp_HorDilPitch
-		$Alt = $Temp_Alt
-		$AltS = $Temp_AltS
-		$Geo = $Temp_Geo
-		$GeoS = $Temp_GeoS
-	EndIf
-	If $Temp_Status = "A" Then ;If the GPRMC data is Active(A) then write data to perminant variables
-		If $FixTime2 <> $Temp_FixTime2 Then $GPRMC_Update = TimerInit()
-		$FixTime2 = $Temp_FixTime2
-		$Latitude2 = $Temp_Lat2
-		$Longitude2 = $Temp_Lon2
-		$SpeedInKnots = $Temp_SpeedInKnots
-		$SpeedInMPH = $Temp_SpeedInMPH
-		$SpeedInKmH = $Temp_SpeedInKmH
-		$TrackAngle = $Temp_TrackAngle
-		$FixDate = $Temp_FixDate
-	EndIf
-	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
-	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
-	_DrawCompassLine($TrackAngle)
-	
-	If $TurnOffGPS = 1 Then _TurnOffGPS()
-	
-	Return ($return)
-EndFunc   ;==>_GetGPS2
-
 Func _FormatGpsTime($time)
 	$time = StringTrimRight($time, 4)
 	$h = StringTrimRight($time, 4)
@@ -2460,7 +2387,7 @@ Func _FormatGpsTime($time)
 	Else
 		$l = "AM"
 	EndIf
-	Return ($h & ":" & $m & ":" & $s & $l & ' (GMT)')
+	Return ($h & ":" & $m & ":" & $s & $l & ' (UTC)')
 EndFunc   ;==>_FormatGpsTime
 
 Func _FormatGpsDate($Date)
@@ -2861,7 +2788,7 @@ EndFunc   ;==>_SortTree
 
 Func _HeaderSort($column);Sort a column in ap list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_HeaderSort()') ;#Debug Display
-	GUICtrlSetData($msgdisplay, 'Sorting List')
+	GUICtrlSetData($msgdisplay, $Text_SortingList)
 	If $Direction[$column] = 0 Then
 		Dim $v_sort = False;set descending
 	Else
@@ -2895,7 +2822,7 @@ EndFunc   ;==>_HeaderSort2
 
 Func _Sort($Sort);Auto Sort based on a user chosen column
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Sort()') ;#Debug Display
-	GUICtrlSetData($msgdisplay, 'Sorting List')
+	GUICtrlSetData($msgdisplay, $Text_SortingList)
 	If $SortDirection = 1 Then
 		Dim $v_sort = False;set ascending
 	Else
@@ -3309,7 +3236,6 @@ Func _CreatePens()
 	$g = Dec(StringTrimLeft(StringTrimRight($GraphBackColor, 2), 2))
 	$b = Dec(StringTrimLeft($GraphBackColor, 4))
 	$GraphBack = _CreateColor($r, $g, $b)
-	;$GraphBack = _CreateColor(215, 228, 242)
 	$black = _CreateColor(0, 0, 0)
 	$red = _CreateColor(255, 0, 0)
 	$GraphGridColor = StringTrimLeft($BackgroundColor, 2)
@@ -3767,7 +3693,7 @@ Func _ImportClose()
 EndFunc   ;==>_ImportClose
 
 Func _ImportOk()
-	GUICtrlSetData($percentlabel, $Text_Progress & ': Loading')
+	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Loading)
 	GUICtrlSetState($NsOk, $GUI_DISABLE)
 	If GUICtrlRead($RadVis) = 1 Then
 		$visfile = GUICtrlRead($vistumblerfileinput)
@@ -3915,7 +3841,7 @@ Func _ImportOk()
 				_ReduceMemory()
 				$currentline += 1
 			Next
-			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & 'Sorting List')
+			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_SortingList)
 			If $AddDirection = 0 Then
 				$v_sort = True;set ascending
 			Else
@@ -4084,7 +4010,7 @@ Func _ImportOk()
 				GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($Load / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($Load / $min, 1), 1))
 				_ReduceMemory()
 			Next
-			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & 'Sorting List')
+			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_SortingList)
 			If $AddDirection = 0 Then
 				$v_sort = True;set ascending
 			Else
@@ -4188,6 +4114,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'Midi_PlayTime', $Midi_PlayTime)
 	IniWrite($settings, "Vistumbler", 'Midi_PlatForActiveAps', $Midi_PlatForActiveAps)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
+	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
 	
 	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
 	IniWrite($settings, 'AutoKML', 'AutoKML_Alt', $AutoKML_Alt)
@@ -4499,6 +4426,27 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'AutoCheckUpdates', $Text_AutoCheckUpdates)
 	IniWrite($settings, 'GuiText', 'CheckBetaUpdates', $Text_CheckBetaUpdates)
 	IniWrite($settings, 'GuiText', 'GuessSearchwords', $Text_GuessSearchwords)
+	IniWrite($settings, 'GuiText', 'Help', $Text_Help)
+	IniWrite($settings, 'GuiText', 'ErrorScanningNetsh', $Text_ErrorScanningNetsh)
+	IniWrite($settings, 'GuiText', 'GpsErrorBufferEmpty', $Text_GpsErrorBufferEmpty)
+	IniWrite($settings, 'GuiText', 'GpsErrorStopped', $Text_GpsErrorStopped)
+	IniWrite($settings, 'GuiText', 'ShowSignalDB', $Text_ShowSignalDB)
+	IniWrite($settings, 'GuiText', 'SortingList', $Text_SortingList)
+	IniWrite($settings, 'GuiText', 'Loading', $Text_Loading)
+	IniWrite($settings, 'GuiText', 'MapOpenNetworks', $Text_MapOpenNetworks)
+	IniWrite($settings, 'GuiText', 'MapWepNetworks', $Text_MapWepNetworks)
+	IniWrite($settings, 'GuiText', 'MapSecureNetworks', $Text_MapSecureNetworks)
+	IniWrite($settings, 'GuiText', 'DrawTrack', $Text_DrawTrack)
+	IniWrite($settings, 'GuiText', 'UseLocalImages', $Text_UseLocalImages)
+	IniWrite($settings, 'GuiText', 'StopBit', $Text_StopBit)
+	IniWrite($settings, 'GuiText', 'Parity', $Text_Parity)
+	IniWrite($settings, 'GuiText', 'DataBit', $Text_DataBit)
+	IniWrite($settings, 'GuiText', 'MIDI', $Text_MIDI)
+	IniWrite($settings, 'GuiText', 'MidiInstrumentNumber', $Text_MidiInstrumentNumber)
+	IniWrite($settings, 'GuiText', 'MidiPlayTime', $Text_MidiPlayTime)
+	IniWrite($settings, 'GuiText', 'SpeakRefreshTime', $Text_SpeakRefreshTime)
+	IniWrite($settings, 'GuiText', 'Information', $Text_Information)
+	IniWrite($settings, 'GuiText', 'AddedGuessedSearchwords', $Text_AddedGuessedSearchwords)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4508,22 +4456,22 @@ EndFunc   ;==>_WriteINI
 Func SaveToKML()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveToKML()') ;#Debug Display
 	Opt("GUIOnEventMode", 0)
-	$ExportKMLGUI = GUICreate("Export KML", 263, 143)
+	$ExportKMLGUI = GUICreate($Text_ExportToKML, 263, 143)
 	GUISetBkColor($BackgroundColor)
-	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox("Map Open Networks", 15, 15, 240, 15)
+	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 15, 240, 15)
 	If $MapOpen = 1 Then GUICtrlSetState($GUI_ExportKML_MapOpen, $GUI_CHECKED)
-	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox("Map WEP Networks", 15, 35, 240, 15)
+	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 35, 240, 15)
 	If $MapWEP = 1 Then GUICtrlSetState($GUI_ExportKML_MapWEP, $GUI_CHECKED)
-	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox("Map Secure Networks", 15, 55, 240, 15)
+	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 55, 240, 15)
 	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportKML_MapSec, $GUI_CHECKED)
-	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox("Draw Track", 15, 75, 240, 15)
+	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox($Text_DrawTrack, 15, 75, 240, 15)
 	;If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
-	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox("Use Local Images", 15, 95, 240, 15)
+	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 95, 240, 15)
 	If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
-	$GUI_ExportKML_OK = GUICtrlCreateButton("Ok", 40, 115, 81, 25, 0)
-	$GUI_ExportKML_Cancel = GUICtrlCreateButton("Cancel", 139, 115, 81, 25, 0)
+	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 115, 81, 25, 0)
+	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 115, 81, 25, 0)
 	GUISetState(@SW_SHOW)
-
+	
 	While 1
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
@@ -5238,10 +5186,11 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_Baud = GUICtrlCreateCombo("4800", 44, 250, 275, 25)
 	GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
-	$StopBitLabel = GUICtrlCreateLabel("Stop Bit", 44, 290, 275, 15)
+	$StopBitLabel = GUICtrlCreateLabel($Text_StopBit, 44, 290, 275, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_StopBit = GUICtrlCreateCombo("1", 44, 305, 275, 25)
 	GUICtrlSetData(-1, "1.5|2", $STOPBIT)
+	
 	If $PARITY = 'E' Then
 		$l_PARITY = $Text_Even
 	ElseIf $PARITY = 'M' Then
@@ -5253,10 +5202,10 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	Else
 		$l_PARITY = $Text_None
 	EndIf
-	$ParityLabel = GUICtrlCreateLabel("Parity", 364, 180, 275, 15)
+	$ParityLabel = GUICtrlCreateLabel($Text_Parity, 364, 180, 275, 15)
 	$GUI_Parity = GUICtrlCreateCombo($Text_None, 364, 195, 275, 25)
 	GUICtrlSetData(-1, $Text_Even & '|' & $Text_Mark & '|' & $Text_Odd & '|' & $Text_Space, $l_PARITY)
-	$DataBitLabel = GUICtrlCreateLabel("Data Bit", 364, 235, 275, 15)
+	$DataBitLabel = GUICtrlCreateLabel($Text_DataBit, 364, 235, 275, 15)
 	$GUI_DataBit = GUICtrlCreateCombo("4", 364, 250, 275, 25)
 	GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
 	$GroupGpsFormat = GUICtrlCreateGroup($Text_GPSFormat, 24, 360, 633, 50)
@@ -5651,7 +5600,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	If $SpeakSignal = 1 Then GUICtrlSetState($GUI_SpeakSignal, $GUI_CHECKED)
 	$GUI_SpeakSoundsVis = GUICtrlCreateRadio($Text_SpeakUseVisSounds, 30, 330, 200, 15)
 	$GUI_SpeakSoundsSapi = GUICtrlCreateRadio($Text_SpeakUseSapi, 30, 350, 200, 15)
-	$GUI_SpeakSoundsMidi = GUICtrlCreateRadio('MIDI', 30, 370, 200, 15)
+	$GUI_SpeakSoundsMidi = GUICtrlCreateRadio($Text_MIDI, 30, 370, 200, 15)
 	GUICtrlSetColor($GUI_SpeakSoundsVis, $TextColor)
 	GUICtrlSetColor($GUI_SpeakSoundsSapi, $TextColor)
 	GUICtrlSetColor($GUI_SpeakSoundsMidi, $TextColor)
@@ -5662,7 +5611,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	ElseIf $SpeakType = 3 Then
 		GUICtrlSetState($GUI_SpeakSoundsMidi, $GUI_CHECKED)
 	EndIf
-	GUICtrlCreateLabel('Speak Refresh Time' & '(ms)', 30, 390, 150, 15)
+	GUICtrlCreateLabel($Text_SpeakRefreshTime & '(ms)', 30, 390, 150, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_SpeakSigTime = GUICtrlCreateInput($SpeakSigTime, 30, 405, 150, 20)
 	GUICtrlSetColor(-1, $TextColor)
@@ -5670,11 +5619,11 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	If $SpeakSigSayPecent = 1 Then GUICtrlSetState($GUI_SpeakPercent, $GUI_CHECKED)
 	
-	GUICtrlCreateLabel('MIDI Instrument #', 400, 310, 150, 15)
+	GUICtrlCreateLabel($Text_MidiInstrumentNumber, 400, 310, 150, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_Midi_Instument = GUICtrlCreateInput($Midi_Instument, 400, 325, 150, 20)
 	GUICtrlSetColor(-1, $TextColor)
-	GUICtrlCreateLabel('MIDI Play Time (ms)', 400, 355, 150, 15)
+	GUICtrlCreateLabel($Text_MidiPlayTime & '(ms)', 400, 355, 150, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 400, 370, 150, 20)
 	GUICtrlSetColor(-1, $TextColor)
@@ -6052,6 +6001,9 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Odd = IniRead($newlanguagefile, 'GuiText', 'Odd', 'Odd')
 		$Text_Mark = IniRead($newlanguagefile, 'GuiText', 'Mark', 'Mark')
 		$Text_Space = IniRead($newlanguagefile, 'GuiText', 'Space', 'Space')
+		$Text_StopBit = IniRead($newlanguagefile, 'GuiText', 'StopBit', 'Stop Bit')
+		$Text_Parity = IniRead($newlanguagefile, 'GuiText', 'Parity', 'Parity')
+		$Text_DataBit = IniRead($newlanguagefile, 'GuiText', 'DataBit', 'Data Bit')
 		$Text_Update = IniRead($newlanguagefile, 'GuiText', 'Update', 'Update')
 		$Text_UpdateMsg = IniRead($newlanguagefile, 'GuiText', 'UpdateMsg', 'Update Found. Would you like to update vistumbler?')
 		$Text_Recover = IniRead($newlanguagefile, 'GuiText', 'Recover', 'Recover')
@@ -6069,6 +6021,24 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AutoCheckUpdates = IniRead($newlanguagefile, 'GuiText', 'AutoCheckUpdates', 'Automatically Check For Updates')
 		$Text_CheckBetaUpdates = IniRead($newlanguagefile, 'GuiText', 'CheckBetaUpdates', 'Check For Beta Updates')
 		$Text_GuessSearchwords = IniRead($newlanguagefile, 'GuiText', 'GuessSearchwords', 'Guess Netsh Searchwords')
+		$Text_Help = IniRead($newlanguagefile, 'GuiText', 'Help', 'Help')
+		$Text_ErrorScanningNetsh = IniRead($newlanguagefile, 'GuiText', 'ErrorScanningNetsh', 'Error scanning netsh')
+		$Text_GpsErrorBufferEmpty = IniRead($newlanguagefile, 'GuiText', 'GpsErrorBufferEmpty', 'GPS Error. Buffer Empty for more than 10 seconds. GPS was probrably disconnected. GPS has been stopped')
+		$Text_GpsErrorStopped = IniRead($newlanguagefile, 'GuiText', 'GpsErrorStopped', 'GPS Error. GPS has been stopped')
+		$Text_ShowSignalDB = IniRead($newlanguagefile, 'GuiText', 'ShowSignalDB', 'Show Signal dB (Estimated)')
+		$Text_SortingList = IniRead($newlanguagefile, 'GuiText', 'SortingList', 'Sorting List')
+		$Text_Loading = IniRead($newlanguagefile, 'GuiText', 'Loading', 'Loading')
+		$Text_MapOpenNetworks = IniRead($newlanguagefile, 'GuiText', 'MapOpenNetworks', 'Map Open Networks')
+		$Text_MapWepNetworks = IniRead($newlanguagefile, 'GuiText', 'MapWepNetworks', 'Map WEP Networks')
+		$Text_MapSecureNetworks = IniRead($newlanguagefile, 'GuiText', 'MapSecureNetworks', 'Map Secure Networks')
+		$Text_DrawTrack = IniRead($newlanguagefile, 'GuiText', 'DrawTrack', 'Draw Track')
+		$Text_UseLocalImages = IniRead($newlanguagefile, 'GuiText', 'UseLocalImages', 'Use Local Images')
+		$Text_MIDI = IniRead($newlanguagefile, 'GuiText', 'MIDI', 'MIDI')
+		$Text_MidiInstrumentNumber = IniRead($newlanguagefile, 'GuiText', 'MidiInstrumentNumber', 'MIDI Instrument #')
+		$Text_MidiPlayTime = IniRead($newlanguagefile, 'GuiText', 'MidiPlayTime', 'MIDI Play Time')
+		$Text_SpeakRefreshTime = IniRead($newlanguagefile, 'GuiText', 'SpeakRefreshTime', 'Speak Refresh Time')
+		$Text_Information = IniRead($newlanguagefile, 'GuiText', 'Information', 'Information')
+		$Text_AddedGuessedSearchwords = IniRead($newlanguagefile, 'GuiText', 'AddedGuessedSearchwords', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
 		
 		$RestartVistumbler = 1
 	EndIf
@@ -7007,7 +6977,7 @@ Func _GuessNetshSearchwords()
 		GUICtrlSetData($SearchWord_BasicRates_GUI, $GSearchWord_BasicRates)
 		GUICtrlSetData($SearchWord_OtherRates_GUI, $GSearchWord_OtherRates)
 		
-		MsgBox(0, 'Information', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
+		MsgBox(0, $Text_Information, $Text_AddedGuessedSearchwords)
 	EndIf
 EndFunc   ;==>_GuessNetshSearchwords
 
