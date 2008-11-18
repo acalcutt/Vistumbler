@@ -11,13 +11,13 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.9 Beta
+;AutoIt Version: v3.2.13.10 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 5.1'
+$version = '9.0 Beta 5.2'
 $last_modified = '11/17/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -569,6 +569,17 @@ Dim $Text_MidiPlayTime = IniRead($settings, 'GuiText', 'MidiPlayTime', 'MIDI Pla
 Dim $Text_SpeakRefreshTime = IniRead($settings, 'GuiText', 'SpeakRefreshTime', 'Speak Refresh Time')
 Dim $Text_Information = IniRead($settings, 'GuiText', 'Information', 'Information')
 Dim $Text_AddedGuessedSearchwords = IniRead($settings, 'GuiText', 'AddedGuessedSearchwords', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
+Dim $Text_SortingTreeview = IniRead($settings, 'GuiText', 'SortingTreeview', 'Sorting Treeview')
+Dim $Text_Recovering = IniRead($settings, 'GuiText', 'Recovering', 'Recovering')
+Dim $Text_VistumblerFile = IniRead($settings, 'GuiText', 'VistumblerFile', 'Vistumbler File')
+Dim $Text_NetstumblerTxtFile = IniRead($settings, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler TXT File')
+Dim $Text_ErrorOpeningGpsPort = IniRead($settings, 'GuiText', 'ErrorOpeningGpsPort', 'Error opening GPS port')
+Dim $Text_SecondsSinceGpsUpdate = IniRead($settings, 'GuiText', 'SecondsSinceGpsUpdate', 'Seconds Since GPS Update')
+Dim $Text_SavingGID = IniRead($settings, 'GuiText', 'SavingGID', 'Saving GID')
+Dim $Text_SavingHistID = IniRead($settings, 'GuiText', 'SavingHistID', 'Saving HistID')
+Dim $Text_UpdateFound = IniRead($settings, 'GuiText', 'UpdateFound', 'Update Found. Would you like to update vistumbler?')
+Dim $Text_NoUpdates = IniRead($settings, 'GuiText', 'NoUpdates', 'No Updates Avalible')
+Dim $Text_NoActiveApFound = IniRead($settings, 'GuiText', 'NoActiveApFound', 'No Active AP found')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -2012,7 +2023,7 @@ Func _GpsToggle();Turns GPS on or off
 			$GPRMC_Update = TimerInit()
 		Else
 			$UseGPS = 0
-			GUICtrlSetData($msgdisplay, 'Error opening GPS port')
+			GUICtrlSetData($msgdisplay, $Text_ErrorOpeningGpsPort)
 		EndIf
 	EndIf
 EndFunc   ;==>_GpsToggle
@@ -2744,7 +2755,7 @@ EndFunc   ;==>_UpdateGpsDetailsGUI
 
 Func _ClearGpsDetailsGUI();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearGpsDetailsGUI()') ;#Debug Display
-	GUICtrlSetData($msgdisplay, "Seconds Since GPS Update: GPGGA:" & Round(TimerDiff($GPGGA_Update) / 1000) & " / " & ($GpsTimeout / 1000) & " - " & "GPRMC:" & Round(TimerDiff($GPRMC_Update) / 1000) & " / " & ($GpsTimeout / 1000))
+	GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": GPGGA:" & Round(TimerDiff($GPGGA_Update) / 1000) & " / " & ($GpsTimeout / 1000) & " - " & "GPRMC:" & Round(TimerDiff($GPRMC_Update) / 1000) & " / " & ($GpsTimeout / 1000))
 	If Round(TimerDiff($GPGGA_Update)) > $GpsTimeout Then
 		$FixTime = ''
 		$Latitude = 'N 0.0000'
@@ -2781,7 +2792,7 @@ EndFunc   ;==>_CloseGpsDetailsGUI
 ;-------------------------------------------------------------------------------------------------------------------------------
 Func _SortTree();Sort the data in the treeview
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SortTree()') ;#Debug Display
-	GUICtrlSetData($msgdisplay, 'Sorting Treeview')
+	GUICtrlSetData($msgdisplay, $Text_SortingTreeview)
 	_GUICtrlTreeView_Sort($TreeviewAPs)
 	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_SortTree
@@ -3412,7 +3423,7 @@ Func _ExportDetailedData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
 	DirCreate($SaveDir)
 	$timestamp = @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Vistumbler (*.VS1)', '', $timestamp & '.VS1')
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VS1)', '', $timestamp & '.VS1')
 	If @error <> 1 Then
 		If StringInStr($file, '.VS1') = 0 Then $file = $file & '.VS1'
 		FileDelete($file)
@@ -3436,7 +3447,7 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundGpsMatch = UBound($GpsMatchArray) - 1
 	For $exp = 1 To $FoundGpsMatch
-		GUICtrlSetData($msgdisplay, 'Saving GID' & ' ' & $exp & ' / ' & $FoundGpsMatch)
+		GUICtrlSetData($msgdisplay, $Text_SavingGID & ' ' & $exp & ' / ' & $FoundGpsMatch)
 		$ExpGID = $GpsMatchArray[$exp][1]
 		$ExpLat = $GpsMatchArray[$exp][2]
 		$ExpLon = $GpsMatchArray[$exp][3]
@@ -3573,7 +3584,7 @@ Func _ExportVSZ()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
 	DirCreate($SaveDir)
 	$timestamp = @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Vistumbler (*.VSZ)', '', $timestamp & '.VSZ')
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VSZ)', '', $timestamp & '.VSZ')
 	If @error <> 1 Then
 		If StringInStr($file, '.VSZ') = 0 Then $file = $file & '.VSZ'
 		$vsz_temp_file = $TmpDir & 'data.zip'
@@ -3609,7 +3620,7 @@ Func AutoLoadList($imfile1 = "")
 EndFunc   ;==>AutoLoadList
 
 Func _ImportVszFile($vsz_file = '')
-	If $vsz_file = '' Then $vsz_file = FileOpenDialog("Select Vistumbler Zipped File", $SaveDir, "Vistumbler Zipped File (*.VSZ)", 1)
+	If $vsz_file = '' Then $vsz_file = FileOpenDialog($Text_ImportFromVSZ, $SaveDir, $Text_VistumblerFile & ' (*.VSZ)', 1)
 	If @error <> 1 Then
 		If StringInStr($vsz_file, '.VSZ') = 0 Then $vsz_file = $vsz_file & '.VSZ'
 		$vsz_temp_file = $TmpDir & 'data.zip'
@@ -3631,9 +3642,9 @@ Func _LoadListGUI($imfile1 = "")
 	GUICtrlCreateLabel($Text_ImportFromTXT, 10, 10, 200, 20)
 	$vistumblerfileinput = GUICtrlCreateInput($imfile1, 10, 30, 420, 20)
 	$browse1 = GUICtrlCreateButton($Text_Browse, 440, 30, 60, 20)
-	$RadVis = GUICtrlCreateRadio("Vistumbler File", 10, 55, 140, 20)
+	$RadVis = GUICtrlCreateRadio($Text_VistumblerFile, 10, 55, 140, 20)
 	GUICtrlSetState($RadVis, $GUI_CHECKED)
-	$RadNs = GUICtrlCreateRadio("Netstumbler TXT File", 10, 75, 140, 20)
+	$RadNs = GUICtrlCreateRadio($Text_NetstumblerTxtFile, 10, 75, 140, 20)
 	$NsOk = GUICtrlCreateButton($Text_Ok, 150, 60, 100, 25)
 	$NsCancel = GUICtrlCreateButton($Text_Close, 260, 60, 100, 25)
 	$progressbar = GUICtrlCreateProgress(10, 95, 490, 10)
@@ -3683,7 +3694,7 @@ Func _ImportMdbOk()
 EndFunc   ;==>_ImportMdbOk
 
 Func _ImportFileBrowse()
-	$file = FileOpenDialog("Select vistumbler File", $SaveDir, "Vistumbler TXT File (*.txt;*.vs1;*.ns1)", 1)
+	$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_VistumblerFile & ' (*.txt;*.vs1;*.ns1)', 1)
 	If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 EndFunc   ;==>_ImportFileBrowse
 
@@ -4409,6 +4420,9 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'Odd', $Text_Odd)
 	IniWrite($settings, 'GuiText', 'Mark', $Text_Mark)
 	IniWrite($settings, 'GuiText', 'Space', $Text_Space)
+	IniWrite($settings, 'GuiText', 'StopBit', $Text_StopBit)
+	IniWrite($settings, 'GuiText', 'Parity', $Text_Parity)
+	IniWrite($settings, 'GuiText', 'DataBit', $Text_DataBit)
 	IniWrite($settings, 'GuiText', 'Update', $Text_Update)
 	IniWrite($settings, 'GuiText', 'UpdateMsg', $Text_UpdateMsg)
 	IniWrite($settings, 'GuiText', 'Recover', $Text_Recover)
@@ -4438,15 +4452,23 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'MapSecureNetworks', $Text_MapSecureNetworks)
 	IniWrite($settings, 'GuiText', 'DrawTrack', $Text_DrawTrack)
 	IniWrite($settings, 'GuiText', 'UseLocalImages', $Text_UseLocalImages)
-	IniWrite($settings, 'GuiText', 'StopBit', $Text_StopBit)
-	IniWrite($settings, 'GuiText', 'Parity', $Text_Parity)
-	IniWrite($settings, 'GuiText', 'DataBit', $Text_DataBit)
 	IniWrite($settings, 'GuiText', 'MIDI', $Text_MIDI)
 	IniWrite($settings, 'GuiText', 'MidiInstrumentNumber', $Text_MidiInstrumentNumber)
 	IniWrite($settings, 'GuiText', 'MidiPlayTime', $Text_MidiPlayTime)
 	IniWrite($settings, 'GuiText', 'SpeakRefreshTime', $Text_SpeakRefreshTime)
 	IniWrite($settings, 'GuiText', 'Information', $Text_Information)
 	IniWrite($settings, 'GuiText', 'AddedGuessedSearchwords', $Text_AddedGuessedSearchwords)
+	IniWrite($settings, 'GuiText', 'SortingTreeview', $Text_SortingTreeview)
+	IniWrite($settings, 'GuiText', 'Recovering', $Text_Recovering)
+	IniWrite($settings, 'GuiText', 'VistumblerFile', $Text_VistumblerFile)
+	IniWrite($settings, 'GuiText', 'NetstumblerTxtFile', $Text_NetstumblerTxtFile)
+	IniWrite($settings, 'GuiText', 'ErrorOpeningGpsPort', $Text_ErrorOpeningGpsPort)
+	IniWrite($settings, 'GuiText', 'SecondsSinceGpsUpdate', $Text_SecondsSinceGpsUpdate)
+	IniWrite($settings, 'GuiText', 'SavingGID', $Text_SavingGID)
+	IniWrite($settings, 'GuiText', 'SavingHistID', $Text_SavingHistID)
+	IniWrite($settings, 'GuiText', 'UpdateFound', $Text_UpdateFound)
+	IniWrite($settings, 'GuiText', 'NoUpdates', $Text_NoUpdates)
+	IniWrite($settings, 'GuiText', 'NoActiveApFound', $Text_NoActiveApFound)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4950,7 +4972,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportNS1()') ;#Debug Display
 	DirCreate($SaveDir)
 	$timestamp = @MON & '-' & @MDAY & '-' & @YEAR & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
-	$filename = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Netstumbler (*.NS1)', '', $timestamp & '.NS1')
+	$filename = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_NetstumblerTxtFile & ' (*.NS1)', '', $timestamp & '.NS1')
 	If @error <> 1 Then
 		FileDelete($filename)
 		$APID1 = ''
@@ -4964,7 +4986,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundHistMatch = UBound($HistMatchArray) - 1
 		For $exns1 = 1 To $FoundHistMatch
-			GUICtrlSetData($msgdisplay, 'Saving HistID' & ' ' & $exns1 & ' / ' & $FoundHistMatch)
+			GUICtrlSetData($msgdisplay, $Text_SavingHistID & ' ' & $exns1 & ' / ' & $FoundHistMatch)
 			$Found_APID = $HistMatchArray[$exns1][1]
 			If $Found_APID <> $APID1 Then
 				$Found_GpsID = $HistMatchArray[$exns1][2]
@@ -6039,6 +6061,17 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SpeakRefreshTime = IniRead($newlanguagefile, 'GuiText', 'SpeakRefreshTime', 'Speak Refresh Time')
 		$Text_Information = IniRead($newlanguagefile, 'GuiText', 'Information', 'Information')
 		$Text_AddedGuessedSearchwords = IniRead($newlanguagefile, 'GuiText', 'AddedGuessedSearchwords', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
+		$Text_SortingTreeview = IniRead($newlanguagefile, 'GuiText', 'SortingTreeview', 'Sorting Treeview')
+		$Text_Recovering = IniRead($newlanguagefile, 'GuiText', 'Recovering', 'Recovering')
+		$Text_VistumblerFile = IniRead($newlanguagefile, 'GuiText', 'VistumblerFile', 'Vistumbler File')
+		$Text_NetstumblerTxtFile = IniRead($newlanguagefile, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler TXT File')
+		$Text_ErrorOpeningGpsPort = IniRead($newlanguagefile, 'GuiText', 'ErrorOpeningGpsPort', 'Error opening GPS port')
+		$Text_SecondsSinceGpsUpdate = IniRead($newlanguagefile, 'GuiText', 'SecondsSinceGpsUpdate', 'Seconds Since GPS Update')
+		$Text_SavingGID = IniRead($newlanguagefile, 'GuiText', 'SavingGID', 'Saving GID')
+		$Text_SavingHistID = IniRead($newlanguagefile, 'GuiText', 'SavingHistID', 'Saving HistID')
+		$Text_UpdateFound = IniRead($newlanguagefile, 'GuiText', 'UpdateFound', 'Update Found. Would you like to update vistumbler?')
+		$Text_NoUpdates = IniRead($newlanguagefile, 'GuiText', 'NoUpdates', 'No Updates Avalible')
+		$Text_NoActiveApFound = IniRead($newlanguagefile, 'GuiText', 'NoActiveApFound', 'No Active AP found')
 		
 		$RestartVistumbler = 1
 	EndIf
@@ -6363,7 +6396,7 @@ Func _EditManu();Opens edit manufacturer window
 	If $EditLine <> $LV_ERR Then
 		$EditMac = StringTrimRight(StringTrimLeft(_GUICtrlListView_GetItemText($GUI_Manu_List, $EditLine, 0), 1), 1)
 		$EditLab = _GUICtrlListView_GetItemText($GUI_Manu_List, $EditLine, 1)
-		$EditMacGUIForm = GUICreate("Edit Manufacturer", 625, 86, -1, -1)
+		$EditMacGUIForm = GUICreate($Text_EditMan, 625, 86, -1, -1)
 		GUISetBkColor($BackgroundColor)
 		GUICtrlCreateLabel($Column_Names_BSSID, 16, 16, 69, 17)
 		$EditMac_Mac = GUICtrlCreateInput($EditMac, 88, 16, 137, 21)
@@ -6715,7 +6748,7 @@ Func _RecoverMDB()
 	$LoadApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
 	For $imp = 1 To $FoundLoadApMatch
-		GUICtrlSetData($msgdisplay, 'Recovering: ' & ' ' & $imp & ' / ' & $FoundLoadApMatch)
+		GUICtrlSetData($msgdisplay, $Text_Recovering & ': ' & ' ' & $imp & ' / ' & $FoundLoadApMatch)
 		$APID += 1
 		$ImpApID = $LoadApMatchArray[$imp][1]
 		$ImpSSID = $LoadApMatchArray[$imp][2]
@@ -6794,10 +6827,10 @@ EndFunc   ;==>_RecoverMDB
 
 Func _MenuUpdate()
 	If _CheckForUpdates() = 1 Then
-		$updatemsg = MsgBox(4, 'Update?', 'Update Found. Would you like to update vistumbler?')
+		$updatemsg = MsgBox(4, $Text_Update & '?', $Text_UpdateFound)
 		If $updatemsg = 6 Then _StartUpdate()
 	Else
-		MsgBox(0, 'Done', 'No Updates Avalible')
+		MsgBox(0, $Text_Information, $Text_NoUpdates)
 	EndIf
 EndFunc   ;==>_MenuUpdate
 
@@ -6876,10 +6909,10 @@ Func _SelectConnectedAp()
 				_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_SELECTED, $LVIS_SELECTED)
 				GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 			Else
-				MsgBox(0, $Text_Error, "Active AP not found in list" & @CRLF & @CRLF & $Column_Names_BSSID & ':' & $IntBSSID & @CRLF & $Column_Names_SSID & ':' & $IntSSID & @CRLF & $Column_Names_Channel & ':' & $IntChan & @CRLF & $Column_Names_Authentication & ':' & $IntAuth)
+				MsgBox(0, $Text_Error, $Text_NoActiveApFound & @CRLF & @CRLF & $Column_Names_BSSID & ':' & $IntBSSID & @CRLF & $Column_Names_SSID & ':' & $IntSSID & @CRLF & $Column_Names_Channel & ':' & $IntChan & @CRLF & $Column_Names_Authentication & ':' & $IntAuth)
 			EndIf
 		Else
-			MsgBox(0, $Text_Error, "No Active AP found")
+			MsgBox(0, $Text_Error, $Text_NoActiveApFound)
 		EndIf
 	EndIf
 	Return ($return)
@@ -6895,7 +6928,6 @@ Func _InterfaceChanged()
 		EndIf
 	Next
 	$DefaultApapter = GUICtrlRead(@GUI_CtrlId, 1)
-	ConsoleWrite(@GUI_CtrlId & '-' & GUICtrlRead(@GUI_CtrlId, 1) & " was selected." & @CRLF)
 EndFunc   ;==>_InterfaceChanged
 
 Func _GuessNetshSearchwords()
