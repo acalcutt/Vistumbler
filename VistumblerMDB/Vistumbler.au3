@@ -11,14 +11,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.10 Beta
+;AutoIt Version: v3.2.13.11 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 5.2'
-$last_modified = '11/17/2008'
+$version = '9.0 Beta 5.3'
+$last_modified = '11/19/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -51,6 +51,8 @@ Next
 
 ; Set a COM Error handler--------------------------------
 $oMyError = ObjEvent("AutoIt.Error", "MyErrFunc")
+; -------------------------------------------------------
+GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
 ;Options-------------------------------------------------
 Opt("TrayIconHide", 1);Hide icon in system tray
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
@@ -7016,3 +7018,18 @@ EndFunc   ;==>_GuessNetshSearchwords
 Func Log10($x)
 	Return Log($x) / Log(10) ;10 is the base
 EndFunc   ;==>Log10
+
+Func WM_NOTIFY($hWnd, $MsgID, $wParam, $lParam)
+	Local $tagNMHDR, $event, $hwndFrom, $code
+	$tagNMHDR = DllStructCreate("int;int;int", $lParam)
+	If @error Then Return 0
+	$code = DllStructGetData($tagNMHDR, 3)
+	If $wParam = $ListviewAPs And $code = -3 Then
+		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+		If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+			ConsoleWrite($Selected & @CRLF)
+			_GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False)
+		EndIf
+	EndIf
+	Return $GUI_RUNDEFMSG
+EndFunc   ;==>WM_NOTIFY
