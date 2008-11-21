@@ -11,14 +11,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.3 Beta
+;AutoIt Version: v3.2.13.11 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
 $version = 'v8.11'
-$last_modified = '08/31/2008'
+$last_modified = '11/21/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -239,7 +239,7 @@ Dim $SortBy = IniRead($settings, 'Vistumbler', 'SortCombo', 'Sort by SSID')
 Dim $SortDirection = IniRead($settings, 'Vistumbler', 'AscDecDefault', 1)
 Dim $SoundOnAP = IniRead($settings, 'Vistumbler', 'PlaySoundOnNewAP', 0)
 Dim $new_AP_sound = IniRead($settings, 'Vistumbler', 'NewAP_Sound', 'new_ap.wav')
-Dim $error_sound = IniRead($settings, 'Vistumbler', 'Error_Sound', 'error.wav')
+Dim $ErrorFlag_sound = IniRead($settings, 'Vistumbler', 'Error_Sound', 'error.wav')
 Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
@@ -252,7 +252,7 @@ Dim $MapSec = IniRead($settings, 'Vistumbler', 'MapSec', 1)
 Dim $ShowTrack = IniRead($settings, 'Vistumbler', 'ShowTrack', 1)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 1)
 Dim $PhilsGraphURL = IniRead($settings, 'Vistumbler', 'PhilsGraphURL', 'http://www.randomintervals.com/wifi/?')
-Dim $PhilsWdbURL = IniRead($settings, 'Vistumbler', 'PhilsWdbURL', 'http://www.randomintervals.com/wifidb/import/?')
+Dim $PhilsWdbURL = IniRead($settings, 'Vistumbler', 'PhilsWdbURL', 'http://www.randomintervals.com/wifi/beta/db/import/?')
 Dim $GPSformat = IniRead($settings, 'Vistumbler', 'GPSformat', 1)
 Dim $ConnectToButton = IniRead($settings, 'Vistumbler', 'ConnectToButton', "Button4")
 Dim $UseLocalKmlImagesOnExport = IniRead($settings, 'Vistumbler', 'UseLocalKmlImagesOnExport', 0)
@@ -1073,7 +1073,7 @@ Func _AddData($addpos, $Active, $BSSID, $SSID, $Auth, $Encr, $SecType, $Sig, $Hi
 	If $SigHist = '' Then $SigHist = $Sig
 	$StripedBSSID = StringReplace($BSSID, ':', '')
 	$MANUF = _FindManufacturer($StripedBSSID)
-	$LABEL = _SetLabels($StripedBSSID)
+	$LABEL = _SetLables($StripedBSSID)
 
 	;Add Into Listview
 	_ListViewAdd($addpos, $line, $Active, $BSSID, $SSID, $Auth, $Encr, $Sig, $Chan, $Rad, $BtX, $OtX, $NetType, $FirstTime, $LastTime, $lat, $lon, $MANUF, $LABEL)
@@ -1151,7 +1151,7 @@ Func _UpdateData($arraypos, $line, $Active, $BSSID, $SSID, $Auth, $Encr, $Sig, $
 	If $ResetMANUF = 1 Or $ResetLABEL = 1 Then
 		$StripedBSSID = StringReplace($DataArray_BSSID[$arraypos], ':', '');Strip ":"'s out of mac address
 		If $ResetMANUF = 1 Then $MANUF = _FindManufacturer(StringTrimRight($StripedBSSID, 6));Set Manufacturer
-		If $ResetLABEL = 1 Then $LABEL = _SetLabels($StripedBSSID);
+		If $ResetLABEL = 1 Then $LABEL = _SetLables($StripedBSSID);
 	EndIf
 	
 	If $SigHist <> '' Then
@@ -1555,8 +1555,8 @@ Func _FindManufacturer($findmac);Returns Manufacturer for given Mac Address
 	Return ($return)
 EndFunc   ;==>_FindManufacturer
 
-Func _SetLabels($findmac);Returns Label for given Mac Address
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetLabels()') ;#Debug Display
+Func _SetLables($findmac);Returns Label for given Mac Address
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetLables()') ;#Debug Display
 	Dim $return = $Text_Unknown
 	For $searchlabellist = 1 To $label_mac[0]
 		If StringStripWS(StringUpper($label_mac[$searchlabellist]), 3) = StringStripWS(StringUpper($findmac), 3) Then
@@ -1565,7 +1565,7 @@ Func _SetLabels($findmac);Returns Label for given Mac Address
 		EndIf
 	Next
 	Return ($return)
-EndFunc   ;==>_SetLabels
+EndFunc   ;==>_SetLables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       TOGGLE/BUTTON FUNCTIONS
@@ -1941,14 +1941,14 @@ Func _GetGPS(); Recieves data from gps device
 					$disconnected_time = -1
 					$return = 0
 					_TurnOffGPS()
-					SoundPlay($SoundDir & $error_sound, 0)
+					SoundPlay($SoundDir & $ErrorFlag_sound, 0)
 				EndIf
 			EndIf
 			If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
 		WEnd
 	Else ;Use CommMG.dll instead of the netcomm ocx (less stable, but works with x64)
 		While 1
-			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
+			$dataline = StringStripWS(_CommGetLine(), 8);Read data line from GPS
 			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
 			If StringInStr($dataline, "GPGGA") Then
 				_GPGGA($dataline);Split GPGGA data from data string
@@ -3537,7 +3537,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "SortCombo", $SortBy)
 	IniWrite($settings, "Vistumbler", "AscDecDefault", $SortDirection)
 	IniWrite($settings, "Vistumbler", "NewAP_Sound", $new_AP_sound)
-	IniWrite($settings, "Vistumbler", "Error_Sound", $error_sound)
+	IniWrite($settings, "Vistumbler", "Error_Sound", $ErrorFlag_sound)
 	IniWrite($settings, "Vistumbler", "NewApPosistion", $AddDirection)
 	IniWrite($settings, "Vistumbler", "BackgroundColor", $BackgroundColor)
 	IniWrite($settings, "Vistumbler", "ControlBackgroundColor", $ControlBackgroundColor)
@@ -5467,7 +5467,7 @@ Func _ApplySettingsGUI();Applys settings
 		For $m = 1 To $manu_mac[0]
 			IniWrite($manufini, "MANUFACURERS", $manu_mac[$m], $manu_manu[$m])
 		Next
-		;Set flag so Labels get reset
+		;Set flag so lables get reset
 		$ResetManLabel = 1
 	EndIf
 	If $Apply_Lab = 1 Then
@@ -5487,7 +5487,7 @@ Func _ApplySettingsGUI();Applys settings
 		For $m = 1 To $label_mac[0]
 			IniWrite($labelsini, "LABELS", $label_mac[$m], $label_label[$m])
 		Next
-		;Set flag so Labels get reset
+		;Set flag so lables get reset
 		$ResetMacLabel = 1
 	EndIf
 	If $Apply_Column = 1 Then
@@ -6042,7 +6042,7 @@ Func _ReduceMemory() ;http://www.autoitscript.com/forum/index.php?showtopic=1407
 EndFunc   ;==>_ReduceMemory
 
 Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal strenth
-	$Error = 0
+	$ErrorFlag = 0
 	If $SpeakSignal = 1 Then; If the signal speaking is turned on
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
@@ -6054,22 +6054,22 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 					If ProcessExists($SayProcess) = 0 Then;If Say.exe is still running, skip opening it again
 						If $SpeakType = 1 Then
 							$SayProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1', '', @SW_HIDE)
-							If @error Then $Error = 1
-							;ConsoleWrite($Error & @CRLF)
+							If @error Then $ErrorFlag = 1
+							;ConsoleWrite($ErrorFlag & @CRLF)
 						Else
 							$SayProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=2', '', @SW_HIDE)
-							If @error Then $Error = 1
-							;ConsoleWrite($Error & @CRLF)
+							If @error Then $ErrorFlag = 1
+							;ConsoleWrite($ErrorFlag & @CRLF)
 						EndIf
 					Else
-						$Error = 1
+						$ErrorFlag = 1
 					EndIf
 					ExitLoop
 				EndIf
 			Next
 		EndIf
 	EndIf
-	If $Error = 0 Then
+	If $ErrorFlag = 0 Then
 		Return (1)
 	Else
 		Return (0)

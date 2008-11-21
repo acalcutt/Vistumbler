@@ -1,5 +1,6 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_icon=icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
@@ -8,14 +9,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.3 Beta
+;AutoIt Version: v3.2.13.11 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/19/2008'
 $Script_Name = 'SayText'
 $Script_Website = 'http://www.TechIdiots.net'
 $Script_Function = 'Uses Sound files to say a number from 0 - 100 or Uses Microsoft SAPI to say anything'
 $version = 'v1.0'
-$last_modified = '07/19/2008'
+$last_modified = '11/21/2008'
 ;--------------------------------------------------------
 #include <String.au3>
 Dim $SoundDir = @ScriptDir & '\Sounds\'
