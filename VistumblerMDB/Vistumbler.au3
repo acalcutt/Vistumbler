@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 5.3'
-$last_modified = '11/19/2008'
+$version = '9.0 Beta 5.4'
+$last_modified = '11/23/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -994,7 +994,17 @@ While 1
 				GUICtrlSetData($msgdisplay, $Text_ErrorScanningNetsh)
 				Sleep(1000)
 			Else
-				$UpdatedAPs = 1 ;Set Update flag so APs do not get scanned again on this loop
+				;Set Update flag so APs do not get scanned again on this loop
+				$UpdatedAPs = 1
+				;Add GPS ID If no access points are found and Save GPS when no APs are active is on
+				If $ScanResults = 0 And $SaveGpsWithNoAps = 1 Then
+					$GPS_ID += 1
+					_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
+				EndIf
+				;Mark Dead Access Points
+				_MarkDeadAPs()
+				;Update active/total ap label
+				GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ScanResults & " / " & $APID)
 				;Play Midi Sounds for all active APs (if enabled)
 				If $Midi_PlatForActiveAps = 1 And ProcessExists($MidiProcess) = 0 Then
 					$query = "SELECT Signal FROM Temp"
@@ -1018,12 +1028,19 @@ While 1
 			;Refresh Networks If Enabled
 			If $RefreshNetworks = 1 Then _RefreshNetworks()
 		EndIf
-		;Add GpsID if Scanning and AP was found or if Using GPS and 'Save GPS With No APs' option is on
-		If BitAND($Scan = 1, $ScanResults > 0) Or BitAND($UseGPS = 1, $SaveGpsWithNoAps = 1) Then
+	ElseIf $Scan = 0 And $UpdatedAPs <> 1 Then
+		$UpdatedAPs = 1
+		;Add GPS ID If AP scanning is off, UseGPS is on, and Save GPS when no AP are active is on
+		If $UseGPS = 1 And $SaveGpsWithNoAps = 1 Then
 			$GPS_ID += 1
 			_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
 		EndIf
+		;Mark Dead access points
+		_MarkDeadAPs()
+		;Update active/total ap label
+		GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & "0 / " & $APID)
 	EndIf
+	
 	;Speak Signal of selected AP (if enabled)
 	If $SpeakSignal = 1 And $Scan = 1 And $UpdatedSpeechSig = 0 And TimerDiff($Speech_Timer) >= $SpeakSigTime Then
 		$SpeakSuccess = _SpeakSelectedSignal()
@@ -1106,7 +1123,7 @@ While 1
 		$UpdatedGpsDetailsPos = 0
 		$UpdatedSpeechSig = 0
 		_GraphApSignal()
-		_UpdateList();Update Listview with new data
+		;_UpdateList();Update Listview with new data
 		GUICtrlSetData($msgdisplay, '') ;Clear Message
 		$time = TimerDiff($begin)
 		GUICtrlSetData($timediff, $Text_ActualLoopTime & ': ' & StringFormat("%04i", $time) & ' ms'); Set 'Actual Loop Time' in GUI
@@ -1135,6 +1152,7 @@ Func _ScanAccessPoints()
 	
 	$NewAP = 0
 	$FoundAPs = 0
+	$NewFoundAPs = 0
 	;RunWait("net restart Wlansvc", '', @SW_HIDE)
 	FileDelete($tempfile)
 	If $DefaultApapter = $Text_Default Then
@@ -1187,102 +1205,32 @@ Func _ScanAccessPoints()
 				$NewAP = 0
 				If $BSSID <> "" Then
 					$FoundAPs += 1
-					_AddRecord($VistumblerDB, "Temp", $DB_OBJ, $BSSID & '|' & $SSID & '|' & $Channel & '|' & $Authentication & '|' & $Encryption & '|' & $NetworkType & '|' & $RadioType & '|' & $BasicTransferRates & '|' & $OtherTransferRates & '|' & $Signal & '|' & $ScanDate & '|' & $ScanTime)
+					;Add new GPS ID
+					If $FoundAPs = 1 Then
+						$GPS_ID += 1
+						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
+					EndIf
+					;Add new access point
+					$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+					If $NewFound = 1 Then $NewFoundAPs += 1
 				EndIf
 			EndIf
 		Next
+		;Play New AP sound if sounds are enabled
+		If $NewFoundAPs <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+		;Return number of active APs
 		Return ($FoundAPs)
 	Else
 		Return ('-1')
 	EndIf
 EndFunc   ;==>_ScanAccessPoints
 
-Func _UpdateList()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateList()') ;#Debug Display
-	$NewApFound = 0
-	;Query Temp Table to see if there are any new APs
-	$query = "SELECT * FROM Temp"
-	$TempApArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundTempAp = UBound($TempApArray) - 1
-	;If APs are found then check if it exists in the AP Table
-	If $FoundTempAp <> 0 Then
-		$newdata = 1 ;Set newdata flag so vistumbler prompts to save on exit
-		For $x = 1 To $FoundTempAp ;Go through New APs in Temp Table to check is it already exists in the AP table
-			$BSSID = $TempApArray[$x][1]
-			$SSID = $TempApArray[$x][2]
-			$CHAN = $TempApArray[$x][3]
-			$AUTH = $TempApArray[$x][4]
-			$ENCR = $TempApArray[$x][5]
-			$NETTYPE = $TempApArray[$x][6]
-			$RADTYPE = $TempApArray[$x][7]
-			$BTX = $TempApArray[$x][8]
-			$OtX = $TempApArray[$x][9]
-			$SIG = $TempApArray[$x][10]
-			$Date = $TempApArray[$x][11]
-			$time = $TempApArray[$x][12]
-			;Set Security Type
-			If $AUTH = $SearchWord_Open And $ENCR = $SearchWord_None Then
-				$SecType = 1 ;Set as Open AP
-			ElseIf $ENCR = $SearchWord_Wep Then
-				$SecType = 2 ;Set as Wep
-			Else
-				$SecType = 3 ;Set as Secure
-			EndIf
-			_AddApData(1, $GPS_ID, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG)
-		Next
-		;Delete APs in the Temp array
-		$query = "DELETE * FROM Temp"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	EndIf
-	;Set APs without current GPS_ID to Dead
-	If $Scan = 0 Or $FoundTempAp = 0 Then
-		$LastActiveGID = 0
-	Else
-		$LastActiveGID = $GPS_ID
-	EndIf
-	If $GraphDeadTime = 1 Then
-		$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "'"
-	Else
-		$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "' And Active = '1'"
-	EndIf
-	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundApMatch = UBound($ApMatchArray) - 1
-	;Set APs Dead in Listview
-	For $resetdead = 1 To $FoundApMatch
-		$Found_APID = $ApMatchArray[$resetdead][1]
-		$Found_ListRow = $ApMatchArray[$resetdead][2]
-		$Found_Active = $ApMatchArray[$resetdead][3]
-		$Found_LastGpsID = $ApMatchArray[$resetdead][4]
-		$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
-		$Date = $dt[1]
-		$time = $dt[2]
-		If $Found_Active = 1 Then
-			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
-			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
-			;Set APs Dead in AP table, Set New HistID
-			$HISTID += 1
-			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $Date & '|' & $time)
-			$query = "UPDATE AP SET Active = '0' WHERE ApID = '" & $Found_APID & "'"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		ElseIf $Found_Active = 0 Then
-			If $GraphDeadTime = 1 And $Scan = 1 Then
-				;Create New HistID, Update AP LastHistID
-				$HISTID += 1
-				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $Date & '|' & $time)
-			EndIf
-		EndIf
-	Next
-	;Update active/total ap label
-	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $FoundTempAp & " / " & $APID)
-	;Play New AP sound if sounds are enabled
-	If $SoundOnAP = 1 And $NewApFound <> 0 Then SoundPlay($SoundDir & $new_AP_sound, 0)
-EndFunc   ;==>_UpdateList
-
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       ADD DB/LISTVIEW/TREEVIEW FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG)
+	$AddedAp = 0
 	If $New = 1 Then
 		$AP_Status = $Text_Active
 		$AP_StatusNum = 1
@@ -1335,16 +1283,9 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$DBHighGpsHistId = '0'
 				EndIf
 				;Set If APs are added to the top of the list or the bottom
-				If $AddDirection = 0 Then;Add APs to top of list
-					$query = "SELECT ApID, ListRow FROM AP"
-					$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$FoundApMatch = UBound($ApMatchArray) - 1
-					For $incr = 1 To $FoundApMatch;Go through current APs and increment ListRow by 1
-						$IncrApIP = $ApMatchArray[$incr][1]
-						$IncrListRow = $ApMatchArray[$incr][2] + 1
-						$query = "UPDATE AP SET ListRow = '" & $IncrListRow & "' WHERE ApID = '" & $IncrApIP & "'"
-						_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-					Next
+				If $AddDirection = 0 And $New = 1 Then;Add APs to top of list
+					$query = "UPDATE AP SET ListRow = ListRow + 1"
+					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 					$DBAddPos = 0
 				Else ;Add to bottom
 					$DBAddPos = $APID - 1
@@ -1434,6 +1375,48 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	Return ($NewApFound)
 EndFunc   ;==>_AddApData
 
+Func _MarkDeadAPs()
+	;Set APs without current GPS_ID to Dead
+	If $Scan = 0 Then;Or $FoundTempAp = 0 Then
+		$LastActiveGID = 0
+	Else
+		$LastActiveGID = $GPS_ID
+	EndIf
+	ConsoleWrite($LastActiveGID & @CRLF)
+	If $GraphDeadTime = 1 Then
+		$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "'"
+	Else
+		$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "' And Active = '1'"
+	EndIf
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	;Set APs Dead in Listview
+	For $resetdead = 1 To $FoundApMatch
+		$Found_APID = $ApMatchArray[$resetdead][1]
+		$Found_ListRow = $ApMatchArray[$resetdead][2]
+		$Found_Active = $ApMatchArray[$resetdead][3]
+		$Found_LastGpsID = $ApMatchArray[$resetdead][4]
+		$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
+		$Date = $dt[1]
+		$time = $dt[2]
+		If $Found_Active = 1 Then
+			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
+			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
+			;Set APs Dead in AP table, Set New HistID
+			$HISTID += 1
+			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $Date & '|' & $time)
+			$query = "UPDATE AP SET Active = '0' WHERE ApID = '" & $Found_APID & "'"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		ElseIf $Found_Active = 0 Then
+			If $GraphDeadTime = 1 And $Scan = 1 Then
+				;Create New HistID, Update AP LastHistID
+				$HISTID += 1
+				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $Date & '|' & $time)
+			EndIf
+		EndIf
+	Next
+EndFunc   ;==>_MarkDeadAPs
+
 Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add_SSID = '', $Add_Authentication = '', $Add_Encryption = '', $Add_Signal = '', $Add_Channel = '', $Add_RadioType = '', $Add_BasicTransferRates = '', $Add_OtherTransferRates = '', $Add_NetworkType = '', $Add_FirstAcvtive = '', $Add_LastActive = '', $Add_LatitudeDMM = '', $Add_LongitudeDMM = '', $Add_MANU = '', $Add_Label = '')
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ListViewAdd()') ;#Debug Display
 	
@@ -1494,8 +1477,6 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	$Encryption_treeviewname = $Encryption
 	$Authentication_treeviewname = $Authentication
 	$NetworkType_treeviewname = $NetworkType
-	
-	_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 	
 	$query = "SELECT Pos FROM TreeviewCHAN WHERE Name = '" & $channel_treeviewname & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -1561,7 +1542,7 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	_TreeViewApInfo($Authentication_subtreeviewposition, $Authentication_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($NetworkType_subtreeviewposition, $NetworkType_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	
-	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
+	
 
 	;Return Treeview positions
 	Return ($channel_subtreeviewposition & '|' & $SSID_subtreeviewposition & '|' & $Encryption_subtreeviewposition & '|' & $Authentication_subtreeviewposition & '|' & $NetworkType_subtreeviewposition)
