@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 6'
+$version = '9.0 Beta 6.1'
 $last_modified = '11/25/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -40,7 +40,7 @@ If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe'
 	RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
 	RegWrite('HKCR\.vs1\', '', 'REG_SZ', 'Vistumbler')
 	RegWrite('HKCR\Vistumbler\shell\open\command\', '', 'REG_SZ', '"' & @ScriptFullPath & '" "%1"')
-	RegWrite('HKCR\Vistumbler\DefaultIcon\', '', 'REG_SZ', '"' & @ScriptDir & '\vs1_icon.ico"')
+	RegWrite('HKCR\Vistumbler\DefaultIcon\', '', 'REG_SZ', '"' & @ScriptDir & '\Icons\vsfile_icon.ico"')
 EndIf
 
 Dim $Load = ''
