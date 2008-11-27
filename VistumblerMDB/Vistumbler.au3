@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 6.1'
-$last_modified = '11/25/2008'
+$version = '9.0 Beta 6.2'
+$last_modified = '11/26/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -145,6 +145,9 @@ Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
 Dim $AutoKmlProcess
 Dim $RefreshWindowOpened
+
+Dim $ListviewAPs
+Dim $TreeviewAPs
 
 Dim $TreeviewAPs_left, $TreeviewAPs_width, $TreeviewAPs_top, $TreeviewAPs_height
 Dim $ListviewAPs_left, $ListviewAPs_width, $ListviewAPs_top, $ListviewAPs_height
@@ -602,6 +605,10 @@ If FileExists($VistumblerDB) Then
 		$query = "SELECT GpsID FROM GPS"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$GPS_ID = UBound($GpsMatchArray) - 1
+		$query = "DELETE * FROM Manufacturers"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		$query = "DELETE * FROM Labels"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		$query = "DELETE * FROM TreeviewAUTH"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		$query = "DELETE * FROM TreeviewCHAN"
@@ -1590,9 +1597,10 @@ Func _ClearAllAp()
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 
 	GUISwitch($DataChild)
-	_GUICtrlListView_Destroy($ListviewAPs)
+	GUICtrlDelete($ListviewAPs)
 	$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+	GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 	GUISwitch($Vistumbler)
 	_SetControlSizes()
 
@@ -1706,6 +1714,7 @@ Func _RecoverMDB()
 	EndIf
 	_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
 	_FixLineNumbers()
+	_UpdateListMacLabels()
 EndFunc   ;==>_RecoverMDB
 
 ;-------------------------------------------------------------------------------------------------------------------------------
