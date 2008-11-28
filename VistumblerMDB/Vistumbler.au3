@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 6.3'
+$version = '9.0'
 $last_modified = '11/28/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -345,7 +345,6 @@ Dim $SearchWord_Open = IniRead($settings, 'SearchWords', 'Open', 'Open')
 Dim $SearchWord_Wep = IniRead($settings, 'SearchWords', 'WEP', 'WEP')
 Dim $SearchWord_Infrastructure = IniRead($settings, 'SearchWords', 'Infrastructure', 'Infrastructure')
 Dim $SearchWord_Adhoc = IniRead($settings, 'SearchWords', 'Adhoc', 'Adhoc')
-;Dim $SearchWord_Cipher = IniRead($settings, 'SearchWords', 'Cipher', 'Cipher')
 
 Dim $Text_Ok = IniRead($settings, 'GuiText', 'Ok', '&Ok')
 Dim $Text_Cancel = IniRead($settings, 'GuiText', 'Cancel', 'C&ancel')
@@ -588,6 +587,9 @@ Dim $Text_SavingHistID = IniRead($settings, 'GuiText', 'SavingHistID', 'Saving H
 Dim $Text_UpdateFound = IniRead($settings, 'GuiText', 'UpdateFound', 'Update Found. Would you like to update vistumbler?')
 Dim $Text_NoUpdates = IniRead($settings, 'GuiText', 'NoUpdates', 'No Updates Avalible')
 Dim $Text_NoActiveApFound = IniRead($settings, 'GuiText', 'NoActiveApFound', 'No Active AP found')
+Dim $Text_VistumblerDonate = IniRead($settings, 'GuiText', 'VistumblerDonate', 'Donate')
+Dim $Text_VistumblerStore = IniRead($settings, 'GuiText', 'VistumblerStore', 'Store')
+Dim $Text_SupportVistumbler = IniRead($settings, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -669,7 +671,6 @@ Else
 	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]);Resize window to ini value
 EndIf
 
-
 $file = GUICtrlCreateMenu($Text_File)
 $SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
@@ -680,12 +681,12 @@ $ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 $ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
 $Edit = GUICtrlCreateMenu($Text_Edit)
-$ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
-$SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 ;$Cut = GUICtrlCreateMenuitem("Cut", $Edit)
 $Copy = GUICtrlCreateMenuItem($Text_Copy, $Edit)
 ;$Delete = GUICtrlCreateMenuItem("Delete", $Edit)
 ;$SelectAll = GUICtrlCreateMenuItem("Select All", $Edit)
+$ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
+$SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 $SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
@@ -770,6 +771,11 @@ $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
 $VistumblerForum = GUICtrlCreateMenuItem($Text_VistumblerForum, $Help)
 $VistumblerWiki = GUICtrlCreateMenuItem($Text_VistumblerWiki, $Help)
 $UpdateVistumbler = GUICtrlCreateMenuItem($Text_CheckForUpdates, $Help)
+
+$SupportVistumbler = GUICtrlCreateMenu($Text_SupportVistumbler)
+$VistumblerDonate = GUICtrlCreateMenuItem($Text_VistumblerDonate, $SupportVistumbler)
+$VistumblerStore = GUICtrlCreateMenuItem($Text_VistumblerStore, $SupportVistumbler)
+
 
 $GraphicGUI = GUICreate("", 895.72, 386.19, 10, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
 GUISetBkColor($ControlBackgroundColor)
@@ -873,7 +879,9 @@ GUICtrlSetOnEvent($VistumblerHome, '_OpenVistumblerHome')
 GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
 GUICtrlSetOnEvent($VistumblerWiki, '_OpenVistumblerWiki')
 GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
-
+;Support Vistumbler
+GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
+GUICtrlSetOnEvent($VistumblerStore, '_OpenVistumblerStore')
 ;Other
 GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 
@@ -1144,6 +1152,7 @@ EndFunc   ;==>_ScanAccessPoints
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApData()') ;#Debug Display
 	$AddedAp = 0
 	If $New = 1 Then
 		$AP_Status = $Text_Active
@@ -1327,6 +1336,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 EndFunc   ;==>_AddApData
 
 Func _MarkDeadAPs()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_MarkDeadAPs()') ;#Debug Display
 	;Set APs without current GPS_ID to Dead
 	If $Scan = 0 Then;Or $FoundTempAp = 0 Then
 		$LastActiveGID = 0
@@ -1423,6 +1433,7 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 EndFunc   ;==>_ListViewAdd
 
 Func _SetListviewWidths()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetListviewWidths()') ;#Debug Display
 	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Active - 0, $column_Width_Active - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_SSID - 0, $column_Width_SSID - 0)
@@ -1448,6 +1459,7 @@ Func _SetListviewWidths()
 EndFunc   ;==>_SetListviewWidths
 
 Func _GetListviewWidths()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GetListviewWidths()') ;#Debug Display
 	$column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0)
 	$column_Width_Active = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0)
 	$column_Width_SSID = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0)
@@ -1565,10 +1577,12 @@ Func _TreeViewApInfo($position, ByRef $tree, $SSID, $BSSID, $NetworkType, $Encry
 EndFunc   ;==>_TreeViewApInfo
 
 Func _ClearAllAp()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearAllAp()') ;#Debug Display
+	;Reset Variables
 	$APID = 0
 	$GPS_ID = 0
 	$HISTID = 0
-
+	;Clear DB
 	$query = "DELETE * FROM GPS"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "DELETE * FROM AP"
@@ -1585,7 +1599,7 @@ Func _ClearAllAp()
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "DELETE * FROM TreeviewSSID"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-
+	;Clear Listview
 	GUISwitch($DataChild)
 	_GetListviewWidths()
 	GUICtrlDelete($ListviewAPs)
@@ -1595,7 +1609,7 @@ Func _ClearAllAp()
 	GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 	GUISwitch($Vistumbler)
 	_SetControlSizes()
-
+	;Clear Treeview
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $Authentication_tree)
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $channel_tree)
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $Encryption_tree)
@@ -1625,6 +1639,7 @@ Func _ReadIniSectionToDB($ini, $section, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
 EndFunc   ;==>_ReadIniSectionToDB
 
 Func _RecoverMDB()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RecoverMDB()') ;#Debug Display
 	$query = "UPDATE AP SET ListRow = '-1'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
@@ -1710,6 +1725,7 @@ Func _RecoverMDB()
 EndFunc   ;==>_RecoverMDB
 
 Func _SetUpDbTables($dbfile)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetUpDbTables()') ;#Debug Display
 	_CreateDB($dbfile)
 	_AccessConnectConn($dbfile, $DB_OBJ)
 	_CreateTable($dbfile, 'GPS', $DB_OBJ)
@@ -1770,6 +1786,7 @@ Func _SetLabels($findmac);Returns Label for given Mac Address
 EndFunc   ;==>_SetLabels
 
 Func _UpdateListMacLabels()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateListMacLabels()') ;#Debug Display
 	$query = "SELECT BSSID, MANU, LABEL, ListRow, ApID FROM AP"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
@@ -1870,6 +1887,7 @@ Func ScanToggle();Turns AP scanning on or off
 EndFunc   ;==>ScanToggle
 
 Func _AutoRefreshToggle()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRefreshToggle()') ;#Debug Display
 	If $RefreshNetworks = 1 Then
 		GUICtrlSetState($RefreshMenuButton, $GUI_UNCHECKED)
 		$RefreshNetworks = 0
@@ -1882,6 +1900,7 @@ Func _AutoRefreshToggle()
 EndFunc   ;==>_AutoRefreshToggle
 
 Func _ActiveApMidiToggle()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ActiveApMidiToggle()') ;#Debug Display
 	If $Midi_PlayForActiveAps = 1 Then
 		GUICtrlSetState($GUI_MidiActiveAps, $GUI_UNCHECKED)
 		$Midi_PlayForActiveAps = 0
@@ -2026,22 +2045,6 @@ Func _SaveGpsWithNoAPsToggle();turns saving gps data without APs on or off
 		$SaveGpsWithNoAps = 1
 	EndIf
 EndFunc   ;==>_SaveGpsWithNoAPsToggle
-
-Func _ToggleSpeechType()
-	If $SpeakType = 1 Then
-		$SpeakType = 2
-	Else
-		$SpeakType = 1
-	EndIf
-EndFunc   ;==>_ToggleSpeechType
-
-Func _ToggleSayPercent()
-	If $SpeakSigSayPecent = 1 Then
-		$SpeakSigSayPecent = 0
-	Else
-		$SpeakSigSayPecent = 1
-	EndIf
-EndFunc   ;==>_ToggleSayPercent
 
 Func _SpeakSigToggle();turns speak ap signal on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SpeakSigToggle()') ;#Debug Display
@@ -2284,6 +2287,7 @@ Func _GetGPS(); Recieves data from gps device
 EndFunc   ;==>_GetGPS
 
 Func _FormatGpsTime($time)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FormatGpsTime()') ;#Debug Display
 	$time = StringTrimRight($time, 4)
 	$h = StringTrimRight($time, 4)
 	$m = StringTrimLeft(StringTrimRight($time, 2), 2)
@@ -2298,6 +2302,7 @@ Func _FormatGpsTime($time)
 EndFunc   ;==>_FormatGpsTime
 
 Func _FormatGpsDate($Date)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FormatGpsDate()') ;#Debug Display
 	$d = StringTrimRight($Date, 4)
 	$m = StringTrimLeft(StringTrimRight($Date, 2), 2)
 	$y = StringTrimLeft($Date, 4)
@@ -3311,6 +3316,20 @@ Func _OpenVistumblerWiki();Opens Vistumbler Wiki
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerWiki() ') ;#Debug Display
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://vistumbler.wiki.sourceforge.net')
 EndFunc   ;==>_OpenVistumblerWiki
+
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       SUPPORT VISTUMBLER FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
+
+Func _OpenVistumblerDonate();Opens Vistumbler Donate
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerDonate() ') ;#Debug Display
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://sourceforge.net/donate/index.php?group_id=235720')
+EndFunc   ;==>_OpenVistumblerDonate
+
+Func _OpenVistumblerStore();Opens Vistumbler Store
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerStore() ') ;#Debug Display
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://www.zazzle.com/acalcutt/products')
+EndFunc   ;==>_OpenVistumblerStore
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       COPY GUI FUNCTIONS
@@ -4633,6 +4652,9 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'UpdateFound', $Text_UpdateFound)
 	IniWrite($settings, 'GuiText', 'NoUpdates', $Text_NoUpdates)
 	IniWrite($settings, 'GuiText', 'NoActiveApFound', $Text_NoActiveApFound)
+	IniWrite($settings, 'GuiText', 'VistumblerDonate', $Text_VistumblerDonate)
+	IniWrite($settings, 'GuiText', 'VistumblerStore', $Text_VistumblerStore)
+	IniWrite($settings, 'GuiText', 'SupportVistumbler', $Text_SupportVistumbler)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4651,7 +4673,7 @@ Func SaveToKML()
 	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 55, 240, 15)
 	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportKML_MapSec, $GUI_CHECKED)
 	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox($Text_DrawTrack, 15, 75, 240, 15)
-	;If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
+	If $ShowTrack = 1 Then GUICtrlSetState($GUI_ExportKML_DrawTrack, $GUI_CHECKED)
 	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 95, 240, 15)
 	If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
 	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 115, 81, 25, 0)
@@ -6229,6 +6251,10 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_UpdateFound = IniRead($newlanguagefile, 'GuiText', 'UpdateFound', 'Update Found. Would you like to update vistumbler?')
 		$Text_NoUpdates = IniRead($newlanguagefile, 'GuiText', 'NoUpdates', 'No Updates Avalible')
 		$Text_NoActiveApFound = IniRead($newlanguagefile, 'GuiText', 'NoActiveApFound', 'No Active AP found')
+		$Text_VistumblerDonate = IniRead($newlanguagefile, 'GuiText', 'VistumblerDonate', 'Donate')
+		$Text_VistumblerDonate = IniRead($newlanguagefile, 'GuiText', 'VistumblerDonate', 'Donate')
+		$Text_VistumblerStore = IniRead($newlanguagefile, 'GuiText', 'VistumblerStore', 'Store')
+		$Text_SupportVistumbler = IniRead($newlanguagefile, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
 		
 		$RestartVistumbler = 1
 	EndIf
@@ -6873,11 +6899,11 @@ Func _CheckForUpdates()
 		If Not @error Then
 			For $i = 1 To $fv[0][0]
 				$filename = $fv[$i][0]
-				$version = $fv[$i][1]
-				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $version Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
+				$fversion = $fv[$i][1]
+				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $fversion Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
 					If $filename = 'update.exe' Then
-						$getfile = InetGet($VIEWSVN_ROOT & $filename & '?revision=' & $version, @ScriptDir & '\' & $filename)
-						If $getfile = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
+						$getfile = InetGet($VIEWSVN_ROOT & $filename & '?revision=' & $fversion, @ScriptDir & '\' & $filename)
+						If $getfile = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $fversion)
 					EndIf
 					$UpdatesAvalible = 1
 				EndIf
