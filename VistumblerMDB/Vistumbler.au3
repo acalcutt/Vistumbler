@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0 Beta 6.2'
-$last_modified = '11/26/2008'
+$version = '9.0 Beta 6.3'
+$last_modified = '11/28/2008'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -102,6 +102,7 @@ Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
 Dim $labelsini = $SettingsDir & 'mac_labels.ini'
 Dim $manufini = $SettingsDir & 'manufactures.ini'
+Dim $midiini = $SettingsDir & 'midi_instruments.ini'
 Dim $Latitude = 'N 0.0000'
 Dim $Longitude = 'E 0.0000'
 Dim $Latitude2 = 'N 0.0000'
@@ -158,7 +159,7 @@ Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_La
 Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $AutoKmlDeadHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
-Dim $GUI_SpeakSignal, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
+Dim $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadNs
 
@@ -185,6 +186,7 @@ $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/Vistumb
 ;Define Arrays
 Dim $Direction[23];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
 Dim $Direction2[3]
+Dim $Direction3[3]
 
 ;Load-Settings-From-INI-File----------------------------
 Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
@@ -622,61 +624,20 @@ If FileExists($VistumblerDB) Then
 		$APID = 0
 	Else
 		FileDelete($VistumblerDB)
-		_CreateDB($VistumblerDB)
-		_AccessConnectConn($VistumblerDB, $DB_OBJ)
-		_CreateTable($VistumblerDB, 'GPS', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'AP', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'Hist', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'Manufacturers', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'Labels', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewAUTH', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewCHAN', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewENCR', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewSSID', $DB_OBJ)
-		_CreatMultipleFields($VistumblerDB, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
-		_CreatMultipleFields($VistumblerDB, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)| TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
-		_CreatMultipleFields($VistumblerDB, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
-		_CreatMultipleFields($VistumblerDB, 'Manufacturers', $DB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'Labels', $DB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewAUTH', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewCHAN', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewENCR', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-		_CreatMultipleFields($VistumblerDB, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+		_SetUpDbTables($VistumblerDB)
 	EndIf
 Else
-	_CreateDB($VistumblerDB)
-	_AccessConnectConn($VistumblerDB, $DB_OBJ)
-	_CreateTable($VistumblerDB, 'GPS', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'AP', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'Hist', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'Manufacturers', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'Labels', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewAUTH', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewCHAN', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewENCR', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewSSID', $DB_OBJ)
-	_CreatMultipleFields($VistumblerDB, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($VistumblerDB, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)| TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
-	_CreatMultipleFields($VistumblerDB, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($VistumblerDB, 'Manufacturers', $DB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'Labels', $DB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewAUTH', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewCHAN', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewENCR', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewNETTYPE', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_SetUpDbTables($VistumblerDB)
 EndIf
 
-;Create-Array-Of-Manufactures----------------------------
+;Create-Table-Of-Manufactures----------------------------
 _ReadIniSectionToDB($manufini, "MANUFACURERS", $VistumblerDB, $DB_OBJ, "Manufacturers")
-;_ReadIniSectionToArrays($manufini, $manu_mac, $manu_manu, "MANUFACURERS")
 
-;Create-Array-Of-Labels----------------------------
+;Create-Table-Of-Labels----------------------------
 _ReadIniSectionToDB($labelsini, "LABELS", $VistumblerDB, $DB_OBJ, "Labels")
-;_ReadIniSectionToArrays($labelsini, $label_mac, $label_label, "LABELS")
+
+;Create-Table-Of-Instruments----------------------------
+_ReadIniSectionToDB($midiini, "INSTRUMENTS", $VistumblerDB, $DB_OBJ, "Instruments")
 
 ;Set-Up-Column-Headers-Based-On-INI-File-----------------
 $var = IniReadSection($settings, "Columns")
@@ -762,7 +723,7 @@ $SetMacLabel = GUICtrlCreateMenuItem($Text_SetMacLabel, $SettingsMenu)
 $SetMacManu = GUICtrlCreateMenuItem($Text_SetMacManu, $SettingsMenu)
 $SetColumnWidths = GUICtrlCreateMenuItem($Text_SetColumnWidths, $SettingsMenu)
 $SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort, $SettingsMenu)
-$SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal, $SettingsMenu)
+$SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI, $SettingsMenu)
 
 $Export = GUICtrlCreateMenu($Text_Export)
 $ExportToTXT2 = GUICtrlCreateMenuItem($Text_ExportToTXT, $Export)
@@ -916,29 +877,8 @@ GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Other
 GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 
-
-;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Active - 0, $column_Width_Active - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_SSID - 0, $column_Width_SSID - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BSSID - 0, $column_Width_BSSID - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_MANUF - 0, $column_Width_MANUF - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Signal - 0, $column_Width_Signal - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Authentication - 0, $column_Width_Authentication - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Encryption - 0, $column_Width_Encryption - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_RadioType - 0, $column_Width_RadioType - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Channel - 0, $column_Width_Channel - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Latitude - 0, $column_Width_Latitude - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Longitude - 0, $column_Width_Longitude - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0, $column_Width_LatitudeDMS - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0, $column_Width_LongitudeDMS - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0, $column_Width_LatitudeDMM - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0, $column_Width_LongitudeDMM - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0, $column_Width_BasicTransferRates - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0, $column_Width_OtherTransferRates - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_FirstActive - 0, $column_Width_FirstActive - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LastActive - 0, $column_Width_LastActive - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_NetworkType - 0, $column_Width_NetworkType - 0)
-_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Label - 0, $column_Width_Label - 0)
+;Set Listview Widths
+_SetListviewWidths()
 
 Dim $Authentication_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_Authentication)
 Dim $channel_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_Channel)
@@ -1482,6 +1422,56 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 	EndIf
 EndFunc   ;==>_ListViewAdd
 
+Func _SetListviewWidths()
+	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Active - 0, $column_Width_Active - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_SSID - 0, $column_Width_SSID - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BSSID - 0, $column_Width_BSSID - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_MANUF - 0, $column_Width_MANUF - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Signal - 0, $column_Width_Signal - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Authentication - 0, $column_Width_Authentication - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Encryption - 0, $column_Width_Encryption - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_RadioType - 0, $column_Width_RadioType - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Channel - 0, $column_Width_Channel - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Latitude - 0, $column_Width_Latitude - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Longitude - 0, $column_Width_Longitude - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0, $column_Width_LatitudeDMS - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0, $column_Width_LongitudeDMS - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0, $column_Width_LatitudeDMM - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0, $column_Width_LongitudeDMM - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0, $column_Width_BasicTransferRates - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0, $column_Width_OtherTransferRates - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_FirstActive - 0, $column_Width_FirstActive - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LastActive - 0, $column_Width_LastActive - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_NetworkType - 0, $column_Width_NetworkType - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Label - 0, $column_Width_Label - 0)
+EndFunc   ;==>_SetListviewWidths
+
+Func _GetListviewWidths()
+	$column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0)
+	$column_Width_Active = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0)
+	$column_Width_SSID = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0)
+	$column_Width_BSSID = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BSSID - 0)
+	$column_Width_MANUF = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0)
+	$column_Width_Signal = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0)
+	$column_Width_Authentication = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0)
+	$column_Width_Encryption = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0)
+	$column_Width_RadioType = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0)
+	$column_Width_Channel = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0)
+	$column_Width_Latitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0)
+	$column_Width_Longitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0)
+	$column_Width_LatitudeDMS = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0)
+	$column_Width_LongitudeDMS = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0)
+	$column_Width_LatitudeDMM = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0)
+	$column_Width_LongitudeDMM = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0)
+	$column_Width_BasicTransferRates = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0)
+	$column_Width_OtherTransferRates = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0)
+	$column_Width_FirstActive = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_FirstActive - 0)
+	$column_Width_LastActive = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LastActive - 0)
+	$column_Width_NetworkType = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0)
+	$column_Width_Label = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0)
+EndFunc   ;==>_GetListviewWidths
+
 Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioType, $BasicTransferRates, $OtherTransferRates, $NetworkType, $MANUF, $LABEL)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_TreeViewAdd()') ;#Debug Display
 	$channel_treeviewname = StringFormat("%02i", $Channel)
@@ -1597,9 +1587,11 @@ Func _ClearAllAp()
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 
 	GUISwitch($DataChild)
+	_GetListviewWidths()
 	GUICtrlDelete($ListviewAPs)
 	$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+	_SetListviewWidths()
 	GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 	GUISwitch($Vistumbler)
 	_SetControlSizes()
@@ -1716,6 +1708,33 @@ Func _RecoverMDB()
 	_FixLineNumbers()
 	_UpdateListMacLabels()
 EndFunc   ;==>_RecoverMDB
+
+Func _SetUpDbTables($dbfile)
+	_CreateDB($dbfile)
+	_AccessConnectConn($dbfile, $DB_OBJ)
+	_CreateTable($dbfile, 'GPS', $DB_OBJ)
+	_CreateTable($dbfile, 'AP', $DB_OBJ)
+	_CreateTable($dbfile, 'Hist', $DB_OBJ)
+	_CreateTable($dbfile, 'Manufacturers', $DB_OBJ)
+	_CreateTable($dbfile, 'Labels', $DB_OBJ)
+	_CreateTable($dbfile, 'Instruments', $DB_OBJ)
+	_CreateTable($dbfile, 'TreeviewAUTH', $DB_OBJ)
+	_CreateTable($dbfile, 'TreeviewCHAN', $DB_OBJ)
+	_CreateTable($dbfile, 'TreeviewENCR', $DB_OBJ)
+	_CreateTable($dbfile, 'TreeviewNETTYPE', $DB_OBJ)
+	_CreateTable($dbfile, 'TreeviewSSID', $DB_OBJ)
+	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)| TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
+	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($dbfile, 'Manufacturers', $DB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
+	_CreatMultipleFields($dbfile, 'Labels', $DB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
+	_CreatMultipleFields($dbfile, 'Instruments', $DB_OBJ, 'INSTNUM TEXT(3)|INSTTEXT TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TreeviewAUTH', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TreeviewCHAN', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TreeviewENCR', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TreeviewNETTYPE', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
+EndFunc   ;==>_SetUpDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       MANUFACTURER/LABEL FUNCTIONS
@@ -2701,20 +2720,33 @@ Func _HeaderSort($column);Sort a column in ap list
 	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_HeaderSort
 
-Func _HeaderSort2($column);Sort a column in a manufacturer/label list
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_HeaderSort2()') ;#Debug Display
+Func _ManufacturerSort();Sorts manufacturer column in manufacturer list
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ManufacturerSort()') ;#Debug Display
+	$column = GUICtrlGetState($GUI_Manu_List)
 	If $Direction2[$column] = 0 Then
 		Dim $v_sort = False;set descending
-	Else
-		Dim $v_sort = True;set ascending
-	EndIf
-	If $Direction2[$column] = 0 Then
 		$Direction2[$column] = 1
 	Else
+		Dim $v_sort = True;set ascending
 		$Direction2[$column] = 0
 	EndIf
-	_GUICtrlListView_SimpleSort($GUIList, $v_sort, $column)
-EndFunc   ;==>_HeaderSort2
+	_GUICtrlListView_SimpleSort($GUI_Manu_List, $v_sort, $column)
+	$Apply_Manu = 1
+EndFunc   ;==>_ManufacturerSort
+
+Func _LabelSort();Sorts manufacturer column in manufacturer list
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LabelSort()') ;#Debug Display
+	$column = GUICtrlGetState($GUI_Lab_List)
+	If $Direction3[$column] = 0 Then
+		Dim $v_sort = False;set descending
+		$Direction3[$column] = 1
+	Else
+		Dim $v_sort = True;set ascending
+		$Direction3[$column] = 0
+	EndIf
+	_GUICtrlListView_SimpleSort($GUI_Lab_List, $v_sort, $column)
+	$Apply_Lab = 1
+EndFunc   ;==>_LabelSort
 
 Func _Sort($Sort);Auto Sort based on a user chosen column
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Sort()') ;#Debug Display
@@ -5424,6 +5456,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	$Remove_MANU = GUICtrlCreateButton($Text_RemoveMan, 239, 90, 201, 25, 0)
 	$Edit_MANU = GUICtrlCreateButton($Text_EditMan, 456, 90, 201, 25, 0)
 	$GUI_Manu_List = GUICtrlCreateListView($Column_Names_BSSID & "|" & $Column_Names_MANUF, 24, 125, 634, 326, $LVS_REPORT, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 	_GUICtrlListView_SetColumnWidth($GUI_Manu_List, 0, 160)
 	_GUICtrlListView_SetColumnWidth($GUI_Manu_List, 1, 450)
 	;Add Manufacturers to list
@@ -5450,6 +5483,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	$Remove_Lab = GUICtrlCreateButton($Text_RemoveLabel, 239, 90, 201, 25, 0)
 	$Edit_Lab = GUICtrlCreateButton($Text_EditLabel, 454, 90, 201, 25, 0)
 	$GUI_Lab_List = GUICtrlCreateListView($Column_Names_BSSID & "|" & $Column_Names_Label, 24, 125, 634, 326, $LVS_REPORT, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 	_GUICtrlListView_SetColumnWidth($GUI_Lab_List, 0, 160)
 	_GUICtrlListView_SetColumnWidth($GUI_Lab_List, 1, 450)
 	;Add Labels to list
@@ -5464,28 +5498,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	;Columns Tabs
 	$Tab_Col = GUICtrlCreateTabItem($Text_Columns)
 	;Get Current GUI widths from listview
-	$column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0)
-	$column_Width_Active = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0)
-	$column_Width_SSID = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0)
-	$column_Width_BSSID = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BSSID - 0)
-	$column_Width_MANUF = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0)
-	$column_Width_Signal = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0)
-	$column_Width_Authentication = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0)
-	$column_Width_Encryption = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0)
-	$column_Width_RadioType = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0)
-	$column_Width_Channel = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0)
-	$column_Width_Latitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0)
-	$column_Width_Longitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0)
-	$column_Width_LatitudeDMS = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0)
-	$column_Width_LongitudeDMS = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0)
-	$column_Width_LatitudeDMM = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0)
-	$column_Width_LongitudeDMM = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0)
-	$column_Width_BasicTransferRates = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0)
-	$column_Width_OtherTransferRates = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0)
-	$column_Width_FirstActive = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_FirstActive - 0)
-	$column_Width_LastActive = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LastActive - 0)
-	$column_Width_NetworkType = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0)
-	$column_Width_Label = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0)
+	_GetListviewWidths()
 	;Start Column tab gui
 	_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 	$GroupColumns = GUICtrlCreateGroup($Text_Columns, 16, 40, 657, 417)
@@ -5697,7 +5710,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlCreateLabel($Text_Seconds, 150, 440, 505, 15)
 	
 	;AutoKML Tab
-	$Tab_AutoKML = GUICtrlCreateTabItem($Text_AutoKml & ' / ' & $Text_SpeakSignal)
+	$Tab_AutoKML = GUICtrlCreateTabItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI)
 	_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 	GUICtrlCreateGroup($Text_AutoKml, 16, 40, 650, 240);Auto Save Group
 	GUICtrlSetColor(-1, $TextColor)
@@ -5745,7 +5758,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AutoKml_Tilt = GUICtrlCreateInput($AutoKML_Tilt, 525, 235, 110, 20)
 	;Speak Signal Options
-	GUICtrlCreateGroup($Text_SpeakSignal, 16, 290, 650, 145)
+	GUICtrlCreateGroup($Text_SpeakSignal, 16, 290, 350, 145)
 	$GUI_SpeakSignal = GUICtrlCreateCheckbox($Text_SpeakSignal, 30, 310, 200, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	If $SpeakSignal = 1 Then GUICtrlSetState($GUI_SpeakSignal, $GUI_CHECKED)
@@ -5766,17 +5779,32 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_SpeakSigTime = GUICtrlCreateInput($SpeakSigTime, 30, 405, 150, 20)
 	GUICtrlSetColor(-1, $TextColor)
-	$GUI_SpeakPercent = GUICtrlCreateCheckbox($Text_SpeakSayPercent, 200, 405, 200, 15)
+	$GUI_SpeakPercent = GUICtrlCreateCheckbox($Text_SpeakSayPercent, 200, 405, 150, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	If $SpeakSigSayPecent = 1 Then GUICtrlSetState($GUI_SpeakPercent, $GUI_CHECKED)
 	
-	GUICtrlCreateLabel($Text_MidiInstrumentNumber, 400, 310, 150, 15)
+	GUICtrlCreateGroup($Text_MIDI, 370, 290, 295, 145)
+	$GUI_PlayMidiSounds = GUICtrlCreateCheckbox($Text_PlayMidiSounds, 385, 310, 200, 15)
+	If $Midi_PlayForActiveAps = 1 Then GUICtrlSetState($GUI_PlayMidiSounds, $GUI_CHECKED)
+	GUICtrlCreateLabel($Text_MidiInstrumentNumber, 385, 330, 150, 15)
 	GUICtrlSetColor(-1, $TextColor)
-	$GUI_Midi_Instument = GUICtrlCreateInput($Midi_Instument, 400, 325, 150, 20)
+	$GUI_Midi_Instument = GUICtrlCreateCombo('', 385, 345, 265, 20)
+	$query = "SELECT INSTNUM, INSTTEXT FROM Instruments"
+	$InstMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundInstMatch = UBound($InstMatchArray) - 1
+	For $m = 1 To $FoundInstMatch
+		$INSTNUM = $InstMatchArray[$m][1]
+		$INSTTEXT = $InstMatchArray[$m][2]
+		If $INSTNUM = $Midi_Instument Then
+			GUICtrlSetData($GUI_Midi_Instument, $INSTNUM & ' - ' & $INSTTEXT, $INSTNUM & ' - ' & $INSTTEXT)
+		Else
+			GUICtrlSetData($GUI_Midi_Instument, $INSTNUM & ' - ' & $INSTTEXT)
+		EndIf
+	Next
 	GUICtrlSetColor(-1, $TextColor)
-	GUICtrlCreateLabel($Text_MidiPlayTime & '(ms)', 400, 355, 150, 15)
+	GUICtrlCreateLabel($Text_MidiPlayTime & '(ms)', 385, 370, 150, 15)
 	GUICtrlSetColor(-1, $TextColor)
-	$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 400, 370, 150, 20)
+	$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 385, 385, 265, 20)
 	GUICtrlSetColor(-1, $TextColor)
 	
 	GUICtrlCreateTabItem("")
@@ -5839,8 +5867,9 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetOnEvent($CWCB_FirstActive, '_SetWidthValue_FirstActive')
 	GUICtrlSetOnEvent($CWCB_LastActive, '_SetWidthValue_LastActive')
 	GUICtrlSetOnEvent($LanguageBox, '_LanguageChanged')
-	
 	GUICtrlSetOnEvent($GuiGuessSearchwords, '_GuessNetshSearchwords')
+	GUICtrlSetOnEvent($GUI_Manu_List, '_ManufacturerSort')
+	GUICtrlSetOnEvent($GUI_Lab_List, '_LabelSort')
 
 	GUISetState(@SW_SHOW)
 EndFunc   ;==>_SettingsGUI
@@ -6051,7 +6080,6 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SpeedInKmh = IniRead($newlanguagefile, 'GuiText', 'SpeedInKmh', 'Speed(km/h)')
 		$Text_TrackAngle = IniRead($newlanguagefile, 'GuiText', 'TrackAngle', 'Track Angle')
 		$Text_Close = IniRead($newlanguagefile, 'GuiText', 'Close', 'Track Close')
-		;$Text_ConnectToWindowName = IniRead($newlanguagefile, 'GuiText', 'ConnectToWindowName', 'Connect to a network'); Set in Auto Tab and changed by _Language Changed
 		$Text_RefreshNetworks = IniRead($newlanguagefile, 'GuiText', 'StartRefreshingNetworks', 'Refreshing Networks')
 		$Text_Start = IniRead($newlanguagefile, 'GuiText', 'Start', 'Start')
 		$Text_Stop = IniRead($newlanguagefile, 'GuiText', 'Stop', 'Stop')
@@ -6275,28 +6303,7 @@ Func _ApplySettingsGUI();Applys settings
 		$column_Width_LastActive = GUICtrlRead($CWIB_LastActive)
 		$column_Width_NetworkType = GUICtrlRead($CWIB_NetType)
 		$column_Width_Label = GUICtrlRead($CWIB_Label)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Line - 0, $column_Width_Line - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Active - 0, $column_Width_Active - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_SSID - 0, $column_Width_SSID - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BSSID - 0, $column_Width_BSSID - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_MANUF - 0, $column_Width_MANUF - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Signal - 0, $column_Width_Signal - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Authentication - 0, $column_Width_Authentication - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Encryption - 0, $column_Width_Encryption - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_RadioType - 0, $column_Width_RadioType - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Channel - 0, $column_Width_Channel - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Latitude - 0, $column_Width_Latitude - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Longitude - 0, $column_Width_Longitude - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0, $column_Width_LatitudeDMS - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0, $column_Width_LongitudeDMS - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0, $column_Width_LatitudeDMM - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0, $column_Width_LongitudeDMM - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0, $column_Width_BasicTransferRates - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0, $column_Width_OtherTransferRates - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_FirstActive - 0, $column_Width_FirstActive - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LastActive - 0, $column_Width_LastActive - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_NetworkType - 0, $column_Width_NetworkType - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Label - 0, $column_Width_Label - 0)
+		_SetListviewWidths()
 	EndIf
 	If $Apply_Searchword = 1 Then
 		$SearchWord_SSID = GUICtrlRead($SearchWord_SSID_GUI)
@@ -6417,7 +6424,10 @@ Func _ApplySettingsGUI();Applys settings
 			$SpeakSigSayPecent = 0;Don't say percent
 		EndIf
 		$SpeakSigTime = GUICtrlRead($GUI_SpeakSigTime)
-		$Midi_Instument = GUICtrlRead($GUI_Midi_Instument)
+		If GUICtrlRead($GUI_PlayMidiSounds) = 4 And $Midi_PlayForActiveAps = 1 Then _ActiveApMidiToggle();Turn off MIDI signal
+		If GUICtrlRead($GUI_PlayMidiSounds) = 1 And $Midi_PlayForActiveAps = 0 Then _ActiveApMidiToggle();Turn on MIDI signal
+		$MidiInstSplit = StringSplit(GUICtrlRead($GUI_Midi_Instument), ' - ', 1)
+		$Midi_Instument = $MidiInstSplit[1]
 		$Midi_PlayTime = GUICtrlRead($GUI_Midi_PlayTime)
 	EndIf
 
