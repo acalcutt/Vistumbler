@@ -3,17 +3,17 @@
 //  By: Phillip Ferland (Longbow486)                           //
 //  Email: longbow486@msn.com                                  //
 //  Started on: 10.14.07                                       //
-//  Purpose: To generate a PNG graph of a WAP's signals        //
+//  Purpose: To generate a PNG graph of a WAP's signal         //
 //           from URL driven data                              //
-//  Filename: genlineurl.php                                   //
+//  Filename: index.php                                        //
 /////////////////////////////////////////////////////////////////
-include('../lib/config.inc.php');
-
 $startdate="14-10-2007";
-$lastedit="30-10-2008";
-echo '<title>WiFiDB PNG Signal Graph *Beta* - ---RanInt---</title>';
-?>
+$lastedit="19-12-2008";
 
+include('../lib/config.inc.php');
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Graphing Page</title>';
+?>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -21,7 +21,7 @@ echo '<title>WiFiDB PNG Signal Graph *Beta* - ---RanInt---</title>';
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* </font>
+		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
 		<font color="#FFFFFF" size="2">
             <a class="links" href="/">[Root] </a>/
 		</font></b>

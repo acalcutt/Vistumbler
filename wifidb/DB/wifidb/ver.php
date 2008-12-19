@@ -1,15 +1,16 @@
 <?php
-echo "<title>WiFiDB Version History - ---RanInt---</title>";
+include('lib/config.inc.php');
+include('lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Main Page</title>';
 ?>
-
-<link rel="stylesheet" href="css/site4.0.css">
+<link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
 <table border="0" width="75%" cellspacing="10" cellpadding="2">
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* </font>
+		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
 		<font color="#FFFFFF" size="2">
             <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
 		</font></b>
@@ -23,8 +24,6 @@ echo "<title>WiFiDB Version History - ---RanInt---</title>";
 <td width="17%" bgcolor="#304D80" valign="top">
 
 <?php
-include('lib/config.inc.php');
-include('lib/database.inc.php');
 mysql_select_db($db,$conn);
 $sql = "SELECT * FROM links ORDER BY ID ASC";
 $result = mysql_query($sql, $conn) or die(mysql_error());
@@ -48,7 +47,7 @@ while ($newArray = mysql_fetch_array($result))
 		<td><p>Project State: </p></td><td><p><b>Alpha (planning and early dev)</p></b><td>
 	</tr>
 	<tr>
-		<td><p>Project Dev(s): </P></td><td><p><b><a href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</P></a></b><td>
+		<td><p>Project Dev(s): </P></td><td><p><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</P></a></b><td>
 	</tr>
 </table>
 <table border="0" id="table1" cellpadding="2">
@@ -60,15 +59,86 @@ while ($newArray = mysql_fetch_array($result))
 		<td style="border-style: solid; border-width: 1px" height="26">
 		Date</td>
 		<td style="border-style: solid; border-width: 1px" height="26">Fixes</td>
-	</tr>
+	</tr>	
 	<tr>
 		<td width="67" style="border-style: solid; border-width: 1px" height="26">
-		0.1</td>
+		0.15 Build 75</td>
 		<td width="285" height="26" style="border-style: solid; border-width: 1px">
 		Phillip Ferland</td>
 		<td style="border-style: solid; border-width: 1px" height="26">
-		2008-06-10</td>
-		<td style="border-style: solid; border-width: 1px" height="26">This is a work in progress. Most if not all the features are in their infancy and need much work.</td>
+		2008-12-19</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Added in a very basic (to start) search page, to search for Access Points.<br>
+		2> (Work in progress) Changing the GPS check so that it checks the DB for the GPS point and from there, if there is a return, point to that GPS, if not add it to the table.<br>
+		3> Added associated Import list for Access Points.
+		4> Added in Security warning incase the /install folder is not removed.
+		5> Added some more user input sanitization.
+		</td>
+	</tr>	
+	<tr>
+		<td width="67" style="border-style: solid; border-width: 1px" height="26">
+		0.15 Build 73</td>
+		<td width="285" height="26" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2008-11-28</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Changed the import report page to have tables for the output, so that it is more organized and is easier to tell weather the access point is a new or updated <br>
+		2> (Work in progress) Changed the GPS check so that it checks the DB for the GPS point and from there, if there is a return, point to that GPS, if not add it to the table<br>
+		</td>
+	</tr>
+	<tr>
+		<td width="67" style="border-style: solid; border-width: 1px" height="26">
+		0.15 Build 67</td>
+		<td width="285" height="26" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2008-11-19</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Added GPS history to Access Point Fetch page<br>
+		2> Added View all AP's for a given user<br>
+		3> Fixed bug in the import_vs1 function where the page was not rendering right, even though it was importing correctly<br>
+		4> Fixed a bug where the AP fetch page wasnt showing more then one row of signal history even though there was more then one<br>
+		</td>
+	</tr>
+	<tr>
+		<td width="67" style="border-style: solid; border-width: 1px" height="26">
+		0.14</td>
+		<td width="285" height="26" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2008-11-14</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Changed the All users list, so that it displays only the first ID for a user (which is considered the users Unique ID)<br>
+		2> Fixed an issue where randomly an AP would have more signal history points then GPS history points<br>
+		3> Added installer for easy setup. Just go to /[WifiDB path]/install/<br>
+		4> Fixed a few more bugs/PEBKAC errors<br>
+		</td>
+	</tr>
+	<tr>
+		<td width="67" style="border-style: solid; border-width: 1px" height="26">
+		0.13</td>
+		<td width="285" height="26" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2008-10-30</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Rearranged functions.php into database.inc.php(all database related functions) and graph.inc.php (all graphing and image related functions).<br>
+		2> Fixed a few more bugs/PEBKAC errors<br>
+		</td>
+	</tr>
+	<tr>
+		<td width="67" style="border-style: solid; border-width: 1px" height="26">
+		0.12</td>
+		<td width="285" height="26" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2008-08-19</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Added in graphing for AP's signal history, one row of history at a time for the moment.<br>
+		2> Added in Users Stats page to view what users have imported / updated what AP's.<br>
+		3> Added in KML exports, right now its is just a Full DB export, soon to be added is Individual AP's and groups of selected AP's.<br>
+		</td>
 	</tr>
 	<tr>
 		<td width="67" style="border-style: solid; border-width: 1px" height="26">
@@ -86,43 +156,14 @@ while ($newArray = mysql_fetch_array($result))
 	</tr>
 	<tr>
 		<td width="67" style="border-style: solid; border-width: 1px" height="26">
-		0.12</td>
+		0.1</td>
 		<td width="285" height="26" style="border-style: solid; border-width: 1px">
 		Phillip Ferland</td>
 		<td style="border-style: solid; border-width: 1px" height="26">
-		2008-08-19</td>
-		<td style="border-style: solid; border-width: 1px" height="26">
-		1> Added in graphing for AP's signal history, one row of history at a time for the moment.<br>
-		2> Added in Users Stats page to view what users have imported / updated what AP's.<br>
-		3> Added in KML exports, right now its is just a Full DB export, soon to be added is Individual AP's and groups of selected AP's.
-		</td>
+		2008-06-10</td>
+		<td style="border-style: solid; border-width: 1px" height="26">This is a work in progress. Most if not all the features are in their infancy and need much work.</td>
 	</tr>
-	<tr>
-		<td width="67" style="border-style: solid; border-width: 1px" height="26">
-		0.13</td>
-		<td width="285" height="26" style="border-style: solid; border-width: 1px">
-		Phillip Ferland</td>
-		<td style="border-style: solid; border-width: 1px" height="26">
-		2008-10-30</td>
-		<td style="border-style: solid; border-width: 1px" height="26">
-		1> Rearranged functions.php into database.inc.php(all database related functions) and graph.inc.php (all graphing and image related functions).<br>
-		2> Fixed a few more bugs/PEBKAC errors
-		</td>
-	</tr>
-	<tr>
-		<td width="67" style="border-style: solid; border-width: 1px" height="26">
-		0.14</td>
-		<td width="285" height="26" style="border-style: solid; border-width: 1px">
-		Phillip Ferland</td>
-		<td style="border-style: solid; border-width: 1px" height="26">
-		2008-11-14</td>
-		<td style="border-style: solid; border-width: 1px" height="26">
-		1> Changed the All users list, so that it displays only the first ID for a user (which is considered the users Unique ID)
-		2> Fixed an issue where randomly an AP would have more signal history points then GPS history points
-		3> Added installer for easy setup. Just go to /[WifiDB path]/install/
-		4> Fixed a few more bugs/PEBKAC errors
-		</td>
-	</tr>
+
 	</table>
 	<h2><---LINKS---></h2>
 	<a class="links" href="">RanInt Forum</a><br>

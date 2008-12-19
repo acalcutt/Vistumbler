@@ -3,7 +3,7 @@ RanInt -> WiFiDB -> Readme
 
   A set of PHP-scripts to manage a MySQL based Wireless Database over the web.
 
-  Version Alpha 0.14
+  Version: Alpha
   --------------
   http://www.randomintervals.com/
 
@@ -19,11 +19,13 @@ RanInt -> WiFiDB -> Readme
     You should have received a copy of the GNU General Public License
     along with this program; if not, you can get it at: or write to the Free Software
     Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	
+	Or go Here:  http://www.gnu.org/licenses/gpl-2.0.txt
 
   Requirements:
     php 5.0 or later
-    MySQL 4.1 or later
-    Apache
+    MySQL 5.0 or later
+    Apache 1.3 or later
 	a web-browser (doh!)
 
   Summary:
@@ -31,13 +33,16 @@ RanInt -> WiFiDB -> Readme
 	Wireless Access points found with the Vistumber Wirelss scanning software
 
   Installation:
-    Go to /[WiFiDB Path]/install/ and fallow the steps, please read the notes before hand
-	The setup.sql file is a database reset script, it basically drops all the DB's and re-creates them - use at your own risk
+	NOTE: if you are using Linux, you must chown the wifidb, to the user that you have apache or what ever HTTP server you are useing.
+		  (This is so that the installer can create the config file, and to generate the graph images and export KML files)
+    Go to /[WiFiDB Path]/install/ and fallow the steps, please read the notes before hand.
+	The setup.sql file is a database reset script, mostly for advanced users, it basically drops all the DB's and re-creates them - use at your own risk
   ChangeLog:
     /[WiFiDB Path]/ver.php
 
   Support:
-    See reference about support forums under http://forum.techidiots.net/
+    Go to the Randomintervals section of these forums http://forum.techidiots.net/forum/
 
     Enjoy!
         The RanInt Dev team
+		   -PFerland

@@ -1,4 +1,7 @@
-<title>Welcome to the Random Intervals Wireless DB --> Import Page</title>
+<?php
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb'"].' --> Install Page</title>';
+?>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -6,7 +9,7 @@
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Randomintervals.com Wireless DataBase *Alpha* </font>
+		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
 		<font color="#FFFFFF" size="2">
             <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
 		</font></b>
@@ -26,15 +29,23 @@
 <?php
 $date = date("m.d.Y");
 $root_sql_user	=	$_POST['root_sql_user'];
+sript_tags($root_sql_user);
 $root_sql_pwd	=	$_POST['root_sql_pwd'];
-
+sript_tags($root_sql_pwd);
 $root		=	$_POST['root'];
+sript_tags($root);
 $hosturl	=	$_POST['hosturl'];
+sript_tags($hosturl);
 $sqlhost	=	$_POST['sqlhost'];
+sript_tags($sqlhost);
 $sqlu		=	$_POST['sqlu'];
+sript_tags($sqlu);
 $sqlp		=	$_POST['sqlp'];
+sript_tags($sqlp);
 $wifi		=	$_POST['wifidb'];
+sript_tags($wifi);
 $wifi_st	=	$_POST['wifistdb'];
+sript_tags($wifi_st);
 echo '<tr><TH colspan="2">Database Install</TH><tr>';
 #Connect with Root priv
 $conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
@@ -137,12 +148,25 @@ echo "<tr><td>Failure..........</td><td>CREATE TABLE `links`</td></tr>";}
 
 
 #Insert data into links table
+if($hosturl !== "" && $root !== "")
+{
 $sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
-		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php\">View All AP\'s</a>'),"
-		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import AP\'s</a>'),"
-		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
-		."(5, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>');";
+		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import APs</a>'),"
+		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>');";
+		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>');";
+}else
+{
+$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
+		."(1, '<a class=\"links\" href=\"/\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"/all.php\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"/import/\">Import APs</a>'),"
+		."(4, '<a class=\"links\" href=\"/opt/search.php\">Search APs</a>'),"
+		."(5, '<a class=\"links\" href=\"/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"/ver.php\">WiFiDB Version</a>');";
+}
 $IN_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($IN_TB_LN_Re)
@@ -176,7 +200,7 @@ echo "<tr><td>Failure..........</td><td>Created user: $sqlu @ $phphost for $wifi
 #create config.inc.php file in /lib folder
 echo '<tr><TH colspan="2"></th></tr><tr><TH colspan="2">Config.inc.php File Creation</th><tr>';
 $file_ext = 'config.inc.php';
-$filename = ('..\lib\\'.$file_ext);
+$filename = '../lib/'.$file_ext;
 $filewrite = fopen($filename, "w");
 $fileappend = fopen($filename, "a");
 

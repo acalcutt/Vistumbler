@@ -25,3 +25,50 @@ a.links {
 	font-weight: bold; 
 	color: #112233;
 }
+table.importconvert
+{ 
+	color: #123;
+	border-width: 1;
+}
+
+table.new
+{ 
+	border-width: 1;
+	border-color: #00FF00;
+}
+table.new ha {
+	border-width: 1px;
+	padding: 1px;
+	border-style: inset;
+	border-color: #00FF00;
+	background-color: #00FF00;
+}
+table.new td {
+	border-width: 1px;
+	padding: 1px;
+	border-style: inset;
+	border-color: #00FF00;
+	background-color: #00FF00;
+}
+
+table.update
+{ 
+	border-width: 1;
+	border-color: #000000;
+}
+
+table.update td {
+	border-width: 1px;
+	padding: 1px;
+	border-style: inset;
+	border-color: #FF0000;
+	background-color: #FF0000;
+}
+
+table.update ha {
+	border-width: 1px;
+	padding: 1px;
+	border-style: inset;
+	border-color: #FF0000;
+	background-color: #FF0000;
+}

@@ -1,5 +1,6 @@
 # RanInt WifiDB SQL file
-# Ver: 1.0
+# Ver: 0.15 Build 75
+# Last Edit: 19/12/2008
 # http://www.randomintervals.com
 #
 # WARNING: This script Drops both the Wifi_st and wifi DB's,
@@ -96,8 +97,9 @@ CREATE TABLE wifi0 (
 #
 
 INSERT INTO `links` (`ID`, `links`) VALUES
-(1, '<a class="links" href="/$root/">Main Page</a>'),
-(2, '<a class="links" href="/$root/all.php">View All AP\'s</a>'),
-(3, '<a class="links" href="/$root/import/">Import AP\'s</a>'),
-(4, '<a class="links" href="/$root/opt/userstats.php?func=usersall">View All Users</a>'),
-(5, '<a class="links" href="/$root/ver.php">WiFiDB Version</a>');
+(1, '<a class="links" href="/">Main Page</a>'),
+(2, '<a class="links" href="/all.php">View All APs</a>'),
+(3, '<a class="links" href="/import/">Import APs</a>'),
+(4, '<a class="links" href="/opt/search.php">Search APs</a>'),
+(5, '<a class="links" href="/opt/userstats.php?func=usersall">View All Users</a>'),
+(6, '<a class="links" href="/ver.php">WiFiDB Version</a>');

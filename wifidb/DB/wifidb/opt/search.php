@@ -1,7 +1,7 @@
 <?php
 include('../lib/database.inc.php');
 include('../lib/config.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Import Page</title>';
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Search Page</title>';
 ?>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
@@ -34,19 +34,8 @@ while ($newArray = mysql_fetch_array($result))
 ?>
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
-<?php
-$domain = $_SERVER['HTTP_HOST'];
-if ($domain === "rihq.randomintervals.com" or $domain === "lanncafe.dynu.com" or $domain === "192.168.3.23")
-{echo '<h2>This is my Development server </h2><H4>(which is unstable because I am always working in it)</H4><H2>Go on over to my <i><a href="http://www.randomintervals.com/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
-if (isset($_GET['file']))
-{
-echo "Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <b>".$_GET['file']."</b><br>Copy and Paste the bolded text into the file location field to import it.<br>";
-}
-
-echo "<br>The old txt summery files are supported, But will only give one GPS point and one Signal history per AP.<br>Where the VS1 file gives many GPS points<br> and many Signal history per AP<br>The username is optional, but it helps keep track of who has imported what AP's<br><br>";
-?>
-					<CENTER><form action="insertnew.php" method="post" enctype="multipart/form-data">
+			<p align="center"><h2>Search for Access Points</h2>
+				<form action="results.php" method="post" enctype="multipart/form-data">
 						<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 							<COL WIDTH=40*>
 							<COL WIDTH=216*>
@@ -56,39 +45,56 @@ echo "<br>The old txt summery files are supported, But will only give one GPS po
 							</TR>
 							<TR>
 								<TD WIDTH=16%>
-									<P>Give a Title to the Import: 
+									<P>SSID  <font size="2"><i>(Linksys)</i></font>: 
 									</P>
 								</TD>
 								<TD WIDTH=84%>
-									<P><A NAME="title"></A><INPUT TYPE=TEXT NAME="title" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+									<P><A NAME="ssid"></A><INPUT TYPE=TEXT NAME="ssid" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
 								</TD>
 							</TR>
 							<TR>
 								<TD WIDTH=16% HEIGHT=35>
-									<P>File location: 
+									<P>MAC Address  <font size="2"><i>(00:11:22:33:44:55)</i></font>: 
 									</P>
 								</TD>
 								<TD WIDTH=84%>
-									<P><A NAME="file"></A><INPUT TYPE=FILE NAME="file" SIZE=56 STYLE="width: 5.41in; height: 0.25in"></P>
+									<P><A NAME="mac"></A><INPUT TYPE=TEXT NAME="mac" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
 								</TD>
 							</TR>
 							<TR>
 								<TD WIDTH=16%>
-									<P>Username: 
+									<P>Radio Type  <font size="2"><i>(a/b/g/n)</i></font>: 
 									</P>
 								</TD>
 								<TD WIDTH=84%>
-									<P><A NAME="user"></A><INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+									<P><A NAME="radio"></A><INPUT TYPE=TEXT NAME="radio" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
 								</TD>
 							</TR>
 							<TR>
 								<TD WIDTH=16%>
-									<P>Notes: 
+									<P>Channel <font size="2"><i>(1/2/3/..)</i></font>: 
 									</P>
 								</TD>
 								<TD WIDTH=84%>
-									<P><TEXTAREA NAME="notes" ROWS=4 COLS=50 STYLE="width: 4.42in; height: 1.01in"></TEXTAREA><BR>
+									<P><A NAME="chan"></A><INPUT TYPE=TEXT NAME="chan" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+								</TD>
+							</TR>
+							<TR>
+								<TD WIDTH=16%>
+									<P>Authentication <font size="2"><i>(WPA/WPA2/OPEN)</i></font>: 
 									</P>
+								</TD>
+								<TD WIDTH=84%>
+									<P><A NAME="auth"></A><INPUT TYPE=TEXT NAME="auth" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+								</TD>
+							</TR>
+							<TR>
+								<TD WIDTH=16%>
+									<P>Encryption <font size="2"><i>(None/WEP/TKIP)</i></font>: 
+									</P>
+								</TD>
+								<TD WIDTH=84%>
+									<P><A NAME="encry"></A><INPUT TYPE=TEXT NAME="encry" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
 								</TD>
 							</TR>
 								<TD WIDTH=16%>.</TD><TD WIDTH=84%>
@@ -102,18 +108,19 @@ echo "<br>The old txt summery files are supported, But will only give one GPS po
 								</TD>
 							</TR>
 						</TABLE>
-						</form>
-					</CENTER>
-
-
+					</form>
+				</p>
 <?php
+
+
 $filename = $_SERVER['SCRIPT_FILENAME'];
 $file_ex = explode("/", $filename);
 $count = count($file_ex);
 $file = $file_ex[($count)-1];
 if (file_exists($filename)) {
     echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
-}?>
+}
+?>
 </p>
 </td>
 </tr>

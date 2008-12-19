@@ -1,17 +1,21 @@
 <?php
-$lastedit = "03-11-2008";
+$lastedit = "19-12-2008";
 $ver=array(
-			"database"=>array(  
-							"import_vs1" 		=> "1.1", 
-							"convert_vs1" 		=> "1.0",
-							"apfetch"			=> "2.0",
-							"gps_check_array"	=> "1.0",
-							"user_stats"		=> "1.0",
+			"wifidb"	=>	"0.15 build 75",
+			"database"	=>	array(  
+							"import_vs1"		=>	"1.3", 
+							"convert_vs1"		=>	"1.0",
+							"apfetch"		=>	"2.1",
+							"gps_check_array"	=>	"1.0",
+							"allusers"		=>	"1.1",
+							"userstats"		=>	"1.1",
+							"usersap"		=>	"1.1",
+							"all_usersap"		=>	"1.1",
 							"export_KML"		=>	"1.0"
 							),
-			"Misc"=>array(
-							"smart_quotes"		=> "1.0",
-							"Manufactures"		=> "1.0",
+			"Misc"		=>	array(
+							"smart_quotes"		=> 	"1.0",
+							"Manufactures"		=> 	"1.0"
 							),
 			);
 class database
@@ -24,7 +28,7 @@ class database
 	{
 	$times=date('Y-m-d H:i:s');
 	if ($source == NULL){echo "<h2>You did not submit a file, please go back and do so.</h2>";die();}
-	include('config.inc.php');
+	include('../lib/config.inc.php');
 	//	$gdata [ ID ] [ object ]
 	//		   num     lat / long / sats / date / time
 	if ($user == ""){$user="Unknown";}
@@ -37,9 +41,11 @@ class database
 	$cco=0;
 	$apdata=array();
 	$gpdata=array();
+	$signals=array();
+	$sats_id=array();
 	$fileex=explode(".", $source);
 	$return = file($source);
-	
+
 	foreach($return as $ret)
 	{
 		if ($ret[0] == "#"){continue;}
@@ -48,7 +54,7 @@ class database
 		$ret_len = count($retexp);
 
 		if ($ret_len == 6)
-			{
+		{
 			$gdata[$retexp[0]] = array("lat"=>$retexp[1], "long"=>$retexp[2],"sats"=>$retexp[3],"date"=>$retexp[4],"time"=>$retexp[5]);
 			if ($GLOBALS["debug"]  == 1)
 			{
@@ -64,7 +70,7 @@ class database
 			}
 			$gpscount++;
 		}elseif($ret_len == 13)
-			{
+		{
 				$wifi = explode("|",$ret, 13);
 				mysql_select_db($db,$conn);
 				$dbsize = mysql_query("SELECT * FROM `$wtable`", $conn) or die(mysql_error());
@@ -142,12 +148,16 @@ class database
 				
 				//create table name to select from, insert into, or create
 				$table = $ssids.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
-				$gps_table = $table.'_GPS';
+				$gps_table = $table.$gps_ext;
+				
 				if(strcmp($table,$table_ptb)==0)
 				{
 					// They are the same
+					
 					mysql_select_db($db_st,$conn);
-
+					echo '<table border ="1" class="update"><tr><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>';
+					echo '<tr><td>'.$APid.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$wifi[1].'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr>';
+					
 					$signal_exp = explode("-",$wifi[12]);
 					//setup ID number for new GPS cords
 					$DB_result = mysql_query("SELECT * FROM `$gps_table`", $conn);
@@ -170,20 +180,20 @@ class database
 					foreach($signal_exp as $exp)
 					{
 						//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re grab it to test the data
-						while ($newArray = mysql_fetch_array($DB_result))
+						while ($neArray = mysql_fetch_array($DB_result))
 						{
-							$db_gps[$newArray["id"]]["sats"]=$newArray["sats"];
-							$db_gps[$newArray["id"]]["lat"]=$newArray["lat"];
-							$db_gps[$newArray["id"]]["long"]=$newArray["long"];
-							$db_gps[$newArray["id"]]["date"]=$newArray["date"];
-							$db_gps[$newArray["id"]]["time"]=$newArray["time"];
+							$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
+							$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
+							$db_gps[$neArray["id"]]["long"]=$neArray["long"];
+							$db_gps[$neArray["id"]]["date"]=$neArray["date"];
+							$db_gps[$neArray["id"]]["time"]=$neArray["time"];
 						}
 						
 						$esp = explode(",",$exp);
 						$vs1_id = $esp[0];
 						$signal = $esp[1];
 						
-						if ($GLOBALS["debug"]  ==1)
+						if ($GLOBALS["debug"]  == 1)
 						{
 							$apecho = "+-+-+-+AP Data+-+-+-+<br> VS1 ID:".$vs1_id." <br> DB ID: ".$gps_id."<br>"
 							."Lat: ".$gdata[$vs1_id]["lat"]."<br>-+-+-+<br>"
@@ -193,15 +203,41 @@ class database
 							."Time: ".$gdata[$vs1_id]["time"]."-+-+-+<br><br><br>";
 							echo $apecho;
 						}
-						$gpschk = database::check_gps_array($db_gps,$apdata[$ap_id]);
+					 #	$gpschk = database::check_gps_array($db_gps,$apdata[$ap_id]);
 						
-						if ($gpschk == 0)
+						$lat = $gdata[$vs1_id]["lat"];
+						$long = $gdata[$vs1_id]["long"];
+						$sats = $gdata[$vs1_id]["sats"];
+						$date = $gdata[$vs1_id]["date"];
+						$time = $gdata[$vs1_id]["time"];
+						
+						$comp = $lat.$long.$date.$time;
+#						echo "VS1 file: ".$comp."<br>";
+						$sql_gps = "SELECT * FROM `$gps_table` WHERE `lat` = '$lat' AND `long` = '$long'";
+						$GPSresult = mysql_query($sql_gps, $conn);
+						while($gps_resarray = mysql_fetch_array($GPSresult))
 						{
-							$lat = $gdata[$vs1_id]["lat"];
-							$long = $gdata[$vs1_id]["long"];
-							$sats = $gdata[$vs1_id]["sats"];
-							$date = $gdata[$vs1_id]["date"];
-							$time = $gdata[$vs1_id]["time"];
+							$dbsel = $gps_resarray['lat'].$gps_resarray['long'].$gps_resarray['date'].$gps_resarray['time'];
+#							echo "databse: ".$dbsel."<br>";
+							if(strcmp($comp, $dbsel) == 0)
+							{
+								if($sats > $gps_resarray['sats'])
+								{
+									$todo = "hi_sats";
+									$hi_sats_id[]=$gps_resarray['id'];
+								}else
+								{
+									$db_id[] = $gps_resarray['id'];
+									$todo = "db";
+								}
+							}else
+							{
+								$todo = "new";
+							}
+						}
+						echo '<tr><td colspan="8">';
+						if ($todo == "new")
+						{
 							$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$ap_id', '$lat', '$long', '$sats', '$date', '$time')";
 							if (mysql_query($sqlitgpsgp, $conn))
 							{
@@ -217,26 +253,37 @@ class database
 							}
 							$signals[$gps_id] = $gps_id.",".$signal;
 							$gps_id++;
-						}elseif($gpschk[0] == 1)
+							
+						}elseif($todo == "db")
 						{
-							$lat = $gdata[$vs1_id]["lat"];
-							$long = $gdata[$vs1_id]["long"];
-							$sats = $gdata[$vs1_id]["sats"];
-							$date = $gdata[$vs1_id]["date"];
-							$time = $gdata[$vs1_id]["time"];
-							$gps_result = mysql_query("SELECT * FROM `$gps_table` WHERE `lat`='$lat' AND `long`='$long' AND `date`='$date' AND `time`='$time'", $conn);
-							$db_id = $gpschk[1];
-							echo "<BR>----".$db_id."- <- DB ID<br>";
-							$signals[$gps_id] = $db_id.",".$signal;
+							
+							echo "GPS Point already in DB<BR>----".$db_id[0]."- <- DB ID<br>";
+							$signals[$gps_id] = $db_id[0].",".$signal;
+							$gps_id++;
+							
+						}elseif($todo == "hi_sats")
+						{
+							foreach($hi_sats_id as $sats_id)
+							{
+								$sqlupgpsgp = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats' , `date` = '$date' , `time` = '$time  WHERE `id` = '$sats_id'";
+								if (mysql_query($sqlupgpsgp, $conn))
+								{echo "(4)Update [".$db_st."].{".$gps_table."}<br>		 => Updated GPS History in Table<br>";}
+								else{echo "A MySQL Update error has occured<br>".mysql_error();}
+							}
+							$signals[$gps_id] = $hi_sats_id[0].",".$signal;
 							$gps_id++;
 						}
+						echo $todo."<br>";
+						echo "</tr><tr>";
 					}
 					
+					echo '<td colspan="8">';
 					$sig = implode("-",$signals);
 					$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
 					
-					$user_aps[$user_n]="1,".$APid;
+					$user_aps[$user_n]="1,".$APid; //User import tracking //UPDATE AP
 					$user_n++;
+					
 					if (mysql_query($sqlit, $conn))
 					{
 						echo "(3)Insert into [".$db_st."].{".$table."}<br>		 => Add Signal History to Table<br>";
@@ -250,15 +297,12 @@ class database
 							{echo "(3)Insert into [".$db_st."].{".$table."}<br>		 => Added GPS History to Table<br>";}
 						}
 					}
-					foreach ($signals as $i => $value)
-					{
-						unset($signals[$i]);
-					}
-					$signals = array_values($signals);
-					
+					echo "</td></tr></table>";
 				}else
 				{
-					echo "=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=<br>						NEW AP<br>=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=--=-=-=-=-=-=-=-=-=-=-=-=<br>";
+					echo '<table class="new" border="1"><tr><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>';
+					echo '<tr><td>'.$APid.'</td><td><b>N</b></td><td>'.$ssids.'</td><td>'.$wifi[1].'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr>';
+					echo '<tr><td colspan="8">';
 					mysql_select_db($db_st,$conn)or die(mysql_error());
 					
 					$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
@@ -273,6 +317,7 @@ class database
 					$N=0;
 					foreach($signal_exp as $exp)
 					{
+						echo '<tr><td colspan="8">';
 						$esp = explode(",",$exp);
 						$vs1_id = $esp[0];
 						$signal = $esp[1];
@@ -307,10 +352,12 @@ class database
 						}
 						$signals[$gps_id] = $gps_id.",".$signal;
 						$gps_id++;
+						echo "</td></tr>";
 					}
+					echo '<tr><td colspan="8">';
 					$sig = implode("-",$signals);
 					
-					$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( NULL, '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
+					$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
 					mysql_query($sqlit, $conn) or die(mysql_error());
 					echo "(3)Insert into [".$db_st."].{".$table."}<br>		 => Add Signal History to Table<br>";
 
@@ -334,15 +381,8 @@ class database
 							echo mysql_error()." => Could not Add new pointer to table (this has been logged) <br>";
 						}
 					}else{echo "Something went wrong, I couldn't add in the pointer :-( <br>";}
+					echo "</td></tr></table>";
 				}
-				unset($newArray["id"]);
-				unset($newArray["ssid"]);
-				unset($newArray["mac"]);
-				unset($newArray["radio"]);
-				unset($newArray["sectype"]);
-				unset($newArray["auth"]);
-				unset($newArray["encry"]);
-				unset($newArray["chan"]);
 				unset($ssid_ptb);
 				unset($mac_ptb);
 				unset($sectype_ptb);
@@ -350,30 +390,42 @@ class database
 				unset($chan_ptb);
 				unset($table_ptb);
 				
-				foreach ($signals as $i => $value)
+				if(!is_null($gdata))
 				{
-					unset($signals[$i]);
+					foreach ($gdata as $i => $val)
+					{
+						unset($gdata[$i]["lat"]);
+						unset($gdata[$i]["long"]);
+						unset($gdata[$i]["sat"]);
+						unset($gdata[$i]["date"]);
+						unset($gdata[$i]["time"]);
+					}
 				}
-				$signals = array_values($signals);
-			}elseif($ret_len == 17)
-			{
-				$convert = database::convert_vs1($source);
-				echo "CONVERTED!!!!!<BR>";
-				database::import_vs1($convert, $GLOBALS['user']);
-				echo "IMPORTED!!!!!!<BR>";
-			}else{echo "There is something wrong with the formatting of the data, check it and try running the script again<br>";}
+				if(!is_null($$signals))
+				{
+					foreach ($signals as $i => $value)
+					{
+						unset($signals[$i]);
+					}
+					$signals = array_values($signals);
+				}
+		}elseif($ret_len == 17)
+		{
+			echo '<table border="1"><tr><td>';
+			$convert = database::convert_vs1($source);
+			echo "CONVERTED!!!!!<BR>";
+			database::import_vs1($convert, $GLOBALS['user']);
+			echo "IMPORTED!!!!!!<BR>";
+			die();
+		}else{echo "There is something wrong with the formatting of the data, check it and try running the script again<br>";}
 	}
-	
+	mysql_select_db($db,$conn);
 	$user_ap_s = implode("-",$user_aps);
 	$notes = addslashes($notes);
-	if ($user_ap_s != NULL)
-	{
-		$sqlu = "INSERT INTO `wifi`.`users` ( `id` , `username` , `points` ,  `notes`, `date`, `title`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title')";
-		mysql_query($sqlu, $conn) or die(mysql_error());
-		$userselect = "SELECT * FROM `wifi`.`usernames` WHERE `username` = '$user'";
-		mysql_query($userselect , $conn) or die(mysql_error());
-		$userresult = mysql_query($userresult, $conn) or die(mysql_error());
-	}
+	if (!$user_ap_s == "")
+	echo $times."<br>";
+	{$sqlu = "INSERT INTO `users` ( `id` , `username` , `points` ,  `notes`, `date`, `title`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title')";
+	mysql_query($sqlu, $conn) or die(mysql_error());}
 	mysql_close($conn);
 	echo "<br>DONE!";
 	}
@@ -739,7 +791,76 @@ class database
 	return $return;
 	}
 
+	#==============================================================================================================================================================#
+	#													Associated List Fetch												     #
+	#==============================================================================================================================================================#
 
+	function lfetch($source)
+	{
+	include ('config.inc.php');
+	$list = array();
+	?>
+	<table border="1">
+	<tr>
+	<th>ID</th><th>User</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
+	<?php
+	mysql_select_db($db, $conn);
+	$result = mysql_query("SELECT * FROM `users`", $conn) or die(mysql_error());
+	while ($field = mysql_fetch_array($result)) 
+	{
+		$APS = explode("-" , $field['points']);
+		foreach ($APS as $AP)
+		{
+			$access = explode(",", $AP);
+			if (strcmp($source, $access[1]) == 0 )
+			{
+				$list[]=$field['id'];
+			}
+		}
+	}
+	foreach($list as $aplist)
+	{
+		$result = mysql_query("SELECT * FROM `users` WHERE `id`='$aplist'", $conn) or die(mysql_error());
+		while ($field = mysql_fetch_array($result)) 
+		{
+			$points = explode('-' , $field['points']);
+			$total = count($points);
+			echo '<td><a class="links" href="userstats.php?func=userap&row='.$field["id"].'">'.$field["id"].'</a></td><td>'.$field["username"].'</td><td>'.$field["title"].'</td><td>'.$total.'</td><td>'.$field['date'].'</td></tr>';
+		}
+	}
+	?>
+	</table>
+	<?php
+	#END IMPORT LISTS FETCH FUNC
+	}
+
+	#==============================================================================================================================================================#
+	#													GPS Fetch														         #
+	#==============================================================================================================================================================#
+
+	function gpsfetch($source)
+	{
+	include('config.inc.php');
+	?>
+	<table border="1">
+	<tr>
+	<th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
+	<?php
+	mysql_select_db($db_st, $conn);
+	$result = mysql_query("SELECT * FROM `$source`", $conn) or die(mysql_error());
+	while ($field = mysql_fetch_array($result)) 
+	{
+		echo "<tr><td>".$field["id"]."</td><td>"
+			.$field["lat"]."</td><td>"
+			.$field["long"]."</td><td>"
+			.$field["sats"]."</td><td>"
+			.$field["date"]."</td><td>"
+			.$field["time"]."</td></tr>";
+	}
+	echo "</table>";
+	#END GPSFETCH FUNC
+	}
+	
 	#==============================================================================================================================================================#
 	#													AP Fetch														         #
 	#==============================================================================================================================================================#
@@ -752,15 +873,15 @@ class database
 	<table border="1">
 	<tr>
 	<th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th>
-	</tr><tr>
+	</tr>
 	<?php
 	mysql_select_db($db_st, $conn);
 	$result = mysql_query("SELECT * FROM `$source`", $conn) or die(mysql_error());
-	while ($field = mysql_fetch_array($result)) 
+	while ($field = mysql_fetch_array($result))
 	{
 		$row = $field["id"];
 		$sig_exp = explode("-", $field["sig"]);
-		$sig_size = count($sig_exp)-2;
+		$sig_size = count($sig_exp)-1;
 
 		$first_ID = explode(",",$sig_exp[0]);
 		$first = $first_ID[0];
@@ -768,36 +889,36 @@ class database
 		$last_ID = explode(",",$sig_exp[$sig_size]);
 		$last = $last_ID[0];
 
-		$sql = "SELECT * FROM `$table_gps` WHERE `id`='$first'";
-		$result = mysql_query($sql, $conn) or die(mysql_error());
-		$gps_table_first = mysql_fetch_array($result);
+		$sql1 = "SELECT * FROM `$table_gps` WHERE `id`='$first'";
+		$re = mysql_query($sql1, $conn) or die(mysql_error());
+		$gps_table_first = mysql_fetch_array($re);
 
 		$date_first = $gps_table_first["date"];
 		$time_first = $gps_table_first["time"];
 		$fa = $date_first." ".$time_first;
 
-		$sql = "SELECT * FROM `$table_gps` WHERE `id`='$last'";
-		$result = mysql_query($sql, $conn) or die(mysql_error());
-		$gps_table_last = mysql_fetch_array($result);
+		$sql2 = "SELECT * FROM `$table_gps` WHERE `id`='$last'";
+		$res = mysql_query($sql2, $conn) or die(mysql_error());
+		$gps_table_last = mysql_fetch_array($res);
 		$date_last = $gps_table_last["date"];
 		$time_last = $gps_table_last["time"];
 		$lu = $date_last." ".$time_last;
 		
-		echo "<td>".$row."</td><td>"
+		echo "<tr><td>".$row."</td><td>"
 			.$field["btx"]."</td><td>"
 			.$field["otx"]."</td><td>"
 			.$fa."</td><td>"
 			.$lu."</td><td>"
 			.$field["nt"]."</td><td>"
 			.$field["label"]."</td><td>"
-			.'<a href="../opt/userstats.php?func=user&user='.$field["user"].'">'.$field["user"].'</a></td><td>'
-			.'<a href="../graph/?row='.$row.'&id='.$GLOBALS['ID'].'">Graph Signal</a></td></tr>';
+			.'<a class="links" href="../opt/userstats.php?func=user&user='.$field["user"].'">'.$field["user"].'</a></td><td>'
+			.'<a class="links" href="../graph/?row='.$row.'&id='.$GLOBALS['ID'].'">Graph Signal</a></td></tr>';
 	}
 	echo "</table>";
 	#END APFETCH FUNC
 	}
 #==============================================================================================================================================================#
-#													Grab the stats for a given user											         #
+#													Grab the stats for All Users											         #
 #==============================================================================================================================================================#
 	function allusers()
 	{
@@ -815,9 +936,7 @@ class database
 		$users[]=$user_array["username"];
 	}
 	$users = array_unique($users);
-#	foreach($users as $user){echo $user."<br>";}
 	$pre_user = "";
-#	echo "------------";
 	foreach($users as $user)
 	{
 		$sql = "SELECT * FROM `users` WHERE `username`='$user'";
@@ -840,7 +959,6 @@ class database
 			{
 				echo '<tr><td></td><td></td><td><a class="links" href="userstats.php?func=userap&row='.$user_array["id"].'">'.$user_array['title'].'</a></td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
 			}
-	#		$userarray[]	=	array( $username,	$id,	$user_array["points"],	$user_array["date"],	$user_array["title"]  );
 			$pre_user = $username;
 		}
 		echo "<tr></tr>";
@@ -889,7 +1007,7 @@ echo '</tr></td></table>';
 		$result = mysql_query($sql, $conn) or die(mysql_error());
 		$user_array = mysql_fetch_array($result);
 		$aps=explode("-",$user_array["points"]);
-		echo '<h1>Access Points For: <a href ="../opt/userstats.php?func=user&user='.$user_array["username"].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
+		echo '<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=user&user='.$user_array["username"].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
 		
 		echo'<table border="1"><tr><th>Row</th><th>AP ID</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
 		foreach($aps as $ap)
@@ -926,11 +1044,69 @@ echo '</tr></td></table>';
 				echo '<td>'.$chan.'</td></tr>';
 			}
 		}
-	echo "<a href=../opt/userstats.php?func=expkml&row=".$user_array['id'].">Export To KML File</a>";
+	echo '<a class="links" href=../opt/userstats.php?func=expkml&row='.$user_array["id"].'>Export To KML File</a>';
 	echo "</table>";
 	}
 
 	
+#==============================================================================================================================================================#
+#													Grab All the AP's for a given user									         #
+#==============================================================================================================================================================#
+
+	function all_usersap($user)
+	{
+		include('config.inc.php');
+		echo '<h1>Access Points For: <a href ="../opt/userstats.php?func=user&user='.$user.'">'.$user.'</a></h1>';
+		echo '<table border="1"><tr><th>U/R</th><th>Row</th><th>AP ID</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
+		
+		$pagerow = 0;
+		mysql_select_db($db,$conn);
+		$sql = "SELECT * FROM `users` WHERE `username`='$user'";
+		$re = mysql_query($sql, $conn) or die(mysql_error());
+		while($user_array = mysql_fetch_array($re))
+		{
+			$aps = explode("-",$user_array["points"]);
+			foreach($aps as $ap)
+			{
+				$ap_exp = explode("," , $ap);
+				if($ap_exp[0] == "1"){continue;}
+				if($ap_exp[0] == "1"){$Stat="R";}else{$Stat="U";}
+				$pagerow++;
+				$apid = $ap_exp[1];
+				$udflag = $ap_exp[0];
+				$sql = "SELECT * FROM `$wtable` WHERE `ID`='$apid'";
+				$res = mysql_query($sql, $conn) or die(mysql_error());
+				while ($ap_array = mysql_fetch_array($res))
+				{
+					$ssid = $ap_array['ssid'];
+				    $mac = $ap_array['mac'];
+				    $chan = $ap_array['chan'];
+					$radio = $ap_array['radio'];
+					$auth = $ap_array['auth'];
+					$encry = $ap_array['encry'];
+				    echo '<tr><td>'.$Stat.'</td><td>'.$pagerow.'</td><td>'.$apid.'</td><td><a class="links" href="fetch.php?id='.$apid.'">'.$ssid.'</a></td>';
+				    echo '<td>'.$mac.'</td>';
+				    echo '<td>'.$auth.'</td>';
+					if($radio=="a")
+					{$radio="802.11a";}
+					elseif($radio=="b")
+					{$radio="802.11b";}
+					elseif($radio=="g")
+					{$radio="802.11g";}
+					elseif($radio=="n")
+					{$radio="802.11n";}
+					else
+					{$radio="Unknown Radio";}
+					echo '<td>'.$encry.'</td>';
+					echo '<td>'.$radio.'</td>';
+					echo '<td>'.$chan.'</td></tr>';
+				}
+			}
+		}
+#	echo "<a href=../opt/userstats.php?func=expkml&row=".$user_array['id'].">Export To KML File</a>";
+	echo "</table>";
+	}
+
 #==============================================================================================================================================================#
 #										Grab the AP's for a given user's Import and throw them into a KML file								         #
 #==============================================================================================================================================================#

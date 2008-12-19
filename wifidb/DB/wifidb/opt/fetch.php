@@ -1,4 +1,8 @@
-<title>Welcome to the Random Intervals Wireless DB</title>
+<?php
+include('../lib/config.inc.php');
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Access Point Info Page</title>';
+?>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -6,7 +10,7 @@
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Randomintervals.com Wireless DataBase *Alpha* </font>
+		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
 		<font color="#FFFFFF" size="2">
             <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
 		</font></b>
@@ -71,9 +75,15 @@ echo '<h1>'.$ssid.'</h1><TABLE WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0 ST
 		.'<TR VALIGN=TOP><TD WIDTH=112><P>Radio Type</P></TD><TD WIDTH=439><P>'.$radio.'</P></TD></TR>'
 		.'<TR VALIGN=TOP><TD WIDTH=112><P>Channel #</P></TD><TD WIDTH=439><P>'.$chan.'</P></TD></TR></TABLE>';
 			
-$table=$ssid.$sep.$newArray["mac"].$sep.$newArray["sectype"].$sep.$newArray["radio"].$sep.$chan;
-
+$table=$ssid.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$chan;
+$table_gps=$ssid.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$chan.$gps_ext;
+echo "<h3>Signal History</h3>";
 database::apfetch($table);
+echo "<h3>GPS History</h3>";
+database::gpsfetch($table_gps);
+
+echo "<h3>Associated Lists</h3>";
+database::lfetch($ID);
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
 $file_ex = explode("/", $filename);

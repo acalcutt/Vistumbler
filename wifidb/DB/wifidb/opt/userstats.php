@@ -1,4 +1,8 @@
-<title>Welcome to the Random Intervals Wireless DB</title>
+<?php
+include('../lib/config.inc.php');
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> User Info Page</title>';
+?>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -6,7 +10,7 @@
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Randomintervals.com Wireless DataBase *Alpha* </font>
+		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
 		<font color="#FFFFFF" size="2">
             <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
 		</font></b>
@@ -37,22 +41,27 @@ while ($newArray = mysql_fetch_array($result))
 $func=$_GET['func'];
 if($func==="user")
 {
-	echo '<h3>View All Users <a href="userstats.php?func=usersall">Here</a></h3>';
 	$user=$_GET['user'];
+	echo '<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>';
+	echo '<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user='.$user.'">'.$user.'</a>';
 	database::userstats($user);
 }elseif($func==="userap")
 {
-	echo '<h3>View All Users <a href="userstats.php?func=usersall">Here</a></h3>';
+	echo '<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>';
 	$row=$_GET['row'];
 	database::usersap($row);
 }elseif($func==="expkml")
 {
-	echo '<h3>View All Users <a href="userstats.php?func=usersall">Here</a></h3>';
+	echo '<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>';
 	$row = $_GET['row'];
 	database::exp_kml_user($row);
 }elseif($func==="usersall")
 {
 	database::allusers();
+}elseif($func==="allap")
+{
+	$user = $_GET['user'];
+	database::all_usersap($user);
 }else
 {
 	echo "<h1>Hey you can do that!, Go back and do it right</h1>";

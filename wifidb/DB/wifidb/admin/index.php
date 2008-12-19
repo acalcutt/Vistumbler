@@ -1,4 +1,8 @@
-<title>Welcome to the Random Intervals Wireless DB</title>
+<?php
+include('../lib/config.inc.php');
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Admin Page</title>';
+?>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -6,7 +10,7 @@
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Randomintervals.com Wireless DataBase *Alpha* </font>
+		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
 		<font color="#FFFFFF" size="2">
             
 		</font></b>
@@ -20,8 +24,6 @@
 <td width="17%" bgcolor="#304D80" valign="top">
 
 <?php
-include('../lib/config.inc.php');
-include('../lib/functions.inc.php');
 mysql_select_db($db,$conn);
 $sqls = "SELECT * FROM links ORDER BY ID ASC";
 $result = mysql_query($sqls, $conn) or die(mysql_error());
