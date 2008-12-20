@@ -29,23 +29,23 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb'"].' --> Install Page</titl
 <?php
 $date = date("m.d.Y");
 $root_sql_user	=	$_POST['root_sql_user'];
-sript_tags($root_sql_user);
+strip_tags($root_sql_user);
 $root_sql_pwd	=	$_POST['root_sql_pwd'];
-sript_tags($root_sql_pwd);
+strip_tags($root_sql_pwd);
 $root		=	$_POST['root'];
-sript_tags($root);
+strip_tags($root);
 $hosturl	=	$_POST['hosturl'];
-sript_tags($hosturl);
+strip_tags($hosturl);
 $sqlhost	=	$_POST['sqlhost'];
-sript_tags($sqlhost);
+strip_tags($sqlhost);
 $sqlu		=	$_POST['sqlu'];
-sript_tags($sqlu);
+strip_tags($sqlu);
 $sqlp		=	$_POST['sqlp'];
-sript_tags($sqlp);
+strip_tags($sqlp);
 $wifi		=	$_POST['wifidb'];
-sript_tags($wifi);
+strip_tags($wifi);
 $wifi_st	=	$_POST['wifistdb'];
-sript_tags($wifi_st);
+strip_tags($wifi_st);
 echo '<tr><TH colspan="2">Database Install</TH><tr>';
 #Connect with Root priv
 $conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
@@ -154,7 +154,7 @@ $sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
 		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php\">View All APs</a>'),"
 		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>');";
+		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>');"
 		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
 		."(6, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>');";
 }else

@@ -1,7 +1,7 @@
 <?php
 $lastedit = "19-12-2008";
 $ver=array(
-			"wifidb"	=>	"0.15 build 75",
+			"wifidb"	=>	"0.15 build 76",
 			"database"	=>	array(  
 							"import_vs1"		=>	"1.3", 
 							"convert_vs1"		=>	"1.0",

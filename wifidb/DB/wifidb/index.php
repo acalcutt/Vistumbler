@@ -32,8 +32,7 @@ while ($newArray = mysql_fetch_array($result))
 	$testField = $newArray['links'];
     echo "<p>$testField</p>";
 }
-?>
-<?php
+
 $sql1 = "SELECT * FROM $wtable";
 $result = mysql_query($sql1, $conn) or die(mysql_error());
 $total = mysql_num_rows($result);
