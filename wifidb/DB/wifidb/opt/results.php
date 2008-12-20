@@ -63,15 +63,15 @@ echo '<table border="1" width="100%" cellspacing="0">'
 .'<th>Encryption</th></tr>';
 
 $ord   =	$_GET['ord'];
-sript_tags($ord);
+strip_tags($ord);
 $sort  =	$_GET['sort'];
-sript_tags($sort);
+strip_tags($sort);
 $from  =	$_GET['from'];
-sript_tags($from);
+strip_tags($from);
 $from_ =	$_GET['from'];
-sript_tags($from_);
+strip_tags($from_);
 $inc   =	$_GET['to'];
-sript_tags($inc);
+strip_tags($inc);
 if ($from==""){$from=0;}
 if ($inc==""){$inc=100;}
 if ($ord==""){$ord="ASC";}
