@@ -91,7 +91,7 @@ while ($newArray = mysql_fetch_array($result))
 	$radio = $newArray['radio'];
 	$auth = $newArray['auth'];
 	$encry = $newArray['encry'];
-    echo '<tr><td><a class="links" href="opt/fetch.php?id='.$id.'">'.$ssid.'</a></td>';
+    echo '<tr><td><a class="links" href="'.$root.'/opt/fetch.php?id='.$id.'">'.$ssid.'</a></td>';
     echo '<td>'.$mac.'</td>';
     echo '<td>'.$chan.'</td>';
 	if($radio=="a")
