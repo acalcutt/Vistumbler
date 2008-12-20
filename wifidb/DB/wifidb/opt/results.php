@@ -42,7 +42,7 @@ $mac_explode = explode(':', $_POST['mac']);
 $mac_post = implode('', $mac_explode);
 strip_tags($_POST['ssid']);
 strip_tags($mac_post);
-strip_tags($_POST['radio'];
+strip_tags($_POST['radio']);
 strip_tags($_POST['chan']);
 strip_tags($_POST['auth']);
 strip_tags($_POST['encry']);
