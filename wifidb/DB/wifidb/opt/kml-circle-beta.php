@@ -24,7 +24,6 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> KML Circle *Beta* P
 <td width="17%" bgcolor="#304D80" valign="top">
 <?php
 $lastmodified="4.26.08";
-$conn = mysql_connect($host, $db_user, $db_pwd);
 mysql_select_db($db,$conn);
 $sqls = "SELECT * FROM links ORDER BY ID ASC";
 $result = mysql_query($sqls, $conn) or die(mysql_error());

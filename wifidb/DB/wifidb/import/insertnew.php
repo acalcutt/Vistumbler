@@ -23,6 +23,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Import Page</title>
 	<tr>
 <td width="17%" bgcolor="#304D80" valign="top">
 <?php
+include('../lib/config.inc.php');
 $conn = mysql_connect($host, $db_user, $db_pwd);
 mysql_select_db($db,$conn);
 $sqls = "SELECT * FROM links ORDER BY ID ASC";

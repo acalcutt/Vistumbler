@@ -23,8 +23,6 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Access Point Info P
 	<tr>
 <td width="17%" bgcolor="#304D80" valign="top">
 <?php
-include('../lib/database.inc.php');
-include('../lib/config.inc.php');
 mysql_select_db($db,$conn);
 $sqls = "SELECT * FROM links ORDER BY ID ASC";
 $result = mysql_query($sqls, $conn) or die(mysql_error());

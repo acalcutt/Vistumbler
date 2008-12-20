@@ -23,7 +23,6 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Access Point Map Pa
 	<tr>
 <td width="17%" bgcolor="#304D80" valign="top">
 <?php
-$conn = mysql_connect($host, $db_user, $db_pwd);
 mysql_select_db($db,$conn);
 $sqls = "SELECT * FROM links ORDER BY ID ASC";
 $result = mysql_query($sqls, $conn) or die(mysql_error());
@@ -40,7 +39,6 @@ while ($newArray = mysql_fetch_array($result))
 <?php
 $id=$_GET['id'];
 
-$conn = mysql_connect($host, $db_user, $db_pwd);
 mysql_select_db($db,$conn);
 $sqls = "SELECT * FROM wifi WHERE id=$id";
 $result = mysql_query($sqls, $conn) or die(mysql_error());

@@ -106,11 +106,11 @@ echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`";}
 
 $sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES
 		(1, '<a class=\"links\" href=\"/\">Main Page</a>'),
-		(2, '<a class=\"links\" href=\"all.php\">View All APs</a>'),
-		(3, '<a class=\"links\" href=\"import/\">Import APs</a>'),
-		(4, '<a class=\"links\" href=\"opt/search.php\">Search APs</a>'),
-		(5, '<a class=\"links\" href=\"opt/userstats.php?func=usersall\">View All Users</a>'),
-		(6, '<a class=\"links\" href=\"ver.php\">WiFiDB Version</a>')";
+		(2, '<a class=\"links\" href=\"/all.php\">View All APs</a>'),
+		(3, '<a class=\"links\" href=\"/import/\">Import APs</a>'),
+		(4, '<a class=\"links\" href=\"/opt/search.php\">Search APs</a>'),
+		(5, '<a class=\"links\" href=\"/opt/userstats.php?func=usersall\">View All Users</a>'),
+		(6, '<a class=\"links\" href=\"/ver.php\">WiFiDB Version</a>')";
 $insert = mysql_query($sql, $conn) or die(mysql_error());
 
 if($insert)
