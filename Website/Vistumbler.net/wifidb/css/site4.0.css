@@ -1,0 +1,27 @@
+body {
+	background:#123;
+	margin:0;
+	text-align:center;
+	line-height: 1.5em;
+	color:#123;
+	font-size/* */:/**/small; font-style:normal; font-variant:normal; font-weight:normal; font-family:Trebuchet MS
+}
+.active-box-resize {
+	display: none;
+}
+.style1 {
+	font-family: "Courier New", Courier, monospace;
+}
+  
+.style2 {
+	text-align: center;
+	border-width: 0;
+}
+
+.style3 {
+	background-color: #477DA9;
+}
+a.links {
+	font-weight: bold; 
+	color: #112233;
+}

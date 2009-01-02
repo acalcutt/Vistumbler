@@ -1,0 +1,65 @@
+<title>Welcome to the Random Intervals Wireless DB</title>
+<link rel="stylesheet" href="/wifidb/css/site4.0.css">
+<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
+<div align="center">
+<table border="0" width="75%" cellspacing="10" cellpadding="2">
+	<tr>
+		<td bgcolor="#315573">
+		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
+		Randomintervals.com </font>
+		<font color="#FFFFFF" size="2">
+            <a class="links" href="/">[Root] </a>/  <a class="links" href="/wifidb/">[WifiDB] </a>/
+		</font></b>
+		</td>
+	</tr>
+</table>
+</div>
+<div align="center">
+<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
+	<tr>
+<td width="17%" bgcolor="#304D80" valign="top">
+<?php
+include('../lib/config.inc.php');
+mysql_select_db($db,$conn);
+$sqls = "SELECT * FROM links ORDER BY ID ASC";
+$result = mysql_query($sqls, $conn) or die(mysql_error());
+while ($newArray = mysql_fetch_array($result))
+{
+	$testField = $newArray['links'];
+    echo "<p>$testField</p>";
+}
+?>
+
+</td>
+		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+			<p align="center">
+<?php
+
+$id=$_GET['id'];
+
+$sql = "SELECT * FROM wifi WHERE id=$id";
+$results = mysql_query($sql, $conn) or die(mysql_error());
+$newArray = mysql_fetch_array($results);
+	$ssid=$newArray['ssid'];
+	$mac=$newArray['mac'];
+	$chan=$newArray['chan'];
+	$sectype = $newArray['sectype'];
+	$radio = $newArray['radio'];
+	$row = "1";
+
+if (!file_exists('../out/graph/'.$ssid.'-'.$mac.'-'.$radio.'-'.$sectype.'-'.$chan.'_'.$row.'.png')
+{
+	echo "Please Generate a graph first then try to view it";
+}else{
+	echo '<h1>'.$ssid.'</h1><br>';
+	echo '<img src="graph/'.$ssid.'-'.$mac.'-'.$radio.'-'.$sectype.'-'.$chan.'_'.$row.'.png">';
+}
+?>
+</p>
+</td>
+</tr>
+<tr>
+<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
+<td bgcolor="#315573" width="0">&nbsp;</td>
+</tr>
+</table>
