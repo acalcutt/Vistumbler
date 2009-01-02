@@ -11,14 +11,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.11 Beta
+;AutoIt Version: v3.2.13.13 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.0'
-$last_modified = '11/28/2008'
+$version = '9.01'
+$last_modified = '01/01/2009' ;-) Happy New Year ;-)
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -920,7 +920,7 @@ While 1
 	$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
 	$datestamp = $dt[1]
 	$timestamp = $dt[2]
-	
+
 	;Get GPS Information (if enabled)
 	If $UseGPS = 1 And $UpdatedGPS <> 1 Then ; If 'Use GPS' is checked then scan gps and display information
 		$GetGpsSuccess = _GetGPS();Scan for GPS if GPS enabled
@@ -934,7 +934,7 @@ While 1
 			Sleep(1000)
 		EndIf
 	EndIf
-	
+
 	;Get AP Information (if enabled)
 	If $Scan = 1 And $UpdatedAPs <> 1 Then
 		;Scan For New Aps
@@ -968,13 +968,13 @@ While 1
 		;Mark Dead Access Points
 		_MarkDeadAPs()
 	EndIf
-	
+
 	;Graph Selected AP
 	If $UpdatedGraph <> 1 Then
 		$UpdatedGraph = 1
 		_GraphApSignal()
 	EndIf
-	
+
 	;Speak Signal of selected AP (if enabled)
 	If $SpeakSignal = 1 And $Scan = 1 And $UpdatedSpeechSig = 0 And TimerDiff($Speech_Timer) >= $SpeakSigTime Then
 		$SpeakSuccess = _SpeakSelectedSignal()
@@ -983,7 +983,7 @@ While 1
 			$Speech_Timer = TimerInit()
 		EndIf
 	EndIf
-	
+
 	;Export KML files for AutoKML Google Earth Tracking (if enabled)
 	If $AutoKML = 1 Then
 		If TimerDiff($kml_gps_timer) >= ($AutoKmlGpsTime * 1000) And $AutoKmlGpsTime <> 0 Then
@@ -1003,52 +1003,52 @@ While 1
 			$kml_track_timer = TimerInit()
 		EndIf
 	EndIf
-	
+
 	;Sort Listview (if enabled)
 	If $AutoSort = 1 And TimerDiff($sort_timer) >= ($SortTime * 1000) Then _Sort($SortBy)
 	If $AutoSave = 1 And $UpdateAutoSave = 1 And TimerDiff($save_timer) >= ($SaveTime * 1000) Then
 		_AutoSave()
 		$UpdateAutoSave = 0
 	EndIf
-	
+
 	;Check Compass Window Position
 	If WinActive($CompassGUI) And $CompassOpen = 1 And $UpdatedCompassPos = 0 Then
 		$c = WinGetPos($CompassGUI)
 		If $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] <> $CompassPosition Then $CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] ;If the $CompassGUI has moved or resized, set $CompassPosition to current window size
 		$UpdatedCompassPos = 1
 	EndIf
-	
+
 	;Check GPS Details Windows Position
 	If WinActive($GpsDetailsGUI) And $GpsDetailsOpen = 1 And $UpdatedGpsDetailsPos = 0 Then
 		$g = WinGetPos($GpsDetailsGUI)
 		If $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
 		$UpdatedGpsDetailsPos = 1
 	EndIf
-	
+
 	;Resize Controls / Control Resize Monitoring
 	_TreeviewListviewResize()
 
 	;Check If Vistumbler Window has moved to tell the graph to redraw
 	If WinActive($Vistumbler) And _WinMoved() = 1 Then $Redraw = 1
-	
+
 	;If the vistumbler window has been resized, redraw the window controls
 	If WinActive($Vistumbler) And $ResetSizes = 1 Then
 		_SetControlSizes()
 		$ResetSizes = 0
 		$Redraw = 1
 	EndIf
-	
+
 	;Flag Actions
 	If $Close = 1 Then _ExitVistumbler() ;If the close flag has been set, exit visumbler
 	If $SortColumn <> -1 Then _HeaderSort($SortColumn);Sort clicked listview column
 	If $ClearAllAps = 1 Then _ClearAllAp();Clear all access points
-	
+
 	;Release Memory (Working Set)
 	If TimerDiff($ReleaseMemory_Timer) > 30000 Then
 		_ReduceMemory()
 		$ReleaseMemory_Timer = TimerInit()
 	EndIf
-	
+
 	If TimerDiff($begin) >= $RefreshLoopTime Then
 		$UpdatedGPS = 0
 		$UpdatedAPs = 0
@@ -1232,7 +1232,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$Found_LastHistID = $ApMatchArray[1][6]
 			$Found_Active = $ApMatchArray[1][7]
 			$HISTID += 1
-			
+
 			;Set Last Time and First Time
 			If $New = 1 Then ;If this is a new access point, use new information
 				$ExpLastHistID = $HISTID
@@ -1381,7 +1381,7 @@ EndFunc   ;==>_MarkDeadAPs
 
 Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add_SSID = '', $Add_Authentication = '', $Add_Encryption = '', $Add_Signal = '', $Add_Channel = '', $Add_RadioType = '', $Add_BasicTransferRates = '', $Add_OtherTransferRates = '', $Add_NetworkType = '', $Add_FirstAcvtive = '', $Add_LastActive = '', $Add_LatitudeDMM = '', $Add_LongitudeDMM = '', $Add_MANU = '', $Add_Label = '')
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ListViewAdd()') ;#Debug Display
-	
+
 	If $Add_LatitudeDMM <> '' And $Add_LongitudeDMM <> '' Then
 		$LatDMS = _Format_GPS_DMM_to_DMS($Add_LatitudeDMM)
 		$LonDMS = _Format_GPS_DMM_to_DMS($Add_LongitudeDMM)
@@ -1393,7 +1393,7 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 		$LatDDD = ''
 		$LonDDD = ''
 	EndIf
-	
+
 	If $Add_Signal <> '' Then
 		If $Add_Signal = 0 Or $ShowEstimatedDB = 0 Then
 			$AddDb = ''
@@ -1491,7 +1491,7 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	$Encryption_treeviewname = $Encryption
 	$Authentication_treeviewname = $Authentication
 	$NetworkType_treeviewname = $NetworkType
-	
+
 	$query = "SELECT Pos FROM TreeviewCHAN WHERE Name = '" & $channel_treeviewname & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundTreeMatch = UBound($TreeMatchArray) - 1
@@ -1501,7 +1501,7 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	Else
 		$channel_treeviewposition = $TreeMatchArray[1][1]
 	EndIf
-	
+
 	$query = "SELECT Pos FROM TreeviewSSID WHERE Name = '" & $SSID_treeviewname & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundTreeMatch = UBound($TreeMatchArray) - 1
@@ -1511,7 +1511,7 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	Else
 		$SSID_treeviewposition = $TreeMatchArray[1][1]
 	EndIf
-	
+
 	$query = "SELECT Pos FROM TreeviewENCR WHERE Name = '" & $Encryption_treeviewname & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundTreeMatch = UBound($TreeMatchArray) - 1
@@ -1521,7 +1521,7 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	Else
 		$Encryption_treeviewposition = $TreeMatchArray[1][1]
 	EndIf
-	
+
 	$query = "SELECT Pos FROM TreeviewAUTH WHERE Name = '" & $Authentication_treeviewname & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundTreeMatch = UBound($TreeMatchArray) - 1
@@ -1531,7 +1531,7 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	Else
 		$Authentication_treeviewposition = $TreeMatchArray[1][1]
 	EndIf
-	
+
 	$query = "SELECT Pos FROM TreeviewNETTYPE WHERE Name = '" & $NetworkType_treeviewname & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundTreeMatch = UBound($TreeMatchArray) - 1
@@ -1548,15 +1548,15 @@ Func _TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $RadioT
 	$Encryption_subtreeviewposition = _GUICtrlTreeView_InsertItem($TreeviewAPs, '(' & $SSID & ')', $Encryption_treeviewposition)
 	$Authentication_subtreeviewposition = _GUICtrlTreeView_InsertItem($TreeviewAPs, '(' & $SSID & ')', $Authentication_treeviewposition)
 	$NetworkType_subtreeviewposition = _GUICtrlTreeView_InsertItem($TreeviewAPs, '(' & $SSID & ')', $NetworkType_treeviewposition)
-	
+
 	;Add AP details to sum menu item
 	_TreeViewApInfo($channel_subtreeviewposition, $channel_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($SSID_subtreeviewposition, $SSID_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($Encryption_subtreeviewposition, $Encryption_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($Authentication_subtreeviewposition, $Authentication_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
 	_TreeViewApInfo($NetworkType_subtreeviewposition, $NetworkType_tree, $SSID, $BSSID, $NetworkType, $Encryption, $RadioType, $Authentication, $BasicTransferRates, $OtherTransferRates, $MANUF, $LABEL)
-	
-	
+
+
 
 	;Return Treeview positions
 	Return ($channel_subtreeviewposition & '|' & $SSID_subtreeviewposition & '|' & $Encryption_subtreeviewposition & '|' & $Authentication_subtreeviewposition & '|' & $NetworkType_subtreeviewposition)
@@ -1681,7 +1681,7 @@ Func _RecoverMDB()
 			$ImpLat = $GpsMatchArray[1][1]
 			$ImpLon = $GpsMatchArray[1][2]
 		EndIf
-		
+
 		;Get First Time
 		$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $ImpFirstHistID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -1694,11 +1694,11 @@ Func _RecoverMDB()
 		$ImpDate = $HistMatchArray[1][1]
 		$ImpTime = $HistMatchArray[1][2]
 		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
-		
+
 		$ListAddPos = $APID - 1
-		
+
 		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $ListAddPos)
-		
+
 		_ListViewAdd($ListRow, $ImpApID, $Text_Dead, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, '0', $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
 
 		_TreeViewAdd($ImpSSID, $ImpBSSID, $ImpAUTH, $ImpENCR, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpMANU, $ImpLAB)
@@ -1713,7 +1713,7 @@ Func _RecoverMDB()
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
 	Next
-	
+
 	If $AddDirection = 0 Then
 		$v_sort = True;set ascending
 	Else
@@ -2192,13 +2192,13 @@ Func _GetGPS(); Recieves data from gps device
 	$timeout = TimerInit()
 	$return = 1
 	$FoundData = 0
-	
+
 	$maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
 	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
-	
+
 	Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
 	Dim $Temp_Quality = 0, $Temp_Status = "V"
-	
+
 	While 1 ;Loop to extract gps data untill location is found or timout time is reached
 		If $UseGPS = 0 Then ExitLoop
 		If $UseNetcomm = 1 Then ;Use Netcomm ocx to get data (more stable right now)
@@ -2280,9 +2280,9 @@ Func _GetGPS(); Recieves data from gps device
 	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
 	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
 	_DrawCompassLine($TrackAngle)
-	
+
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
-	
+
 	Return ($return)
 EndFunc   ;==>_GetGPS
 
@@ -2457,19 +2457,19 @@ Func _CompassGUI()
 		GUICtrlSetColor(-1, $TextColor)
 		$west = GUICtrlCreateLabel("W", 3, 45, 15, 12)
 		GUICtrlSetColor(-1, $TextColor)
-		
+
 		_GDIPlus_Startup()
 		$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
 		$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
 		$hBrush = _GDIPlus_BrushCreateSolid($CompassColor) ;red
 		_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, 100, 100, $hBrush)
-		
+
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseCompassGui')
 		GUISetOnEvent($GUI_EVENT_RESIZED, '_SetCompassSizes')
 		GUISetOnEvent($GUI_EVENT_RESTORE, '_SetCompassSizes')
-		
+
 		GUISetState(@SW_SHOW)
-		
+
 		$cpsplit = StringSplit($CompassPosition, ',')
 		If $cpsplit[0] = 4 Then ;If $CompassPosition is a proper position, move and resize window
 			WinMove($CompassGUI, '', $cpsplit[1], $cpsplit[2], $cpsplit[3], $cpsplit[4])
@@ -2478,7 +2478,7 @@ Func _CompassGUI()
 			$CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3]
 		EndIf
 		_SetCompassSizes()
-		
+
 		$CompassOpen = 1
 	EndIf ;==>_CompassGUI
 EndFunc   ;==>_CompassGUI
@@ -2506,12 +2506,12 @@ Func _SetCompassSizes();Takes the size of a hidden label in the compass window a
 	GUICtrlSetPos($south, $CompassMidWidth, $CompassHeight + 15, 15, 15)
 	GUICtrlSetPos($east, $CompassHeight + 15, $CompassMidHeight, 15, 15)
 	GUICtrlSetPos($west, 0, $CompassMidHeight, 15, 15)
-	
-	
+
+
 	_GDIPlus_GraphicsDispose($CompassGraphic)
 	_GDIPlus_Shutdown()
 	_GDIPlus_Startup()
-	
+
 	$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
 	$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
 	$hBrush = _GDIPlus_BrushCreateSolid($CompassColor) ;red
@@ -2560,7 +2560,7 @@ Func _DrawCompassLine($Degree);Draws compass in GPS Details GUI
 			$CircleX = $CenterX - (Cos($Radians) * $Radius)
 			$CircleY = $CenterY - (Sin($Radians) * $Radius)
 		EndIf
-		
+
 		_GDIPlus_GraphicsDrawLine($CompassGraphic, $CenterX, $CenterY, $CircleX, $CircleY)
 		;Draw Compass
 		;GUICtrlSetGraphic($CompassGraphic, $GUI_GR_ELLIPSE, 1, 1, $CompassHeight - 2, $CompassHeight - 2);Draw compass cicle
@@ -2623,9 +2623,9 @@ Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 		$CloseGpsDetailsGUI = GUICtrlCreateButton($Text_Close, 375, 165, 97, 25, 0)
 		GUICtrlSetOnEvent($CloseGpsDetailsGUI, '_CloseGpsDetailsGUI')
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseGpsDetailsGUI')
-		
+
 		GUISetState(@SW_SHOW)
-		
+
 		$gpsplit = StringSplit($GpsDetailsPosition, ',')
 		If $gpsplit[0] = 4 Then ;If $CompassPosition is a proper position, move and resize window
 			WinMove($GpsDetailsGUI, '', $gpsplit[1], $gpsplit[2], $gpsplit[3], $gpsplit[4])
@@ -2633,7 +2633,7 @@ Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 			$g = WinGetPos($GpsDetailsGUI)
 			$GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3]
 		EndIf
-		
+
 		$GpsDetailsOpen = 1
 	EndIf
 EndFunc   ;==>_OpenGpsDetailsGUI
@@ -2649,7 +2649,7 @@ Func _UpdateGpsDetailsGUI();Updates information on GPS Details GUI
 		GUICtrlSetData($GPGGA_HorDilPitch, $Text_HorizontalDilutionPosition & ": " & $HorDilPitch & @CRLF)
 		GUICtrlSetData($GPGGA_Alt, $Text_Altitude & ": " & $Alt & $AltS & @CRLF)
 		GUICtrlSetData($GPGGA_Geo, $Text_HeightOfGeoid & ": " & $Geo & $GeoS & @CRLF)
-		
+
 		GUICtrlSetData($GPRMC_Time, $Text_Time & ": " & $FixTime2 & @CRLF)
 		GUICtrlSetData($GPRMC_Date, $Text_Date & ": " & $FixDate & @CRLF)
 		GUICtrlSetData($GPRMC_Lat, $Column_Names_Latitude & ": " & _GpsFormat($Latitude2) & @CRLF)
@@ -2761,7 +2761,7 @@ Func _Sort($Sort);Auto Sort based on a user chosen column
 	Else
 		Dim $v_sort = True;set descending
 	EndIf
-	
+
 	If $Sort = $Column_Names_SSID Then
 		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_SSID)
 	ElseIf $Sort = $Column_Names_NetworkType Then
@@ -2816,7 +2816,7 @@ Func _WinMoved();Checks if window has moved. Returns 1 if it has
 	$a = WinGetPos($Vistumbler)
 	$winpos_old = $winpos
 	$winpos = $a[0] & $a[1] & $a[2] & $a[3]
-	
+
 	If $winpos_old <> $winpos Then
 		;Set window state and position
 		$winstate = WinGetState($title, "")
@@ -2846,7 +2846,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$Graphic_width = Round(($b[2] * 0.99) - $Graphic_left)
 			$Graphic_top = ($b[3] * 0.01)
 			$Graphic_height = Round(($b[3] * $SplitHeightPercent) - $Graphic_top)
-			
+
 			$ListviewAPs_left = ($b[2] * 0.01)
 			$ListviewAPs_width = Round(($b[2] * 0.99) - $ListviewAPs_left)
 			$ListviewAPs_top = ($b[3] * $SplitHeightPercent) + 1
@@ -2856,18 +2856,18 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top + 60, $Graphic_width, $Graphic_height)
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
-			
+
 		Else
 			$TreeviewAPs_left = ($b[2] * 0.01)
 			$TreeviewAPs_width = ($b[2] * $SplitPercent) - $TreeviewAPs_left
 			$TreeviewAPs_top = ($b[3] * 0.01)
 			$TreeviewAPs_height = ($b[3] * 0.99) - $TreeviewAPs_top
-			
+
 			$ListviewAPs_left = ($b[2] * $SplitPercent) + 1
 			$ListviewAPs_width = ($b[2] * 0.99) - $ListviewAPs_left
 			$ListviewAPs_top = ($b[3] * 0.01)
 			$ListviewAPs_height = ($b[3] * 0.99) - $ListviewAPs_top
-			
+
 			GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
@@ -2958,16 +2958,16 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 		If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 			$query = "SELECT ApID FROM AP WHERE ListRow = '" & $Selected & "'"
 			$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			
+
 			;_ArrayDisplay($ListRowMatchArray)
 			$GraphApID = $ListRowMatchArray[1][1]
-			
+
 			$query = "SELECT Signal, ApID FROM Hist WHERE ApID = '" & $GraphApID & "' ORDER BY Date1, Time1"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
-			
+
 			$data = $HistMatchArray[1][2] & '-' & $HistSize
-			
+
 			If $data <> $data_old Or $sizes <> $sizes_old Or $Redraw = 1 Then ; if graph data changed, map new data
 				$base_right = $Graphic_width - 1
 				$base_left = 0
@@ -2979,7 +2979,7 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 				$max_graph_points = 125
 				$data_old = $data
 				$sizes_old = $sizes
-				
+
 
 				If $Selected <> $LastSelected Or $Redraw = 1 Then
 					$o_old = 0
@@ -2989,7 +2989,7 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 						_DrawLine($base_left, $r, $base_right, $r)
 					Next
 					$LastSelected = $Selected
-					
+
 					_SelectColor($GraphGrid)
 					_DrawLine($base_left, $base_top, $base_left, $base_bottom)
 					_DrawLine($base_right, $base_top, $base_right, $base_bottom)
@@ -3000,7 +3000,7 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 						_DrawLine($base_right, $subtract_value, $base_left, $subtract_value)
 					Next
 				EndIf
-				
+
 				If $Graph = 1 Then
 					If $HistSize > $max_graph_points Then ; If the array is grater that the max number of ports, set array size to the max size, else use the full size of the array
 						$start = $HistSize - $max_graph_points
@@ -3013,8 +3013,8 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 					EndIf
 					$base_x_add_value = ($base_x / ($arraylen - 2)); Set disance between points
 					$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
-					
-					
+
+
 					;############### Start Mapping Access Point signal Data ###############
 					_SelectColor($red)
 					$base_add = $base_left
@@ -3035,22 +3035,22 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 						If $y2 < $y_low Then $y_low = $y2
 						If $y3 < $y_low Then $y_low = $y3
 						If $y4 < $y_low Then $y_low = $y4
-						
+
 						_SelectColor($GraphBack)
 						For $rl = $x1 To $x4
 							_DrawLine($rl, $y_high + 2, $rl, $y_low - 2)
 						Next
-						
+
 						_SelectColor($GraphGrid)
 						For $drawline = 1 To 10
 							$subtract_value = (($drawline * 10) * $base_y_add_value)
 							_DrawLine($x1, $subtract_value, $x4, $subtract_value)
 						Next
-						
+
 						_DrawLine($base_right, $base_top, $base_right, $base_bottom)
 						_DrawLine($base_left, $base_top, $base_left, $base_bottom)
 						_DrawLine($base_left, $base_top, $base_right, $base_top)
-						
+
 						_SelectColor($red)
 						_DrawDot($x1, $y1)
 						_DrawLine($x1, $y1, $x2, $y2);Draw line
@@ -3071,10 +3071,10 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 						$arraylen = $HistSize
 					EndIf
 					$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
-					
+
 					$base_add = $base_left + 1
 					$base_x_add_value = 1
-					
+
 					For $o = $start To $arraylen
 						If $o < $arraylen And $o <> $start And $Redraw <> 1 Then
 							If $HistMatchArray[$o][1] <> $HistMatchArray[$o - 1][1] And $start <> 1 Then
@@ -3220,7 +3220,7 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 			$Found_MANU = $ListRowMatchArray[1][11]
 			$Found_LAB = $ListRowMatchArray[1][12]
 			$Found_HighGpsHistId = $ListRowMatchArray[1][13] - 0
-			
+
 			If $Found_HighGpsHistId = 0 Then
 				$Found_Lat = 'N 0.0000'
 				$Found_Lon = 'E 0.0000'
@@ -3234,7 +3234,7 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 				$Found_Lat = $GpsMatchArray[1][1]
 				$Found_Lon = $GpsMatchArray[1][2]
 			EndIf
-			
+
 			$query = "SELECT Signal, Date1, Time1 FROM Hist WHERE ApID = '" & $Found_APID & "' ORDER BY Date1 DESC, Time1 DESC"
 			$SignalMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$FoundSignalMatch = UBound($SignalMatchArray) - 1
@@ -3370,7 +3370,7 @@ Func _CopyAP()
 		$CopyOK = GUICtrlCreateButton($Text_Ok, 142, 216, 100, 25, 0)
 		$CopyCancel = GUICtrlCreateButton($Text_Cancel, 256, 216, 100, 25, 0)
 		GUISetState(@SW_SHOW)
-		
+
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseCopyGUI')
 		GUICtrlSetOnEvent($CopyCancel, '_CloseCopyGUI')
 		GUICtrlSetOnEvent($CopyOK, '_CopyOK')
@@ -3643,7 +3643,7 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 		$ExpTime = $GpsMatchArray[$exp][6]
 		FileWriteLine($savefile, $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpDate & '|' & $ExpTime)
 	Next
-	
+
 	;Export AP Information
 	FileWriteLine($savefile, "# ---------------------------------------------------------------------------------------------------------------------------------------------------------")
 	FileWriteLine($savefile, "# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL")
@@ -3670,7 +3670,7 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 		$ExpAPID = $ApMatchArray[$exp][15]
 		$ExpHighGpsID = $ApMatchArray[$exp][16]
 		$ExpGidSid = ''
-		
+
 		;Create GID,SIG String
 		$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -3684,7 +3684,7 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 				$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
 			EndIf
 		Next
-		
+
 		FileWriteLine($savefile, $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid)
 	Next
 EndFunc   ;==>_ExportDetailedTXT
@@ -3716,7 +3716,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		$ExpLastID = $ApMatchArray[$exp][13]
 		$ExpAPID = $ApMatchArray[$exp][14]
 		$ExpHighGpsID = $ApMatchArray[$exp][15]
-		
+
 		;Get High GPS Signal
 		If $ExpHighGpsID = 0 Then
 			$ExpHighGpsSig = 0
@@ -3732,7 +3732,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 			$ExpHighGpsLat = $GpsMatchArray[1][1]
 			$ExpHighGpsLon = $GpsMatchArray[1][2]
 		EndIf
-		
+
 		;Get First Found Time From FirstHistID
 		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpFirstID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -3740,7 +3740,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFirstGpsId & "'"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-		
+
 		;Get Last Found Time From LastHistID
 		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -3748,7 +3748,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsId & "'"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-		
+
 		;Get Signal History
 		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -3760,7 +3760,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 				$ExpSigHist &= '-' & $HistMatchArray[$esh][1]
 			EndIf
 		Next
-		
+
 		FileWriteLine($savefile, $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpHighGpsSig & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpHighGpsLat & '|' & $ExpHighGpsLon & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $FirstDateTime & '|' & $LastDateTime & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpSigHist)
 	Next
 EndFunc   ;==>_ExportToTXT
@@ -3839,7 +3839,7 @@ Func _LoadListGUI($imfile1 = "")
 	$linemin = GUICtrlCreateLabel($Text_LinesMin & ':', 230, 135, 240, 20)
 	$estimatedtime = GUICtrlCreateLabel($Text_EstimatedTimeRemaining & ':', 230, 155, 240, 20)
 	GUISetState()
-	
+
 	GUICtrlSetOnEvent($browse1, "_ImportFileBrowse")
 	GUICtrlSetOnEvent($NsOk, "_ImportOk")
 	GUICtrlSetOnEvent($NsCancel, "_ImportClose")
@@ -3864,7 +3864,7 @@ Func _LoadMDB()
 	$linemin = GUICtrlCreateLabel($Text_LinesMin & ':', 230, 135, 240, 20)
 	$estimatedtime = GUICtrlCreateLabel($Text_EstimatedTimeRemaining & ':', 230, 155, 240, 20)
 	GUISetState()
-	
+
 	GUICtrlSetOnEvent($browse1, "_ImportFileBrowse")
 	GUICtrlSetOnEvent($Ok, "_ImportMdbOk")
 	GUICtrlSetOnEvent($Cancel, "_ImportClose")
@@ -3909,7 +3909,7 @@ Func _ImportOk()
 				$totallines += 1
 			WEnd
 			For $Load = 1 To $totallines
-				
+
 				$linein = FileReadLine($vistumblerfile, $Load);Open Line in file
 				If @error = -1 Then ExitLoop
 				If StringTrimRight($linein, StringLen($linein) - 1) <> "#" Then
@@ -3921,7 +3921,7 @@ Func _ImportOk()
 						$LoadSat = $loadlist[4]
 						$LoadDate = $loadlist[5]
 						$LoadTime = $loadlist[6]
-						
+
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 						$FoundGpsMatch = UBound($GpsMatchArray) - 1
@@ -3988,7 +3988,7 @@ Func _ImportOk()
 						$tsplit = StringSplit($LoadLastActive, ' ')
 						$LoadLastActive_Time = $tsplit[2]
 						$LoadLastActive_Date = $tsplit[1]
-						
+
 						;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4003,7 +4003,7 @@ Func _ImportOk()
 						EndIf
 						;Add First AP Info to DB, Listview, and Treeview
 						_AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
-						
+
 						;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4025,7 +4025,7 @@ Func _ImportOk()
 				EndIf
 				$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 				$percent = ($currentline / $totallines) * 100
-				
+
 				GUICtrlSetData($progressbar, $percent)
 				GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
 				GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
@@ -4050,11 +4050,11 @@ Func _ImportOk()
 
 		$nsfile = GUICtrlRead($vistumblerfileinput)
 		$netstumblerfile = FileOpen($nsfile, 0)
-		
+
 		If $netstumblerfile <> -1 Then
 			;Get Total number of lines
 			$totallines = 0
-			
+
 			While 1
 				FileReadLine($netstumblerfile)
 				If @error = -1 Then ExitLoop
@@ -4064,7 +4064,7 @@ Func _ImportOk()
 			$AddAP = 0
 			$AddGID = 0
 			$Loading = 1
-			
+
 			For $Load = 1 To $totallines
 				$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
 				If @error = -1 Then ExitLoop
@@ -4121,28 +4121,28 @@ Func _ImportOk()
 							ElseIf $FoundGpsMatch = 1 Then
 								$LoadGID = $GpsMatchArray[1][1]
 							EndIf
-							
+
 							$query = "SELECT ApID, ListRow, HighGpsHistId FROM AP WHERE BSSID = '" & $BSSID & "' And SSID = '" & $SSID & "' And CHAN = '" & $Channel & "'"
 							$LoadApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 							$FoundApMatch = UBound($LoadApMatchArray) - 1
-							
+
 							If $FoundApMatch = 0 Then
 								$AddAP += 1
 								$APID += 1
 								$HISTID += 1
-								
+
 								$StripedBSSID = StringReplace($BSSID, ':', '');Strip ":"'s out of mac address
 								$MANUF = _FindManufacturer(StringTrimRight($StripedBSSID, 6));Set Manufacturer
 								$LABEL = _SetLabels($StripedBSSID)
-								
+
 								If $LoadLatitude <> 'N 0.0000' And $LoadLatitude <> 'E 0.0000' Then
 									$DBHighGpsHistId = $HISTID
 								Else
 									$DBHighGpsHistId = 0
 								EndIf
-								
+
 								$DBAddPos = $APID - 1
-								
+
 								_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $LoadGID & '|' & $Signal & '|' & $Date & '|' & $time)
 								$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $APID, $DBAddPos)
 								_AddRecord($VistumblerDB, "AP", $DB_OBJ, $APID & '|' & $ListRow & '|1|' & $BSSID & '|' & $SSID & '|' & $Channel & '|' & $Authentication & '|' & $Encryption & '|' & $LoadSecType & '|' & $Type & '|' & $Text_Unknown & '|' & $Text_Unknown & '|' & $Text_Unknown & '|' & $DBHighGpsHistId & '|' & $LoadGID & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL)
@@ -4153,11 +4153,11 @@ Func _ImportOk()
 								$Found_ListRow = $LoadApMatchArray[1][2]
 								$Found_HighGpsHistId = $LoadApMatchArray[1][3] + 0
 								$HISTID += 1
-								
+
 								If $Found_HighGpsHistId = 0 Then
 									If $LoadLatitude <> 'N 0.0000' And $LoadLongitude <> 'E 0.0000' Then
 										$DBHighGpsHistId = $HISTID
-										
+
 									Else
 										$DBHighGpsHistId = 0
 									EndIf
@@ -4167,14 +4167,14 @@ Func _ImportOk()
 									$FoundHistMatch = UBound($HistMatchArray) - 1
 									$Found_GpsID = $HistMatchArray[1][1]
 									$Found_Sig = $HistMatchArray[1][2]
-									
+
 									If $Signal >= $Found_Sig Then
 										$DBHighGpsHistId = $HISTID
 									Else
 										$DBHighGpsHistId = $Found_HighGpsHistId
 									EndIf
 								EndIf
-								
+
 								If $Found_HighGpsHistId = $DBHighGpsHistId Or $DBHighGpsHistId = 0 Then
 									$ImLat = ''
 									$ImLon = ''
@@ -4184,7 +4184,7 @@ Func _ImportOk()
 									$query = "UPDATE AP SET HighGpsHistId = '" & $DBHighGpsHistId & "' WHERE ApID = '" & $Found_APID & "'"
 									_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 								EndIf
-								
+
 								_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $LoadGID & '|' & $Signal & '|' & $Date & '|' & $time)
 								_ListViewAdd($Found_ListRow, '', '', '', '', '', '', '', '', '', '', '', '', '', $DateTime, $ImLat, $ImLon, $MANUF, $LABEL)
 							EndIf
@@ -4309,7 +4309,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'Midi_PlayForActiveAps', $Midi_PlayForActiveAps)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
 	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
-	
+
 	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
 	IniWrite($settings, 'AutoKML', 'AutoKML_Alt', $AutoKML_Alt)
 	IniWrite($settings, 'AutoKML', 'AutoKML_AltMode', $AutoKML_AltMode)
@@ -4323,12 +4323,12 @@ Func _WriteINI()
 	IniWrite($settings, 'AutoKML', 'KmlFlyTo', $KmlFlyTo)
 	IniWrite($settings, 'AutoKML', 'OpenKmlNetLink', $OpenKmlNetLink)
 	IniWrite($settings, 'AutoKML', 'GoogleEarth_EXE', $GoogleEarth_EXE)
-	
+
 	IniWrite($settings, 'WindowPositions', 'VistumblerState', $VistumblerState)
 	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
 	IniWrite($settings, 'WindowPositions', 'CompassPosition', $CompassPosition)
 	IniWrite($settings, 'WindowPositions', 'GpsDetailsPosition', $GpsDetailsPosition)
-	
+
 	IniWrite($settings, 'GpsSettings', 'ComPort', $ComPort)
 	IniWrite($settings, 'GpsSettings', 'Baud', $BAUD)
 	IniWrite($settings, 'GpsSettings', 'Parity', $PARITY)
@@ -4360,7 +4360,7 @@ Func _WriteINI()
 	IniWrite($settings, "Columns", "Column_LastActive", $save_column_LastActive)
 	IniWrite($settings, "Columns", "Column_NetworkType", $save_column_NetworkType)
 	IniWrite($settings, "Columns", "Column_Label", $save_column_Label)
-	
+
 	IniWrite($settings, "Column_Width", "Column_Line", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0))
 	IniWrite($settings, "Column_Width", "Column_Active", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0))
 	IniWrite($settings, "Column_Width", "Column_SSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0))
@@ -4406,7 +4406,7 @@ Func _WriteINI()
 	IniWrite($settings, "Column_Names", "Column_LastActive", $Column_Names_LastActive)
 	IniWrite($settings, "Column_Names", "Column_NetworkType", $Column_Names_NetworkType)
 	IniWrite($settings, "Column_Names", "Column_Label", $Column_Names_Label)
-	
+
 	IniWrite($settings, "SearchWords", "SSID", $SearchWord_SSID)
 	IniWrite($settings, "SearchWords", "BSSID", $SearchWord_BSSID)
 	IniWrite($settings, "SearchWords", "NetworkType", $SearchWord_NetworkType)
@@ -4422,7 +4422,7 @@ Func _WriteINI()
 	IniWrite($settings, "SearchWords", "WEP", $SearchWord_Wep)
 	IniWrite($settings, "SearchWords", "Infrastructure", $SearchWord_Infrastructure)
 	IniWrite($settings, "SearchWords", "Adhoc", $SearchWord_Adhoc)
-	
+
 	IniWrite($settings, "GuiText", "Ok", $Text_Ok)
 	IniWrite($settings, "GuiText", "Cancel", $Text_Cancel)
 	IniWrite($settings, "GuiText", "Apply", $Text_Apply)
@@ -4679,7 +4679,7 @@ Func SaveToKML()
 	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 115, 81, 25, 0)
 	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 115, 81, 25, 0)
 	GUISetState(@SW_SHOW)
-	
+
 	While 1
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
@@ -4811,7 +4811,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 				$ExpHighGpsHistID = $ApMatchArray[$exp][12] - 0
 				$ExpFirstID = $ApMatchArray[$exp][13] - 0
 				$ExpLastID = $ApMatchArray[$exp][14] - 0
-				
+
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4821,7 +4821,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][1])
 				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][2])
-				
+
 				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
 					;Get First Seen
 					$query = "SELECT GpsId FROM Hist Where HistID = '" & $ExpFirstID & "'"
@@ -4837,8 +4837,8 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$ExpLastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-					
-					
+
+
 					$file &= '<Placemark>' & @CRLF _
 							 & '<name></name>' & @CRLF _
 							 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' _
@@ -4876,7 +4876,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 				$ExpHighGpsHistID = $ApMatchArray[$exp][12] - 0
 				$ExpFirstID = $ApMatchArray[$exp][13] - 0
 				$ExpLastID = $ApMatchArray[$exp][14] - 0
-				
+
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4901,8 +4901,8 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$ExpLastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-					
-					
+
+
 					$file &= '<Placemark>' & @CRLF _
 							 & '<name></name>' & @CRLF _
 							 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' _
@@ -4940,7 +4940,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 				$ExpHighGpsHistID = $ApMatchArray[$exp][12] - 0
 				$ExpFirstID = $ApMatchArray[$exp][13] - 0
 				$ExpLastID = $ApMatchArray[$exp][14] - 0
-				
+
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4965,8 +4965,8 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$ExpLastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-					
-					
+
+
 					$file &= '<Placemark>' & @CRLF _
 							 & '<name></name>' & @CRLF _
 							 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' _
@@ -4980,15 +4980,15 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 			$file &= '</Folder>' & @CRLF
 		EndIf
 	EndIf
-	
+
 	$file &= '</Folder>' & @CRLF
-	
+
 	If $GpsTrack = 1 Then
 		$query = "SELECT Latitude, Longitude FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundGpsMatch = UBound($GpsMatchArray) - 1
 		If $FoundGpsMatch <> 0 Then
-			
+
 			$file &= '<Folder>' & @CRLF _
 					 & '<name>GPS Track</name>' & @CRLF _
 					 & '<Placemark>' & @CRLF _
@@ -5015,7 +5015,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 	EndIf
 	$file &= '</Document>' & @CRLF _
 			 & '</kml>' & @CRLF
-	
+
 	If $FoundApWithGps = 1 Then
 		FileWrite($kml, $file)
 		Return (1)
@@ -5161,11 +5161,11 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 		FileDelete($filename)
 		$APID1 = ''
 		$Date1 = ''
-		
+
 		$file = "# $Creator: " & $Script_Name & " " & $version & @CRLF & _
 				"# $Format: wi-scan summary with extensions" & @CRLF & _
 				"# Latitude	Longitude	( SSID )	Type	( BSSID )	Time (GMT)	[ SNR Sig Noise ]	# ( Name )	Flags	Channelbits	BcnIntvl	DataRate	LastChannel" & @CRLF
-		
+
 		$query = "SELECT ApID, GpsID, Signal, Date1, Time1 FROM Hist ORDER BY Date1, Time1"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundHistMatch = UBound($HistMatchArray) - 1
@@ -5194,12 +5194,12 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 				$Found_OTX = $ApMatchArray[1][7]
 				$Found_LAB = $ApMatchArray[1][8]
 				$Found_MANU = $ApMatchArray[1][9]
-				
+
 				If $dateformated <> $Date1 Then
 					$Date1 = $dateformated
 					$file &= "# $DateGMT: " & $Date1 & @CRLF
 				EndIf
-				
+
 				$otxarray = StringSplit($Found_OTX, " ")
 				If IsArray($otxarray) Then
 					$Radio = $otxarray[$otxarray[0]] * 10
@@ -5211,7 +5211,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 						$Radio = 0
 					EndIf
 				EndIf
-				
+
 				;Channel Info - http://www.netstumbler.org/f4/channelbits-8849/
 				$CHAN = '00000000'
 				If $Found_CHAN = 1 Then $CHAN = '00000002'
@@ -5245,7 +5245,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 				If $Found_CHAN = 54 Then $CHAN = '20000000'
 				If $Found_CHAN = 62 Then $CHAN = '40000000'
 				If $Found_CHAN = 34 Then $CHAN = '80000000'
-				
+
 				$Flags = 0
 				If $Found_NETTYPE = $SearchWord_Adhoc Then
 					$Flags += 2 ;Set IBSS (Ad hoc) flag
@@ -5254,11 +5254,11 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 					$Flags += 1 ;Set ESS (Infrastructure) flag
 					$BSS = 'BSS'
 				EndIf
-				
+
 				If $Found_SecType <> '1' Then
 					$Flags += 10 ;Set Privacy (WEP) flag
 				EndIf
-				
+
 				$Flags = StringFormat("%04i", $Flags)
 			EndIf
 			$file &= $Found_Lat & "	" & $Found_Lon & "	( " & $Found_SSID & " )	" & $BSS & "	( " & $Found_BSSID & " )	" & $Found_Time & " (GMT)	[ " & $Found_Sig & " " & $Found_Sig + 50 & " 50 ]	# ( " & $Found_LAB & ' - ' & $Found_MANU & " )	" & $Flags & "	" & $CHAN & "	1000	" & $Radio & "	" & $Found_CHAN & @CRLF
@@ -5396,7 +5396,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_StopBit = GUICtrlCreateCombo("1", 44, 305, 275, 25)
 	GUICtrlSetData(-1, "1.5|2", $STOPBIT)
-	
+
 	If $PARITY = 'E' Then
 		$l_PARITY = $Text_Even
 	ElseIf $PARITY = 'M' Then
@@ -5730,7 +5730,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 435, 115, 20)
 	GUICtrlCreateLabel($Text_Seconds, 150, 440, 505, 15)
-	
+
 	;AutoKML Tab
 	$Tab_AutoKML = GUICtrlCreateTabItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI)
 	_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
@@ -5757,8 +5757,8 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlCreateLabel($Text_GpsTrackTime & '(s)', 405, 140, 115, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AutoKmlTrackTime = GUICtrlCreateInput($AutoKmlTrackTime, 405, 155, 115, 20)
-	
-	
+
+
 	GUICtrlCreateGroup($Text_FlyToSettings, 30, 180, 620, 90)
 	$GUI_KmlFlyTo = GUICtrlCreateCheckbox($Text_FlyToCurrentGps, 45, 200, 570, 15)
 	GUICtrlSetColor(-1, $TextColor)
@@ -5804,7 +5804,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	$GUI_SpeakPercent = GUICtrlCreateCheckbox($Text_SpeakSayPercent, 200, 405, 150, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	If $SpeakSigSayPecent = 1 Then GUICtrlSetState($GUI_SpeakPercent, $GUI_CHECKED)
-	
+
 	GUICtrlCreateGroup($Text_MIDI, 370, 290, 295, 145)
 	$GUI_PlayMidiSounds = GUICtrlCreateCheckbox($Text_PlayMidiSounds, 385, 310, 200, 15)
 	If $Midi_PlayForActiveAps = 1 Then GUICtrlSetState($GUI_PlayMidiSounds, $GUI_CHECKED)
@@ -5828,16 +5828,16 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 385, 385, 265, 20)
 	GUICtrlSetColor(-1, $TextColor)
-	
+
 	GUICtrlCreateTabItem("")
-	
+
 	;END OF TABS
 	$GUI_Set_Apply = GUICtrlCreateButton($Text_Apply, 610, 470, 73, 25, 0)
 	$GUI_Set_Can = GUICtrlCreateButton($Text_Cancel, 535, 470, 75, 25, 0)
 	$GUI_Set_Ok = GUICtrlCreateButton($Text_Ok, 460, 470, 75, 25, 0)
 	;$GUI_Set_Export = GUICtrlCreateButton($Text_ExportSettings, 2, 470, 135, 25, 0)
 	;$GUI_Set_Import = GUICtrlCreateButton($Text_ImportSettings, 137, 470, 135, 25, 0)
-	
+
 	If $StartTab = 0 Then GUICtrlSetState($Tab_Misc, $GUI_SHOW)
 	If $StartTab = 1 Then GUICtrlSetState($Tab_Gps, $GUI_SHOW)
 	If $StartTab = 2 Then GUICtrlSetState($Tab_Lan, $GUI_SHOW)
@@ -5855,11 +5855,11 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetOnEvent($Add_Lab, '_AddLabel')
 	GUICtrlSetOnEvent($Edit_Lab, '_EditLabel')
 	GUICtrlSetOnEvent($Remove_Lab, '_RemoveLabel')
-	
+
 	GUICtrlSetOnEvent($browse1, '_BrowseSave')
 	GUICtrlSetOnEvent($Browse2, '_BrowseAutoSave')
 	GUICtrlSetOnEvent($Browse3, '_BrowseKmlSave')
-	
+
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseSettingsGUI')
 	GUICtrlSetOnEvent($GUI_Set_Can, '_CloseSettingsGUI')
 	GUICtrlSetOnEvent($GUI_Set_Apply, '_ApplySettingsGUI')
@@ -6102,7 +6102,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SpeedInKmh = IniRead($newlanguagefile, 'GuiText', 'SpeedInKmh', 'Speed(km/h)')
 		$Text_TrackAngle = IniRead($newlanguagefile, 'GuiText', 'TrackAngle', 'Track Angle')
 		$Text_Close = IniRead($newlanguagefile, 'GuiText', 'Close', 'Track Close')
-		$Text_RefreshNetworks = IniRead($newlanguagefile, 'GuiText', 'StartRefreshingNetworks', 'Refreshing Networks')
+		$Text_RefreshNetworks = IniRead($newlanguagefile, 'GuiText', 'RefreshingNetworks', 'Auto Refresh Networks')
 		$Text_Start = IniRead($newlanguagefile, 'GuiText', 'Start', 'Start')
 		$Text_Stop = IniRead($newlanguagefile, 'GuiText', 'Stop', 'Stop')
 		$Text_ConnectToWindowTitle = IniRead($newlanguagefile, 'GuiText', 'ConnectToWindowTitle', '"Connect to" window title:')
@@ -6180,6 +6180,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_MacExistsOverwriteIt = IniRead($newlanguagefile, 'GuiText', 'MacExistsOverwriteIt', 'A entry for this mac address already exists. would you like to overwrite it?')
 		$Text_SavingLine = IniRead($newlanguagefile, 'GuiText', 'SavingLine', 'Saving Line')
 		$Text_DisplayDebug = IniRead($newlanguagefile, 'GuiText', 'DisplayDebug', 'Debug - Display Functions')
+		$Text_GraphDeadTime = IniRead($newlanguagefile, 'GuiText', 'GraphDeadTime', 'Graph Dead Time')
 		$Text_OpenKmlNetLink = IniRead($newlanguagefile, 'GuiText', 'OpenKmlNetLink', 'Open KML NetworkLink')
 		$Text_ActiveRefreshTime = IniRead($newlanguagefile, 'GuiText', 'ActiveRefreshTime', 'Active Refresh Time')
 		$Text_DeadRefreshTime = IniRead($newlanguagefile, 'GuiText', 'DeadRefreshTime', 'Dead Refresh Time')
@@ -6255,7 +6256,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_VistumblerDonate = IniRead($newlanguagefile, 'GuiText', 'VistumblerDonate', 'Donate')
 		$Text_VistumblerStore = IniRead($newlanguagefile, 'GuiText', 'VistumblerStore', 'Store')
 		$Text_SupportVistumbler = IniRead($newlanguagefile, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
-		
+
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -6397,7 +6398,7 @@ Func _ApplySettingsGUI();Applys settings
 		Else
 			$SortDirection = 0
 		EndIf
-		
+
 		$SortBy = GUICtrlRead($GUI_SortBy)
 		$SortTime = GUICtrlRead($GUI_SortTime)
 		If GUICtrlRead($GUI_AutoSort) = 4 And $AutoSort = 1 Then _AutoSortToggle()
@@ -6417,13 +6418,13 @@ Func _ApplySettingsGUI();Applys settings
 		Else
 			$OpenKmlNetLink = 0
 		EndIf
-		
+
 		$GoogleEarth_EXE = GUICtrlRead($GUI_GoogleEXE)
 		$AutoKmlActiveTime = GUICtrlRead($GUI_AutoKmlActiveTime)
 		$AutoKmlDeadTime = GUICtrlRead($GUI_AutoKmlDeadTime)
 		$AutoKmlGpsTime = GUICtrlRead($GUI_AutoKmlGpsTime)
 		$AutoKmlTrackTime = GUICtrlRead($GUI_AutoKmlTrackTime)
-		
+
 		If GUICtrlRead($GUI_KmlFlyTo) = 1 Then
 			$KmlFlyTo = 1
 		Else
@@ -6727,7 +6728,7 @@ Func _GuessNetshSearchwords()
 		For $stripws = 1 To $TempFileArray[0]
 			$TempFileArray[$stripws] = StringStripWS($TempFileArray[$stripws], 3)
 		Next
-		
+
 		For $loop = 1 To $TempFileArray[0]
 			$temp = StringSplit(StringStripWS($TempFileArray[$loop], 3), ":")
 			If IsArray($temp) Then
@@ -6938,7 +6939,7 @@ Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CompareDate()') ;#Debug Display
 	$d1split = StringSplit($d1, ' ')
 	$d2split = StringSplit($d2, ' ')
-	
+
 	If $d1split[0] >= 2 And $d2split[0] >= 2 Then
 		$Date1 = StringSplit($d1split[1], '-')
 		$Time1 = StringSplit($d1split[2], ':')
@@ -6998,7 +6999,7 @@ Func _SelectConnectedAp()
 		For $strip_ws = 1 To $TempFileArrayShowInt[0]
 			$TempFileArrayShowInt[$strip_ws] = StringStripWS($TempFileArrayShowInt[$strip_ws], 3)
 		Next
-		
+
 		Dim $IntState, $IntSSID, $IntBSSID, $IntChan, $IntAuth
 		For $loop = 1 To $TempFileArrayShowInt[0]
 			$temp = StringSplit(StringStripWS($TempFileArrayShowInt[$loop], 3), ":")
