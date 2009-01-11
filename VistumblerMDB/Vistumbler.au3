@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.03'
+$version = '9.1 Alpha 1'
 $last_modified = '01/10/2009'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -753,6 +753,8 @@ $ExportToTXT2 = GUICtrlCreateMenuItem($Text_ExportToTXT, $Export)
 $ExportToVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1, $Export)
 $ExportToKML = GUICtrlCreateMenuItem($Text_ExportToKML, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
+$ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(Filtered)', $Export)
+$ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(Filtered)', $Export)
 
 Dim $found_adapter = 0
 Dim $NetworkAdapters[2]
@@ -879,6 +881,8 @@ GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
 GUICtrlSetOnEvent($ExportToTXT2, '_ExportData')
 GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
 GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
+GUICtrlSetOnEvent($ExportToFilVS1, '_ExportFilteredData')
+GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
 ;Settings Menu
 GUICtrlSetOnEvent($SetAuto, '_SettingsGUI_Auto')
 GUICtrlSetOnEvent($SetAutoKML, '_SettingsGUI_AutoKML')
@@ -1669,6 +1673,7 @@ EndFunc   ;==>_ReadIniSectionToDB
 
 Func _RecoverMDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RecoverMDB()') ;#Debug Display
+	$RecListrow = 0
 	$query = "UPDATE AP SET ListRow = '-1'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
@@ -1723,13 +1728,14 @@ Func _RecoverMDB()
 		$ImpDate = $HistMatchArray[1][1]
 		$ImpTime = $HistMatchArray[1][2]
 		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
-
-		$ListAddPos = $APID - 1
-
-		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $ListAddPos)
-
-		_ListViewAdd($ListRow, $ImpApID, $Text_Dead, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, '0', $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
-
+		
+		$ListRow = -1
+		If _FilterMatch($ImpApID, $Text_Dead, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, '0', $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB) = 1 Then
+			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $RecListrow)
+			_ListViewAdd($ListRow, $ImpApID, $Text_Dead, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, '0', $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
+			$RecListrow += 1
+		EndIf
+		
 		_TreeViewAdd($ImpSSID, $ImpBSSID, $ImpAUTH, $ImpENCR, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpMANU, $ImpLAB)
 
 		If $ImpActive = 1 Then
@@ -3794,6 +3800,88 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 	Next
 EndFunc   ;==>_ExportToTXT
 
+Func _ExportFilteredData();Saves data to a selected file
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
+	DirCreate($SaveDir)
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VS1)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.VS1')
+	If @error <> 1 Then
+		If StringInStr($file, '.VS1') = 0 Then $file = $file & '.VS1'
+		FileDelete($file)
+		_ExportFileredTXT($file, $FilterQuery)
+		MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $file & '"')
+		GUICtrlSetData($msgdisplay, '')
+		$newdata = 0
+	EndIf
+EndFunc   ;==>_ExportFilteredData
+
+Func _ExportFileredTXT($savefile, $savequery);writes vistumbler filtered data to a txt file
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportFileredTXT()') ;#Debug Display
+	FileWriteLine($savefile, "# Vistumbler VS1 - Filtered Detailed Export Version 1")
+	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
+
+	;Export GIDs
+	FileWriteLine($savefile, "# -------------------------------------------------")
+	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC)|Time(UTC)")
+	FileWriteLine($savefile, "# -------------------------------------------------")
+	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS"
+	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundGpsMatch = UBound($GpsMatchArray) - 1
+	For $exp = 1 To $FoundGpsMatch
+		GUICtrlSetData($msgdisplay, $Text_SavingGID & ' ' & $exp & ' / ' & $FoundGpsMatch)
+		$ExpGID = $GpsMatchArray[$exp][1]
+		$ExpLat = $GpsMatchArray[$exp][2]
+		$ExpLon = $GpsMatchArray[$exp][3]
+		$ExpSat = $GpsMatchArray[$exp][4]
+		$ExpDate = $GpsMatchArray[$exp][5]
+		$ExpTime = $GpsMatchArray[$exp][6]
+		FileWriteLine($savefile, $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpDate & '|' & $ExpTime)
+	Next
+
+	;Export AP Information
+	FileWriteLine($savefile, "# ---------------------------------------------------------------------------------------------------------------------------------------------------------")
+	FileWriteLine($savefile, "# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL")
+	FileWriteLine($savefile, "# ---------------------------------------------------------------------------------------------------------------------------------------------------------")
+
+	$ApMatchArray = _RecordSearch($VistumblerDB, $savequery, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $exp = 1 To $FoundApMatch
+		GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
+		$ExpAPID = $ApMatchArray[$exp][1]
+		$ExpSSID = $ApMatchArray[$exp][2]
+		$ExpBSSID = $ApMatchArray[$exp][3]
+		$ExpNET = $ApMatchArray[$exp][4]
+		$ExpRAD = $ApMatchArray[$exp][5]
+		$ExpCHAN = $ApMatchArray[$exp][6]
+		$ExpAUTH = $ApMatchArray[$exp][7]
+		$ExpENCR = $ApMatchArray[$exp][8]
+		$ExpSECTYPE = $ApMatchArray[$exp][9]
+		$ExpBTX = $ApMatchArray[$exp][10]
+		$ExpOTX = $ApMatchArray[$exp][11]
+		$ExpMANU = $ApMatchArray[$exp][12]
+		$ExpLAB = $ApMatchArray[$exp][13]
+		$ExpHighGpsID = $ApMatchArray[$exp][14]
+		$ExpFirstID = $ApMatchArray[$exp][15]
+		$ExpLastID = $ApMatchArray[$exp][16]
+		$ExpGidSid = ''
+
+		;Create GID,SIG String
+		$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundHistMatch = UBound($HistMatchArray) - 1
+		For $epgs = 1 To $FoundHistMatch
+			$ExpGID = $HistMatchArray[$epgs][1]
+			$ExpSig = $HistMatchArray[$epgs][2]
+			If $epgs = 1 Then
+				$ExpGidSid = $ExpGID & ',' & $ExpSig
+			Else
+				$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
+			EndIf
+		Next
+
+		FileWriteLine($savefile, $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid)
+	Next
+EndFunc   ;==>_ExportFileredTXT
+
 Func _ExportVSZ()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
 	DirCreate($SaveDir)
@@ -4857,9 +4945,9 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 				$ExpOTX = $ApMatchArray[$exp][9]
 				$ExpMANU = $ApMatchArray[$exp][10]
 				$ExpLAB = $ApMatchArray[$exp][11]
-				$ExpHighGpsHistID = $ApMatchArray[$exp][12] - 0
-				$ExpFirstID = $ApMatchArray[$exp][13] - 0
-				$ExpLastID = $ApMatchArray[$exp][14] - 0
+				$ExpHighGpsHistID = $ApMatchArray[$exp][12]
+				$ExpFirstID = $ApMatchArray[$exp][13]
+				$ExpLastID = $ApMatchArray[$exp][14]
 
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
@@ -4898,8 +4986,8 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 							 & '</Placemark>' & @CRLF
 				EndIf
 			Next
+			$file &= '</Folder>' & @CRLF
 		EndIf
-		$file &= '</Folder>' & @CRLF
 	EndIf
 	If $MapWepAps = 1 Then
 		$query = "SELECT SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID FROM AP WHERE SECTYPE = '2' And HighGpsHistId <> '0'"
@@ -4922,9 +5010,9 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 				$ExpOTX = $ApMatchArray[$exp][9]
 				$ExpMANU = $ApMatchArray[$exp][10]
 				$ExpLAB = $ApMatchArray[$exp][11]
-				$ExpHighGpsHistID = $ApMatchArray[$exp][12] - 0
-				$ExpFirstID = $ApMatchArray[$exp][13] - 0
-				$ExpLastID = $ApMatchArray[$exp][14] - 0
+				$ExpHighGpsHistID = $ApMatchArray[$exp][12]
+				$ExpFirstID = $ApMatchArray[$exp][13]
+				$ExpLastID = $ApMatchArray[$exp][14]
 
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
@@ -4962,8 +5050,8 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 							 & '</Placemark>' & @CRLF
 				EndIf
 			Next
+			$file &= '</Folder>' & @CRLF
 		EndIf
-		$file &= '</Folder>' & @CRLF
 	EndIf
 	If $MapSecAps = 1 Then
 		$query = "SELECT SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID FROM AP WHERE SECTYPE = '3' And HighGpsHistId <> '0'"
@@ -4986,9 +5074,9 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 				$ExpOTX = $ApMatchArray[$exp][9]
 				$ExpMANU = $ApMatchArray[$exp][10]
 				$ExpLAB = $ApMatchArray[$exp][11]
-				$ExpHighGpsHistID = $ApMatchArray[$exp][12] - 0
-				$ExpFirstID = $ApMatchArray[$exp][13] - 0
-				$ExpLastID = $ApMatchArray[$exp][14] - 0
+				$ExpHighGpsHistID = $ApMatchArray[$exp][12]
+				$ExpFirstID = $ApMatchArray[$exp][13]
+				$ExpLastID = $ApMatchArray[$exp][14]
 
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
@@ -5073,6 +5161,385 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $Map
 	EndIf
 	;EndIf
 EndFunc   ;==>SaveKML
+
+Func _ExportFilteredKML()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveToKML()') ;#Debug Display
+	Opt("GUIOnEventMode", 0)
+	$ExportKMLGUI = GUICreate($Text_ExportToKML, 263, 143)
+	GUISetBkColor($BackgroundColor)
+	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 15, 240, 15)
+	If $MapOpen = 1 Then GUICtrlSetState($GUI_ExportKML_MapOpen, $GUI_CHECKED)
+	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 35, 240, 15)
+	If $MapWEP = 1 Then GUICtrlSetState($GUI_ExportKML_MapWEP, $GUI_CHECKED)
+	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 55, 240, 15)
+	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportKML_MapSec, $GUI_CHECKED)
+	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox($Text_DrawTrack, 15, 75, 240, 15)
+	If $ShowTrack = 1 Then GUICtrlSetState($GUI_ExportKML_DrawTrack, $GUI_CHECKED)
+	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 95, 240, 15)
+	If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
+	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 115, 81, 25, 0)
+	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 115, 81, 25, 0)
+	GUISetState(@SW_SHOW)
+
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE
+				GUIDelete($ExportKMLGUI)
+				ExitLoop
+			Case $GUI_ExportKML_Cancel
+				GUIDelete($ExportKMLGUI)
+				ExitLoop
+			Case $GUI_ExportKML_OK
+				If GUICtrlRead($GUI_ExportKML_MapOpen) = 1 Then
+					$MapOpen = 1
+				Else
+					$MapOpen = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportKML_MapWEP) = 1 Then
+					$MapWEP = 1
+				Else
+					$MapWEP = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportKML_MapSec) = 1 Then
+					$MapSec = 1
+				Else
+					$MapSec = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportKML_DrawTrack) = 1 Then
+					$ShowTrack = 1
+				Else
+					$ShowTrack = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportKML_UseLocalImages) = 1 Then
+					$UseLocalKmlImagesOnExport = 1
+				Else
+					$UseLocalKmlImagesOnExport = 0
+				EndIf
+				GUIDelete($ExportKMLGUI)
+				DirCreate($SaveDirKml)
+				$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.kml')
+				If Not @error Then
+					$savekml = _SaveFilteredKML($kml, $FilterQuery, $UseLocalKmlImagesOnExport, $MapOpen, $MapWEP, $MapSec, $ShowTrack)
+					If $savekml = 1 Then
+						MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $kml & '"')
+					Else
+						MsgBox(0, $Text_Done, $Text_NoApsWithGps & ' ' & $Text_NoFileSaved)
+					EndIf
+				EndIf
+				ExitLoop
+		EndSwitch
+	WEnd
+	Opt("GUIOnEventMode", 1)
+EndFunc   ;==>_ExportFilteredKML
+
+Func _SaveFilteredKML($kml, $kmlquery, $KmlUseLocalImages = 1, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsTrack = 0)
+	$FoundApWithGps = 0
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveFilteredKML()') ;#Debug Display
+	If StringInStr($kml, '.kml') = 0 Then $kml = $kml & '.kml'
+	FileDelete($kml)
+	$file = '<?xml version="1.0" encoding="utf-8"?>' & @CRLF _
+			 & '<kml xmlns="http://earth.google.com/kml/2.0">' & @CRLF _
+			 & '<Document>' & @CRLF _
+			 & '<description>' & $Script_Name & ' - By ' & $Script_Author & '</description>' & @CRLF _
+			 & '<name>' & $Script_Name & ' ' & $version & '</name>' & @CRLF _
+			 & '<Style id="secureStyle">' & @CRLF _
+			 & '<IconStyle>' & @CRLF _
+			 & '<scale>.5</scale>' & @CRLF _
+			 & '<Icon>' & @CRLF
+	If $KmlUseLocalImages = 1 Then
+		$file &= '<href>' & $ImageDir & 'secure.png</href>' & @CRLF
+	Else
+		$file &= '<href>http://vistumbler.sourceforge.net/images/program-images/secure.png</href>' & @CRLF
+	EndIf
+	$file &= '</Icon>' & @CRLF _
+			 & '</IconStyle>' & @CRLF _
+			 & '</Style>' & @CRLF _
+			 & '<Style id="wepStyle">' & @CRLF _
+			 & '<IconStyle>' & @CRLF _
+			 & '<scale>.5</scale>' & @CRLF _
+			 & '<Icon>' & @CRLF
+	If $KmlUseLocalImages = 1 Then
+		$file &= '<href>' & $ImageDir & 'secure-wep.png</href>' & @CRLF
+	Else
+		$file &= '<href>http://vistumbler.sourceforge.net/images/program-images/secure-wep.png</href>' & @CRLF
+	EndIf
+	$file &= '</Icon>' & @CRLF _
+			 & '</IconStyle>' & @CRLF _
+			 & '</Style>' & @CRLF _
+			 & '<Style id="openStyle">' & @CRLF _
+			 & '<IconStyle>' & @CRLF _
+			 & '<scale>.5</scale>' & @CRLF _
+			 & '<Icon>' & @CRLF
+	If $KmlUseLocalImages = 1 Then
+		$file &= '<href>' & $ImageDir & 'open.png</href>' & @CRLF
+	Else
+		$file &= '<href>http://vistumbler.sourceforge.net/images/program-images/open.png</href>' & @CRLF
+	EndIf
+	$file &= '</Icon>' & @CRLF _
+			 & '</IconStyle>' & @CRLF _
+			 & '</Style>' & @CRLF _
+			 & '<Style id="Location">' & @CRLF _
+			 & '<LineStyle>' & @CRLF _
+			 & '<color>7f0000ff</color>' & @CRLF _
+			 & '<width>4</width>' & @CRLF _
+			 & '</LineStyle>' & @CRLF _
+			 & '</Style>' & @CRLF _
+			 & '<Folder>' & @CRLF _
+			 & '<name>Access Points</name>' & @CRLF _
+			 & '<description>Access points found</description>' & @CRLF
+	If $MapOpenAPs = 1 Then
+		$query = $kmlquery
+		If StringInStr($query, 'WHERE') Then
+			$query &= " And SECTYPE = '1' And HighGpsHistId <> '0'"
+		Else
+			$query &= " WHERE SECTYPE = '1' And HighGpsHistId <> '0'"
+		EndIf
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			$file &= '<Folder>' & @CRLF _
+					 & '<name>Open Access Points</name>' & @CRLF
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][2]
+				$ExpBSSID = $ApMatchArray[$exp][3]
+				$ExpNET = $ApMatchArray[$exp][4]
+				$ExpRAD = $ApMatchArray[$exp][5]
+				$ExpCHAN = $ApMatchArray[$exp][6]
+				$ExpAUTH = $ApMatchArray[$exp][7]
+				$ExpENCR = $ApMatchArray[$exp][8]
+				$ExpBTX = $ApMatchArray[$exp][10]
+				$ExpOTX = $ApMatchArray[$exp][11]
+				$ExpMANU = $ApMatchArray[$exp][12]
+				$ExpLAB = $ApMatchArray[$exp][13]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][14]
+				$ExpFirstID = $ApMatchArray[$exp][15]
+				$ExpLastID = $ApMatchArray[$exp][16]
+
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][1])
+				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][2])
+
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					;Get First Seen
+					$query = "SELECT GpsId FROM Hist Where HistID = '" & $ExpFirstID & "'"
+					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpGID = $HistMatchArray[1][1]
+					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpFirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+					;Get Last Seen
+					$query = "SELECT GpsId FROM Hist Where HistID = '" & $ExpLastID & "'"
+					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpGID = $HistMatchArray[1][1]
+					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpLastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+
+
+					$file &= '<Placemark>' & @CRLF _
+							 & '<name></name>' & @CRLF _
+							 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' _
+							 & '<styleUrl>#openStyle</styleUrl>' & @CRLF _
+							 & '<Point>' & @CRLF _
+							 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
+							 & '</Point>' & @CRLF _
+							 & '</Placemark>' & @CRLF
+				EndIf
+			Next
+			$file &= '</Folder>' & @CRLF
+		EndIf
+	EndIf
+	If $MapWepAps = 1 Then
+		$query = $kmlquery
+		If StringInStr($query, 'WHERE') Then
+			$query &= " And SECTYPE = '2' And HighGpsHistId <> '0'"
+		Else
+			$query &= " WHERE SECTYPE = '2' And HighGpsHistId <> '0'"
+		EndIf
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			$file &= '<Folder>' & @CRLF _
+					 & '<name>Wep Access Points</name>' & @CRLF
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving WEP AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][2]
+				$ExpBSSID = $ApMatchArray[$exp][3]
+				$ExpNET = $ApMatchArray[$exp][4]
+				$ExpRAD = $ApMatchArray[$exp][5]
+				$ExpCHAN = $ApMatchArray[$exp][6]
+				$ExpAUTH = $ApMatchArray[$exp][7]
+				$ExpENCR = $ApMatchArray[$exp][8]
+				$ExpBTX = $ApMatchArray[$exp][10]
+				$ExpOTX = $ApMatchArray[$exp][11]
+				$ExpMANU = $ApMatchArray[$exp][12]
+				$ExpLAB = $ApMatchArray[$exp][13]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][14]
+				$ExpFirstID = $ApMatchArray[$exp][15]
+				$ExpLastID = $ApMatchArray[$exp][16]
+
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][1])
+				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][2])
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					;Get First Seen
+					$query = "SELECT GpsId FROM Hist Where HistID = '" & $ExpFirstID & "'"
+					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpGID = $HistMatchArray[1][1]
+					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpFirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+					;Get Last Seen
+					$query = "SELECT GpsId FROM Hist Where HistID = '" & $ExpLastID & "'"
+					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpGID = $HistMatchArray[1][1]
+					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpLastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+
+
+					$file &= '<Placemark>' & @CRLF _
+							 & '<name></name>' & @CRLF _
+							 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' _
+							 & '<styleUrl>#wepStyle</styleUrl>' & @CRLF _
+							 & '<Point>' & @CRLF _
+							 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
+							 & '</Point>' & @CRLF _
+							 & '</Placemark>' & @CRLF
+				EndIf
+			Next
+			$file &= '</Folder>' & @CRLF
+		EndIf
+	EndIf
+	If $MapSecAps = 1 Then
+		$query = $kmlquery
+		If StringInStr($query, 'WHERE') Then
+			$query &= " And SECTYPE = '3' And HighGpsHistId <> '0'"
+		Else
+			$query &= " WHERE SECTYPE = '3' And HighGpsHistId <> '0'"
+		EndIf
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			$file &= '<Folder>' & @CRLF _
+					 & '<name>Secure Access Points</name>' & @CRLF
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving Secure AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][2]
+				$ExpBSSID = $ApMatchArray[$exp][3]
+				$ExpNET = $ApMatchArray[$exp][4]
+				$ExpRAD = $ApMatchArray[$exp][5]
+				$ExpCHAN = $ApMatchArray[$exp][6]
+				$ExpAUTH = $ApMatchArray[$exp][7]
+				$ExpENCR = $ApMatchArray[$exp][8]
+				$ExpBTX = $ApMatchArray[$exp][10]
+				$ExpOTX = $ApMatchArray[$exp][11]
+				$ExpMANU = $ApMatchArray[$exp][12]
+				$ExpLAB = $ApMatchArray[$exp][13]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][14]
+				$ExpFirstID = $ApMatchArray[$exp][15]
+				$ExpLastID = $ApMatchArray[$exp][16]
+
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][1])
+				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][2])
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					;Get First Seen
+					$query = "SELECT GpsId FROM Hist Where HistID = '" & $ExpFirstID & "'"
+					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpGID = $HistMatchArray[1][1]
+					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpFirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+					;Get Last Seen
+					$query = "SELECT GpsId FROM Hist Where HistID = '" & $ExpLastID & "'"
+					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpGID = $HistMatchArray[1][1]
+					$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpLastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+
+
+					$file &= '<Placemark>' & @CRLF _
+							 & '<name></name>' & @CRLF _
+							 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' _
+							 & '<styleUrl>#secureStyle</styleUrl>' & @CRLF _
+							 & '<Point>' & @CRLF _
+							 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
+							 & '</Point>' & @CRLF _
+							 & '</Placemark>' & @CRLF
+				EndIf
+			Next
+			$file &= '</Folder>' & @CRLF
+		EndIf
+	EndIf
+
+	$file &= '</Folder>' & @CRLF
+
+	If $GpsTrack = 1 Then
+		$query = "SELECT Latitude, Longitude FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundGpsMatch = UBound($GpsMatchArray) - 1
+		If $FoundGpsMatch <> 0 Then
+
+			$file &= '<Folder>' & @CRLF _
+					 & '<name>GPS Track</name>' & @CRLF _
+					 & '<Placemark>' & @CRLF _
+					 & '<name>GPS Track</name>' & @CRLF _
+					 & '<styleUrl>#Location</styleUrl>' & @CRLF _
+					 & '<LineString>' & @CRLF _
+					 & '<extrude>1</extrude>' & @CRLF _
+					 & '<tessellate>1</tessellate>' & @CRLF _
+					 & '<coordinates>' & @CRLF
+			For $exp = 1 To $FoundGpsMatch
+				GUICtrlSetData($msgdisplay, 'Saving Gps Position ' & $exp & '/' & $FoundGpsMatch)
+				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1])
+				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2])
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$FoundApWithGps = 1
+					$file &= StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0' & @CRLF
+				EndIf
+			Next
+			$file &= '</coordinates>' & @CRLF _
+					 & '</LineString>' & @CRLF _
+					 & '</Placemark>' & @CRLF _
+					 & '</Folder>' & @CRLF
+		EndIf
+	EndIf
+	$file &= '</Document>' & @CRLF _
+			 & '</kml>' & @CRLF
+
+	If $FoundApWithGps = 1 Then
+		FileWrite($kml, $file)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+	;EndIf
+EndFunc   ;==>_SaveFilteredKML
 
 Func _StartGoogleAutoKmlRefresh()
 	$kml = $GoogleEarth_OpenFile
@@ -6603,13 +7070,11 @@ Func _ApplySettingsGUI();Applys settings
 			$query = "UPDATE AP SET ListRow = '-1'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Add filtered data into listview
-			ConsoleWrite($fquery & @CRLF)
 			$FilterListviewPos = 0
 			$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
 			$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
-			ConsoleWrite($FoundLoadApMatch & @CRLF)
 			For $imp = 1 To $FoundLoadApMatch
-				GUICtrlSetData($msgdisplay, $Text_Recovering & ': ' & ' ' & $imp & ' / ' & $FoundLoadApMatch)
+				GUICtrlSetData($msgdisplay, 'Adding Filtered AP' & ': ' & ' ' & $imp & ' / ' & $FoundLoadApMatch)
 				$ImpApID = $LoadApMatchArray[$imp][1]
 				$ImpSSID = $LoadApMatchArray[$imp][2]
 				$ImpBSSID = $LoadApMatchArray[$imp][3]
@@ -7179,7 +7644,7 @@ Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
 		$time1hour = StringFormat("%02i", $Time1[1])
 		$time1minute = StringFormat("%02i", $Time1[2])
 		$time1second = StringFormat("%02i", $Time1[3])
-		$Date1String = $date1month & $date1day & $date1year & $time1hour & $time1minute & $time1second
+		$Date1String = $date1year & $date1month & $date1day & $time1hour & $time1minute & $time1second
 		$Date2 = StringSplit($d2split[1], '-')
 		$Time2 = StringSplit($d2split[2], ':')
 		$date2month = StringFormat("%02i", $Date2[1])
@@ -7188,17 +7653,13 @@ Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
 		$time2hour = StringFormat("%02i", $Time2[1])
 		$time2minute = StringFormat("%02i", $Time2[2])
 		$time2second = StringFormat("%02i", $Time2[3])
-		$Date2String = $date2month & $date2day & $date2year & $time2hour & $time2minute & $time2second
-		ConsoleWrite($Date1String & '-' & $Date2String & @CRLF)
+		$Date2String = $date2year & $date2month & $date2day & $time2hour & $time2minute & $time2second
 		;Compare date strings
 		If $Date1String = $Date2String Then
-			ConsoleWrite('0' & @CRLF)
 			Return (0)
 		ElseIf $Date1String > $Date2String Then
-			ConsoleWrite('1' & @CRLF)
 			Return (1)
 		ElseIf $Date1String < $Date2String Then
-			ConsoleWrite('2' & @CRLF)
 			Return (2)
 		Else
 			Return (-1)
