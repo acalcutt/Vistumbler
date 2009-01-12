@@ -1,5 +1,5 @@
 <?php
-include('../lib/database.inc.php');
+include('lib/database.inc.php');
 echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title>';
 ?>
 <link rel="stylesheet" href="../css/site4.0.css">

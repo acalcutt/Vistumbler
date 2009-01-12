@@ -38,6 +38,7 @@ while ($newArray = mysql_fetch_array($result))
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
 <?php
+include('../lib/database.inc.php');
 $user	=	addslashes($_POST["user"]);
 $notes	=	addslashes($_POST["notes"]);
 $source	=	$_FILES['file']['tmp_name'];

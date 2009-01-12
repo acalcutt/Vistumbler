@@ -5,16 +5,16 @@ $ver=array(
 			"database"	=>	array(  
 							"import_vs1"		=>	"1.3", 
 							"convert_vs1"		=>	"1.0",
-							"apfetch"			=>	"2.1",
+							"apfetch"		=>	"2.1",
 							"gps_check_array"	=>	"1.0",
-							"allusers"			=>	"1.1",
-							"userstats"			=>	"1.1",
-							"usersap"			=>	"1.1",
+							"allusers"		=>	"1.1",
+							"userstats"		=>	"1.1",
+							"usersap"		=>	"1.1",
 							"all_usersap"		=>	"1.1",
 							"export_KML"		=>	"1.0"
 							),
 			"Misc"		=>	array(
-							"smart quotes"		=> 	"1.0",
+							"smart_quotes"		=> 	"1.0",
 							"Manufactures"		=> 	"1.0"
 							),
 			);
@@ -1769,7 +1769,6 @@ function convert_vs1($source, $out="file")
 #			}
 #		}
 #	}
-
 #end DATABASE CLASS
 }
 

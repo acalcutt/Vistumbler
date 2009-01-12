@@ -42,7 +42,7 @@ $mac_explode = explode(':', $_POST['mac']);
 $mac_post = implode('', $mac_explode);
 strip_tags($_POST['ssid']);
 strip_tags($mac_post);
-strip_tags($_POST['radio']);
+strip_tags($_POST['radio'];
 strip_tags($_POST['chan']);
 strip_tags($_POST['auth']);
 strip_tags($_POST['encry']);
@@ -63,15 +63,15 @@ echo '<table border="1" width="100%" cellspacing="0">'
 .'<th>Encryption</th></tr>';
 
 $ord   =	$_GET['ord'];
-strip_tags($ord);
+sript_tags($ord);
 $sort  =	$_GET['sort'];
-strip_tags($sort);
+sript_tags($sort);
 $from  =	$_GET['from'];
-strip_tags($from);
+sript_tags($from);
 $from_ =	$_GET['from'];
-strip_tags($from_);
+sript_tags($from_);
 $inc   =	$_GET['to'];
-strip_tags($inc);
+sript_tags($inc);
 if ($from==""){$from=0;}
 if ($inc==""){$inc=100;}
 if ($ord==""){$ord="ASC";}
@@ -91,7 +91,7 @@ while ($newArray = mysql_fetch_array($result))
 	$radio = $newArray['radio'];
 	$auth = $newArray['auth'];
 	$encry = $newArray['encry'];
-    echo '<tr><td><a class="links" href="'.$root.'/opt/fetch.php?id='.$id.'">'.$ssid.'</a></td>';
+    echo '<tr><td><a class="links" href="opt/fetch.php?id='.$id.'">'.$ssid.'</a></td>';
     echo '<td>'.$mac.'</td>';
     echo '<td>'.$chan.'</td>';
 	if($radio=="a")
