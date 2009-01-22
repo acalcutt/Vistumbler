@@ -106,7 +106,7 @@ echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`";}
 
 $sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES
 		(1, '<a class=\"links\" href=\"/\">Main Page</a>'),
-		(2, '<a class=\"links\" href=\"all.php\">View All APs</a>'),
+		(2, '<a class=\"links\" href=\"all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),
 		(3, '<a class=\"links\" href=\"import/\">Import APs</a>'),
 		(4, '<a class=\"links\" href=\"opt/search.php\">Search APs</a>'),
 		(5, '<a class=\"links\" href=\"opt/userstats.php?func=usersall\">View All Users</a>'),

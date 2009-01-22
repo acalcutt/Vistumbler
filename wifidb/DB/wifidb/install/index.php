@@ -51,7 +51,7 @@ else
     <td><input name="root_sql_pwd"></td></tr>
   <tr> 
   <tr>
-    <td width="100%">WiFiDB Root (Default `wifidb` )</td><td>........................................</td>
+    <td width="100%">WiFiDB Root ( The folder you put WiFiDB in )</td><td>........................................</td>
     <td><input name="root"></td></tr>
   <tr>
     <td>Host URL</td><td>........................................</td>

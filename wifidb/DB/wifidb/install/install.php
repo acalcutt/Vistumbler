@@ -150,22 +150,31 @@ echo "<tr><td>Failure..........</td><td>CREATE TABLE `links`</td></tr>";}
 #Insert data into links table
 if($hosturl !== "" && $root !== "")
 {
-$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
+	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
-		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php\">View All APs</a>'),"
+		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
 		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>');"
+		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>')"
 		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
-		."(6, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>');";
+		."(6, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>')";
+}elseif($root !== "")
+{ 
+	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
+		."(1, '<a class=\"links\" href=\"$root/\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"$root/import/\">Import APs</a>'),"
+		."(4, '<a class=\"links\" href=\"$root/opt/search.php\">Search APs</a>'),"
+		."(5, '<a class=\"links\" href=\"$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"$root/ver.php\">WiFiDB Version</a>')";
 }else
 {
-$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
+	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"/\">Main Page</a>'),"
-		."(2, '<a class=\"links\" href=\"/all.php\">View All APs</a>'),"
+		."(2, '<a class=\"links\" href=\"/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
 		."(3, '<a class=\"links\" href=\"/import/\">Import APs</a>'),"
 		."(4, '<a class=\"links\" href=\"/opt/search.php\">Search APs</a>'),"
 		."(5, '<a class=\"links\" href=\"/opt/userstats.php?func=usersall\">View All Users</a>'),"
-		."(6, '<a class=\"links\" href=\"/ver.php\">WiFiDB Version</a>');";
+		."(6, '<a class=\"links\" href=\"/ver.php\">WiFiDB Version</a>')";
 }
 $IN_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
