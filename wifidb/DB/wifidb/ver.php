@@ -74,11 +74,11 @@ while ($newArray = mysql_fetch_array($result))
 	</tr>
 	<tr>
 		<td width="67" style="border-style: solid; border-width: 1px" height="26">
-		0.15 Build 76</td>
+		0.15 Build 77</td>
 		<td width="285" height="26" style="border-style: solid; border-width: 1px">
 		Phillip Ferland</td>
 		<td style="border-style: solid; border-width: 1px" height="26">
-		2008-12-20</td>
+		2008-01-11</td>
 		<td style="border-style: solid; border-width: 1px" height="26">
 		1> some headers had duplicate includes for database.inc.php.
 		2> fixed import of GPS points.
