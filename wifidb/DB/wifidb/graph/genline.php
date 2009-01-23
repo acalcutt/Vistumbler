@@ -13,6 +13,7 @@ $lastedit="19-12-2008";
 
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
+include('../lib/graph.inc.php');
 echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Graphing Page</title>';
 ?>
 <link rel="stylesheet" href="../css/site4.0.css">

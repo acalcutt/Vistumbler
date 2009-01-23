@@ -62,6 +62,18 @@ while ($newArray = mysql_fetch_array($result))
 	</tr>
 	<tr>
 		<td width="67" style="border-style: solid; border-width: 1px" height="26">
+		0.15 Build 78</td>
+		<td width="285" height="26" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2008-12-20</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Extra includes for database.inc.php slipped back in.
+		2> Install script had a bug with the Links table.
+		</td>
+	</tr>
+	<tr>
+		<td width="67" style="border-style: solid; border-width: 1px" height="26">
 		0.15 Build 76</td>
 		<td width="285" height="26" style="border-style: solid; border-width: 1px">
 		Phillip Ferland</td>

@@ -1,5 +1,10 @@
 <?php
-include('lib/config.inc.php');
+if(file_exists('lib/config.inc.php'))
+{
+	include('lib/config.inc.php');
+}else{
+	die('<h1>You need to install WiFiDB first. Please go <a href="install/">here</a> to do that.</h1>');
+}
 include('lib/database.inc.php');
 echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Main Page</title>';
 ?>
