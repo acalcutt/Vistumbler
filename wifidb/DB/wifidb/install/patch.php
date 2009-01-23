@@ -23,7 +23,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 	<tr>
 <td width="17%" bgcolor="#304D80" valign="top">
 <table><tr><th>Status</th><th>Step of Install</th></tr>
-<tr><TH colspan="2">Upgrade DB for 0.15 Build 75</TH><tr>
+<tr><TH colspan="2">Upgrade DB for 0.15 Build 78</TH><tr>
 <?php
 
 $date = date("m.d.Y");
@@ -31,15 +31,19 @@ $root_sql_user	=	$_POST['root_sql_user'];
 strip_tags($root_sql_user);
 $root_sql_pwd	=	$_POST['root_sql_pwd'];
 strip_tags($root_sql_pwd);
+$root		=	$_POST['root'];
+strip_tags($root);
+$hosturl	=	$_POST['hosturl'];
+strip_tags($hosturl);
 $sqlhost	=	$_POST['sqlhost'];
 strip_tags($sqlhost);
 $sqlu		=	$_POST['sqlu'];
 strip_tags($sqlu);
 $sqlp		=	$_POST['sqlp'];
 strip_tags($sqlp);
-$wifi		=	$_POST['wifi'];
+$wifi		=	$_POST['wifidb'];
 strip_tags($wifi);
-$wifi_st	=	$_POST['wifist'];
+$wifi_st	=	$_POST['wifistdb'];
 strip_tags($wifi_st);
 
 if ($sqlhost !== 'localhost' or $sqlhost !== "127.0.0.1")
@@ -96,30 +100,55 @@ else{
 echo "<tr><td>Failure..........</td><td>DROP TABLE `links`";}
 
 
-$sql0 = "CREATE TABLE `links` (`ID` int(255) NOT NULL auto_increment,`links` varchar(255) NOT NULL, KEY `INDEX` (`ID`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=6";
-$create = mysql_query($sql, $conn) or die(mysql_error());
+#Create Links table
+$sqls =	"CREATE TABLE `links` ("
+	."`ID` int(255) NOT NULL auto_increment,"
+	."`links` varchar(255) NOT NULL,"
+	."KEY `INDEX` (`ID`)"
+	.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;";
+$CR_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
-if($create)
-{echo "<tr><td>Success..........</td><td>CREATE TABLE `links`; ";}
+if($CR_TB_LN_Re)
+{echo "<tr><td>Success..........</td><td>CREATE TABLE `links`</td></tr>";}
 else{
-echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`";}
+echo "<tr><td>Failure..........</td><td>CREATE TABLE `links`</td></tr>";}
 
-$sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES
-		(1, '<a class=\"links\" href=\"/\">Main Page</a>'),
-		(2, '<a class=\"links\" href=\"all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),
-		(3, '<a class=\"links\" href=\"import/\">Import APs</a>'),
-		(4, '<a class=\"links\" href=\"opt/search.php\">Search APs</a>'),
-		(5, '<a class=\"links\" href=\"opt/userstats.php?func=usersall\">View All Users</a>'),
-		(6, '<a class=\"links\" href=\"ver.php\">WiFiDB Version</a>')";
-$insert = mysql_query($sql, $conn) or die(mysql_error());
 
-if($insert)
-{echo "<tr><td>Success..........</td><td>DROP DATABASE `$wifi_st`; "
-		."CREATE DATABASE `$wifi_st`</td></tr>";}
-else{
-echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`; "
-		."CREATE DATABASE `$wifi_st`</td></tr>";
+#Insert data into links table
+if($hosturl !== "" && $root !== "")
+{
+	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
+		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import APs</a>'),"
+		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>')"
+		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>')";
+}elseif($root !== "")
+{ 
+	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
+		."(1, '<a class=\"links\" href=\"/$root/\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"/$root/import/\">Import APs</a>'),"
+		."(4, '<a class=\"links\" href=\"/$root/opt/search.php\">Search APs</a>'),"
+		."(5, '<a class=\"links\" href=\"/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"/$root/ver.php\">WiFiDB Version</a>')";
+}else
+{
+	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
+		."(1, '<a class=\"links\" href=\"/\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"/import/\">Import APs</a>'),"
+		."(4, '<a class=\"links\" href=\"/opt/search.php\">Search APs</a>'),"
+		."(5, '<a class=\"links\" href=\"/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"/ver.php\">WiFiDB Version</a>')";
 }
+$IN_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
+
+if($IN_TB_LN_Re)
+{echo "<tr><td>Success..........</td><td>INSERT INTO `links`</td></tr>";}
+else{echo "<tr><td>Failure..........</td><td>INSERT INTO `links`</td></tr>";}
+
 
 echo "</table>";
 

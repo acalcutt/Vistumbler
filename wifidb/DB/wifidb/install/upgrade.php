@@ -1,6 +1,6 @@
 <?php
-include('lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title>';
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
 ?>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
@@ -9,20 +9,24 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		<?php echo 'Wireless DataBase *Alpha* '.$ver["wifidb"].'</font>';?>
+		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
 		<font color="#FFFFFF" size="2">
             <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
 		</font></b>
-		</p>
 		</td>
 	</tr>
 </table>
 </div>
 <div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
-	<tr>
+<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90"><tr>
 <td width="17%" bgcolor="#304D80" valign="top">
+<!--LINKS-->
+</td>
+
+<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+<!--BODY-->
 <form action="patch.php" method="post" enctype="multipart/form-data">
+
   <h2>WiFiDB Settings for Upgrade</h2>
 <?php
 $gd = gd_info(); 
@@ -35,6 +39,7 @@ else
 	echo "<h4><font color=#00ff00>GD Version: ".$gd['GD Version'].", is installed</font></h4>";
 }
 ?>
+<h3>This is the Upgrade page to go from v 0.14 or any 0.15 build to this current version ( <?php echo $ver["wifidb"]; ?> )</h3>
 <table border="0" cellspacing="0" cellpadding="3">
 
   <tr>
@@ -45,20 +50,31 @@ else
     <td><input name="root_sql_pwd"></td></tr>
   <tr>
   <td>
+    <p>WiFiDB root ( Folder you put WiFiDB in )</td><td>........................................</td>
+    <td><input name="root"></td></tr>
+  <tr>
+    <td>
+    <p>Host Root URL ( leave blank for most installs )</td><td>........................................</td>
+    <td><input name="hosturl"></td></tr>
+  <tr>
+	<td>
     <p>MySQL Host (Default `localhost` )</td><td>........................................</td>
     <td><input name="sqlhost"></td></tr>
   <tr>
-    <td>WiFiDB SQL Username</td><td>........................................</td>
+    <td>WiFiDB SQL Username (to verify)</td><td>........................................</td>
     <td><input name="sqlu"></td></tr>
   <tr>
-    <td>WiFiDB SQL Password</td><td>........................................</td>
+    <td>WiFiDB SQL Password (to verify)</td><td>........................................</td>
     <td><input name="sqlp"></td></tr>
   <tr>
-    <td>WiFi DB name (Default `wifi` )</td><td>........................................</td>
-    <td><input name="wifi"></td></tr>
+    <td>WiFi DB name (For the wifidb user )</td><td>........................................</td>
+    <td><input name="wifi"></td>
+  </tr>
   <tr>
-    <td>WiFi Storage DB name (Default `wifi_st` )</td><td>........................................</td>
-    <td><input name="wifist"></td>
+    <td>WiFi Storage DB name (For the wifidb user )</td><td>........................................</td>
+    <td>
+	<input name="wifist">
+	</td>
 </TR><TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
 <INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
 </TD>
