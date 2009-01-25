@@ -69,11 +69,18 @@ Dim $Debug
 Dim $debugdisplay
 Dim $sErr
 Dim $CompassGraphic, $compasspos_old, $compasspos, $north, $south, $east, $west, $CompassBack, $CompassHeight, $CompassBrush
+Dim $DefaultSaveDir = @ScriptDir & '\Save\'
+Dim $SettingsDir = @ScriptDir & '\Settings\'
+Dim $LanguageDir = @ScriptDir & '\Languages\'
+Dim $SoundDir = @ScriptDir & '\Sounds\'
+Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $TmpDir = @ScriptDir & '\temp\'
 DirCreate($TmpDir)
 Dim $VistumblerDB = $TmpDir & 'VistumblerDB.mdb'
+Dim $ManuLabInstDB = $SettingsDir & 'ManuLabInstDB.mdb'
 
 Dim $DB_OBJ
+Dim $ManuLabInstDB_OBJ
 Dim $APID = 0
 Dim $HISTID = 0
 Dim $GPS_ID = 0
@@ -94,11 +101,6 @@ Dim $GoogleEarth_TrackFile = $TmpDir & 'autokml_track.kml'
 Dim $GoogleEarth_OpenFile = $TmpDir & 'autokml_networklink.kml'
 Dim $tempfile = $TmpDir & "netsh_tmp.txt"
 Dim $tempfile_showint = $TmpDir & "netsh_si_tmp.txt"
-Dim $DefaultSaveDir = @ScriptDir & '\Save\'
-Dim $SettingsDir = @ScriptDir & '\Settings\'
-Dim $LanguageDir = @ScriptDir & '\Languages\'
-Dim $SoundDir = @ScriptDir & '\Sounds\'
-Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
 Dim $labelsini = $SettingsDir & 'mac_labels.ini'
 Dim $manufini = $SettingsDir & 'manufactures.ini'
@@ -630,10 +632,6 @@ If FileExists($VistumblerDB) Then
 		$query = "SELECT GpsID FROM GPS"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$GPS_ID = UBound($GpsMatchArray) - 1
-		$query = "DELETE * FROM Manufacturers"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		$query = "DELETE * FROM Labels"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		$query = "DELETE * FROM TreeviewAUTH"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		$query = "DELETE * FROM TreeviewCHAN"
@@ -653,14 +651,22 @@ Else
 	_SetUpDbTables($VistumblerDB)
 EndIf
 
+If FileExists($ManuLabInstDB) Then
+	_AccessConnectConn($ManuLabInstDB, $ManuLabInstDB_OBJ)
+Else
+	_SetUpManLabInstDbTables($ManuLabInstDB)
+EndIf
+
+
+
 ;Create-Table-Of-Manufactures----------------------------
-_ReadIniSectionToDB($manufini, "MANUFACURERS", $VistumblerDB, $DB_OBJ, "Manufacturers")
+;_ReadIniSectionToDB($manufini, "MANUFACURERS", $VistumblerDB, $DB_OBJ, "Manufacturers")
 
 ;Create-Table-Of-Labels----------------------------
-_ReadIniSectionToDB($labelsini, "LABELS", $VistumblerDB, $DB_OBJ, "Labels")
+;_ReadIniSectionToDB($labelsini, "LABELS", $VistumblerDB, $DB_OBJ, "Labels")
 
 ;Create-Table-Of-Instruments----------------------------
-_ReadIniSectionToDB($midiini, "INSTRUMENTS", $VistumblerDB, $DB_OBJ, "Instruments")
+;_ReadIniSectionToDB($midiini, "INSTRUMENTS", $VistumblerDB, $DB_OBJ, "Instruments")
 
 ;Set-Up-Column-Headers-Based-On-INI-File-----------------
 $var = IniReadSection($settings, "Columns")
@@ -1006,8 +1012,8 @@ While 1
 		;Add APs back into the listview that match but are not there
 		_FilterReAddMatchingNotInList()
 	EndIf
-	
-	
+
+
 
 	;Graph Selected AP
 	If $UpdatedGraph <> 1 Then
@@ -1673,11 +1679,11 @@ Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 		$APNUM = _GUICtrlListView_GetItemText($ListviewAPs, $lisviewrow, $column_Line)
 		$query = "UPDATE AP SET ListRow = '" & $lisviewrow & "' WHERE ApId = '" & $APNUM & "'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		
+
 	Next
 EndFunc   ;==>_FixLineNumbers
 
-Func _ReadIniSectionToDB($ini, $section, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
+Func _ReadIniSectionToDB2($ini, $section, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ReadIniSectionToArrays()') ;#Debug Display
 	$var = IniReadSection($ini, $section)
 	If Not @error Then
@@ -1685,6 +1691,22 @@ Func _ReadIniSectionToDB($ini, $section, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
 			_AddRecord($DB, $DBTABLE, $DBOBJ, StringUpper($var[$i][0]) & '|' & $var[$i][1])
 		Next
 	EndIf
+EndFunc   ;==>_ReadIniSectionToDB2
+
+Func _ReadIniSectionToDB($ini, $section, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
+	;Get Total number of lines
+	$sectionstartline = 1
+	$sectionendline = 0
+	While 1
+		ConsoleWrite('l:' & $sectionendline & @CRLF)
+		$linein = FileReadLine($ini, $sectionendline)
+		If @error = -1 Then ExitLoop
+		If StringInStr($linein, '=') Then
+			$infosplit = StringSplit($linein, '=')
+			_AddRecord($DB, $DBTABLE, $DBOBJ, StringUpper($infosplit[1]) & '|' & $infosplit[2])
+		EndIf
+		$sectionendline += 1
+	WEnd
 EndFunc   ;==>_ReadIniSectionToDB
 
 Func _RecoverMDB()
@@ -1744,14 +1766,14 @@ Func _RecoverMDB()
 		$ImpDate = $HistMatchArray[1][1]
 		$ImpTime = $HistMatchArray[1][2]
 		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
-		
+
 		$ListRow = -1
 		If _FilterMatch($ImpApID, $Text_Dead, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, '0', $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB) = 1 Then
 			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $RecListrow)
 			_ListViewAdd($ListRow, $ImpApID, $Text_Dead, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, '0', $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
 			$RecListrow += 1
 		EndIf
-		
+
 		_TreeViewAdd($ImpSSID, $ImpBSSID, $ImpAUTH, $ImpENCR, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpMANU, $ImpLAB)
 
 		If $ImpActive = 1 Then
@@ -1782,9 +1804,6 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'GPS', $DB_OBJ)
 	_CreateTable($dbfile, 'AP', $DB_OBJ)
 	_CreateTable($dbfile, 'Hist', $DB_OBJ)
-	_CreateTable($dbfile, 'Manufacturers', $DB_OBJ)
-	_CreateTable($dbfile, 'Labels', $DB_OBJ)
-	_CreateTable($dbfile, 'Instruments', $DB_OBJ)
 	_CreateTable($dbfile, 'TreeviewAUTH', $DB_OBJ)
 	_CreateTable($dbfile, 'TreeviewCHAN', $DB_OBJ)
 	_CreateTable($dbfile, 'TreeviewENCR', $DB_OBJ)
@@ -1793,15 +1812,24 @@ Func _SetUpDbTables($dbfile)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'Manufacturers', $DB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
-	_CreatMultipleFields($dbfile, 'Labels', $DB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
-	_CreatMultipleFields($dbfile, 'Instruments', $DB_OBJ, 'INSTNUM TEXT(3)|INSTTEXT TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TreeviewAUTH', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TreeviewCHAN', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TreeviewENCR', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TreeviewNETTYPE', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
+
+Func _SetUpManLabInstDbTables($dbfile)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetUpManLabInstDbTables()') ;#Debug Display
+	_CreateDB($dbfile)
+	_AccessConnectConn($dbfile, $ManuLabInstDB_OBJ)
+	_CreateTable($dbfile, 'Manufacturers', $ManuLabInstDB_OBJ)
+	_CreateTable($dbfile, 'Labels', $ManuLabInstDB_OBJ)
+	_CreateTable($dbfile, 'Instruments', $ManuLabInstDB_OBJ)
+	_CreatMultipleFields($dbfile, 'Manufacturers', $ManuLabInstDB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
+	_CreatMultipleFields($dbfile, 'Labels', $ManuLabInstDB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
+	_CreatMultipleFields($dbfile, 'Instruments', $ManuLabInstDB_OBJ, 'INSTNUM TEXT(3)|INSTTEXT TEXT(255)')
+EndFunc   ;==>_SetUpManLabInstDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       MANUFACTURER/LABEL FUNCTIONS
@@ -1812,7 +1840,7 @@ Func _FindManufacturer($findmac);Returns Manufacturer for given Mac Address
 	$findmac = StringReplace($findmac, ':', '')
 	If StringLen($findmac) <> 6 Then $findmac = StringTrimRight($findmac, StringLen($findmac) - 6)
 	$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID = '" & $findmac & "'"
-	$ManuMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ManuMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
 	$FoundManuMatch = UBound($ManuMatchArray) - 1
 	If $FoundManuMatch = 0 Then
 		Return ($Text_Unknown)
@@ -1826,7 +1854,7 @@ Func _SetLabels($findmac);Returns Label for given Mac Address
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetLabels()') ;#Debug Display
 	$findmac = StringReplace($findmac, ':', '')
 	$query = "SELECT Label FROM Labels WHERE BSSID = '" & $findmac & "'"
-	$LabMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$LabMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
 	$FoundLabMatch = UBound($LabMatchArray) - 1
 	If $FoundLabMatch = 0 Then
 		Return ($Text_Unknown)
@@ -1897,6 +1925,7 @@ Func _Exit()
 	If WinExists($Text_ConnectToWindowName) Then WinClose($Text_ConnectToWindowName)
 	GUISetState(@SW_HIDE, $Vistumbler)
 	_AccessCloseConn($DB_OBJ)
+	_AccessCloseConn($ManuLabInstDB_OBJ)
 	_WriteINI(); Write current settings to back to INI file
 	$PID = -1
 	$CloseTimer = TimerInit()
@@ -4788,7 +4817,7 @@ Func _WriteINI()
 	IniWrite($settings, 'GuiText', 'VistumblerDonate', $Text_VistumblerDonate)
 	IniWrite($settings, 'GuiText', 'VistumblerStore', $Text_VistumblerStore)
 	IniWrite($settings, 'GuiText', 'SupportVistumbler', $Text_SupportVistumbler)
-	
+
 	IniWrite($settings, 'Filters', 'FilterLine', $Filter_Line)
 	IniWrite($settings, 'Filters', 'FilterActive', $Filter_Active)
 	IniWrite($settings, 'Filters', 'FilterBSSID', $Filter_BSSID)
@@ -5688,9 +5717,9 @@ EndFunc   ;==>_AutoKmlGpsFile
 Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportNS1()') ;#Debug Display
 	DirCreate($SaveDir)
-	$filename = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_NetstumblerTxtFile & ' (*.NS1)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.NS1')
+	$FileName = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_NetstumblerTxtFile & ' (*.NS1)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.NS1')
 	If @error <> 1 Then
-		FileDelete($filename)
+		FileDelete($FileName)
 		$APID1 = ''
 		$Date1 = ''
 
@@ -5795,7 +5824,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 			EndIf
 			$file &= $Found_Lat & "	" & $Found_Lon & "	( " & $Found_SSID & " )	" & $BSS & "	( " & $Found_BSSID & " )	" & $Found_Time & " (GMT)	[ " & $Found_Sig & " " & $Found_Sig + 50 & " 50 ]	# ( " & $Found_LAB & ' - ' & $Found_MANU & " )	" & $Flags & "	" & $CHAN & "	1000	" & $Radio & "	" & $Found_CHAN & @CRLF
 		Next
-		FileWrite($filename, $file)
+		FileWrite($FileName, $file)
 	Else
 		MsgBox(0, $Text_Error, $Text_NoFileSaved)
 	EndIf
@@ -6020,7 +6049,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	_GUICtrlListView_SetColumnWidth($GUI_Manu_List, 1, 450)
 	;Add Manufacturers to list
 	$query = "SELECT BSSID, Manufacturer FROM Manufacturers"
-	$ManuMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ManuMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
 	$FoundManuMatch = UBound($ManuMatchArray) - 1
 	For $m = 1 To $FoundManuMatch
 		$manumac = $ManuMatchArray[$m][1]
@@ -6047,7 +6076,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	_GUICtrlListView_SetColumnWidth($GUI_Lab_List, 1, 450)
 	;Add Labels to list
 	$query = "SELECT BSSID, Label FROM Labels"
-	$LabMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$LabMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
 	$FoundLabMatch = UBound($LabMatchArray) - 1
 	For $l = 1 To $FoundLabMatch
 		$labmac = $LabMatchArray[$l][1]
@@ -6349,7 +6378,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_Midi_Instument = GUICtrlCreateCombo('', 385, 345, 265, 20)
 	$query = "SELECT INSTNUM, INSTTEXT FROM Instruments"
-	$InstMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$InstMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
 	$FoundInstMatch = UBound($InstMatchArray) - 1
 	For $m = 1 To $FoundInstMatch
 		$INSTNUM = $InstMatchArray[$m][1]
@@ -6515,9 +6544,9 @@ Func _ImportLanguage();Copies language file to the languages directory
 	$imfile = GUICtrlRead($ImpLanFile)
 	If $imfile <> '' Then
 		$lastslash = StringInStr($imfile, "\", 0, -1)
-		$filename = StringTrimLeft($imfile, $lastslash)
-		FileDelete($LanguageDir & $filename)
-		FileCopy($imfile, $LanguageDir & $filename)
+		$FileName = StringTrimLeft($imfile, $lastslash)
+		FileDelete($LanguageDir & $FileName)
+		FileCopy($imfile, $LanguageDir & $FileName)
 	EndIf
 EndFunc   ;==>_ImportLanguage
 
@@ -6846,23 +6875,13 @@ Func _ApplySettingsGUI();Applys settings
 	If $Apply_Manu = 1 Then
 		;Remove all current Mac address/manus in the array
 		$query = "DELETE * FROM Manufacturers"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		_ExecuteMDB($ManuLabInstDB, $ManuLabInstDB_OBJ, $query)
 		;Rewrite Mac address/labels from listview into the array
 		$itemcount = _GUICtrlListView_GetItemCount($GUI_Manu_List) - 1; Get List Size
 		For $findloop = 0 To $itemcount
 			$o_manu_mac = StringUpper(StringReplace(_GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 0), '"', ''))
 			$o_manu = _GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 1)
-			_AddRecord($VistumblerDB, "Manufacturers", $DB_OBJ, $o_manu_mac & '|' & $o_manu)
-		Next
-		;rewrite manufacturer ini
-		IniDelete($manufini, "MANUFACURERS")
-		$query = "SELECT BSSID, Manufacturer FROM Manufacturers"
-		$ManuMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundManuMatch = UBound($ManuMatchArray) - 1
-		For $m = 1 To $FoundManuMatch
-			$manumac = $ManuMatchArray[$m][1]
-			$manumanu = $ManuMatchArray[$m][2]
-			IniWrite($manufini, "MANUFACURERS", $manumac, $manumanu)
+			_AddRecord($ManuLabInstDB, "Manufacturers", $ManuLabInstDB_OBJ, $o_manu_mac & '|' & $o_manu)
 		Next
 		;Reset Labels In List
 		_UpdateListMacLabels()
@@ -6870,23 +6889,13 @@ Func _ApplySettingsGUI();Applys settings
 	If $Apply_Lab = 1 Then
 		;Remove all current Mac address/labels in the array
 		$query = "DELETE * FROM Labels"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		_ExecuteMDB($ManuLabInstDB, $ManuLabInstDB_OBJ, $query)
 		;Rewrite Mac address/labels from listview into the array
 		$itemcount = _GUICtrlListView_GetItemCount($GUI_Lab_List) - 1; Get List Size
 		For $findloop = 0 To $itemcount
 			$o_lab_mac = StringUpper(StringReplace(_GUICtrlListView_GetItemText($GUI_Lab_List, $findloop, 0), '"', ''))
 			$o_lab = _GUICtrlListView_GetItemText($GUI_Lab_List, $findloop, 1)
-			_AddRecord($VistumblerDB, "Labels", $DB_OBJ, $o_lab_mac & '|' & $o_lab)
-		Next
-		;rewrite manufacturer ini
-		IniDelete($labelsini, "LABELS")
-		$query = "SELECT BSSID, Label FROM Labels"
-		$LabMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundLabMatch = UBound($LabMatchArray) - 1
-		For $l = 1 To $FoundLabMatch
-			$labmac = $LabMatchArray[$l][1]
-			$lablab = $LabMatchArray[$l][2]
-			IniWrite($labelsini, "LABELS", $labmac, $lablab)
+			_AddRecord($ManuLabInstDB, "Labels", $ManuLabInstDB_OBJ, $o_lab_mac & '|' & $o_lab)
 		Next
 		;Reset Labels In List
 		_UpdateListMacLabels()
@@ -7054,7 +7063,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Filter_OTX = GUICtrlRead($Filter_OTX_GUI)
 		$Filter_Line = GUICtrlRead($Filter_Line_GUI)
 		$Filter_Active = GUICtrlRead($Filter_Active_GUI)
-		
+
 		$fquery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 		$wquery = ''
 		$wquery = _AddQueryFilers($wquery, 'SSID', $Filter_SSID)
@@ -7530,12 +7539,12 @@ Func _CheckForUpdates()
 		$fv = IniReadSection($NewVersionFile, "FileVersions")
 		If Not @error Then
 			For $i = 1 To $fv[0][0]
-				$filename = $fv[$i][0]
+				$FileName = $fv[$i][0]
 				$fversion = $fv[$i][1]
-				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $fversion Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
-					If $filename = 'update.exe' Then
-						$getfile = InetGet($VIEWSVN_ROOT & $filename & '?revision=' & $fversion, @ScriptDir & '\' & $filename)
-						If $getfile = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $fversion)
+				If IniRead($CurrentVersionFile, "FileVersions", $FileName, '0') <> $fversion Or FileExists(@ScriptDir & '\' & $FileName) = 0 Then
+					If $FileName = 'update.exe' Then
+						$getfile = InetGet($VIEWSVN_ROOT & $FileName & '?revision=' & $fversion, @ScriptDir & '\' & $FileName)
+						If $getfile = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $FileName, $fversion)
 					EndIf
 					$UpdatesAvalible = 1
 				EndIf
@@ -7754,7 +7763,7 @@ Func _FilterRemoveNonMatchingInList()
 					For $lrnu = 1 To $ListRowMatch
 						$lApID = $ListRowArray[$lrnu][1]
 						$lListRow = $ListRowArray[$lrnu][2]
-						
+
 						ConsoleWrite(StringFormat("%09i", $lListRow) > StringFormat("%09i", $fListRow))
 						ConsoleWrite(' - ' & StringFormat("%09i", $lListRow) & '-' & StringFormat("%09i", $fListRow) & @CRLF)
 						If StringFormat("%09i", $lListRow) > StringFormat("%09i", $fListRow) Then
@@ -7764,7 +7773,7 @@ Func _FilterRemoveNonMatchingInList()
 							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 							ConsoleWrite('old:"' & $lListRow & '"     new:"' & $nListRow & '"' & @CRLF)
 						EndIf
-						
+
 					Next
 				EndIf
 			Next
@@ -7828,7 +7837,7 @@ Func _FilterReAddMatchingNotInList()
 		$ImpTime = $HistMatchArray[1][2]
 		$ImpSig = $HistMatchArray[1][3]
 		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
-		
+
 		If $ImpActive = 0 Then
 			$LActive = $Text_Dead
 		Else
