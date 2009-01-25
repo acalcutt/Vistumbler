@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.1 Alpha 2'
+$version = '9.1 Beta 1'
 $last_modified = '01/25/2009'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -75,7 +75,11 @@ Dim $LanguageDir = @ScriptDir & '\Languages\'
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $TmpDir = @ScriptDir & '\temp\'
-DirCreate($TmpDir)
+DirCreate($DefaultSaveDir)
+DirCreate($SettingsDir)
+DirCreate($LanguageDir)
+DirCreate($SoundDir)
+DirCreate($ImageDir)
 Dim $VistumblerDB = $TmpDir & 'VistumblerDB.mdb'
 Dim $ManuLabInstDB = $SettingsDir & 'ManuLabInstDB.mdb'
 
@@ -657,18 +661,6 @@ Else
 	_SetUpManLabInstDbTables($ManuLabInstDB)
 EndIf
 
-
-
-;Create-Table-Of-Manufactures----------------------------
-;_ReadIniSectionToDB($manufini, "MANUFACURERS", $VistumblerDB, $DB_OBJ, "Manufacturers")
-
-;Create-Table-Of-Labels----------------------------
-;_ReadIniSectionToDB($labelsini, "LABELS", $VistumblerDB, $DB_OBJ, "Labels")
-
-;Create-Table-Of-Instruments----------------------------
-;_ReadIniSectionToDB($midiini, "INSTRUMENTS", $VistumblerDB, $DB_OBJ, "Instruments")
-
-;Set-Up-Column-Headers-Based-On-INI-File-----------------
 $var = IniReadSection($settings, "Columns")
 If @error Then
 	$headers = '#|Active|SSID|Mac Address|Manufacturer|Signal|Authentication|Encryption|Radio Type|Channel|Latitude|Longitude|Latitude DMS|Longitude DMS|Latitude DMM|Longitude DMM|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated|Network Type|Label'
@@ -1682,32 +1674,6 @@ Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 
 	Next
 EndFunc   ;==>_FixLineNumbers
-
-Func _ReadIniSectionToDB2($ini, $section, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ReadIniSectionToArrays()') ;#Debug Display
-	$var = IniReadSection($ini, $section)
-	If Not @error Then
-		For $i = 1 To $var[0][0]
-			_AddRecord($DB, $DBTABLE, $DBOBJ, StringUpper($var[$i][0]) & '|' & $var[$i][1])
-		Next
-	EndIf
-EndFunc   ;==>_ReadIniSectionToDB2
-
-Func _ReadIniSectionToDB($ini, $section, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
-	;Get Total number of lines
-	$sectionstartline = 1
-	$sectionendline = 0
-	While 1
-		ConsoleWrite('l:' & $sectionendline & @CRLF)
-		$linein = FileReadLine($ini, $sectionendline)
-		If @error = -1 Then ExitLoop
-		If StringInStr($linein, '=') Then
-			$infosplit = StringSplit($linein, '=')
-			_AddRecord($DB, $DBTABLE, $DBOBJ, StringUpper($infosplit[1]) & '|' & $infosplit[2])
-		EndIf
-		$sectionendline += 1
-	WEnd
-EndFunc   ;==>_ReadIniSectionToDB
 
 Func _RecoverMDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RecoverMDB()') ;#Debug Display
