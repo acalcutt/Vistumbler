@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.1 Alpha 1'
-$last_modified = '01/10/2009'
+$version = '9.1 Alpha 2'
+$last_modified = '01/25/2009'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -194,7 +194,7 @@ Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
 Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir)
 Dim $AutoCheckForUpdates = IniRead($settings, 'Vistumbler', 'AutoCheckForUpdates', 1)
-Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 1)
+Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
 Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
 Dim $DefaultApapter = IniRead($settings, 'Vistumbler', 'DefaultApapter', 'Default')
@@ -979,6 +979,13 @@ While 1
 			EndIf
 			;Mark Dead Access Points
 			_MarkDeadAPs()
+			;MsgBox(0, '1', '_MarkDeadAPs()')
+			;Remove APs that do not match the filter
+			_FilterRemoveNonMatchingInList()
+			;MsgBox(0, '1', '_FilterRemoveNonMatchingInList()')
+			;Add APs back into the listview that match but are not there
+			_FilterReAddMatchingNotInList()
+			;MsgBox(0, '1', '_FilterReAddMatchingNotInList()')
 			;Play Midi Sounds for all active APs (if enabled)
 			_PlayMidiForActiveAPs()
 		EndIf
@@ -994,7 +1001,13 @@ While 1
 		EndIf
 		;Mark Dead Access Points
 		_MarkDeadAPs()
+		;Remove APs that do not match the filter
+		_FilterRemoveNonMatchingInList()
+		;Add APs back into the listview that match but are not there
+		_FilterReAddMatchingNotInList()
 	EndIf
+	
+	
 
 	;Graph Selected AP
 	If $UpdatedGraph <> 1 Then
@@ -1235,7 +1248,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
 				;Check If AP matches filter parameters
 				$ListRow = -1
-				If _FilterMatch($APID, $AP_Status, $BSSID, $SSID, $AUTH, $ENCR, $AP_DisplaySig, $CHAN, $RADTYPE, $BTX, $OtX, $NETTYPE, $New_DateTime, $New_DateTime, $New_Lat, $New_Lon, $MANUF, $LABEL) = 1 Then
+				If _FilterMatch($APID, $AP_StatusNum, $BSSID, $SSID, $AUTH, $ENCR, $AP_DisplaySig, $CHAN, $RADTYPE, $BTX, $OtX, $NETTYPE, $New_DateTime, $New_DateTime, $New_Lat, $New_Lon, $MANUF, $LABEL) = 1 Then
 					;Set If APs are added to the top of the list or the bottom
 					If $AddDirection = 0 And $New = 1 Then;Add APs to top of list
 						$query = "UPDATE AP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
@@ -1388,8 +1401,10 @@ Func _MarkDeadAPs()
 		$Found_Active = $ApMatchArray[$resetdead][3]
 		$Found_LastGpsID = $ApMatchArray[$resetdead][4]
 		If $Found_Active = 1 Then
-			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
-			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
+			If $Found_ListRow <> -1 Then
+				_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
+				_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
+			EndIf
 			;Set APs Dead in AP table, Set New HistID
 			$HISTID += 1
 			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $datestamp & '|' & $timestamp)
@@ -1658,6 +1673,7 @@ Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 		$APNUM = _GUICtrlListView_GetItemText($ListviewAPs, $lisviewrow, $column_Line)
 		$query = "UPDATE AP SET ListRow = '" & $lisviewrow & "' WHERE ApId = '" & $APNUM & "'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		
 	Next
 EndFunc   ;==>_FixLineNumbers
 
@@ -7053,87 +7069,7 @@ Func _ApplySettingsGUI();Applys settings
 		$wquery = _AddQueryFilers($wquery, 'ApID', $Filter_Line)
 		$wquery = _AddQueryFilers($wquery, 'Active', $Filter_Active)
 		If $wquery <> '' Then $fquery &= ' WHERE' & $wquery
-		
-		
-		If $FilterQuery <> $fquery Then
-			$FilterQuery = $fquery
-			;Clear Listview
-			GUISwitch($DataChild)
-			_GetListviewWidths()
-			GUICtrlDelete($ListviewAPs)
-			$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
-			GUICtrlSetBkColor(-1, $ControlBackgroundColor)
-			_SetListviewWidths()
-			GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
-			GUISwitch($Vistumbler)
-			;Set Listview position in DB to -1
-			$query = "UPDATE AP SET ListRow = '-1'"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-			;Add filtered data into listview
-			$FilterListviewPos = 0
-			$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
-			$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
-			For $imp = 1 To $FoundLoadApMatch
-				GUICtrlSetData($msgdisplay, 'Adding Filtered AP' & ': ' & ' ' & $imp & ' / ' & $FoundLoadApMatch)
-				$ImpApID = $LoadApMatchArray[$imp][1]
-				$ImpSSID = $LoadApMatchArray[$imp][2]
-				$ImpBSSID = $LoadApMatchArray[$imp][3]
-				$ImpNET = $LoadApMatchArray[$imp][4]
-				$ImpRAD = $LoadApMatchArray[$imp][5]
-				$ImpCHAN = $LoadApMatchArray[$imp][6]
-				$ImpAUTH = $LoadApMatchArray[$imp][7]
-				$ImpENCR = $LoadApMatchArray[$imp][8]
-				$ImpSecType = $LoadApMatchArray[$imp][9]
-				$ImpBTX = $LoadApMatchArray[$imp][10]
-				$ImpOTX = $LoadApMatchArray[$imp][11]
-				$ImpMANU = $LoadApMatchArray[$imp][12]
-				$ImpLAB = $LoadApMatchArray[$imp][13]
-				$ImpHighGpsHistID = $LoadApMatchArray[$imp][14] - 0
-				$ImpFirstHistID = $LoadApMatchArray[$imp][15] - 0
-				$ImpLastHistID = $LoadApMatchArray[$imp][16] - 0
-				$ImpLastGpsID = $LoadApMatchArray[$imp][17] - 0
-				$ImpActive = $LoadApMatchArray[$imp][18]
-
-				;Get GPS Position
-				If $ImpHighGpsHistID = 0 Then
-					$ImpLat = 'N 0.0000'
-					$ImpLon = 'E 0.0000'
-				Else
-					$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ImpHighGpsHistID & "'"
-					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$ImpGID = $HistMatchArray[1][1]
-					$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ImpGID & "'"
-					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$FoundGpsMatch = UBound($GpsMatchArray) - 1
-					$ImpLat = $GpsMatchArray[1][1]
-					$ImpLon = $GpsMatchArray[1][2]
-				EndIf
-
-				;Get First Time
-				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $ImpFirstHistID & "'"
-				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ImpDate = $HistMatchArray[1][1]
-				$ImpTime = $HistMatchArray[1][2]
-				$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
-				;Get Last Time
-				$query = "SELECT Date1, Time1, Signal FROM Hist WHERE HistID = '" & $ImpLastHistID & "'"
-				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ImpDate = $HistMatchArray[1][1]
-				$ImpTime = $HistMatchArray[1][2]
-				$ImpSig = $HistMatchArray[1][3]
-				$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
-				
-				If $ImpActive = 0 Then
-					$LActive = $Text_Dead
-				Else
-					$LActive = $Text_Active
-				EndIf
-
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $FilterListviewPos)
-				_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
-				$FilterListviewPos += 1
-			Next
-		EndIf
+		$FilterQuery = $fquery
 	EndIf
 
 	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1
@@ -7788,3 +7724,128 @@ Func _DataMatchInDelimitedString($mdata, $mDelimitedString, $mDelimiter = '|', $
 		EndIf
 	EndIf
 EndFunc   ;==>_DataMatchInDelimitedString
+
+Func _FilterRemoveNonMatchingInList()
+	If StringInStr($FilterQuery, 'WHERE') Then
+		$infq = StringReplace($FilterQuery, '=', '<>');Invert Filter Query
+		$query = $infq & " And (Listrow<>'-1')"
+		ConsoleWrite($query & @CRLF)
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		ConsoleWrite($FoundApMatch & @CRLF)
+		If $FoundApMatch <> 0 Then
+			For $frnm = 1 To $ApMatchArray[0][0]
+				$fApID = $ApMatchArray[$frnm][1]
+				;Get ListRow of AP
+				$query = "Select ListRow FROM AP WHERE ApID='" & $fApID & "'"
+				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$fListRow = $ListRowArray[1][1]
+				;Delete AP Row
+				_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $fListRow)
+				ConsoleWrite('removed ' & $fListRow & @CRLF)
+				;Set AP ListRow to -1
+				$query = "UPDATE AP SET ListRow='-1' WHERE ApID='" & $fApID & "'"
+				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				;Get all old listrows from db
+				$query = "Select ApID, ListRow FROM AP WHERE ListRow<>'-1'"
+				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ListRowMatch = UBound($ListRowArray) - 1
+				If $ListRowMatch <> 0 Then
+					For $lrnu = 1 To $ListRowMatch
+						$lApID = $ListRowArray[$lrnu][1]
+						$lListRow = $ListRowArray[$lrnu][2]
+						
+						ConsoleWrite(StringFormat("%09i", $lListRow) > StringFormat("%09i", $fListRow))
+						ConsoleWrite(' - ' & StringFormat("%09i", $lListRow) & '-' & StringFormat("%09i", $fListRow) & @CRLF)
+						If StringFormat("%09i", $lListRow) > StringFormat("%09i", $fListRow) Then
+							;If ($lListRow >= $fListRow) = 1 Then
+							$nListRow = $lListRow - 1
+							$query = "UPDATE AP SET ListRow='" & $nListRow & "' WHERE ApID='" & $lApID & "'"
+							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+							ConsoleWrite('old:"' & $lListRow & '"     new:"' & $nListRow & '"' & @CRLF)
+						EndIf
+						
+					Next
+				EndIf
+			Next
+		EndIf
+	EndIf
+EndFunc   ;==>_FilterRemoveNonMatchingInList
+
+Func _FilterReAddMatchingNotInList()
+	If StringInStr($FilterQuery, "WHERE") Then
+		$fquery = $FilterQuery & " And ListRow='-1'"
+	Else
+		$fquery = $FilterQuery & " WHERE ListRow='-1'"
+	EndIf
+	$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+	For $imp = 1 To $FoundLoadApMatch
+		$ImpApID = $LoadApMatchArray[$imp][1]
+		$ImpSSID = $LoadApMatchArray[$imp][2]
+		$ImpBSSID = $LoadApMatchArray[$imp][3]
+		$ImpNET = $LoadApMatchArray[$imp][4]
+		$ImpRAD = $LoadApMatchArray[$imp][5]
+		$ImpCHAN = $LoadApMatchArray[$imp][6]
+		$ImpAUTH = $LoadApMatchArray[$imp][7]
+		$ImpENCR = $LoadApMatchArray[$imp][8]
+		$ImpSecType = $LoadApMatchArray[$imp][9]
+		$ImpBTX = $LoadApMatchArray[$imp][10]
+		$ImpOTX = $LoadApMatchArray[$imp][11]
+		$ImpMANU = $LoadApMatchArray[$imp][12]
+		$ImpLAB = $LoadApMatchArray[$imp][13]
+		$ImpHighGpsHistID = $LoadApMatchArray[$imp][14]
+		$ImpFirstHistID = $LoadApMatchArray[$imp][15]
+		$ImpLastHistID = $LoadApMatchArray[$imp][16]
+		$ImpLastGpsID = $LoadApMatchArray[$imp][17]
+		$ImpActive = $LoadApMatchArray[$imp][18]
+
+		;Get GPS Position
+		If $ImpHighGpsHistID = 0 Then
+			$ImpLat = 'N 0.0000'
+			$ImpLon = 'E 0.0000'
+		Else
+			$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ImpHighGpsHistID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ImpGID = $HistMatchArray[1][1]
+			$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ImpGID & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundGpsMatch = UBound($GpsMatchArray) - 1
+			$ImpLat = $GpsMatchArray[1][1]
+			$ImpLon = $GpsMatchArray[1][2]
+		EndIf
+
+		;Get First Time
+		$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $ImpFirstHistID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ImpDate = $HistMatchArray[1][1]
+		$ImpTime = $HistMatchArray[1][2]
+		$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
+		;Get Last Time
+		$query = "SELECT Date1, Time1, Signal FROM Hist WHERE HistID = '" & $ImpLastHistID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ImpDate = $HistMatchArray[1][1]
+		$ImpTime = $HistMatchArray[1][2]
+		$ImpSig = $HistMatchArray[1][3]
+		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
+		
+		If $ImpActive = 0 Then
+			$LActive = $Text_Dead
+		Else
+			$LActive = $Text_Active
+		EndIf
+
+		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID)
+		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
+		$query = "UPDATE AP SET ListRow='" & $ListRow & "' WHERE ApID='" & $ImpApID & "'"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	Next
+EndFunc   ;==>_FilterReAddMatchingNotInList
+
+Func _DeleteListviewRow($dapid)
+	;_GUICtrlListView_DeleteItem($ListviewAPs, $drow)
+	;$query = "UPDATE AP SET ListRow = '-1' WHERE ApID = '" & $fApID & "'"
+	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	;$query = "UPDATE AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
+	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+EndFunc   ;==>_DeleteListviewRow
