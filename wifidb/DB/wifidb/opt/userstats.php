@@ -3,7 +3,7 @@ include('../lib/config.inc.php');
 include('../lib/database.inc.php');
 echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> User Info Page</title>';
 ?>
-<link rel="stylesheet" href="css/site4.0.css">
+<link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
 <table border="0" width="75%" cellspacing="10" cellpadding="2">
