@@ -44,7 +44,7 @@ class database
 	$sats_id=array();
 	$fileex=explode(".", $source);
 	$return = file($source);
-
+	$table_ptb="-";
 	foreach($return as $ret)
 	{
 		if ($ret[0] == "#"){continue;}
@@ -74,6 +74,7 @@ class database
 				mysql_select_db($db,$conn);
 				$dbsize = mysql_query("SELECT * FROM `$wtable`", $conn) or die(mysql_error());
 				$size = mysql_num_rows($dbsize);
+				$size++;
 				if ($GLOBALS["debug"]  == 1)
 				{
 					echo "<br>|<br>|<br>|<br>---- ";
@@ -110,7 +111,7 @@ class database
 				
 				$conn1 = mysql_connect($host, $db_user, $db_pwd);
 				mysql_select_db($db,$conn1);
-				$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac`LIKE'$macs' AND `chan`LIKE'$chan' AND `sectype` LIKE '$sectype' AND `ssid` LIKE '$ssids' AND `radio`LIKE'$radios'", $conn1) or die(mysql_error());
+				$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `ssid` LIKE '$ssids' AND `radio` LIKE '$radios' LIMIT 1", $conn1) or die(mysql_error());
 				while ($newArray = mysql_fetch_array($result))
 				{
 
@@ -218,6 +219,7 @@ class database
 						$GPSresult = mysql_query($sql_gps, $conn);
 						while($gps_resarray = mysql_fetch_array($GPSresult))
 						{
+							if ($gps_resarray['date'] == $date && $gps_resarray['time'] == $time ){$todo = "db";continue;}
 							$dbsel = $gps_resarray['lat'].$gps_resarray['long'].$gps_resarray['date'].$gps_resarray['time'];
 #							echo "databse: ".$dbsel."<br>";
 							if(strcmp($comp, $dbsel) == 0)
@@ -228,51 +230,57 @@ class database
 									$hi_sats_id[]=$gps_resarray['id'];
 								}else
 								{
-									$db_id[] = $gps_resarray['id'];
 									$todo = "db";
+									$db_id[] = $gps_resarray['id'];
 								}
 							}else
 							{
 								$todo = "new";
+								$newGPS[]=array(
+												"lat"=>$lat,
+												"long"=>$long,
+												"sats"=>$sats,
+												"date"=>$date,
+												"time"=>$time
+												);
 							}
 						}
 						echo '<tr><td colspan="8">';
-						if ($todo == "new")
-						{
-							$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$date', '$time')";
-							if (mysql_query($sqlitgpsgp, $conn))
-							{
-								echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
-							}else
-							{
-								$sqlcgt = "CREATE TABLE `$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL , `long` VARCHAR( 25 ) NOT NULL , `sats` INT( 2 ) NOT NULL , `date` VARCHAR( 10 ) NOT NULL , `time` VARCHAR( 8 ) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
-								if (mysql_query($sqlcgt, $conn))
+						switch ($todo)
+						{	
+							case "new":
+								$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$date', '$time')";
+								if (mysql_query($sqlitgpsgp, $conn))
 								{
-									echo "(1)Create Table [".$db_st."].{".$gps_table."}<br>		 => Thats odd the table was missing, well I added a GPS Table for ".$ssids."<br>";
-									if (mysql_query($sqlitgpsgp, $conn)){echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";}
+									echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
+								}else
+								{
+									$sqlcgt = "CREATE TABLE `$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL , `long` VARCHAR( 25 ) NOT NULL , `sats` INT( 2 ) NOT NULL , `date` VARCHAR( 10 ) NOT NULL , `time` VARCHAR( 8 ) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
+									if (mysql_query($sqlcgt, $conn))
+									{
+										echo "(1)Create Table [".$db_st."].{".$gps_table."}<br>		 => Thats odd the table was missing, well I added a GPS Table for ".$ssids."<br>";
+										if (mysql_query($sqlitgpsgp, $conn)){echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";}
+									}
 								}
-							}
-							$signals[$gps_id] = $gps_id.",".$signal;
-							$gps_id++;
-							
-						}elseif($todo == "db")
-						{
-							
-							echo "GPS Point already in DB<BR>----".$db_id[0]."- <- DB ID<br>";
-							$signals[$gps_id] = $db_id[0].",".$signal;
-							$gps_id++;
-							
-						}elseif($todo == "hi_sats")
-						{
-							foreach($hi_sats_id as $sats_id)
-							{
-								$sqlupgpsgp = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats' , `date` = '$date' , `time` = '$time  WHERE `id` = '$sats_id'";
-								if (mysql_query($sqlupgpsgp, $conn))
-								{echo "(4)Update [".$db_st."].{".$gps_table."}<br>		 => Updated GPS History in Table<br>";}
-								else{echo "A MySQL Update error has occured<br>".mysql_error();}
-							}
-							$signals[$gps_id] = $hi_sats_id[0].",".$signal;
-							$gps_id++;
+								$signals[$gps_id] = $gps_id.",".$signal;
+								$gps_id++;
+								break;
+							case "db":
+								echo "GPS Point already in DB<BR>----".$db_id[0]."- <- DB ID<br>";
+								$signals[$gps_id] = $db_id[0].",".$signal;
+								$gps_id++;
+								break;
+							case "hi_sats":
+								foreach($hi_sats_id as $sats_id)
+								{
+									$sqlupgpsgp = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats' , `date` = '$date' , `time` = '$time  WHERE `id` = '$sats_id'";
+									if (mysql_query($sqlupgpsgp, $conn))
+									{echo "(4)Update [".$db_st."].{".$gps_table."}<br>		 => Updated GPS History in Table<br>";}
+									else{echo "A MySQL Update error has occured<br>".mysql_error();}
+								}
+								$signals[$gps_id] = $hi_sats_id[0].",".$signal;
+								$gps_id++;
+								break;
 						}
 						echo $todo."<br>";
 						echo "</tr><tr>";
@@ -302,7 +310,7 @@ class database
 				}else
 				{
 					echo '<table class="new" border="1"><tr><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>';
-					echo '<tr><td>'.$APid.'</td><td><b>N</b></td><td>'.$ssids.'</td><td>'.$wifi[1].'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr>';
+					echo '<tr><td>'.$size.'</td><td><b>N</b></td><td>'.$ssids.'</td><td>'.$wifi[1].'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr>';
 					echo '<tr><td colspan="8">';
 					mysql_select_db($db_st,$conn)or die(mysql_error());
 					
@@ -391,19 +399,7 @@ class database
 				unset($chan_ptb);
 				unset($table_ptb);
 				
-#				if(!is_null($gdata))
-#				{
-#					foreach ($gdata as $i => $val)
-#					{
-#						unset($gdata[$i]["lat"]);
-#						unset($gdata[$i]["long"]);
-#						unset($gdata[$i]["sat"]);
-#						unset($gdata[$i]["date"]);
-#
-#						unset($gdata[$i]["time"]);
-#					}
-#				}
-				if(!is_null($$signals))
+				if(!is_null($signals))
 				{
 					foreach ($signals as $i => $value)
 					{
@@ -440,8 +436,8 @@ class database
 	mysql_select_db($db,$conn);
 	$user_ap_s = implode("-",$user_aps);
 	$notes = addslashes($notes);
-	if (!$user_ap_s == "")
 	echo $times."<br>";
+	if (!$user_ap_s == "")
 	{$sqlu = "INSERT INTO `users` ( `id` , `username` , `points` ,  `notes`, `date`, `title`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title')";
 	mysql_query($sqlu, $conn) or die(mysql_error());}
 	mysql_close($conn);

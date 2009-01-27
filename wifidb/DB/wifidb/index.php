@@ -29,6 +29,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Main Page</title>';
 	<tr>
 <td width="17%" bgcolor="#304D80" valign="top">
 <?php
+$usersa = array();
 mysql_select_db($db,$conn);
 $sql = "SELECT * FROM links ORDER BY ID ASC";
 $result = mysql_query($sql, $conn) or die(mysql_error());
@@ -38,24 +39,46 @@ while ($newArray = mysql_fetch_array($result))
     echo "<p>$testField</p>";
 }
 
-$sql1 = "SELECT * FROM $wtable";
+$sql1 = "SELECT size FROM `settings`";
 $result = mysql_query($sql1, $conn) or die(mysql_error());
-$total = mysql_num_rows($result);
-$sql2 = "SELECT * FROM $wtable WHERE `sectype`='1'";
+$DB_size = mysql_fetch_array($result);
+$total = $DB_size['size'];
+
+$sql2 = "SELECT id FROM `$wtable` WHERE `sectype`='1'";
 $result = mysql_query($sql2, $conn) or die(mysql_error());
 $open = mysql_num_rows($result);
-$sql3 = "SELECT * FROM $wtable WHERE `sectype`='2'";
+
+$sql3 = "SELECT id FROM `$wtable` WHERE `sectype`='2'";
 $result = mysql_query($sql3, $conn) or die(mysql_error());
 $WEP = mysql_num_rows($result);
-$sql4 = "SELECT * FROM $wtable WHERE `sectype`='3'";
+
+$sql4 = "SELECT id FROM `$wtable` WHERE `sectype`='3'";
 $result = mysql_query($sql4, $conn) or die(mysql_error());
 $Sec = mysql_num_rows($result);
-$sql2 = "SELECT * FROM $wtable WHERE `id`='$total'";
-$result = mysql_query($sql2, $conn) or die(mysql_error());
+
+$sql5 = "SELECT id,ssid FROM `$wtable` ORDER BY ID DESC LIMIT 1";
+$result = mysql_query($sql5, $conn) or die(mysql_error());
 $lastap_array = mysql_fetch_array($result);
+$lastap_id = $lastap_array['id'];
+$lastap_ssid = $lastap_array['ssid'];
 
+$sql6 = "SELECT username FROM `users`";
+$result1 = mysql_query($sql6, $conn) or die(mysql_error());
+while($user_array = mysql_fetch_array($result1))
+{
+echo $user_array['username'];
+	$usersa[]=$user_array['username'];
+}
+mysql_close($conn);
+var_dump($usersa);
+$usercount = count($usersa);
+if ($usercount == NULL)
+{$lastUs="No one has imported any APs yet.";}
+else
+{$lastUs = $usersa[$usercount-1];}
 
-
+$users = array_unique($usersa);
+$user_count = count($usersa);
 
 ?>
 </td>
@@ -83,15 +106,15 @@ $lastap_array = mysql_fetch_array($result);
 		<td class="style8"><?php echo $Sec; ?></td>
 	</tr>
 	<tr>
-		<td class="style14" style="width: 200px"></td>
-		<td class="style16"></td>
+		<td class="style14" style="width: 200px">Total Users</td>
+		<td class="style16">Last user to import</td>
 		<td class="style16">Last AP added</td>
 		<td class="style18">&nbsp;</td>
 	</tr>
 	<tr>
-		<td class="style9" style="width: 200px"><?php echo $users;?></td>
+		<td class="style9" style="width: 200px"><?php echo $user_count;?></td>
 		<td class="style12"><?php echo $lastUs;?></td>
-		<td class="style12"><?php echo '<a class="links" href="opt/fetch.php?id='.$lastap_array['id'].'">'.$lastap_array['ssid'].'</a>';?></td>
+		<td class="style12"><?php if($lastap_ssid==''){echo "No AP";}else{echo '<a class="links" href="opt/fetch.php?id='.$lastap_id.'">'.$lastap_ssid.'</a>';}?></td>
 		<td class="style11">&nbsp;</td>
 	</tr>
 </table>
