@@ -1,7 +1,7 @@
 <?php
-$lastedit = "19-12-2008";
+$lastedit = "27-01-2008";
 $ver=array(
-			"wifidb"	=>	"0.15 build 78",
+			"wifidb"	=>	"0.15 build 79",
 			"database"	=>	array(  
 							"import_vs1"		=>	"1.4", 
 							"apfetch"			=>	"2.1",
@@ -172,6 +172,7 @@ class database
 					{
 						//if the table is already populated set it to the last ID's number
 						$gps_id = $gpstableid;
+						$gps_id++;
 						if ($GLOBALS["debug"]  == 1){echo "0x00000001 <br>";}
 					}
 					//pull out all GPS rows to be tested against for duplicates
@@ -238,7 +239,7 @@ class database
 						echo '<tr><td colspan="8">';
 						if ($todo == "new")
 						{
-							$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$ap_id', '$lat', '$long', '$sats', '$date', '$time')";
+							$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$date', '$time')";
 							if (mysql_query($sqlitgpsgp, $conn))
 							{
 								echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
@@ -337,7 +338,7 @@ class database
 						$sats = $gdata[$vs1_id]["sats"];
 						$date = $gdata[$vs1_id]["date"];
 						$time = $gdata[$vs1_id]["time"];
-						$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$ap_id', '$lat', '$long', '$sats', '$date', '$time')";
+						$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$date', '$time')";
 						if (mysql_query($sqlitgpsgp, $conn))
 						{
 							echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
@@ -412,7 +413,28 @@ class database
 				}
 		}elseif($ret_len == 17)
 		{
-			die("Txt files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu otpion in Vistumbler");
+		echo "Txt files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu otpion in Vistumbler";	
+		$filename = $_SERVER['SCRIPT_FILENAME'];	
+		$file_ex = explode("/", $filename);
+		$count = count($file_ex);
+		$file = $file_ex[($count)-1];
+		if (file_exists($filename)) {
+			echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
+		}
+		?>
+		</p>
+		</td>
+		</tr>
+		<tr>
+		<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
+		<td bgcolor="#315573" width="0">
+		</td>
+		</tr>
+		</table>
+		</div>
+		</html>
+		<?php
+		die();
 		}else{echo "There is something wrong with the formatting of the data, check it and try running the script again<br>";}
 	}
 	mysql_select_db($db,$conn);
