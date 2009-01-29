@@ -763,6 +763,7 @@ class database
 	}
 	$users = array_unique($users);
 	$pre_user = "";
+	$n=0;
 	foreach($users as $user)
 	{
 		$sql = "SELECT * FROM `users` WHERE `username`='$user'";

@@ -1,9 +1,9 @@
 <?php
 $lastedit = "01-11-2008";
-$ver=array(
+$ver_graph=array(
 			"graphs"=>array(
-							"wifiline"			=> "2.0.2", 
-							"wifibar" 			=> "2.0.2", 
+							"wifiline"			=> "2.0.3", 
+							"wifibar" 			=> "2.0.3", 
 							"imagegrid"			=> "1.0",
 							"genboth"			=> "1.0"
 							),
@@ -223,16 +223,18 @@ class graphs
 	}
 	#end signal strenth numbers--
 	imagesetstyle($img, array($bg, $grid));
-	$n=$count-1;
-	$nn=$count-2;
-	while($count>-1)
+	$counting=$count-1;
+	$n=0;
+	$nn=1;
+	while($count>0)
 	{
+		if($nn==$counting+1){break;}
 	    imageline($img, $y ,459-($signal[$n]*4), $y=$y+6 ,459-($signal[$nn]*4) ,$col);
 	    imageline($img, $u ,460-($signal[$n]*4), $u=$u+6 ,460-($signal[$nn]*4) ,$col);
 	    imageline($img, $yy ,459-($signal[$n]*4), $yy=$yy+6 ,459-($signal[$nn]*4) ,$col);
 	    imageline($img, $uu ,460-($signal[$n]*4), $uu=$uu+6 ,460-($signal[$nn]*4) ,$col);
-	$n--;
-	$nn--;
+	$n++;
+	$nn++;
 	$count--;
 	}
 	imagesetstyle($img,array($bg,$grid));
@@ -278,7 +280,7 @@ class graphs
 	$ssid="UNNAMED";
 	}
 	$signal = explode("-", $sig);
-	$count = count($signal);
+	$count = (count($signal)-1);
 	$c1 = 'SSID: '.$ssid.'   Channel: '.$chan.'   Radio: '.$radio.'   Network: '.$NT.'   OTx: '.$OTx;
 	$check = strlen($c1);
 	$c2 = 'Mac: '.$mac.'   Auth: '.$auth.' '.$encry.'   BTx: '.$BTx.'   Lat: '.$lat.'   Long: '.$long;
@@ -331,22 +333,27 @@ class graphs
 	#end signal strenth numbers--
 	imagesetstyle($img, array($bg, $grid));
 	$X=20;
+	$n=0;
 	while($count>=0)
 	{
-	  if ($signal[$count]==0)
-	  {
-	  $signal[$count]=1;
-	  imageline($img, $X ,459, $X, 459-($signal[$count]), $col);
-	  $X++;
-	  imageline($img, $X ,459, $X, 459-($signal[$count]), $col);
-	  $X=$X+2;
-	  }else{
-	  imageline($img, $X ,459, $X, 459-($signal[$count]*4), $col);
-	  $X++;
-	  imageline($img, $X ,459, $X, 459-($signal[$count]*4), $col);
-	  $X=$X+2;
-	  }
-	$count--;
+		if($n==$count+1){break;}
+		if ($signal[$n]==0)
+		{
+			$signal[$n]=1;
+			imageline($img, $X ,459, $X, 459-($signal[$n]), $col);
+			$X++;
+			imageline($img, $X ,459, $X, 459-($signal[$n]), $col);
+			$X=$X+2;
+		}
+		else
+		{
+			imageline($img, $X ,459, $X, 459-($signal[$n]*4), $col);
+			$X++;
+			imageline($img, $X ,459, $X, 459-($signal[$n]*4), $col);
+			$X=$X+2;
+		}
+		$n++;
+		$count--;
 	}
 	imagesetstyle($img,array($bg,$grid));
 	graphs::imagegrid($img,$wid,$Height,19.99,$grid);

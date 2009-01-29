@@ -100,7 +100,7 @@ while ($newArray = mysql_fetch_array($result))
 								<TD WIDTH=16%>.</TD><TD WIDTH=84%>
 									<P>
 								<?php	
-									if($rebuilding !== 0)
+									if($rebuild === 0)
 									{
 									echo '<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in"></P>';
 									}else{echo "The database is in  rebuild mode, please wait...";}

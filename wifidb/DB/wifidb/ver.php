@@ -62,6 +62,29 @@ while ($newArray = mysql_fetch_array($result))
 	</tr>
 	<tr>
 		<td width="67" style="border-style: solid; border-width: 1px" height="26">
+		0.15 Build 80</td>
+		<td width="285" height="26" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2009-01-29</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Small Code fixes that needed to be fixed. most only showed up if verbose errors was on in PHP
+		</td>
+	</tr>
+	<tr>
+		<td width="67" style="border-style: solid; border-width: 1px" height="26">
+		0.15 Build 79</td>
+		<td width="285" height="26" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2009-01-24</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		1> Made a rapair script to check the Storage tables for erroneous data, to replace or remove
+		2> Some other small typos and coding fixes.
+		</td>
+	</tr>
+	<tr>
+		<td width="67" style="border-style: solid; border-width: 1px" height="26">
 		0.15 Build 78</td>
 		<td width="285" height="26" style="border-style: solid; border-width: 1px">
 		Phillip Ferland</td>

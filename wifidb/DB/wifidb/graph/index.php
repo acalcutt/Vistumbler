@@ -8,10 +8,11 @@
 //  Filename: index.php                                        //
 /////////////////////////////////////////////////////////////////
 $startdate="14-10-2007";
-$lastedit="19-12-2008";
+$lastedit="29-Jan-2009";
 
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
+include('../lib/graph.inc.php');
 echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Graphing Page</title>';
 ?>
 <link rel="stylesheet" href="../css/site4.0.css">
@@ -52,7 +53,7 @@ while ($newArray = mysql_fetch_array($result))
 <form action="genline.php" method="post" enctype="multipart/form-data">
 
 <?php
-echo '<h1>Graph an Access Points Signal history *Beta*</h1><h4>Bar Graph=>'.$ver['graphs']['wifibar'].'<br>Line Graph=>'.$ver['graphs']['wifiline'].'</h4>';
+echo '<h1>Graph an Access Points Signal history *Beta*</h1><h4>Bar Graph=>'.$ver_graph['graphs']['wifibar'].'<br>Line Graph=>'.$ver_graph['graphs']['wifiline'].'</h4>';
 
 $id = $_GET['id'];
 $row = $_GET['row'];
