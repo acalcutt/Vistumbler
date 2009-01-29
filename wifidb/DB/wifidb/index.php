@@ -66,11 +66,9 @@ $sql6 = "SELECT username FROM `users`";
 $result1 = mysql_query($sql6, $conn) or die(mysql_error());
 while($user_array = mysql_fetch_array($result1))
 {
-echo $user_array['username'];
 	$usersa[]=$user_array['username'];
 }
 mysql_close($conn);
-var_dump($usersa);
 $usercount = count($usersa);
 if ($usercount == NULL)
 {$lastUs="No one has imported any APs yet.";}
