@@ -1,4 +1,5 @@
 <?php
+error_reporting(E_ALL | E_STRICT);
 $lastedit = "27-Jan-2008";
 $ver=array(
 			"wifidb"	=>	"0.15 build 80",
@@ -445,136 +446,74 @@ class database
 	
 	
 	#========================================================================================================================#
-	#													Convert DM to DD									         	     #
+	#													Convert GeoCord DM to DD									   	     #
 	#========================================================================================================================#
 	
-	function &convert_dm_dd($lat_in , $long_in)
+	function &convert_dm_dd($geocord_in)
 	{
 	//	GPS Convertion :
-		$latitude = explode(" ", $gps["lat"]);
-		$gps["lat"]="";
-		$lat_front = explode(".", $latitude[1]);
-		$lat_left = strlen($lat_front[0]);
+		$neg=FALSE;
+		$geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
+		$patterns[0] = '/N /';
+		$patterns[1] = '/E /';
+		$patterns[2] = '/S /';
+		$patterns[3] = '/W /';
+		$replacements = "";
+		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
+		$geocord_exp[0] = preg_replace($patterns, $replacements, $geocord_exp[0]);
+		$geocord_count_chars = count_chars($geocord_exp[0], 1);
+	#	foreach (count_chars($geocord_exp[0], 1) as $i => $val) {
+	#	echo "There were $val instance(s) of \"" , $i , "\" in the string.\n";
+	#	}
 		
-		$longitude = explode(" ", $gps["long"]);
-		$gps["long"]="";
-		$long_front = explode(".",$longitude[1]);
-		$long_left = strlen($long_front[0]);
-		
-		if($lat_left == 1 && $long_left == 1)
+		if($geocord_count_chars[45] === 1)
 		{
-			if($latitude[0] == "S"){$la = "-";}
-				else{$la="";}
-			
-			if($longitude[0]=="W"){$lo = "-";}
-				else{$lo="";}
-			
-			$long = $lo."".$long_front[0].".".$long_front[1];
-			
-			$lat = $la."".$lat_front[0].".".$lat_front[1];
-		
-			if($lat == NULL){$gps["lat"]="N 0.0000";}
-				else{$gps["long"]= $long;}
-			if($long == NULL){$gps["long"]="W 0.0000";}
-				else{$gps["lat"]= $lat;}
+			$geocord_exp[0] = preg_replace("-", "", $geocord_exp[0]);
+			$neg=TRUE;
 		}
-		elseif($lat_left == 2 && $long_left == 2)
-		{
-			$lat_back = "0.".$lat_front[1]; // add a 0. to the begining of the number to make it a decmal
-			$lat_back = $lat_back/60; // multiply the decimal to to convert it to minuets
-			
-			$Lat_temp  = explode(".",$lat_back); //get the numbers before the decimal place.
-			$Lat_temp_ = strlen($Lat_temp[0]); //find out how long it is before the decimal
-			$back_lat  = strlen($Lat_temp[1]);
-			
-			if($back_lat > 4){$Lat_temp[1] = substr_replace($Lat_temp[1],"",4);}
-			
-			if($Lat_temp_ == 1){$lat_ = $lat_front[0]."0".$lat_back;}
-				else{$lat_ = $lat_front[0].$lat_back;}
-		//////////////////// END LAT CONVERSION ////////////////////
-
-		//////////////////// START LONG CONVERSION ////////////////////
-			$long_back = "0.".$long_front[1]; //// add a 0. to the begining of the number to make it a decmal
-			$long_back = $long_back/60; // multiply the decimal to to convert it to minuets
-			
-			$Long_temp = explode(".",$long_back); //get the numbers before the decimal place.
-			$Long_temp_ = strlen($Long_temp[0]);
-			$back_long = strlen($Long_temp[1]);
-			if($back_long > 4){$Long_temp[1]= substr_replace($Long_temp[1],"",4);}
-			
-			if($Long_temp_ == 1){$long_ =  $long_front[0]."0".$long_back;}
-				else{$long_ =  $long_front[0].$long_back;}
-			
-			if($latitude[0] == "S"){$la = "-";}
-				else{$la="";}
-			if($longitude[0]=="W"){$lo = "-";}
-				else{$lo="";}
-			
-			if($lat_==0){$gps["lat"]="0.0000";}
-				else{$gps["lat"]=$la.$lat_;}
-			
-			if($long_==0){$gps["long"]="0.0000";}
-				else{$gps["long"]=$lo.$long_;}
-		//////////////////// END LONG CONVERSION ////////////////////
-		}elseif($lat_left == 3 && $long_left == 3)
-		{
-			$lat_back = "0.".$lat_front[1]; // add a 0. to the begining of the number to make it a decmal
-			$lat_back = $lat_back/60; // multiply the decimal to to convert it to minuets
-			
-			$Lat_temp  = explode(".",$lat_back); //get the numbers before the decimal place.
-			$Lat_temp_ = strlen($Lat_temp[0]); //find out how long it is before the decimal
-			$back_lat  = strlen($Lat_temp[1]);
-			
-			if($back_lat > 4){$Lat_temp[1] = substr_replace($Lat_temp[1],"",4);}
-			
-			if($Lat_temp_ == 0){$lat_ = $lat_front[0]."0".$lat_back;}
-				else{$lat_ = $lat_front[0].$lat_back;}
-		//////////////////// END LAT CONVERSION ////////////////////
-
-		//////////////////// START LONG CONVERSION ////////////////////
-			$long_back = "0.".$long_front[1]; //// add a 0. to the begining of the number to make it a decmal
-			$long_back = $long_back/60; // multiply the decimal to to convert it to minuets
-			
-			$Long_temp = explode(".",$long_back); //get the numbers before the decimal place.
-			$Long_temp_ = strlen($Long_temp[0]);
-			$back_long = strlen($Long_temp[1]);
-			if($back_long > 4){$Long_temp[1]= substr_replace($Long_temp[1],"",4);}
-			
-			if($Long_temp_ == 0){$long_ =  $long_front[0]."0".$long_back;}
-				else{$long_ =  $long_front[0].$long_back;}
-			
-			if($latitude[0] == "S"){$la = "-";}
-				else{$la="";}
-			if($longitude[0]=="W"){$lo = "-";}
-				else{$lo="";}
-			
-			if($lat_==0){$gps["lat"]="0.0000";}
-				else{$gps["lat"]=$la.$lat_;}
-			
-			if($long_==0){$gps["long"]="0.0000";}
-				else{$gps["long"]=$lo.$long_;}
-		//////////////////// END LONG CONVERSION ////////////////////
-		}elseif($lat_left == 4 && $long_left == 4)
-		{
-			if($latitude[0] == "S"){$la = "-";}
-				else{$la="";}			
-			if($longitude[0]=="W"){$lo = "-";}
-				else{$lo="";}
-			
-			$long0 = $lo."".$long_front[0].".".$long_front[1];
-			
-			$lat0 = $la."".$lat_front[0].".".$lat_front[1];
-			
-		}
-//	END GPS convert
-		$lat1 = str_split($lat0, 11);
-		$long1 = str_split($long0, 11);
-		$lat = $lat1[0];
-		$long = $long1[0];
-		#echo $lat."<BR>".$long."<BR>";
-		return array ($lat, $long);
+		// 4208.7753 ---- 4208 - 7753
+		$geocord_dec = "0.".$geocord_exp[1];
+		// 4208.7753 ---- 4208 - 0.7753
+		$geocord_min = str_split($geocord_exp[0],2);
+		// 4208.7753 ---- 42 - 8 - 0.7753
+		$geocord_min_ = $geocord_min[1]+$geocord_dec;
+		// 4208.7753 ---- 42 - 8.7753
+		$geocord_div = $geocord_min_/60;
+		// 4208.7753 ---- 42 - (8.7753)/60 = 0.146255
+		$geocord_add = $geocord_min[0] + $geocord_div;
+		// 4208.7753 ---- 42.146255
+		if($neg === TRUE){$geocord_add = "-".$geocord_add;}
+		return $geocord_add;
 	}
+	#========================================================================================================================#
+	#													Convert GeoCord DD to DM									   	     #
+	#========================================================================================================================#
 	
+	function &convert_dd_dm($geocord_in)
+	{
+		//	GPS Convertion :
+		$geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
+		$pattern[0] = '/N /';
+		$pattern[1] = '/E /';
+		$pattern[2] = '/S /';
+		$pattern[3] = '/W /';
+		$replacements = "";
+		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
+		$geocord_exp[0] = preg_replace($pattern, $replacements, $geocord_exp[0]);
+		$geocord_count_chars = count_chars($geocord_exp[0], 1);
+		if($geocord_count_chars["-"] !== NULL){$geocord_exp[0] = preg_replace("-", "", $geocord_exp[0]);$neg=1;}
+		// 42.146255 ---- 42 - 146255
+		$geocord_dec = "0.".$geocord_exp[1];
+		// 42.146255 ---- 42 - 0.146255
+		$geocord_mult = $geocord_dec*60;
+		// 42.146255 ---- 42 - (0.146255)*60 = 8.7753
+		$geocord_mult = "0".$geocord_mult;
+		// 42.146255 ---- 42 - 08.7753
+		$geocord_add = $geocord_exp[0].$geocord_mult;
+		// 42.146255 ---- 4208.7753
+		if($neg === 1){$geocord_add = "-".$geocord_add;}
+		return $geocord_add;
+	}
 	
 	#========================================================================================================================#
 	#													GPS check, make sure there are no duplicates						 #
@@ -1309,6 +1248,8 @@ echo '</tr></td></table>';
 			    $id = $newArray['id'];
 				$ssid = $newArray['ssid'];
 			    $mac = $newArray['mac'];
+				$man_mac = str_split($mac,8);
+				$man = $manufactures[$man_mac];
 			    $chan = $newArray['chan'];
 				$r = $newArray["radio"];
 				$auth = $newArray['auth'];
@@ -1329,7 +1270,7 @@ echo '</tr></td></table>';
 			
 				switch($r)
 				{
-					case a:
+					case "a":
 						$radio="802.11a";
 						break;
 					case "b":
@@ -1350,7 +1291,7 @@ echo '</tr></td></table>';
 				mysql_select_db("$db_st") or die("Unable to select Database:".$db_st);
 				
 				$sql = "SELECT * FROM `$table` WHERE `id`='1'";
-				$result = mysql_query($sql, $conn) or die(mysql_error());
+				$result = mysql_query($sql, $conn);
 				$AP_table = mysql_fetch_array($result);
 				$otx = $AP_table["otx"];
 				$btx = $AP_table["btx"];
@@ -1359,11 +1300,11 @@ echo '</tr></td></table>';
 				$table_gps = $table."_GPS";
 				
 				$sql6 = "SELECT * FROM `$table_gps`";
-				$result6 = mysql_query($sql6, $conn) or die(mysql_error());
+				$result6 = mysql_query($sql6, $conn);
 				$max = mysql_num_rows($result6);
 				
 				$sql = "SELECT * FROM `$table_gps` WHERE `id`='1'";
-				$result = mysql_query($sql, $conn) or die(mysql_error());
+				$result = mysql_query($sql, $conn);
 				$gps_table_first = mysql_fetch_array($result);
 				$date_first = $gps_table_first["date"];
 				$time_first = $gps_table_first["time"];
@@ -1372,19 +1313,20 @@ echo '</tr></td></table>';
 				//===================================CONVERT FROM DM TO DD=========================================//
 				$lat_in = $gps_table_first['lat'];
 				$long_in = $gps_table_first['long'];
-				list($lat, $long) = database::convert_dm_dd($lat_in, $long_in);
+				$lat = database::convert_dm_dd($lat_in);
+				$long = database::convert_dm_dd($long_in);
 				unset($lat_in);
 				unset($long_in);
 				//=====================================================================================================//
 				
 				$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
-				$result = mysql_query($sql, $conn) or die(mysql_error());
+				$result = mysql_query($sql, $conn);
 				$gps_table_last = mysql_fetch_array($result);
 				$date_last = $gps_table_last["date"];
 				$time_last = $gps_table_last["time"];
 				$la = $date_last." ".$time_last;
 				fwrite( $fileappend, "		<Placemark id=\"".$mac."\">\r\n<name></name><description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"http://www.randomintervals.com/wifidb/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point>\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-				echo "Wrote AP to KML File<BR>";
+				echo "Wrote AP: ".$ssid."<br>to KML File<BR>";
 				unset($gps_table_first["lat"]);
 				unset($gps_table_first["long"]);
 			}

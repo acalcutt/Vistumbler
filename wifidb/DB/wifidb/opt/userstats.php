@@ -36,35 +36,35 @@ while ($newArray = mysql_fetch_array($result))
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
 <?php
+$database = new database();
 $func=$_GET['func'];
 if($func==="user")
 {
 	$user=$_GET['user'];
 	echo '<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>';
 	echo '<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user='.$user.'">'.$user.'</a>';
-	database::userstats($user);
+	$database->userstats($user);
 }elseif($func==="userap")
 {
 	echo '<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>';
 	$row=$_GET['row'];
-	database::usersap($row);
+	$database->usersap($row);
 }elseif($func==="expkml")
 {
 	echo '<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>';
 	$row = $_GET['row'];
-	database::exp_kml_user($row);
+	$database->exp_kml_user($row);
 }elseif($func==="usersall")
 {
-	database::allusers();
+	$database->allusers();
 }elseif($func==="allap")
 {
 	$user = $_GET['user'];
-	database::all_usersap($user);
+	$database->all_usersap($user);
 }else
 {
 	echo "<h1>Hey you can do that!, Go back and do it right</h1>";
 }
-
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
 $file_ex = explode("/", $filename);

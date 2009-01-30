@@ -80,6 +80,9 @@ else
 </p>
 
 <?php
+$timezn = 'Etc/GMT+5';
+date_default_timezone_set($timezn);
+
 $filename = $_SERVER['SCRIPT_FILENAME'];
 $file_ex = explode("/", $filename);
 $count = count($file_ex);

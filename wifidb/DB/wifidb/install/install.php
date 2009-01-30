@@ -27,7 +27,14 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb'"].' --> Install Page</titl
 		<p align="center">
 <table><tr><th>Status</th><th>Step of Install</th></tr>
 <?php
+	#========================================================================================================================#
+	#													Gather the needed infomation								   	     #
+	#========================================================================================================================#
+	
+$timezn = 'Etc/GMT+5';
+date_default_timezone_set($timezn);
 $date = date("m.d.Y");
+
 $root_sql_user	=	$_POST['root_sql_user'];
 strip_tags($root_sql_user);
 $root_sql_pwd	=	$_POST['root_sql_pwd'];
@@ -47,10 +54,13 @@ strip_tags($wifi);
 $wifi_st	=	$_POST['wifistdb'];
 strip_tags($wifi_st);
 echo '<tr><TH colspan="2">Database Install</TH><tr>';
-#Connect with Root priv
+	#========================================================================================================================#
+	#													Connect to MySQL with Root											 #
+	#									and remove any existing databases and replace with empty ones						 #
+	#========================================================================================================================#
 $conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
 
-#drop exisiting db if it is there and create a new one
+#drop exisiting db if it is there and create a new one [this is the install after all / not the upgrade]
 $sqls0 =	"DROP DATABASE $wifi_st";
 $sqls1 =	"CREATE DATABASE $wifi_st";
 $RE_DB_ST_Re = mysql_query($sqls0, $conn);
@@ -79,7 +89,9 @@ else{
 echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi`; "
 		."CREATE DATABASE `$wifi`</td></tr>";
 }
-
+	#========================================================================================================================#
+	#									Create the Settings table and populate it									   	     #
+	#========================================================================================================================#
 #create Settings table
 $sqls =	"CREATE TABLE `settings` ("
 		."`id` int(255) NOT NULL auto_increment,"
@@ -104,6 +116,9 @@ if($IN_TB_SE_Re)
 {echo "<tr><td>Success..........</td><td>INSERT INTO `settings`</td></tr>";}
 else{echo "<tr><td>Failure..........</td><td>INSERT INTO `settings`</td></tr>";}
 
+	#========================================================================================================================#
+	#													Create Users table											   	     #
+	#========================================================================================================================#
 #create users table (History for imports)
 $sqls =	"CREATE TABLE `users` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`username` VARCHAR( 25 ) NOT NULL ,`points` TEXT NOT NULL ,`notes` TEXT NOT NULL ,`title` varchar(32) NOT NULL ,`date` varchar(25) NOT NULL, INDEX ( `id` )) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 $CR_TB_US_Re = mysql_query($sqls, $conn) or die(mysql_error());
@@ -113,6 +128,9 @@ if($CR_TB_US_Re)
 else{
 echo "<tr><td>Failure..........</td><td>CREATE TABLE `users`</td></tr>";}
 
+	#========================================================================================================================#
+	#													Create WiFi Pointers table									   	     #
+	#========================================================================================================================#
 #Create Wifi0 table (Pointers to _ST tables
 $sqls =	"CREATE TABLE wifi0 ("
   ."  id int(255) default NULL,"
@@ -132,7 +150,9 @@ if($CR_TB_W0_Re)
 else{
 echo "<tr><td>Failure..........</td><td>CREATE TABLE `wifi0`</td></tr>";}
 
-
+	#========================================================================================================================#
+	#													Create links table and populate								   	     #
+	#========================================================================================================================#
 #Create Links table
 $sqls =	"CREATE TABLE `links` ("
 	."`ID` int(255) NOT NULL auto_increment,"
@@ -186,7 +206,9 @@ else{echo "<tr><td>Failure..........</td><td>INSERT INTO `links`</td></tr>";}
 if ($sqlhost !== 'localhost' or $sqlhost !== "127.0.0.1")
 {$phphost = 'localhost';}
 else{$phphost	=	$_POST['phphost'];}
-
+	#========================================================================================================================#
+	#									Create WiFiDB user for WiFi and WiFi_st										   	     #
+	#========================================================================================================================#
 #create WifiDB user in  WIFI
 $sqls =	"GRANT ALL PRIVILEGES ON $wifi.* TO '$sqlu'@'$phphost' IDENTIFIED BY '$sqlp';";
 $GR_US_WF_Re = mysql_query($sqls, $conn) or die(mysql_error());
@@ -206,6 +228,10 @@ if($GR_US_WF_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Created user: $sqlu @ $phphost for $wifi_st</td></tr>";}
 
+
+	#========================================================================================================================#
+	#											Create the Config.inc.php file										   	     #
+	#========================================================================================================================#
 #create config.inc.php file in /lib folder
 echo '<tr><TH colspan="2"></th></tr><tr><TH colspan="2">Config.inc.php File Creation</th><tr>';
 $file_ext = 'config.inc.php';
@@ -220,7 +246,7 @@ echo "<tr><td>Failure..........</td><td>Creating Config file</td></tr>";}
 
 
 #Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\n$"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\n$"."date_default_timezone_set('$timezn');\r\nlastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr><td>Success..........</td><td>Add last edit date</td></tr>";}
@@ -307,7 +333,9 @@ if($AD_CF_KM_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
-
+	#========================================================================================================================#
+	#													Install has finished										   	     #
+	#========================================================================================================================#
 
 fwrite($fileappend, "\r\n?>");
 echo "</table>";
