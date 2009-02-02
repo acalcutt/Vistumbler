@@ -17,7 +17,7 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.1 Beta 2'
+$version = '9.1 Beta 2.1'
 $last_modified = '02/01/2009'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
@@ -199,9 +199,6 @@ Dim $Direction3[3]
 Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
 Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir)
-Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English.ini')
-Dim $DefaultLanguageFile = IniRead($settings, 'Vistumbler', 'LanguageFile', $DefaultLanguage & '.ini')
-Dim $DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
 Dim $AutoCheckForUpdates = IniRead($settings, 'Vistumbler', 'AutoCheckForUpdates', 1)
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
@@ -337,6 +334,15 @@ Dim $column_Width_NetworkType = IniRead($settings, 'Column_Width', 'Column_Netwo
 Dim $column_Width_Label = IniRead($settings, 'Column_Width', 'Column_Label', 110)
 
 ;Load GUI Text from language file
+Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English.ini')
+Dim $DefaultLanguageFile = IniRead($settings, 'Vistumbler', 'LanguageFile', $DefaultLanguage & '.ini')
+Dim $DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
+If FileExists($DefaultLanguagePath) = 0 Then
+	$DefaultLanguage = 'English'
+	$DefaultLanguageFile = 'English.ini'
+	$DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
+EndIf
+
 Dim $Column_Names_Line = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Line', '#')
 Dim $Column_Names_Active = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Active', 'Active')
 Dim $Column_Names_SSID = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_SSID', 'SSID')
