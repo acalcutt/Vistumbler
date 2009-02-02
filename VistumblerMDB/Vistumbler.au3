@@ -342,6 +342,7 @@ If FileExists($DefaultLanguagePath) = 0 Then
 	$DefaultLanguageFile = 'English.ini'
 	$DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
 EndIf
+IniDelete($settings, 'GuiText');Delete old GuiText section of the setting file if it exists
 
 Dim $Column_Names_Line = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Line', '#')
 Dim $Column_Names_Active = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Active', 'Active')
