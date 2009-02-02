@@ -4477,7 +4477,7 @@ Func _WriteINI()
 	IniWrite($settings, 'GpsSettings', 'UseNetcomm', $UseNetcomm)
 	IniWrite($settings, 'GpsSettings', 'GPSformat', $GPSformat)
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
-	
+
 	IniWrite($settings, 'Filters', 'FilterLine', $Filter_Line)
 	IniWrite($settings, 'Filters', 'FilterActive', $Filter_Active)
 	IniWrite($settings, 'Filters', 'FilterBSSID', $Filter_BSSID)
@@ -4543,7 +4543,7 @@ Func _WriteINI()
 	IniWrite($settings, "Column_Width", "Column_LastActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LastActive - 0))
 	IniWrite($settings, "Column_Width", "Column_NetworkType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0))
 	IniWrite($settings, "Column_Width", "Column_Label", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0))
-	
+
 	;//Write Changes to Language File
 
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Line", $Column_Names_Line)
@@ -7334,6 +7334,7 @@ Func _SetCwState(); Set All columns in settings gui enabled or disabled
 EndFunc   ;==>_SetCwState
 
 Func _GuessNetshSearchwords()
+	Local $GSearchWord_SSID = '', $GSearchWord_NetworkType = '', $GSearchWord_Authentication = '', $GSearchWord_Encryption = '', $GSearchWord_BSSID = '', $GSearchWord_Signal = '', $GSearchWord_RadioType = '', $GSearchWord_Channel = '', $GSearchWord_BasicRates = '', $GSearchWord_OtherRates = ''
 	$count = 0
 	FileDelete($tempfile)
 	If $DefaultApapter = $Text_Default Then
@@ -7389,18 +7390,22 @@ Func _GuessNetshSearchwords()
 			EndIf
 		Next
 		;Update Data In GUI
-		GUICtrlSetData($SearchWord_SSID_GUI, $GSearchWord_SSID)
-		GUICtrlSetData($SearchWord_NetType_GUI, $GSearchWord_NetworkType)
-		GUICtrlSetData($SearchWord_Authentication_GUI, $GSearchWord_Authentication)
-		GUICtrlSetData($SearchWord_Encryption_GUI, $GSearchWord_Encryption)
-		GUICtrlSetData($SearchWord_BSSID_GUI, $GSearchWord_BSSID)
-		GUICtrlSetData($SearchWord_Signal_GUI, $GSearchWord_Signal)
-		GUICtrlSetData($SearchWord_RadioType_GUI, $GSearchWord_RadioType)
-		GUICtrlSetData($SearchWord_Channel_GUI, $GSearchWord_Channel)
-		GUICtrlSetData($SearchWord_BasicRates_GUI, $GSearchWord_BasicRates)
-		GUICtrlSetData($SearchWord_OtherRates_GUI, $GSearchWord_OtherRates)
-		;Show Done Message
-		MsgBox(0, $Text_Information, $Text_AddedGuessedSearchwords)
+		If $GSearchWord_SSID <> '' And $GSearchWord_NetworkType <> '' And $GSearchWord_Authentication <> '' And $GSearchWord_Encryption <> '' And $GSearchWord_BSSID <> '' And $GSearchWord_Signal <> '' And $GSearchWord_RadioType <> '' And $GSearchWord_Channel <> '' And $GSearchWord_BasicRates <> '' And $GSearchWord_OtherRates <> '' Then
+			GUICtrlSetData($SearchWord_SSID_GUI, $GSearchWord_SSID)
+			GUICtrlSetData($SearchWord_NetType_GUI, $GSearchWord_NetworkType)
+			GUICtrlSetData($SearchWord_Authentication_GUI, $GSearchWord_Authentication)
+			GUICtrlSetData($SearchWord_Encryption_GUI, $GSearchWord_Encryption)
+			GUICtrlSetData($SearchWord_BSSID_GUI, $GSearchWord_BSSID)
+			GUICtrlSetData($SearchWord_Signal_GUI, $GSearchWord_Signal)
+			GUICtrlSetData($SearchWord_RadioType_GUI, $GSearchWord_RadioType)
+			GUICtrlSetData($SearchWord_Channel_GUI, $GSearchWord_Channel)
+			GUICtrlSetData($SearchWord_BasicRates_GUI, $GSearchWord_BasicRates)
+			GUICtrlSetData($SearchWord_OtherRates_GUI, $GSearchWord_OtherRates)
+			;Show Done Message
+			MsgBox(0, $Text_Information, $Text_AddedGuessedSearchwords)
+		Else
+			MsgBox(0, $Text_Error, "Vistumbler was unable to guess searchwords")
+		EndIf
 	EndIf
 EndFunc   ;==>_GuessNetshSearchwords
 
