@@ -1,6 +1,7 @@
 <?php
 error_reporting(E_ALL | E_STRICT);
-$lastedit = "27-Jan-2008";
+$lastedit = "02-Feb-2009";
+
 $ver=array(
 			"wifidb"	=>	"0.15 build 80",
 			"database"	=>	array(  
@@ -11,11 +12,13 @@ $ver=array(
 							"userstats"			=>	"1.1",
 							"usersap"			=>	"1.1",
 							"all_usersap"		=>	"1.1",
-							"export_KML"		=>	"1.0"
+							"export_KML"		=>	"1.0",
+							"convert_dm_dd"		=>	"1.1",
+							"convert_dd_dm"		=>	"1.1"
 							),
 			"Misc"		=>	array(
 							"smart_quotes"		=> 	"1.0",
-							"Manufactures"		=> 	"1.0"
+							"Manufactures"		=> 	"2.0"
 							),
 			);
 class database
@@ -454,23 +457,16 @@ class database
 	//	GPS Convertion :
 		$neg=FALSE;
 		$geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
+		if($geocord_exp[0][0] === "S" or $geocord_exp[0][0] === "W"){$neg = TRUE;}
 		$patterns[0] = '/N /';
 		$patterns[1] = '/E /';
 		$patterns[2] = '/S /';
 		$patterns[3] = '/W /';
 		$replacements = "";
-		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
 		$geocord_exp[0] = preg_replace($patterns, $replacements, $geocord_exp[0]);
-		$geocord_count_chars = count_chars($geocord_exp[0], 1);
-	#	foreach (count_chars($geocord_exp[0], 1) as $i => $val) {
-	#	echo "There were $val instance(s) of \"" , $i , "\" in the string.\n";
-	#	}
 		
-		if($geocord_count_chars[45] === 1)
-		{
-			$geocord_exp[0] = preg_replace("-", "", $geocord_exp[0]);
-			$neg=TRUE;
-		}
+		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
+		
 		// 4208.7753 ---- 4208 - 7753
 		$geocord_dec = "0.".$geocord_exp[1];
 		// 4208.7753 ---- 4208 - 0.7753
@@ -492,16 +488,18 @@ class database
 	function &convert_dd_dm($geocord_in)
 	{
 		//	GPS Convertion :
-		$geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
+		$neg=FALSE;
+		$geocord_exp = explode(".", $geocord_in);
+		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
 		$pattern[0] = '/N /';
 		$pattern[1] = '/E /';
 		$pattern[2] = '/S /';
 		$pattern[3] = '/W /';
 		$replacements = "";
-		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
 		$geocord_exp[0] = preg_replace($pattern, $replacements, $geocord_exp[0]);
-		$geocord_count_chars = count_chars($geocord_exp[0], 1);
-		if($geocord_count_chars["-"] !== NULL){$geocord_exp[0] = preg_replace("-", "", $geocord_exp[0]);$neg=1;}
+		
+		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
+		
 		// 42.146255 ---- 42 - 146255
 		$geocord_dec = "0.".$geocord_exp[1];
 		// 42.146255 ---- 42 - 0.146255
@@ -511,7 +509,7 @@ class database
 		// 42.146255 ---- 42 - 08.7753
 		$geocord_add = $geocord_exp[0].$geocord_mult;
 		// 42.146255 ---- 4208.7753
-		if($neg === 1){$geocord_add = "-".$geocord_add;}
+		if($neg === TRUE){$geocord_add = "-".$geocord_add;}
 		return $geocord_add;
 	}
 	
@@ -521,10 +519,9 @@ class database
 
 	function &check_gps_array($gpsarray, $test)
 	{
-	$n=1;
 	foreach($gpsarray as $gps)
 	{
-		$gps_t =  $gps["lat"]. "-".$gps["long"];
+		$gps_t 	=  $gps["lat"]."-".$gps["long"];
 		$test_t = $test["lat"]."-".$test["long"]; 
 		if (strcmp($gps_t,$test_t)== 0 )
 		{
@@ -546,7 +543,6 @@ class database
 			}
 			$return = 0;
 		}
-	$n++;
 	}
 	return $return;
 	}
@@ -1198,6 +1194,21 @@ echo '</tr></td></table>';
 		}
 	}
 	
+	#========================================================================================================================#
+	#						Grab the Manuf for a given MAC, print Unknown Manuf if not found								 #
+	#========================================================================================================================#
+	
+	function &manufactures($mac)
+	{
+		include('manufactures.inc.php');
+		$man_mac = str_split($mac,6);
+		
+		if($manufactures[$man_mac[0]])
+		{$manuf = $manufactures[$man_mac[0]];}
+		else{$manuf = "Unknown Manufacture";}
+		return $manuf;
+	
+	}
 	
 	#========================================================================================================================#
 	#						Grab the AP's for a given user's Import and throw them into a KML file							 #
@@ -1222,8 +1233,8 @@ echo '</tr></td></table>';
 		$filewrite = fopen($filename, "w");
 		$fileappend = fopen($filename, "a");
 		// open file and write header:
-		fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"http://earth.google.com/kml/2.2\">\r\n<Document>\r\n<name>RanInt WifiDB KML</name>\r\n");
-		fwrite($fileappend, "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$open_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+		fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"$KML_SOURCE_URL\">\r\n		<Document>\r\n			<name>RanInt WifiDB KML</name>\r\n");
+		fwrite($fileappend, "			<Style id=\"openStyleDead\">\r\n		<IconStyle>\r\n				<scale>0.5</scale>\r\n				<Icon>\r\n			<href>".$open_loc."</href>\r\n			</Icon>\r\n			</IconStyle>\r\n			</Style>\r\n");
 		fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 		fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 		fwrite($fileappend, '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
@@ -1232,7 +1243,7 @@ echo '</tr></td></table>';
 		$n=0;
 		$total = count($aps);
 		fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n<description>APs: ".$total."</description>\r\n");
-		fwrite( $fileappend, "	<Folder>\r\n<name>".$title." Access Points</name>\r\n");
+		fwrite( $fileappend, "<Folder>\r\n<name>".$title." Access Points</name>\r\n");
 		echo "Wrote KML Folder Header<BR>";
 		
 		foreach($aps as $ap)
@@ -1248,8 +1259,7 @@ echo '</tr></td></table>';
 			    $id = $newArray['id'];
 				$ssid = $newArray['ssid'];
 			    $mac = $newArray['mac'];
-				$man_mac = str_split($mac,8);
-				$man = $manufactures[$man_mac];
+				$man =& database::manufactures($mac);
 			    $chan = $newArray['chan'];
 				$r = $newArray["radio"];
 				$auth = $newArray['auth'];
@@ -1311,12 +1321,12 @@ echo '</tr></td></table>';
 				$fa = $date_first." ".$time_first;
 				if($gps_table_first['lat']=="0.0000" or $gps_table_first['long'] =="0.0000"){continue;}
 				//===================================CONVERT FROM DM TO DD=========================================//
-				$lat_in = $gps_table_first['lat'];
-				$long_in = $gps_table_first['long'];
-				$lat = database::convert_dm_dd($lat_in);
-				$long = database::convert_dm_dd($long_in);
-				unset($lat_in);
-				unset($long_in);
+				$lat = $gps_table_first['lat'];
+				$long = $gps_table_first['long'];
+				if($lat !== "N 0.0000"){
+					$lat = database::convert_dm_dd($lat);
+					$long = database::convert_dm_dd($long);
+				}
 				//=====================================================================================================//
 				
 				$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
@@ -1325,14 +1335,15 @@ echo '</tr></td></table>';
 				$date_last = $gps_table_last["date"];
 				$time_last = $gps_table_last["time"];
 				$la = $date_last." ".$time_last;
-				fwrite( $fileappend, "		<Placemark id=\"".$mac."\">\r\n<name></name><description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"http://www.randomintervals.com/wifidb/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point>\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+				fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name></name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"http://www.randomintervals.com/wifidb/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n	");
+				fwrite( $fileappend, "<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 				echo "Wrote AP: ".$ssid."<br>to KML File<BR>";
 				unset($gps_table_first["lat"]);
 				unset($gps_table_first["long"]);
 			}
 		}
-		fwrite( $fileappend, "</Folder>\r\n");
-		fwrite( $fileappend, "</Folder></Document></kml>");
+		fwrite( $fileappend, "	</Folder>\r\n");
+		fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
 		fclose( $fileappend );
 	mysql_close($conn);
 	}
@@ -1444,8 +1455,6 @@ $text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
 $text = str_replace($strip,"_",$text);
 return $text;
 }
-##### Manufactures
-include('manufactures.inc.php');
 
 
 ?>
