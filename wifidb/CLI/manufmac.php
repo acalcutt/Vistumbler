@@ -1,10 +1,10 @@
 <?php
-$version = "1.1.1";
-$debug = 0;
-$script_start = "1.24.09";
-$last_edit = "1.24.09";
+$ver = "1.1.2";
+$script_start = "24.Jan.09";
+$last_edit = "3.Feb.09";
 $author = "pferland";
-		echo "Starting creation of Vistumbler compatible Wireless Router Manuf List.\nBy: Pferland\nhttp:\\www.randomintervals.com\n";
+echo "Starting creation of Vistumbler compatible Wireless Router Manuf List.\nBy: $author\nhttp:\\www.randomintervals.com\nVersion: $ver";
+$debug = 0;
 $cwd = "c:/wamp/www/";
 $stime = time()*60;
 $source="http://standards.ieee.org/regauth/oui/oui.txt";
