@@ -1,3 +1,14 @@
+wiFiDB CLI Folder
+
+1 -> Convert Txt to VS1
+2 -> Manufactures Generation script
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+1			Convert Txt to VS1
+--------------------------------------------------------------
+--------------------------------------------------------------
+
 This is a converter for the Vistumbler Summery Text file to the VS1 file.
 
 I wrote this script in windows, but it can run on any OS that you have PHP on.
@@ -86,4 +97,70 @@ Initial release, no GPS conversion yet, just a file converter.
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 Fixed most of the GPS issues, is now converting from DD.dddd to DDMM.mmmm(DDDmm.mmmm also supported)
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.2
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Replaced old GPS conversion function with newer better code.
+==============================
+
+
+
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+2		Manufactures Generation script
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+All you need to do is run the manufmac.exe or manufmac.php script and it will download the 
+text file from: http://standards.ieee.org/regauth/oui/oui.txt
+
+then it converts it to a WiFiDB compatible PHP (manufactures.inc.php) file 
+and a Vistumbler compatible INI(manufactures.ini) file.
+
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release, was just WiFiDB generation, no Vistumbler yet.
+
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.1.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Added in Vistumbler output. 
+2-> WiFiDB output was missing the ending ?> and had a few parse errors due to 
+	non-cancled double quotes in Manufactures name
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.1.2
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Forgot to add in the Debug variable and wrapper around the line echo, performance was severley hindered.
+2-> Changed console header and layout a little
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.1.3
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Compiled into manufmac.exe for ease of use
 ==============================
