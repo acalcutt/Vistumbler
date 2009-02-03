@@ -1,5 +1,6 @@
 <?php
 $version = "1.1.1";
+$debug = 0;
 $script_start = "1.24.09";
 $last_edit = "1.24.09";
 $author = "pferland";
@@ -44,7 +45,7 @@ foreach($manuf_list as $manuf)
 	}else{
 		$write = "\"".$manuf['mac']."\"=>\"".$manuf['manuf']."\",\r";
 	}
-			echo $write."\n";
+	if($debug==1){	echo $write."\n";}
 	fwrite($fileappend, $write);
 	$current++;
 }
@@ -62,7 +63,7 @@ foreach($manuf_list as $manuf)
 {
 	$write = $manuf['mac']."=".$manuf['manuf']."\r";
 	fwrite($fileappend, $write);
-
+	if($debug == 1){echo $write."\n";}
 }
 $etime = time()*60;
 $diff_time = $etime - $stime;
