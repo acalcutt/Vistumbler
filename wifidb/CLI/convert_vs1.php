@@ -2,10 +2,10 @@
 $TOTAL_START=date("H:i:s");
 #error_reporting(E_ALL);
 $debug = 0;
-$lastedit="9.22.2008";
+$lastedit="3-Feb-2009";
 $start="6.21.2008";
-$ver="1.1";
-echo "=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-Vistumbler Summery Text to VS1 converter Version: ".$ver."=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-\n";
+$ver="1.2";
+echo "==-=-=-=-=-=-Vistumbler Summery Text to VS1 converter -=-=-=-=-=-==\n Version: ".$ver."\nLast Edit: ".$lastedit."\n";
 
 $vs1dir = getcwd();
 $vs1dir.="\\vs1\\";
@@ -89,6 +89,57 @@ foreach($gpsarray as $gps)
 }
 return $return;
 }
+
+	#========================================================================================================================#
+	#													Convert GeoCord DD to DM									   	     #
+	#========================================================================================================================#
+	
+	function &convert_dd_dm($geocord_in)
+	{
+		//	GPS Convertion :
+		$neg=FALSE;
+		$geocord_exp = explode(".", $geocord_in);
+		$pattern[0] = '/S /';
+		$pattern[1] = '/W /';
+		$pattern[2] = '/E /';
+		$pattern[3] = '/N /';
+		$replacements[0] = "-";
+		$replacements[1] = "-";
+		$replacements[2] = "";
+		$replacements[3] = "";
+		$geocord = preg_replace($pattern, $replacements, $geocord_exp[0]);
+		
+		if($geocord === "-"){$geocord = 0 - $geocord; $neg = TRUE;}
+		
+		// 42.146255 ---- 42 - 146255
+		$geocord_dec = "0.".$geocord_exp[1];
+		// 42.146255 ---- 42 - 0.146255
+		$geocord_mult = $geocord_dec*60;
+		// 42.146255 ---- 42 - (0.146255)*60 = 8.7753
+		$geocord_mult_exp = explode('.',$geocord_mult);
+		// 42.146255 ---- 42 -- 8 - 775
+		$geocord_mult_len = strlen($geocord_mult_exp[0]);
+		if($geocord_mult_len === 1){$geocord_mult_exp[0] = "0".$geocord_mult_exp[0]; // 42.146255 ---- 42 - 08.7753
+		}
+		// 42.146255 ---- 42 -- 08 - 7753
+		$geocord_mult_len_1 = strlen($geocord_mult_exp[1]); // if 7753 -> 4
+		if($geocord_mult_len_1 === 1){$geocord_mult_exp[1] = $geocord_mult_exp[1]."000"; // 42.146255 ---- 42 - 08.7000
+		}elseif($geocord_mult_len_1 === 2){$geocord_mult_exp[1] = $geocord_mult_exp[1]."00"; // 42.146255 ---- 42 - 08.7700
+		}elseif($geocord_mult_len_1 === 3){$geocord_mult_exp[1] = $geocord_mult_exp[1]."0"; // 42.146255 ---- 42 - 08.7750
+		}elseif($geocord_mult_len_1 > 4) // 42.146255 ---- 42 - 08.7757891
+		{
+			$geocord_mult_exp[1] = substr_replace($geocord_mult_exp[1] , '' , 4 , strlen($geocord_mult_exp[1]));
+			// 42.146255 ---- 42 - 08.7757
+			$geocord_mult = $geocord_mult_exp[1];
+		}
+		$geocord_mult = implode(".", $geocord_mult_exp);
+		$geocord_add = $geocord.$geocord_mult;
+		// 42.146255 ---- 4208.7753
+		if($geocord_add === "000"){$geocord_add = "0000.0000";}
+		if($neg === TRUE){$geocord_add = "-".$geocord_add;}
+		
+		return $geocord_add;
+	}
 
 function convert_vs1($source, $out)
 {
@@ -178,7 +229,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 		$gpsdata[$n]=array(
 							"lat"=>$wifi[8],
 							"long"=>$wifi[9],
-							"sats"=>$wifi[3],
+							"sats"=>'0',
 							"date"=>$date,
 							"time"=>$time
 						);
@@ -218,7 +269,7 @@ if ($ret_count == 17)// test to see if the data is in correct format
 			$gpsdata[$n]=array(
 								"lat"=>$wifi[8],
 								"long"=>$wifi[9],
-								"sats"=>"0",
+								"sats"=>'0',
 								"date"=>$date,
 								"time"=>$time
 								);
@@ -240,9 +291,9 @@ if ($ret_count == 17)// test to see if the data is in correct format
 								);
 			if ($GLOBALS["debug"] == 1 )
 			{
-				echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."+_\n".$gpsdata[$n]["long"]."+_\n".$gpsdata[$n]["sats"]."+_\n".$gpsdata[$n]["date"]."+_\n".$gpsdata[$n]["time"]."+_\n";	
+				echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."  +_\n".$gpsdata[$n]["long"]."  +_\n".$gpsdata[$n]["sats"]."  +_\n".$gpsdata[$n]["date"]."  +_\n".$gpsdata[$n]["time"]."  +_\n";	
 				echo "Access Point Number: ".$N."\n";
-				echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."=-\n".$apdata[$N]["mac"]."=-\n".$apdata[$N]["auth"]."=-\n".$apdata[$N]["encry"]."=-\n".$apdata[$N]["sectype"]."=-\n".$apdata[$N]["radio"]."=-\n".$apdata[$N]["chan"]."=-\n".$apdata[$N]["btx"]."=-\n".$apdata[$N]["otx"]."=-\n".$apdata[$N]["nt"]."=-\n".$apdata[$N]["label"]."=-\n".$apdata[$N]["sig"]."\n";
+				echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."  =-\n".$apdata[$N]["mac"]."  =-\n".$apdata[$N]["auth"]."  =-\n".$apdata[$N]["encry"]."  =-\n".$apdata[$N]["sectype"]."  =-\n".$apdata[$N]["radio"]."  =-\n".$apdata[$N]["chan"]."  =-\n".$apdata[$N]["btx"]."  =-\n".$apdata[$N]["otx"]."  =-\n".$apdata[$N]["nt"]."  =-\n".$apdata[$N]["label"]."  =-\n".$apdata[$N]["sig"]."\n";
 			}
 		}elseif($gpschk===1)
 		{
@@ -284,133 +335,14 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	foreach( $gpsdata as $gps )
 	{
 	//	GPS Convertion :
-		$latitude = explode(" ", $gps["lat"]);
-		$gps["lat"]="";
-		$lat_front = explode(".", $latitude[1]);
-		$lat_left = strlen($lat_front[0]);
-		
-		$longitude = explode(" ", $gps["long"]);
-		$gps["long"]="";
-		$long_front = explode(".",$longitude[1]);
-		$long_left = strlen($long_front[0]);
-		
-		if($lat_left == 2 && $long_left == 2)
-		{
-			$lat_back = "0.".$lat_front[1]; // add a 0. to the begining of the number to make it a decmal
-			$lat_back = $lat_back*60; // multiply the decimal to to convert it to minuets
-			
-			$Lat_temp  = explode(".",$lat_back); //get the numbers before the decimal place.
-			$Lat_temp_ = strlen($Lat_temp[0]); //find out how long it is before the decimal
-			$back_lat  = strlen($Lat_temp[1]);
-			
-			if($back_lat > 4){$Lat_temp[1] = substr_replace($Lat_temp[1],"",4);}
-			
-			if($Lat_temp_ == 1){$lat_ = $lat_front[0]."0".$lat_back;}
-				else{$lat_ = $lat_front[0].$lat_back;}
-		//////////////////// END LAT CONVERSION ////////////////////
-
-		//////////////////// START LONG CONVERSION ////////////////////
-			$long_back = "0.".$long_front[1]; //// add a 0. to the begining of the number to make it a decmal
-			$long_back = $long_back*60; // multiply the decimal to to convert it to minuets
-			
-			$Long_temp = explode(".",$long_back); //get the numbers before the decimal place.
-			$Long_temp_ = strlen($Long_temp[0]);
-			$back_long = strlen($Long_temp[1]);
-			if($back_long > 4){$Long_temp[1]= substr_replace($Long_temp[1],"",4);}
-			
-			if($Long_temp_ == 1){$long_ =  $long_front[0]."0".$long_back;}
-				else{$long_ =  $long_front[0].$long_back;}
-			
-			if($latitude[0] == "S"){$la = "-";}
-				else{$la="";}
-			if($longitude[0]=="W"){$lo = "-";}
-				else{$lo="";}
-			
-			if($lat_==0){$gps["lat"]="0.0000";}
-				else{$gps["lat"]=$la.$lat_;}
-			
-			if($long_==0){$gps["long"]="0.0000";}
-				else{$gps["long"]=$lo.$long_;}
-		//////////////////// END LONG CONVERSION ////////////////////
-		}elseif($lat_left == 3 && $long_left == 3)
-		{
-			$lat_back = "0.".$lat_front[1]; // add a 0. to the begining of the number to make it a decmal
-			$lat_back = $lat_back*60; // multiply the decimal to to convert it to minuets
-			
-			$Lat_temp  = explode(".",$lat_back); //get the numbers before the decimal place.
-			$Lat_temp_ = strlen($Lat_temp[0]); //find out how long it is before the decimal
-			$back_lat  = strlen($Lat_temp[1]);
-			
-			if($back_lat > 4){$Lat_temp[1] = substr_replace($Lat_temp[1],"",4);}
-			
-			if($Lat_temp_ == 0){$lat_ = $lat_front[0]."0".$lat_back;}
-				else{$lat_ = $lat_front[0].$lat_back;}
-		//////////////////// END LAT CONVERSION ////////////////////
-
-		//////////////////// START LONG CONVERSION ////////////////////
-			$long_back = "0.".$long_front[1]; //// add a 0. to the begining of the number to make it a decmal
-			$long_back = $long_back*60; // multiply the decimal to to convert it to minuets
-			
-			$Long_temp = explode(".",$long_back); //get the numbers before the decimal place.
-			$Long_temp_ = strlen($Long_temp[0]);
-			$back_long = strlen($Long_temp[1]);
-			if($back_long > 4){$Long_temp[1]= substr_replace($Long_temp[1],"",4);}
-			
-			if($Long_temp_ == 0){$long_ =  $long_front[0]."0".$long_back;}
-				else{$long_ =  $long_front[0].$long_back;}
-			
-			if($latitude[0] == "S"){$la = "-";}
-				else{$la="";}
-			if($longitude[0]=="W"){$lo = "-";}
-				else{$lo="";}
-			
-			if($lat_==0){$gps["lat"]="0.0000";}
-				else{$gps["lat"]=$la.$lat_;}
-			
-			if($long_==0){$gps["long"]="0.0000";}
-				else{$gps["long"]=$lo.$long_;}
-		//////////////////// END LONG CONVERSION ////////////////////
-		}elseif($lat_left == 4 && $long_left == 4)
-		{
-			if($latitude[0] == "S"){$la = "-";}
-				else{$la="";}			
-			if($longitude[0]=="W"){$lo = "-";}
-				else{$lo="";}
-			
-			$long = $lo."".$long_front[0].".".$long_front[1];
-			
-			$lat = $la."".$lat_front[0].".".$lat_front[1];
-			
-			if($lat == NULL){$gps["lat"]="N 0.0000";}
-				else{$gps["long"]= $long;}
-			
-			if($long == NULL){$gps["long"]="W 0.0000";}
-				else{$gps["lat"]= $lat;}
-			
-		}elseif($lat_left == 1 && $long_left == 1)
-		{
-			if($latitude[0] == "S"){$la = "-";}
-				else{$la="";}
-			
-			if($longitude[0]=="W"){$lo = "-";}
-				else{$lo="";}
-			
-			$long = $lo."".$long_front[0].".".$long_front[1];
-			
-			$lat = $la."".$lat_front[0].".".$lat_front[1];
-		
-			if($lat == NULL){$gps["lat"]="N 0.0000";}
-				else{$gps["long"]= $long;}
-			if($long == NULL){$gps["long"]="W 0.0000";}
-				else{$gps["lat"]= $lat;}
-		}
-
-//	END GPS convert
+	$lat  =& convert_dd_dm($gps['lat']);
+	$long =& convert_dd_dm($gps['long']);
+	//	END GPS convert
 		
 		
 		if ($GLOBALS["debug"] ==1 ){echo "Lat : ".$gps['lat']." - Long : ".$gps['long']."\n";}
 		
-		$gpsd = $n."|".$gps['lat']."|".$gps['long']."|".$gps["sats"]."|".$gps["date"]."|".$gps["time"]."\r\n";
+		$gpsd = $n."|".$lat."|".$long."|".$gps["sats"]."|".$gps["date"]."|".$gps["time"]."\r\n";
 		if($GLOBALS["debug"] == 1){ echo $gpsd;}
 		fwrite($fileappend, $gpsd);
 		$n++;
