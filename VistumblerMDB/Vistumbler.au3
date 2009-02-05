@@ -3396,7 +3396,7 @@ EndFunc   ;==>_OpenVistumblerWiki
 
 Func _OpenVistumblerDonate();Opens Vistumbler Donate
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerDonate() ') ;#Debug Display
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://sourceforge.net/donate/index.php?group_id=235720')
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ACalcutt%40Vistumbler%2enet&item_name=Vistumbler%20Donation&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8')
 EndFunc   ;==>_OpenVistumblerDonate
 
 Func _OpenVistumblerStore();Opens Vistumbler Store
@@ -6873,7 +6873,6 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_UpdateFound = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateFound', 'Update Found. Would you like to update vistumbler?')
 		$Text_NoUpdates = IniRead($DefaultLanguagePath, 'GuiText', 'NoUpdates', 'No Updates Avalible')
 		$Text_NoActiveApFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoActiveApFound', 'No Active AP found')
-		$Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', 'Donate')
 		$Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', 'Donate')
 		$Text_VistumblerStore = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerStore', 'Store')
 		$Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
