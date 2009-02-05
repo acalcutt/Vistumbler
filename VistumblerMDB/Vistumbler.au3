@@ -17,8 +17,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.1 Beta 2.2'
-$last_modified = '02/02/2009'
+$version = '9.1 Beta 3'
+$last_modified = '02/05/2009'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -81,10 +81,14 @@ DirCreate($LanguageDir)
 DirCreate($SoundDir)
 DirCreate($ImageDir)
 Dim $VistumblerDB = $TmpDir & 'VistumblerDB.mdb'
-Dim $ManuLabInstDB = $SettingsDir & 'ManuLabInstDB.mdb'
+Dim $ManuDB = $SettingsDir & 'Manufacturers.mdb'
+Dim $LabDB = $SettingsDir & 'Labels.mdb'
+Dim $InstDB = $SettingsDir & 'Instruments.mdb'
 
 Dim $DB_OBJ
-Dim $ManuLabInstDB_OBJ
+Dim $ManuDB_OBJ
+Dim $LabDB_OBJ
+Dim $InstDB_OBJ
 Dim $APID = 0
 Dim $HISTID = 0
 Dim $GPS_ID = 0
@@ -666,10 +670,32 @@ Else
 	_SetUpDbTables($VistumblerDB)
 EndIf
 
-If FileExists($ManuLabInstDB) Then
-	_AccessConnectConn($ManuLabInstDB, $ManuLabInstDB_OBJ)
+;Connect to manufacturer database
+If FileExists($ManuDB) Then
+	_AccessConnectConn($ManuDB, $ManuDB_OBJ)
 Else
-	_SetUpManLabInstDbTables($ManuLabInstDB)
+	_CreateDB($ManuDB)
+	_AccessConnectConn($ManuDB, $ManuDB_OBJ)
+	_CreateTable($ManuDB, 'Manufacturers', $ManuDB_OBJ)
+	_CreatMultipleFields($ManuDB, 'Manufacturers', $ManuDB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
+EndIf
+;Connect to label database
+If FileExists($LabDB) Then
+	_AccessConnectConn($LabDB, $LabDB_OBJ)
+Else
+	_CreateDB($LabDB)
+	_AccessConnectConn($LabDB, $LabDB_OBJ)
+	_CreateTable($LabDB, 'Labels', $LabDB_OBJ)
+	_CreatMultipleFields($LabDB, 'Labels', $LabDB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
+EndIf
+;Connect to Instrument
+If FileExists($InstDB) Then
+	_AccessConnectConn($InstDB, $InstDB_OBJ)
+Else
+	_CreateDB($InstDB)
+	_AccessConnectConn($InstDB, $InstDB_OBJ)
+	_CreateTable($InstDB, 'Instruments', $InstDB_OBJ)
+	_CreatMultipleFields($InstDB, 'Instruments', $InstDB_OBJ, 'INSTNUM TEXT(3)|INSTTEXT TEXT(255)')
 EndIf
 
 $var = IniReadSection($settings, "Columns")
@@ -1796,18 +1822,6 @@ Func _SetUpDbTables($dbfile)
 	_CreatMultipleFields($dbfile, 'TreeviewSSID', $DB_OBJ, 'Pos TEXT(255)|Name TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
-Func _SetUpManLabInstDbTables($dbfile)
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetUpManLabInstDbTables()') ;#Debug Display
-	_CreateDB($dbfile)
-	_AccessConnectConn($dbfile, $ManuLabInstDB_OBJ)
-	_CreateTable($dbfile, 'Manufacturers', $ManuLabInstDB_OBJ)
-	_CreateTable($dbfile, 'Labels', $ManuLabInstDB_OBJ)
-	_CreateTable($dbfile, 'Instruments', $ManuLabInstDB_OBJ)
-	_CreatMultipleFields($dbfile, 'Manufacturers', $ManuLabInstDB_OBJ, 'BSSID TEXT(6)|Manufacturer TEXT(255)')
-	_CreatMultipleFields($dbfile, 'Labels', $ManuLabInstDB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
-	_CreatMultipleFields($dbfile, 'Instruments', $ManuLabInstDB_OBJ, 'INSTNUM TEXT(3)|INSTTEXT TEXT(255)')
-EndFunc   ;==>_SetUpManLabInstDbTables
-
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       MANUFACTURER/LABEL FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -1817,7 +1831,7 @@ Func _FindManufacturer($findmac);Returns Manufacturer for given Mac Address
 	$findmac = StringReplace($findmac, ':', '')
 	If StringLen($findmac) <> 6 Then $findmac = StringTrimRight($findmac, StringLen($findmac) - 6)
 	$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID = '" & $findmac & "'"
-	$ManuMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
+	$ManuMatchArray = _RecordSearch($ManuDB, $query, $ManuDB_OBJ)
 	$FoundManuMatch = UBound($ManuMatchArray) - 1
 	If $FoundManuMatch = 0 Then
 		Return ($Text_Unknown)
@@ -1831,7 +1845,7 @@ Func _SetLabels($findmac);Returns Label for given Mac Address
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetLabels()') ;#Debug Display
 	$findmac = StringReplace($findmac, ':', '')
 	$query = "SELECT Label FROM Labels WHERE BSSID = '" & $findmac & "'"
-	$LabMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
+	$LabMatchArray = _RecordSearch($LabDB, $query, $LabDB_OBJ)
 	$FoundLabMatch = UBound($LabMatchArray) - 1
 	If $FoundLabMatch = 0 Then
 		Return ($Text_Unknown)
@@ -1902,7 +1916,9 @@ Func _Exit()
 	If WinExists($Text_ConnectToWindowName) Then WinClose($Text_ConnectToWindowName)
 	GUISetState(@SW_HIDE, $Vistumbler)
 	_AccessCloseConn($DB_OBJ)
-	_AccessCloseConn($ManuLabInstDB_OBJ)
+	_AccessCloseConn($ManuDB_OBJ)
+	_AccessCloseConn($LabDB_OBJ)
+	_AccessCloseConn($InstDB_OBJ)
 	_WriteINI(); Write current settings to back to INI file
 	$PID = -1
 	$CloseTimer = TimerInit()
@@ -6033,7 +6049,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		_GUICtrlListView_SetColumnWidth($GUI_Manu_List, 1, 450)
 		;Add Manufacturers to list
 		$query = "SELECT BSSID, Manufacturer FROM Manufacturers"
-		$ManuMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
+		$ManuMatchArray = _RecordSearch($ManuDB, $query, $ManuDB_OBJ)
 		$FoundManuMatch = UBound($ManuMatchArray) - 1
 		GUICtrlSetData($msgdisplay, $Text_VistumblerSettings & ' - Loading ' & $FoundManuMatch & ' Manufacturer(s)')
 		For $m = 1 To $FoundManuMatch
@@ -6062,7 +6078,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		_GUICtrlListView_SetColumnWidth($GUI_Lab_List, 1, 450)
 		;Add Labels to list
 		$query = "SELECT BSSID, Label FROM Labels"
-		$LabMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
+		$LabMatchArray = _RecordSearch($LabDB, $query, $LabDB_OBJ)
 		$FoundLabMatch = UBound($LabMatchArray) - 1
 		GUICtrlSetData($msgdisplay, $Text_VistumblerSettings & ' - Loading ' & $FoundLabMatch & ' Label(s)')
 		For $l = 1 To $FoundLabMatch
@@ -6366,7 +6382,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_Midi_Instument = GUICtrlCreateCombo('', 385, 345, 265, 20)
 		$query = "SELECT INSTNUM, INSTTEXT FROM Instruments"
-		$InstMatchArray = _RecordSearch($ManuLabInstDB, $query, $ManuLabInstDB_OBJ)
+		$InstMatchArray = _RecordSearch($InstDB, $query, $InstDB_OBJ)
 		$FoundInstMatch = UBound($InstMatchArray) - 1
 		GUICtrlSetData($msgdisplay, $Text_VistumblerSettings & ' - Loading ' & $FoundInstMatch & ' Instrument(s)')
 		For $m = 1 To $FoundInstMatch
@@ -6867,13 +6883,13 @@ Func _ApplySettingsGUI();Applys settings
 	If $Apply_Manu = 1 Then
 		;Remove all current Mac address/manus in the array
 		$query = "DELETE * FROM Manufacturers"
-		_ExecuteMDB($ManuLabInstDB, $ManuLabInstDB_OBJ, $query)
+		_ExecuteMDB($ManuDB, $ManuDB_OBJ, $query)
 		;Rewrite Mac address/labels from listview into the array
 		$itemcount = _GUICtrlListView_GetItemCount($GUI_Manu_List) - 1; Get List Size
 		For $findloop = 0 To $itemcount
 			$o_manu_mac = StringUpper(StringReplace(_GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 0), '"', ''))
 			$o_manu = _GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 1)
-			_AddRecord($ManuLabInstDB, "Manufacturers", $ManuLabInstDB_OBJ, $o_manu_mac & '|' & $o_manu)
+			_AddRecord($ManuDB, "Manufacturers", $ManuDB_OBJ, $o_manu_mac & '|' & $o_manu)
 		Next
 		;Reset Labels In List
 		_UpdateListMacLabels()
@@ -6881,13 +6897,13 @@ Func _ApplySettingsGUI();Applys settings
 	If $Apply_Lab = 1 Then
 		;Remove all current Mac address/labels in the array
 		$query = "DELETE * FROM Labels"
-		_ExecuteMDB($ManuLabInstDB, $ManuLabInstDB_OBJ, $query)
+		_ExecuteMDB($LabDB, $LabDB_OBJ, $query)
 		;Rewrite Mac address/labels from listview into the array
 		$itemcount = _GUICtrlListView_GetItemCount($GUI_Lab_List) - 1; Get List Size
 		For $findloop = 0 To $itemcount
 			$o_lab_mac = StringUpper(StringReplace(_GUICtrlListView_GetItemText($GUI_Lab_List, $findloop, 0), '"', ''))
 			$o_lab = _GUICtrlListView_GetItemText($GUI_Lab_List, $findloop, 1)
-			_AddRecord($ManuLabInstDB, "Labels", $ManuLabInstDB_OBJ, $o_lab_mac & '|' & $o_lab)
+			_AddRecord($LabDB, "Labels", $LabDB_OBJ, $o_lab_mac & '|' & $o_lab)
 		Next
 		;Reset Labels In List
 		_UpdateListMacLabels()
