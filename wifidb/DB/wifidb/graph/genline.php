@@ -149,17 +149,7 @@ if($_POST['line']==='line')
 
 	}
 	
+
 $filename = $_SERVER['SCRIPT_FILENAME'];
-$file_ex = explode("/", $filename);
-$count = count($file_ex);
-$file = $file_ex[($count)-1];
-if (file_exists($filename)) {
-    echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
-}
+footer($filename);
 ?>
-<tr>
-<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
-<td bgcolor="#315573" width="0">
-</td>
-</tr>
-</table>

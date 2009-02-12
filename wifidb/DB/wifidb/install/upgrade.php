@@ -25,82 +25,8 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title
 
 <td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 <!--BODY-->
-<form action="patch.php" method="post" enctype="multipart/form-data">
-
-  <h2>WiFiDB Settings for Upgrade</h2>
 <?php
-$gd = gd_info(); 
-if(is_null($gd["GD Version"]))
-{
-	echo "<h4><font color=#ff0000>You Do Not Have GD or GD2 installed, please install this or you will not beable to use the graphing feature!</font></h4>";
-}
-else
-{ 
-	echo "<h4><font color=#00ff00>GD Version: ".$gd['GD Version'].", is installed</font></h4>";
-}
-?>
-<h3>This is the Upgrade page to go from v 0.14 or any 0.15 build to this current version ( <?php echo $ver["wifidb"]; ?> )</h3>
-<table border="0" cellspacing="0" cellpadding="3">
-
-  <tr>
-    <td width="100%">SQL root User (to update the wifidb user priv's)</td><td>........................................</td>
-    <td><input name="root_sql_user"></td></tr>
-  <tr>
-    <td>SQL root user Password</td><td>........................................</td>
-    <td><input name="root_sql_pwd"></td></tr>
-  <tr>
-  <td>
-    <p>WiFiDB root ( Folder you put WiFiDB in )</td><td>........................................</td>
-    <td><input name="root"></td></tr>
-  <tr>
-    <td>
-    <p>Host Root URL ( leave blank for most installs )</td><td>........................................</td>
-    <td><input name="hosturl"></td></tr>
-  <tr>
-	<td>
-    <p>MySQL Host (Default `localhost` )</td><td>........................................</td>
-    <td><input name="sqlhost"></td></tr>
-  <tr>
-    <td>WiFiDB SQL Username (to verify)</td><td>........................................</td>
-    <td><input name="sqlu"></td></tr>
-  <tr>
-    <td>WiFiDB SQL Password (to verify)</td><td>........................................</td>
-    <td><input name="sqlp"></td></tr>
-  <tr>
-    <td>WiFi DB name (For the wifidb user )</td><td>........................................</td>
-    <td><input name="wifi"></td>
-  </tr>
-  <tr>
-    <td>WiFi Storage DB name (For the wifidb user )</td><td>........................................</td>
-    <td>
-	<input name="wifist">
-	</td>
-</TR><TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
-<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
-</TD>
-</TR>
-</TABLE>
-</form>
-</p>
-
-<?php
+header("Location: upgrade/");
 $filename = $_SERVER['SCRIPT_FILENAME'];
-$file_ex = explode("/", $filename);
-$count = count($file_ex);
-$file = $file_ex[($count)-1];
-if (file_exists($filename)) {
-    echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
-}?>
-</body>
-</html>
-</p>
-</td>
-</tr>
-<tr>
-<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
-<td bgcolor="#315573" width="0">
-</td>
-</tr>
-</table>
-</div>
-</html>
+footer($filename);
+?>

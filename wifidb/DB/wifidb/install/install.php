@@ -327,7 +327,8 @@ echo "<tr><td>Failure..........</td><td>Adding SQL Connection Info</td></tr>";}
 $AD_CF_KM_Re = fwrite($fileappend, "#---------------- KML Info ----------------#\r\n"
 							."$"."open_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
 							."$"."WEP_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
-							."$"."WPA_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n\r\n");
+							."$"."WPA_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n\r\n"
+							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';";
 if($AD_CF_KM_Re)
 {echo "<tr><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{
@@ -340,23 +341,7 @@ echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 fwrite($fileappend, "\r\n?>");
 echo "</table>";
 
+
 $filename = $_SERVER['SCRIPT_FILENAME'];
-$file_ex = explode("/", $filename);
-$count = count($file_ex);
-$file = $file_ex[($count)-1];
-if (file_exists($filename)) {
-    echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
-}?>
-</body>
-</html>
-</p>
-</td>
-</tr>
-<tr>
-<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
-<td bgcolor="#315573" width="0">
-</td>
-</tr>
-</table>
-</div>
-</html>
+footer($filename);
+?>

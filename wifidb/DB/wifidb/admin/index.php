@@ -84,14 +84,7 @@ while ($newArray = mysql_fetch_array($result))
 </form>
 <?php
 }else{echo "You did not get to this page the right way, go back and try it again.";}
+
+$filename = $_SERVER['SCRIPT_FILENAME'];
+footer($filename);
 ?>
-</p>
-</td>
-</tr>
-<tr>
-<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
-<td bgcolor="#315573" width="0">&nbsp;</td>
-</tr>
-</table>
-</div>
-</html>

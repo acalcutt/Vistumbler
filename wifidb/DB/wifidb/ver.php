@@ -1,8 +1,8 @@
 <?php
 include('lib/config.inc.php');
 include('lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Main Page</title>';
 ?>
+<title>Wireless DataBase *Alpha*<?php echo $ver["wifidb"]?> --> Main Page</title>
 <link rel="stylesheet" href="css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -60,6 +60,28 @@ while ($newArray = mysql_fetch_array($result))
 		<th style="border-style: solid; border-width: 1px" height="26">
 		Date</th>
 		<th style="border-style: solid; border-width: 1px" height="26">Fixes</th>
+	</tr>
+	<tr>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		0.16 Pre-Build 1</td>
+		<td style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		2009-02-12</td>
+		<td style="border-style: solid; border-width: 1px" height="26">
+		<b>1></b> Started moving all HTML code outside PHP code.<br>
+		<b>2></b> Fixed an error in the GPS conversion.<br>
+		<b>3></b> Added a footer function to take over the "this file has been last edited on..." at the end of all forms, to standardize it, seeing how it was on all forms anyway.<br>
+		<b>4></b> Working on changing the layout of the AP fetch page. Soon it will be:<b><i>
+		<br>---------------<br>&nbsp;&nbsp;Assosiated list <br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> Signal history for that list <br>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-> GPS points for that Signal<br>
+		---------------<br></b></i>Would like to have it so the GPS history is hidable via Javascript or something.<br>
+		-> Unfortunately this is going to require a change in the backend. Previous databases will not be compatible with this update.
+		-> Reason being, in the previous versions (0.14 & 0.15[all builds]) did not store the signal history row in the Users table.<br> 
+		-> The users table holds all the list imports for each user. (old way ex 1,1-0,2-0,6-1,10-... / 0,6 : 0 is the update or new flag 1 = Updated AP  0 = New AP, the 6 is the AP ID number in the Database)<br>
+		-> New way ex 1,1:1-0,2:2-0,6:3-1,10:1-... /<br> <font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">2</font> ; <font color="red">0</font> is the update or new flag 1 = Updated AP / 0 = New AP, the <font color="Yellow">6</font> is the Unique Access Point ID (UAPID) in the Database, and the <font color="Green">2</font> is the Signal History row number for the access point.)
+		</td>
 	</tr>
 	<tr>
 		<td style="border-style: solid; border-width: 1px" height="26">
@@ -236,23 +258,4 @@ while ($newArray = mysql_fetch_array($result))
 <?php
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
-$file_ex = explode("/", $filename);
-$count = count($file_ex);
-$file = $file_ex[($count)-1];
-if (file_exists($filename)) {
-    echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
-}
-?>
-<br>
-</font>
-</td>
-</tr>
-<tr>
-<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
-<td bgcolor="#315573" width="0">
-
-</td>
-</tr>
-</table>
-</div>
-</html>
+footer($filename);?>

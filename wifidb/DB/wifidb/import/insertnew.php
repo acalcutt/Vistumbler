@@ -49,11 +49,7 @@ $uploaddir = "C:\wamp\www\wifidb\import\up\\";
 $uploadfile = $uploaddir . $rand ."-". basename($dest);
 
 echo '<pre>';
-if (move_uploaded_file($source, $uploadfile)) {
-    #echo "Success.\n";
-} else {
-    echo "Failure.\n";
-}
+if (!move_uploaded_file($source, $uploadfile)) {echo "Failure.\n";}
 
 print "</pre>";
 $database = new database();
@@ -61,22 +57,5 @@ $database->import_vs1($uploadfile, $user, $notes, $title );
 # database::vs1_2_kml($source);
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
-$file_ex = explode("/", $filename);
-$count = count($file_ex);
-$file = $file_ex[($count)-1];
-if (file_exists($filename)) {
-    echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
-}
-
+footer($filename);
 ?>
-</p>
-</td>
-</tr>
-<tr>
-<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
-<td bgcolor="#315573" width="0">
-</td>
-</tr>
-</table>
-</div>
-</html>
