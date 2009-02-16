@@ -189,12 +189,12 @@ if($hosturl !== "" && $root !== "")
 }else
 {
 	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
-		."(1, '<a class=\"links\" href=\"/\">Main Page</a>'),"
-		."(2, '<a class=\"links\" href=\"/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
-		."(3, '<a class=\"links\" href=\"/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"/opt/search.php\">Search APs</a>'),"
-		."(5, '<a class=\"links\" href=\"/opt/userstats.php?func=usersall\">View All Users</a>'),"
-		."(6, '<a class=\"links\" href=\"/ver.php\">WiFiDB Version</a>')";
+		."(1, '<a class=\"links\" href=\"/wifidb\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"/wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"/wifidb/import/\">Import APs</a>'),"
+		."(4, '<a class=\"links\" href=\"/wifidb/opt/search.php\">Search APs</a>'),"
+		."(5, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"/wifidb/ver.php\">WiFiDB Version</a>')";
 }
 $IN_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
@@ -246,7 +246,7 @@ echo "<tr><td>Failure..........</td><td>Creating Config file</td></tr>";}
 
 
 #Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\n$"."date_default_timezone_set('$timezn');\r\nlastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\n date_default_timezone_set('$timezn');\r\n $"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr><td>Success..........</td><td>Add last edit date</td></tr>";}
@@ -313,7 +313,6 @@ if($AD_CF_SU_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Adding DataBase names</td></tr>";}
 
-
 #add sql Connection info
 $AD_CF_SC_Re = fwrite($fileappend, "#---------------- SQL Connection Info ----------------#\r\n"
 							."$"."conn 			=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
@@ -322,13 +321,11 @@ if($AD_CF_SU_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Adding SQL Connection Info</td></tr>";}
 
-#
-
 $AD_CF_KM_Re = fwrite($fileappend, "#---------------- KML Info ----------------#\r\n"
 							."$"."open_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
 							."$"."WEP_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
-							."$"."WPA_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n\r\n"
-							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';";
+							."$"."WPA_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
+							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n");
 if($AD_CF_KM_Re)
 {echo "<tr><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{
@@ -340,8 +337,7 @@ echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
 fwrite($fileappend, "\r\n?>");
 echo "</table>";
-
-
+echo "<h2>Install is Finished, if all was Successfull you may now remove the Install Folder</h2>";
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);
 ?>

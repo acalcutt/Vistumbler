@@ -42,6 +42,8 @@ function footer($filename)
 	</td>
 	</tr>
 	</table>
+	</body>
+	</html>
 	<?php
 }
 class database
@@ -182,7 +184,7 @@ class database
 				$table = $ssids.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 				$gps_table = $table.$gps_ext;
 				
-				if(strcmp($table,$table_ptb)==0)
+				if(strcmp($table,$table_ptb)===0)
 				{
 					// They are the same
 					
@@ -198,14 +200,14 @@ class database
 					if ( $gpstableid === 0)
 					{
 						$gps_id = 1;
-						if ($GLOBALS["debug"]  == 1){echo "0x00 <br>";}
+						if ($GLOBALS["debug"]  === 1){echo "0x00 <br>";}
 					}
 					else
 					{
 						//if the table is already populated set it to the last ID's number
 						$gps_id = $gpstableid;
 						$gps_id++;
-						if ($GLOBALS["debug"]  == 1){echo "0x01 <br>";}
+						if ($GLOBALS["debug"]  === 1){echo "0x01 <br>";}
 					}
 					//pull out all GPS rows to be tested against for duplicates
 						
@@ -213,22 +215,23 @@ class database
 					foreach($signal_exp as $exp)
 					{
 						//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re grab it to test the data
-						while ($neArray = mysql_fetch_array($DB_result))
-						{
-							$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
-							$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
-							$db_gps[$neArray["id"]]["long"]=$neArray["long"];
-							$db_gps[$neArray["id"]]["date"]=$neArray["date"];
-							$db_gps[$neArray["id"]]["time"]=$neArray["time"];
-						}
+#						$DBresult = mysql_query("SELECT * FROM `$gps_table`", $conn);
+#						while ($neArray = mysql_fetch_array($DBresult))
+#						{
+#							$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
+#							$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
+#							$db_gps[$neArray["id"]]["long"]=$neArray["long"];
+#							$db_gps[$neArray["id"]]["date"]=$neArray["date"];
+#							$db_gps[$neArray["id"]]["time"]=$neArray["time"];
+#						}
 						
 						$esp = explode(",",$exp);
 						$vs1_id = $esp[0];
 						$signal = $esp[1];
 						
-						if ($GLOBALS["debug"]  == 1)
+						if ($GLOBALS["debug"]  === 1)
 						{
-							$apecho = "+-+-+-+AP Data+-+-+-+<br> VS1 ID:".$vs1_id." <br> DB ID: ".$gps_id."<br>"
+							$apecho = "+-+-+-+AP Data+-+-+-+<br> VS1 ID:".$vs1_id." <br> Next DB ID: ".$gps_id."<br>"
 							."Lat: ".$gdata[$vs1_id]["lat"]."<br>-+-+-+<br>"
 							."Long: ".$gdata[$vs1_id]["long"]."<br>-+-+-+<br>"
 							."Satellites: ".$gdata[$vs1_id]["sats"]."<br>-+-+-+<br>"
@@ -245,13 +248,19 @@ class database
 						$time = $gdata[$vs1_id]["time"];
 						
 						$comp = $lat.'-'.$long.'-'.$date.'-'.$time;
-						$sql_gps = "SELECT * FROM `$gps_table` WHERE `lat` = '$lat' AND `long` = '$long'";
+						
+						$sql_gps = "SELECT * FROM `$gps_table` WHERE `time` = '$time' LIMIT 1";
 						$GPSresult = mysql_query($sql_gps, $conn);
-						while($gps_resarray = mysql_fetch_array($GPSresult))
-						{
-#							if ($gps_resarray['date'] == $date && $gps_resarray['time'] == $time ){$todo = "db";continue;}
+						#while(
+						$gps_resarray = mysql_fetch_array($GPSresult);#)
+						#{
+#						echo count($gps_resarray);
 							$dbsel = $gps_resarray['lat'].'-'.$gps_resarray['long'].'-'.$gps_resarray['date'].'-'.$gps_resarray['time'];
-							if(strcmp($comp, $dbsel) == 0)
+							echo $dbsel."<br><br>".$comp."<br>";
+#							echo "Lat: ".$gps_resarray['lat']."<br>Long: ".$gps_resarray['long']."<br>Date: ".$gps_resarray['date']."<br>Time: ".$gps_resarray['time']."<br>";
+							if (strcmp($gps_resarray['date'],$date) && strcmp($gps_resarray['time'],$time) ){$todo = "db"; $db_id[] = $gps_resarray['id']; continue;}
+							
+							if(strcmp($comp, $dbsel) === 0)
 							{
 								if($sats > $gps_resarray['sats'])
 								{
@@ -273,10 +282,11 @@ class database
 												"time"=>$time
 												);
 							}
-						}
+						#}
 						?>
 						<tr><td colspan="8">
 						<?php
+						echo $todo."<br>";
 						switch ($todo)
 						{	
 							case "new":
@@ -313,7 +323,6 @@ class database
 								$gps_id++;
 								break;
 						}
-						echo $todo
 						?>
 						<br></tr><tr>
 						<?php
@@ -458,28 +467,10 @@ class database
 				}
 		}elseif($ret_len == 17)
 		{
-		echo "Txt files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu otpion in Vistumbler";	
-		$filename = $_SERVER['SCRIPT_FILENAME'];	
-		$file_ex = explode("/", $filename);
-		$count = count($file_ex);
-		$file = $file_ex[($count)-1];
-		if (file_exists($filename)) {
-			echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
-		}
-		?>
-		</p>
-		</td>
-		</tr>
-		<tr>
-		<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
-		<td bgcolor="#315573" width="0">
-		</td>
-		</tr>
-		</table>
-		</div>
-		</html>
-		<?php
-		die();
+			echo "Txt files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu otpion in Vistumbler";
+			$filename = $_SERVER['SCRIPT_FILENAME'];	
+			footer($filename);
+			die();
 		}else{echo "There is something wrong with the formatting of the data, check it and try running the script again<br>";}
 	}
 	mysql_select_db($db,$conn);
@@ -755,14 +746,15 @@ class database
 	#========================================================================================================================#
 	function allusers()
 	{
+	include('config.inc.php');
 	$users = array();
 	$userarray = array();
 	?>
-		<h1>Stats For: All Users</h1>'
-		<table border="1"><tr>'
-		<th>ID</th><th>UserName</th><th>Title</th><th>Number of AP\'s</th><th>Imported On</th></tr><tr>
+		<h1>Stats For: All Users</h1>
+		<table border="1"><tr>
+		<th>ID</th><th>UserName</th><th>Title</th><th>Number of APs</th><th>Imported On</th></tr><tr>
 	<?php
-	include('config.inc.php');
+	
 	mysql_select_db($db,$conn);
 	$sql = "SELECT * FROM `users` ORDER BY username ASC";
 	$result = mysql_query($sql, $conn) or die(mysql_error());
@@ -835,6 +827,7 @@ class database
 		<a class="links" href="../opt/userstats.php?func=userap&row=<?php echo $user_array['id'];?>"><?php echo $user_array['title'];?></a></td><td>
 		<?php echo $points_c;?></td><td>
 		<?php echo $user_array['date'];?></td></tr>
+		<?php
 	}
 	echo "</table>";
 	}
