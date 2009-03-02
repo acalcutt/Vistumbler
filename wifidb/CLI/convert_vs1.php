@@ -2,9 +2,9 @@
 $TOTAL_START=date("H:i:s");
 #error_reporting(E_ALL);
 $debug = 0;
-$lastedit="3-Feb-2009";
+$lastedit="1.Mar.2009";
 $start="6.21.2008";
-$ver="1.2";
+$ver="1.3";
 echo "==-=-=-=-=-=-Vistumbler Summery Text to VS1 converter -=-=-=-=-=-==\n Version: ".$ver."\nLast Edit: ".$lastedit."\n";
 
 $vs1dir = getcwd();

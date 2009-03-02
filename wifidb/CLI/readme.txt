@@ -1,7 +1,7 @@
 wiFiDB CLI Folder
 
-1 -> Convert Txt to VS1
-2 -> Manufactures Generation script
+1 -> Convert Txt to VS1 (Converter.exe | converter.php).
+2 -> Manufactures Generation script (manufmac.exe | manufmac.php).
 
 --------------------------------------------------------------
 --------------------------------------------------------------
@@ -27,8 +27,8 @@ Browse to Y:\[Path to PHP]\bin\
 Type "php X:\[Path to converter]\convert_vs1.php" 
                -  Where X is the drive you have the converter stored and [Path to converter] is the folder that the converter lives in.
 
-The convert_vs1.php file searches the "text\" folder for vistumbler Text Summery files to convert
-It is self aware of where it is living so there is no need to configure it
+The convert_vs1.php file searches the "text\" folder for vistumbler Text Summery files to convert.
+It is self aware of where it is living so there is no need to configure it.
 
 
 ===================================================================
@@ -87,7 +87,7 @@ VERSION HISTORY
 1.0
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
-Initial release, no GPS conversion yet, just a file converter.
+1-> Initial release, no GPS conversion yet, just a file converter.
 
 ==============================
 
@@ -96,7 +96,7 @@ Initial release, no GPS conversion yet, just a file converter.
 1.1
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
-Fixed most of the GPS issues, is now converting from DD.dddd to DDMM.mmmm(DDDmm.mmmm also supported)
+1-> Fixed most of the GPS issues, is now converting from DD.dddd to DDMM.mmmm(DDDmm.mmmm also supported)
 ==============================
 
 ~~~~~~~~~~~~
@@ -104,7 +104,14 @@ Fixed most of the GPS issues, is now converting from DD.dddd to DDMM.mmmm(DDDmm.
 1.2
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
-Replaced old GPS conversion function with newer better code.
+1-> Replaced old GPS conversion function with newer better code.
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.3
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Recompiled the EXE and compressed it down to ~600KB from 1.3MB. No code changes.
 ==============================
 
 
@@ -116,11 +123,11 @@ Replaced old GPS conversion function with newer better code.
 --------------------------------------------------------------
 --------------------------------------------------------------
 
-All you need to do is run the manufmac.exe or manufmac.php script and it will download the 
+  All you need to do is run the manufmac.exe or manufmac.php script and it will download the 
 text file from: http://standards.ieee.org/regauth/oui/oui.txt
 
-then it converts it to a WiFiDB compatible PHP (manufactures.inc.php) file 
-and a Vistumbler compatible INI(manufactures.ini) file.
+  Then it converts it to a WiFiDB compatible PHP (manufactures.inc.php) file 
+and a Vistumbler compatible INI (manufactures.ini) file.
 
 
 ----------------------------------------
@@ -144,8 +151,8 @@ Initial release, was just WiFiDB generation, no Vistumbler yet.
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 1-> Added in Vistumbler output. 
-2-> WiFiDB output was missing the ending ?> and had a few parse errors due to 
-	non-cancled double quotes in Manufactures name
+2-> WiFiDB output was missing the ending ?> and had a few parse errors due to.
+	non-cancled double quotes in Manufactures name.
 ==============================
 
 ~~~~~~~~~~~~
@@ -154,7 +161,7 @@ Initial release, was just WiFiDB generation, no Vistumbler yet.
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 1-> Forgot to add in the Debug variable and wrapper around the line echo, performance was severley hindered.
-2-> Changed console header and layout a little
+2-> Changed console header and layout a little.
 ==============================
 
 ~~~~~~~~~~~~
@@ -162,5 +169,14 @@ Initial release, was just WiFiDB generation, no Vistumbler yet.
 1.1.3
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
-1-> Compiled into manufmac.exe for ease of use
+1-> Compiled into manufmac.exe for ease of use.
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.2.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Fixed a bug where I forgot to replace the value of $cwd with getcwd().
+2-> Changed the creation of the files so that they are both created at the same time.
 ==============================

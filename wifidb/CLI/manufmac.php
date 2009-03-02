@@ -1,26 +1,34 @@
 <?php
-$ver = "1.1.3";
+$ver = "1.2.0";
 $script_start = "24.Jan.09";
-$last_edit = "3.Feb.09";
+$last_edit = "1.Mar.09";
 $author = "pferland";
 echo "-----------------------------------------------------------------------\n";
 echo "| Starting creation of Vistumbler compatible Wireless Router Manuf List.\n| By: $author\n| http:\\www.randomintervals.com\n| Version: $ver\n";
 $debug = 0;
-$cwd = "c:/wamp/www/";
-$stime = time()*60;
+$cwd = getcwd();
+
 $source="http://standards.ieee.org/regauth/oui/oui.txt";
 $manuf_list = array();
-$filename = $cwd."manufactures.inc.php";
-$filewrite = fopen($filename, "w");
-$fileappend = fopen($filename, "a");
-		echo "Downloading and Opening the Source File from: ".$source."\n|\n|";
+$phpfile = $cwd."\manufactures.inc.php";
+$phpfilewrite = fopen($phpfile, "w");
+$phpfileappend = fopen($phpfile, "a");
+
+$vs1file = $cwd."\manufactures.ini";
+$vs1filewrite = fopen($vs1file, "w");
+$vs1fileappend = fopen($vs1file, "a");
+
+	echo "Downloading and Opening the Source File from: \n----->".$source."\n|\n|";
 $return = file($source);
+
+#Start time is here because the File needs to be downloaded first, this messes with the real run time of the conversion.
+$stime = time();
 $total_lines = count($return);
-		echo "Source File opened and Destination file placed, starting convertion.\n|\n|";
+	echo "Source File opened and Destination file placed, starting convertion.\n|\n|";
 foreach($return as $ret)
 {
 	$test = substr($ret, 11,5);
-	if ($test != "(hex)"){echo "Erroneous data found, dropping\n| This is normal...\n| "; continue;}
+	if ($test != "(hex)"){if($debug === 1){echo "Erroneous data found, dropping\n| This is normal...\n| ";} continue;}
 	$retexp = explode("(hex)",$ret);
 	$Man_mac = trim($retexp[0], "\x20\x09");
 	$man_mac = explode("-",$Man_mac);
@@ -35,39 +43,32 @@ foreach($return as $ret)
 }
 echo "Manufactures and MAC Address' found...\n| ";
 $total_manuf = count($manuf_list);
-		echo "Write WiFiDB Compatible File:\n| ";
-$write_var = "<?php\r$"."manufactures=array(\r";
-fwrite($fileappend, $write_var);
+		echo "Write Manufactures File for both Vistumbler and WiFiDB:\n";
+
+fwrite($vs1fileappend, ";This file allows you to assign a manufacturer to a mac address(first 6 digits).\r\n[MANUFACURERS]\r\n");
+fwrite($phpfileappend, "<?php\r\n$"."manufactures=array(\r\n");
+
 $current = 1;
 foreach($manuf_list as $manuf)
 {
 	if($total_manuf == $current)
 	{
-		$write = "\"".$manuf['mac']."\"=>\"".$manuf['manuf']."\"\r";
+		$write = "\"".$manuf['mac']."\"=>\"".$manuf['manuf']."\"\r\n";
 	}else{
-		$write = "\"".$manuf['mac']."\"=>\"".$manuf['manuf']."\",\r";
+		$write = "\"".$manuf['mac']."\"=>\"".$manuf['manuf']."\",\r\n";
 	}
-	if($debug==1){	echo $write."\n| ";}
-	fwrite($fileappend, $write);
+	if($debug === 1){	echo $write."\n| ";}
+	fwrite($phpfileappend, $write);
 	$current++;
-}
-$footer = ");\r?>";
-fwrite($fileappend, $footer);
+	
 
-$filename = $cwd."manufactures.ini";
-$filewrite = fopen($filename, "w");
-$fileappend = fopen($filename, "a");
-		echo "Write Vistumlber Compatible File:\n";
-$write_var = ";This file allows you to assign a manufacturer to a mac address(first 6 digits).\r[MANUFACURERS]\r";
-fwrite($fileappend, $write_var);
-
-foreach($manuf_list as $manuf)
-{
-	$write = $manuf['mac']."=".$manuf['manuf']."\r";
-	fwrite($fileappend, $write);
+	fwrite($vs1fileappend, $manuf['mac']."=".$manuf['manuf']."\r\n");
 	if($debug == 1){echo $write."\n";}
 }
-$etime = time()*60;
+fwrite($phpfileappend, ");\r?>");
+#------------------------------------------------------------------------------------------------------#
+
+$etime = time();
 $diff_time = $etime - $stime;
 $lines_p_min = $total_lines/$diff_time;
 	echo "Total Manufactures found: ".$total_manuf."\n----------------\n"
