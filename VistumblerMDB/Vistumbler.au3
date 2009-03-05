@@ -1,6 +1,5 @@
 #RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
@@ -17,8 +16,8 @@ $Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.1 Beta 3'
-$last_modified = '02/05/2009'
+$version = '9.1 Beta 4'
+$last_modified = '03/04/2009'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -201,6 +200,7 @@ Dim $Direction2[3]
 Dim $Direction3[3]
 
 ;Load-Settings-From-INI-File----------------------------
+Dim $DateFormat = IniRead($settings, 'Vistumbler', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
 Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
 Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir)
@@ -982,6 +982,7 @@ While 1
 	$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
 	$datestamp = $dt[1]
 	$timestamp = $dt[2]
+	$ldatetimestamp = @YEAR & '-' & @MON & '-' & @MDAY & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
 
 	;Get GPS Information (if enabled)
 	If $UseGPS = 1 And $UpdatedGPS <> 1 Then ; If 'Use GPS' is checked then scan gps and display information
@@ -1505,11 +1506,11 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 	If $Add_Label <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Label, $column_Label)
 	If $Add_FirstAcvtive <> '' Then
 		$LTD = StringSplit($Add_FirstAcvtive, ' ')
-		_GUICtrlListView_SetItemText($ListviewAPs, $line, _DateTimeUtcConvert($LTD[1], $LTD[2], 0), $column_FirstActive)
+		_GUICtrlListView_SetItemText($ListviewAPs, $line, _DateTimeLocalFormat(_DateTimeUtcConvert($LTD[1], $LTD[2], 0)), $column_FirstActive)
 	EndIf
 	If $Add_LastActive <> '' Then
 		$LTD = StringSplit($Add_LastActive, ' ')
-		_GUICtrlListView_SetItemText($ListviewAPs, $line, _DateTimeUtcConvert($LTD[1], $LTD[2], 0), $column_LastActive)
+		_GUICtrlListView_SetItemText($ListviewAPs, $line, _DateTimeLocalFormat(_DateTimeUtcConvert($LTD[1], $LTD[2], 0)), $column_LastActive)
 	EndIf
 EndFunc   ;==>_ListViewAdd
 
@@ -2379,7 +2380,7 @@ Func _FormatGpsDate($Date)
 	$d = StringTrimRight($Date, 4)
 	$m = StringTrimLeft(StringTrimRight($Date, 2), 2)
 	$y = StringTrimLeft($Date, 4)
-	Return ($m & "/" & $d & "/" & $y)
+	Return (StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y))
 EndFunc   ;==>_FormatGpsDate
 
 Func _CheckGpsChecksum($checkdata);Checks if GPS Data Checksum is correct. Returns 1 if it is correct, else Returns 0
@@ -3669,7 +3670,7 @@ EndFunc   ;==>_AutoSave
 Func _ExportData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
 	DirCreate($SaveDir)
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Text (*.txt)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.txt')
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Text (*.txt)', '', $ldatetimestamp & '.txt')
 	If @error <> 1 Then
 		If StringInStr($file, '.txt') = 0 Then $file = $file & '.txt'
 		FileDelete($file)
@@ -3683,7 +3684,7 @@ EndFunc   ;==>_ExportData
 Func _ExportDetailedData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
 	DirCreate($SaveDir)
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VS1)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.VS1')
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VS1)', '', $ldatetimestamp & '.VS1')
 	If @error <> 1 Then
 		If StringInStr($file, '.VS1') = 0 Then $file = $file & '.VS1'
 		FileDelete($file)
@@ -3842,7 +3843,7 @@ EndFunc   ;==>_ExportToTXT
 Func _ExportFilteredData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
 	DirCreate($SaveDir)
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VS1)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.VS1')
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VS1)', '', $ldatetimestamp & '.VS1')
 	If @error <> 1 Then
 		If StringInStr($file, '.VS1') = 0 Then $file = $file & '.VS1'
 		FileDelete($file)
@@ -3924,7 +3925,7 @@ EndFunc   ;==>_ExportFileredTXT
 Func _ExportVSZ()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
 	DirCreate($SaveDir)
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VSZ)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.VSZ')
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VSZ)', '', $ldatetimestamp & '.VSZ')
 	If @error <> 1 Then
 		If StringInStr($file, '.VSZ') = 0 Then $file = $file & '.VSZ'
 		$vsz_temp_file = $TmpDir & 'data.zip'
@@ -4422,6 +4423,7 @@ Func _WriteINI()
 	Else
 		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
 	EndIf
+	IniWrite($settings, "Vistumbler", "DateFormat", $DateFormat)
 	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
 	IniWrite($settings, "Vistumbler", "CheckForBetaUpdates", $CheckForBetaUpdates)
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
@@ -4896,7 +4898,7 @@ Func SaveToKML()
 				EndIf
 				GUIDelete($ExportKMLGUI)
 				DirCreate($SaveDirKml)
-				$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.kml')
+				$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
 				If Not @error Then
 					$savekml = SaveKML($kml, $UseLocalKmlImagesOnExport, $MapOpen, $MapWEP, $MapSec, $ShowTrack)
 					If $savekml = 1 Then
@@ -5260,7 +5262,7 @@ Func _ExportFilteredKML()
 				EndIf
 				GUIDelete($ExportKMLGUI)
 				DirCreate($SaveDirKml)
-				$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.kml')
+				$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
 				If Not @error Then
 					$savekml = _SaveFilteredKML($kml, $FilterQuery, $UseLocalKmlImagesOnExport, $MapOpen, $MapWEP, $MapSec, $ShowTrack)
 					If $savekml = 1 Then
@@ -5714,7 +5716,7 @@ EndFunc   ;==>_AutoKmlGpsFile
 Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportNS1()') ;#Debug Display
 	DirCreate($SaveDir)
-	$FileName = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_NetstumblerTxtFile & ' (*.NS1)', '', $datestamp & ' ' & StringReplace($timestamp, ':', '-') & '.NS1')
+	$FileName = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_NetstumblerTxtFile & ' (*.NS1)', '', $ldatetimestamp & '.NS1')
 	If @error <> 1 Then
 		FileDelete($FileName)
 		$APID1 = ''
@@ -7586,6 +7588,16 @@ Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
 		Return ('00-00-00 00:00:00')
 	EndIf
 EndFunc   ;==>_DateTimeUtcConvert
+
+Func _DateTimeLocalFormat($DateTimeString)
+	ConsoleWrite($DateTimeString & @CRLF)
+	$dta = StringSplit($DateTimeString, ' ')
+	$da = StringSplit($dta[1], '-')
+	$m = $da[1]
+	$d = $da[2]
+	$y = $da[3]
+	Return (StringReplace(StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y), '/', '-') & ' ' & $dta[2])
+EndFunc   ;==>_DateTimeLocalFormat
 
 Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CompareDate()') ;#Debug Display
