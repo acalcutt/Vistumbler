@@ -9,15 +9,19 @@
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+;Get Date Format--------------------------------------------------------
+Dim $SettingsDir = @ScriptDir & '\Settings\'
+Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
+Dim $DateFormat = IniRead($settings, 'Vistumbler', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
 ;--------------------------------------------------------
 ;AutoIt Version: v3.2.13.13 Beta
 $Script_Author = 'Andrew Calcutt'
-$Script_Start_Date = '07/10/2007'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.1 Beta 4'
-$last_modified = '03/04/2009'
+$version = '9.1 Beta 4.1'
+$Script_Start_Date = _DateLocalFormat('07/10/2007')
+$last_modified = _DateLocalFormat('03/04/2009')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -69,7 +73,6 @@ Dim $debugdisplay
 Dim $sErr
 Dim $CompassGraphic, $compasspos_old, $compasspos, $north, $south, $east, $west, $CompassBack, $CompassHeight, $CompassBrush
 Dim $DefaultSaveDir = @ScriptDir & '\Save\'
-Dim $SettingsDir = @ScriptDir & '\Settings\'
 Dim $LanguageDir = @ScriptDir & '\Languages\'
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ImageDir = @ScriptDir & '\Images\'
@@ -108,7 +111,6 @@ Dim $GoogleEarth_TrackFile = $TmpDir & 'autokml_track.kml'
 Dim $GoogleEarth_OpenFile = $TmpDir & 'autokml_networklink.kml'
 Dim $tempfile = $TmpDir & "netsh_tmp.txt"
 Dim $tempfile_showint = $TmpDir & "netsh_si_tmp.txt"
-Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
 Dim $labelsini = $SettingsDir & 'mac_labels.ini'
 Dim $manufini = $SettingsDir & 'manufactures.ini'
 Dim $midiini = $SettingsDir & 'midi_instruments.ini'
@@ -200,7 +202,6 @@ Dim $Direction2[3]
 Dim $Direction3[3]
 
 ;Load-Settings-From-INI-File----------------------------
-Dim $DateFormat = IniRead($settings, 'Vistumbler', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
 Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
 Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir)
@@ -7590,14 +7591,26 @@ Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
 EndFunc   ;==>_DateTimeUtcConvert
 
 Func _DateTimeLocalFormat($DateTimeString)
-	ConsoleWrite($DateTimeString & @CRLF)
 	$dta = StringSplit($DateTimeString, ' ')
-	$da = StringSplit($dta[1], '-')
-	$m = $da[1]
-	$d = $da[2]
-	$y = $da[3]
-	Return (StringReplace(StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y), '/', '-') & ' ' & $dta[2])
+	$ds = _DateLocalFormat($dta[1])
+	Return ($ds & ' ' & $dta[2])
 EndFunc   ;==>_DateTimeLocalFormat
+
+Func _DateLocalFormat($DateString)
+	If StringInStr($DateString, '/') Then
+		$da = StringSplit($DateString, '/')
+		$m = $da[1]
+		$d = $da[2]
+		$y = $da[3]
+		Return (StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y))
+	ElseIf StringInStr($DateString, '-') Then
+		$da = StringSplit($DateString, '-')
+		$m = $da[1]
+		$d = $da[2]
+		$y = $da[3]
+		Return (StringReplace(StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y), '/', '-'))
+	EndIf
+EndFunc   ;==>_DateLocalFormat
 
 Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CompareDate()') ;#Debug Display
