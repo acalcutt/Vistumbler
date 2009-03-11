@@ -4,11 +4,6 @@
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
-;License Information------------------------------------
-;Copyright (C) 2008 Andrew Calcutt
-;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
-;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;Get Date Format--------------------------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
 Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
@@ -19,10 +14,15 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.1 Beta 4.1'
-$Script_Start_Date = _DateLocalFormat('07/10/2007')
-$last_modified = _DateLocalFormat('03/09/2009')
+$version = '9.1 Beta 4.2'
+$Script_Start_Date = _DateLocalFormat('2007/07/10')
+$last_modified = _DateLocalFormat('2009/03/10')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
+;License Information------------------------------------
+;Copyright (C) 2008 Andrew Calcutt
+;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
+;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -980,10 +980,10 @@ $ReleaseMemory_Timer = TimerInit()
 $Speech_Timer = TimerInit()
 While 1
 	;Set TimeStamps (UTC Values)
-	$dt = StringSplit(_DateTimeUtcConvert(@MON & '-' & @MDAY & '-' & @YEAR, @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
+	$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
 	$datestamp = $dt[1]
 	$timestamp = $dt[2]
-	$ldatetimestamp = @YEAR & '-' & @MON & '-' & @MDAY & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+	$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
 
 	;Get GPS Information (if enabled)
 	If $UseGPS = 1 And $UpdatedGPS <> 1 Then ; If 'Use GPS' is checked then scan gps and display information
@@ -1716,6 +1716,47 @@ EndFunc   ;==>_FixLineNumbers
 
 Func _RecoverMDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RecoverMDB()') ;#Debug Display
+	;Start - Fix dates of old mdb format
+	$query = "SELECT Date1 FROM GPS WHERE GpsID='1'"
+	$LoadGpsMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundGpsMatch = UBound($LoadGpsMatch) - 1
+	If $FoundGpsMatch = 1 Then
+		ConsoleWrite($LoadGpsMatch[1][1] & @CRLF)
+		$fgms = StringSplit($LoadGpsMatch[1][1], '-')
+		If StringLen($fgms[1]) <> 4 Then
+			;--Fix date in GPS table
+			$query = "SELECT GpsID, Date1 FROM GPS"
+			$LoadGpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundLoadGpsMatch = UBound($LoadGpsMatchArray) - 1
+			For $impg = 1 To $FoundLoadGpsMatch
+				$igpsid = $LoadGpsMatchArray[$impg][1]
+				$igs = StringSplit($LoadGpsMatchArray[$impg][2], '-')
+				If StringLen($igs[1]) <> 4 Then
+					GUICtrlSetData($msgdisplay, 'Fixing GPS table date(s) ' & $impg & '/' & $FoundLoadGpsMatch)
+					$query = "UPDATE GPS SET Date1='" & $igs[3] & "-" & $igs[1] & "-" & $igs[2] & "' WHERE GpsID='" & $igpsid & "'"
+					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				Else
+					ExitLoop
+				EndIf
+			Next
+			;--Fix date in Hist table
+			$query = "SELECT HistID, Date1 FROM Hist"
+			$LoadGpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundLoadGpsMatch = UBound($LoadGpsMatchArray) - 1
+			For $impg = 1 To $FoundLoadGpsMatch
+				$ihistid = $LoadGpsMatchArray[$impg][1]
+				$igs = StringSplit($LoadGpsMatchArray[$impg][2], '-')
+				If StringLen($igs[1]) <> 4 Then
+					GUICtrlSetData($msgdisplay, 'Fixing HIST table date(s) ' & $impg & '/' & $FoundLoadGpsMatch)
+					$query = "UPDATE Hist SET Date1='" & $igs[3] & "-" & $igs[1] & "-" & $igs[2] & "' WHERE HistID='" & $ihistid & "'"
+					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				Else
+					ExitLoop
+				EndIf
+			Next
+		EndIf
+	EndIf
+	;End - Fix dates of old mdb format
 	$RecListrow = 0
 	$query = "UPDATE AP SET ListRow = '-1'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -3698,12 +3739,12 @@ EndFunc   ;==>_ExportDetailedData
 
 Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
-	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 1.1")
+	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 1.2")
 	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
 
 	;Export GIDs
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC)|Time(UTC)")
+	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)")
 	FileWriteLine($savefile, "# -------------------------------------------------")
 	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
 
@@ -3767,7 +3808,7 @@ EndFunc   ;==>_ExportDetailedTXT
 
 Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToTXT()') ;#Debug Display
-	FileWriteLine($savefile, "# Vistumbler TXT - Export Version 1.1")
+	FileWriteLine($savefile, "# Vistumbler TXT - Export Version 1.2")
 	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
 	FileWriteLine($savefile, "# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
 	FileWriteLine($savefile, "# SSID|BSSID|MANUFACTURER|Highest Signal w/GPS|Authetication|Encryption|Radio Type|Channel|Latitude|Longitude|Basic Transfer Rates|Other Transfer Rates|First Seen(UTC)|Last Seen(UTC)|Network Type|Label|Signal History")
@@ -3857,12 +3898,12 @@ EndFunc   ;==>_ExportFilteredData
 
 Func _ExportFileredTXT($savefile, $savequery);writes vistumbler filtered data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportFileredTXT()') ;#Debug Display
-	FileWriteLine($savefile, "# Vistumbler VS1 - Filtered Detailed Export Version 1")
+	FileWriteLine($savefile, "# Vistumbler VS1 - Filtered Detailed Export Version 1.2")
 	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
 
 	;Export GIDs
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC)|Time(UTC)")
+	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)")
 	FileWriteLine($savefile, "# -------------------------------------------------")
 	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS"
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4078,6 +4119,9 @@ Func _ImportOk()
 						$LoadLon = $loadlist[3]
 						$LoadSat = $loadlist[4]
 						$LoadDate = $loadlist[5]
+						$ld = StringSplit($LoadDate, '-')
+						If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
+						ConsoleWrite('--' & $LoadDate & @CRLF)
 						$LoadTime = $loadlist[6]
 
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
@@ -4143,10 +4187,14 @@ Func _ImportOk()
 						$tsplit = StringSplit($LoadFirstActive, ' ')
 						$LoadFirstActive_Time = $tsplit[2]
 						$LoadFirstActive_Date = $tsplit[1]
+						$ld = StringSplit($LoadFirstActive_Date, '-')
+						If StringLen($ld[1]) <> 4 Then $LoadFirstActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
 						$tsplit = StringSplit($LoadLastActive, ' ')
 						$LoadLastActive_Time = $tsplit[2]
 						$LoadLastActive_Date = $tsplit[1]
-
+						$ld = StringSplit($LoadLastActive_Date, '-')
+						If StringLen($ld[1]) <> 4 Then $LoadLastActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
+						
 						;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4228,8 +4276,8 @@ Func _ImportOk()
 				If @error = -1 Then ExitLoop
 				If StringInStr($linein, "# $DateGMT:") Then ;If the date tag is found, reformat and set date
 					$Date = StringTrimLeft($linein, 12)
-					$datereformat = StringSplit($Date, "-")
-					If $datereformat[0] = 3 Then $Date = $datereformat[2] & "-" & $datereformat[3] & "-" & $datereformat[1]
+					;$datereformat = StringSplit($Date, "-")
+					;If $datereformat[0] = 3 Then $Date = $datereformat[2] & "-" & $datereformat[3] & "-" & $datereformat[1]
 				EndIf
 				If StringLeft($linein, 1) <> "#" Then ;If the line is not commented out, get AP information
 					$array = StringSplit($linein, "	");Seperate AP information
@@ -4279,73 +4327,10 @@ Func _ImportOk()
 							ElseIf $FoundGpsMatch = 1 Then
 								$LoadGID = $GpsMatchArray[1][1]
 							EndIf
-
-							$query = "SELECT ApID, ListRow, HighGpsHistId FROM AP WHERE BSSID = '" & $BSSID & "' And SSID = '" & $SSID & "' And CHAN = '" & $Channel & "'"
-							$LoadApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-							$FoundApMatch = UBound($LoadApMatchArray) - 1
-
-							If $FoundApMatch = 0 Then
-								$AddAP += 1
-								$APID += 1
-								$HISTID += 1
-
-								$StripedBSSID = StringReplace($BSSID, ':', '');Strip ":"'s out of mac address
-								$MANUF = _FindManufacturer(StringTrimRight($StripedBSSID, 6));Set Manufacturer
-								$LABEL = _SetLabels($StripedBSSID)
-
-								If $LoadLatitude <> 'N 0.0000' And $LoadLatitude <> 'E 0.0000' Then
-									$DBHighGpsHistId = $HISTID
-								Else
-									$DBHighGpsHistId = 0
-								EndIf
-
-								$DBAddPos = $APID - 1
-
-								_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $LoadGID & '|' & $Signal & '|' & $Date & '|' & $time)
-								$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $APID, $DBAddPos)
-								_AddRecord($VistumblerDB, "AP", $DB_OBJ, $APID & '|' & $ListRow & '|1|' & $BSSID & '|' & $SSID & '|' & $Channel & '|' & $Authentication & '|' & $Encryption & '|' & $LoadSecType & '|' & $Type & '|' & $Text_Unknown & '|' & $Text_Unknown & '|' & $Text_Unknown & '|' & $DBHighGpsHistId & '|' & $LoadGID & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL)
-								_ListViewAdd($ListRow, $APID, $Text_Dead, $BSSID, $SSID, $Authentication, $Encryption, '0', $Channel, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Type, $DateTime, $DateTime, $LoadLatitude, $LoadLongitude, $MANUF, $LABEL)
-								_TreeViewAdd($SSID, $BSSID, $Authentication, $Encryption, $Channel, $Text_Unknown, $Text_Unknown, $Text_Unknown, $NetworkType, $MANUF, $LABEL)
-							ElseIf $FoundApMatch = 1 Then
-								$Found_APID = $LoadApMatchArray[1][1]
-								$Found_ListRow = $LoadApMatchArray[1][2]
-								$Found_HighGpsHistId = $LoadApMatchArray[1][3] + 0
-								$HISTID += 1
-
-								If $Found_HighGpsHistId = 0 Then
-									If $LoadLatitude <> 'N 0.0000' And $LoadLongitude <> 'E 0.0000' Then
-										$DBHighGpsHistId = $HISTID
-
-									Else
-										$DBHighGpsHistId = 0
-									EndIf
-								Else
-									$query = "SELECT GpsID, Signal FROM Hist WHERE HistID = '" & $Found_HighGpsHistId & "'"
-									$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-									$FoundHistMatch = UBound($HistMatchArray) - 1
-									$Found_GpsID = $HistMatchArray[1][1]
-									$Found_Sig = $HistMatchArray[1][2]
-
-									If $Signal >= $Found_Sig Then
-										$DBHighGpsHistId = $HISTID
-									Else
-										$DBHighGpsHistId = $Found_HighGpsHistId
-									EndIf
-								EndIf
-
-								If $Found_HighGpsHistId = $DBHighGpsHistId Or $DBHighGpsHistId = 0 Then
-									$ImLat = ''
-									$ImLon = ''
-								Else
-									$ImLat = $LoadLatitude
-									$ImLon = $LoadLongitude
-									$query = "UPDATE AP SET HighGpsHistId = '" & $DBHighGpsHistId & "' WHERE ApID = '" & $Found_APID & "'"
-									_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-								EndIf
-
-								_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $LoadGID & '|' & $Signal & '|' & $Date & '|' & $time)
-								_ListViewAdd($Found_ListRow, '', '', '', '', '', '', '', '', '', '', '', '', '', $DateTime, $ImLat, $ImLon, $MANUF, $LABEL)
-							EndIf
+							
+							;Add Last AP Info to DB, Listview, and Treeview
+							$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal)
+							If $NewApAdded = 1 Then $AddAP += 1
 						EndIf
 					Else
 						ExitLoop
@@ -7578,15 +7563,20 @@ Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
 	$DateSplit = StringSplit($Date, '-')
 	$TimeSplit = StringSplit($time, ':')
 	If $DateSplit[0] = 3 And $TimeSplit[0] = 3 Then
-		$tSystem = _Date_Time_EncodeSystemTime($DateSplit[1], $DateSplit[2], $DateSplit[3], $TimeSplit[1], $TimeSplit[2], $TimeSplit[3])
+		$tSystem = _Date_Time_EncodeSystemTime($DateSplit[2], $DateSplit[3], $DateSplit[1], $TimeSplit[1], $TimeSplit[2], $TimeSplit[3])
 		If $ConvertToUTC = 1 Then
 			$rtime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
 		Else
 			$rtime = _Date_Time_SystemTimeToTzSpecificLocalTime(DllStructGetPtr($tSystem))
 		EndIf
-		Return (StringReplace(_Date_Time_SystemTimeToDateTimeStr($rtime), '/', '-'))
+		$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rtime), ' ')
+		$dts2 = StringSplit($dts1[1], '/')
+		$m = $dts2[1]
+		$d = $dts2[2]
+		$y = $dts2[3]
+		Return ($y & '-' & $m & '-' & $d & ' ' & $dts1[2])
 	Else
-		Return ('00-00-00 00:00:00')
+		Return ('0000-00-00 00:00:00')
 	EndIf
 EndFunc   ;==>_DateTimeUtcConvert
 
@@ -7599,53 +7589,32 @@ EndFunc   ;==>_DateTimeLocalFormat
 Func _DateLocalFormat($DateString)
 	If StringInStr($DateString, '/') Then
 		$da = StringSplit($DateString, '/')
-		$m = $da[1]
-		$d = $da[2]
-		$y = $da[3]
+		$y = $da[1]
+		$m = $da[2]
+		$d = $da[3]
 		Return (StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y))
 	ElseIf StringInStr($DateString, '-') Then
 		$da = StringSplit($DateString, '-')
-		$m = $da[1]
-		$d = $da[2]
-		$y = $da[3]
+		$y = $da[1]
+		$m = $da[2]
+		$d = $da[3]
 		Return (StringReplace(StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y), '/', '-'))
 	EndIf
 EndFunc   ;==>_DateLocalFormat
 
 Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CompareDate()') ;#Debug Display
-	$d1split = StringSplit($d1, ' ')
-	$d2split = StringSplit($d2, ' ')
-
-	If $d1split[0] >= 2 And $d2split[0] >= 2 Then
-		$Date1 = StringSplit($d1split[1], '-')
-		$Time1 = StringSplit($d1split[2], ':')
-		$date1month = StringFormat("%02i", $Date1[1])
-		$date1day = StringFormat("%02i", $Date1[2])
-		$date1year = StringFormat("%04i", $Date1[3])
-		$time1hour = StringFormat("%02i", $Time1[1])
-		$time1minute = StringFormat("%02i", $Time1[2])
-		$time1second = StringFormat("%02i", $Time1[3])
-		$Date1String = $date1year & $date1month & $date1day & $time1hour & $time1minute & $time1second
-		$Date2 = StringSplit($d2split[1], '-')
-		$Time2 = StringSplit($d2split[2], ':')
-		$date2month = StringFormat("%02i", $Date2[1])
-		$date2day = StringFormat("%02i", $Date2[2])
-		$date2year = StringFormat("%04i", $Date2[3])
-		$time2hour = StringFormat("%02i", $Time2[1])
-		$time2minute = StringFormat("%02i", $Time2[2])
-		$time2second = StringFormat("%02i", $Time2[3])
-		$Date2String = $date2year & $date2month & $date2day & $time2hour & $time2minute & $time2second
-		;Compare date strings
-		If $Date1String = $Date2String Then
-			Return (0)
-		ElseIf $Date1String > $Date2String Then
-			Return (1)
-		ElseIf $Date1String < $Date2String Then
-			Return (2)
-		Else
-			Return (-1)
-		EndIf
+	
+	$d1 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d1, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
+	$d2 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d2, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
+	If $d1 = $d2 Then
+		Return (0)
+	ElseIf $d1 > $d2 Then
+		Return (1)
+	ElseIf $d1 < $d2 Then
+		Return (2)
+	Else
+		Return (-1)
 	EndIf
 
 EndFunc   ;==>_CompareDate
