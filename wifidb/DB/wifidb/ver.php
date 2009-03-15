@@ -53,54 +53,62 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="16pb1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Pre-Beta 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 12-02-2009</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 12-02-2009</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
 			<LI>Started moving all HTML code outside PHP code.</LI>
 			<LI>Fixed an error in the GPS conversion.</LI>
 			<LI>Added a footer function to take over the "this file has been last edited on..." at the end of all forms, to standardize it, seeing how it was on all forms anyway.</LI>
 			<LI>Working on changing the layout of the AP fetch page. Soon it will be:</LI>
-			<OL>
+			<OL type="A">
 				<LI><b><i><br>---------------------------------------<br>
 				&nbsp;&nbsp;Assosiated list <br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_&gt; Signal history for that list <br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_&gt; GPS points for that Signal<br>
 				---------------------------------------<br></i></b></LI>
 				<LI>Would like to have it so the GPS history is hideable via Javascript or something.</LI>
+				<LI>So far the changes are, all the previous seperate functions (fetch gps, fetch assosiate list, and fetch signal) are all now one function (fetch ap).</LI>
+				<LI>Unfortunately this is going to require a change in the backend. Previous databases will not be compatible with this update.</LI>
+				<LI>Reason being, in the previous versions (0.14 &amp; 0.15[all builds]) did not store the signal history row in the Users table.</LI> 
+					<OL>
+						<LI>Old way ex <font color="red">1</font>,<font color="Yellow">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>-<font color="red">1</font>,<font color="Yellow">10</font>-... / <font color="red">0</font>,<font color="Yellow">6</font> : <font color="red">0</font> is the update or new flag <font color="red">1</font> = Updated AP  <font color="red">0</font> = New AP, the <font color="Yellow">6</font> is the AP ID number in the Database</LI>
+						<LI>New way ex <font color="red">1</font>,<font color="Yellow">6</font>:<font color="Green">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>:<font color="Green">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">3</font>-<font color="red">1</font>,<font color="Yellow">10</font>:<font color="Green">1</font>-... /<br> <font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">2</font> ; <font color="red">0</font> is the update or new flag 1 = Updated AP / 0 = New AP, the <font color="Yellow">6</font> is the Unique Access Point ID (UAPID) in the Database, and the <font color="Green">2</font> is the Signal History row number for the access point.)</LI>
+					</OL>
 			</OL>
-		<LI>Unfortunately this is going to require a change in the backend. Previous databases will not be compatible with this update.</LI>
-		<LI>Reason being, in the previous versions (0.14 &amp; 0.15[all builds]) did not store the signal history row in the Users table.</LI> 
 		<LI>The users table holds all the list imports for each user.</LI>
-			<OL>
-				<LI>Old way ex <font color="red">1</font>,<font color="Yellow">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>-<font color="red">1</font>,<font color="Yellow">10</font>-... / <font color="red">0</font>,<font color="Yellow">6</font> : <font color="red">0</font> is the update or new flag <font color="red">1</font> = Updated AP  <font color="red">0</font> = New AP, the <font color="Yellow">6</font> is the AP ID number in the Database</LI>
-				<LI>New way ex <font color="red">1</font>,<font color="Yellow">6</font>:<font color="Green">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>:<font color="Green">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">3</font>-<font color="red">1</font>,<font color="Yellow">10</font>:<font color="Green">1</font>-... /<br> <font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">2</font> ; <font color="red">0</font> is the update or new flag 1 = Updated AP / 0 = New AP, the <font color="Yellow">6</font> is the Unique Access Point ID (UAPID) in the Database, and the <font color="Green">2</font> is the Signal History row number for the access point.)</LI>
-			</OL>
+		<LI>Fixed a bug when a search has no results, the page would output a PHP error, now it says "There where no results, please try again".</LI>
+		<LI>Fixed an issue, where on install there would be an SQL error and fail to install.</LI>
+		<LI>Added link to Last User on Index page.</LI>
+		<LI>Cleaned up the tables on the new version page.</LI>
+		<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumblers save file.</LI>
+		<LI>Moved the "*THIS PAGE* was last modified on: YYYY-MMM-DD @ HH:MM:SS" to the bottom of the page in the bottom cell.</LI>
 		</OL>
 	</td></tr>
 </table>
 <br>
 <table width="100%" border="2" id="15b80" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.15 Build 80</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-01-29</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 80</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-01-29</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
 		<OL>
 			<LI>Small Code fixes that needed to be fixed. most only showed up if verbose errors was on in PHP.</LI>
 			<LI>Fixed Export to KML files from the Users List and Individual Access Points.</LI>
+			<LI>Dates are now standardized as YYYY-MM-DD.</LI>
 		</OL>
 	</td></tr>
 </table>
 <br>
 <table width="100%" border="2" id="15b79" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.15 Build 79</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-01-24</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 79</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-01-24</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
 		<OL>
 			<LI>Made a rapair script to check the Storage tables for erroneous data, to replace or remove.</LI>
 			<LI>Some other small typos and coding fixes.</LI>
@@ -109,11 +117,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="15b78" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.15 Build 78</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-01-22</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 78</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-01-22</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
 		<OL>
 			<LI>Extra includes for database.inc.php slipped back in.</LI>
 			<LI>Install script had a bug with the Links table.</LI>
@@ -122,11 +130,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="15b77" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.15 Build 77</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-01-11</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 77</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-01-11</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Some headers had duplicate includes for database.inc.php.</LI>
 			<LI>Fixed import of GPS points.</LI>
@@ -135,11 +143,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="15b76" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.15 Build 76	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-12-20</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 76	</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-12-20</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>There where a few major bugs in the install script that are now fixed</LI>
 			<LI>There was no Upgrade script in the install folder to do a safe upgrade from v0.14 to v0.15. go to /install/upgrade.php</LI>
@@ -148,11 +156,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="15b75" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.15 Build 75	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-12-19</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 75	</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-12-19</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Added in a very basic (to start) search page, to search for Access Points.</LI>
 			<LI>(Work in progress) Changing the GPS check so that it checks the DB for the GPS point and from there, if there is a return, point to that GPS, if not add it to the table.</LI>
@@ -164,11 +172,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="15b73" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.15 Build 73	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-11-28</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 73	</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-11-28</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Changed the import report page to have tables for the output, so that it is more organized and is easier to tell weather the access point is a new or updated.</LI>
 			<LI>(Work in progress) Changed the GPS check so that it checks the DB for the GPS point and from there, if there is a return, point to that GPS, if not add it to the table.</LI>
@@ -177,11 +185,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="15b67" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.15 Build 67	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-11-19</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 67	</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-11-19</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Added GPS history to Access Point Fetch page.</LI>
 			<LI>Added View all AP's for a given user.</LI>
@@ -192,11 +200,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="14" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.14	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-11-14</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.14	</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-11-14</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Changed the All users list, so that it displays only the first ID for a user (which is considered the users Unique ID).</LI>
 			<LI>Fixed an issue where randomly an AP would have more signal history points then GPS history points.</LI>
@@ -207,11 +215,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="13" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.13	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-10-30</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.13	</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-10-30</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Rearranged functions.php into database.inc.php(all database related functions) and graph.inc.php (all graphing and image related functions).</LI>
 			<LI>Fixed a few more bugs/PEBKAC errors.</LI>
@@ -220,11 +228,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="12" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.12	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-08-19</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :<td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.12</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-08-19</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Added in graphing for AP's signal history, one row of history at a time for the moment.</LI>
 			<LI>Added in Users Stats page to view what users have imported / updated what AP's.</LI>
@@ -234,11 +242,11 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="11" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.11	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-08-12</td><td></td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.11</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-08-12</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Fixed the issue where the signal history was getting corrupted and adding in way more signal points then there actually where for the AP. [functions.php->import_vs1()]</LI>
 			<LI>Added in a `Users` table to keep track of what users imported/updated AP's.</LI>
@@ -250,10 +258,10 @@ while ($newArray = mysql_fetch_array($result))
 </table>
 <br>
 <table width="100%" border="2" id="1" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td></td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.1	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2008-06-10</td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td><td></td><td></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.1	</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-06-10</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>This is a work in progress. Most if not all the features are in their infancy and need much work.</LI>
 		</OL>

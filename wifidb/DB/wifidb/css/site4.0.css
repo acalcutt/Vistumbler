@@ -6,6 +6,7 @@ body {
 	color:#123;
 	font-size/* */:/**/small; font-style:normal; font-variant:normal; font-weight:normal; font-family:Trebuchet MS
 }
+
 .active-box-resize {
 	display: none;
 }
@@ -15,7 +16,7 @@ body {
   
 .style2 {
 	text-align: center;
-	border-width: 0;
+	border-width: 1;
 }
 
 .style3 {
@@ -23,7 +24,7 @@ body {
 }
 a.links {
 	font-weight: bold; 
-	color: #112233;
+	color: #123;
 }
 table.importconvert
 { 
@@ -34,41 +35,41 @@ table.importconvert
 table.new
 { 
 	border-width: 1;
-	border-color: #00FF00;
+	border-color: #0F0;
 }
 table.new ha {
 	border-width: 1px;
 	padding: 1px;
 	border-style: inset;
-	border-color: #00FF00;
-	background-color: #00FF00;
+	border-color: #0F0;
+	background-color: #0F0;
 }
 table.new td {
 	border-width: 1px;
 	padding: 1px;
 	border-style: inset;
-	border-color: #00FF00;
-	background-color: #00FF00;
+	border-color: #0F0;
+	background-color: #0F0;
 }
 
 table.update
 { 
 	border-width: 1;
-	border-color: #000000;
+	border-color: #0;
 }
 
 table.update td {
 	border-width: 1px;
 	padding: 1px;
 	border-style: inset;
-	border-color: #FF0000;
-	background-color: #FF0000;
+	border-color: #F00;
+	background-color: #F00;
 }
 
 table.update ha {
 	border-width: 1px;
 	padding: 1px;
 	border-style: inset;
-	border-color: #FF0000;
-	background-color: #FF0000;
+	border-color: #F00;
+	background-color: #F00;
 }

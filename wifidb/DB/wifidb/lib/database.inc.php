@@ -1,44 +1,54 @@
 <?php
 error_reporting(E_ALL | E_STRICT);
-$lastedit = "11-Feb-2009";
-include('manufactures.inc.php');
+#include('manufactures.inc.php');
 $ver=array(
-			"wifidb"	=>	"0.16 Build 1",
-			"database"	=>	array(  
-							"import_vs1"		=>	"1.5.1", 
-							"apfetch"			=>	"2.4.1",
-							"gps_check_array"	=>	"1.0",
-							"allusers"			=>	"1.1",
-							"userstats"			=>	"1.1",
-							"usersap"			=>	"1.1",
-							"all_usersap"		=>	"1.1",
-							"export_KML"		=>	"1.0",
-							"convert_dm_dd"		=>	"1.2",
-							"convert_dd_dm"		=>	"1.2"
-							),
-			"Misc"		=>	array(
-							"footer"			=>	"1.0",
-							"smart_quotes"		=> 	"1.0",
-							"Manufactures"		=> 	"2.0"
-							),
+			"wifidb"			=>	"0.16 Build 1",
+			"Last_Core_Edit" 	=> 	"2009-Mar-14",
+			"database"			=>	array(  
+										"import_vs1"		=>	"1.5.1", 
+										"apfetch"			=>	"2.4.1",
+										"gps_check_array"	=>	"1.0",
+										"allusers"			=>	"1.1",
+										"userstats"			=>	"1.1",
+										"usersap"			=>	"1.1",
+										"all_usersap"		=>	"1.1",
+										"export_KML"		=>	"1.0",
+										"export_KML_user"	=>	"1.1",
+										"convert_dm_dd"		=>	"1.2",
+										"convert_dd_dm"		=>	"1.2"
+										),
+			"Misc"				=>	array(
+										"footer"			=>	"1.0",
+										"smart_quotes"		=> 	"1.0",
+										"Manufactures"		=> 	"2.0"
+										),
 			);
+
+#========================================================================================================================#
+#											Footer (writes the footer for all pages)									 #
+#========================================================================================================================#
+
 function footer($filename)
 {
 	$file_ex = explode("/", $filename);
 	$count = count($file_ex);
 	$file = $file_ex[($count)-1];
-	if (file_exists($filename)) {?>
-		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("F d Y H:i:s.", filemtime($filename));?></h6>
-	<?php
-	}
-
 	?>
 	</p>
 	</td>
 	</tr>
 	<tr>
 	<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
-	<td bgcolor="#315573" width="0">
+	<td bgcolor="#315573" width="0" align="center">
+	<?php
+	if (file_exists($filename)) {?>
+		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
+	<?php
+	}
+	?>
+	<!-- -->
+	<!-- Put your ADs here if you want them, if not just leave this alone -->
+	<!-- -->
 	</td>
 	</tr>
 	</table>
@@ -46,6 +56,30 @@ function footer($filename)
 	</html>
 	<?php
 }
+
+#========================================================================================================================#
+#													Smart Quotes (char filtering)										 #
+#========================================================================================================================#
+
+function smart_quotes($text) {
+$pattern = '/"((.)*?)"/i';
+$strip = array(
+				0=>"'",
+				1=>".",
+				2=>"*",
+				3=>"/",
+				4=>"?",
+				5=>"<",
+				6=>">",
+				7=>'"',
+				8=>"'",
+				9=>"$",
+			);
+$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
+$text = str_replace($strip,"_",$text);
+return $text;
+}
+
 class database
 {
 	#========================================================================================================================#
@@ -840,10 +874,15 @@ class database
 	function all_usersap($user)
 	{
 		include('config.inc.php');
-		echo '<h1>Access Points For: <a href ="../opt/userstats.php?func=user&user='.$user.'">'.$user.'</a></h1>';
-		echo '<table border="1"><tr><th>U/R</th><th>Row</th><th>AP ID</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
+		mysql_select_db($db,$conn);
+		$sql = "SELECT * FROM `users` WHERE `username`='$user'";
+		$re = mysql_query($sql, $conn) or die(mysql_error());
+		#<h3><a href="../opt/userstats.php?func=expkml&row=echo $user;">Export To KML File</a></h3>
+		?>
+		<h1>Access Points For: <a href ="../opt/userstats.php?func=user&user=<?php echo $user;?>"><?php echo $user;?></a></h1>
 		
-		$pagerow = 0;
+		<table border="1"><tr><th>New/Update</th><th>Row</th><th>AP ID</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>
+		<?php
 		mysql_select_db($db,$conn);
 		$sql = "SELECT * FROM `users` WHERE `username`='$user'";
 		$re = mysql_query($sql, $conn) or die(mysql_error());
@@ -853,11 +892,12 @@ class database
 			foreach($aps as $ap)
 			{
 				$ap_exp = explode("," , $ap);
-				if($ap_exp[0] == "1"){continue;}
-				if($ap_exp[0] == "1"){$Stat="R";}else{$Stat="U";}
-				$pagerow++;
+				#if($ap_exp[0] == "1"){continue;}
+				if($ap_exp[0] == "1"){$Stat="U";}else{$Stat="N";}
+				
 				$apid = $ap_exp[1];
-				$udflag = $ap_exp[0];
+				$exp_apid = explode(":",$apid);
+				
 				$sql = "SELECT * FROM `$wtable` WHERE `ID`='$apid'";
 				$res = mysql_query($sql, $conn) or die(mysql_error());
 				while ($ap_array = mysql_fetch_array($res))
@@ -868,10 +908,7 @@ class database
 					$radio = $ap_array['radio'];
 					$auth = $ap_array['auth'];
 					$encry = $ap_array['encry'];
-				    echo '<tr><td>'.$Stat.'</td><td>'.$pagerow.'</td><td>'.$apid.'</td><td><a class="links" href="fetch.php?id='.$apid.'">'.$ssid.'</a></td>';
-				    echo '<td>'.$mac.'</td>';
-				    echo '<td>'.$auth.'</td>';
-					if($radio=="a")
+				    if($radio=="a")
 					{$radio="802.11a";}
 					elseif($radio=="b")
 					{$radio="802.11b";}
@@ -881,13 +918,29 @@ class database
 					{$radio="802.11n";}
 					else
 					{$radio="Unknown Radio";}
-					echo '<td>'.$encry.'</td>';
-					echo '<td>'.$radio.'</td>';
-					echo '<td>'.$chan.'</td></tr>';
+					?>
+					<tr><td align="center">
+					<?php
+					echo $Stat;
+					?></td><td align="center">
+					<?php
+					echo $exp_apid[1];
+					?>
+					</td><td align="center">
+					<?php
+					echo $exp_apid[0];
+					?>
+					</td><td><a class="links" href="fetch.php?id=<?php echo $apid;?>"><?php echo $ssid;?></a></td>
+					<td>
+					<?php echo $mac;?></td><td>
+					<?php echo $auth;?></td><td>
+					<?php echo $encry;?></td><td>
+					<?php echo $radio;?></td><td>
+					<?php echo $chan;?></td></tr>
+				<?php
 				}
 			}
 		}
-#	echo "<a href=../opt/userstats.php?func=expkml&row=".$user_array['id'].">Export To KML File</a>";
 	echo "</table>";
 	}
 	
@@ -907,15 +960,16 @@ class database
 		$aps=explode("-",$user_array["points"]);
 		echo '<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=user&user='.$user_array["username"].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
 		
-		echo'<table border="1"><tr><th>Row</th><th>AP ID</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
+		echo'<table border="1"><tr><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
 		foreach($aps as $ap)
 		{
-			$pagerow++;
+			#$pagerow++;
 			$ap_exp = explode("," , $ap);
+			$udflag = $ap_exp[0];
 			$ap_and_row = explode(":",$ap_exp[1]);
 			$apid = $ap_and_row[0];
 			$row = $ap_and_row[1];
-			$udflag = $ap_exp[0];
+			
 			$sql = "SELECT * FROM `$wtable` WHERE `ID`='$apid'";
 			$result = mysql_query($sql, $conn) or die(mysql_error());
 			while ($ap_array = mysql_fetch_array($result))
@@ -926,7 +980,7 @@ class database
 				$radio = $ap_array['radio'];
 				$auth = $ap_array['auth'];
 				$encry = $ap_array['encry'];
-			    echo '<tr><td>'.$pagerow.'</td><td>'.$apid.'</td><td><a class="links" href="fetch.php?id='.$apid.'">'.$ssid.'</a></td>';
+			    echo '<tr><td>'.$apid.'</td><td>'.$row.'</td><td><a class="links" href="fetch.php?id='.$apid.'">'.$ssid.'</a></td>';
 			    echo '<td>'.$mac.'</td>';
 			    echo '<td>'.$auth.'</td>';
 				if($radio=="a")
@@ -1294,9 +1348,10 @@ class database
 	
 	function exp_kml_user($row)
 	{	
+		echo "<table>";
 		include('config.inc.php');
-		echo "Start of WiFi DB export to KML<BR>";
-		echo "-------------------------------<BR><BR>";
+		echo '<tr><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
+		#echo "-------------------------------<BR><BR>";
 		mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 		$sql = "SELECT * FROM `users` WHERE `id`='$row'";
 		$result = mysql_query($sql, $conn) or die(mysql_error());
@@ -1316,13 +1371,13 @@ class database
 		fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 		fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 		fwrite($fileappend, '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
-		echo "Wrote Header to KML File<BR>";
+		echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
 		$x=0;
 		$n=0;
 		$total = count($aps);
 		fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n<description>APs: ".$total."</description>\r\n");
 		fwrite( $fileappend, "<Folder>\r\n<name>".$title." Access Points</name>\r\n");
-		echo "Wrote KML Folder Header<BR>";
+		echo '<tr><td style="border-style: solid; border-width: 1px">Wrote KML Folder Header</td><td></td></tr>';
 		
 		foreach($aps as $ap)
 		{
@@ -1415,7 +1470,7 @@ class database
 				$la = $date_last." ".$time_last;
 				fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name></name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"http://www.randomintervals.com/wifidb/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n	");
 				fwrite( $fileappend, "<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-				echo "Wrote AP: ".$ssid."<br>to KML File<BR>";
+				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 				unset($gps_table_first["lat"]);
 				unset($gps_table_first["long"]);
 			}
@@ -1423,6 +1478,7 @@ class database
 		fwrite( $fileappend, "	</Folder>\r\n");
 		fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
 		fclose( $fileappend );
+		echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a href="'.$filename.'">Here</a></td><td></td></tr></table>';
 	mysql_close($conn);
 	}
 	
@@ -1434,7 +1490,7 @@ class database
 	{
 		include('config.inc.php');
 		$file_ext = 'newest_database.kml';
-		$filename = ('C:/wamp/www/wifidb/out/kml/'.$file_ext);
+		$filename = ('../out/kml/'.$file_ext);
 		// define initial write and appends
 		$filewrite = fopen($filename, "w");
 		if($filewrite != FALSE)
@@ -1506,33 +1562,11 @@ class database
 			.$field["label"]."</td><td>"
 			.'<a href="../opt/userstats.php?user='.$field["user"].'">'.$field["user"].'</a></td><td>'
 			.'<a href="../graph/?row='.$row.'&id='.$GLOBALS['ID'].'">Graph Signal</a></td></tr>';
+		}else
+		{
+			echo "Failed to write KML File, Check the permissions on the wifidb folder, and make sure that Apache (or what ever HTTP server you are using) has permissions to write";
 		}
 	}
-#end DATABASE CLASS
-}
 
-#========================================================================================================================#
-#													Smart Quotes (char filtering)										 #
-#========================================================================================================================#
-
-function smart_quotes($text) {
-$pattern = '/"((.)*?)"/i';
-$strip = array(
-				0=>"'",
-				1=>".",
-				2=>"*",
-				3=>"/",
-				4=>"?",
-				5=>"<",
-				6=>">",
-				7=>'"',
-				8=>"'",
-				9=>"$",
-			);
-$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
-$text = str_replace($strip,"_",$text);
-return $text;
-}
-
-
+}#end DATABASE CLASS
 ?>

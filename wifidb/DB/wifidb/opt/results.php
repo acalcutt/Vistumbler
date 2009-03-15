@@ -79,9 +79,20 @@ if ($sort==""){$sort="id";}
 $x=0;
 $n=0;
 $to=$from+$inc;
+
 mysql_select_db($db,$conn);
-$sql0 .= "SELECT * FROM $wtable WHERE " . implode(' AND ', $sql_a) ." ORDER BY $sort $ord";
+$sql0 = "SELECT * FROM $wtable WHERE " . implode(' AND ', $sql_a) ." ORDER BY $sort $ord";
 $result = mysql_query($sql0, $conn) or die(mysql_error());
+$total_rows = mysql_num_rows($result);
+
+if($total_rows == 0)
+{
+	echo '<tr><td colspan="6" align="center">There where no results, please try again</td></tr></table>'; 
+	$filename = $_SERVER['SCRIPT_FILENAME'];
+	footer($filename);
+	die();
+}
+
 while ($newArray = mysql_fetch_array($result))
 {
     $id = $newArray['id'];

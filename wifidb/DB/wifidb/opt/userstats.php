@@ -1,7 +1,8 @@
 <?php
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
-?><title>Wireless DataBase *Alpha*<?php echo $ver["wifidb"];?> --> Access Point Info Page</title>
+?>
+<title>Wireless DataBase *Alpha*<?php echo $ver["wifidb"];?> --> Access Point Info Page</title>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -48,14 +49,14 @@ if($func==="user")
 }elseif($func==="userap")
 {
 	?>
-	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>';
+	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>
 	<?php
 	$row=$_GET['row'];
 	$database->usersap($row);
 }elseif($func==="expkml")
 {
 	?>
-	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>';
+	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>
 	<?php
 	$row = $_GET['row'];
 	$database->exp_kml_user($row);
@@ -72,7 +73,6 @@ if($func==="user")
 	<h1>Hey you can do that!, Go back and do it right</h1>
 	<?php
 }
-
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);?>

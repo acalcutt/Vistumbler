@@ -82,43 +82,41 @@ $user_count = count($usersa);
 ?>
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">			To View all AP's click <a href="all.php?sort=SSID&ord=ASC&from=0&to=100">Here</a><br><br>
+			<p align="center">			To View all AP's click <a class="links" href="all.php?sort=SSID&ord=ASC&from=0&to=100">Here</a><br><br>
 			<?php
 			$domain = $_SERVER['HTTP_HOST'];
-			if ($domain === "rihq.randomintervals.com" or $domain === "lanncafe.dynu.com")
+			if ($domain === "rihq.randomintervals.com")
 			{echo '<h2>This is my Development server </h2><H4>(which is unstable because I am always working in it)</H4><H2>Go on over to my <i><a href="http://www.randomintervals.com/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
 			?>
 <table WIDTH=85% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 	<tr>
 		<td colspan="4" class="style1"><strong><em>Statistics</em></strong></td>
 	</tr>
-	</tr>
-	<tr><td span="4" ></td></tr>
+	<tr><td class="style2" colspan="4" ></td></tr>
 	<tr>
-	<tr>
-		<th class="style9" style="width: 100px">Total AP&#39;s</th>
-		<th class="style12">Open AP&#39;s</th>
-		<th class="style12">WEP AP&#39;s</th>
-		<th class="style11">Secure AP&#39;s</th>
+		<th class="style3" style="width: 100px">Total AP&#39;s</th>
+		<th class="style3">Open AP&#39;s</th>
+		<th class="style3">WEP AP&#39;s</th>
+		<th class="style3">Secure AP&#39;s</th>
 	</tr>
 	<tr>
-		<td align="center" class="style5" style="width: 100px"><?php echo $total; ?></td>
-		<td align="center" class="style13"><?php echo $open; ?></td>
-		<td align="center" class="style13"><?php echo $WEP; ?></td>
-		<td align="center" class="style8"><?php echo $Sec; ?></td>
+		<td align="center" class="style2" style="width: 100px"><?php echo $total; ?></td>
+		<td align="center" class="style2"><?php echo $open; ?></td>
+		<td align="center" class="style2"><?php echo $WEP; ?></td>
+		<td align="center" class="style2"><?php echo $Sec; ?></td>
 	</tr>
-	<tr><td span="4" ></td></tr>
+	<tr><td class="style2" colspan="4" ></td></tr>
 	<tr>
-		<th class="style14" style="width: 100px">Total Users</th>
-		<th class="style16">Last user to import</th>
-		<th class="style16">Last AP added</th>
-		<th class="style18">&nbsp;</th>
+		<th class="style3" style="width: 100px">Total Users</th>
+		<th class="style3">Last user to import</th>
+		<th class="style3">Last AP added</th>
+		<th class="style3">&nbsp;</th>
 	</tr>
 	<tr>
-		<td align="center" class="style9" style="width: 100px"><?php echo $user_count;?></td>
-		<td align="center" class="style12"><?php echo $lastUs;?></td>
-		<td align="center" class="style12"><?php if($lastap_ssid==''){echo "No AP";}else{echo '<a class="links" href="opt/fetch.php?id='.$lastap_id.'">'.$lastap_ssid.'</a>';}?></td>
-		<td align="center" class="style11">&nbsp;</td>
+		<td align="center" class="style2" style="width: 100px"><?php echo $user_count;?></td>
+		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=allap&user=<?php echo $lastUs;?>"><?php echo $lastUs;?></a></td>
+		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No AP";}else{?><a class="links" href="opt/fetch.php?id="<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
+		<td align="center" class="style2">&nbsp;</td>
 	</tr>
 </table>
 <?php

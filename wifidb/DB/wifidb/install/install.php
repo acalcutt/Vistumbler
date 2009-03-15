@@ -174,7 +174,7 @@ if($hosturl !== "" && $root !== "")
 		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
 		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
 		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>')"
+		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>'),"
 		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
 		."(6, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>')";
 }elseif($root !== "")

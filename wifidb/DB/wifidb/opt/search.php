@@ -35,7 +35,7 @@ while ($newArray = mysql_fetch_array($result))
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center"><h2>Search for Access Points</h2>
-				<form action="results.php" method="post" enctype="multipart/form-data">
+				<form action="results.php?ord=ASC&sort=ssid&from=0&to=25" method="post" enctype="multipart/form-data">
 						<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 							<COL WIDTH=40*>
 							<COL WIDTH=216*>

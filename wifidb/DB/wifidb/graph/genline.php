@@ -2,14 +2,14 @@
 /////////////////////////////////////////////////////////////////
 //  By: Phillip Ferland (Longbow486)                           //
 //  Email: longbow486@msn.com                                  //
-//  Started on: 10.14.07                                       //
+//  Started on: 2007-Oct-14                                    //
 //  Purpose: To generate a PNG graph of a WAP's signals        //
 //           from URL driven data                              //
 //  Filename: genline.php                                      //
 /////////////////////////////////////////////////////////////////
 
-$startdate="14-10-2007";
-$lastedit="19-12-2008";
+$startdate = "2009-Oct-14";
+$lastedit  = "2009-Mar-14";
 
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
@@ -49,7 +49,7 @@ while ($newArray = mysql_fetch_array($result))
 		<td bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
 <?php
-
+$graphs = new graphs();
 if($_POST['line']==='line')
 {
 	$name = $_POST['name'];
@@ -90,12 +90,13 @@ if($_POST['line']==='line')
 	echo '<input name="sig" type="hidden" value="'.$sig.'"/>';
 	echo '<input name="text" type="hidden" value="'.$text.'"/>';
 	echo '<input name="linec" type="hidden" value="'.$linec.'"/>';
+	echo '<input name="bgc" type="hidden" value="'.$linec.'"/>';
 	echo '<input name="name" type="hidden" value="'.$name.'"/>';
 	echo '<input name="line" type="hidden" value=""/>';
 	echo '<input name="Genline" type="submit" value="Generate Bar Graph" />';
 	echo '</form>';
 	
-	graphs::wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $linec, $text );
+	$graphs->wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $bgc, $linec, $text );
 	
 	echo 'You can find your Wifi Graph here -> <a href="../out/graph/'.$name.'v.png">'.$name.'v.png</a>';
 
@@ -139,17 +140,16 @@ if($_POST['line']==='line')
 	echo '<input name="sig" type="hidden" value="'.$sig.'"/>';
 	echo '<input name="text" type="hidden" value="'.$text.'"/>';
 	echo '<input name="linec" type="hidden" value="'.$linec.'"/>';
+	echo '<input name="bgc" type="hidden" value="'.$linec.'"/>';
 	echo '<input name="name" type="hidden" value="'.$name.'"/>';
 	echo '<input name="line" type="hidden" value="line"/>';
 	echo '<input name="Genline" type="submit" value="Generate Line Graph" />';
 	echo '</form>';
-	graphs::wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $linec, $text);
+	$graphs->wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $bgc, $linec, $text);
 
 	echo 'You can find your Wifi Graph here -> <a href="../out/graph/'.$name.'.png">'.$name.'.png</a>';
 
-	}
-	
-
+}
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);
 ?>
