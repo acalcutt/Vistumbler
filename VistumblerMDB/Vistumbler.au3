@@ -14,9 +14,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.2 Beta 2'
+$version = '9.2 Beta 2.1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/03/15')
+$last_modified = _DateLocalFormat('2009/03/16')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;License Information------------------------------------
 ;Copyright (C) 2008 Andrew Calcutt
@@ -35,6 +35,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include <Date.au3>
 #include <String.au3>
 #include <WinAPI.au3>
+#include <GuiButton.au3>
 #include "UDFs\CommMG.au3"
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
@@ -159,6 +160,7 @@ Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
 Dim $AutoKmlProcess
 Dim $RefreshWindowOpened
+Dim $NsCancel
 
 Dim $ListviewAPs
 Dim $TreeviewAPs
@@ -1550,6 +1552,192 @@ Func _GetListviewWidths()
 	$column_Width_NetworkType = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0)
 	$column_Width_Label = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0)
 EndFunc   ;==>_GetListviewWidths
+
+Func _TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_TreeViewAdd()') ;#Debug Display
+	;Format Treeview Names
+	$channel_treeviewname = StringFormat("%02i", $ImpCHAN)
+	$SSID_treeviewname = '(' & $ImpSSID & ')'
+	$Encryption_treeviewname = $ImpENCR
+	$Authentication_treeviewname = $ImpAUTH
+	$NetworkType_treeviewname = $ImpNET
+	;Create sub menu item for AP details
+	_AddTreeviewItem('CHAN', $TreeviewAPs, $channel_tree, $channel_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+	_AddTreeviewItem('SSID', $TreeviewAPs, $SSID_tree, $SSID_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+	_AddTreeviewItem('ENCR', $TreeviewAPs, $Encryption_tree, $Encryption_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+	_AddTreeviewItem('AUTH', $TreeviewAPs, $Authentication_tree, $Authentication_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+	_AddTreeviewItem('NETTYPE', $TreeviewAPs, $NetworkType_tree, $NetworkType_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+EndFunc   ;==>_TreeViewAdd
+
+Func _AddTreeviewItem($RootTree, $Treeview, $tree, $SubTreeName, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+	$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE RootTree = '" & $RootTree & "' And SubTreeName = '" & $SubTreeName & "'"
+	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundTreeMatch = UBound($TreeMatchArray) - 1
+	If $FoundTreeMatch = 0 Then
+		$treeviewposition = _GUICtrlTreeView_InsertItem($Treeview, $SubTreeName, $tree)
+	Else
+		$treeviewposition = $TreeMatchArray[1][1]
+	EndIf
+	$subtreeviewposition = _GUICtrlTreeView_InsertItem($Treeview, '(' & $ImpSSID & ')', $treeviewposition)
+	$st_ssid = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_SSID & ' : ' & $ImpSSID, $subtreeviewposition)
+	$st_bssid = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_BSSID & ' : ' & $ImpBSSID, $subtreeviewposition)
+	$st_chan = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Channel & ' : ' & $ImpCHAN, $subtreeviewposition)
+	$st_net = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_NetworkType & ' : ' & $ImpNET, $subtreeviewposition)
+	$st_encr = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Encryption & ' : ' & $ImpENCR, $subtreeviewposition)
+	$st_rad = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_RadioType & ' : ' & $ImpRAD, $subtreeviewposition)
+	$st_auth = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Authentication & ' : ' & $ImpAUTH, $subtreeviewposition)
+	$st_btx = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_BasicTransferRates & ' : ' & $ImpBTX, $subtreeviewposition)
+	$st_otx = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_OtherTransferRates & ' : ' & $ImpOTX, $subtreeviewposition)
+	$st_manu = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_MANUF & ' : ' & $ImpMANU, $subtreeviewposition)
+	$st_lab = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Label & ' : ' & $ImpLAB, $subtreeviewposition)
+	;Write treeview position information to DB
+	_AddRecord($VistumblerDB, "TreeviewPos", $DB_OBJ, $ImpApID & '|' & $RootTree & '|' & $SubTreeName & '|' & $treeviewposition & '|' & $subtreeviewposition & '|' & $st_ssid & '|' & $st_bssid & '|' & $st_chan & '|' & $st_net & '|' & $st_encr & '|' & $st_rad & '|' & $st_auth & '|' & $st_btx & '|' & $st_otx & '|' & $st_manu & '|' & $st_lab)
+EndFunc   ;==>_AddTreeviewItem
+
+Func _TreeViewRemove($ImpApID)
+	_RemoveTreeviewItem($TreeviewAPs, 'CHAN', $ImpApID)
+	_RemoveTreeviewItem($TreeviewAPs, 'SSID', $ImpApID)
+	_RemoveTreeviewItem($TreeviewAPs, 'ENCR', $ImpApID)
+	_RemoveTreeviewItem($TreeviewAPs, 'AUTH', $ImpApID)
+	_RemoveTreeviewItem($TreeviewAPs, 'NETTYPE', $ImpApID)
+EndFunc   ;==>_TreeViewRemove
+
+Func _RemoveTreeviewItem($Treeview, $RootTree, $ImpApID)
+	$query = "SELECT SubTreePos, InfoSubPos FROM TreeviewPos WHERE ApID = '" & $ImpApID & "' And RootTree = '" & $RootTree & "'"
+	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundTreeMatch = UBound($TreeMatchArray) - 1
+	If $FoundTreeMatch = 1 Then
+		$STP = $TreeMatchArray[1][1]
+		$ISP = $TreeMatchArray[1][2]
+		$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE ApID <> '" & $ImpApID & "' And SubTreePos = '" & $STP & "' And RootTree = '" & $RootTree & "'"
+		$TreeMatchArray2 = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundTreeMatch2 = UBound($TreeMatchArray2) - 1
+		If $FoundTreeMatch2 = 0 Then _GUICtrlTreeView_Delete($Treeview, $STP)
+	EndIf
+	$query = "DELETE FROM TreeviewPos WHERE ApID = '" & $ImpApID & "' And RootTree = '" & $RootTree & "'"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+EndFunc   ;==>_RemoveTreeviewItem
+
+Func _FilterRemoveNonMatchingInList()
+	If StringInStr($FilterQuery, 'WHERE') Then
+		$infq = StringReplace(StringReplace(StringReplace(StringReplace($FilterQuery, '=', '<>'), ' Or ', ' And '), ')', ''), '(', '');Invert Filter Query
+		$query = $infq & " And Listrow<>'-1'"
+		ConsoleWrite($query & @CRLF)
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		ConsoleWrite($FoundApMatch & @CRLF)
+		If $FoundApMatch <> 0 Then
+			For $frnm = 1 To $ApMatchArray[0][0]
+				$fApID = $ApMatchArray[$frnm][1]
+				;Get ListRow of AP
+				$query = "Select ListRow FROM AP WHERE ApID='" & $fApID & "'"
+				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$fListRow = $ListRowArray[1][1]
+				_TreeViewRemove($fApID)
+				;Delete AP Row
+				_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $fListRow)
+				;Set AP ListRow to -1
+				$query = "UPDATE AP SET ListRow='-1' WHERE ApID='" & $fApID & "'"
+				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				;Get all old listrows from db
+				$query = "Select ApID, ListRow FROM AP WHERE ListRow<>'-1'"
+				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ListRowMatch = UBound($ListRowArray) - 1
+				If $ListRowMatch <> 0 Then
+					For $lrnu = 1 To $ListRowMatch
+						$lApID = $ListRowArray[$lrnu][1]
+						$lListRow = $ListRowArray[$lrnu][2]
+						If StringFormat("%09i", $lListRow) > StringFormat("%09i", $fListRow) Then
+							;If ($lListRow >= $fListRow) = 1 Then
+							$nListRow = $lListRow - 1
+							$query = "UPDATE AP SET ListRow='" & $nListRow & "' WHERE ApID='" & $lApID & "'"
+							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+						EndIf
+					Next
+				EndIf
+			Next
+		EndIf
+	EndIf
+EndFunc   ;==>_FilterRemoveNonMatchingInList
+
+Func _FilterReAddMatchingNotInList()
+	If StringInStr($FilterQuery, "WHERE") Then
+		$fquery = $FilterQuery & " And (ListRow='-1')"
+	Else
+		$fquery = $FilterQuery & " WHERE (ListRow='-1')"
+	EndIf
+	$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+	For $imp = 1 To $FoundLoadApMatch
+		$ImpApID = $LoadApMatchArray[$imp][1]
+		$ImpSSID = $LoadApMatchArray[$imp][2]
+		$ImpBSSID = $LoadApMatchArray[$imp][3]
+		$ImpNET = $LoadApMatchArray[$imp][4]
+		$ImpRAD = $LoadApMatchArray[$imp][5]
+		$ImpCHAN = $LoadApMatchArray[$imp][6]
+		$ImpAUTH = $LoadApMatchArray[$imp][7]
+		$ImpENCR = $LoadApMatchArray[$imp][8]
+		$ImpSecType = $LoadApMatchArray[$imp][9]
+		$ImpBTX = $LoadApMatchArray[$imp][10]
+		$ImpOTX = $LoadApMatchArray[$imp][11]
+		$ImpMANU = $LoadApMatchArray[$imp][12]
+		$ImpLAB = $LoadApMatchArray[$imp][13]
+		$ImpHighGpsHistID = $LoadApMatchArray[$imp][14]
+		$ImpFirstHistID = $LoadApMatchArray[$imp][15]
+		$ImpLastHistID = $LoadApMatchArray[$imp][16]
+		$ImpLastGpsID = $LoadApMatchArray[$imp][17]
+		$ImpActive = $LoadApMatchArray[$imp][18]
+		;Get GPS Position
+		If $ImpHighGpsHistID = 0 Then
+			$ImpLat = 'N 0.0000'
+			$ImpLon = 'E 0.0000'
+		Else
+			$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ImpHighGpsHistID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ImpGID = $HistMatchArray[1][1]
+			$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ImpGID & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundGpsMatch = UBound($GpsMatchArray) - 1
+			$ImpLat = $GpsMatchArray[1][1]
+			$ImpLon = $GpsMatchArray[1][2]
+		EndIf
+		;Get First Time
+		$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $ImpFirstHistID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ImpDate = $HistMatchArray[1][1]
+		$ImpTime = $HistMatchArray[1][2]
+		$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
+		;Get Last Time
+		$query = "SELECT Date1, Time1, Signal FROM Hist WHERE HistID = '" & $ImpLastHistID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ImpDate = $HistMatchArray[1][1]
+		$ImpTime = $HistMatchArray[1][2]
+		$ImpSig = $HistMatchArray[1][3]
+		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
+		;If AP is not active, mark as dead and set signal to 0
+		If $ImpActive = 0 Then
+			$LActive = $Text_Dead
+			$ImpSig = '0'
+		Else
+			$LActive = $Text_Active
+		EndIf
+		;Add APs to top of list
+		If $AddDirection = 0 Then
+			$query = "UPDATE AP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+			$DBAddPos = 0
+		Else ;Add to bottom
+			$DBAddPos = -1
+		EndIf
+		;Add Into ListView
+		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos)
+		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
+		$query = "UPDATE AP SET ListRow='" & $ListRow & "' WHERE ApID='" & $ImpApID & "'"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		;Add Into TreeView
+		_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+	Next
+EndFunc   ;==>_FilterReAddMatchingNotInList
 
 Func _ClearAllAp()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearAllAp()') ;#Debug Display
@@ -3981,6 +4169,8 @@ Func _ImportOk()
 								$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig)
 								If $NewApAdded = 1 Then $AddAP += 1
 							EndIf
+							$closebtn = _GUICtrlButton_GetState($NsCancel)
+							If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 						Next
 					ElseIf $loadlist[0] = 17 Then ; If string is TXT data line
 						$Found = 0
@@ -4063,6 +4253,8 @@ Func _ImportOk()
 					$MemReleaseTimer = TimerInit()
 				EndIf
 				$currentline += 1
+				$closebtn = _GUICtrlButton_GetState($NsCancel)
+				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 			Next
 		EndIf
 	ElseIf GUICtrlRead($RadNs) = 1 Then
@@ -4169,6 +4361,8 @@ Func _ImportOk()
 					$MemReleaseTimer = TimerInit()
 				EndIf
 				$currentline += 1
+				$closebtn = _GUICtrlButton_GetState($NsCancel)
+				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 			Next
 		EndIf
 	EndIf
@@ -7567,204 +7761,6 @@ Func _DataMatchInDelimitedString($mdata, $mDelimitedString, $mDelimiter = '|', $
 		EndIf
 	EndIf
 EndFunc   ;==>_DataMatchInDelimitedString
-
-Func _FilterRemoveNonMatchingInList()
-	If StringInStr($FilterQuery, 'WHERE') Then
-		$infq = StringReplace(StringReplace(StringReplace(StringReplace($FilterQuery, '=', '<>'), ' Or ', ' And '), ')', ''), '(', '');Invert Filter Query
-		$query = $infq & " And Listrow<>'-1'"
-		ConsoleWrite($query & @CRLF)
-		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundApMatch = UBound($ApMatchArray) - 1
-		ConsoleWrite($FoundApMatch & @CRLF)
-		If $FoundApMatch <> 0 Then
-			For $frnm = 1 To $ApMatchArray[0][0]
-				$fApID = $ApMatchArray[$frnm][1]
-				;Get ListRow of AP
-				$query = "Select ListRow FROM AP WHERE ApID='" & $fApID & "'"
-				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$fListRow = $ListRowArray[1][1]
-				_TreeViewRemove($fApID)
-				;Delete AP Row
-				_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $fListRow)
-				;ConsoleWrite('removed ' & $fListRow & @CRLF)
-				;Set AP ListRow to -1
-				$query = "UPDATE AP SET ListRow='-1' WHERE ApID='" & $fApID & "'"
-				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-				;Get all old listrows from db
-				$query = "Select ApID, ListRow FROM AP WHERE ListRow<>'-1'"
-				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ListRowMatch = UBound($ListRowArray) - 1
-				If $ListRowMatch <> 0 Then
-					For $lrnu = 1 To $ListRowMatch
-						$lApID = $ListRowArray[$lrnu][1]
-						$lListRow = $ListRowArray[$lrnu][2]
-
-						;ConsoleWrite(StringFormat("%09i", $lListRow) > StringFormat("%09i", $fListRow))
-						;ConsoleWrite(' - ' & StringFormat("%09i", $lListRow) & '-' & StringFormat("%09i", $fListRow) & @CRLF)
-						If StringFormat("%09i", $lListRow) > StringFormat("%09i", $fListRow) Then
-							;If ($lListRow >= $fListRow) = 1 Then
-							$nListRow = $lListRow - 1
-							$query = "UPDATE AP SET ListRow='" & $nListRow & "' WHERE ApID='" & $lApID & "'"
-							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-							;ConsoleWrite('old:"' & $lListRow & '"     new:"' & $nListRow & '"' & @CRLF)
-						EndIf
-
-					Next
-				EndIf
-			Next
-		EndIf
-	EndIf
-EndFunc   ;==>_FilterRemoveNonMatchingInList
-
-Func _FilterReAddMatchingNotInList()
-	If StringInStr($FilterQuery, "WHERE") Then
-		$fquery = $FilterQuery & " And (ListRow='-1')"
-	Else
-		$fquery = $FilterQuery & " WHERE (ListRow='-1')"
-	EndIf
-	$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
-	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
-	For $imp = 1 To $FoundLoadApMatch
-		$ImpApID = $LoadApMatchArray[$imp][1]
-		$ImpSSID = $LoadApMatchArray[$imp][2]
-		$ImpBSSID = $LoadApMatchArray[$imp][3]
-		$ImpNET = $LoadApMatchArray[$imp][4]
-		$ImpRAD = $LoadApMatchArray[$imp][5]
-		$ImpCHAN = $LoadApMatchArray[$imp][6]
-		$ImpAUTH = $LoadApMatchArray[$imp][7]
-		$ImpENCR = $LoadApMatchArray[$imp][8]
-		$ImpSecType = $LoadApMatchArray[$imp][9]
-		$ImpBTX = $LoadApMatchArray[$imp][10]
-		$ImpOTX = $LoadApMatchArray[$imp][11]
-		$ImpMANU = $LoadApMatchArray[$imp][12]
-		$ImpLAB = $LoadApMatchArray[$imp][13]
-		$ImpHighGpsHistID = $LoadApMatchArray[$imp][14]
-		$ImpFirstHistID = $LoadApMatchArray[$imp][15]
-		$ImpLastHistID = $LoadApMatchArray[$imp][16]
-		$ImpLastGpsID = $LoadApMatchArray[$imp][17]
-		$ImpActive = $LoadApMatchArray[$imp][18]
-
-		;Get GPS Position
-		If $ImpHighGpsHistID = 0 Then
-			$ImpLat = 'N 0.0000'
-			$ImpLon = 'E 0.0000'
-		Else
-			$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ImpHighGpsHistID & "'"
-			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ImpGID = $HistMatchArray[1][1]
-			$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ImpGID & "'"
-			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundGpsMatch = UBound($GpsMatchArray) - 1
-			$ImpLat = $GpsMatchArray[1][1]
-			$ImpLon = $GpsMatchArray[1][2]
-		EndIf
-
-		;Get First Time
-		$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $ImpFirstHistID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ImpDate = $HistMatchArray[1][1]
-		$ImpTime = $HistMatchArray[1][2]
-		$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
-		;Get Last Time
-		$query = "SELECT Date1, Time1, Signal FROM Hist WHERE HistID = '" & $ImpLastHistID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ImpDate = $HistMatchArray[1][1]
-		$ImpTime = $HistMatchArray[1][2]
-		$ImpSig = $HistMatchArray[1][3]
-		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
-
-		If $ImpActive = 0 Then
-			$LActive = $Text_Dead
-			$ImpSig = '0'
-		Else
-			$LActive = $Text_Active
-		EndIf
-
-		If $AddDirection = 0 Then;Add APs to top of list
-			$query = "UPDATE AP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-			$DBAddPos = 0
-		Else ;Add to bottom
-			$DBAddPos = -1
-		EndIf
-
-		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos)
-		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
-		$query = "UPDATE AP SET ListRow='" & $ListRow & "' WHERE ApID='" & $ImpApID & "'"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		
-		;Add Into Treeview
-		_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-	Next
-EndFunc   ;==>_FilterReAddMatchingNotInList
-
-Func _TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_TreeViewAdd()') ;#Debug Display
-	;Format Treeview Names
-	$channel_treeviewname = StringFormat("%02i", $ImpCHAN)
-	$SSID_treeviewname = '(' & $ImpSSID & ')'
-	$Encryption_treeviewname = $ImpENCR
-	$Authentication_treeviewname = $ImpAUTH
-	$NetworkType_treeviewname = $ImpNET
-	;Create sub menu item for AP details
-	_AddTreeviewItem('CHAN', $TreeviewAPs, $channel_tree, $channel_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-	_AddTreeviewItem('SSID', $TreeviewAPs, $SSID_tree, $SSID_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-	_AddTreeviewItem('ENCR', $TreeviewAPs, $Encryption_tree, $Encryption_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-	_AddTreeviewItem('AUTH', $TreeviewAPs, $Authentication_tree, $Authentication_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-	_AddTreeviewItem('NETTYPE', $TreeviewAPs, $NetworkType_tree, $NetworkType_treeviewname, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-EndFunc   ;==>_TreeViewAdd
-
-Func _AddTreeviewItem($RootTree, $Treeview, $tree, $SubTreeName, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-	$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE RootTree = '" & $RootTree & "' And SubTreeName = '" & $SubTreeName & "'"
-	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundTreeMatch = UBound($TreeMatchArray) - 1
-	If $FoundTreeMatch = 0 Then
-		$treeviewposition = _GUICtrlTreeView_InsertItem($Treeview, $SubTreeName, $tree)
-	Else
-		$treeviewposition = $TreeMatchArray[1][1]
-	EndIf
-	$subtreeviewposition = _GUICtrlTreeView_InsertItem($Treeview, '(' & $ImpSSID & ')', $treeviewposition)
-	$st_ssid = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_SSID & ' : ' & $ImpSSID, $subtreeviewposition)
-	$st_bssid = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_BSSID & ' : ' & $ImpBSSID, $subtreeviewposition)
-	$st_chan = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Channel & ' : ' & $ImpCHAN, $subtreeviewposition)
-	$st_net = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_NetworkType & ' : ' & $ImpNET, $subtreeviewposition)
-	$st_encr = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Encryption & ' : ' & $ImpENCR, $subtreeviewposition)
-	$st_rad = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_RadioType & ' : ' & $ImpRAD, $subtreeviewposition)
-	$st_auth = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Authentication & ' : ' & $ImpAUTH, $subtreeviewposition)
-	$st_btx = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_BasicTransferRates & ' : ' & $ImpBTX, $subtreeviewposition)
-	$st_otx = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_OtherTransferRates & ' : ' & $ImpOTX, $subtreeviewposition)
-	$st_manu = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_MANUF & ' : ' & $ImpMANU, $subtreeviewposition)
-	$st_lab = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Label & ' : ' & $ImpLAB, $subtreeviewposition)
-	;Write treeview position information to DB
-	_AddRecord($VistumblerDB, "TreeviewPos", $DB_OBJ, $ImpApID & '|' & $RootTree & '|' & $SubTreeName & '|' & $treeviewposition & '|' & $subtreeviewposition & '|' & $st_ssid & '|' & $st_bssid & '|' & $st_chan & '|' & $st_net & '|' & $st_encr & '|' & $st_rad & '|' & $st_auth & '|' & $st_btx & '|' & $st_otx & '|' & $st_manu & '|' & $st_lab)
-EndFunc   ;==>_AddTreeviewItem
-
-Func _TreeViewRemove($ImpApID)
-	_RemoveTreeviewItem($TreeviewAPs, 'CHAN', $ImpApID)
-	_RemoveTreeviewItem($TreeviewAPs, 'SSID', $ImpApID)
-	_RemoveTreeviewItem($TreeviewAPs, 'ENCR', $ImpApID)
-	_RemoveTreeviewItem($TreeviewAPs, 'AUTH', $ImpApID)
-	_RemoveTreeviewItem($TreeviewAPs, 'NETTYPE', $ImpApID)
-EndFunc   ;==>_TreeViewRemove
-
-Func _RemoveTreeviewItem($Treeview, $RootTree, $ImpApID)
-	$query = "SELECT SubTreePos, InfoSubPos FROM TreeviewPos WHERE ApID = '" & $ImpApID & "' And RootTree = '" & $RootTree & "'"
-	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundTreeMatch = UBound($TreeMatchArray) - 1
-	If $FoundTreeMatch = 1 Then
-		$STP = $TreeMatchArray[1][1]
-		$ISP = $TreeMatchArray[1][2]
-		$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE ApID <> '" & $ImpApID & "' And SubTreePos = '" & $STP & "' And RootTree = '" & $RootTree & "'"
-		$TreeMatchArray2 = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundTreeMatch2 = UBound($TreeMatchArray2) - 1
-		If $FoundTreeMatch2 = 0 Then _GUICtrlTreeView_Delete($Treeview, $STP)
-	EndIf
-	$query = "DELETE FROM TreeviewPos WHERE ApID = '" & $ImpApID & "' And RootTree = '" & $RootTree & "'"
-	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-EndFunc   ;==>_RemoveTreeviewItem
-
-
-
 
 Func _DeleteListviewRow($dapid)
 	;_GUICtrlListView_DeleteItem($ListviewAPs, $drow)
