@@ -14,7 +14,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.2 Beta 1'
+$version = '9.2 Beta 1.1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/03/15')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -646,6 +646,7 @@ If FileExists($VistumblerDB) Then
 	$recovermsg = MsgBox(4, $Text_Recover, $Text_RecoverMsg)
 	If $recovermsg = 6 Then
 		$Recover = 1
+		$APID = 0
 		_AccessConnectConn($VistumblerDB, $DB_OBJ)
 		$query = "SELECT HistID FROM Hist"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -655,7 +656,10 @@ If FileExists($VistumblerDB) Then
 		$GPS_ID = UBound($GpsMatchArray) - 1
 		$query = "DELETE * FROM TreeviewPos"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		$APID = 0
+		;Fix missing TreeviewPos table (MDB backward compatibitly fix)
+		_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
+		_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
+		_CreatMultipleFields($VistumblerDB, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	Else
 		FileDelete($VistumblerDB)
 		_SetUpDbTables($VistumblerDB)
