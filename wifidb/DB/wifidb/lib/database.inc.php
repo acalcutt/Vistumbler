@@ -1,9 +1,8 @@
 <?php
-error_reporting(E_ALL | E_STRICT);
 #include('manufactures.inc.php');
 $ver=array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-14",
+			"Last_Core_Edit" 	=> 	"2009-Mar-15",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.1", 
 										"apfetch"			=>	"2.4.1",
@@ -12,15 +11,16 @@ $ver=array(
 										"userstats"			=>	"1.1",
 										"usersap"			=>	"1.1",
 										"all_usersap"		=>	"1.1",
-										"export_KML"		=>	"1.0",
-										"export_KML_user"	=>	"1.1",
+										"export_KML"		=>	"2.0",
+										"export_KML_user"	=>	"2.0",
 										"convert_dm_dd"		=>	"1.2",
-										"convert_dd_dm"		=>	"1.2"
+										"convert_dd_dm"		=>	"1.2",
+										"manufactures"		=>	"1.0"
 										),
 			"Misc"				=>	array(
-										"footer"			=>	"1.0",
-										"smart_quotes"		=> 	"1.0",
-										"Manufactures"		=> 	"2.0"
+										"footer"				=>	"1.0",
+										"smart_quotes"			=> 	"1.0",
+										"Manufactures-list"		=> 	"2.0"
 										),
 			);
 
@@ -67,13 +67,14 @@ $strip = array(
 				0=>"'",
 				1=>".",
 				2=>"*",
-				3=>"/",
-				4=>"?",
-				5=>"<",
-				6=>">",
-				7=>'"',
-				8=>"'",
-				9=>"$",
+				3=>"?",
+				4=>"<",
+				5=>">",
+				6=>'"',
+				7=>"'",
+				8=>"$",
+				9=>"?>",
+				10=>";"
 			);
 $text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
 $text = str_replace($strip,"_",$text);
@@ -108,6 +109,8 @@ class database
 	$fileex=explode(".", $source);
 	$return = file($source);
 	$table_ptb="-";
+	$count = count($return);
+	if($count <= 8) { echo "<h3>You cannot upload an empty VS1 file, atleast scan for a few seconds to import some data.</h3><a href=\"index.php\">Go back and do it again</a>"; footer("../import/insertnew.php");die();}
 	foreach($return as $ret)
 	{
 		if ($ret[0] == "#"){continue;}
@@ -633,9 +636,9 @@ class database
 		$ID = $newArray['id'];
 		
 		$macaddress = $newArray['mac'];
+		$manuf = database::manufactures($macaddress);
 		$mac = str_split($macaddress,2);
 		$mac_full = $mac[0].":".$mac[1].":".$mac[2].":".$mac[3].":".$mac[4].":".$mac[5];
-		$manuf = database::manufactures($macaddress);
 		$radio = $newArray['radio'];
 		if($radio == "a")
 			{$radio = "802.11a";}
@@ -813,6 +816,7 @@ class database
 			if ($user_array['notes'] === " " or $user_array['notes'] === ""){ $user_array['notes']="No Notes, hmm..";}
 			$points = explode("-",$user_array['points']);
 			$pc = count($points);
+			if($user_array['points'] === ""){continue;}
 			if($pre_user !== $username)
 			{
 				echo '<tr><td>'.$user_array['id'].'</td><td><a class="links" href="userstats.php?func=user&user='.$username.'">'.$username.'</a></td><td><a class="links" href="userstats.php?func=userap&row='.$user_array["id"].'">'.$user_array['title'].'</a></td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
@@ -1007,339 +1011,176 @@ class database
 	#													Export to Google KML File											 #
 	#========================================================================================================================#
 
-	function export_kml($source="full", $file_ext="full_databse.kml")
+	function export_kml()
 	{
 		include('config.inc.php');
-		echo "Start of WiFi DB export to KML\r\n";
-		echo "-------------------------------\r\n\r\n";
-		if ($source ==="full")
+		include('manufactures.inc.php');
+		echo '<table><tr><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
+		
+		mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
+		$sql = "SELECT * FROM `$wtable`";
+		$result = mysql_query($sql, $conn) or die(mysql_error());
+		while($ap_array = mysql_fetch_array($result))
 		{
-			$file_ext = 'full_database.kml';
-			$filename = ('C:/wamp/www/wifidb/out/kml/'.$file_ext);
-			// define initial write and appends
-			$filewrite = fopen($filename, "w");
-			$fileappend = fopen($filename, "a");
-			// open file and write header:
-			fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"http://earth.google.com/kml/2.2\">\r\n<Document>\r\n<name>RanInt WifiDB KML</name>\r\n");
-			fwrite($fileappend, "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/open.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
-			fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
-			fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
-			$x=0;
-			$n=0;
-			$to=$from+$inc;
-			$conn = mysql_pconnect($host, $db_user, $db_pwd);
-			mysql_select_db($db,$conn);
-			
-			echo $WPA_t."\r\n Write AP's to File\r\n";
-			fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n<Folder>\r\n<name>Open Access Points</name>\r\n");
-			echo "Start write of Open AP's\r\n";
-			$open_t=0;
-			$sql = "SELECT * FROM `$wtable` WHERE `encry`='none'";
-			$result = mysql_query($sql, $conn) or die(mysql_error());
-			while ($newArray = mysql_fetch_array($result))
+			$man_mac = str_split($ap_array['mac'],6);
+			if(!is_null($manufactures[$man_mac[0]]))
 			{
-				$ssid = $newArray['ssid'];
-				$mac = $newArray['mac'];
-				$chan = $newArray['chan'];
-				$radio = $newArray['radio'];
-				$auth = $newArray['auth'];
-				$encry = $newArray['encry'];
-				$source=$ssid.'_'.$mac.'_'.$auth.'_'.$encry.'_'.$radio.'_'.$chan;
-				$macs = str_split($mac,2);
-				$mac = $macs[0].':'.$macs[1].':'.$macs[2].':'.$macs[3].':'.$macs[4].':'.$macs[5];
-				echo "Fetch Data for AP: ".$source."\r\n";
-			#	if ($radio =="U"){continue;}
-				if($radio=="a")
-				{$radio="802.11a";}
-				elseif($radio=="b")
-				{$radio="802.11b";}
-				elseif($radio=="g")
-				{$radio="802.11g";}
-				elseif($radio=="n")
-				{$radio="802.11n";}
-				else
-				{$radio="Unknown Radio";}
-				mysql_select_db("$db_st") or die("Unable to select database");
-				$sql6 = "SELECT * FROM `$source`";
-				$result6 = mysql_query($sql6, $conn) or die(mysql_error());
-				$max = mysql_num_rows($result6)-1;
-				if($max == 0){$max = 1;}
-				$sql2 = "SELECT * FROM `$source` WHERE `id`=$max";
-				$result2 = mysql_query($sql2, $conn) or die(mysql_error());
-				$field = mysql_fetch_array($result2);
-				$lat = $field['lat'];
-				$long = $field['long'];
-				$btx = $field['btx'];
-				$otx = $field['otx'];
-				$man = $field['man'];
-				$fa = $field['fa'];
-				$la = $field['la'];
-				$nt = $field['nt'];
-				$label = $field['lable'];
-				if ($lat =="N 0.0000000"){continue;}
-				if ($lat =="S 0.0000000"){continue;}
-				if ($long =="W 0.0000000"){continue;}
-				if ($long =="E 0.0000000"){continue;}
-				if ($lat =="N 0000.0000"){continue;}
-				if ($lat =="S 0000.0000"){continue;}
-				if ($long =="W 0000.0000"){continue;}
-				if ($long =="E 0000.0000"){continue;}
-				if ($lat =="N 0.0000"){continue;}
-				if ($lat =="S 0.0000"){continue;}
-				if ($long =="W 0.0000"){continue;}
-				if ($long =="E 0.0000"){continue;}
-				if ($long ==""){continue;}
-				if ($long ==""){continue;}
-				$long = str_replace("W ","-",$long);
-				$long = str_replace("E ","",$long);
-				$lat = str_replace("S ","-",$lat);
-				$lat = str_replace("N ","",$lat);
-				echo "Writing Data for AP: ".$source."\r\n";
-				fwrite( $fileappend, "		<Placemark>\r\n<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br />]]></description>\r\n<styleUrl>#openStyleDead</styleUrl>\r\n<Point>\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-				$open_t++;
+				$manuf = $manufactures[$man_mac[0]];
 			}
-			$WEP_t=0;
-			fwrite( $fileappend, "	<description>APs:".$open_t."</description>\r\n</Folder>\r\n<Folder>\r\n<name>WEP Access Points</name>\r\n");
-			mysql_select_db($db,$conn);
-			$sql = "SELECT * FROM `$w_table` WHERE `encry`='WEP'";
-			$result = mysql_query($sql, $conn) or die(mysql_error());
-			while ($newArray = mysql_fetch_array($result))
+			else
 			{
-				$ssid = $newArray['ssid'];
-				$mac = $newArray['mac'];
-				$chan = $newArray['chan'];
-				$radio = $newArray['radio'];
-				$auth = $newArray['auth'];
-				$encry = $newArray['encry'];
-				$source=$ssid.'_'.$mac.'_'.$auth.'_'.$encry.'_'.$radio.'_'.$chan;
-				$macs = str_split($mac,2);
-				$mac = $macs[0].':'.$macs[1].':'.$macs[2].':'.$macs[3].':'.$macs[4].':'.$macs[5];
-				echo "Fetch Data for AP: ".$source."\r\n";
-			#	if ($radio =="U"){continue;}
-				if($radio=="a")
-				{$radio="802.11a";}
-				elseif($radio=="b")
-				{$radio="802.11b";}
-				elseif($radio=="g")
-				{$radio="802.11g";}
-				elseif($radio=="n")
-				{$radio="802.11n";}
-				else
-				{$radio="Unknown Radio";}
-				mysql_select_db("$db_st") or die("Unable to select database");
-				$sql6 = "SELECT * FROM `$source`";
-				$result6 = mysql_query($sql6, $conn) or die(mysql_error());
-				$max = mysql_num_rows($result6)-1;
-				if($max == 0){$max = 1;}
-				$sql2 = "SELECT * FROM `$source` WHERE `id`=$max";
-				$result2 = mysql_query($sql2, $conn) or die(mysql_error());
-				$field = mysql_fetch_array($result2);
-				$lat = $field['lat'];
-				$long = $field['long'];
-				$btx = $field['btx'];
-				$otx = $field['otx'];
-				$man = $field['man'];
-				$fa = $field['fa'];
-				$la = $field['la'];
-				$nt = $field['nt'];
-				$label = $field['lable'];
-				if ($lat =="N 0.0000000"){continue;}
-				if ($lat =="S 0.0000000"){continue;}
-				if ($long =="W 0.0000000"){continue;}
-				if ($long =="E 0.0000000"){continue;}
-				if ($lat =="N 0000.0000"){continue;}
-				if ($lat =="S 0000.0000"){continue;}
-				if ($long =="W 0000.0000"){continue;}
-				if ($long =="E 0000.0000"){continue;}
-				if ($lat =="N 0.0000"){continue;}
-				if ($lat =="S 0.0000"){continue;}
-				if ($long =="W 0.0000"){continue;}
-				if ($long =="E 0.0000"){continue;}
-				if ($long ==""){continue;}
-				if ($long ==""){continue;}
-				$long = str_replace("W ","-",$long);
-				$long = str_replace("E ","",$long);
-				$lat = str_replace("S ","-",$lat);
-				$lat = str_replace("N ","",$lat);
-				echo "Writing Data for AP: ".$source."\r\n";
-				fwrite( $fileappend, "<Placemark>\r\n<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br />]]></description>\r\n<styleUrl>#wepStyleDead</styleUrl>\r\n<Point>\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-				$WEP_t++;
+				$manuf = "Unknown Manufacture";
 			}
-			fwrite( $fileappend, "<description>APs:".$WEP_t."</description></Folder>\r\n");
-			$WPA_t=0;
-			fwrite( $fileappend, "	<Folder>\r\n<name>Secure Access Points</name>\r\n");
-			mysql_select_db($db,$conn);
-			$sql = "SELECT * FROM `$w_table` WHERE `auth`='WPA-Personal'";
-			$result = mysql_query($sql, $conn) or die(mysql_error());
-			while ($newArray = mysql_fetch_array($result))
-			{
-				$ssid = $newArray['ssid'];
-				$mac = $newArray['mac'];
-				$chan = $newArray['chan'];
-				$radio = $newArray['radio'];
-				$auth = $newArray['auth'];
-				$encry = $newArray['encry'];
-				$source=$ssid.'_'.$mac.'_'.$auth.'_'.$encry.'_'.$radio.'_'.$chan;
-				$macs = str_split($mac,2);
-				$mac = $macs[0].':'.$macs[1].':'.$macs[2].':'.$macs[3].':'.$macs[4].':'.$macs[5];
-				echo "Fetch Data for AP: ".$source."\r\n";
-			#	if ($radio =="U"){continue;}
-				if($radio=="a")
-				{$radio="802.11a";}
-				elseif($radio=="b")
-				{$radio="802.11b";}
-				elseif($radio=="g")
-				{$radio="802.11g";}
-				elseif($radio=="n")
-				{$radio="802.11n";}
-				else
-				{$radio="Unknown Radio";}
-				mysql_select_db("$db_st") or die("Unable to select database");
-				$sql6 = "SELECT * FROM `$source`";
-				$result6 = mysql_query($sql6, $conn) or die(mysql_error());
-				$max = mysql_num_rows($result6)-1;
-				if($max == 0){$max = 1;}
-				$sql2 = "SELECT * FROM `$source` WHERE `id`=$max";
-				$result2 = mysql_query($sql2, $conn) or die(mysql_error());
-				$field = mysql_fetch_array($result2);
-				$lat = $field['lat'];
-				$long = $field['long'];
-				$btx = $field['btx'];
-				$otx = $field['otx'];
-				$man = $field['man'];
-				$fa = $field['fa'];
-				$la = $field['la'];
-				$nt = $field['nt'];
-				$label = $field['lable'];
-				if ($lat =="N 0.0000000"){continue;}
-				if ($lat =="S 0.0000000"){continue;}
-				if ($long =="W 0.0000000"){continue;}
-				if ($long =="E 0.0000000"){continue;}
-				if ($lat =="N 0000.0000"){continue;}
-				if ($lat =="S 0000.0000"){continue;}
-				if ($long =="W 0000.0000"){continue;}
-				if ($long =="E 0000.0000"){continue;}
-				if ($lat =="N 0.0000"){continue;}
-				if ($lat =="S 0.0000"){continue;}
-				if ($long =="W 0.0000"){continue;}
-				if ($long =="E 0.0000"){continue;}
-				if ($long ==""){continue;}
-				if ($long ==""){continue;}
-				$long = str_replace("W ","-",$long);
-				$long = str_replace("E ","",$long);
-				$lat = str_replace("S ","-",$lat);
-				$lat = str_replace("N ","",$lat);
-				echo "Writing Data for AP: ".$source."\r\n";
-				fwrite( $fileappend, "<Placemark>\r\n<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br />]]></description>\r\n<styleUrl>#secureStyleDead</styleUrl>\r\n<Point>\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-				$WPA_t++;
-			}
-			$total=$open_t+$WEP_t+$WPA_t;
-			echo "Close File out\r\n";
-			fwrite( $fileappend, "<description>APs:".$WPA_t."</description></Folder>\r\n<description>APs:".$total."</description>\r\n</Folder>\r\n</Document>\r\n</kml>");
-			fclose( $fileappend );
-			echo "Done!\r\n";
-			mysql_close($conn);
-		}elseif($source!=="")
+			$aps[] = array(
+							'id' => $ap_array['id'],
+							'ssid' => $ap_array['ssid'],
+							'mac' => $ap_array['mac'],
+							'sectype' => $ap_array['sectype'],
+							'radio' => $ap_array['radio'],
+							'chan' => $ap_array['chan'],
+							'man'	=> $manuf
+						   );
+		}
+		
+		$date=date('Y-m-d');
+		
+		$file_ext = $date."_full_databse.kml";
+		$filename = ('..\out\kml\\'.$file_ext);
+		// define initial write and appends
+		$filewrite = fopen($filename, "w");
+		$fileappend = fopen($filename, "a");
+		// open file and write header:
+		fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"$KML_SOURCE_URL\">\r\n		<Document>\r\n			<name>RanInt WifiDB KML</name>\r\n");
+		fwrite($fileappend, "			<Style id=\"openStyleDead\">\r\n		<IconStyle>\r\n				<scale>0.5</scale>\r\n				<Icon>\r\n			<href>".$open_loc."</href>\r\n			</Icon>\r\n			</IconStyle>\r\n			</Style>\r\n");
+		fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+		fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+		fwrite($fileappend, '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
+		echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
+		$x=0;
+		$n=0;
+		$total = count($aps);
+		fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n<description>APs: ".$total."</description>\r\n");
+		fwrite( $fileappend, "<Folder>\r\n<name>WiFiDB Access Points</name>\r\n");
+		echo '<tr><td style="border-style: solid; border-width: 1px">Wrote KML Folder Header</td><td></td></tr>';
+		
+		foreach($aps as $ap)
 		{
-			$filename = ('../out/kml/'.$file_ext);
-			// define initial write and appends
-			$filewrite = fopen($filename, "w");
-			$fileappend = fopen($filename, "a");
-			// open file and write header:
-			fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"http://earth.google.com/kml/2.2\">\r\n<Document>\r\n<name>".$file_ext."</name>\r\n");
-			fwrite($fileappend, "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/open.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
-			fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
-			fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
-			$x=0;
-			$n=0;
-			mysql_select_db($db,$conn);
-			
-			echo $WPA_t."\r\n Write AP's to File\r\n";
-			fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n");
-			echo "Start write of AP's\r\n";
-			$open_t=0;
-			$sql = "SELECT * FROM `$wtable` WHERE `encry`='none'";
+			echo '<tr><td style="border-style: solid; border-width: 1px">';
+			$table=$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['radio'].'-'.$ap['chan'];
+			$table_gps = $table.$gps_ext;
+			mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
+#			echo $table."<br>";
+			$sql = "SELECT * FROM `$table`";
 			$result = mysql_query($sql, $conn) or die(mysql_error());
-			while ($newArray = mysql_fetch_array($result))
+			$rows = mysql_num_rows($result);
+#			echo $rows."<br>";
+			$sql = "SELECT * FROM `$table` WHERE `id`='1'";
+			$result1 = mysql_query($sql, $conn) or die(mysql_error());
+#			echo $ap['mac']."<BR>";
+			while ($newArray = mysql_fetch_array($result1))
 			{
-				$ssid = $newArray['ssid'];
-				$mac = $newArray['mac'];
-				$chan = $newArray['chan'];
-				$radio = $newArray['radio'];
-				$auth = $newArray['auth'];
-				$encry = $newArray['encry'];
-				$table=$ssid.'-'.$mac.'-'.$auth.'-'.$encry.'-'.$radio.'-'.$chan;
-				$table=$ssid.'-'.$mac.'-'.$auth.'-'.$encry.'-'.$radio.'-'.$chan.$gps_ext;
-				$macs = str_split($mac,2);
-				$mac = $macs[0].':'.$macs[1].':'.$macs[2].':'.$macs[3].':'.$macs[4].':'.$macs[5];
-				echo "Fetch Data for AP: ".$source."\r\n";
-			#	if ($radio =="U"){continue;}
-				if($radio=="a")
-				{$radio="802.11a";}
-				elseif($radio=="b")
-				{$radio="802.11b";}
-				elseif($radio=="g")
-				{$radio="802.11g";}
-				elseif($radio=="n")
-				{$radio="802.11n";}
-				else
-				{$radio="Unknown Radio";}
-				mysql_select_db("$db_st") or die("Unable to select database");
-				$sql6 = "SELECT * FROM `$source`";
-				$result6 = mysql_query($sql6, $conn) or die(mysql_error());
-				$max = mysql_num_rows($result6)-1;
-				if($max == 0){$max = 1;}
-				$sql2 = "SELECT * FROM `$source` WHERE `id`=$max";
-				$result2 = mysql_query($sql2, $conn) or die(mysql_error());
-				$field = mysql_fetch_array($result2);
-				$lat = $field['lat'];
-				$long = $field['long'];
-				$btx = $field['btx'];
-				$otx = $field['otx'];
-				$man = $field['man'];
-				$fa = $field['fa'];
-				$la = $field['la'];
-				$nt = $field['nt'];
-				$label = $field['lable'];
-				if ($lat =="N 0.0000000"){continue;}
-				if ($lat =="S 0.0000000"){continue;}
-				if ($long =="W 0.0000000"){continue;}
-				if ($long =="E 0.0000000"){continue;}
-				if ($lat =="N 0000.0000"){continue;}
-				if ($lat =="S 0000.0000"){continue;}
-				if ($long =="W 0000.0000"){continue;}
-				if ($long =="E 0000.0000"){continue;}
-				if ($lat =="N 0.0000"){continue;}
-				if ($lat =="S 0.0000"){continue;}
-				if ($long =="W 0.0000"){continue;}
-				if ($long =="E 0.0000"){continue;}
-				if ($long ==""){continue;}
-				if ($long ==""){continue;}
-				$long = str_replace("W ","-",$long);
-				$long = str_replace("E ","",$long);
-				$lat = str_replace("S ","-",$lat);
-				$lat = str_replace("N ","",$lat);
-				echo "Writing Data for AP: ".$source."\r\n";
-				fwrite( $fileappend, "		<Placemark>\r\n<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br />]]></description>\r\n<styleUrl>#openStyleDead</styleUrl>\r\n<Point>\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-				$open_t++;
+				switch($ap['sectype'])
+				{
+					case 1:
+						$type = "#openStyleDead";
+						$auth = "Open";
+						$encry = "None";
+						break;
+					case 2:
+						$type = "#wepStyleDead";
+						$auth = "Open";
+						$encry = "WEP";
+						break;
+					case 3:
+						$type = "#secureStyleDead";
+						$auth = "WPA-Personal";
+						$encry = "TKIP-PSK";
+						break;
+				}
+				
+				switch($ap['radio'])
+				{
+					case "a":
+						$radio="802.11a";
+						break;
+					case "b":
+						$radio="802.11b";
+						break;
+					case "g":
+						$radio="802.11g";
+						break;
+					case "n":
+						$radio="802.11n";
+						break;
+					default:
+						$radio="Unknown Radio";
+						break;
+				}
+				
+				$otx = $newArray["otx"];
+				$btx = $newArray["btx"];
+				$nt = $newArray['nt'];
+				$label = $newArray['label'];
+				
+				$sql6 = "SELECT * FROM `$table_gps`";
+				$result6 = mysql_query($sql6, $conn);
+				$max = mysql_num_rows($result6);
+				
+				$sql = "SELECT * FROM `$table_gps` WHERE `id`='1'";
+				$result = mysql_query($sql, $conn);
+				$gps_table_first = mysql_fetch_array($result);
+				
+				$date_first = $gps_table_first["date"];
+				$time_first = $gps_table_first["time"];
+				$fa = $date_first." ".$time_first;
+				
+				#if($gps_table_first['lat'] == "N 0.0000" or $gps_table_first['long'] == "E 0.0000"){continue;}
+				//===================================CONVERT FROM DM TO DD=========================================//
+				$lat = $gps_table_first['lat'];
+				$long = $gps_table_first['long'];
+				if($lat !== "N 0.0000" && $long !== "E 0.0000"){
+					$lat &= database::convert_dm_dd($lat);
+					$long &= database::convert_dm_dd($long);
+				}
+				//=====================================================================================================//
+				
+				$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+				$result = mysql_query($sql, $conn);
+				$gps_table_last = mysql_fetch_array($result);
+				$date_last = $gps_table_last["date"];
+				$time_last = $gps_table_last["time"];
+				$la = $date_last." ".$time_last;
+				fwrite( $fileappend, "<Placemark id=\"".$ap['mac']."\">\r\n	<name></name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+				echo 'Wrote AP: '.$ap['ssid'].'</td></tr>';
+				
+				unset($gps_table_first["lat"]);
+				unset($gps_table_first["long"]);
 			}
 		}
+		fwrite( $fileappend, "	</Folder>\r\n");
+		fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
+		fclose( $fileappend );
+		echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a href="'.$filename.'">Here</a></td><td></td></tr></table>';
+		mysql_close($conn);
 	}
 	
 	#========================================================================================================================#
-	#						Grab the Manuf for a given MAC, print Unknown Manuf if not found								 #
+	#						Grab the Manuf for a given MAC, return Unknown Manuf if not found								 #
 	#========================================================================================================================#
 	
 	function &manufactures($mac)
 	{
 		include('manufactures.inc.php');
 		$man_mac = str_split($mac,6);
-		
 		if(!is_null($manufactures[$man_mac[0]]))
-		{$manuf = $manufactures[$man_mac[0]];}
-		else{$manuf = "Unknown Manufacture";}
+		{
+			$manuf = $manufactures[$man_mac[0]];
+		}
+		else
+		{
+			$manuf = "Unknown Manufacture";
+		}
 		return $manuf;
-	
 	}
 	
 	#========================================================================================================================#
@@ -1431,7 +1272,7 @@ class database
 				}
 				
 				$table=$ssid.'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
-				mysql_select_db("$db_st") or die("Unable to select Database:".$db_st);
+				mysql_select_db($db_st) or die("Unable to select Database: ".$db_st);
 				
 				$sql = "SELECT * FROM `$table` WHERE `id`='1'";
 				$result = mysql_query($sql, $conn);

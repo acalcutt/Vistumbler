@@ -174,27 +174,30 @@ if($hosturl !== "" && $root !== "")
 		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
 		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
 		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>'),"
-		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
-		."(6, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>')";
+		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=exportall\">Export All APs</a>'),"
+		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>'),"
+		."(6, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(7, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>')";
 }elseif($root !== "")
 { 
 	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"$root/\">Main Page</a>'),"
 		."(2, '<a class=\"links\" href=\"$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
 		."(3, '<a class=\"links\" href=\"$root/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"$root/opt/search.php\">Search APs</a>'),"
-		."(5, '<a class=\"links\" href=\"$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
-		."(6, '<a class=\"links\" href=\"$root/ver.php\">WiFiDB Version</a>')";
+		."(4, '<a class=\"links\" href=\"$root/opt/userstats.php?func=exportall\">Export All APs</a>'),"
+		."(5, '<a class=\"links\" href=\"$root/opt/search.php\">Search APs</a>'),"
+		."(6, '<a class=\"links\" href=\"$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(7, '<a class=\"links\" href=\"$root/ver.php\">WiFiDB Version</a>')";
 }else
 {
 	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"/wifidb\">Main Page</a>'),"
 		."(2, '<a class=\"links\" href=\"/wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
 		."(3, '<a class=\"links\" href=\"/wifidb/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"/wifidb/opt/search.php\">Search APs</a>'),"
-		."(5, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=usersall\">View All Users</a>'),"
-		."(6, '<a class=\"links\" href=\"/wifidb/ver.php\">WiFiDB Version</a>')";
+		."(4, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=exportall\">Export All APs</a>'),"
+		."(5, '<a class=\"links\" href=\"/wifidb/opt/search.php\">Search APs</a>'),"
+		."(6, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(7, '<a class=\"links\" href=\"/wifidb/ver.php\">WiFiDB Version</a>')";
 }
 $IN_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
@@ -246,12 +249,12 @@ echo "<tr><td>Failure..........</td><td>Creating Config file</td></tr>";}
 
 
 #Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\n date_default_timezone_set('$timezn');\r\n $"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\ndate_default_timezone_set('$timezn');\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
-{echo "<tr><td>Success..........</td><td>Add last edit date</td></tr>";}
+{echo "<tr><td>Success..........</td><td>Add Install date</td></tr>";}
 else{
-echo "<tr><td>Failure..........</td><td>Add last edit date</td></tr>";}
+echo "<tr><td>Failure..........</td><td>Add Install date</td></tr>";}
 
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n$"."rebuild	=	0;\r\n"
@@ -265,7 +268,7 @@ echo "<tr><td>Failure..........</td><td>Add default debug values</td></tr>";}
 
 #add url info
 $AD_CF_UR_Re = fwrite($fileappend, "#---------------- URL Info ----------------#\r\n"
-									."$"."root	=	'$root';\r\n"
+									."$"."root		=	'$root';\r\n"
 									."$"."hosturl	=	'$hosturl';\r\n\r\n");
 
 if($AD_CF_UR_Re)
@@ -286,7 +289,7 @@ echo "<tr><td>Failure..........</td><td>Adding SQL Host info</td></tr>";}
 $AD_CF_WT_Re = fwrite($fileappend, "#---------------- Tables ----------------#\r\n"
 									."$"."settings_tb 	=	'settings';\r\n"
 									."$"."users_tb 		=	'users';\r\n"
-									."$"."links 			=	'links';\r\n"
+									."$"."links 		=	'links';\r\n"
 									."$"."wtable 		=	'wifi0';\r\n"
 									."$"."gps_ext 		=	'_GPS';\r\n"
 									."$"."sep 			=	'-';\r\n\r\n");
@@ -315,16 +318,16 @@ echo "<tr><td>Failure..........</td><td>Adding DataBase names</td></tr>";}
 
 #add sql Connection info
 $AD_CF_SC_Re = fwrite($fileappend, "#---------------- SQL Connection Info ----------------#\r\n"
-							."$"."conn 			=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
+							."$"."conn 				=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
 if($AD_CF_SU_Re)
 {echo "<tr><td>Success..........</td><td>Add SQL Connection Info</td></tr>";}
 else{
 echo "<tr><td>Failure..........</td><td>Adding SQL Connection Info</td></tr>";}
 
 $AD_CF_KM_Re = fwrite($fileappend, "#---------------- KML Info ----------------#\r\n"
-							."$"."open_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
-							."$"."WEP_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
-							."$"."WPA_loc 		=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
+							."$"."open_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
+							."$"."WEP_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
+							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
 							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n");
 if($AD_CF_KM_Re)
 {echo "<tr><td>Success..........</td><td>Add KML Info</td></tr>";}

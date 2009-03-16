@@ -67,6 +67,9 @@ if($func==="user")
 {
 	$user = $_GET['user'];
 	$database->all_usersap($user);
+}elseif($func==="exportall")
+{
+	$database->export_kml();
 }else
 {
 	?>

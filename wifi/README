@@ -1,0 +1,46 @@
+RanInt -> Vistumbler to PNG -> Readme
+===================
+
+  A set of PHP-scripts to generate Wireless Signal History graph over the web.
+
+  Version: Alpha
+  --------------
+  http://www.randomintervals.com/
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2,
+    as published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, you can get it at: or write to the Free Software
+    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	
+	Or go Here:  http://www.gnu.org/licenses/gpl-2.0.txt
+
+  Requirements:
+    php 5.0 or later
+    Apache 1.3 or later
+	a web-browser (doh!)
+
+  Summary:
+    Vistumbler to PNG is a PHP based set of scripts that is intended to generate 
+	Wireless Signal History graph over the web for Access Points found with the 
+	Vistumber Wirelss scanning software
+
+  Installation:
+	NOTE: if you are using Linux, you must chown the wifi/tmp folder, to the user that you have apache or what ever HTTP server you are useing.
+		  (This is so that the installer can write the PNG graph files)
+  ChangeLog:
+    /[Vistumbler to PNG Path]/ver.php
+
+  Support:
+    Go to the Randomintervals section of these forums http://forum.techidiots.net/forum/viewforum.php?f=22
+
+    Enjoy!
+        The RanInt Dev team
+		   -PFerland

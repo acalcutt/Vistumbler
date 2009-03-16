@@ -40,45 +40,47 @@ while ($newArray = mysql_fetch_array($result))
     echo "<p>$testField</p>";
 }
 
-$sql1 = "SELECT size FROM `settings`";
-$result = mysql_query($sql1, $conn) or die(mysql_error());
+$sql = "SELECT size FROM `settings`";
+$result = mysql_query($sql, $conn) or die(mysql_error());
 $DB_size = mysql_fetch_array($result);
 $total = $DB_size['size'];
 
-$sql2 = "SELECT id FROM `$wtable` WHERE `sectype`='1'";
-$result = mysql_query($sql2, $conn) or die(mysql_error());
+$sql = "SELECT id FROM `$wtable` WHERE `sectype`='1'";
+$result = mysql_query($sql, $conn) or die(mysql_error());
 $open = mysql_num_rows($result);
 
-$sql3 = "SELECT id FROM `$wtable` WHERE `sectype`='2'";
-$result = mysql_query($sql3, $conn) or die(mysql_error());
+$sql = "SELECT id FROM `$wtable` WHERE `sectype`='2'";
+$result = mysql_query($sql, $conn) or die(mysql_error());
 $WEP = mysql_num_rows($result);
 
-$sql4 = "SELECT id FROM `$wtable` WHERE `sectype`='3'";
-$result = mysql_query($sql4, $conn) or die(mysql_error());
+$sql = "SELECT id FROM `$wtable` WHERE `sectype`='3'";
+$result = mysql_query($sql, $conn) or die(mysql_error());
 $Sec = mysql_num_rows($result);
 
-$sql5 = "SELECT id,ssid FROM `$wtable` ORDER BY ID DESC LIMIT 1";
-$result = mysql_query($sql5, $conn) or die(mysql_error());
+$sql = "SELECT id,ssid FROM `$wtable` ORDER BY ID DESC LIMIT 1";
+$result = mysql_query($sql, $conn) or die(mysql_error());
 $lastap_array = mysql_fetch_array($result);
 $lastap_id = $lastap_array['id'];
 $lastap_ssid = $lastap_array['ssid'];
 
-$sql6 = "SELECT username FROM `users`";
-$result1 = mysql_query($sql6, $conn) or die(mysql_error());
-while($user_array = mysql_fetch_array($result1))
+$sql = "SELECT username FROM `users`";
+$result = mysql_query($sql, $conn) or die(mysql_error());
+$row_users = mysql_num_rows($result);
+while($user_array = mysql_fetch_array($result))
 {
 	$usersa[]=$user_array['username'];
 }
+
+$sql = "SELECT username FROM `users` WHERE `id`='$row_users'";
+$result = mysql_query($sql, $conn) or die(mysql_error());
+$lastuser = mysql_fetch_array($result);
+
 mysql_close($conn);
+
+$usersa = array_unique($usersa);
 $usercount = count($usersa);
-if ($usercount == NULL)
-{$lastUs="No one has imported any APs yet.";}
-else
-{$lastUs = $usersa[$usercount-1];}
 
-$users = array_unique($usersa);
-$user_count = count($usersa);
-
+if ($usercount == NULL){$lastuser['username'] = "No one has imported any APs yet.";}
 ?>
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
@@ -113,13 +115,13 @@ $user_count = count($usersa);
 		<th class="style3">&nbsp;</th>
 	</tr>
 	<tr>
-		<td align="center" class="style2" style="width: 100px"><?php echo $user_count;?></td>
-		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=allap&user=<?php echo $lastUs;?>"><?php echo $lastUs;?></a></td>
+		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
+		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=allap&user=<?php echo $lastuser['username'];?>"><?php echo $lastuser['username'];?></a></td>
 		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No AP";}else{?><a class="links" href="opt/fetch.php?id="<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
 		<td align="center" class="style2">&nbsp;</td>
 	</tr>
 </table>
 <?php
-
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);
+?>

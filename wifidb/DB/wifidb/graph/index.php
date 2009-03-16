@@ -71,7 +71,7 @@ elseif($radio == "g"){$radio = "802.11g";}
 elseif($radio == "n"){$radio = "802.11n";}
 else				 {$radio = "802.11u";}
 
-$man_mac = str_split($pointer["mac"], 6);
+
 $table=$pointer["ssid"].'-'.$pointer["mac"].'-'.$pointer["sectype"].'-'.$pointer["radio"].'-'.$pointer["chan"];
 $table_gps = $table.$gps_ext;
 $name = $table."_".$row;
@@ -80,8 +80,9 @@ mysql_select_db($db_st,$conn);
 $sql = "SELECT*FROM`$table`WHERE`id`=$row";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $ap_table = mysql_fetch_array($result);
-
-if ( $manufactures[$man_mac[0]] == ""){$man = "UNKNOWN Manuf";}else{ $man =  $manufactures[$man_mac[0]];}
+$database = new database();
+$man = $database->manufactures($pointer["mac"]);
+#if ( $manufactures[$man_mac[0]] == ""){$man = "UNKNOWN Manuf";}else{ $man =  $manufactures[$man_mac[0]];}
 
 $sig_exp = explode("-", $ap_table["sig"]);
 $sig_size = count($sig_exp)-1;
@@ -163,6 +164,17 @@ $sig = implode("-",$signal);
 					
 					</td>
 				</tr>
+				<tr>
+					<td class="style2">
+					Choose Background Color:
+					<select name="bgc" style="height: 22px; width: 147px">
+	<option value="000:000:000">Black</option>
+	<option value="255:255:255">White</option>
+	</select>
+					
+					</td>
+				</tr>
+	
 				<tr>
 					<td class="style2">
 					Choose Line Color:<select name="linec" style="width: 153px">

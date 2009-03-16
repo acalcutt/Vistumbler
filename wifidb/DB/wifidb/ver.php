@@ -54,14 +54,15 @@ while ($newArray = mysql_fetch_array($result))
 <br>
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Pre-Beta 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 12-02-2009</td></tr>
+	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-15</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
 			<LI>Started moving all HTML code outside PHP code.</LI>
 			<LI>Fixed an error in the GPS conversion.</LI>
-			<LI>Added a footer function to take over the "this file has been last edited on..." at the end of all forms, to standardize it, seeing how it was on all forms anyway.</LI>
+			<LI>Added a footer function to take over the "*THIS PAGE* has been last edited on..." at the end of all forms, to standardize it, seeing how it was on all forms anyway.</LI>
+			<LI>Moved the "*THIS PAGE* was last modified on: YYYY-MMM-DD @ HH:MM:SS" to the bottom of the page in the bottom cell.</LI>
 			<LI>Working on changing the layout of the AP fetch page. Soon it will be:</LI>
 			<OL type="A">
 				<LI><b><i><br>---------------------------------------<br>
@@ -84,7 +85,11 @@ while ($newArray = mysql_fetch_array($result))
 		<LI>Added link to Last User on Index page.</LI>
 		<LI>Cleaned up the tables on the new version page.</LI>
 		<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumblers save file.</LI>
-		<LI>Moved the "*THIS PAGE* was last modified on: YYYY-MMM-DD @ HH:MM:SS" to the bottom of the page in the bottom cell.</LI>
+		
+		<LI>Fixed up the List KML export, there is a link to the KML file now.</LI>
+		<LI>Finished KML export for entire database.</LI>
+		<LI>Added option for a black background on the Signal Graphs.</LI>
+		<LI>Empty Imports are no longer allowed (should have been like that since the beginning). Also if there were any empty imports, they will not be printed out on the All Users page.</LI>
 		</OL>
 	</td></tr>
 </table>
@@ -92,7 +97,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="15b80" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 80</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-01-29</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Jan-29</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
 		<OL>
@@ -106,7 +111,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="15b79" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 79</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-01-24</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Jan-24</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
 		<OL>
@@ -119,7 +124,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="15b78" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 78</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-01-22</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Jan-22</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
 		<OL>
@@ -132,7 +137,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="15b77" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 77</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-01-11</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Jan-11</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -145,7 +150,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="15b76" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 76	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-12-20</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Dec-20</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -158,7 +163,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="15b75" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 75	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-12-19</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Dec-19</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -174,7 +179,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="15b73" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 73	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-11-28</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Nov-28</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -187,7 +192,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="15b67" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 67	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-11-19</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Nov-19</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -202,7 +207,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="14" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.14	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-11-14</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Nov-14</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -217,7 +222,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="13" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.13	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-10-30</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Oct-30</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -230,7 +235,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="12" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.12</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-08-19</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Aug-19</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -244,7 +249,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="11" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.11</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-08-12</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Aug-12</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -259,7 +264,7 @@ while ($newArray = mysql_fetch_array($result))
 <br>
 <table width="100%" border="2" id="1" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.1	</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-06-10</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Jun-10</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
@@ -270,10 +275,11 @@ while ($newArray = mysql_fetch_array($result))
 <br>
 
 	<h2><---LINKS---></h2>
-	<a class="links" href="">RanInt Forum</a><br>
-	<a class="links" href="">WiFiDB Forum</a><br>
+	<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=22">RanInt Forum</a><br>
+	<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=38">WiFiDB Forum</a><br>
 <br>
 <?php
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);?>
+footer($filename);
+?>
