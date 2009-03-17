@@ -90,6 +90,9 @@ while ($newArray = mysql_fetch_array($result))
 		<LI>Finished KML export for entire database.</LI>
 		<LI>Added option for a black background on the Signal Graphs.</LI>
 		<LI>Empty Imports are no longer allowed (should have been like that since the beginning). Also if there were any empty imports, they will not be printed out on the All Users page.</LI>
+		<LI>Added some friendly informational links.</LI>
+		<LI>Set the default values for function varibles, incase one value is left out.</LI>
+		<LI>Initial code for Export Newest AP to KML is writen, not tested yet.
 		</OL>
 	</td></tr>
 </table>

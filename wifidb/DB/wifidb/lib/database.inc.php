@@ -2,9 +2,9 @@
 #include('manufactures.inc.php');
 $ver=array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-15",
+			"Last_Core_Edit" 	=> 	"2009-Mar-17",
 			"database"			=>	array(  
-										"import_vs1"		=>	"1.5.1", 
+										"import_vs1"		=>	"1.5.2", 
 										"apfetch"			=>	"2.4.1",
 										"gps_check_array"	=>	"1.0",
 										"allusers"			=>	"1.1",
@@ -18,7 +18,7 @@ $ver=array(
 										"manufactures"		=>	"1.0"
 										),
 			"Misc"				=>	array(
-										"footer"				=>	"1.0",
+										"footer"				=>	"1.1",
 										"smart_quotes"			=> 	"1.0",
 										"Manufactures-list"		=> 	"2.0"
 										),
@@ -28,7 +28,7 @@ $ver=array(
 #											Footer (writes the footer for all pages)									 #
 #========================================================================================================================#
 
-function footer($filename)
+function footer($filename = $_SERVER['SCRIPT_FILENAME'])
 {
 	$file_ex = explode("/", $filename);
 	$count = count($file_ex);
@@ -61,7 +61,7 @@ function footer($filename)
 #													Smart Quotes (char filtering)										 #
 #========================================================================================================================#
 
-function smart_quotes($text) {
+function smart_quotes($text="") {
 $pattern = '/"((.)*?)"/i';
 $strip = array(
 				0=>"'",
@@ -87,7 +87,7 @@ class database
 	#													VS1 File import													     #
 	#========================================================================================================================#
 	
-	function import_vs1($source , $user="Unknown" , $notes="No Notes" , $title="UNTITLED" )
+	function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED" )
 	{
 	$times=date('Y-m-d H:i:s');
 	if ($source == NULL){?><h2>You did not submit a file, please go back and do so.</h2> <?php die();}
@@ -120,7 +120,15 @@ class database
 
 		if ($ret_len == 6)
 		{
-			$gdata[$retexp[0]] = array("lat"=>$retexp[1], "long"=>$retexp[2],"sats"=>$retexp[3],"date"=>$retexp[4],"time"=>$retexp[5]);
+			$date_exp = explode("-",$retexp[4]);
+			if(strlen($date_exp[0]) <= 2)
+			{
+				$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
+			}else
+			{
+				$gpsdate = $retexp[4];
+			}
+			$gdata[$retexp[0]] = array("lat"=>$retexp[1], "long"=>$retexp[2],"sats"=>$retexp[3],"date"=>$gpsdate,"time"=>$retexp[5]);
 			if ($GLOBALS["debug"]  == 1)
 			{
 				$gpecho = "GP Data : \r<br>"
@@ -504,11 +512,11 @@ class database
 				}
 		}elseif($ret_len == 17)
 		{
-			echo "Txt files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu otpion in Vistumbler";
+			echo 'Text files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu option in <a href="www.vistumbler.net" target="_blank">Vistumbler</a>';
 			$filename = $_SERVER['SCRIPT_FILENAME'];	
 			footer($filename);
 			die();
-		}else{echo "There is something wrong with the formatting of the data, check it and try running the script again<br>";}
+		}else{echo 'There is something wrong with the file you uploaded, check and make sure it is a <a href="http://vistumbler.wiki.sourceforge.net/VS1+Format">valid VS1</a> file and try again<br>';}
 	}
 	mysql_select_db($db,$conn);
 	$user_ap_s = implode("-",$user_aps);
@@ -526,7 +534,7 @@ class database
 	#													Convert GeoCord DM to DD									   	     #
 	#========================================================================================================================#
 	
-	function &convert_dm_dd($geocord_in)
+	function &convert_dm_dd($geocord_in="")
 	{
 	//	GPS Convertion :
 		$neg=FALSE;
@@ -540,7 +548,6 @@ class database
 		$geocord_exp[0] = preg_replace($patterns, $replacements, $geocord_exp[0]);
 		
 		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
-		
 		// 4208.7753 ---- 4208 - 7753
 		$geocord_dec = "0.".$geocord_exp[1];
 		// 4208.7753 ---- 4208 - 0.7753
@@ -559,7 +566,7 @@ class database
 	#													Convert GeoCord DD to DM									   	     #
 	#========================================================================================================================#
 	
-	function &convert_dd_dm($geocord_in)
+	function &convert_dd_dm($geocord_in="")
 	{
 		//	GPS Convertion :
 		$neg=FALSE;
@@ -573,7 +580,6 @@ class database
 		$geocord_exp[0] = preg_replace($pattern, $replacements, $geocord_exp[0]);
 		
 		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
-		
 		// 42.146255 ---- 42 - 146255
 		$geocord_dec = "0.".$geocord_exp[1];
 		// 42.146255 ---- 42 - 0.146255
@@ -591,7 +597,7 @@ class database
 	#													GPS check, make sure there are no duplicates						 #
 	#========================================================================================================================#
 
-	function &check_gps_array($gpsarray, $test)
+	function &check_gps_array($gpsarrayarray(0=>array('lat'=>"","long"=>"")), $test=array('lat'=>"","long"=>""))
 	{
 	foreach($gpsarray as $gps)
 	{
@@ -626,7 +632,7 @@ class database
 	#													AP History Fetch													 #
 	#========================================================================================================================#
 
-	function apfetch($id)
+	function apfetch($id=0)
 	{
 		include('../lib/config.inc.php');
 		mysql_select_db($db,$conn);
@@ -875,7 +881,7 @@ class database
 	#													Grab All the AP's for a given user									 #
 	#========================================================================================================================#
 	
-	function all_usersap($user)
+	function all_usersap($user="")
 	{
 		include('config.inc.php');
 		mysql_select_db($db,$conn);
@@ -953,7 +959,7 @@ class database
 	#													Grab the AP's for a given user's Import								 #
 	#========================================================================================================================#
 
-	function usersap($row)
+	function usersap($row=0)
 	{
 		include('config.inc.php');
 		$pagerow =0;
@@ -1168,7 +1174,7 @@ class database
 	#						Grab the Manuf for a given MAC, return Unknown Manuf if not found								 #
 	#========================================================================================================================#
 	
-	function &manufactures($mac)
+	function &manufactures($mac="")
 	{
 		include('manufactures.inc.php');
 		$man_mac = str_split($mac,6);
@@ -1187,7 +1193,7 @@ class database
 	#						Grab the AP's for a given user's Import and throw them into a KML file							 #
 	#========================================================================================================================#
 	
-	function exp_kml_user($row)
+	function exp_kml_user($row=0)
 	{	
 		echo "<table>";
 		include('config.inc.php');
@@ -1330,83 +1336,143 @@ class database
 	function exp_newest_kml()
 	{
 		include('config.inc.php');
-		$file_ext = 'newest_database.kml';
+		include('manufactures.inc.php');
+		$file_ext = 'newest_import.kml';
 		$filename = ('../out/kml/'.$file_ext);
 		// define initial write and appends
 		$filewrite = fopen($filename, "w");
+#		echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
 		if($filewrite != FALSE)
 		{
-			$fileappend = fopen($filename, "a");
+			$file_data = ("");
+			$file_data .= ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"http://earth.google.com/kml/2.2\">\r\n<Document>\r\n<name>RanInt WifiDB KML</name>\r\n");
+			$file_data .= ("<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/open.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+			$file_data .= ("<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+			$file_data .= ("<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+			$file_data .= ('<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
 			// open file and write header:
-			fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"http://earth.google.com/kml/2.2\">\r\n<Document>\r\n<name>RanInt WifiDB KML</name>\r\n");
-			fwrite($fileappend, "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/open.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
-			fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
-			fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 			
-			mysql_select_db($db, $conn);
+			mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 			$sql = "SELECT * FROM `$wtable`";
 			$num_rows = mysql_num_rows($sql, $conn) or die(mysql_error());
 			
 			$sql = "SELECT * FROM `$wtable` WHERE `ID`='$num_rows'";
 			$result = mysql_query($sql, $conn) or die(mysql_error());
-			$pointer_array = mysql_fetch_array($result);
+			while($ap_array = mysql_fetch_array($result))
+			{
+				$man_mac = str_split($ap_array['mac'],6);
+				if(!is_null($manufactures[$man_mac[0]]))
+				{
+					$manuf = $manufactures[$man_mac[0]];
+				}
+				else
+				{
+					$manuf = "Unknown Manufacture";
+				}
+				$aps[] = array(
+								'id' => $ap_array['id'],
+								'ssid' => $ap_array['ssid'],
+								'mac' => $ap_array['mac'],
+								'sectype' => $ap_array['sectype'],
+								'radio' => $ap_array['radio'],
+								'chan' => $ap_array['chan'],
+								'man'	=> $manuf
+							   );
+			}
 			
-			$APid = $pointer_array['id'];
-			$ssid_ptb_ = $pointer_array["ssid"];
-			$ssids_ptb = str_split($pointer_array['ssid'],25);
-			$ssid_ptb = $ssids_ptb[0];
-			$mac_ptb=$pointer_array['mac'];
-			$radio_ptb=$pointer_array['radio'];
-			$sectype_ptb=$pointer_array['sectype'];
-			$auth_ptb=$pointer_array['auth'];
-			$encry_ptb=$pointer_array['encry'];
-			$chan_ptb=$pointer_array['chan'];
-			
-			$table = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
-			mysql_select_db($db_st, $conn);
-			$table_gps = $source.$gps_ext;
-			$table_rows = mysql_num_rows("SELECT * FROM `$table`", $conn) or die(mysql_error());
-			
-			$result = mysql_query("SELECT * FROM `$table` WHERE `id` = '$table_row'", $conn) or die(mysql_error());
-			$field = mysql_fetch_array($result); 
-			$row = $field["id"];
-			$sig_exp = explode("-", $field["sig"]);
-			$sig_size = count($sig_exp);
-			
-			$first_ID = explode(",",$sig_exp[0]);
-			$first = $first_ID[0];
-			
-			$last_ID = explode(",",$sig_exp[$sig_size]);
-			$last = $last_ID[0];
-			
-			$sql = "SELECT * FROM `$table_gps` WHERE `id`='$first'";
+			$table=$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['radio'].'-'.$ap['chan'];
+			$table_gps = $table.$gps_ext;
+			mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
+#			echo $table."<br>";
+			$sql = "SELECT * FROM `$table`";
 			$result = mysql_query($sql, $conn) or die(mysql_error());
-			$gps_table_first = mysql_fetch_array($result);
-			
-			$date_first = $gps_table_first["date"];
-			$time_first = $gps_table_first["time"];
-			$fa = $date_first." ".$time_first;
-			
-			$sql = "SELECT * FROM `$table_gps` WHERE `id`='$last'";
-			$result = mysql_query($sql, $conn) or die(mysql_error());
-			$gps_table_last = mysql_fetch_array($result);
-			$date_last = $gps_table_last["date"];
-			$time_last = $gps_table_last["time"];
-			$lu = $date_last." ".$time_last;
-			
-		echo "<td>".$row."</td><td>"
-			.$field["btx"]."</td><td>"
-			.$field["otx"]."</td><td>"
-			.$fa."</td><td>"
-			.$lu."</td><td>"
-			.$field["nt"]."</td><td>"
-			.$field["label"]."</td><td>"
-			.'<a href="../opt/userstats.php?user='.$field["user"].'">'.$field["user"].'</a></td><td>'
-			.'<a href="../graph/?row='.$row.'&id='.$GLOBALS['ID'].'">Graph Signal</a></td></tr>';
+			$rows = mysql_num_rows($result);
+#			echo $rows."<br>";
+			$sql = "SELECT * FROM `$table` WHERE `id`='1'";
+			$result1 = mysql_query($sql, $conn) or die(mysql_error());
+#			echo $ap['mac']."<BR>";
+			while ($newArray = mysql_fetch_array($result1))
+			{
+				switch($ap['sectype'])
+				{
+					case 1:
+						$type = "#openStyleDead";
+						$auth = "Open";
+						$encry = "None";
+						break;
+					case 2:
+						$type = "#wepStyleDead";
+						$auth = "Open";
+						$encry = "WEP";
+						break;
+					case 3:
+						$type = "#secureStyleDead";
+						$auth = "WPA-Personal";
+						$encry = "TKIP-PSK";
+						break;
+				}
+				
+				switch($ap['radio'])
+				{
+					case "a":
+						$radio="802.11a";
+						break;
+					case "b":
+						$radio="802.11b";
+						break;
+					case "g":
+						$radio="802.11g";
+						break;
+					case "n":
+						$radio="802.11n";
+						break;
+					default:
+						$radio="Unknown Radio";
+						break;
+				}
+				
+				$otx = $newArray["otx"];
+				$btx = $newArray["btx"];
+				$nt = $newArray['nt'];
+				$label = $newArray['label'];
+				
+				$sql6 = "SELECT * FROM `$table_gps`";
+				$result6 = mysql_query($sql6, $conn);
+				$max = mysql_num_rows($result6);
+				
+				$sql = "SELECT * FROM `$table_gps` WHERE `id`='1'";
+				$result = mysql_query($sql, $conn);
+				$gps_table_first = mysql_fetch_array($result);
+				
+				$date_first = $gps_table_first["date"];
+				$time_first = $gps_table_first["time"];
+				$fa = $date_first." ".$time_first;
+				
+				#if($gps_table_first['lat'] == "N 0.0000" or $gps_table_first['long'] == "E 0.0000"){continue;}
+				//===================================CONVERT FROM DM TO DD=========================================//
+				$lat = $gps_table_first['lat'];
+				$long = $gps_table_first['long'];
+				if($lat !== "N 0.0000" && $long !== "E 0.0000"){
+					$lat &= database::convert_dm_dd($lat);
+					$long &= database::convert_dm_dd($long);
+				}
+				//=====================================================================================================//
+				
+				$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+				$result = mysql_query($sql, $conn);
+				$gps_table_last = mysql_fetch_array($result);
+				$date_last = $gps_table_last["date"];
+				$time_last = $gps_table_last["time"];
+				$la = $date_last." ".$time_last;
+				$file_data .= ("<Placemark id=\"".$ap['mac']."\">\r\n	<name></name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+#				echo 'Wrote AP: '.$ap['ssid'].'</td></tr>';
+			}
 		}else
 		{
-			echo "Failed to write KML File, Check the permissions on the wifidb folder, and make sure that Apache (or what ever HTTP server you are using) has permissions to write";
+#			echo "Failed to write KML File, Check the permissions on the wifidb folder, and make sure that Apache (or what ever HTTP server you are using) has permissions to write";
 		}
+		$fileappend = fopen($filename, "a");
+		fwrite($fileappend, $filedata);
 	}
 
 }#end DATABASE CLASS
