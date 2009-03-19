@@ -38,44 +38,49 @@ while ($newArray = mysql_fetch_array($result))
 <?php
 $database = new database();
 $func=$_GET['func'];
-if($func==="user")
+switch($func)
 {
+	case "user":
 	$user=$_GET['user'];
 	?>
 	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>
 	<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $user;?>"><?php echo $user;?></a>
 	<?php
 	$database->userstats($user);
-}elseif($func==="userap")
-{
+	break;
+	#-------------
+	
+	case "userap":
 	?>
 	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>
+	<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $user;?>"><?php echo $user;?></a>
+	<h3>Export This list
 	<?php
 	$row=$_GET['row'];
-	$database->usersap($row);
-}elseif($func==="expkml")
-{
-	?>
-	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>
-	<?php
-	$row = $_GET['row'];
-	$database->exp_kml_user($row);
-}elseif($func==="usersall")
-{
+	$database->userslist($row);
+	break;
+	#-------------
+	
+	case "usersall":
 	$database->allusers();
-}elseif($func==="allap")
-{
+	break;
+	#-------------
+	
+	case "allap":
 	$user = $_GET['user'];
+	?>
+		<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=user&user=<?php echo $user;?>"><?php echo $user;?></a></h1>
+		<h3><a class="links" href="../opt/export.php?func=exp_user_all_kml&user=<?php echo $user;?>">Export To KML File</a></h3>
+	<?php
 	$database->all_usersap($user);
-}elseif($func==="exportall")
-{
-	$database->export_kml();
-}else
-{
+	break;
+	#-------------
+	
+	case "":
 	?>
 	<h1>Hey you can do that!, Go back and do it right</h1>
 	<?php
 }
-
 $filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);?>
+footer($filename);
+?>

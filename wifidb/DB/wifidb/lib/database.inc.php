@@ -2,7 +2,7 @@
 #include('manufactures.inc.php');
 $ver=array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-17",
+			"Last_Core_Edit" 	=> 	"2009-Mar-18",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.2", 
 										"apfetch"			=>	"2.4.1",
@@ -10,15 +10,14 @@ $ver=array(
 										"allusers"			=>	"1.1",
 										"userstats"			=>	"1.1",
 										"usersap"			=>	"1.1",
-										"all_usersap"		=>	"1.1",
-										"export_KML"		=>	"2.0",
-										"export_KML_user"	=>	"2.0",
+										"all_usersap"		=>	"1.2",
+										"exp_KML"			=>	"3.0",
 										"convert_dm_dd"		=>	"1.2",
 										"convert_dd_dm"		=>	"1.2",
 										"manufactures"		=>	"1.0"
 										),
 			"Misc"				=>	array(
-										"footer"				=>	"1.1",
+										"footer"				=>	"1.2",
 										"smart_quotes"			=> 	"1.0",
 										"Manufactures-list"		=> 	"2.0"
 										),
@@ -28,8 +27,9 @@ $ver=array(
 #											Footer (writes the footer for all pages)									 #
 #========================================================================================================================#
 
-function footer($filename = $_SERVER['SCRIPT_FILENAME'])
+function footer($filename = '')
 {
+	include('config.inc.php');
 	$file_ex = explode("/", $filename);
 	$count = count($file_ex);
 	$file = $file_ex[($count)-1];
@@ -45,10 +45,9 @@ function footer($filename = $_SERVER['SCRIPT_FILENAME'])
 		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
 	<?php
 	}
+	echo $tracker;
+	echo $ads;
 	?>
-	<!-- -->
-	<!-- Put your ADs here if you want them, if not just leave this alone -->
-	<!-- -->
 	</td>
 	</tr>
 	</table>
@@ -597,7 +596,7 @@ class database
 	#													GPS check, make sure there are no duplicates						 #
 	#========================================================================================================================#
 
-	function &check_gps_array($gpsarrayarray(0=>array('lat'=>"","long"=>"")), $test=array('lat'=>"","long"=>""))
+	function &check_gps_array($gpsarrayarray=array(0=>array('lat'=>"","long"=>"")), $test=array('lat'=>"","long"=>""))
 	{
 	foreach($gpsarray as $gps)
 	{
@@ -660,17 +659,18 @@ class database
 		$table_gps	=	$newArray['ssid'].'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'].$gps_ext;
 		?>
 				<h1><?php echo $newArray['ssid'];?></h1><TABLE WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0 STYLE="page-break-before: always"><COL WIDTH=112><COL WIDTH=439>
-				<TR VALIGN=TOP><TD WIDTH=112><P>MAC Address</P></TD><TD WIDTH=439><P><?php echo $mac_full;?></P></TD></TR>
-				<TR VALIGN=TOP><TD WIDTH=112><P>Manufacture</P></TD><TD WIDTH=439><P><?php echo $manuf;?></P></TD></TR>
-				<TR VALIGN=TOP><TD WIDTH=112 HEIGHT=26><P>Authentication</P></TD><TD WIDTH=439><P><?php echo $newArray['auth'];?></P></TD></TR>
-				<TR VALIGN=TOP><TD WIDTH=112><P>Encryption Type</P></TD><TD WIDTH=439><P><?php echo $newArray['encry'];?></P></TD></TR>
-				<TR VALIGN=TOP><TD WIDTH=112><P>Radio Type</P></TD><TD WIDTH=439><P><?php echo $radio;?></P></TD></TR>
-				<TR VALIGN=TOP><TD WIDTH=112><P>Channel #</P></TD><TD WIDTH=439><P><?php echo $newArray['chan'];?></P></TD></TR></TABLE>
+				<TR VALIGN=TOP><TD class="style3" WIDTH=112><P>MAC Address</P></TD><TD WIDTH=439><P><?php echo $mac_full;?></P></TD></TR>
+				<TR VALIGN=TOP><TD class="style3" WIDTH=112><P>Manufacture</P></TD><TD WIDTH=439><P><?php echo $manuf;?></P></TD></TR>
+				<TR VALIGN=TOP><TD class="style3" WIDTH=112 HEIGHT=26><P>Authentication</P></TD><TD WIDTH=439><P><?php echo $newArray['auth'];?></P></TD></TR>
+				<TR VALIGN=TOP><TD class="style3" WIDTH=112><P>Encryption Type</P></TD><TD WIDTH=439><P><?php echo $newArray['encry'];?></P></TD></TR>
+				<TR VALIGN=TOP><TD class="style3" WIDTH=112><P>Radio Type</P></TD><TD WIDTH=439><P><?php echo $radio;?></P></TD></TR>
+				<TR VALIGN=TOP><TD class="style3" WIDTH=112><P>Channel #</P></TD><TD WIDTH=439><P><?php echo $newArray['chan'];?></P></TD></TR></TABLE>
 		<?php
 		?>
+		<a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>"><h3>Export this AP to KML</h3></a>
 		<h3>Signal History</h3>
 		<table border="1">
-		<tr>
+		<tr class="style3">
 		<th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th>
 		</tr>
 		<?php
@@ -703,7 +703,7 @@ class database
 			$time_last = $gps_table_last["time"];
 			$lu = $date_last." ".$time_last;
 			?>
-			<tr><td><?php echo $row; ?></td><td>
+			<tr><td align="center"><?php echo $row; ?></td><td>
 				<?php echo $field["btx"]; ?></td><td>
 				<?php echo $field["otx"]; ?></td><td>
 				<?php echo $fa; ?></td><td>
@@ -721,17 +721,17 @@ class database
 		?>
 		<h3>GPS History</h3>
 		<table border="1">
-		<tr>
+		<tr class="style3">
 		<th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
 		<?php
 		$result = mysql_query("SELECT * FROM `$table_gps`", $conn) or die(mysql_error());
 		while ($field = mysql_fetch_array($result)) 
 		{
 			?>
-			<tr><td>
+			<tr><td align="center">
 			<?php echo $field["id"]; ?></td><td>
 			<?php echo $field["lat"]; ?></td><td>
-			<?php echo $field["long"]; ?></td><td>
+			<?php echo $field["long"]; ?></td><td align="center">
 			<?php echo $field["sats"]; ?></td><td>
 			<?php echo $field["date"]; ?></td><td>
 			<?php echo $field["time"]; ?></td></tr>
@@ -745,7 +745,7 @@ class database
 		?>
 		<h3>Associated Lists</h3>
 		<table border="1">
-		<tr>
+		<tr class="style3">
 		<th>ID</th><th>User</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
 		<?php
 		mysql_select_db($db, $conn);
@@ -772,7 +772,7 @@ class database
 				$points = explode('-' , $field['points']);
 				$total = count($points);
 				?>
-				<td><a class="links" href="userstats.php?func=userap&row=<?php echo $field["id"];?>"><?php echo $field["id"];?></a></td><td><?php echo $field["username"];?></td><td><?php echo $field["title"];?></td><td><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
+				<td align="center"><a class="links" href="userstats.php?func=userap&row=<?php echo $field["id"];?>"><?php echo $field["id"];?></a></td><td><?php echo $field["username"];?></td><td><?php echo $field["title"];?></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
 				<?php
 			}
 		}
@@ -794,7 +794,7 @@ class database
 	$userarray = array();
 	?>
 		<h1>Stats For: All Users</h1>
-		<table border="1"><tr>
+		<table border="1"><tr class="style3">
 		<th>ID</th><th>UserName</th><th>Title</th><th>Number of APs</th><th>Imported On</th></tr><tr>
 	<?php
 	
@@ -847,52 +847,15 @@ class database
 	
 	
 	#========================================================================================================================#
-	#													Grab the stats for a given user										 #
-	#========================================================================================================================#
-	function userstats($user="")
-	{
-	if ($user === ""){die("Cannont have blank user.<br>Either there is an error in the code, or you did something wrong.");}
-	include('config.inc.php');
-	mysql_select_db($db,$conn);
-	?>
-	<h1>Stats For:<?php echo " ".$user;?></h1><table border="1"><tr><th>ID</th><th>Title</th><th>Number of AP's</th><th>Imported On</th></tr>
-	<?php
-	$sql = "SELECT * FROM `users` WHERE `username`='$user'";
-	$result = mysql_query($sql, $conn) or die(mysql_error());
-	while ($user_array = mysql_fetch_array($result))
-	{
-		$points = explode(",",$user_array['points']);
-		$points_c = count($points)-1;
-		if ($user_array['title'] === "" or $user_array['title'] === " "){ $user_array['title']="UNTITLED";}
-		if ($user_array['date'] === ""){ $user_array['date']="No date, hmm..";}
-		if ($user_array['notes'] === " " or $user_array['notes'] === ""){ $user_array['notes']="No Notes, hmm..";}
-		?>
-		<tr><td><?php echo $user_array['id'];?></td><td>
-		<a class="links" href="../opt/userstats.php?func=userap&row=<?php echo $user_array['id'];?>"><?php echo $user_array['title'];?></a></td><td>
-		<?php echo $points_c;?></td><td>
-		<?php echo $user_array['date'];?></td></tr>
-		<?php
-	}
-	echo "</table>";
-	}
-	
-	
-	#========================================================================================================================#
 	#													Grab All the AP's for a given user									 #
 	#========================================================================================================================#
 	
 	function all_usersap($user="")
 	{
-		include('config.inc.php');
-		mysql_select_db($db,$conn);
-		$sql = "SELECT * FROM `users` WHERE `username`='$user'";
-		$re = mysql_query($sql, $conn) or die(mysql_error());
-		#<h3><a href="../opt/userstats.php?func=expkml&row=echo $user;">Export To KML File</a></h3>
 		?>
-		<h1>Access Points For: <a href ="../opt/userstats.php?func=user&user=<?php echo $user;?>"><?php echo $user;?></a></h1>
-		
-		<table border="1"><tr><th>New/Update</th><th>Row</th><th>AP ID</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>
+			<table border="1"><tr class="style3"><th>New/Update</th><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>
 		<?php
+		include('config.inc.php');
 		mysql_select_db($db,$conn);
 		$sql = "SELECT * FROM `users` WHERE `username`='$user'";
 		$re = mysql_query($sql, $conn) or die(mysql_error());
@@ -934,11 +897,11 @@ class database
 					echo $Stat;
 					?></td><td align="center">
 					<?php
-					echo $exp_apid[1];
+					echo $exp_apid[0];
 					?>
 					</td><td align="center">
 					<?php
-					echo $exp_apid[0];
+					echo $exp_apid[1];
 					?>
 					</td><td><a class="links" href="fetch.php?id=<?php echo $apid;?>"><?php echo $ssid;?></a></td>
 					<td>
@@ -959,7 +922,7 @@ class database
 	#													Grab the AP's for a given user's Import								 #
 	#========================================================================================================================#
 
-	function usersap($row=0)
+	function userslist($row=0)
 	{
 		include('config.inc.php');
 		$pagerow =0;
@@ -1008,7 +971,7 @@ class database
 				echo '<td>'.$chan.'</td></tr>';
 			}
 		}
-	echo '<a class="links" href=../opt/userstats.php?func=expkml&row='.$user_array["id"].'>Export To KML File</a>';
+	echo '<a class="links" href=../opt/export.php?func=exp_user_list&row='.$user_array["id"].'>Export To KML File</a>';
 	echo "</table>";
 	}
 	
@@ -1017,7 +980,7 @@ class database
 	#													Export to Google KML File											 #
 	#========================================================================================================================#
 
-	function export_kml()
+	function exp_kml()
 	{
 		include('config.inc.php');
 		include('manufactures.inc.php');

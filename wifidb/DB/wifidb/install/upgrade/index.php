@@ -27,6 +27,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 
 <form action="patch.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Upgrade</h2>
+  <h3>Upgrade DB for 0.15 Build 7x to 0.16 Build 1</h3>
   <h4>Please Read <a target="_blank" href="../notes.html">these notes</a> before installing the Wireless Database</h4>
 <?php
 $gd = gd_info(); 

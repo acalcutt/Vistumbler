@@ -55,7 +55,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-15</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-18</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -92,7 +92,12 @@ while ($newArray = mysql_fetch_array($result))
 		<LI>Empty Imports are no longer allowed (should have been like that since the beginning). Also if there were any empty imports, they will not be printed out on the All Users page.</LI>
 		<LI>Added some friendly informational links.</LI>
 		<LI>Set the default values for function varibles, incase one value is left out.</LI>
-		<LI>Initial code for Export Newest AP to KML is writen, not tested yet.
+		<LI>Initial code for Export Newest AP to KML is writen, not tested yet.</LI>
+		<LI>Added Export Page at /opt/export.php, also a link on the left hand side.</LI>
+			<OL type="A">
+				<LI>Have Export users list to KML, all APs for a user to KML, export all APs in the DB to KML, and export a single AP to KML</LI>
+				<LI>Going to add the same for export to VS1</LI>
+			</OL>
 		</OL>
 	</td></tr>
 </table>

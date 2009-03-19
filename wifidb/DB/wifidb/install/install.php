@@ -31,9 +31,9 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb'"].' --> Install Page</titl
 	#													Gather the needed infomation								   	     #
 	#========================================================================================================================#
 	
-$timezn = 'Etc/GMT+5';
+$timezn = 'GMT+0';
 date_default_timezone_set($timezn);
-$date = date("m.d.Y");
+$date = date("Y-m-d");
 
 $root_sql_user	=	$_POST['root_sql_user'];
 strip_tags($root_sql_user);
@@ -176,7 +176,7 @@ if($hosturl !== "" && $root !== "")
 		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import APs</a>'),"
 		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=exportall\">Export All APs</a>'),"
 		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>'),"
-		."(6, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=allusers\">View All Users</a>'),"
 		."(7, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>')";
 }elseif($root !== "")
 { 
@@ -186,7 +186,7 @@ if($hosturl !== "" && $root !== "")
 		."(3, '<a class=\"links\" href=\"$root/import/\">Import APs</a>'),"
 		."(4, '<a class=\"links\" href=\"$root/opt/userstats.php?func=exportall\">Export All APs</a>'),"
 		."(5, '<a class=\"links\" href=\"$root/opt/search.php\">Search APs</a>'),"
-		."(6, '<a class=\"links\" href=\"$root/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"$root/opt/userstats.php?func=allusers\">View All Users</a>'),"
 		."(7, '<a class=\"links\" href=\"$root/ver.php\">WiFiDB Version</a>')";
 }else
 {
@@ -196,7 +196,7 @@ if($hosturl !== "" && $root !== "")
 		."(3, '<a class=\"links\" href=\"/wifidb/import/\">Import APs</a>'),"
 		."(4, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=exportall\">Export All APs</a>'),"
 		."(5, '<a class=\"links\" href=\"/wifidb/opt/search.php\">Search APs</a>'),"
-		."(6, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=usersall\">View All Users</a>'),"
+		."(6, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=allusers\">View All Users</a>'),"
 		."(7, '<a class=\"links\" href=\"/wifidb/ver.php\">WiFiDB Version</a>')";
 }
 $IN_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
@@ -334,11 +334,22 @@ if($AD_CF_KM_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
+
+$AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
+									."$"."ads = ''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+									."$"."tracker = ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n";
+if($AD_CF_FI_Re)
+{echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
+else{
+echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
+fwrite($fileappend, "\r\n?>");
+
+
 	#========================================================================================================================#
 	#													Install has finished										   	     #
 	#========================================================================================================================#
-
-fwrite($fileappend, "\r\n?>");
+fclose($fileappend);
+fclose($filewrite);
 echo "</table>";
 echo "<h2>Install is Finished, if all was Successfull you may now remove the Install Folder</h2>";
 $filename = $_SERVER['SCRIPT_FILENAME'];

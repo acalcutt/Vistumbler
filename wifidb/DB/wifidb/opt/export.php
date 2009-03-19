@@ -1,89 +1,153 @@
 <?php
-
-function exp_kml_user($row)
+include('../lib/config.inc.php');
+include('../lib/database.inc.php');
+?>
+<title>Wireless DataBase *Alpha*<?php echo $ver["wifidb"];?> --> Access Point Info Page</title>
+<link rel="stylesheet" href="../css/site4.0.css">
+<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
+<div align="center">
+<table border="0" width="75%" cellspacing="10" cellpadding="2">
+	<tr>
+		<td bgcolor="#315573">
+		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
+		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
+		<font color="#FFFFFF" size="2">
+            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
+		</font></b>
+		</td>
+	</tr>
+</table>
+</div>
+<div align="center">
+<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
+	<tr>
+<td width="17%" bgcolor="#304D80" valign="top">
+<?php
+mysql_select_db($db,$conn);
+$sqls = "SELECT * FROM links ORDER BY ID ASC";
+$result = mysql_query($sqls, $conn) or die(mysql_error());
+while ($newArray = mysql_fetch_array($result))
 {
-	include('config.php');
-	echo "Start of WiFi DB export to KML<BR>";
-	echo "-------------------------------<BR><BR>";
-	$open_loc = "http://www.vistumbler.net/images/program-images/open.png";
-	$wep_loc = "http://www.vistumbler.net/images/program-images/secure-wep_dead.png";
-	$wpa_loc = "http://www.vistumbler.net/images/program-images/secure_dead.png";
-
-	$sql = "SELECT * FROM `users` WHERE `id`='$row'";
-	$result = mysql_query($sql, $conn) or die(mysql_error());
-	$user_array = mysql_fetch_array($result);
-	$aps=explode("-",$user_array["points"]);
-	$date=date('YmdHis');
-	$file_ext = $$user_array["title"].'-'.$date.'.kml';
-	$filename = ('..\out\kml\\'.$file_ext);
-	// define initial write and appends
-	$filewrite = fopen($filename, "w");
-	$fileappend = fopen($filename, "a");
-	// open file and write header:
-	fwrite($fileappend, '<?xml version="1.0" encoding="UTF-8"?>\r\n<kml xmlns="http://earth.google.com/kml/2.2">\r\n<Document>\r\n<name>RanInt WifiDB KML</name>\r\n');
-	fwrite($fileappend, '<Style id="openStyleDead">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>'.$open_loc.'</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n');
-	fwrite($fileappend, '<Style id="wepStyleDead">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>'.$WEP_loc.'</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n');
-	fwrite($fileappend, '<Style id="secureStyleDead">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>'.$WPA_loc.'</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n');
-
-	$x=0;
-	$n=0;
-
-	fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n<description>APs:".$total."</description>\r\n");
-	fwrite( $fileappend, "	<Folder>\r\n<name>".$title." Access Points</name>\r\n<description>APs:".$open_t."</description>\r\n");
-
-
-	foreach($aps as $ap)
-	{
-		$ap_exp = explode("," , $ap);
-		$apid = $ap_exp[1];
-		$udflag = $ap_exp[0];
-		mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
-		$sql0 = "SELECT * FROM $wtable WHERE encry='$apid'";
-		$result = mysql_query($sql0, $conn) or die(mysql_error());
-		while ($newArray = mysql_fetch_array($result))
-		{
-		    $id = $newArray['id'];
-			$ssid = $newArray['ssid'];
-		    $mac = $newArray['mac'];
-		    $chan = $newArray['chan'];
-			$radio = $newArray['radio'];
-			$auth = $newArray['auth'];
-			$encry = $newArray['encry'];
-			if($radio=="a")
-			{$radio="802.11a";}
-			elseif($radio=="b")
-			{$radio="802.11b";}
-			elseif($radio=="g")
-			{$radio="802.11g";}
-			elseif($radio=="n")
-			{$radio="802.11n";}
-			else
-			{$radio="Unknown Radio";}
-			$table=$ssid.'-'.$mac.'-'.$auth.'-'.$encry.'-'.$radio.'-'.$chan;
-			mysql_select_db("$db_st") or die("Unable to select Database:".$db_st);
-
-			$sql6 = "SELECT * FROM $table";
-			$result6 = mysql_query($sql6, $conn) or die(mysql_error());
-			$max = mysql_num_rows($result6);
-			
-			$sql = "SELECT * FROM `$table_gps` WHERE `id`='1'";
-			$result = mysql_query($sql, $conn) or die(mysql_error());
-			$gps_table_first = mysql_fetch_array($result);
-			$date_first = $gps_table_first["date"];
-			$time_first = $gps_table_first["time"];
-			$fa = $date_first." ".$time_first;
-
-			$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
-			$result = mysql_query($sql, $conn) or die(mysql_error());
-			$gps_table_last = mysql_fetch_array($result);
-			$date_last = $gps_table_last["date"];
-			$time_last = $gps_table_last["time"];
-			$la = $date_last." ".$time_last;
-			fwrite( $fileappend, "		<Placemark>\r\n<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br />]]></description>\r\n<styleUrl>#openStyleDead</styleUrl>\r\n<Point>\r\n<coordinates>".$lat.",".$long.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-		}
-	}
-	fwrite( $fileappend, "</Folder>\r\n");
-	fwrite( $fileappend, "</Folder></Document></kml>");
-	fclose( $fileappend );
+	$testField = $newArray['links'];
+    echo "<p>$testField</p>";
 }
 ?>
+</td>
+		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+			<p align="center">
+<?php
+$database = new database();
+
+$func=$_GET['func'];
+switch($func)
+{
+	case "index":
+
+	?>
+	<form action="export.php?func=exp_user_all_kml" method="post" enctype="multipart/form-data">
+	<table border="0" cellspacing="0" cellpadding="3">
+	<tr><th colspan="2">Export All Acess Points for a User</th></tr>
+	<tr><td>Username</td><td>
+		<select name="users">
+		<?php
+		include('../lib/config.inc.php');
+		mysql_select_db($db,$conn);
+		$sql = "SELECT `username` FROM `users`";
+		$re = mysql_query($sql, $conn) or die(mysql_error());
+		while($user_array = mysql_fetch_array($re))
+		{
+			echo '<option value="'.$user_array["username"].'">'.$user_array["username"]."\r\n";
+		}
+		?>
+		</select>
+		</td></tr>
+	</table>
+	</form>
+	<form action="export.php?func=exp_single_ap" method="post" enctype="multipart/form-data">
+	<table border="0" cellspacing="0" cellpadding="3">
+	<tr><th colspan="2">Export an Acess Point to KML</th></tr>
+	<tr><td>Username</td><td>
+		<select name="ap">
+		<?php
+		include('../lib/config.inc.php');
+		mysql_select_db($db,$conn);
+		$sql = "SELECT `ssid` FROM `$wtable`";
+		$re = mysql_query($sql, $conn) or die(mysql_error());
+		while($user_array = mysql_fetch_array($re))
+		{
+			echo '<option value="'.$user_array["ssid"].'">'.$user_array["ssid"]."\r\n";
+		}
+		?>
+		</select>
+		</td></tr>
+	</table>
+	</form>
+	<table border="0" cellspacing="0" cellpadding="3">
+	<tr><th colspan="2">Export All Acess Points in the Database to KML</th></tr>
+	<tr><td><a class="links" href="export.php?func=exp_all_db_kml"></a></td></tr>
+	</table>
+	</form>
+	
+	<form action="export.php?func=exp_user_list" method="post" enctype="multipart/form-data">
+	<table border="0" cellspacing="0" cellpadding="3">
+	<tr><th colspan="2">Export a Users Import List to KML</th></tr>
+	<tr><td>Username</td><td>
+		<select name="userlist">
+		<?php
+		include('../lib/config.inc.php');
+		mysql_select_db($db,$conn);
+		$sql = "SELECT `id`,`title`, `username` FROM `users`";
+		$re = mysql_query($sql, $conn) or die(mysql_error());
+		while($user_array = mysql_fetch_array($re))
+		{
+			echo '<option value="'.$user_array["id"].'">User: '.$user_array["username"].' - Title: '.$user_array["title"]."\r\n";
+		}
+		?>
+		</select>
+		</td></tr>
+	</table>
+	</form>
+		
+	<?php
+	break;
+	#--------------------------
+	case "exp_user_all_kml":
+
+	if($_GET['user'])
+	{$user=$_GET['user'];}
+	elseif($_POST['user'];)
+	{$user = $_POST['user'];}
+	
+	$database->exp_kml($export="user", $user);
+	break;
+	#--------------------------
+	case "exp_all_db_kml":
+
+	$database->exp_kml($export="all");
+	break;
+	#--------------------------
+	case "exp_single_ap":
+
+	if($_GET['row'])
+	{$row=$_GET['row'];}
+	elseif($_POST['row'])
+	{$row = $_POST['row'];}
+	
+	$database->exp_kml($export="ap",$row);
+	break;
+	#--------------------------
+	case "exp_user_list":
+
+	if($_GET['user'])
+	{$user=$_GET['user'];}
+	elseif($_POST['user'];)
+	{$user = $_POST['user'];}
+	
+	$database->exp_kml($export="list",$user);
+	break;
+	#--------------------------
+	case NULL:
+
+	echo "You have done something wrong, go back and try again man.";
+	break;
+}

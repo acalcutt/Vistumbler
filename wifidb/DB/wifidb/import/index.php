@@ -44,7 +44,7 @@ if (isset($_GET['file']))
 echo "Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <b>".$_GET['file']."</b><br>Copy and Paste the bolded text into the file location field to import it.<br>";
 }
 
-echo "<br>The old txt summery files are supported, But will only give one GPS point and one Signal history per AP.<br>Where the VS1 file gives many GPS points<br> and many Signal history per AP<br>The username is optional, but it helps keep track of who has imported what AP's<br><br>";
+echo "<br>The old txt summery files are nolonger supported.<br>VS1 file gives many GPS points<br> and many Signal history per AP<br>The username is optional, but it helps keep track of who has imported what AP's<br><br>";
 ?>
 					<CENTER><form action="insertnew.php" method="post" enctype="multipart/form-data">
 						<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0>

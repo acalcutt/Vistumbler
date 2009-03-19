@@ -23,10 +23,10 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 	<tr>
 <td width="17%" bgcolor="#304D80" valign="top">
 <table><tr><th>Status</th><th>Step of Install</th></tr>
-<tr><TH colspan="2">Upgrade DB for 0.15 Build 75</TH><tr>
+<tr><TH colspan="2">Upgrade DB for 0.15 Build 7x to 0.16 Build 1</TH><tr>
 <?php
 
-$date = date("m.d.Y");
+$date = date("Y-m-d");
 $root_sql_user	=	$_POST['root_sql_user'];
 strip_tags($root_sql_user);
 $root_sql_pwd	=	$_POST['root_sql_pwd'];
@@ -107,10 +107,10 @@ echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`";}
 $sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES
 		(1, '<a class=\"links\" href=\"/\">Main Page</a>'),
 		(2, '<a class=\"links\" href=\"all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),
-		(3, '<a class=\"links\" href=\"import/\">Import APs</a>'),
-		(4, '<a class=\"links\" href=\"opt/userstats.php?func=exportall\">Export All APs</a>'),
-		(5, '<a class=\"links\" href=\"opt/search.php\">Search APs</a>'),
-		(6, '<a class=\"links\" href=\"opt/userstats.php?func=usersall\">View All Users</a>'),
+		(3, '<a class=\"links\" href=\"import/\">Import</a>'),
+		(4, '<a class=\"links\" href=\"opt/export.php?func=index\">Export</a>'),
+		(5, '<a class=\"links\" href=\"opt/search.php\">Search</a>'),
+		(6, '<a class=\"links\" href=\"opt/userstats.php?func=allusers\">View All Users</a>'),
 		(7, '<a class=\"links\" href=\"ver.php\">WiFiDB Version</a>')";
 $insert = mysql_query($sql, $conn) or die(mysql_error());
 
@@ -121,6 +121,20 @@ else{
 echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`; "
 		."CREATE DATABASE `$wifi_st`</td></tr>";
 }
+mysql_close($conn);
+$file_ext = 'config.inc.php';
+$filename = '../../lib/'.$file_ext;
+$fileappend = fopen($filename, "a");
+$AD_CF_FI_Re = fwrite($fileappend,"<?php\r\n#---------------- Footer Additional Info -----------------#\r\n"
+									."$"."ads = ''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+									."$"."tracker = ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n";
+if($AD_CF_FI_Re)
+{echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
+else{
+echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
+fwrite($fileappend, "\r\n?>");
+fclose($fileappend);
+fclose($filewrite);
 
 echo "</table>";
 
