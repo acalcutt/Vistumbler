@@ -1,0 +1,121 @@
+<?php
+$stime = time();
+include('../../lib/config.inc.php');
+include('../../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Fix Database Page</title>';
+?>
+<link rel="stylesheet" href="../../css/site4.0.css">
+<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
+<div align="center">
+<table border="0" width="75%" cellspacing="10" cellpadding="2">
+	<tr>
+		<td bgcolor="#315573">
+		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
+		<?php echo 'Wireless DataBase *Alpha* '.$ver["wifidb"].'</font>';?>
+		<font color="#FFFFFF" size="2">
+            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
+		</font></b>
+		</td>
+	</tr>
+</table>
+</div>
+<div align="center">
+<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90"><tr>
+<td width="17%" bgcolor="#304D80" valign="top">
+<!--LINKS-->
+</td>
+
+<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+<!--BODY-->
+<table border="1"><tr><th>Status</th><th>Step of Install</th></tr>
+<?php
+echo '<tr><TH colspan="2">Fix Erroneous Data in '.$ver['wifidb'].'</TH><tr>';
+$id 	= array();
+$ssid 	= array();
+$mac 	= array();
+$chan 	= array();
+$radio 	= array();
+$auth 	= array();
+$encry 	= array();
+
+$post_user 	=	$_POST['root_sql_user'];
+$post_pwd 	=	$_POST['root_sql_pwd'];
+
+$post_wdb_user 	=	$_POST['wdb_sql_user'];
+$post_wdb_pwd 	=	$_POST['wdb_sql_pwd'];
+
+$replace 	=	$_POST['replace'];
+$deleteap 	=	$_POST['deleteap'];
+
+if($post_wdb_user != $db_user && $post_wdb_pwd != $db_pwd)
+{die("You did not enter the correct Username/Password");}
+
+$conn 	=	mysql_pconnect($host, $post_user, $post_pwd) or die("Unable to connect to SQL server: $host");
+$AP = array();
+mysql_select_db($db,$conn);
+$sql = "SELECT * FROM `$wtable`";
+$result = mysql_query($sql, $conn) or die(mysql_error());
+while ($newArray = mysql_fetch_array($result))
+{
+    $mac = $newArray['mac'];
+	$mac_exp = str_split($mac,2);
+	$mac = implode(":",$mac_exp);
+	
+    $AP[] = array(
+					'id' => $newArray['id'],
+					'ssid' => $newArray['ssid'],
+					'mac'	=> $newArray['mac'],
+				    'chan' => $newArray['chan'],
+					'radio' => $newArray['radio'],
+					'sectype' => $newArray['sectype']
+				);
+}
+$count_aps = count($AP);
+echo "<table>";
+foreach($AP as $ap)
+{
+	mysql_select_db($db_st,$conn);
+	$table_gps = $ap["ssid"].'-'.$ap["mac"].'-'.$ap["sectype"].'-'.$ap["radio"].'-'.$ap["chan"].$gps_ext;
+	$sql_ = "SELECT * FROM `$table_gps` WHERE `time` = ''";
+	$result_ = mysql_query($sql_, $conn) or die(mysql_error());
+	while ($gpstable = mysql_fetch_array($result_))
+	{
+		echo "<td>";
+		$date = explode("-", $gpstable['date']);
+		$old_date = $date[0].'-'.$date[1].'-'.$date[2];
+		$date_count = strlen($date[0]);
+		$lat = $gpstable['lat'];
+		$long = $gpstable['long'];
+		$time = gpstable['time'];
+		$sats = $gpstable['sats'];
+		if($date_count == 2)
+		{
+			$new_date = $date[2].'-'.$date[0].'-'.$date[1];
+			echo "Old Date: $old_date<br>";
+			echo "New Date: $new_date<br>";
+			$update = "UPDATE `$table_gps` SET `lat` = '$lat', `long` = '$long', `sats` = '$sats', `date`='$new_date', `time` = '$time'";
+			$update_result = mysql_query($update, $conn) or die(mysql_error());
+			if($update_result)
+			{
+				echo 'GPS Date updated for AP '.$ap["ssid"];
+			}else
+			{
+				echo "Error updating GPS date for AP: ".$ap["ssid"];
+			}
+		}else
+		{
+			echo "GPS point for AP: ".$ap['ssid']." Does not need to be updated";
+		}
+		echo '</td></tr>';
+	}
+}
+mysql_close($conn);
+echo "</table>";
+$etime = time();
+$total_run = $etime - $stime;
+echo "<h2>Total run time: ".$total_run."<br>";
+echo "<h2>Now you can remove the /install folder from the WiFiDB install root</h2>";
+
+$filename = $_SERVER['SCRIPT_FILENAME'];
+footer($filename);
+?>
