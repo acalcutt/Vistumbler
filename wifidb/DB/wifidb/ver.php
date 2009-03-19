@@ -95,8 +95,8 @@ while ($newArray = mysql_fetch_array($result))
 		<LI>Initial code for Export Newest AP to KML is writen, not tested yet.</LI>
 		<LI>Added Export Page at /opt/export.php, also a link on the left hand side.</LI>
 			<OL type="A">
-				<LI>Have Export users list to KML, all APs for a user to KML, export all APs in the DB to KML, and export a single AP to KML</LI>
-				<LI>Going to add the same for export to VS1</LI>
+				<LI>Have Export users list to KML, all APs for a user to KML, export all APs in the DB to KML, and export a single AP to KML.</LI>
+				<LI>Going to add the same for export to VS1.</LI>
 			</OL>
 		</OL>
 	</td></tr>

@@ -35,6 +35,7 @@ while ($newArray = mysql_fetch_array($result))
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
+			<h2>Import Access Points</h2>
 <?php
 $domain = $_SERVER['HTTP_HOST'];
 if ($domain === "rihq.randomintervals.com" or $domain === "lanncafe.dynu.com" or $domain === "192.168.3.23")

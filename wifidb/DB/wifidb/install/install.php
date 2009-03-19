@@ -173,9 +173,9 @@ if($hosturl !== "" && $root !== "")
 	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
 		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
-		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=exportall\">Export All APs</a>'),"
-		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search APs</a>'),"
+		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import</a>'),"
+		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/export.php?func=index\">Export</a>'),"
+		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search</a>'),"
 		."(6, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=allusers\">View All Users</a>'),"
 		."(7, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>')";
 }elseif($root !== "")
@@ -183,9 +183,9 @@ if($hosturl !== "" && $root !== "")
 	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"$root/\">Main Page</a>'),"
 		."(2, '<a class=\"links\" href=\"$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
-		."(3, '<a class=\"links\" href=\"$root/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"$root/opt/userstats.php?func=exportall\">Export All APs</a>'),"
-		."(5, '<a class=\"links\" href=\"$root/opt/search.php\">Search APs</a>'),"
+		."(3, '<a class=\"links\" href=\"$root/import/\">Import</a>'),"
+		."(4, '<a class=\"links\" href=\"$root/opt/export.php?func=index\">Export</a>'),"
+		."(5, '<a class=\"links\" href=\"$root/opt/search.php\">Search</a>'),"
 		."(6, '<a class=\"links\" href=\"$root/opt/userstats.php?func=allusers\">View All Users</a>'),"
 		."(7, '<a class=\"links\" href=\"$root/ver.php\">WiFiDB Version</a>')";
 }else
@@ -193,9 +193,9 @@ if($hosturl !== "" && $root !== "")
 	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"/wifidb\">Main Page</a>'),"
 		."(2, '<a class=\"links\" href=\"/wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
-		."(3, '<a class=\"links\" href=\"/wifidb/import/\">Import APs</a>'),"
-		."(4, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=exportall\">Export All APs</a>'),"
-		."(5, '<a class=\"links\" href=\"/wifidb/opt/search.php\">Search APs</a>'),"
+		."(3, '<a class=\"links\" href=\"/wifidb/import/\">Import</a>'),"
+		."(4, '<a class=\"links\" href=\"/wifidb/opt/export.php?func=index\">Export</a>'),"
+		."(5, '<a class=\"links\" href=\"/wifidb/opt/search.php\">Search</a>'),"
 		."(6, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=allusers\">View All Users</a>'),"
 		."(7, '<a class=\"links\" href=\"/wifidb/ver.php\">WiFiDB Version</a>')";
 }
@@ -268,7 +268,7 @@ echo "<tr><td>Failure..........</td><td>Add default debug values</td></tr>";}
 
 #add url info
 $AD_CF_UR_Re = fwrite($fileappend, "#---------------- URL Info ----------------#\r\n"
-									."$"."root		=	'$root';\r\n"
+									."$"."root		=	'/$root';\r\n"
 									."$"."hosturl	=	'$hosturl';\r\n\r\n");
 
 if($AD_CF_UR_Re)
@@ -328,7 +328,8 @@ $AD_CF_KM_Re = fwrite($fileappend, "#---------------- KML Info ----------------#
 							."$"."open_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
 							."$"."WEP_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
 							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
-							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n");
+							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
+							."$"."kml_out				=	'../out/kml/';");
 if($AD_CF_KM_Re)
 {echo "<tr><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{

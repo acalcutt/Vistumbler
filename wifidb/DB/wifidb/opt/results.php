@@ -47,12 +47,12 @@ strip_tags($_POST['chan']);
 strip_tags($_POST['auth']);
 strip_tags($_POST['encry']);
 
-if ($_POST['ssid'] !== '')	{ $sql_a[]	=	" `ssid` = '".$_POST['ssid']."' ";}
-if ($mac_post !== '')		{ $sql_a[]	=	" `mac` = '".$mac_post."' ";}
-if ($_POST['radio'] !== '')	{ $sql_a[]	=	" `radio` = '".$_POST['radio']."' ";}
-if ($_POST['chan'] !== '')	{ $sql_a[]	=	" `chan` = '".$_POST['chan']."' ";}
-if ($_POST['auth'] !== '')	{ $sql_a[]	=	" `auth` = '".$_POST['auth']."' ";}
-if ($_POST['encry'] !== '')	{ $sql_a[]	=	" `encry` = '".$_POST['encry']."' ";}
+if ($_POST['ssid']	!== '')	{ $sql_a[]	=	" `ssid` = '".$_POST['ssid']."' ";}
+if ($mac_post		!== '')	{ $sql_a[]	=	" `mac` = '".$mac_post."' ";}
+if ($_POST['radio']	!== '')	{ $sql_a[]	=	" `radio` = '".$_POST['radio']."' ";}
+if ($_POST['chan']	!== '')	{ $sql_a[]	=	" `chan` = '".$_POST['chan']."' ";}
+if ($_POST['auth']	!== '')	{ $sql_a[]	=	" `auth` = '".$_POST['auth']."' ";}
+if ($_POST['encry']	!== '')	{ $sql_a[]	=	" `encry` = '".$_POST['encry']."' ";}
 
 echo '<table border="1" width="100%" cellspacing="0">'
 .'<tr><th>SSID</th>'
@@ -80,12 +80,18 @@ $x=0;
 $n=0;
 $to=$from+$inc;
 
+if(!$sql_a)
+{
+	echo '<tr><td colspan="6" align="center">There where no results, please try again</td></tr></table>'; 
+	$filename = $_SERVER['SCRIPT_FILENAME'];
+	footer($filename);
+	die();
+}
 mysql_select_db($db,$conn);
 $sql0 = "SELECT * FROM $wtable WHERE " . implode(' AND ', $sql_a) ." ORDER BY $sort $ord";
 $result = mysql_query($sql0, $conn) or die(mysql_error());
 $total_rows = mysql_num_rows($result);
-
-if($total_rows == 0)
+if($total_rows === 0)
 {
 	echo '<tr><td colspan="6" align="center">There where no results, please try again</td></tr></table>'; 
 	$filename = $_SERVER['SCRIPT_FILENAME'];
@@ -122,4 +128,5 @@ while ($newArray = mysql_fetch_array($result))
 echo "</table>";
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);?>
+footer($filename);
+?>

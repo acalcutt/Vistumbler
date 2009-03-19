@@ -54,7 +54,6 @@ if (!move_uploaded_file($source, $uploadfile)) {echo "Failure.\n";}
 print "</pre>";
 $database = new database();
 $database->import_vs1($uploadfile, $user, $notes, $title );
-# database::vs1_2_kml($source);
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);

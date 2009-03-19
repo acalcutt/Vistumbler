@@ -32,7 +32,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Main Page</title>';
 <?php
 $usersa = array();
 mysql_select_db($db,$conn);
-$sql = "SELECT * FROM links ORDER BY ID ASC";
+$sql = "SELECT * FROM `links` ORDER BY ID ASC";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 while ($newArray = mysql_fetch_array($result))
 {
@@ -40,30 +40,30 @@ while ($newArray = mysql_fetch_array($result))
     echo "<p>$testField</p>";
 }
 
-$sql = "SELECT size FROM `settings`";
+$sql = "SELECT `size` FROM `settings`";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $DB_size = mysql_fetch_array($result);
 $total = $DB_size['size'];
 
-$sql = "SELECT id FROM `$wtable` WHERE `sectype`='1'";
+$sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='1'";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $open = mysql_num_rows($result);
 
-$sql = "SELECT id FROM `$wtable` WHERE `sectype`='2'";
+$sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='2'";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $WEP = mysql_num_rows($result);
 
-$sql = "SELECT id FROM `$wtable` WHERE `sectype`='3'";
+$sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='3'";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $Sec = mysql_num_rows($result);
 
-$sql = "SELECT id,ssid FROM `$wtable` ORDER BY ID DESC LIMIT 1";
+$sql = "SELECT `id`,`ssid` FROM `$wtable` ORDER BY ID DESC LIMIT 1";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $lastap_array = mysql_fetch_array($result);
 $lastap_id = $lastap_array['id'];
 $lastap_ssid = $lastap_array['ssid'];
 
-$sql = "SELECT username FROM `users`";
+$sql = "SELECT `username` FROM `users`";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $row_users = mysql_num_rows($result);
 while($user_array = mysql_fetch_array($result))
@@ -117,7 +117,7 @@ if ($usercount == NULL){$lastuser['username'] = "No one has imported any APs yet
 	<tr>
 		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
 		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=allap&user=<?php echo $lastuser['username'];?>"><?php echo $lastuser['username'];?></a></td>
-		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No AP";}else{?><a class="links" href="opt/fetch.php?id="<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
+		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No AP";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
 		<td align="center" class="style2">&nbsp;</td>
 	</tr>
 </table>

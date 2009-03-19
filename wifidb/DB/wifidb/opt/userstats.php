@@ -33,53 +33,40 @@ while ($newArray = mysql_fetch_array($result))
 }
 ?>
 </td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
+	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+		<p align="center">
 <?php
 $database = new database();
 $func=$_GET['func'];
 switch($func)
 {
-	case "user":
-	$user=$_GET['user'];
-	?>
-	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>
-	<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $user;?>"><?php echo $user;?></a>
-	<?php
-	$database->userstats($user);
-	break;
+	case "alluserlists":
+		$user=$_GET['user'];
+		$database->users_lists($user);
+		break;
 	#-------------
 	
-	case "userap":
-	?>
-	<h3>View All Users <a class="links" href="userstats.php?func=usersall">Here</a></h3>
-	<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $user;?>"><?php echo $user;?></a>
-	<h3>Export This list
-	<?php
-	$row=$_GET['row'];
-	$database->userslist($row);
-	break;
+	case "useraplist":
+		$row=$_GET['row'];
+		$database->user_ap_list($row);
+		break;
 	#-------------
 	
-	case "usersall":
-	$database->allusers();
-	break;
+	case "allusers":
+		$database->all_users();
+		break;
 	#-------------
 	
 	case "allap":
-	$user = $_GET['user'];
-	?>
-		<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=user&user=<?php echo $user;?>"><?php echo $user;?></a></h1>
-		<h3><a class="links" href="../opt/export.php?func=exp_user_all_kml&user=<?php echo $user;?>">Export To KML File</a></h3>
-	<?php
-	$database->all_usersap($user);
-	break;
+		$user = $_GET['user'];
+		$database->all_users_ap($user);
+		break;
 	#-------------
 	
 	case "":
-	?>
-	<h1>Hey you can do that!, Go back and do it right</h1>
-	<?php
+		?>
+		<h1>Hey you can do that!, Go back and do it right</h1>
+		<?php
 }
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);
