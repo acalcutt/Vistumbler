@@ -619,13 +619,13 @@ class database
 	#													GPS check, make sure there are no duplicates						 #
 	#========================================================================================================================#
 
-	function &check_gps_array($gpsarrayarray=array(0=>array('lat'=>"","long"=>"")), $test=array('lat'=>"","long"=>""))
+	function &check_gps_array($gpsarray, $test)
 	{
 	foreach($gpsarray as $gps)
 	{
-		$gps_t 	=  $gps["lat"]."-".$gps["long"];
-		$test_t = $test["lat"]."-".$test["long"]; 
-		if (strcmp($gps_t,$test_t)== 0 )
+		$gps_t 	= $gps["lat"]."-".$gps["long"]."-".$gps["sats"]."-".$gps["date"]."-".$gps["time"];
+		$test_t = $test["lat"]."-".$test["long"]."-".$test["sats"]."-".$test["date"]."-".$test["time"]; 
+		if (strcmp($gps_t,$test_t)=== 0 )
 		{
 			if ($GLOBALS["debug"]  == 1 ) {
 				echo  "  SAME<br>";
@@ -1046,15 +1046,7 @@ class database
 				$result = mysql_query($sql, $conn) or die(mysql_error());
 				while($ap_array = mysql_fetch_array($result))
 				{
-					$man_mac = str_split($ap_array['mac'],6);
-					if(!is_null($manufactures[$man_mac[0]]))
-					{
-						$manuf = $manufactures[$man_mac[0]];
-					}
-					else
-					{
-						$manuf = "Unknown Manufacture";
-					}
+					$manuf = database::manufactures($macaddress);
 					$aps[] = array(
 									'id' => $ap_array['id'],
 									'ssid' => $ap_array['ssid'],
@@ -1745,8 +1737,174 @@ class database
 				}
 				$fileappend = fopen($filename, "a");
 				fwrite($fileappend, $filedata);
+				fclose( $fileappend );
 				echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
 				mysql_close($conn);
+		}
+	}
+
+	function exp_vs1($export = "", $user = "", $row = 0)
+	{
+		include('config.inc.php');
+		include('manufactures.inc.php');
+		$gps_array = array();
+		switch ($export)
+		{
+			case "exp_all_db_vs1":
+				$n	=	1; # GPS Array KEY -has to start at 1 vistumbler will error out if the first GPS point has a key of 0
+				$nn	=	1; # AP Array key
+				echo '<table><tr><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to VS1</th></tr>';
+				mysql_select_db($db,$conn) or die("Unable to select Database: ".$db);
+				$sql_		= "SELECT * FROM `$wtable`";
+				$result_	= mysql_query($sql_, $conn) or die(mysql_error());
+				while($ap_array = mysql_fetch_array($result_))
+				{
+					$manuf = database::manufactures($ap_array['mac']);
+					switch($ap_array['sectype'])
+						{
+							case 1:
+								$type = "#openStyleDead";
+								$auth = "Open";
+								$encry = "None";
+								break;
+							case 2:
+								$type = "#wepStyleDead";
+								$auth = "Open";
+								$encry = "WEP";
+								break;
+							case 3:
+								$type = "#secureStyleDead";
+								$auth = "WPA-Personal";
+								$encry = "TKIP-PSK";
+								break;
+						}
+					switch($ap_array['radio'])
+						{
+							case "a":
+								$radio="802.11a";
+								break;
+							case "b":
+								$radio="802.11b";
+								break;
+							case "g":
+								$radio="802.11g";
+								break;
+							case "n":
+								$radio="802.11n";
+								break;
+							default:
+								$radio="Unknown Radio";
+								break;
+						}
+					mysql_select_db($db_st,$conn) or die("Unable to select Database: ".$db_st);
+					
+					$table	=	$ap_array['ssid'].'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
+					$sql	=	"SELECT * FROM `$table`";
+					$result	=	mysql_query($sql, $conn) or die(mysql_error());
+					$rows	=	mysql_num_rows($result);
+					
+					$sql1 = "SELECT * FROM `$table` WHERE `id` = '$rows'";
+					$result1 = mysql_query($sql1, $conn) or die(mysql_error());
+					$newArray = mysql_fetch_array($result1);
+					echo $nn."<BR>";
+					$otx	= $newArray["otx"];
+					$btx	= $newArray["btx"];
+					$nt		= $newArray['nt'];
+					$label	= $newArray['label'];
+					$signal	= $newArray['sig'];
+					$aps[$nn]	= array(
+										'id'		=>	$ap_array['id'],
+										'ssid'		=>	$ap_array['ssid'],
+										'mac'		=>	$ap_array['mac'],
+										'sectype'	=>	$ap_array['sectype'],
+										'r'			=>	$ap_array['radio'],
+										'radio'		=>	$radio,
+										'chan'		=>	$ap_array['chan'],
+										'man'		=>	$manuf,
+										'type'		=>	$type,
+										'auth'		=>	$auth,
+										'encry'		=>	$encry,
+										'label'		=>	$label,
+										'nt'		=>	$nt,
+										'btx'		=>	$btx,
+										'otx'		=>	$otx,
+										'sig'		=>	$signal
+										);
+					$nn++;
+				}
+				$signals = array();
+				foreach($aps as $key=>$ap)
+				{
+					$sig		=	$ap['sig'];
+					$signals	=	explode("-", $sig);
+	#				echo $sig."<BR>";
+					$table_gps		=	$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['r'].'-'.$ap['chan'].$gps_ext;
+					echo $table_gps."<BR>";
+					foreach($signals as $sign)
+					{
+						mysql_select_db($db_st,$conn) or die("Unable to select Database: ".$db_st);
+						$sig_exp = explode(",", $sign);
+						$gps_id	= $sig_exp[0];
+						
+						$sql1 = "SELECT * FROM `$table_gps` WHERE `id` = '$gps_id'";
+						$result1 = mysql_query($sql1, $conn) or die(mysql_error());
+						$gps_table = mysql_fetch_array($result1);
+						$gps_array[$n]	=	array(
+												"lat" => $gps_table['lat'],
+												"long" => $gps_table['long'],
+												"sats" => $gps_table['sats'],
+												"date" => $gps_table['date'],
+												"time" => $gps_table['time']
+												);
+						$n++;
+						$signals[] = $n.",".$sig_exp[1];
+					}
+					$sig_new = implode("-", $signals);
+					$aps[$key]['sig'] = $sig_new;
+					echo $aps[$key]['sig']."<BR>";
+				}
+				#$gps_array = array_unique($gps_array);
+		#		var_dump($gps_array);
+				
+				$date		=	date('Y-m-d_H-i-s');
+				$file_ext	=	$date."_entire_db.vs1";
+				$filename	=	$vs1_out.$file_ext;
+				// define initial write and appends
+				$filewrite	=	fopen($filename, "w");
+				$fileappend	=	fopen($filename, "a");
+				
+				$h1 = "#  Vistumbler VS1 - Detailed Export Version 1.2\r\n# Created By: RanInt WiFi DB Alpha 0.16 Build 1 \r\n# -------------------------------------------------\r\n# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)\r\n# -------------------------------------------------\r\n";
+				fwrite($fileappend, $h1);
+				
+				foreach( $gps_array as $key=>$gps )
+				{
+					$lat	=	$gps['lat'];
+					$long	=	$gps['long'];
+					$sats	=	$gps['sats'];
+					$date	=	$gps['date'];
+					$time	=	$gps['time'];
+					if ($GLOBALS["debug"] ==1 ){echo "Lat : ".$lat." - Long : ".$long."\n";}
+					$gpsd = $key."|".$lat."|".$long."|".$sats."|".$date."|".$time."\r\n";
+					if($GLOBALS["debug"] == 1){ echo $gpsd;}
+					fwrite($fileappend, $gpsd);
+				}
+				$ap_head = "# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GpsID,SIGNAL\r\n# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n";
+				fwrite($fileappend, $ap_head);
+				foreach($aps as $ap)
+				{
+					$apd = $ap['ssid']."|".$ap['mac']."|".$ap['man']."|".$ap['auth']."|".$ap['encry']."|".$ap['sectype']."|".$ap['radio']."|".$ap['chan']."|".$ap['btx']."|".$ap['otx']."|".$ap['nt']."|".$ap['label']."|".$ap['sig']."\r\n";
+					fwrite($fileappend, $apd);
+				}
+				fclose($fileappend);
+				fclose($filewrite);
+				mysql_close($conn);
+				$end 	=	date("H:i:s");
+				$GPSS	=	count($gps_array);
+				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote # GPS Points: '.$GPSS.'</td></tr>';
+				$APSS	=	count($aps);
+				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote # Access Points: '.$APSS.'</td></tr>';
+				echo '<tr><td style="border-style: solid; border-width: 1px">Your Vistumbler VS1 file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
+				break;
 		}
 	}
 }#end DATABASE CLASS

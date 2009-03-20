@@ -128,11 +128,19 @@ $fileappend = fopen($filename, "a");
 $AD_CF_FI_Re = fwrite($fileappend,"<?php\r\n#---------------- Footer Additional Info -----------------#\r\n"
 									."$"."ads		=	''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
 									."$"."tracker	=	''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n"
-									."$"."kml_out	=	'../out/kml/';");
+									."$"."kml_out	=	'../out/kml/';\r\n$"."vs1_out	=	'../out/vs1/';"
+									"\r\n\r\n date_default_timezone_set('GMT+0');");
 if($AD_CF_FI_Re)
 {echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
 echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
+
+$install_warning = fwrite($fileappend,"if(is_dir('install')){echo '<h2>The install Folder is still there, remove it!</h2>';}\nelseif(is_dir('../install')){echo '<h2>The install Folder is still there, remove it!</h2>';}");
+if($install_warning)
+{echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
+else{
+echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
+
 fwrite($fileappend, "\r\n?>");
 fclose($fileappend);
 fclose($filewrite);

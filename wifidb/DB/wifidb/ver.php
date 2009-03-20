@@ -55,7 +55,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-18</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-20</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -79,25 +79,33 @@ while ($newArray = mysql_fetch_array($result))
 						<LI>New way ex <font color="red">1</font>,<font color="Yellow">6</font>:<font color="Green">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>:<font color="Green">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">3</font>-<font color="red">1</font>,<font color="Yellow">10</font>:<font color="Green">1</font>-... /<br> <font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">2</font> ; <font color="red">0</font> is the update or new flag 1 = Updated AP / 0 = New AP, the <font color="Yellow">6</font> is the Unique Access Point ID (UAPID) in the Database, and the <font color="Green">2</font> is the Signal History row number for the access point.)</LI>
 					</OL>
 			</OL>
-		<LI>The users table holds all the list imports for each user.</LI>
-		<LI>Fixed a bug when a search has no results, the page would output a PHP error, now it says "There where no results, please try again".</LI>
-		<LI>Fixed an issue, where on install there would be an SQL error and fail to install.</LI>
-		<LI>Added link to Last User on Index page.</LI>
-		<LI>Cleaned up the tables on the new version page.</LI>
-		<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumblers save file.</LI>
-		
-		<LI>Fixed up the List KML export, there is a link to the KML file now.</LI>
-		<LI>Finished KML export for entire database.</LI>
-		<LI>Added option for a black background on the Signal Graphs.</LI>
-		<LI>Empty Imports are no longer allowed (should have been like that since the beginning). Also if there were any empty imports, they will not be printed out on the All Users page.</LI>
-		<LI>Added some friendly informational links.</LI>
-		<LI>Set the default values for function varibles, incase one value is left out.</LI>
-		<LI>Initial code for Export Newest AP to KML is writen, not tested yet.</LI>
-		<LI>Added Export Page at /opt/export.php, also a link on the left hand side.</LI>
-			<OL type="A">
-				<LI>Have Export users list to KML, all APs for a user to KML, export all APs in the DB to KML, and export a single AP to KML.</LI>
-				<LI>Going to add the same for export to VS1.</LI>
-			</OL>
+			<LI>The users table holds all the list imports for each user.</LI>
+			<LI>Fixed a bug when a search has no results, the page would output a PHP error, now it says "There where no results, please try again".</LI>
+			<LI>Fixed an issue, where on install there would be an SQL error and fail to install.</LI>
+			<LI>Added link to Last User on Index page.</LI>
+			<LI>Cleaned up the tables on the new version page.</LI>
+			<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumblers save file.</LI>
+			
+			<LI>Fixed up the List KML export, there is a link to the KML file now.</LI>
+			<LI>Finished KML export for entire database.</LI>
+			<LI>Added option for a black background on the Signal Graphs.</LI>
+			<LI>Empty Imports are no longer allowed (should have been like that since the beginning). Also if there were any empty imports, they will not be printed out on the All Users page.</LI>
+			<LI>Added some friendly informational links.</LI>
+			<LI>Set the default values for function varibles, incase one value is left out.</LI>
+			<LI>Initial code for Export Newest AP to KML is writen, not tested yet.</LI>
+			<LI>Added Export Page at /opt/export.php, also a link on the left hand side.</LI>
+				<OL type="A">
+					<LI>Have Export users list to KML, all APs for a user to KML, export all APs in the DB to KML, and export a single AP to KML.</LI>
+					<LI>Going to add the same for export to VS1.</LI>
+				</OL>
+			<LI>The warning for the install folder sitll being available wasnot added into the installer. It now is, and also in the upgrader too.</LI>
+			<LI>Made the Default App internal timezone, GMT+0(Zulu).</LI>
+				<OL>
+					<LI>Soon you will beable to make the viewing time as your local timezon.</LI>
+					<LI><a class="links" href="http://wwp.greenwichmeantime.com/">greenwichmeantime.com</a></LI>
+					<LI><a class="links" href="http://en.wikipedia.org/wiki/Greenwich_Mean_Time">wikipedia -> Greenwich_Mean_Time</a></LI>
+				</OL>
+			<LI></LI>
 		</OL>
 	</td></tr>
 </table>

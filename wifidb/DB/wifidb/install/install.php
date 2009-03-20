@@ -324,12 +324,13 @@ if($AD_CF_SU_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Adding SQL Connection Info</td></tr>";}
 
-$AD_CF_KM_Re = fwrite($fileappend, "#---------------- KML Info ----------------#\r\n"
+$AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info ----------------#\r\n"
 							."$"."open_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
 							."$"."WEP_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
 							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
 							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
-							."$"."kml_out				=	'../out/kml/';");
+							."$"."kml_out				=	'../out/kml/';"
+							."$"."vs1_out				=	'../out/vs1/';");
 if($AD_CF_KM_Re){echo "<tr><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
@@ -341,8 +342,10 @@ if($AD_CF_FI_Re)
 {echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
 echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
-fwrite($fileappend, "\r\n?>");
 
+$install_warning = fwrite($fileappend,"\r\n\r\nif(is_dir('install')){echo '<h2>The install Folder is still there, remove it!</h2>';}\nelseif(is_dir('../install')){echo '<h2>The install Folder is still there, remove it!</h2>';}");
+if($install_warning){}
+fwrite($fileappend, "\r\n?>");
 
 	#========================================================================================================================#
 	#													Install has finished										   	     #
