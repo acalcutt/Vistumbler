@@ -330,15 +330,13 @@ $AD_CF_KM_Re = fwrite($fileappend, "#---------------- KML Info ----------------#
 							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
 							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
 							."$"."kml_out				=	'../out/kml/';");
-if($AD_CF_KM_Re)
-{echo "<tr><td>Success..........</td><td>Add KML Info</td></tr>";}
-else{
-echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
+if($AD_CF_KM_Re){echo "<tr><td>Success..........</td><td>Add KML Info</td></tr>";}
+else{echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
 
 $AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
-									."$"."ads = ''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
-									."$"."tracker = ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n";
+								."$"."ads = ''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+								."$"."tracker = ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
 if($AD_CF_FI_Re)
 {echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{

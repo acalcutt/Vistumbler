@@ -1,8 +1,23 @@
 wiFiDB CLI Folder
+http://www.randomintervals.com/
+
+    This program is free software; you can redistribute it and/or modify it under
+	the terms of the GNU General Public License version 2, as published by the 
+	Free Software Foundation.   This program is distributed in the hope that it 
+	will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
+	of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General 
+	Public License for more details. You should have received a copy of the GNU 
+	General Public License along with this program; if not, you can get it at: 
+	
+		Free Software Foundation, Inc.,
+		51 Franklin St, Fifth Floor
+		Boston, MA  02110-1301 USA
+	
+	Or go here:  http://www.gnu.org/licenses/gpl-2.0.txt
 
 1 -> Convert Txt to VS1 (Converter.exe | converter.php).
 2 -> Manufactures Generation script (manufmac.exe | manufmac.php).
-
+3 -> Wireless Database Batch Import script [command line only].
 --------------------------------------------------------------
 --------------------------------------------------------------
 1			Convert Txt to VS1
@@ -20,7 +35,7 @@ To run the exe just put the properly formated Txt file from Vistumbler in the TX
 Or go to a command propmt and run it via that.
 
 
-To run this scrip stand-alone all you need to do is download the PHP package from [url]http://us2.php.net/get/php-5.2.6-Win32.zip/from/a/mirror[/url]
+To run this scrip stand-alone all you need to do is download the PHP package from [http://us2.php.net/get/php-5.2.6-Win32.zip/from/a/mirror]
 
 Browse to Y:\[Path to PHP]\bin\ 
                -  Where Y is the drive you have PHP installed in and [Path to PHP] is where PHP is stored on the drive.
@@ -142,7 +157,6 @@ VERSION HISTORY
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 Initial release, was just WiFiDB generation, no Vistumbler yet.
-
 ==============================
 
 ~~~~~~~~~~~~
@@ -179,4 +193,46 @@ Initial release, was just WiFiDB generation, no Vistumbler yet.
 ~~~~~~~~~~~~
 1-> Fixed a bug where I forgot to replace the value of $cwd with getcwd().
 2-> Changed the creation of the files so that they are both created at the same time.
+==============================
+
+
+
+
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+3		Wireless Database Batch Import script [command line only]
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+Usage: 
+	import.php --wifidb="/var/www/wifidb" --user="admin" --notes="These, are the notes!" --title="Import"
+
+	--wifidb	-	The folder that is where WiFiDB is installed
+					this is so that we can use the config file to
+					connect to MySQL and import the Access points
+	--user		-	The User name that will show up as importing
+					the all the access points into the database
+					for a batch import.
+	--notes		-	This will be put in each list that is imported
+					into the database.
+	--title		-	This will give a title to the batch import,
+					each list will have a title of 'Batch: *title*'
+
+All the options are needed, except for the notes and possibly the title if you want 
+all your titles to be "Batch: ". Otherwise they will be "Batch: Import", or whatever 
+you put as the Batch Import title name that will replace 'Import' in this example.
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Initial release
 ==============================

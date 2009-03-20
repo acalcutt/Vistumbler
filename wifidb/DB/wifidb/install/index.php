@@ -84,6 +84,27 @@ $timezn = 'Etc/GMT+5';
 date_default_timezone_set($timezn);
 
 
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
-?>
+	$filename = $_SERVER['SCRIPT_FILENAME'];
+	$file_ex = explode("/", $filename);
+	$count = count($file_ex);
+	$file = $file_ex[($count)-1];
+	?>
+	</p>
+	</td>
+	</tr>
+	<tr>
+	<td bgcolor="#315573" height="23"><a href="<?php echo $root; ?>/img/moon.png"><img border="0" src="<?php echo $root; ?>/img/moon_tn.png"></a></td>
+	<td bgcolor="#315573" width="0" align="center">
+	<?php
+	if (file_exists($filename)) {?>
+		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
+	<?php
+	}
+	echo $tracker;
+	echo $ads;
+	?>
+	</td>
+	</tr>
+	</table>
+	</body>
+	</html>
