@@ -204,6 +204,18 @@ Func _CreateField($s_dbname, $s_Tablename, $s_Fieldname, $format, ByRef $o_adoCo
 	If $i_NeedToCloseInFunc Then $o_adoCon.Close
 EndFunc   ;==>_CreateField
 
+Func _DropField($s_dbname, $s_Tablename, $s_Fieldname, ByRef $o_adoCon, $i_adoMDB = 1, $USRName = "", $PWD = "")
+	If Not IsObj($o_adoCon) Then
+		_AccessConnectConn($s_dbname, $o_adoCon, $i_adoMDB, $USRName, $PWD)
+		$i_NeedToCloseInFunc = 1
+	Else
+		$i_NeedToCloseInFunc = 0
+	EndIf
+	;if not _FieldExists($addField, $s_Tablename, $s_Fieldname) then
+	$o_adoCon.Execute("ALTER TABLE " & $s_Tablename & " DROP " & $s_Fieldname)
+	If $i_NeedToCloseInFunc Then $o_adoCon.Close
+EndFunc   ;==>_CreateField
+
 Func _AccessAddData($s_dbname, $s_Tablename, $s_Fieldname, $s_i_value, ByRef $o_adoCon, $i_adoMDB = 1, $USRName = "", $PWD = "")
 	If Not IsObj($o_adoCon) Then
 		_AccessConnectConn($s_dbname, $o_adoCon, $i_adoMDB, $USRName, $PWD)

@@ -4,25 +4,25 @@
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
-;Get Date Format--------------------------------------------------------
-Dim $SettingsDir = @ScriptDir & '\Settings\'
-Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
-Dim $DateFormat = IniRead($settings, 'Vistumbler', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
-;--------------------------------------------------------
-;AutoIt Version: v3.2.13.13 Beta
-$Script_Author = 'Andrew Calcutt'
-$Script_Name = 'Vistumbler'
-$Script_Website = 'http://www.Vistumbler.net'
-$Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.2 Beta 2.1'
-$Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/03/16')
-$title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;License Information------------------------------------
 ;Copyright (C) 2008 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+;Get Date Format--------------------------------------------------------
+Dim $SettingsDir = @ScriptDir & '\Settings\'
+Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
+Dim $DateFormat = IniRead($settings, 'Vistumbler', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
+;--------------------------------------------------------
+;AutoIt Version: v3.3.0.0
+$Script_Author = 'Andrew Calcutt'
+$Script_Name = 'Vistumbler'
+$Script_Website = 'http://www.Vistumbler.net'
+$Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
+$version = '9.2 Beta 3'
+$Script_Start_Date = _DateLocalFormat('2007/07/10')
+$last_modified = _DateLocalFormat('2009/03/22')
+$title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -121,6 +121,15 @@ Dim $Longitude = 'E 0.0000'
 Dim $Latitude2 = 'N 0.0000'
 Dim $Longitude2 = 'E 0.0000'
 Dim $NumberOfSatalites = '00'
+Dim $HorDilPitch = '0'
+Dim $Alt = '0'
+Dim $AltS = 'M'
+Dim $Geo = '0'
+Dim $GeoS = 'M'
+Dim $SpeedInKnots = '0'
+Dim $SpeedInMPH = '0'
+Dim $SpeedInKmH = '0'
+Dim $TrackAngle = '0'
 Dim $TurnOffGPS = 0
 Dim $UseGPS = 0
 Dim $Scan = 0
@@ -169,7 +178,7 @@ Dim $TreeviewAPs_left, $TreeviewAPs_width, $TreeviewAPs_top, $TreeviewAPs_height
 Dim $ListviewAPs_left, $ListviewAPs_width, $ListviewAPs_top, $ListviewAPs_height
 Dim $Graphic_left, $Graphic_width, $Graphic_top, $Graphic_height
 
-Dim $FixTime, $FixTime2, $FixDate, $Quality, $HorDilPitch, $Alt, $AltS, $Geo, $GeoS, $Status, $SpeedInKnots, $SpeedInMPH, $SpeedInKmH, $TrackAngle
+Dim $FixTime, $FixTime2, $FixDate, $Quality
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
 Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
@@ -658,6 +667,31 @@ If FileExists($VistumblerDB) Then
 		$GPS_ID = UBound($GpsMatchArray) - 1
 		$query = "DELETE * FROM TreeviewPos"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		;Fix missing GPS table fields (MDB backward compatibitly fix)
+		If _FieldExists($VistumblerDB, 'GPS', 'TrackAngle') <> 1 Then
+			;Create new fields
+			_CreateField($VistumblerDB, "GPS", "HorDilPitch", "TEXT(255)", $DB_OBJ)
+			_CreateField($VistumblerDB, "GPS", "Alt", "TEXT(255)", $DB_OBJ)
+			_CreateField($VistumblerDB, "GPS", "Geo", "TEXT(255)", $DB_OBJ)
+			_CreateField($VistumblerDB, "GPS", "SpeedInKmh", "TEXT(255)", $DB_OBJ)
+			_CreateField($VistumblerDB, "GPS", "SpeedInMPH", "TEXT(255)", $DB_OBJ)
+			_CreateField($VistumblerDB, "GPS", "TrackAngle", "TEXT(255)", $DB_OBJ)
+			$query = "UPDATE GPS SET HorDilPitch = '0', Alt = '0', Geo = '0', SpeedInKmh = '0', SpeedInMPH = '0', TrackAngle = '0'"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+			;Move date and time to proper position in the table (the long way....since I could not get renaming of the field to work)
+			_CreateField($VistumblerDB, "GPS", "Date2", "TEXT(255)", $DB_OBJ)
+			_CreateField($VistumblerDB, "GPS", "Time2", "TEXT(255)", $DB_OBJ)
+			$query = "UPDATE GPS SET Date2 = Date1, Time2 = Time1"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+			_DropField($VistumblerDB, "GPS", "Date1", $DB_OBJ)
+			_DropField($VistumblerDB, "GPS", "Time1", $DB_OBJ)
+			_CreateField($VistumblerDB, "GPS", "Date1", "TEXT(255)", $DB_OBJ)
+			_CreateField($VistumblerDB, "GPS", "Time1", "TEXT(255)", $DB_OBJ)
+			$query = "UPDATE GPS SET Date1 = Date2, Time1 = Time2"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+			_DropField($VistumblerDB, "GPS", "Date2", $DB_OBJ)
+			_DropField($VistumblerDB, "GPS", "Time2", $DB_OBJ)
+		EndIf
 		;Fix missing TreeviewPos table (MDB backward compatibitly fix)
 		_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
 		_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
@@ -1012,7 +1046,7 @@ While 1
 			;Add GPS ID If no access points are found and Save GPS when no APs are active is on
 			If $ScanResults = 0 And $SaveGpsWithNoAps = 1 Then
 				$GPS_ID += 1
-				_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
+				_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
 			EndIf
 			;Mark Dead Access Points
 			_MarkDeadAPs()
@@ -1034,7 +1068,7 @@ While 1
 		;Add GPS ID If AP Scanning is off, UseGPS is on, and Save GPS when no AP are active is on
 		If $UseGPS = 1 And $SaveGpsWithNoAps = 1 Then
 			$GPS_ID += 1
-			_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
+			_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
 		EndIf
 		;Mark Dead Access Points
 		_MarkDeadAPs()
@@ -1207,7 +1241,8 @@ Func _ScanAccessPoints()
 					;Add new GPS ID
 					If $FoundAPs = 1 Then
 						$GPS_ID += 1
-						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
+						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
+						;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
 					EndIf
 					;Add new access point
 					$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
@@ -1252,13 +1287,13 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	$MANUF = _FindManufacturer($BSSID);Set Manufacturer
 	$LABEL = _SetLabels($BSSID)
 	;Get Current GPS/Date/Time Information
-	$query = "SELECT * FROM GPS WHERE GpsID = '" & $NewGpsId & "'"
+	$query = "SELECT Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = '" & $NewGpsId & "'"
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$New_Lat = $GpsMatchArray[1][2]
-	$New_Lon = $GpsMatchArray[1][3]
-	$New_NumSat = $GpsMatchArray[1][4]
-	$New_Date = $GpsMatchArray[1][5]
-	$New_Time = $GpsMatchArray[1][6]
+	$New_Lat = $GpsMatchArray[1][1]
+	$New_Lon = $GpsMatchArray[1][2]
+	$New_NumSat = $GpsMatchArray[1][3]
+	$New_Date = $GpsMatchArray[1][4]
+	$New_Time = $GpsMatchArray[1][5]
 	$New_DateTime = $New_Date & ' ' & $New_Time
 	$NewApFound = 0
 	If $GpsMatchArray <> 0 Then ;If GPS ID Is Found
@@ -1267,29 +1302,23 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
-			;Get GPS and Date/Time information from GPS table
-			$query = "SELECT Latitude, Longitude, Date1, Time1 FROM GPS WHERE GpsID = '" & $NewGpsId & "'"
-			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundGpsMatch = UBound($GpsMatchArray) - 1
-			If $FoundGpsMatch <> 0 Then;If GPS Information exists, Add the new AP to the AP table
-				$APID += 1
-				$HISTID += 1
-				$NewApFound = 1
-				;Set HISTID
-				If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then
-					$DBHighGpsHistId = $HISTID
-				Else
-					$DBHighGpsHistId = '0'
-				EndIf
-				;Add History Information
-				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
-				;Check If AP matches filter parameters
-				$ListRow = -1
-				;Add AP Data into the AP table
-				_AddRecord($VistumblerDB, "AP", $DB_OBJ, $APID & '|' & $ListRow & '|' & $AP_StatusNum & '|' & $BSSID & '|' & $SSID & '|' & $CHAN & '|' & $AUTH & '|' & $ENCR & '|' & $SecType & '|' & $NETTYPE & '|' & $RADTYPE & '|' & $BTX & '|' & $OtX & '|' & $DBHighGpsHistId & '|' & $NewGpsId & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL)
-				;Add AP Data into treeview
-				;-->_TreeViewAdd($SSID, $BSSID, $AUTH, $ENCR, $CHAN, $RADTYPE, $BTX, $OtX, $NETTYPE, $MANUF, $LABEL)
+			$APID += 1
+			$HISTID += 1
+			$NewApFound = 1
+			;Set HISTID
+			If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then
+				$DBHighGpsHistId = $HISTID
+			Else
+				$DBHighGpsHistId = '0'
 			EndIf
+			;Add History Information
+			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
+			;Check If AP matches filter parameters
+			$ListRow = -1
+			;Add AP Data into the AP table
+			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $APID & '|' & $ListRow & '|' & $AP_StatusNum & '|' & $BSSID & '|' & $SSID & '|' & $CHAN & '|' & $AUTH & '|' & $ENCR & '|' & $SecType & '|' & $NETTYPE & '|' & $RADTYPE & '|' & $BTX & '|' & $OtX & '|' & $DBHighGpsHistId & '|' & $NewGpsId & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL)
+			;Add AP Data into treeview
+			;-->_TreeViewAdd($SSID, $BSSID, $AUTH, $ENCR, $CHAN, $RADTYPE, $BTX, $OtX, $NETTYPE, $MANUF, $LABEL)
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
 			$Found_APID = $ApMatchArray[1][1]
 			$Found_ListRow = $ApMatchArray[1][2]
@@ -1622,10 +1651,8 @@ Func _FilterRemoveNonMatchingInList()
 	If StringInStr($FilterQuery, 'WHERE') Then
 		$infq = StringReplace(StringReplace(StringReplace(StringReplace($FilterQuery, '=', '<>'), ' Or ', ' And '), ')', ''), '(', '');Invert Filter Query
 		$query = $infq & " And Listrow<>'-1'"
-		ConsoleWrite($query & @CRLF)
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
-		ConsoleWrite($FoundApMatch & @CRLF)
 		If $FoundApMatch <> 0 Then
 			For $frnm = 1 To $ApMatchArray[0][0]
 				$fApID = $ApMatchArray[$frnm][1]
@@ -1859,7 +1886,7 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'AP', $DB_OBJ)
 	_CreateTable($dbfile, 'Hist', $DB_OBJ)
 	_CreateTable($dbfile, 'TreeviewPos', $DB_OBJ)
-	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
@@ -2067,7 +2094,18 @@ Func _TurnOffGPS();Turns off GPS, resets variable
 	$disconnected_time = -1
 	$Latitude = 'N 0.0000'
 	$Longitude = 'E 0.0000'
+	$Latitude2 = 'N 0.0000'
+	$Longitude2 = 'E 0.0000'
 	$NumberOfSatalites = '00'
+	$HorDilPitch = '0'
+	$Alt = '0'
+	$AltS = 'M'
+	$Geo = '0'
+	$GeoS = 'M'
+	$SpeedInKnots = '0'
+	$SpeedInMPH = '0'
+	$SpeedInKmH = '0'
+	$TrackAngle = '0'
 	_CloseComPort($ComPort) ;Close The GPS COM port
 	GUICtrlSetData($GpsButton, $Text_UseGPS)
 	GUICtrlSetData($msgdisplay, '')
@@ -2487,8 +2525,8 @@ Func _GPRMC($data);Strips data from a gps $GPRMC data string
 				$Temp_Lat2 = $GPRMC_Split[5] & ' ' & StringFormat('%0.4f', $GPRMC_Split[4]) ;_FormatLatLon($GPRMC_Split[4], $GPRMC_Split[5])
 				$Temp_Lon2 = $GPRMC_Split[7] & ' ' & StringFormat('%0.4f', $GPRMC_Split[6]) ;_FormatLatLon($GPRMC_Split[6], $GPRMC_Split[7])
 				$Temp_SpeedInKnots = $GPRMC_Split[8]
-				$Temp_SpeedInMPH = Round($GPRMC_Split[8] * 1.15, 2) & " MPH"
-				$Temp_SpeedInKmH = Round($GPRMC_Split[8] * 1.85200, 2) & " km/h"
+				$Temp_SpeedInMPH = Round($GPRMC_Split[8] * 1.15, 2)
+				$Temp_SpeedInKmH = Round($GPRMC_Split[8] * 1.85200, 2)
 				$Temp_TrackAngle = $GPRMC_Split[9]
 				$Temp_FixDate = _FormatGpsDate($GPRMC_Split[10])
 			EndIf
@@ -2761,21 +2799,21 @@ Func _UpdateGpsDetailsGUI();Updates information on GPS Details GUI
 		GUICtrlSetData($GPGGA_Time, $Text_Time & ": " & $FixTime)
 		GUICtrlSetData($GPGGA_Lat, $Column_Names_Latitude & ": " & _GpsFormat($Latitude))
 		GUICtrlSetData($GPGGA_Lon, $Column_Names_Longitude & ": " & _GpsFormat($Longitude))
-		GUICtrlSetData($GPGGA_Quality, $Text_Quality & ": " & $Temp_Quality & @CRLF)
-		GUICtrlSetData($GPGGA_Satalites, $Text_NumberOfSatalites & ": " & $NumberOfSatalites & @CRLF)
-		GUICtrlSetData($GPGGA_HorDilPitch, $Text_HorizontalDilutionPosition & ": " & $HorDilPitch & @CRLF)
-		GUICtrlSetData($GPGGA_Alt, $Text_Altitude & ": " & $Alt & $AltS & @CRLF)
-		GUICtrlSetData($GPGGA_Geo, $Text_HeightOfGeoid & ": " & $Geo & $GeoS & @CRLF)
+		GUICtrlSetData($GPGGA_Quality, $Text_Quality & ": " & $Temp_Quality)
+		GUICtrlSetData($GPGGA_Satalites, $Text_NumberOfSatalites & ": " & $NumberOfSatalites)
+		GUICtrlSetData($GPGGA_HorDilPitch, $Text_HorizontalDilutionPosition & ": " & $HorDilPitch)
+		GUICtrlSetData($GPGGA_Alt, $Text_Altitude & ": " & $Alt & $AltS)
+		GUICtrlSetData($GPGGA_Geo, $Text_HeightOfGeoid & ": " & $Geo & $GeoS)
 
-		GUICtrlSetData($GPRMC_Time, $Text_Time & ": " & $FixTime2 & @CRLF)
-		GUICtrlSetData($GPRMC_Date, $Text_Date & ": " & $FixDate & @CRLF)
-		GUICtrlSetData($GPRMC_Lat, $Column_Names_Latitude & ": " & _GpsFormat($Latitude2) & @CRLF)
-		GUICtrlSetData($GPRMC_Lon, $Column_Names_Longitude & ": " & _GpsFormat($Longitude2) & @CRLF)
-		GUICtrlSetData($GPRMC_Status, $Text_Status & ": " & $Temp_Status & @CRLF)
-		GUICtrlSetData($GPRMC_SpeedKnots, $Text_SpeedInKnots & ": " & $SpeedInKnots & @CRLF)
-		GUICtrlSetData($GPRMC_SpeedMPH, $Text_SpeedInMPH & ": " & $SpeedInMPH & @CRLF)
-		GUICtrlSetData($GPRMC_SpeedKmh, $Text_SpeedInKmh & ": " & $SpeedInKmH & @CRLF)
-		GUICtrlSetData($GPRMC_TrackAngle, $Text_TrackAngle & ": " & $TrackAngle & @CRLF)
+		GUICtrlSetData($GPRMC_Time, $Text_Time & ": " & $FixTime2)
+		GUICtrlSetData($GPRMC_Date, $Text_Date & ": " & $FixDate)
+		GUICtrlSetData($GPRMC_Lat, $Column_Names_Latitude & ": " & _GpsFormat($Latitude2))
+		GUICtrlSetData($GPRMC_Lon, $Column_Names_Longitude & ": " & _GpsFormat($Longitude2))
+		GUICtrlSetData($GPRMC_Status, $Text_Status & ": " & $Temp_Status)
+		GUICtrlSetData($GPRMC_SpeedKnots, $Text_SpeedInKnots & ": " & $SpeedInKnots & " Kn")
+		GUICtrlSetData($GPRMC_SpeedMPH, $Text_SpeedInMPH & ": " & $SpeedInMPH & " Km/H")
+		GUICtrlSetData($GPRMC_SpeedKmh, $Text_SpeedInKmh & ": " & $SpeedInKmH & " MPH")
+		GUICtrlSetData($GPRMC_TrackAngle, $Text_TrackAngle & ": " & $TrackAngle)
 	EndIf
 EndFunc   ;==>_UpdateGpsDetailsGUI
 
@@ -2787,21 +2825,21 @@ Func _ClearGpsDetailsGUI();Clears all GPS Details information
 		$Latitude = 'N 0.0000'
 		$Longitude = 'E 0.0000'
 		$NumberOfSatalites = '00'
-		$HorDilPitch = ''
-		$Alt = ''
-		$AltS = ''
-		$Geo = ''
-		$GeoS = ''
+		$HorDilPitch = '0'
+		$Alt = '0'
+		$AltS = 'M'
+		$Geo = '0'
+		$GeoS = 'M'
 		$GPGGA_Update = TimerInit()
 	EndIf
 	If Round(TimerDiff($GPRMC_Update)) > $GpsTimeout Then
 		$FixTime2 = ''
 		$Latitude2 = 'N 0.0000'
 		$Longitude2 = 'E 0.0000'
-		$SpeedInKnots = ''
-		$SpeedInMPH = ''
-		$SpeedInKmH = ''
-		$TrackAngle = ''
+		$SpeedInKnots = '0'
+		$SpeedInMPH = '0'
+		$SpeedInKmH = '0'
+		$TrackAngle = '0'
 		$FixDate = ''
 		$GPRMC_Update = TimerInit()
 	EndIf
@@ -3742,14 +3780,15 @@ EndFunc   ;==>_ExportDetailedData
 
 Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
-	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 1.2")
+	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 2.0")
 	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
 
 	;Export GIDs
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)")
+	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)")
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
+
+	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
 
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundGpsMatch = UBound($GpsMatchArray) - 1
@@ -3759,9 +3798,15 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 		$ExpLat = $GpsMatchArray[$exp][2]
 		$ExpLon = $GpsMatchArray[$exp][3]
 		$ExpSat = $GpsMatchArray[$exp][4]
-		$ExpDate = $GpsMatchArray[$exp][5]
-		$ExpTime = $GpsMatchArray[$exp][6]
-		FileWriteLine($savefile, $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpDate & '|' & $ExpTime)
+		$ExpHorDilPitch = $GpsMatchArray[$exp][5]
+		$ExpAlt = $GpsMatchArray[$exp][6]
+		$ExpGeo = $GpsMatchArray[$exp][7]
+		$ExpSpeedMPH = $GpsMatchArray[$exp][8]
+		$ExpSpeedKmh = $GpsMatchArray[$exp][9]
+		$ExpTrack = $GpsMatchArray[$exp][10]
+		$ExpDate = $GpsMatchArray[$exp][11]
+		$ExpTime = $GpsMatchArray[$exp][12]
+		FileWriteLine($savefile, $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime)
 	Next
 
 	;Export AP Information
@@ -3901,14 +3946,16 @@ EndFunc   ;==>_ExportFilteredData
 
 Func _ExportFileredTXT($savefile, $savequery);writes vistumbler filtered data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportFileredTXT()') ;#Debug Display
-	FileWriteLine($savefile, "# Vistumbler VS1 - Filtered Detailed Export Version 1.2")
+	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 2.0")
 	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
 
 	;Export GIDs
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)")
+	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)")
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS"
+
+	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
+
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundGpsMatch = UBound($GpsMatchArray) - 1
 	For $exp = 1 To $FoundGpsMatch
@@ -3917,9 +3964,15 @@ Func _ExportFileredTXT($savefile, $savequery);writes vistumbler filtered data to
 		$ExpLat = $GpsMatchArray[$exp][2]
 		$ExpLon = $GpsMatchArray[$exp][3]
 		$ExpSat = $GpsMatchArray[$exp][4]
-		$ExpDate = $GpsMatchArray[$exp][5]
-		$ExpTime = $GpsMatchArray[$exp][6]
-		FileWriteLine($savefile, $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpDate & '|' & $ExpTime)
+		$ExpHorDilPitch = $GpsMatchArray[$exp][5]
+		$ExpAlt = $GpsMatchArray[$exp][6]
+		$ExpGeo = $GpsMatchArray[$exp][7]
+		$ExpSpeedMPH = $GpsMatchArray[$exp][8]
+		$ExpSpeedKmh = $GpsMatchArray[$exp][9]
+		$ExpTrack = $GpsMatchArray[$exp][10]
+		$ExpDate = $GpsMatchArray[$exp][11]
+		$ExpTime = $GpsMatchArray[$exp][12]
+		FileWriteLine($savefile, $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime)
 	Next
 
 	;Export AP Information
@@ -4095,6 +4148,8 @@ Func _ImportOk()
 	$UpdateTimer = TimerInit()
 	$MemReleaseTimer = TimerInit()
 	If GUICtrlRead($RadVis) = 1 Then
+		_CreateTable($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ)
+		_CreatMultipleFields($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ, 'OldGpsID TEXT(255)|NewGpsID TEXT(255)')
 		$visfile = GUICtrlRead($vistumblerfileinput)
 		$vistumblerfile = FileOpen($visfile, 0)
 		If $vistumblerfile <> -1 Then
@@ -4118,31 +4173,70 @@ Func _ImportOk()
 				If @error = -1 Then ExitLoop
 				If StringTrimRight($linein, StringLen($linein) - 1) <> "#" Then
 					$loadlist = StringSplit($linein, '|');Split Infomation of AP on line
-					If $loadlist[0] = 6 Then ; If Line is GPS ID Line
-						$LoadGID = $loadlist[1]
-						$LoadLat = $loadlist[2]
-						$LoadLon = $loadlist[3]
-						$LoadSat = $loadlist[4]
-						$LoadDate = $loadlist[5]
-						$ld = StringSplit($LoadDate, '-')
-						If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
-						$LoadTime = $loadlist[6]
-
-						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
-						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-						$FoundGpsMatch = UBound($GpsMatchArray) - 1
-						If $FoundGpsMatch = 0 Then
-							$AddGID += 1
-							$GPS_ID += 1
-							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadDate & '|' & $LoadTime)
-							_ArrayAdd($TmpGPSArray_ID, $LoadGID)
-							_ArrayAdd($TmpGPSArray_NewID, $GPS_ID)
-						ElseIf $FoundGpsMatch = 1 Then
-							$NewGpsId = $GpsMatchArray[1][1]
-							_ArrayAdd($TmpGPSArray_ID, $LoadGID)
-							_ArrayAdd($TmpGPSArray_NewID, $NewGpsId)
-						Else
-
+					If $loadlist[0] = 6 Or $loadlist[0] = 12 Then ; If Line is GPS ID Line
+						If $loadlist[0] = 6 Then
+							$LoadGID = $loadlist[1]
+							$LoadLat = $loadlist[2]
+							$LoadLon = $loadlist[3]
+							$LoadSat = $loadlist[4]
+							$LoadHorDilPitch = 0
+							$LoadAlt = 0
+							$LoadGeo = 0
+							$LoadSpeedKmh = 0
+							$LoadSpeedMPH = 0
+							$LoadTrackAngle = 0
+							$LoadDate = $loadlist[5]
+							$ld = StringSplit($LoadDate, '-')
+							If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
+							$LoadTime = $loadlist[6]
+						ElseIf $loadlist[0] = 12 Then
+							$LoadGID = $loadlist[1]
+							$LoadLat = $loadlist[2]
+							$LoadLon = $loadlist[3]
+							$LoadSat = $loadlist[4]
+							$LoadHorDilPitch = $loadlist[5]
+							$LoadAlt = $loadlist[6]
+							$LoadGeo = $loadlist[7]
+							$LoadSpeedKmh = $loadlist[8]
+							$LoadSpeedMPH = $loadlist[9]
+							$LoadTrackAngle = $loadlist[10]
+							$LoadDate = $loadlist[11]
+							$ld = StringSplit($LoadDate, '-')
+							If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
+							$LoadTime = $loadlist[12]
+						EndIf
+						
+						$query = "SELECT OldGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $LoadGID & "'"
+						$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+						$FoundTempGidMatch = UBound($TempGidMatchArray) - 1
+						If $FoundTempGidMatch = 0 Then
+							$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
+							$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+							$FoundGpsMatch = UBound($GpsMatchArray) - 1
+							If $FoundGpsMatch = 0 Then
+								$AddGID += 1
+								$GPS_ID += 1
+								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadHorDilPitch & '|' & $LoadAlt & '|' & $LoadGeo & '|' & $LoadSpeedKmh & '|' & $LoadSpeedMPH & '|' & $LoadTrackAngle & '|' & $LoadDate & '|' & $LoadTime)
+								_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $GPS_ID)
+							ElseIf $FoundGpsMatch = 1 Then
+								$NewGpsId = $GpsMatchArray[1][1]
+								_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $NewGpsId)
+							EndIf
+						ElseIf $FoundTempGidMatch = 1 Then
+							$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
+							$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+							$FoundGpsMatch = UBound($GpsMatchArray) - 1
+							If $FoundGpsMatch = 0 Then
+								$AddGID += 1
+								$GPS_ID += 1
+								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadHorDilPitch & '|' & $LoadAlt & '|' & $LoadGeo & '|' & $LoadSpeedKmh & '|' & $LoadSpeedMPH & '|' & $LoadTrackAngle & '|' & $LoadDate & '|' & $LoadTime)
+								$query = "UPDATE TempGpsIDMatchTabel SET NewGpsID='" & $GPS_ID & "' WHERE OldGpsID='" & $LoadGID & "'"
+								_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+							ElseIf $FoundGpsMatch = 1 Then
+								$NewGpsId = $GpsMatchArray[1][1]
+								$query = "UPDATE TempGpsIDMatchTabel SET NewGpsID='" & $NewGpsId & "' WHERE OldGpsID='" & $LoadGID & "'"
+								_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+							EndIf
 						EndIf
 					ElseIf $loadlist[0] = 13 Then ;If String is VS1 data line
 						$Found = 0
@@ -4164,7 +4258,9 @@ Func _ImportOk()
 							If $GidSigSplit[0] = 2 Then
 								$ImpGID = $GidSigSplit[1]
 								$ImpSig = $GidSigSplit[2]
-								$NewGID = $TmpGPSArray_NewID[$ImpGID]
+								$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
+								$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+								$NewGID = $TempGidMatchArray[1][1]
 								;Add AP Info to DB, Listview, and Treeview
 								$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig)
 								If $NewApAdded = 1 Then $AddAP += 1
@@ -4208,7 +4304,8 @@ Func _ImportOk()
 						If $FoundGpsMatch = 0 Then
 							$AddGID += 1
 							$GPS_ID += 1
-							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
+							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
+							;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
 							$LoadGID = $GPS_ID
 						Else
 							$LoadGID = $GpsMatchArray[1][1]
@@ -4223,7 +4320,8 @@ Func _ImportOk()
 						If $FoundGpsMatch = 0 Then
 							$AddGID += 1
 							$GPS_ID += 1
-							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
+							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
+							;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
 							$LoadGID = $GPS_ID
 						Else
 							$LoadGID = $GpsMatchArray[1][1]
@@ -4257,6 +4355,9 @@ Func _ImportOk()
 				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 			Next
 		EndIf
+		$query = "DELETE * FROM TempGpsIDMatchTabel"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		_DropTable($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ)
 	ElseIf GUICtrlRead($RadNs) = 1 Then
 		Dim $BSSID_Array[1], $SSID_Array[1], $FirstSeen_Array[1], $LastSeen_Array[1], $SignalHist_Array[1], $Lat_Array[1], $Lon_Array[1], $Auth_Array[1], $Encr_Array[1], $Type_Array[1]
 
@@ -4329,7 +4430,8 @@ Func _ImportOk()
 							If $FoundGpsMatch = 0 Then
 								$AddGID += 1
 								$GPS_ID += 1
-								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & '00' & '|' & $Date & '|' & $time)
+								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|00|0|0|0|0|0|0|' & $Date & '|' & $time)
+								;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & '00' & '|' & $Date & '|' & $time)
 								$LoadGID = $GPS_ID
 							ElseIf $FoundGpsMatch = 1 Then
 								$LoadGID = $GpsMatchArray[1][1]
