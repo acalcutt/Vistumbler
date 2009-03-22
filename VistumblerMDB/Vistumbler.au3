@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.2 Beta 3.1'
+$version = '9.2'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/03/22')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -33,8 +33,6 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include <Process.au3>
 #include <GDIPlus.au3>
 #include <Date.au3>
-#include <String.au3>
-#include <WinAPI.au3>
 #include <GuiButton.au3>
 #include "UDFs\CommMG.au3"
 #include "UDFs\AccessCom.au3"
