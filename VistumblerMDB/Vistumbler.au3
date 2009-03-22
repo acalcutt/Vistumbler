@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.2 Beta 3'
+$version = '9.2 Beta 3.1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/03/22')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -1265,6 +1265,7 @@ EndFunc   ;==>_ScanAccessPoints
 
 Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApData()') ;#Debug Display
+	$t = TimerInit()
 	$AddedAp = 0
 	If $New = 1 Then
 		$AP_Status = $Text_Active
@@ -1275,19 +1276,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 		$AP_StatusNum = 0
 		$AP_DisplaySig = '0'
 	EndIf
-	;Set Security Type
-	If $AUTH = $SearchWord_Open And $ENCR = $SearchWord_None Then
-		$SecType = 1
-	ElseIf $ENCR = $SearchWord_Wep Then
-		$SecType = 2
-	Else
-		$SecType = 3
-	EndIf
-	;Get Label and Manufacturer information
-	$MANUF = _FindManufacturer($BSSID);Set Manufacturer
-	$LABEL = _SetLabels($BSSID)
 	;Get Current GPS/Date/Time Information
-	$query = "SELECT Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = '" & $NewGpsId & "'"
+	$query = "SELECT TOP 1 Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = '" & $NewGpsId & "'"
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$New_Lat = $GpsMatchArray[1][1]
 	$New_Lon = $GpsMatchArray[1][2]
@@ -1298,13 +1288,24 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	$NewApFound = 0
 	If $GpsMatchArray <> 0 Then ;If GPS ID Is Found
 		;Query AP table for New AP
-		$query = "SELECT ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & $CHAN & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
+		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & $CHAN & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
 			$APID += 1
 			$HISTID += 1
 			$NewApFound = 1
+			;Set Security Type
+			If $AUTH = $SearchWord_Open And $ENCR = $SearchWord_None Then
+				$SecType = 1
+			ElseIf $ENCR = $SearchWord_Wep Then
+				$SecType = 2
+			Else
+				$SecType = 3
+			EndIf
+			;Get Label and Manufacturer information
+			$MANUF = _FindManufacturer($BSSID);Set Manufacturer
+			$LABEL = _SetLabels($BSSID)
 			;Set HISTID
 			If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then
 				$DBHighGpsHistId = $HISTID
@@ -1337,7 +1338,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$ExpLastDateTime = $New_DateTime
 				$ExpFirstDateTime = ''
 			Else ;If this is not a new check if this information is newer or older
-				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $Found_LastHistID & "'"
+				$query = "SELECT TOP 1 Date1, Time1 FROM Hist WHERE HistID = '" & $Found_LastHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				If _CompareDate($HistMatchArray[1][1] & ' ' & $HistMatchArray[1][2], $New_Date & ' ' & $New_Time) = 1 Then
 					$ExpLastHistID = $Found_LastHistID
@@ -1348,7 +1349,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$ExpGpsID = $NewGpsId
 					$ExpLastDateTime = $New_DateTime
 				EndIf
-				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $Found_FirstHistID & "'"
+				$query = "SELECT TOP 1 Date1, Time1 FROM Hist WHERE HistID = '" & $Found_FirstHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				If _CompareDate($HistMatchArray[1][1] & ' ' & $HistMatchArray[1][2], $New_Date & ' ' & $New_Time) = 2 Then
 					$ExpFirstDateTime = ''
@@ -1358,7 +1359,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$ExpFirstHistID = $HISTID
 				EndIf
 			EndIf
-
+			
 			;Set Highest GPS History ID
 			If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then ;If new latitude and longitude are valid
 				If $Found_HighGpsHistId = 0 Then ;If old HighGpsHistId is blank then use the new Hist ID
@@ -1402,6 +1403,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$DBLat = ''
 				$DBLon = ''
 			EndIf
+			
 			;If HighGpsHistID is different from the origional, update it
 			If $DBHighGpsHistId <> $Found_HighGpsHistId Then
 				$query = "UPDATE AP SET HighGpsHistId = '" & $DBHighGpsHistId & "' WHERE ApID = '" & $Found_APID & "'"
