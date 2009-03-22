@@ -3785,7 +3785,7 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 
 	;Export GIDs
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)")
+	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|HorizontalDilutionOfPrecision|Altitude(m)|HeightOfGeoidAboveWGS84Ellipsoid(m)|Speed(km/h)|Speed(MPH)|TrackAngle(Deg)|Date(UTC y-m-d)|Time(UTC h:m:s)")
 	FileWriteLine($savefile, "# -------------------------------------------------")
 
 	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
@@ -3951,7 +3951,7 @@ Func _ExportFileredTXT($savefile, $savequery);writes vistumbler filtered data to
 
 	;Export GIDs
 	FileWriteLine($savefile, "# -------------------------------------------------")
-	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)")
+	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|HorizontalDilutionOfPrecision|Altitude(m)|HeightOfGeoidAboveWGS84Ellipsoid(m)|Speed(km/h)|Speed(MPH)|TrackAngle(Deg)|Date(UTC y-m-d)|Time(UTC h:m:s)")
 	FileWriteLine($savefile, "# -------------------------------------------------")
 
 	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
