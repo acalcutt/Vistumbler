@@ -61,11 +61,23 @@ $to=$from+$inc;
 mysql_select_db($db,$conn);
 $sql0 = "SELECT * FROM $wtable ORDER BY $sort $ord  LIMIT $from , $inc";
 $result = mysql_query($sql0, $conn) or die(mysql_error());
+$num = mysql_num_rows($result);
+
+if($num == 0)
+{
+	echo '<tr><td colspan="6" align="center">There where no results, please try again</td></tr></table>'; 
+	$filename = $_SERVER['SCRIPT_FILENAME'];
+	footer($filename);
+	die();
+}
+
 while ($newArray = mysql_fetch_array($result))
 {
     $id = $newArray['id'];
+
 	$ssid = $newArray['ssid'];
-    $mac = $newArray['mac'];
+	if($ssid == ""){$ssid = "No SSID";}
+	$mac = $newArray['mac'];
 	$mac_exp = str_split($mac,2);
 	$mac = implode(":",$mac_exp);
     $chan = $newArray['chan'];

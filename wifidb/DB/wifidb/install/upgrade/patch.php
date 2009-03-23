@@ -25,7 +25,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 <table><tr><th>Status</th><th>Step of Install</th></tr>
 <tr><TH colspan="2">Upgrade DB for 0.15 Build 7x to 0.16 Build 1</TH><tr>
 <?php
-
+if($ver['wifidb'] !== "0.16 Build 1"){echo '<h1><font color="red">You must have the 0.16 Build 1 Code base.</font></h1>';footer($_SERVER['SCRIPT_FILENAME']); die();}
 $date = date("Y-m-d");
 $root_sql_user	=	$_POST['root_sql_user'];
 strip_tags($root_sql_user);
@@ -97,12 +97,12 @@ echo "<tr><td>Failure..........</td><td>DROP TABLE `links`";}
 
 
 $sql0 = "CREATE TABLE `links` (`ID` int(255) NOT NULL auto_increment,`links` varchar(255) NOT NULL, KEY `INDEX` (`ID`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=6";
-$create = mysql_query($sql, $conn) or die(mysql_error());
+$create = mysql_query($sql0, $conn) or die(mysql_error());
 
 if($create)
 {echo "<tr><td>Success..........</td><td>CREATE TABLE `links`; ";}
 else{
-echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`";}
+echo "<tr><td>Failure..........</td><td>CREATE TABLE `links`";}
 
 $sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES
 		(1, '<a class=\"links\" href=\"/\">Main Page</a>'),
@@ -112,15 +112,62 @@ $sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES
 		(5, '<a class=\"links\" href=\"opt/search.php\">Search</a>'),
 		(6, '<a class=\"links\" href=\"opt/userstats.php?func=allusers\">View All Users</a>'),
 		(7, '<a class=\"links\" href=\"ver.php\">WiFiDB Version</a>')";
-$insert = mysql_query($sql, $conn) or die(mysql_error());
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>DROP DATABASE `$wifi_st`; "
-		."CREATE DATABASE `$wifi_st`</td></tr>";}
+{echo "<tr><td>Success..........</td><td>Created new Links for 0.16 Build 1</td></tr>";}
 else{
-echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`; "
-		."CREATE DATABASE `$wifi_st`</td></tr>";
+echo "<tr><td>Failure..........</td><td>To insert new links into database</td></tr>";
 }
+
+$sql2 = "ALTER TABLE  `$wtable` CHANGE  `chan`  `chan` VARCHAR( 3 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
+$alter_chan = mysql_query($sql2, $conn) or die(mysql_error());
+
+if($alter_chan)
+{echo "<tr><td>Success..........</td><td>Alter `Chan` column in WiFi Pointers table `$wtable`, to allow 3 digits (for 802.11a channels)</td></tr>";}
+else{
+echo "<tr><td>Failure..........</td><td>To alter `chan` column in WiFi Pointers table `$wtable`</td></tr>";
+}
+
+
+
+
+mysql_select_db($db,$conn) or die("Unable to select Database: ".$db);
+$sql_		= "SELECT * FROM `$wtable`";
+$result_	= mysql_query($sql_, $conn) or die(mysql_error());
+while($ap_array = mysql_fetch_array($result_))
+{
+	$aps[]	= array(
+					'id'		=>	$ap_array['id'],
+					'ssid'		=>	$ap_array['ssid'],
+					'mac'		=>	$ap_array['mac'],
+					'sectype'	=>	$ap_array['sectype'],
+					'r'			=>	$ap_array['radio'],
+					'chan'		=>	$ap_array['chan']
+					);
+mysql_select_db($db_st,$conn) or die("Unable to select Database: ".$db_st);
+foreach($aps as $ap)
+{
+	$table_gps			=	$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['r'].'-'.$ap['chan'].$gps_ext;
+	$alter_gpstables	=	"ALTER TABLE  `$table_gps` "
+							."ADD  `hdp` FLOAT NOT NULL AFTER  `sats` ,"
+							."ADD  `alt` FLOAT NOT NULL AFTER  `hdp` ,"
+							."ADD  `geo` FLOAT NOT NULL AFTER  `alt` ,"
+							."ADD  `kmh` FLOAT NOT NULL AFTER  `geo` ,"
+							."ADD  `mph` FLOAT NOT NULL AFTER  `kmh` ,"
+							."ADD  `track` FLOAT NOT NULL AFTER  `mph`"
+	$alter_chan = mysql_query($alter_gpstables, $conn) or die(mysql_error());
+	if($alter_chan){
+		$ok++;
+	}
+	else{
+		$not++;
+	}
+}
+echo '<tr><td>Access Point GPS tables Updated with new columns</td><td>'.$ok.'</td></tr>';
+echo '<tr><td>Access Point GPS tables Not Updated with new columns</td><td>'.$not.'</td></tr>';
+
+
 mysql_close($conn);
 $file_ext = 'config.inc.php';
 $filename = '../../lib/'.$file_ext;
@@ -135,11 +182,11 @@ if($AD_CF_FI_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
 
-$install_warning = fwrite($fileappend,"if(is_dir('install')){echo '<h2>The install Folder is still there, remove it!</h2>';}\nelseif(is_dir('../install')){echo '<h2>The install Folder is still there, remove it!</h2>';}");
+$install_warning = fwrite($fileappend,"\r\n\r\nif(is_dir('install')){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}\nelseif(is_dir('../install')){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}");
 if($install_warning)
-{echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
+{echo "<tr><td>Success..........</td><td>Warning headers if 'install' folder is found in the 'wifidb' folder.</td></tr>";}
 else{
-echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
+echo "<tr><td>Failure..........</td><td>To add 'insall' folder warning header.</td></tr>";}
 
 fwrite($fileappend, "\r\n?>");
 fclose($fileappend);

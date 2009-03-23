@@ -2,24 +2,25 @@
 #include('manufactures.inc.php');
 $ver = array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-19",
+			"Last_Core_Edit" 	=> 	"2009-Mar-22",
 			"database"			=>	array(  
-										"import_vs1"		=>	"1.5.2", 
+										"import_vs1"		=>	"1.5.4", 
 										"apfetch"			=>	"2.4.1",
 										"gps_check_array"	=>	"1.0",
 										"all_users"			=>	"1.1",
 										"users_lists"		=>	"1.1",
 										"user_ap_list"		=>	"1.1",
 										"all_users_ap"		=>	"1.2",
-										"exp_KML"			=>	"3.0",
-										"convert_dm_dd"		=>	"1.2",
-										"convert_dd_dm"		=>	"1.2",
+										"exp_KML"			=>	"3.1",
+										"convert_dm_dd"		=>	"1.3",
+										"convert_dd_dm"		=>	"1.3",
 										"manufactures"		=>	"1.0"
 										),
 			"Misc"				=>	array(
 										"footer"				=>	"1.2",
 										"smart_quotes"			=> 	"1.0",
-										"Manufactures-list"		=> 	"2.0"
+										"Manufactures-list"		=> 	"2.0",
+										"Languages-List"		=>	"1.0"
 										),
 			);
 
@@ -64,23 +65,50 @@ function smart_quotes($text="")
 {
 	$pattern = '/"((.)*?)"/i';
 	$strip = array(
-					0=>"'",
-					1=>".",
-					2=>"*",
-					3=>"?",
-					4=>"<",
-					5=>">",
-					6=>'"',
-					7=>"'",
-					8=>"$",
-					9=>"?>",
-					10=>";"
+					0=>".",
+					1=>"*",
+					2=>"?",
+					3=>"<",
+					4=>">",
+					5=>'"',
+					6=>"'",
+					7=>"$",
+					8=>"?>",
+					9=>";",
+					10=>"#",
+					11=>"&",
+					12=>"=",
+					13=>"~",
+					14=>"^",
+					15=>"`",
+					16=>"+",
+					17=>"%",
+					18=>"!",
+					19=>"@",
+					20=>"-"
 				);
 	$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
 	$text = str_replace($strip,"_",$text);
 	return $text;
 }
 
+function smart($text="")
+{
+	$pattern = '/"((.)*?)"/i';
+	$strip = array(
+					0=>" ",
+					1=>":",
+					2=>"-",
+					3=>".",
+					4=>"N",
+					5=>"E",
+					6=>"W",
+					7=>"S"
+				  );
+	$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
+	$text = str_replace($strip,"",$text);
+	return $text;
+}
 
 
 
@@ -117,19 +145,18 @@ class database
 	//		   num     lat / long / sats / date / time
 	if ($user == ""){$user="Unknown";}
 	
-	$user_n=0;
-	$N=0;
-	$n=0;
-	$gpscount=0;
-	$co=0;
-	$cco=0;
-	$apdata=array();
-	$gpdata=array();
-	$signals=array();
-	$sats_id=array();
-	$fileex=explode(".", $source);
-	$return = file($source);
-	$table_ptb="-";
+	$user_n	 = 0;
+	$N		 = 0;
+	$n		 = 0;
+	$gpscount= 0;
+	$co		 = 0;
+	$cco	 = 0;
+	$apdata  = array();
+	$gpdata  = array();
+	$signals = array();
+	$sats_id = array();
+	$fileex  = explode(".", $source);
+	$return  = file($source);
 	$count = count($return);
 	if($count <= 8) { echo "<h3>You cannot upload an empty VS1 file, atleast scan for a few seconds to import some data.</h3><a href=\"index.php\">Go back and do it again</a>"; footer("../import/insertnew.php");die();}
 	foreach($return as $ret)
@@ -139,7 +166,44 @@ class database
 		$retexp = explode("|",$ret);
 		$ret_len = count($retexp);
 
-		if ($ret_len == 6)
+		if ($ret_len == 12)
+		{
+			$date_exp = explode("-",$retexp[10]);
+			if(strlen($date_exp[0]) <= 2)
+			{
+				$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
+			}else
+			{
+				$gpsdate = $retexp[10];
+			}
+			# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
+			$gdata[$retexp[0]] = array(
+										"lat"=>$retexp[1],
+										"long"=>$retexp[2],
+										"sats"=>$retexp[3],
+										"hdp"=>$retexp[4],
+										"alt"=>$retexp[5],
+										"geo"=>$retexp[6],
+										"kmh"=>$retexp[7],
+										"mph"=>$retexp[8],
+										"track"=>$retexp[9],
+										"date"=>$gpsdate,
+										"time"=>$retexp[11]
+										);
+			if ($GLOBALS["debug"]  == 1)
+			{
+				$gpecho = "GP Data : \r\n"
+				."Return length: ".$ret_len."\n+-+-+-+-+\r\n"
+				."ID: ".$retexp[0]."\n+-+-+-+-+\r\n"
+				."Lat: ".$gdata[$retexp[0]]["lat"]."\n+-+-+-+-+\r\n"
+				."Long: ".$gdata[$retexp[0]]["long"]."\n+-+-+-+-+\r\n"
+				."Satellites: ".$gdata[$retexp[0]]["sats"]."\n+-+-+-+-+\r\n"
+				."Date: ".$gdata[$retexp[0]]["date"]."\n+-+-+-+-+\r\n"
+				."Time: ".$gdata[$retexp[0]]["time"]."+-+-+-+-+\r\r\n\n";
+				echo $gpecho;
+			}
+			$gpscount++;
+		}elseif($ret_len == 6)
 		{
 			$date_exp = explode("-",$retexp[4]);
 			if(strlen($date_exp[0]) <= 2)
@@ -149,25 +213,39 @@ class database
 			{
 				$gpsdate = $retexp[4];
 			}
-			$gdata[$retexp[0]] = array("lat"=>$retexp[1], "long"=>$retexp[2],"sats"=>$retexp[3],"date"=>$gpsdate,"time"=>$retexp[5]);
+			# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
+			$gdata[$retexp[0]] = array(
+										"lat"=>$retexp[1],
+										"long"=>$retexp[2],
+										"sats"=>$retexp[3],
+										"hdp"=>0.0,
+										"alt"=>0.0,
+										"geo"=>-0.0,
+										"kmh"=>0.0,
+										"mph"=>0.0,
+										"track"=>0.0,
+										"date"=>$gpsdate,
+										"time"=>$retexp[5]
+										);
 			if ($GLOBALS["debug"]  == 1)
 			{
-				$gpecho = "GP Data : \r<br>"
-				."Return length: ".$ret_len."<br>+-+-+-+-+\r<br>"
-				."ID: ".$retexp[0]."<br>+-+-+-+-+\r<br>"
-				."Lat: ".$gdata[$retexp[0]]["lat"]."<br>+-+-+-+-+\r<br>"
-				."Long: ".$gdata[$retexp[0]]["long"]."<br>+-+-+-+-+\r<br>"
-				."Satellites: ".$gdata[$retexp[0]]["sats"]."<br>+-+-+-+-+\r<br>"
-				."Date: ".$gdata[$retexp[0]]["date"]."<br>+-+-+-+-+\r<br>"
-				."Time: ".$gdata[$retexp[0]]["time"]."+-+-+-+-+\r\r<br><br>";
+				$gpecho = "GP Data : \r\n"
+				."Return length: ".$ret_len."\n+-+-+-+-+\r\n"
+				."ID: ".$retexp[0]."\n+-+-+-+-+\r\n"
+				."Lat: ".$gdata[$retexp[0]]["lat"]."\n+-+-+-+-+\r\n"
+				."Long: ".$gdata[$retexp[0]]["long"]."\n+-+-+-+-+\r\n"
+				."Satellites: ".$gdata[$retexp[0]]["sats"]."\n+-+-+-+-+\r\n"
+				."Date: ".$gdata[$retexp[0]]["date"]."\n+-+-+-+-+\r\n"
+				."Time: ".$gdata[$retexp[0]]["time"]."+-+-+-+-+\r\r\n\n";
 				echo $gpecho;
 			}
 			$gpscount++;
 		}elseif($ret_len == 13)
 		{
 				$wifi = explode("|",$ret, 13);
+				if($wifi[0] === "" && $wifi[1] === "" && $wifi[5] === "" && $wifi[6] === "" && $wifi[7] === ""){continue;}
 				mysql_select_db($db,$conn);
-				$dbsize = mysql_query("SELECT * FROM `$wtable`", $conn) or die(mysql_error());
+				$dbsize = mysql_query("SELECT * FROM `$wtable`", $conn) or die(mysql_error($conn));
 				$size = mysql_num_rows($dbsize);
 				$size++;
 				if ($GLOBALS["debug"]  == 1)
@@ -183,7 +261,7 @@ class database
 					<?php
 				}
 				if ($wifi[0]==""){$wifi[0]="UNNAMED";}
-				$wifi[12]=strip_tags(smart_quotes($wifi[12]));
+		#		$wifi[12] = strip_tags($wifi[12]);
 				// sanitize wifi data to be used in table name
 				$ssidss = strip_tags(smart_quotes($wifi[0]));
 				$ssidsss = str_split($ssidss,25);
@@ -249,13 +327,13 @@ class database
 				//create table name to select from, insert into, or create
 				$table = $ssids.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 				$gps_table = $table.$gps_ext;
-				
+				if(!isset($table_ptb)){$table_ptb="";}
 				if(strcmp($table,$table_ptb)===0)
 				{
 					// They are the same
 					
 					mysql_select_db($db_st,$conn);
-					?><table border ="1" class="update"><tr><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
+					?><table border ="1" width="95%" class="update"><tr class="style3"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
 					<tr><td><?php echo $APid; ?></td><td><b>U</b></td><td><?php echo $ssids; ?></td><td><?php echo $wifi[1]; ?></td><td><?php echo $authen; ?></td><td><?php echo $encryp; ?></td><td><?php echo $radios; ?></td><td><?php echo $chan; ?></td></tr>
 					<?php
 					$signal_exp = explode("-",$wifi[12]);
@@ -278,23 +356,35 @@ class database
 					//pull out all GPS rows to be tested against for duplicates
 						
 					$N=0;
+					$todo=array();
+					$prev='';
+					
 					foreach($signal_exp as $exp)
 					{
+						?>
+							<tr><td colspan="8">
+						<?php
 						//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re grab it to test the data
-#						$DBresult = mysql_query("SELECT * FROM `$gps_table`", $conn);
-#						while ($neArray = mysql_fetch_array($DBresult))
-#						{
-#							$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
-#							$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
-#							$db_gps[$neArray["id"]]["long"]=$neArray["long"];
-#							$db_gps[$neArray["id"]]["date"]=$neArray["date"];
-#							$db_gps[$neArray["id"]]["time"]=$neArray["time"];
-#						}
+						$DBresult = mysql_query("SELECT * FROM `$gps_table`", $conn);
+						while ($neArray = mysql_fetch_array($DBresult))
+						{
+							$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
+							$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
+							$db_gps[$neArray["id"]]["long"]=$neArray["long"];
+							$db_gps[$neArray["id"]]["date"]=$neArray["date"];
+							$db_gps[$neArray["id"]]["time"]=$neArray["time"];
+						}
 						
 						$esp = explode(",",$exp);
 						$vs1_id = $esp[0];
 						$signal = $esp[1];
 						
+						if ($prev == $vs1_id)
+						{
+							$gps_id_ = $gps_id-1;
+							$signals[$gps_id] = $gps_id_.",".$signal;
+							continue;
+						}
 						if ($GLOBALS["debug"]  === 1)
 						{
 							$apecho = "+-+-+-+AP Data+-+-+-+<br> VS1 ID:".$vs1_id." <br> Next DB ID: ".$gps_id."<br>"
@@ -305,69 +395,62 @@ class database
 							."Time: ".$gdata[$vs1_id]["time"]."-+-+-+<br><br><br>";
 							echo $apecho;
 						}
-					 #	$gpschk = database::check_gps_array($db_gps,$apdata[$ap_id]);
-						
 						$lat = $gdata[$vs1_id]["lat"];
 						$long = $gdata[$vs1_id]["long"];
 						$sats = $gdata[$vs1_id]["sats"];
 						$date = $gdata[$vs1_id]["date"];
 						$time = $gdata[$vs1_id]["time"];
+						$hdp = $gdata[$vs1_id]["hdp"];
+						$alt = $gdata[$vs1_id]["alt"];
+						$geo = $gdata[$vs1_id]["geo"];
+						$kmh = $gdata[$vs1_id]["kmh"];
+						$mph = $gdata[$vs1_id]["mph"];
+						$track = $gdata[$vs1_id]["track"];
 						
-						$comp = $lat.'-'.$long.'-'.$date.'-'.$time;
+						$lat1 = smart($lat);
 						
-						$sql_gps = "SELECT * FROM `$gps_table` WHERE `time` = '$time' LIMIT 1";
-						$GPSresult = mysql_query($sql_gps, $conn);
-						#while(
-						$gps_resarray = mysql_fetch_array($GPSresult);#)
-						#{
-#						echo count($gps_resarray);
-							$dbsel = $gps_resarray['lat'].'-'.$gps_resarray['long'].'-'.$gps_resarray['date'].'-'.$gps_resarray['time'];
-							echo $dbsel."<br><br>".$comp."<br>";
-#							echo "Lat: ".$gps_resarray['lat']."<br>Long: ".$gps_resarray['long']."<br>Date: ".$gps_resarray['date']."<br>Time: ".$gps_resarray['time']."<br>";
-							if (strcmp($gps_resarray['date'],$date) && strcmp($gps_resarray['time'],$time) ){$todo = "db"; $db_id[] = $gps_resarray['id']; continue;}
-							
-							if(strcmp($comp, $dbsel) === 0)
+						$long1 = smart($long);
+						
+						$time1 = smart($time);
+						
+						$date1 = smart($date);
+						
+						$comp = $lat1."".$long1."".$date1."".$time1;
+						
+						$gpschk = database::check_gps_array($db_gps,$comp);
+						list($return_gps, $db_id) = $gpschk;
+						$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$db_id'", $conn);
+						$GPSDBArray = mysql_fetch_array($DBresult);
+						
+						if($return_gps === 0)
+						{
+							$todo = "new";
+						#	break;
+						}else
+						{
+							if($sats > $GPSDBArray['sats'])
 							{
-								if($sats > $gps_resarray['sats'])
-								{
-									$todo = "hi_sats";
-									$hi_sats_id[]=$gps_resarray['id'];
-								}else
-								{
-									$todo = "db";
-									$db_id[] = $gps_resarray['id'];
-								}
+								$todo = "hi_sats";
+								$hi_sats_id[]=$db_id;
+						#		continue;
 							}else
 							{
-								$todo = "new";
-								$newGPS[]=array(
-												"lat"=>$lat,
-												"long"=>$long,
-												"sats"=>$sats,
-												"date"=>$date,
-												"time"=>$time
-												);
+								$todo = "db";
+								$db_id[] = $db_id;
+						#		break;
 							}
-						#}
-						?>
-						<tr><td colspan="8">
-						<?php
-						echo $todo."<br>";
+						}
 						switch ($todo)
 						{	
 							case "new":
-								$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$date', '$time')";
+								$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
+											   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
 								if (mysql_query($sqlitgpsgp, $conn))
 								{
 									echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
 								}else
 								{
-									$sqlcgt = "CREATE TABLE `$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL , `long` VARCHAR( 25 ) NOT NULL , `sats` INT( 2 ) NOT NULL , `date` VARCHAR( 10 ) NOT NULL , `time` VARCHAR( 8 ) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
-									if (mysql_query($sqlcgt, $conn))
-									{
-										echo "(1)Create Table [".$db_st."].{".$gps_table."}<br>		 => Thats odd the table was missing, well I added a GPS Table for ".$ssids."<br>";
-										if (mysql_query($sqlitgpsgp, $conn)){echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";}
-									}
+									echo "There was an Error inserting the GPS information";
 								}
 								$signals[$gps_id] = $gps_id.",".$signal;
 								$gps_id++;
@@ -380,20 +463,20 @@ class database
 							case "hi_sats":
 								foreach($hi_sats_id as $sats_id)
 								{
-									$sqlupgpsgp = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats' , `date` = '$date' , `time` = '$time  WHERE `id` = '$sats_id'";
-									if (mysql_query($sqlupgpsgp, $conn))
+									$sqlupgpsgp = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats', `hdp` = '$hdp', `alt` = '$alt', `geo` = '$geo', `kmh` = '$kmh', `mph` = '$mph', `track` = '$track' , `date` = '$date' , `time` = '$time'  WHERE `id` = '$sats_id'";
+									$resource = mysql_query($sqlupgpsgp, $conn);
+									if ($resource)
 									{echo "(4)Update [".$db_st."].{".$gps_table."}<br>		 => Updated GPS History in Table<br>";}
-									else{echo "A MySQL Update error has occured<br>".mysql_error();}
+									else{echo "A MySQL Update error has occured<br>";echo mysql_error($conn);}
 								}
 								$signals[$gps_id] = $hi_sats_id[0].",".$signal;
 								$gps_id++;
 								break;
 						}
 						?>
-						<br></tr><tr>
+							</td></tr>
 						<?php
 					}
-					
 					?>
 					<td colspan="8">
 					<?php
@@ -421,37 +504,58 @@ class database
 						}
 					}
 					?>
-					</td></tr></table>
+					</td></tr></table><br>
 					<?php
 				}else
 				{
-					?><table class="new" border="1"><tr><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
+					?><table class="new" border="1" width="95%"><tr class="style3"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
 					<tr><td><?php echo $size;?></td><td><b>N</b></td><td><?php echo $ssids;?></td><td><?php echo $wifi[1];?></td><td><?php echo $authen;?></td><td><?php echo $encryp;?></td><td><?php echo $radios;?></td><td><?php echo $chan;?></td></tr>
 					<?php
 					?>
 					<tr><td colspan="8">
 					<?php
-					mysql_select_db($db_st,$conn)or die(mysql_error());
+					mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 					
 					$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
 					mysql_query($sqlct, $conn);
 					echo "(1)Create Table [".$db_st."].{".$table."}<br>		 => Added new Table for ".$ssids."<br>";
 					
-					$sqlcgt = "CREATE TABLE `$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL , `long` VARCHAR( 25 ) NOT NULL , `sats` INT( 2 ) NOT NULL , `date` VARCHAR( 10 ) NOT NULL , `time` VARCHAR( 8 ) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
+					$sqlcgt = "CREATE TABLE `$gps_table` ("
+								."`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,"
+								."`lat` VARCHAR( 25 ) NOT NULL , "
+								."`long` VARCHAR( 25 ) NOT NULL , "
+								."`sats` INT( 2 ) NOT NULL , "
+								."`hdp` FLOAT NOT NULL ,"
+								."`alt` FLOAT NOT NULL ,"
+								."`geo` FLOAT NOT NULL ,"
+								."`kmh` FLOAT NOT NULL ,"
+								."`mph` FLOAT NOT NULL ,"
+								."`track` FLOAT NOT NULL ,"
+								."`date` VARCHAR( 10 ) NOT NULL , "
+								."`time` VARCHAR( 8 ) NOT NULL , "
+								."INDEX ( `id` ) ) CHARACTER SET = latin1";
 					mysql_query($sqlcgt, $conn);
 					echo "(2)Create Table [".$db_st."].{".$gps_table."}<br>		 => Added new GPS Table for ".$ssids."<br>";
 					$signal_exp = explode("-",$wifi[12]);
+					echo $wifi[12]."<BR>";
 					$gps_id = 1;
 					$N=0;
+					$prev = '';
 					foreach($signal_exp as $exp)
 					{
+						
 						?>
 						<tr><td colspan="8">
 						<?php
 						$esp = explode(",",$exp);
 						$vs1_id = $esp[0];
 						$signal = $esp[1];
-						
+						if ($prev == $vs1_id)
+						{
+							$gps_id_ = $gps_id-1;
+							$signals[$gps_id] = $gps_id_.",".$signal;
+							continue;
+						}
 						if ($GLOBALS["debug"]  ==1)
 						{
 							$apecho = "+-+-+-+AP Data+-+-+-+<br> GPS ID:".$vs1_id." <br> ID: ".$gps_id."<br>"
@@ -467,24 +571,29 @@ class database
 						$sats = $gdata[$vs1_id]["sats"];
 						$date = $gdata[$vs1_id]["date"];
 						$time = $gdata[$vs1_id]["time"];
-						$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$date', '$time')";
+						$hdp = $gdata[$vs1_id]["hdp"];
+						$alt = $gdata[$vs1_id]["alt"];
+						$geo = $gdata[$vs1_id]["geo"];
+						$kmh = $gdata[$vs1_id]["kmh"];
+						$mph = $gdata[$vs1_id]["mph"];
+						$track = $gdata[$vs1_id]["track"];
+						
+						$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
+											   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
 						if (mysql_query($sqlitgpsgp, $conn))
 						{
-							echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
+							echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table";
 						}else
 						{
-							$sqlcgt = "CREATE TABLE `$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL , `long` VARCHAR( 25 ) NOT NULL , `sats` INT( 2 ) NOT NULL , `date` VARCHAR( 10 ) NOT NULL , `time` VARCHAR( 8 ) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
-							if (mysql_query($sqlcgt, $conn))
-							{
-								echo "(1)Create Table [".$db_st."].{".$gps_table."}<br>		 => Thats odd the table was missing, well I added a GPS Table for ".$ssids."<br>";
-								if (mysql_query($sqlitgpsgp, $conn)){echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";}
-							}
+							echo "There was an error inserting the GPS data.<br>".mysql_error($conn);
 						}
 						$signals[$gps_id] = $gps_id.",".$signal;
+				#		echo $signals[$gps_id];
 						$gps_id++;
 						?>
 						</td></tr>
 						<?php
+						$prev = $vs1_id;
 					}
 					?>
 					<tr><td colspan="8">
@@ -492,19 +601,19 @@ class database
 					$sig = implode("-",$signals);
 					
 					$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
-					mysql_query($sqlit, $conn) or die(mysql_error());
+					mysql_query($sqlit, $conn) or die(mysql_error($conn));
 					echo "(3)Insert into [".$db_st."].{".$table."}<br>		 => Add Signal History to Table<br>";
 					
 					# pointers
 					mysql_select_db($db,$conn);
 					$sqlp = "INSERT INTO `$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '$size', '$ssidss', '$macs','$chan', '$radios', '$authen', '$encryp', '$sectype')";
-					if (mysql_query($sqlp, $conn) or die(mysql_error()))
+					if (mysql_query($sqlp, $conn) or die(mysql_error($conn)))
 					{
 						echo "(1)Insert into [".$db."].{".$wtable."} => Added Pointer Record<br>";
 						$user_aps[$user_n]="0,".$size.":1";
 						$user_n++;
 						$sqlup = "UPDATE `$settings_tb` SET `size` = '$size' WHERE `table` = '$wtable' LIMIT 1;";
-						if (mysql_query($sqlup, $conn) or die(mysql_error()))
+						if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 						{
 							
 							echo 'Updated ['.$db.'].{'.$wtable."} with new Size <br>		=> ".$size."<br>";
@@ -514,7 +623,7 @@ class database
 							echo mysql_error()." => Could not Add new pointer to table (this has been logged) <br>";
 						}
 					}else{echo "Something went wrong, I couldn't add in the pointer :-( <br>";}
-					echo "</td></tr></table>";
+					echo "</td></tr></table><br>";
 				}
 				unset($ssid_ptb);
 				unset($mac_ptb);
@@ -543,11 +652,13 @@ class database
 	$user_ap_s = implode("-",$user_aps);
 	$notes = addslashes($notes);
 	echo $times."<br>";
+	if($title === ''){$title = "Untitled";}
+	if($user === ''){$user="Unknown";}
+	if($notes === ''){$notes="No Notes";}
 	if (!$user_ap_s == "")
 	{$sqlu = "INSERT INTO `users` ( `id` , `username` , `points` ,  `notes`, `date`, `title`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title')";
-	mysql_query($sqlu, $conn) or die(mysql_error());}
+	mysql_query($sqlu, $conn) or die(mysql_error($conn));}
 	mysql_close($conn);
-	database::exp_kml($export="exp_newest_kml");
 	echo "<br>DONE!";
 	}
 	
@@ -561,6 +672,8 @@ class database
 	//	GPS Convertion :
 		$neg=FALSE;
 		$geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
+		$geocord_front = explode(" ", $geocord_exp[0]);
+		if($geocord_front[1]==0 or strlen($geocord_front[1])==2){return $geocord_in; continue;}
 		if($geocord_exp[0][0] === "S" or $geocord_exp[0][0] === "W"){$neg = TRUE;}
 		$patterns[0] = '/N /';
 		$patterns[1] = '/E /';
@@ -593,6 +706,9 @@ class database
 		//	GPS Convertion :
 		$neg=FALSE;
 		$geocord_exp = explode(".", $geocord_in);
+		$geocord_front = explode(" ", $geocord_exp[0]);
+		if(strlen($geocord_front[1])==4){return $geocord_in; continue;}
+		
 		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
 		$pattern[0] = '/N /';
 		$pattern[1] = '/E /';
@@ -623,27 +739,34 @@ class database
 	{
 	foreach($gpsarray as $gps)
 	{
-		$gps_t 	= $gps["lat"]."-".$gps["long"]."-".$gps["sats"]."-".$gps["date"]."-".$gps["time"];
-		$test_t = $test["lat"]."-".$test["long"]."-".$test["sats"]."-".$test["date"]."-".$test["time"]; 
-		if (strcmp($gps_t,$test_t)=== 0 )
+		$id = $gps['id'];
+		$lat1 = smart($gps['lat']);
+		$long1 = smart($gps['long']);
+		$time1 = smart($gps['time']);
+		$date1 = smart($gps['date']);
+		$gps_t 	= $lat1."".$long1."".$date1."".$time1;
+		echo $test."<BR>".$gps_t."<BR>";
+		$testing = strcasecmp($gps_t,$test);
+		echo $testing."<BR>";
+		if ($testing===0)
 		{
 			if ($GLOBALS["debug"]  == 1 ) {
 				echo  "  SAME<br>";
 				echo  "  Array data: ".$gps_t."<br>";
-				echo  "  Testing data: ".$test_t."<br>.-.-.-.-.=.-.-.-.-.<br>";
+				echo  "  Testing data: ".$test."<br>.-.-.-.-.=.-.-.-.-.<br>";
 				echo  "-----=-----=-----<br>|<br>|<br>"; 
 			}
-			return 1;
+			return array(0=>1,1=>$id);
 			break;
 		}else
 		{
 			if ($GLOBALS["debug"]  == 1){
 				echo  "  NOT SAME<br>";
 				echo  "  Array data: ".$gps_t."<br>";
-				echo  "  Testing data: ".$test_t."<br>----<br>";
+				echo  "  Testing data: ".$test."<br>----<br>";
 				echo  "-----=-----<br>";
 			}
-			$return = 0;
+			$return = array(0=>0,1=>0);
 		}
 	}
 	return $return;
@@ -795,7 +918,7 @@ class database
 				$points = explode('-' , $field['points']);
 				$total = count($points);
 				?>
-				<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["id"];?></a></td><td><?php echo $field["username"];?></td><td><?php echo $field["title"];?></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
+				<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
 				<?php
 			}
 		}
@@ -824,6 +947,14 @@ class database
 		mysql_select_db($db,$conn);
 		$sql = "SELECT * FROM `users` ORDER BY username ASC";
 		$result = mysql_query($sql, $conn) or die(mysql_error());
+		$num = mysql_num_rows($result);
+		if($num == 0)
+		{
+			echo '<tr><td colspan="5" align="center">There no Users, Import something.</td></tr></table>'; 
+			$filename = $_SERVER['SCRIPT_FILENAME'];
+			footer($filename);
+			die();
+		}
 		while ($user_array = mysql_fetch_array($result))
 		{
 			$users[]=$user_array["username"];
@@ -950,19 +1081,20 @@ class database
 	function users_lists($user="")
 	{
 		include('config.inc.php');
-		echo '<h1>Import Lists For: <a class="links" href ="../opt/userstats.php?func=user&user='.$user.'">'.$user.'</a></h1>';		
+		echo '<h1>Import Lists For: <a class="links" href ="../opt/userstats.php?func=allap&user='.$user.'">'.$user.'</a></h1>';		
 		echo '<h3>View All Users <a class="links" href="userstats.php?func=allusers">Here</a></h3>';
 		echo '<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user='.$user.'">'.$user.'</a>';
 		echo '<h2><a class="links" href=../opt/export.php?func=exp_user_all_kml&user='.$user.'>Export To KML File</a></h2>';
-		echo'<table border="1"><tr><th>ID</th><th>Title</th><th># of APs</th><th>Imported on</th></tr><tr>';
+		echo '<table border="1"><tr class="style3"><th>ID</th><th>Title</th><th># of APs</th><th>Imported on</th></tr><tr>';
 		mysql_select_db($db,$conn);
 		$sql = "SELECT * FROM `users` WHERE `username` = '$user'";
 		$result = mysql_query($sql, $conn) or die(mysql_error());
 		while($user_array = mysql_fetch_array($result))
 		{
+			if($user_array['title']==''){$title = "Untitled";}else{$title = $user_array['title'];}
 			$points = explode('-',$user_array['points']);
 			$total = count($points);
-			echo '<tr><td>'.$user_array["id"].'</td><td><a class="links" href="../opt/userstats.php?func=useraplist&row='.$user_array["id"].'">'.$user_array["title"].'</a></td><td align="center">'.$total.'</td><td>'.$user_array["date"].'</td></tr>';
+			echo '<tr><td>'.$user_array["id"].'</td><td align="center"><a class="links" href="../opt/userstats.php?func=useraplist&row='.$user_array["id"].'">'.$title.'</a></td><td align="center">'.$total.'</td><td>'.$user_array["date"].'</td></tr>';
 			
 		}
 		echo "</table><br>";
@@ -981,11 +1113,11 @@ class database
 		$result = mysql_query($sql, $conn) or die(mysql_error());
 		$user_array = mysql_fetch_array($result);
 		$aps=explode("-",$user_array["points"]);
-		echo '<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=user&user='.$user_array["username"].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
+		echo '<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=allap&user='.$user_array["username"].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
 		?>
 		<h3>View All Users <a class="links" href="userstats.php?func=allusers">Here</a></h3>
 		<?php
-		echo'<table border="1"><tr><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
+		echo'<table border="1"><tr class="style3"><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
 		foreach($aps as $ap)
 		{
 			#$pagerow++;
@@ -1040,7 +1172,7 @@ class database
 		{
 			case "exp_all_db_kml":
 			
-				echo '<table><tr><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
+				echo '<table><tr class="style3"><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
 				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 				$sql = "SELECT * FROM `$wtable`";
 				$result = mysql_query($sql, $conn) or die(mysql_error());
@@ -1142,31 +1274,34 @@ class database
 						$result6 = mysql_query($sql6, $conn);
 						$max = mysql_num_rows($result6);
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='1'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_first = mysql_fetch_array($result);
-						
-						$date_first = $gps_table_first["date"];
-						$time_first = $gps_table_first["time"];
-						$fa = $date_first." ".$time_first;
-						
-		#				if($gps_table_first['lat'] == "N 0.0000" or $gps_table_first['long'] == "E 0.0000"){continue;}
-						//===================================CONVERT FROM DM TO DD=========================================//
-						$lat = $gps_table_first['lat'];
-						$long = $gps_table_first['long'];
-						if($lat !== "N 0.0000" && $long !== "E 0.0000"){
-							$lat &= database::convert_dm_dd($lat);
-							$long &= database::convert_dm_dd($long);
+						$sql_1 = "SELECT * FROM `$table_gps`";
+						$result_1 = mysql_query($sql_1, $conn);
+						while($gps_table_first = mysql_fetch_array($result))
+						{
+							$date_first = $gps_table_first["date"];
+							$time_first = $gps_table_first["time"];
+							$fa = $date_first." ".$time_first;
+							
+							$alt = $gps_table_first['alt'];
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							$long_exp = explode(" ", $gps_table_first['long']);
+							if($lat_exp[1] == "0.00000"){continue;}
+							
+							$lat = $gps_table_first['lat'];
+							$long = $gps_table_first['long'];
+							$lat = database::convert_dm_dd($lat);
+							$long = database::convert_dm_dd($long);
 						}
+						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
 						//=====================================================================================================//
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_last = mysql_fetch_array($result);
+						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+						$result_2 = mysql_query($sql_2, $conn);
+						$gps_table_last = mysql_fetch_array($result_2);
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						fwrite( $fileappend, "<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						fwrite( $fileappend, "<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 						echo 'Wrote AP: '.$ap['ssid'].'</td></tr>';
 						
 						unset($gps_table_first["lat"]);
@@ -1182,11 +1317,18 @@ class database
 			#---------------------#
 			#---------------------#
 			case "exp_user_list":
-				echo '<table><tr><th style="border-style: solid; border-width: 1px; colspan: 4">Start of export Users List to KML</th></tr>';
+				echo '<table><tr class="style3"><th style="border-style: solid; border-width: 1px; colspan: 4">Start of export Users List to KML</th></tr>';
+				if($row == 0)
+				{
+					$sql_row = "SELECT * FROM `users`";
+					$result_row = mysql_query($sql_row, $conn) or die(mysql_error());
+					$row = mysql_num_rows($result_row);
+				}
 				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 				$sql = "SELECT * FROM `users` WHERE `id`='$row'";
 				$result = mysql_query($sql, $conn) or die(mysql_error());
 				$user_array = mysql_fetch_array($result);
+				
 				$aps = explode("-" , $user_array["points"]);
 				
 				$date=date('Y-m-d_H-i-s');
@@ -1215,12 +1357,16 @@ class database
 				foreach($aps as $ap)
 				{
 					$ap_exp = explode("," , $ap);
-					$apid = $ap_exp[1];
+					$apid_exp = explode(":",$ap_exp[1]);
+					
+					$apid = $apid_exp[0];
+					$update_row = $apid_exp[1];
 					$udflag = $ap_exp[0];
+					
 					mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 					$sql0 = "SELECT * FROM `$wtable` WHERE `id`='$apid'";
-					$result = mysql_query($sql0, $conn) or die(mysql_error());
-					while ($newArray = mysql_fetch_array($result))
+					$result0 = mysql_query($sql0, $conn) or die(mysql_error());
+					while ($newArray = mysql_fetch_array($result0))
 					{
 						$id = $newArray['id'];
 						$ssid = $newArray['ssid'];
@@ -1235,12 +1381,18 @@ class database
 						{
 							case 1:
 								$type = "#openStyleDead";
+								$auth = "Open";
+								$encry = "None";
 								break;
 							case 2:
 								$type = "#wepStyleDead";
+								$auth = "Open";
+								$encry = "WEP";
 								break;
 							case 3:
 								$type = "#secureStyleDead";
+								$auth = "WPA-Personal";
+								$encry = "TIKP";
 								break;
 						}
 					
@@ -1266,7 +1418,7 @@ class database
 						$table=$ssid.'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
 						mysql_select_db($db_st) or die("Unable to select Database: ".$db_st);
 						
-						$sql = "SELECT * FROM `$table` WHERE `id`='1'";
+						$sql = "SELECT * FROM `$table` WHERE `id`='$update_row'";
 						$result = mysql_query($sql, $conn);
 						$AP_table = mysql_fetch_array($result);
 						$otx = $AP_table["otx"];
@@ -1279,30 +1431,34 @@ class database
 						$result6 = mysql_query($sql6, $conn);
 						$max = mysql_num_rows($result6);
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='1'";
+						$sql = "SELECT * FROM `$table_gps`";
 						$result = mysql_query($sql, $conn);
-						$gps_table_first = mysql_fetch_array($result);
-						$date_first = $gps_table_first["date"];
-						$time_first = $gps_table_first["time"];
-						$fa = $date_first." ".$time_first;
-		#				if($gps_table_first['lat']=="0.0000" or $gps_table_first['long'] =="0.0000"){continue;}
-						//===================================CONVERT FROM DM TO DD=========================================//
-						$lat = $gps_table_first['lat'];
-						$long = $gps_table_first['long'];
-						if($lat !== "N 0.0000"){
+						while($gps_table_first = mysql_fetch_array($result))
+						{
+							$date_first = $gps_table_first["date"];
+							$time_first = $gps_table_first["time"];
+							$fa = $date_first." ".$time_first;
+							
+							$alt = $gps_table_first['alt'];
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							$long_exp = explode(" ", $gps_table_first['long']);
+							if($lat_exp[1] == "0.00000"){continue;}
+							
+							$lat = $gps_table_first['lat'];
+							$long = $gps_table_first['long'];
 							$lat = database::convert_dm_dd($lat);
 							$long = database::convert_dm_dd($long);
 						}
-						//=====================================================================================================//
+						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_last = mysql_fetch_array($result);
+						$sql_1 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+						$result_1 = mysql_query($sql_1, $conn);
+						$gps_table_last = mysql_fetch_array($result_1);
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
 						fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"<a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n	");
-						fwrite( $fileappend, "<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						fwrite( $fileappend, "<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 						unset($gps_table_first["lat"]);
 						unset($gps_table_first["long"]);
@@ -1324,7 +1480,7 @@ class database
 				$aparray = mysql_fetch_array($result);
 				
 				$file_ext = $aparray['ssid']."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".kml";
-				echo '<table><tr><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$aparray["ssid"].'</th></tr>';
+				echo '<table><tr class="style3"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$aparray["ssid"].'</th></tr>';
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
 				$filewrite = fopen($filename, "w");
@@ -1410,31 +1566,33 @@ class database
 						$result6 = mysql_query($sql6, $conn);
 						$max = mysql_num_rows($result6);
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='1'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_first = mysql_fetch_array($result);
-						
-						$date_first = $gps_table_first["date"];
-						$time_first = $gps_table_first["time"];
-						$fa = $date_first." ".$time_first;
-						
-		#				if($gps_table_first['lat'] == "N 0.0000" or $gps_table_first['long'] == "E 0.0000"){continue;}
-						//===================================CONVERT FROM DM TO DD=========================================//
-						$lat = $gps_table_first['lat'];
-						$long = $gps_table_first['long'];
-						if($lat !== "N 0.0000" && $long !== "E 0.0000"){
-							$lat &= database::convert_dm_dd($lat);
-							$long &= database::convert_dm_dd($long);
+						$sql_1 = "SELECT * FROM `$table_gps`";
+						$result_1 = mysql_query($sql_1, $conn);
+						while($gps_table_first = mysql_fetch_array($result))
+						{
+							$date_first = $gps_table_first["date"];
+							$time_first = $gps_table_first["time"];
+							$fa = $date_first." ".$time_first;
+							
+							$alt = $gps_table_first['alt'];
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							$long_exp = explode(" ", $gps_table_first['long']);
+							if($lat_exp[1] == "0.00000"){continue;}
+							
+							$lat = $gps_table_first['lat'];
+							$long = $gps_table_first['long'];
+							$lat = database::convert_dm_dd($lat);
+							$long = database::convert_dm_dd($long);
 						}
-						//=====================================================================================================//
+						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_last = mysql_fetch_array($result);
+						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+						$result_2 = mysql_query($sql_2, $conn);
+						$gps_table_last = mysql_fetch_array($result_2);
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						$file_data .= ("<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						$file_data .= ("<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ap['ssid'].'</td></tr>';
 					}
 				}else
@@ -1443,6 +1601,9 @@ class database
 				}
 				$fileappend = fopen($filename, "a");
 				fwrite($fileappend, $file_data);
+				fwrite( $fileappend, "	</Document>\r\n</kml>");
+				
+				fclose( $fileappend );
 				echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
 				mysql_close($conn);
 				break;
@@ -1450,7 +1611,7 @@ class database
 			#----------------------#
 			case "exp_user_all_kml":
 				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
-				echo '<table><tr><th style="border-style: solid; border-width: 1px">Start export of all APs for User: '.$user.', to KML</th></tr>';
+				echo '<table><tr class="style3"><th style="border-style: solid; border-width: 1px">Start export of all APs for User: '.$user.', to KML</th></tr>';
 				$ap_id = array();
 				$sql = "SELECT `points` FROM `users` WHERE `username`='$user'";
 				$result = mysql_query($sql, $conn);
@@ -1490,18 +1651,24 @@ class database
 				{
 					mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 					$id = $ap['id'];
+					$rows = $ap['row'];
+					
 					$sql = "SELECT * FROM `$wtable` WHERE `id`='$id'";
 					$result = mysql_query($sql, $conn);
 					$aps = mysql_fetch_array($result);
+					
 					$ssid = $aps['ssid'];
 					$mac = $aps['mac'];
 					$sectype = $aps['sectype'];
 					$r = $aps['radio'];
 					$chan = $aps['chan'];
 					$manuf =& database::manufactures($mac);
+					
 					echo '<tr><td style="border-style: solid; border-width: 1px">';
+					
 					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
 					$table_gps = $table.$gps_ext;
+					
 					switch($r)
 						{
 							case "a":
@@ -1539,9 +1706,6 @@ class database
 								break;
 						}
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
-					
-					$rows = $ap['row'];
-					
 					$sql = "SELECT * FROM `$table` WHERE `id`='$rows'";
 					$result1 = mysql_query($sql, $conn) or die(mysql_error());
 					
@@ -1565,31 +1729,33 @@ class database
 						$result6 = mysql_query($sql6, $conn);
 						$max = mysql_num_rows($result6);
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='$first_sig_gps_id'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_first = mysql_fetch_array($result);
-						
-						$date_first = $gps_table_first["date"];
-						$time_first = $gps_table_first["time"];
-						$fa = $date_first." ".$time_first;
-						
-		#				if($gps_table_first['lat'] == "N 0.0000" or $gps_table_first['long'] == "E 0.0000"){continue;}
-						//===================================CONVERT FROM DM TO DD=========================================//
-						$lat = $gps_table_first['lat'];
-						$long = $gps_table_first['long'];
-						if($lat !== "N 0.0000" && $long !== "E 0.0000"){
-							$lat &= database::convert_dm_dd($lat);
-							$long &= database::convert_dm_dd($long);
+						$sql_1 = "SELECT * FROM `$table_gps` WHERE";
+						$result_1 = mysql_query($sql_1, $conn);
+						while($gps_table_first = mysql_fetch_array($result))
+						{
+							$date_first = $gps_table_first["date"];
+							$time_first = $gps_table_first["time"];
+							$fa = $date_first." ".$time_first;
+							
+							$alt = $gps_table_first['alt'];
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							$long_exp = explode(" ", $gps_table_first['long']);
+							if($lat_exp[1] == "0.00000"){continue;}
+							
+							$lat = $gps_table_first['lat'];
+							$long = $gps_table_first['long'];
+							$lat = database::convert_dm_dd($lat);
+							$long = database::convert_dm_dd($long);
 						}
-						//=====================================================================================================//
+						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='$last_sig_gps_id'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_last = mysql_fetch_array($result);
+						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$last_sig_gps_id'";
+						$result_2 = mysql_query($sql_2, $conn);
+						$gps_table_last = mysql_fetch_array($result_2);
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 						echo 'Wrote AP: '.$ssid.'</td></tr>';
 						
 						unset($gps_table_first["lat"]);
@@ -1606,17 +1772,16 @@ class database
 			#--------------------#
 			case "exp_newest_kml":
 				$date=date('Y-m-d_H-i-s');
-				$sql = "SELECT * FROM `$wtable` WHERE `id`='$row'";
+				$sql = "SELECT * FROM `$wtable`";
 				$result = mysql_query($sql, $conn) or die(mysql_error());
 				$rows = mysql_num_rows($result);
-				$new_row = count($rows);
 				
-				$sql = "SELECT * FROM `$wtable` WHERE `id`='$new_row'";
+				$sql = "SELECT * FROM `$wtable` WHERE `id`='$rows'";
 				$result = mysql_query($sql, $conn) or die(mysql_error());
 				$ap_array = mysql_fetch_array($result);
 				
 				$file_ext = "Newest_AP_".$date.".kml";
-				echo '<table><tr><th style="border-style: solid; border-width: 1px">Start export of Single AP: $ap_array["ssid"]</th></tr>';
+				echo '<table><tr class="style3"><th style="border-style: solid; border-width: 1px">Start export of Single AP: $ap_array["ssid"]</th></tr>';
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
 				$filewrite = fopen($filename, "w");
@@ -1704,31 +1869,33 @@ class database
 						$result6 = mysql_query($sql6, $conn);
 						$max = mysql_num_rows($result6);
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='1'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_first = mysql_fetch_array($result);
-						
-						$date_first = $gps_table_first["date"];
-						$time_first = $gps_table_first["time"];
-						$fa = $date_first." ".$time_first;
-						
-		#				if($gps_table_first['lat'] == "N 0.0000" or $gps_table_first['long'] == "E 0.0000"){continue;}
-						//===================================CONVERT FROM DM TO DD=========================================//
-						$lat = $gps_table_first['lat'];
-						$long = $gps_table_first['long'];
-						if($lat !== "N 0.0000" && $long !== "E 0.0000"){
-							$lat &= database::convert_dm_dd($lat);
-							$long &= database::convert_dm_dd($long);
+						$sql_1 = "SELECT * FROM `$table_gps`";
+						$result_1 = mysql_query($sql_1, $conn);
+						while($gps_table_first = mysql_fetch_array($result))
+						{
+							$date_first = $gps_table_first["date"];
+							$time_first = $gps_table_first["time"];
+							$fa = $date_first." ".$time_first;
+							
+							$alt = $gps_table_first['alt'];
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							$long_exp = explode(" ", $gps_table_first['long']);
+							if($lat_exp[1] == "0.00000"){continue;}
+							
+							$lat = $gps_table_first['lat'];
+							$long = $gps_table_first['long'];
+							$lat = database::convert_dm_dd($lat);
+							$long = database::convert_dm_dd($long);
 						}
-						//=====================================================================================================//
+						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
 						
-						$sql = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
-						$result = mysql_query($sql, $conn);
-						$gps_table_last = mysql_fetch_array($result);
+						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+						$result_2 = mysql_query($sql_2, $conn);
+						$gps_table_last = mysql_fetch_array($result_2);
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						$file_data .= ("<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",0</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						$file_data .= ("<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 						echo 'Wrote AP: '.$ap['ssid'].'</td></tr>';
 					}
 				}else
@@ -1753,7 +1920,7 @@ class database
 			case "exp_all_db_vs1":
 				$n	=	1; # GPS Array KEY -has to start at 1 vistumbler will error out if the first GPS point has a key of 0
 				$nn	=	1; # AP Array key
-				echo '<table><tr><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to VS1</th></tr>';
+				echo '<table><tr class="style3"><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to VS1</th></tr>';
 				mysql_select_db($db,$conn) or die("Unable to select Database: ".$db);
 				$sql_		= "SELECT * FROM `$wtable`";
 				$result_	= mysql_query($sql_, $conn) or die(mysql_error());

@@ -116,7 +116,7 @@ if ($usercount == NULL){$lastuser['username'] = "No one has imported any APs yet
 	</tr>
 	<tr>
 		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
-		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=allap&user=<?php echo $lastuser['username'];?>"><?php echo $lastuser['username'];?></a></td>
+		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>"><?php echo $lastuser['username'];?></a></td>
 		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No AP";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
 		<td align="center" class="style2">&nbsp;</td>
 	</tr>

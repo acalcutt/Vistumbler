@@ -23,7 +23,6 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Import Page</title>
 	<tr>
 <td width="17%" bgcolor="#304D80" valign="top">
 <?php
-$conn = mysql_connect($host, $db_user, $db_pwd);
 mysql_select_db($db,$conn);
 $sqls = "SELECT * FROM links ORDER BY ID ASC";
 $result = mysql_query($sqls, $conn) or die(mysql_error());
@@ -32,29 +31,42 @@ while ($newArray = mysql_fetch_array($result))
 	$testField = $newArray['links'];
     echo "<p>$testField</p>";
 }
+
 ?>
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
 <?php
-$user	=	addslashes($_POST["user"]);
-$notes	=	addslashes($_POST["notes"]);
-$source	=	$_FILES['file']['tmp_name'];
-$dest	=	$_FILES['file']['name'];
+
+if($_POST["user"] !== ''){$user = addslashes($_POST["user"]);}else{$user="Unknown";}
+if($_POST["notes"] !== ''){$notes = addslashes($_POST["notes"]);}else{$notes="No Notes";}
+if($_POST['title'] !== ''){$title = addslashes($_POST['title']);}else{$title="Untitled";}
+
+$tmp	=	$_FILES['file']['tmp_name'];
+$filename	=	$_FILES['file']['name'];
+
 $rand	=	rand();
-$title	=	addslashes($_POST['title']);
+
+$user = smart_quotes($user);
+$notes = smart_quotes($notes);
+$title = smart_quotes($title);
+
 echo "<h1>Imported By: ".$user."<BR></h1>";
 echo "<h2>With Title: ".$title."</h2>";
-$uploaddir = "C:\wamp\www\wifidb\import\up\\";
-$uploadfile = $uploaddir . $rand ."-". basename($dest);
+$uploaddir = getcwd()."/up/";
+$uploadfile = $uploaddir.$rand.'_'.$filename;
 
-echo '<pre>';
-if (!move_uploaded_file($source, $uploadfile)) {echo "Failure.\n";}
-
-print "</pre>";
+if (!move_uploaded_file($tmp, $uploadfile)) {echo "Failure.<BR>"; die();}
 $database = new database();
 $database->import_vs1($uploadfile, $user, $notes, $title );
+mysql_select_db($db,$conn);
 
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+$sqls = "SELECT * FROM `users`";
+$result = mysql_query($sqls, $conn) or die(mysql_error());
+$row = mysql_num_rows($result);
+$database->exp_kml($export="exp_newest_kml");
+
+$file = $_SERVER['SCRIPT_FILENAME'];
+footer($file);
+mysql_close($conn);
 ?>

@@ -62,7 +62,12 @@ switch($func)
 			$re = mysql_query($sql, $conn) or die(mysql_error());
 			while($user_array = mysql_fetch_array($re))
 			{
-				echo '<option value="'.$user_array["username"].'">'.$user_array["username"]."\r\n";
+				$users[]=$user_array['username'];
+			}
+			$users = array_unique($users);
+			foreach($users as $user)
+			{
+				echo '<option value="'.$user.'">'.$user."\r\n";
 			}
 			?>
 			</select>
@@ -109,7 +114,8 @@ switch($func)
 			$re = mysql_query($sql, $conn) or die(mysql_error());
 			while($user_array = mysql_fetch_array($re))
 			{
-				echo '<option value="'.$user_array["id"].'">User: '.$user_array["username"].' - Title: '.$user_array["title"]."\r\n";
+				if($user_array['title']==''){$title = "Untitled";}else{$title = $user_array['title'];}
+				echo '<option value="'.$user_array["id"].'">User: '.$user_array["username"].' - Title: '.$title."\r\n";
 			}
 			?>
 			</select>

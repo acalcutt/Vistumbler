@@ -25,6 +25,9 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb'"].' --> Install Page</titl
 </td>
 	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 		<p align="center">
+<?php
+if($ver['wifidb'] !== "0.16 Build 1"){echo '<h1><font color="red">You must have the 0.16 Build 1 Code base.</font></h1>';footer($_SERVER['SCRIPT_FILENAME']); die();}
+?>
 <table><tr><th>Status</th><th>Step of Install</th></tr>
 <?php
 	#========================================================================================================================#
@@ -136,7 +139,7 @@ $sqls =	"CREATE TABLE wifi0 ("
   ."  id int(255) default NULL,"
   ."  ssid varchar(25) NOT NULL,"
   ."  mac varchar(25) NOT NULL,"
-  ."  chan varchar(2) NOT NULL,"
+  ."  chan varchar(3) NOT NULL,"
   ."  sectype varchar(1) NOT NULL,"
   ."  radio varchar(1) NOT NULL,"
   ."  auth varchar(25) NOT NULL,"
@@ -343,7 +346,7 @@ if($AD_CF_FI_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
 
-$install_warning = fwrite($fileappend,"\r\n\r\nif(is_dir('install')){echo '<h2>The install Folder is still there, remove it!</h2>';}\nelseif(is_dir('../install')){echo '<h2>The install Folder is still there, remove it!</h2>';}");
+$install_warning = fwrite($fileappend,"\r\n\r\nif(is_dir('install')){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}\nelseif(is_dir('../install')){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}");
 if($install_warning){}
 fwrite($fileappend, "\r\n?>");
 
