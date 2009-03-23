@@ -55,7 +55,7 @@ if ($_POST['auth']	!== '')	{ $sql_a[]	=	" `auth` = '".$_POST['auth']."' ";}
 if ($_POST['encry']	!== '')	{ $sql_a[]	=	" `encry` = '".$_POST['encry']."' ";}
 
 echo '<table border="1" width="100%" cellspacing="0">'
-.'<tr><th>SSID</th>'
+.'<tr class="style4"><th>SSID</th>'
 .'<th>MAC</th>'
 .'<th>Chan</th>'
 .'<th>Radio Type</th>'

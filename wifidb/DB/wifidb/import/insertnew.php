@@ -64,7 +64,7 @@ mysql_select_db($db,$conn);
 $sqls = "SELECT * FROM `users`";
 $result = mysql_query($sqls, $conn) or die(mysql_error());
 $row = mysql_num_rows($result);
-$database->exp_kml($export="exp_newest_kml");
+#$database->exp_kml($export="exp_newest_kml");
 
 $file = $_SERVER['SCRIPT_FILENAME'];
 footer($file);

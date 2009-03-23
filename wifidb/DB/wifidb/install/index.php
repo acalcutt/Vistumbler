@@ -100,8 +100,6 @@ date_default_timezone_set($timezn);
 		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
 	<?php
 	}
-	echo $tracker;
-	echo $ads;
 	?>
 	</td>
 	</tr>

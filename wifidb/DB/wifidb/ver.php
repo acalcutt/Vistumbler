@@ -55,7 +55,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-20</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-23</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -100,12 +100,24 @@ while ($newArray = mysql_fetch_array($result))
 				</OL>
 			<LI>The warning for the install folder sitll being available wasnot added into the installer. It now is, and also in the upgrader too.</LI>
 			<LI>Made the Default App internal timezone, GMT+0(Zulu).</LI>
-				<OL>
+				<OL type="A">
 					<LI>Soon you will beable to make the viewing time as your local timezon.</LI>
 					<LI><a class="links" href="http://wwp.greenwichmeantime.com/">greenwichmeantime.com</a></LI>
 					<LI><a class="links" href="http://en.wikipedia.org/wiki/Greenwich_Mean_Time">wikipedia -> Greenwich_Mean_Time</a></LI>
 				</OL>
-			<LI></LI>
+			<LI>GPS Update Issue has been resolved. Problem was PHP had an issue comparing the Time stamp from the DB and the VS1 file.</LI>
+				<OL type="A">
+					<LI>Sample Before: N 0.00000-E 0.00000-2009-03-19-17:51:56 [lat-long-date-time]</LI>
+					<LI>Sample After: 00000000000020090319175156 [latlongdatetime]</LI>
+						<OL>
+							<LI>The Sample strings are the lat, long, date, and time all cramed into one long string.</LI>
+							<LI>Sample Before was how I was comparing the GPS before the fix.</LI>
+							<LI>Sample After is how the comparison is done now.</LI>
+							<LI>With all the non-numerical data removed, GPS comparisons are done correctly.</LI>
+							<LI>Even when it had non-numerical data, but no time stamp the compare was successful, but we're not going to do that.</LI>
+						</OL>
+				</OL>
+			
 		</OL>
 	</td></tr>
 </table>

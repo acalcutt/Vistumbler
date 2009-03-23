@@ -48,51 +48,45 @@ echo "Due to security restrictions in current browsers, file fields cannot have 
 echo "<br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br>";
 ?>
 					<CENTER><form action="insertnew.php" method="post" enctype="multipart/form-data">
-						<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0>
-							<COL WIDTH=40*>
-							<COL WIDTH=216*>
-							<TR>
-								<TD WIDTH=16%></TD>
-								<TD WIDTH=84% VALIGN=TOP></TD>
-							</TR>
-							<TR>
-								<TD WIDTH=16%>
-									<P>Give a Title to the Import: 
+						<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
+							<TR height="40">
+								<TD class="style4">
+									<P>Title of Import: 
 									</P>
 								</TD>
-								<TD WIDTH=84%>
+								<TD>
 									<P><A NAME="title"></A><INPUT TYPE=TEXT NAME="title" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
 								</TD>
 							</TR>
-							<TR>
-								<TD WIDTH=16% HEIGHT=35>
+							<TR height="40">
+								<TD class="style4">
 									<P>File location: 
 									</P>
 								</TD>
-								<TD WIDTH=84%>
+								<TD>
 									<P><A NAME="file"></A><INPUT TYPE=FILE NAME="file" SIZE=56 STYLE="width: 5.41in; height: 0.25in"></P>
 								</TD>
 							</TR>
-							<TR>
-								<TD WIDTH=16%>
+							<TR height="40">
+								<TD class="style4">
 									<P>Username: 
 									</P>
 								</TD>
-								<TD WIDTH=84%>
+								<TD>
 									<P><A NAME="user"></A><INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
 								</TD>
 							</TR>
 							<TR>
-								<TD WIDTH=16%>
+								<TD class="style4">
 									<P>Notes: 
 									</P>
 								</TD>
-								<TD WIDTH=84%>
+								<TD>
 									<P><TEXTAREA NAME="notes" ROWS=4 COLS=50 STYLE="width: 4.42in; height: 1.01in"></TEXTAREA><BR>
 									</P>
 								</TD>
 							</TR>
-								<TD WIDTH=16%>.</TD><TD WIDTH=84%>
+								<TD>.</TD><TD>
 									<P>
 								<?php	
 									if($rebuild === 0)

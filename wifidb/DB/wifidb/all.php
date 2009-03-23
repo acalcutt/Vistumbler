@@ -48,12 +48,12 @@ if ($sort==""){$sort="id";}
 			<p align="center">
 <?php
 		echo '<table border="1" width="100%" cellspacing="0">'
-		.'<tr><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0"border="0" src="img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
-		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0"src="img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
-		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0"src="img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
-		.'<td>Radio Type<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
-		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
-		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td></tr>';
+		.'<tr class="style4"><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"border="0" src="img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Radio Type<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td></tr>';
 
 $x=0;
 $n=0;

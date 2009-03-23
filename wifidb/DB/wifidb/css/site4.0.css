@@ -10,6 +10,15 @@ body {
 .active-box-resize {
 	display: none;
 }
+.good{
+	background-color: #0F0;
+}
+
+.bad
+{ 
+	background-color: #F00;
+
+}
 .style1 {
 	font-family: "Courier New", Courier, monospace;
 }
@@ -18,10 +27,17 @@ body {
 	text-align: center;
 	border-width: 1;
 }
-
 .style3 {
+
+	border: 1;
+}
+.style4
+{
+	text-align: center;
+	border-width: 1; 
 	background-color: #477DA9;
 }
+
 a.links {
 	font-weight: bold; 
 	color: #123;
@@ -35,14 +51,16 @@ table.importconvert
 table.new
 { 
 	border-width: 1;
+	border: 1;
 	border-color: #0F0;
+	width: "90%";
 }
 table.new ha {
 	border-width: 1px;
 	padding: 1px;
 	border-style: inset;
 	border-color: #0F0;
-	background-color: #0F0;
+	background-color: #477DA9;
 }
 table.new td {
 	border-width: 1px;
@@ -51,11 +69,12 @@ table.new td {
 	border-color: #0F0;
 	background-color: #0F0;
 }
-
 table.update
 { 
 	border-width: 1;
-	border-color: #0;
+	border: 1;
+	border-color: #F00;
+	width: "90%";
 }
 
 table.update td {
@@ -71,5 +90,5 @@ table.update ha {
 	padding: 1px;
 	border-style: inset;
 	border-color: #F00;
-	background-color: #F00;
+	background-color: #477DA9;
 }
