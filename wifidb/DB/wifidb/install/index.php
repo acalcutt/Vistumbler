@@ -28,7 +28,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title
 
 <form action="install.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Install</h2>
-  <h4>Please Read <a target="_blank" href="notes.html">these notes</a> before installing the Wireless Database</h4>
+  <h4>Please Read <a class="links" target="_blank" href="notes.html">these notes</a> before installing the Wireless Database</h4>
 <?php
 $gd = gd_info(); 
 if(is_null($gd["GD Version"]))
@@ -37,7 +37,7 @@ if(is_null($gd["GD Version"]))
 }
 else
 { 
-	echo "<h4><font color=#00ff00>GD Version: ".$gd['GD Version'].", is installed</font></h4>";
+	echo "<h4><font color=\"blue\">GD Version: ".$gd['GD Version'].", is installed</font></h4>";
 }
 ?>
 <table border="0" cellspacing="0" cellpadding="3">

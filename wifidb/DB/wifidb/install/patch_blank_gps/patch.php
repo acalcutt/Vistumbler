@@ -141,7 +141,7 @@ foreach($id as $APFORID)
 												"sig"		=>	$gps_signal_exp[1],
 												"gpsid"		=>	$gps_signal_exp[0]
 												);
-							if($replace==1)
+							if($replace=="on")
 							{
 								echo "Replaced With `valid` data<br>";
 								$gpsid = $gpspoint['id'];

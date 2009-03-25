@@ -27,8 +27,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 
 <form action="patch.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Upgrade</h2>
-  <h3>Upgrade DB for 0.15 Build 7x to 0.16 Build 1</h3>
-  <h4>Please Read <a target="_blank" href="../notes.html">these notes</a> before installing the Wireless Database</h4>
+  <h4>Please Read <a class="links" target="_blank" href="../notes.html">these notes</a> before installing the Wireless Database</h4>
 <?php
 $gd = gd_info(); 
 if(is_null($gd["GD Version"]))
@@ -64,6 +63,10 @@ else
   <tr>
     <td>WiFi Storage DB name (Default `wifi_st` )</td><td>........................................</td>
     <td><input name="wifist"></td>
+</TR>
+  <tr>
+    <td>Remove Empty User import lists</td><td>........................................</td>
+    <td><INPUT TYPE=CHECKBOX NAME="remove"></td>
 </TR><TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
 <INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
 </TD>
@@ -73,7 +76,23 @@ else
 </p>
 
 <?php
-
 $filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
-?>
+$file_ex = explode("/", $filename);
+$count = count($file_ex);
+$file = $file_ex[($count)-1];
+if (file_exists($filename)) {
+    echo "<h6><i><u>$file</u></i> was last modified: " . date ("F d Y H:i:s.", filemtime($filename)) . "</h6>";
+}?>
+</body>
+</html>
+</p>
+</td>
+</tr>
+<tr>
+<td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
+<td bgcolor="#315573" width="0">
+</td>
+</tr>
+</table>
+</div>
+</html>

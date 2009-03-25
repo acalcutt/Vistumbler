@@ -2,7 +2,7 @@
 #include('manufactures.inc.php');
 $ver = array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-23",
+			"Last_Core_Edit" 	=> 	"2009-Mar-24",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.5", 
 										"apfetch"			=>	"2.4.2",
@@ -11,7 +11,7 @@ $ver = array(
 										"users_lists"		=>	"1.2",
 										"user_ap_list"		=>	"1.2",
 										"all_users_ap"		=>	"1.3",
-										"exp_KML"			=>	"3.2",
+										"exp_KML"			=>	"3.2.1",
 										"convert_dm_dd"		=>	"1.3",
 										"convert_dd_dm"		=>	"1.3",
 										"manufactures"		=>	"1.0"
@@ -439,7 +439,6 @@ class database
 								}else
 								{
 									$todo = "db";
-									$db_id = $dbid;
 							#		break;
 								}
 							}
@@ -459,8 +458,8 @@ class database
 									$gps_id++;
 									break;
 								case "db":
-									echo "GPS Point already in DB<BR>----".$db_id."- <- DB ID<br>";
-									$signals[$gps_id] = $db_id.",".$signal;
+									echo "GPS Point already in DB<BR>----".$dbid."- <- DB ID<br>";
+									$signals[$gps_id] = $dbid.",".$signal;
 									$gps_id++;
 									break;
 								case "hi_sats":
@@ -686,22 +685,22 @@ class database
 	#													Convert GeoCord DM to DD									   	     #
 	#========================================================================================================================#
 	
-	function &convert_dm_dd($geocord_in="")
+	function &convert_dm_dd($geocord_in)
 	{
 		$start = microtime(true);
 	//	GPS Convertion :
 		$neg=FALSE;
 		$geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
 		$geocord_front = explode(" ", $geocord_exp[0]);
-		if($geocord_front[1]==0 or strlen($geocord_front[1])==2){return $geocord_in; continue;}
+#		if($geocord_front[1][0]==0 or strlen($geocord_front[1])==2){return $geocord_in; continue;}
 		if($geocord_exp[0][0] === "S" or $geocord_exp[0][0] === "W"){$neg = TRUE;}
 		$patterns[0] = '/N /';
 		$patterns[1] = '/E /';
 		$patterns[2] = '/S /';
 		$patterns[3] = '/W /';
 		$replacements = "";
-		$geocord_exp[0] = preg_replace($patterns, $replacements, $geocord_exp[0]);
-		
+		$geocord_in = preg_replace($patterns, $replacements, $geocord_in);
+		$geocord_exp = explode(".", $geocord_in);
 		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
 		// 4208.7753 ---- 4208 - 7753
 		$geocord_dec = "0.".$geocord_exp[1];
@@ -712,9 +711,9 @@ class database
 		// 4208.7753 ---- 42 - 8.7753
 		$geocord_div = $geocord_min_/60;
 		// 4208.7753 ---- 42 - (8.7753)/60 = 0.146255
-		$geocord_add = $geocord_min[0] + $geocord_div;
+		$geocord_out = $geocord_min[0] + $geocord_div;
 		// 4208.7753 ---- 42.146255
-		if($neg === TRUE){$geocord_out = "-".$geocord_add;}
+		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
 		$end = microtime(true);
 		if ($GLOBALS["bench"]  == 1)
 		{
@@ -753,7 +752,7 @@ class database
 		// 42.146255 ---- 42 - (0.146255)*60 = 8.7753
 		$geocord_mult = "0".$geocord_mult;
 		// 42.146255 ---- 42 - 08.7753
-		$geocord_add = $geocord_exp[0].$geocord_mult;
+		$geocord_out = $geocord_exp[0].$geocord_mult;
 		// 42.146255 ---- 4208.7753
 		if($neg === TRUE){$geocord_out = "-".$geocord_add;}
 		$end = microtime(true);
@@ -1317,8 +1316,9 @@ class database
 					$sql = "SELECT * FROM `$table` WHERE `id`='1'";
 					$result1 = mysql_query($sql, $conn) or die(mysql_error());
 		#			echo $ap['mac']."<BR>";
-					while ($newArray = mysql_fetch_array($result1))
-					{
+		#			while (
+					$newArray = mysql_fetch_array($result1);
+		#			){
 						switch($ap['sectype'])
 						{
 							case 1:
@@ -1368,23 +1368,25 @@ class database
 						
 						$sql_1 = "SELECT * FROM `$table_gps`";
 						$result_1 = mysql_query($sql_1, $conn);
-						while($gps_table_first = mysql_fetch_array($result))
+						$zero == 0;
+						while($gps_table_first = mysql_fetch_array($result_1))
 						{
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							
+							$test = $lat_exp[1]+0;
+							
+							if($test == "0.0000"){$zero = 1; continue;}
+							
 							$date_first = $gps_table_first["date"];
 							$time_first = $gps_table_first["time"];
 							$fa = $date_first." ".$time_first;
-							
 							$alt = $gps_table_first['alt'];
-							$lat_exp = explode(" ", $gps_table_first['lat']);
-							$long_exp = explode(" ", $gps_table_first['long']);
-							if($lat_exp[1] == "0.00000"){continue;}
-							
-							$lat = $gps_table_first['lat'];
-							$long = $gps_table_first['long'];
-							$lat = database::convert_dm_dd($lat);
-							$long = database::convert_dm_dd($long);
+							$lat =& database::convert_dm_dd($gps_table_first['lat']);
+							$long =& database::convert_dm_dd($gps_table_first['long']);
+							$zero = 0;
+							break;
 						}
-						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
+						if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
 						//=====================================================================================================//
 						
 						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
@@ -1394,11 +1396,12 @@ class database
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
 						fwrite( $fileappend, "<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-						echo 'Wrote AP: '.$ap['ssid'].'</td></tr>';
-						
+						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ap['ssid'].'</td></tr>';
+						unset($lat);
+						unset($long);
 						unset($gps_table_first["lat"]);
 						unset($gps_table_first["long"]);
-					}
+#					}
 				}
 				fwrite( $fileappend, "	</Folder>\r\n");
 				fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
@@ -1535,21 +1538,22 @@ class database
 						$result = mysql_query($sql, $conn);
 						while($gps_table_first = mysql_fetch_array($result))
 						{
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							
+							$test = $lat_exp[1]+0;
+							
+							if($test == "0.0000"){$zero = 1; continue;}
+							
 							$date_first = $gps_table_first["date"];
 							$time_first = $gps_table_first["time"];
 							$fa = $date_first." ".$time_first;
-							
 							$alt = $gps_table_first['alt'];
-							$lat_exp = explode(" ", $gps_table_first['lat']);
-							$long_exp = explode(" ", $gps_table_first['long']);
-							if($lat_exp[1] == "0.00000"){continue;}
-							
-							$lat = $gps_table_first['lat'];
-							$long = $gps_table_first['long'];
-							$lat = database::convert_dm_dd($lat);
-							$long = database::convert_dm_dd($long);
+							$lat =& database::convert_dm_dd($gps_table_first['lat']);
+							$long =& database::convert_dm_dd($gps_table_first['long']);
+							$zero = 0;
+							break;
 						}
-						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
+						if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
 						
 						$sql_1 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
 						$result_1 = mysql_query($sql_1, $conn);
@@ -1675,23 +1679,24 @@ class database
 						
 						$sql_1 = "SELECT * FROM `$table_gps`";
 						$result_1 = mysql_query($sql_1, $conn);
-						while($gps_table_first = mysql_fetch_array($result))
+						while($gps_table_first = mysql_fetch_array($result_1))
 						{
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							
+							$test = $lat_exp[1]+0;
+							
+							if($test == "0.0000"){$zero = 1; continue;}
+							
 							$date_first = $gps_table_first["date"];
 							$time_first = $gps_table_first["time"];
 							$fa = $date_first." ".$time_first;
-							
 							$alt = $gps_table_first['alt'];
-							$lat_exp = explode(" ", $gps_table_first['lat']);
-							$long_exp = explode(" ", $gps_table_first['long']);
-							if($lat_exp[1] == "0.00000"){continue;}
-							
-							$lat = $gps_table_first['lat'];
-							$long = $gps_table_first['long'];
-							$lat = database::convert_dm_dd($lat);
-							$long = database::convert_dm_dd($long);
+							$lat =& database::convert_dm_dd($gps_table_first['lat']);
+							$long =& database::convert_dm_dd($gps_table_first['long']);
+							$zero = 0;
+							break;
 						}
-						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
+						if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
 						
 						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
 						$result_2 = mysql_query($sql_2, $conn);
@@ -1848,21 +1853,22 @@ class database
 						$result_1 = mysql_query($sql_1, $conn);
 						while($gps_table_first = mysql_fetch_array($result))
 						{
+							$lat_exp = explode(" ", $gps_table_first['lat']);
+							
+							$test = $lat_exp[1]+0;
+							
+							if($test == "0.0000"){$zero = 1; continue;}
+							
 							$date_first = $gps_table_first["date"];
 							$time_first = $gps_table_first["time"];
 							$fa = $date_first." ".$time_first;
-							
 							$alt = $gps_table_first['alt'];
-							$lat_exp = explode(" ", $gps_table_first['lat']);
-							$long_exp = explode(" ", $gps_table_first['long']);
-							if($lat_exp[1] == "0.00000"){continue;}
-							
-							$lat = $gps_table_first['lat'];
-							$long = $gps_table_first['long'];
-							$lat = database::convert_dm_dd($lat);
-							$long = database::convert_dm_dd($long);
+							$lat =& database::convert_dm_dd($gps_table_first['lat']);
+							$long =& database::convert_dm_dd($gps_table_first['long']);
+							$zero = 0;
+							break;
 						}
-						if(!isset($lat)){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>';continue;}
+						if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
 						
 						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$last_sig_gps_id'";
 						$result_2 = mysql_query($sql_2, $conn);
@@ -1981,20 +1987,22 @@ class database
 					$result_1 = mysql_query($sql_1, $conn);
 					while($gps_table_first = mysql_fetch_array($result_1))
 					{
+						$lat_exp = explode(" ", $gps_table_first['lat']);
+						
+						$test = $lat_exp[1]+0;
+						
+						if($test == "0.0000"){$zero = 1; continue;}
+						
 						$date_first = $gps_table_first["date"];
 						$time_first = $gps_table_first["time"];
 						$fa = $date_first." ".$time_first;
 						$alt = $gps_table_first['alt'];
-						
-						$lat_exp = smart($gps_table_first['lat']);
-						if($lat_exp == "0.00000"){continue;}
-						
-						$lat = $gps_table_first['lat'];
-						$long = $gps_table_first['long'];
-						$lat = database::convert_dm_dd($lat);
-						$long = database::convert_dm_dd($long);
+						$lat =& database::convert_dm_dd($gps_table_first['lat']);
+						$long =& database::convert_dm_dd($gps_table_first['long']);
+						$zero = 0;
+						break;
 					}
-					if(!isset($lat))
+					if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
 					{
 						?>
 						<tr>
