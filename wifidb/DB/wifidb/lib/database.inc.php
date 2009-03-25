@@ -867,7 +867,7 @@ class database
 		</tr>
 		<?php
 		mysql_select_db($db_st, $conn);
-		$result = mysql_query("SELECT * FROM `$table`", $conn) or die(mysql_error());
+		$result = mysql_query("SELECT * FROM `$table` ORDER BY `id`", $conn) or die(mysql_error());
 		while ($field = mysql_fetch_array($result))
 		{
 			$row = $field["id"];
@@ -916,7 +916,7 @@ class database
 		<tr class="style4">
 		<th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
 		<?php
-		$result = mysql_query("SELECT * FROM `$table_gps`", $conn) or die(mysql_error());
+		$result = mysql_query("SELECT * FROM `$table_gps` ORDER BY `id`", $conn) or die(mysql_error());
 		while ($field = mysql_fetch_array($result)) 
 		{
 			?>
