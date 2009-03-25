@@ -103,7 +103,7 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>DROP TABLE `links`";}
 
 
-$sql0 = "CREATE TABLE `links` (`ID` int(255) NOT NULL auto_increment,`links` varchar(255) NOT NULL, KEY `INDEX` (`ID`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=6";
+$sql0 = "CREATE TABLE `links` (`ID` int(255) NOT NULL auto_increment,`links` varchar(255) NOT NULL, KEY `INDEX` (`ID`) ) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $create = mysql_query($sql0, $conn) or die(mysql_error($conn));
 
 if($create)
@@ -172,7 +172,8 @@ while($ap_array = mysql_fetch_array($result_))
 
 foreach($aps as $ap)
 {
-	$table_gps			=	$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['r'].'-'.$ap['chan'].$gps_ext;
+	$table				=	$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['r'].'-'.$ap['chan'];
+	$table_gps			=	$table.$gps_ext;
 	$alter_gpstables	=	"ALTER TABLE  `$wifi_st`.`$table_gps` "
 							."add  `hdp` FLOAT NOT NULL ,"
 							."add  `alt` FLOAT NOT NULL ,"
@@ -186,7 +187,25 @@ foreach($aps as $ap)
 	}
 	else{
 		echo '<tr class="bad"><td>Failure..........</td><td>Access Point GPS tables Not Updated with new columns.<br>Either not needed, or MySQL error.<BR>'.$table_gps.'</td></tr>';
-	}	
+	}
+	
+	$primary_key	= "ALTER TABLE `$table_gps` ADD PRIMARY KEY (`id`)";
+	$primary = mysql_query($primary_key, $conn);
+	if($primary){
+		echo '<tr class="good"><td>Success..........</td><td>Add Primary key on GPS table: '.$table_gps.'</td></tr>';
+	}
+	else{
+		echo '<tr class="bad"><td>Failure..........</td><td>Add Primary key on GPS table: '.$table_gps.'</td></tr>';
+	}
+	
+	$primarykey	= "ALTER TABLE `$table` ADD PRIMARY KEY (`id`)";
+	$primar = mysql_query($primarykey, $conn);
+	if($primar){
+		echo '<tr class="good"><td>Success..........</td><td>Add Primary key on Signal histtory table: '.$table_gps.'</td></tr>';
+	}
+	else{
+		echo '<tr class="bad"><td>Failure..........</td><td>Add Primary key on Signal histtory table: '.$table_gps.'</td></tr>';
+	}
 }
 
 mysql_select_db($db,$conn) or die("Unable to select Database: ".$db);

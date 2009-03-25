@@ -498,7 +498,7 @@ class database
 							echo "(3)Insert into [".$db_st."].{".$table."}<br>		 => Add Signal History to Table<br>";
 						}else
 						{
-							$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
+							$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL , INDEX ( `id` ), PRIMARY KEY (`id`) ) ENGINE=$engine DEFAULT CHARSET=$charset";
 							if (mysql_query($sqlcgt, $conn) or die(mysql_error()))
 							{
 								echo "(1)Create Table [".$db_st."].{".$table."}<br>		 => Thats odd the table was missing, well I added a Table for ".$ssids."<br>";
@@ -519,7 +519,7 @@ class database
 						<?php
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						
-						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL , INDEX ( `id` ) ) CHARACTER SET = latin1";
+						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = $engine DEFAULT CHARSET=$charset";
 						mysql_query($sqlct, $conn);
 						echo "(1)Create Table [".$db_st."].{".$table."}<br>		 => Added new Table for ".$ssids."<br>";
 						
