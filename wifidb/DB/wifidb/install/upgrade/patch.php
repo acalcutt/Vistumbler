@@ -142,18 +142,18 @@ if($hosturl !== "" && $root !== "")
 $insert = mysql_query($sqls, $conn) or die(mysql_error($conn));
 
 if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Created new Links for 0.16 Build 1</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Created new Links for 0.16 Build 1.</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>To insert new links into database</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>To insert new links into database.</td></tr>";
 }
 
 $sql2 = "ALTER TABLE  `$wtable` CHANGE  `chan`  `chan` VARCHAR( 3 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
 $alter_chan = mysql_query($sql2, $conn);
 
 if($alter_chan)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Alter `Chan` column in WiFi Pointers table `".$wtable."`, to allow 3 digits (for 802.11a channels)</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Alter `Chan` column in WiFi Pointers table `".$wtable."`, to allow 3 digits (for 802.11a channels.)</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>To alter `Chan` column in WiFi Pointers table `".$wtable."`</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>To alter `Chan` column in WiFi Pointers table `".$wtable."`.</td></tr>";
 }
 
 $sql_		= "SELECT * FROM `$wtable`";
@@ -173,14 +173,6 @@ while($ap_array = mysql_fetch_array($result_))
 foreach($aps as $ap)
 {
 	$table_gps			=	$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['r'].'-'.$ap['chan'].$gps_ext;
-	$drop_gpscol		=	"ALTER TABLE  `$wifi_st`.`$table_gps` "
-							."drop  `hdp` ,"
-							."drop  `alt` ,"
-							."drop  `geo` ,"
-							."drop  `kmh` ,"
-							."drop  `mph` ,"
-							."drop  `track`";
-	if(mysql_query($drop_gpscol, $conn)){echo "<tr class=\"good\"><td>Success..........</td><td>Cols exsisted, removed them.<BR>";}else{echo '<tr class=\"bad\"><td>Failure..........</td><td>Exsisting Colsed not removed';}
 	$alter_gpstables	=	"ALTER TABLE  `$wifi_st`.`$table_gps` "
 							."add  `hdp` FLOAT NOT NULL ,"
 							."add  `alt` FLOAT NOT NULL ,"
@@ -190,10 +182,10 @@ foreach($aps as $ap)
 							."add  `track` FLOAT NOT NULL ";
 	$alter_chan = mysql_query($alter_gpstables, $conn);
 	if($alter_chan){
-		echo 'Access Point GPS tables Updated with new columns<br>'.$table_gps.'</td></tr>';
+		echo '<tr class="good"><td>Success..........</td><td>Access Point GPS tables Updated with new columns<br>'.$table_gps.'</td></tr>';
 	}
 	else{
-		echo 'Access Point GPS tables Not Updated with new columns<br>'.$table_gps.'</td></tr>';
+		echo '<tr class="bad"><td>Failure..........</td><td>Access Point GPS tables Not Updated with new columns.<br>Either not needed, or MySQL error.<BR>'.$table_gps.'</td></tr>';
 	}	
 }
 
