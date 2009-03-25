@@ -73,7 +73,7 @@ CREATE TABLE wifi0 (
   id int(255) default NULL,
   ssid varchar(25) NOT NULL,
   mac varchar(25) NOT NULL,
-  chan varchar(2) NOT NULL,
+  chan varchar(3) NOT NULL,
   radio varchar(1) NOT NULL,
   auth varchar(25) NOT NULL,
   encry varchar(25) NOT NULL,
@@ -97,9 +97,10 @@ CREATE TABLE wifi0 (
 #
 
 INSERT INTO `links` (`ID`, `links`) VALUES
-(1, '<a class="links" href="/">Main Page</a>'),
-(2, '<a class="links" href="/all.php">View All APs</a>'),
-(3, '<a class="links" href="/import/">Import APs</a>'),
-(4, '<a class="links" href="/opt/search.php">Search APs</a>'),
-(5, '<a class="links" href="/opt/userstats.php?func=usersall">View All Users</a>'),
-(6, '<a class="links" href="/ver.php">WiFiDB Version</a>');
+(1, '<a class=\links\ href=\/wifidb\>Main Page</a>'),
+(2, '<a class=\links\ href=\/wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100\>View All APs</a>'),
+(3, '<a class=\links\ href=\/wifidb/import/\>Import</a>'),
+(4, '<a class=\links\ href=\/wifidb/opt/export.php?func=index\>Export</a>'),
+(5, '<a class=\links\ href=\/wifidb/opt/search.php\>Search</a>'),
+(6, '<a class=\links\ href=\/wifidb/opt/userstats.php?func=allusers\>View All Users</a>'),
+(7, '<a class=\links\ href=\/wifidb/ver.php\>WiFiDB Version</a>');
