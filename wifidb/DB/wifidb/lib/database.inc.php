@@ -2,7 +2,7 @@
 #include('manufactures.inc.php');
 $ver = array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-24",
+			"Last_Core_Edit" 	=> 	"2009-Mar-26",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.5", 
 										"apfetch"			=>	"2.4.2",
@@ -1263,7 +1263,7 @@ class database
 		{
 			case "exp_all_db_kml":
 				$start = microtime(true);
-				echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
+				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th colspan="2" style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
 				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 				$sql = "SELECT * FROM `$wtable`";
 				$result = mysql_query($sql, $conn) or die(mysql_error());
@@ -1272,7 +1272,7 @@ class database
 					$manuf = database::manufactures($ap_array['mac']);
 					$aps[] = array(
 									'id' => $ap_array['id'],
-									'ssid' => $ap_array['ssid'],
+									'ssid' => $ssid,
 									'mac' => $ap_array['mac'],
 									'sectype' => $ap_array['sectype'],
 									'radio' => $ap_array['radio'],
@@ -1300,11 +1300,11 @@ class database
 				$total = count($aps);
 				fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n<description>APs: ".$total."</description>\r\n");
 				fwrite( $fileappend, "<Folder>\r\n<name>WiFiDB Access Points</name>\r\n");
-				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote KML Folder Header</td><td></td></tr>';
-				
+				echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Wrote KML Folder Header</td></tr>';
+				$NN=0;
 				foreach($aps as $ap)
 				{
-					echo '<tr><td style="border-style: solid; border-width: 1px">';
+					$ssid = smart_quotes($ap['ssid']);
 					$table=$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['radio'].'-'.$ap['chan'];
 					$table_gps = $table.$gps_ext;
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
@@ -1384,9 +1384,10 @@ class database
 							$lat =& database::convert_dm_dd($gps_table_first['lat']);
 							$long =& database::convert_dm_dd($gps_table_first['long']);
 							$zero = 0;
+							$NN++;
 							break;
 						}
-						if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
+						if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
 						//=====================================================================================================//
 						
 						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
@@ -1395,8 +1396,8 @@ class database
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						fwrite( $fileappend, "<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ap['ssid'].'</td></tr>';
+						fwrite( $fileappend, "<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'<td style="border-style: solid; border-width: 1px">Wrote AP: '.$ap['ssid'].'</td></tr>';
 						unset($lat);
 						unset($long);
 						unset($gps_table_first["lat"]);
@@ -1420,7 +1421,7 @@ class database
 			#---------------------#
 			case "exp_user_list":
 				$start = microtime(true);
-				echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px; colspan: 4">Start of export Users List to KML</th></tr>';
+				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start of export Users List to KML</th></tr>';
 				if($row == 0)
 				{
 					$sql_row = "SELECT * FROM `users`";
@@ -1437,7 +1438,8 @@ class database
 				$date=date('Y-m-d_H-i-s');
 				
 				if ($user_array["title"]==""){$title = "UNTITLED";}else{$title=$user_array["title"];}
-				echo '<tr><td align="center" style="border-style: solid; border-width: 1px">Username: '.$user_array["username"].'</td></tr><tr><td align="center" style="border-style: solid; border-width: 1px">Title: '.$title.'</td></tr>';
+				echo '<tr class="style4"><td colspan="2" align="center" style="border-style: solid; border-width: 1px">Username: '.$user_array["username"].'</td></tr>'
+					.'<tr class="style4"><td colspan="2" align="center" style="border-style: solid; border-width: 1px">Title: '.$title.'</td></tr>';
 				$file_ext = $title.'-'.$date.'.kml';
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
@@ -1449,14 +1451,14 @@ class database
 				fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 				fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 				fwrite($fileappend, '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
-				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
+				echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
 				$x=0;
 				$n=0;
 				$total = count($aps);
 				fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n<description>APs: ".$total."</description>\r\n");
 				fwrite( $fileappend, "<Folder>\r\n<name>".$title." Access Points</name>\r\n");
-				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote KML Folder Header</td><td></td></tr>';
-				
+				echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Wrote KML Folder Header</td></tr>';
+				$NN=0;
 				foreach($aps as $ap)
 				{
 					$ap_exp = explode("," , $ap);
@@ -1472,7 +1474,7 @@ class database
 					while ($newArray = mysql_fetch_array($result0))
 					{
 						$id = $newArray['id'];
-						$ssid = $newArray['ssid'];
+						$ssid = smart_quotes($newArray['ssid']);
 						$mac = $newArray['mac'];
 						$man =& database::manufactures($mac);
 						$chan = $newArray['chan'];
@@ -1551,9 +1553,10 @@ class database
 							$lat =& database::convert_dm_dd($gps_table_first['lat']);
 							$long =& database::convert_dm_dd($gps_table_first['long']);
 							$zero = 0;
+							$NN++;
 							break;
 						}
-						if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
+						if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
 						
 						$sql_1 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
 						$result_1 = mysql_query($sql_1, $conn);
@@ -1563,7 +1566,7 @@ class database
 						$la = $date_last." ".$time_last;
 						fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"<a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n	");
 						fwrite( $fileappend, "<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
+						echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'</td><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 						unset($gps_table_first["lat"]);
 						unset($gps_table_first["long"]);
 					}
@@ -1571,7 +1574,7 @@ class database
 				fwrite( $fileappend, "	</Folder>\r\n");
 				fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
 				fclose( $fileappend );
-				echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
+				echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
 				mysql_close($conn);
 				$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
@@ -1585,13 +1588,14 @@ class database
 			#--------------------#
 			case "exp_single_ap":
 				$start = microtime(true);
+				$NN=0;
 				$date=date('Y-m-d_H-i-s');
 				$sql = "SELECT * FROM `$wtable` WHERE `ID`='$row'";
 				$result = mysql_query($sql, $conn) or die(mysql_error());
 				$aparray = mysql_fetch_array($result);
 				
 				$file_ext = $aparray['ssid']."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".kml";
-				echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$aparray["ssid"].'</th></tr>';
+				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$aparray["ssid"].'</th></tr>';
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
 				$filewrite = fopen($filename, "w");
@@ -1607,17 +1611,8 @@ class database
 					// open file and write header:
 					
 					$manuf =& database::manufactures($aparray['mac']);
-					$ap = array(
-								'id' => $aparray['id'],
-								'ssid' => $aparray['ssid'],
-								'mac' => $aparray['mac'],
-								'sectype' => $aparray['sectype'],
-								'radio' => $aparray['radio'],
-								'chan' => $aparray['chan'],
-								'man'	=> $manuf
-							   );
-					
-					$table=$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['radio'].'-'.$ap['chan'];
+					$ssid = smart_quotes($aparray['ssid']);
+					$table=$aparray['ssid'].'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
 					$table_gps = $table.$gps_ext;
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 		#			echo $table."<br>";
@@ -1630,7 +1625,7 @@ class database
 		#			echo $ap['mac']."<BR>";
 					while ($newArray = mysql_fetch_array($result1))
 					{
-						switch($ap['sectype'])
+						switch($aparray['sectype'])
 						{
 							case 1:
 								$type = "#openStyleDead";
@@ -1649,7 +1644,7 @@ class database
 								break;
 						}
 						
-						switch($ap['radio'])
+						switch($aparray['radio'])
 						{
 							case "a":
 								$radio="802.11a";
@@ -1694,9 +1689,10 @@ class database
 							$lat =& database::convert_dm_dd($gps_table_first['lat']);
 							$long =& database::convert_dm_dd($gps_table_first['long']);
 							$zero = 0;
+							$NN++;
 							break;
 						}
-						if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
+						if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
 						
 						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
 						$result_2 = mysql_query($sql_2, $conn);
@@ -1704,8 +1700,8 @@ class database
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						$file_data .= ("<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ap['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap['ssid']."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ap['ssid'].'</td></tr>';
+						$file_data .= ("<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$assid.'</td></tr>';
 					}
 				}else
 				{
@@ -1731,7 +1727,7 @@ class database
 			case "exp_user_all_kml":
 				$start = microtime(true);
 				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
-				echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of all APs for User: '.$user.', to KML</th></tr>';
+				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start export of all APs for User: '.$user.', to KML</th></tr>';
 				$ap_id = array();
 				$sql = "SELECT `points` FROM `users` WHERE `username`='$user'";
 				$result = mysql_query($sql, $conn);
@@ -1766,8 +1762,8 @@ class database
 				fwrite($fileappend, '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
 				fwrite( $fileappend, "<Folder>\r\n<name>WiFiDB Access Points</name>\r\n<description>Total Number of APs: ".$total."</description>\r\n");
 				fwrite( $fileappend, "<Folder>\r\n<name>Access Points for User: ".$user."</name>\r\n");
-				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td></tr>';
-				
+				echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Wrote Header to KML File</td></tr>';
+				$NN = 0;
 				foreach($ap_id as $ap)
 				{
 					mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
@@ -1778,14 +1774,14 @@ class database
 					$result = mysql_query($sql, $conn);
 					$aps = mysql_fetch_array($result);
 					
-					$ssid = $aps['ssid'];
+					$ssid = smart_quotes($aps['ssid']);
 					$mac = $aps['mac'];
 					$sectype = $aps['sectype'];
 					$r = $aps['radio'];
 					$chan = $aps['chan'];
 					$manuf =& database::manufactures($mac);
 					
-					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
+					$table = $aps['ssid'].'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
 					$table_gps = $table.$gps_ext;
 					
 					switch($r)
@@ -1802,8 +1798,11 @@ class database
 							case "n":
 								$radio="802.11n";
 								break;
+							case "u":
+								$radio="802.11u";
+								break;
 							default:
-								$radio="Unknown Radio";
+							$radio="Unknown Radio";
 								break;
 						}
 					switch($sectype)
@@ -1824,7 +1823,7 @@ class database
 								$encry = "TKIP-PSK";
 								break;
 						}
-					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
+					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db_st);
 					$sql = "SELECT * FROM `$table` WHERE `id`='$rows'";
 					$result1 = mysql_query($sql, $conn) or die(mysql_error());
 					
@@ -1866,9 +1865,10 @@ class database
 							$lat =& database::convert_dm_dd($gps_table_first['lat']);
 							$long =& database::convert_dm_dd($gps_table_first['long']);
 							$zero = 0;
+							$NN++;
 							break;
 						}
-						if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
+						if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
 						
 						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$last_sig_gps_id'";
 						$result_2 = mysql_query($sql_2, $conn);
@@ -1877,7 +1877,7 @@ class database
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
 						fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
+						echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'</td><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 						
 						unset($gps_table_first["lat"]);
 						unset($gps_table_first["long"]);
@@ -1886,7 +1886,7 @@ class database
 				fwrite( $fileappend, "	</Folder>\r\n");
 				fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
 				fclose( $fileappend );
-				echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
+				echo '<tr class="style4"><td solspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
 				mysql_close($conn);
 				$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
@@ -1910,7 +1910,7 @@ class database
 				$ap_array = mysql_fetch_array($result);
 				$manuf =& database::manufactures($ap_array['mac']);
 				$file_ext = "Newest_AP_".$date.".kml";
-				echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Newest AP: '.$ap_array["ssid"].'</th></tr>';
+				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Newest AP: '.$ap_array["ssid"].'</th></tr>';
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
 				$filewrite = fopen($filename, "w");
