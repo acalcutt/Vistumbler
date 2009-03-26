@@ -86,7 +86,7 @@ foreach($pointers as $ap)
 
 	while ($newArray = mysql_fetch_array($resultc))
 	{
-		if($newArray['lat'] == ' ' && $newArray['long'] == ' ')
+		if($newArray['lat'] == '' && $newArray['long'] == '')
 		{
 			$gpspoints[] = array(
 								"id"	=>	$newArray["id"],
@@ -134,7 +134,7 @@ foreach($pointers as $ap)
 				$update_result2 = mysql_query($update_gps2, $conn);
 				if($update_result1)
 				{
-					echo $update_gps1."<BR>GPS Point rapaired<br>".$update_gps2;
+					echo "<BR>GPS Point rapaired<br>";
 				}else{echo mysql_error($conn);}
 			}elseif($deleteap=="on")
 			{
