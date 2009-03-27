@@ -1399,7 +1399,7 @@ class database
 				fwrite( $fileappend, "	</Folder>\r\n");
 				fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
 				fclose( $fileappend );
-				echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
+				echo '<tr class="style4"><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
 				mysql_close($conn);
 				$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
@@ -1566,7 +1566,7 @@ class database
 				fwrite( $fileappend, "	</Folder>\r\n");
 				fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
 				fclose( $fileappend );
-				echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
+				echo '<tr class="style4"><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
 				mysql_close($conn);
 				$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
@@ -1591,7 +1591,6 @@ class database
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
 				$filewrite = fopen($filename, "w");
-				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
 				if($filewrite != FALSE)
 				{
 					$file_data  = ("");
@@ -1600,6 +1599,7 @@ class database
 					$file_data .= ("<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 					$file_data .= ("<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 					$file_data .= ('<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
+					echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
 					// open file and write header:
 					
 					$manuf =& database::manufactures($aparray['mac']);
@@ -1704,7 +1704,7 @@ class database
 				fwrite( $fileappend, "	</Document>\r\n</kml>");
 				
 				fclose( $fileappend );
-				echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
+				echo '<tr class="style4"><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
 				mysql_close($conn);
 				$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
@@ -1878,7 +1878,7 @@ class database
 				fwrite( $fileappend, "	</Folder>\r\n");
 				fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
 				fclose( $fileappend );
-				echo '<tr class="style4"><td solspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
+				echo '<tr class="style4"><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
 				mysql_close($conn);
 				$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
@@ -1906,7 +1906,6 @@ class database
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
 				$filewrite = fopen($filename, "w");
-				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
 				if($filewrite != FALSE)
 				{
 					$file_data  = ("");
@@ -1915,6 +1914,7 @@ class database
 					$file_data .= ("<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 					$file_data .= ("<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 					$file_data .= ('<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
+					echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td></tr>';
 					// open file and write header:
 					
 					$table=$ap_array['ssid'].'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
@@ -1994,7 +1994,7 @@ class database
 						$zero = 0;
 						break;
 					}
-					if($zero == 1){echo '</td></tr><tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
+					if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
 					{
 						?>
 						<tr>
@@ -2036,7 +2036,7 @@ class database
 				$fileappend = fopen($filename, "a");
 				fwrite($fileappend, $filedata);
 				fclose( $fileappend );
-				echo '<tr><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
+				echo '<tr class="style4"><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
 				mysql_close($conn);
 				$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
