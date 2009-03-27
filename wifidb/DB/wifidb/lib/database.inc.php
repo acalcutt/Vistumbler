@@ -86,7 +86,8 @@ function smart_quotes($text="")
 					17=>"%",
 					18=>"!",
 					19=>"@",
-					20=>"-"
+					20=>"-",
+					21=>"/"
 				);
 	$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
 	$text = str_replace($strip,"_",$text);
@@ -498,7 +499,7 @@ class database
 							echo "(3)Insert into [".$db_st."].{".$table."}<br>		 => Add Signal History to Table<br>";
 						}else
 						{
-							$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL , INDEX ( `id` ), PRIMARY KEY (`id`) ) ENGINE=$engine DEFAULT CHARSET=$charset";
+							$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL , INDEX ( `id` ), PRIMARY KEY (`id`) )  ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 							if (mysql_query($sqlcgt, $conn) or die(mysql_error()))
 							{
 								echo "(1)Create Table [".$db_st."].{".$table."}<br>		 => Thats odd the table was missing, well I added a Table for ".$ssids."<br>";
@@ -519,7 +520,7 @@ class database
 						<?php
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						
-						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = $engine DEFAULT CHARSET=$charset";
+						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 						mysql_query($sqlct, $conn);
 						echo "(1)Create Table [".$db_st."].{".$table."}<br>		 => Added new Table for ".$ssids."<br>";
 						
@@ -1266,23 +1267,9 @@ class database
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th colspan="2" style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
 				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 				$sql = "SELECT * FROM `$wtable`";
-				$result = mysql_query($sql, $conn) or die(mysql_error());
-				while($ap_array = mysql_fetch_array($result))
-				{
-					$manuf = database::manufactures($ap_array['mac']);
-					$aps[] = array(
-									'id' => $ap_array['id'],
-									'ssid' => $ssid,
-									'mac' => $ap_array['mac'],
-									'sectype' => $ap_array['sectype'],
-									'radio' => $ap_array['radio'],
-									'chan' => $ap_array['chan'],
-									'man'	=> $manuf
-								   );
-				}
-				
+				$result = mysql_query($sql, $conn) or die(mysql_error($conn));
+				$total = mysql_num_rows($result);
 				$date=date('Y-m-d_H-i-s');
-				
 				$file_ext = $date."_full_databse.kml";
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
@@ -1294,32 +1281,38 @@ class database
 				fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 				fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 				fwrite($fileappend, '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
-				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td><td></td></tr>';
+				echo '<tr><td style="border-style: solid; border-width: 1px" colspan="2">Wrote Header to KML File</td><td></td></tr>';
 				$x=0;
 				$n=0;
-				$total = count($aps);
+				$NN=0;
 				fwrite( $fileappend, "<Folder>\r\n<name>Access Points</name>\r\n<description>APs: ".$total."</description>\r\n");
 				fwrite( $fileappend, "<Folder>\r\n<name>WiFiDB Access Points</name>\r\n");
 				echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Wrote KML Folder Header</td></tr>';
-				$NN=0;
-				foreach($aps as $ap)
+				while($ap_array = mysql_fetch_array($result))
 				{
-					$ssid = smart_quotes($ap['ssid']);
-					$table=$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['radio'].'-'.$ap['chan'];
+					$man 		= database::manufactures($ap_array['mac']);
+					$id			= $ap_array['id'];
+					$ssid		= $ap_array['ssid'];
+					$mac		= $ap_array['mac'];
+					$sectype	= $ap_array['sectype'];
+					$radio		= $ap_array['radio'];
+					$chan		= $ap_array['chan'];
+					
+					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
 					$table_gps = $table.$gps_ext;
+					$ssid = smart_quotes($ssid);
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 		#			echo $table."<br>";
-					$sql = "SELECT * FROM `$table`";
-					$result = mysql_query($sql, $conn) or die(mysql_error());
-					$rows = mysql_num_rows($result);
+					$sql1 = "SELECT * FROM `$table`";
+					$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+					$rows = mysql_num_rows($result1);
 		#			echo $rows."<br>";
 					$sql = "SELECT * FROM `$table` WHERE `id`='1'";
-					$result1 = mysql_query($sql, $conn) or die(mysql_error());
 		#			echo $ap['mac']."<BR>";
 		#			while (
 					$newArray = mysql_fetch_array($result1);
 		#			){
-						switch($ap['sectype'])
+						switch($sectype)
 						{
 							case 1:
 								$type = "#openStyleDead";
@@ -1337,8 +1330,7 @@ class database
 								$encry = "TKIP-PSK";
 								break;
 						}
-						
-						switch($ap['radio'])
+						switch($radio)
 						{
 							case "a":
 								$radio="802.11a";
@@ -1379,15 +1371,15 @@ class database
 							
 							$date_first = $gps_table_first["date"];
 							$time_first = $gps_table_first["time"];
-							$fa = $date_first." ".$time_first;
-							$alt = $gps_table_first['alt'];
-							$lat =& database::convert_dm_dd($gps_table_first['lat']);
+							$fa   = $date_first." ".$time_first;
+							$alt  = $gps_table_first['alt'];
+							$lat  =& database::convert_dm_dd($gps_table_first['lat']);
 							$long =& database::convert_dm_dd($gps_table_first['long']);
 							$zero = 0;
 							$NN++;
 							break;
 						}
-						if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
+						if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
 						//=====================================================================================================//
 						
 						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
@@ -1396,8 +1388,8 @@ class database
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						fwrite( $fileappend, "<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-						echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'<td style="border-style: solid; border-width: 1px">Wrote AP: '.$ap['ssid'].'</td></tr>';
+						fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'<td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 						unset($lat);
 						unset($long);
 						unset($gps_table_first["lat"]);
