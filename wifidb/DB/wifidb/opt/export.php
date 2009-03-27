@@ -58,7 +58,7 @@ switch($func)
 			<?php
 			include('../lib/config.inc.php');
 			mysql_select_db($db,$conn);
-			$sql = "SELECT `username` FROM `users`";
+			$sql = "SELECT * FROM `users` ORDER BY username ASC";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
 			while($user_array = mysql_fetch_array($re))
 			{
@@ -85,12 +85,12 @@ switch($func)
 		<form action="export.php?func=exp_single_ap" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
 		<tr class="style4"><th colspan="2">Export an Acess Point to KML</th></tr>
-		<tr><td>Username</td><td>
+		<tr><td>Access Point</td><td>
 			<select name="row">
 			<?php
 			include('../lib/config.inc.php');
 			mysql_select_db($db,$conn);
-			$sql = "SELECT `id`,`ssid` FROM `$wtable`";
+			$sql = "SELECT `id`,`ssid` FROM `$wtable` order by id asc";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
 			$rows = mysql_num_rows($re);
 			if($rows ==0)
@@ -132,23 +132,25 @@ switch($func)
 		<form action="export.php?func=exp_user_list" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
 		<tr class="style4"><th colspan="2">Export a Users Import List to KML</th></tr>
-		<tr><td>Username</td><td>
+		<tr><td>User List</td><td>
 			<select name="row">
 			<?php
 			include('../lib/config.inc.php');
 			mysql_select_db($db,$conn);
-			$sql = "SELECT `id`,`title`, `username` FROM `users`";
+			$sql = "SELECT * FROM `users` order by username asc";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
 			$rows = mysql_num_rows($re);
-			if($rows ==0)
+			if($rows == 0)
 			{
 				echo '<option value="">There are no Users<option value="">import something first';
 			}else
 			{
 				while($user_array = mysql_fetch_array($re))
 				{
+					$points = explode("-", $user_array['points']);
+					$totalap = count($points);
 					if($user_array['title']==''){$title = "Untitled";}else{$title = $user_array['title'];}
-					echo '<option value="'.$user_array["id"].'">User: '.$user_array["username"].' - Title: '.$title."\r\n";
+					echo '<option value="'.$user_array["id"].'">User: '.$user_array["username"].' - Title: '.$title." - APs: ".$totalap."\r\n";
 				}
 			}
 			?>
