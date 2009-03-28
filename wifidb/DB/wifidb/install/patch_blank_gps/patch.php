@@ -120,17 +120,13 @@ foreach($pointers as $ap)
 				mysql_select_db($db_st,$conn);
 				$gpsid = $gpspoint['id'];
 				
-				$lat = "N 0.0000";
-				$long = "E 0.0000";
-				$sats = "0";
+				if($gpspoint['lat']==''){$lat = "N 0.0000";}else{$lat = $gpspoint['lat'];}
+				if($gpspoint['long']==''){$long = "E 0.0000";}else{$long = $gpspoint['long'];}
+				if($gpspoint['sats']==''){$sats = "00";}else{$sats = $gpspoint['sats'];}
 				if($gpspoint['date']==''){$date = "1971-01-01";}else{$date = $gpspoint['date'];}
 				if($gpspoint['time']==''){$time = "00:00:00";}else{$time=$gpspoint['time'];}
 				
-				$update_gps1 = "DELETE FROM `$table_gps` WHERE `id` = '$gpsid'";
-				$update_result1 = mysql_query($update_gps1, $conn);
-				if(!$update_result1)
-				{echo mysql_error($conn);}
-				$update_gps2 = "INSERT INTO `$table_gps` ( `id` , `lat` , `long` , `sats` , `date` , `time` ) VALUES ( '$gpsid', '$lat', '$long', '$sats', '$date', '$time')";
+				$update_gps2 = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats',`date` = '$date' , `time` = '$time'  WHERE `id` = '$gpsid'";
 				$update_result2 = mysql_query($update_gps2, $conn);
 				if($update_result1)
 				{

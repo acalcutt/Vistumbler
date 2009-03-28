@@ -55,7 +55,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-23</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-27</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -117,7 +117,7 @@ while ($newArray = mysql_fetch_array($result))
 							<LI>Even when it had non-numerical data, but no time stamp the compare was successful, but we're not going to do that.</LI>
 						</OL>
 				</OL>
-			
+			<LI>Fixed an issue where if there where removed rows in the users table, the index page would have a problem retrieving the Title, and Username of the last import.</LI>
 		</OL>
 	</td></tr>
 </table>

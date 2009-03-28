@@ -2,7 +2,7 @@
 #include('manufactures.inc.php');
 $ver = array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-26",
+			"Last_Core_Edit" 	=> 	"2009-Mar-27",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.5", 
 										"apfetch"			=>	"2.4.2",

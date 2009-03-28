@@ -48,8 +48,6 @@ $filename	=	$_FILES['file']['name'];
 $rand	=	rand();
 
 $user = smart_quotes($user);
-$notes = smart_quotes($notes);
-$title = smart_quotes($title);
 
 echo "<h1>Imported By: ".$user."<BR></h1>";
 echo "<h2>With Title: ".$title."</h2>";

@@ -33,7 +33,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Main Page</title>';
 $usersa = array();
 mysql_select_db($db,$conn);
 $sql = "SELECT * FROM `links` ORDER BY ID ASC";
-$result = mysql_query($sql, $conn) or die(mysql_error());
+$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 while ($newArray = mysql_fetch_array($result))
 {
 	$testField = $newArray['links'];
@@ -41,39 +41,43 @@ while ($newArray = mysql_fetch_array($result))
 }
 
 $sql = "SELECT `size` FROM `settings`";
-$result = mysql_query($sql, $conn) or die(mysql_error());
+$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 $DB_size = mysql_fetch_array($result);
 $total = $DB_size['size'];
 
 $sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='1'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
+$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 $open = mysql_num_rows($result);
 
 $sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='2'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
+$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 $WEP = mysql_num_rows($result);
 
 $sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='3'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
+$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 $Sec = mysql_num_rows($result);
 
 $sql = "SELECT `id`,`ssid` FROM `$wtable` ORDER BY ID DESC LIMIT 1";
-$result = mysql_query($sql, $conn) or die(mysql_error());
+$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 $lastap_array = mysql_fetch_array($result);
 $lastap_id = $lastap_array['id'];
 $lastap_ssid = $lastap_array['ssid'];
 
 $sql = "SELECT `username` FROM `users`";
-$result = mysql_query($sql, $conn) or die(mysql_error());
+$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 $row_users = mysql_num_rows($result);
 while($user_array = mysql_fetch_array($result))
 {
 	$usersa[]=$user_array['username'];
 }
+$sql_row = "SELECT * FROM `users` ORDER BY `users`.`id` DESC LIMIT 1";
+$result_row = mysql_query($sql_row, $conn) or die(mysql_error($conn));
+$users_rows = mysql_fetch_array($result_row);
+$row_users = $users_rows['id'];
 
-$sql = "SELECT * FROM `users` WHERE `id`='$row_users'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-$lastuser = mysql_fetch_array($result);
+$sql1 = "SELECT * FROM `users` WHERE `id`='$row_users'";
+$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+$lastuser = mysql_fetch_array($result1);
 
 mysql_close($conn);
 
