@@ -693,7 +693,6 @@ class database
 		$neg=FALSE;
 		$geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
 		$geocord_front = explode(" ", $geocord_exp[0]);
-#		if($geocord_front[1][0]==0 or strlen($geocord_front[1])==2){return $geocord_in; continue;}
 		if($geocord_exp[0][0] === "S" or $geocord_exp[0][0] === "W"){$neg = TRUE;}
 		$patterns[0] = '/N /';
 		$patterns[1] = '/E /';
@@ -703,17 +702,33 @@ class database
 		$geocord_in = preg_replace($patterns, $replacements, $geocord_in);
 		$geocord_exp = explode(".", $geocord_in);
 		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
-		// 4208.7753 ---- 4208 - 7753
+		// 428.7753 ---- 428 - 7753
 		$geocord_dec = "0.".$geocord_exp[1];
-		// 4208.7753 ---- 4208 - 0.7753
-		$geocord_min = str_split($geocord_exp[0],2);
-		// 4208.7753 ---- 42 - 8 - 0.7753
-		$geocord_min_ = $geocord_min[1]+$geocord_dec;
-		// 4208.7753 ---- 42 - 8.7753
-		$geocord_div = $geocord_min_/60;
-		// 4208.7753 ---- 42 - (8.7753)/60 = 0.146255
-		$geocord_out = $geocord_min[0] + $geocord_div;
-		// 4208.7753 ---- 42.146255
+		// 428.7753 ---- 428 - 0.7753
+		$len = strlen($geocord_exp[0]);
+		echo $len.'<BR>';
+		$geocord_min = substr($geocord_exp[0],-2,3);
+		echo $geocord_min.'<BR>';
+		// 428.7753 ---- 4 - 28 - 0.7753
+		$geocord_min = $geocord_min+$geocord_dec;
+		// 428.7753 ---- 4 - 28.7753
+		$geocord_div = $geocord_min/60;
+		// 428.7753 ---- 4 - (28.7753)/60 = 0.4795883
+		if($len ==3)
+		{
+			$geocord_deg = substr($geocord_exp[0], 0,1);
+			echo $geocord_deg.'<br>';
+		}elseif($len == 4)
+		{
+			$geocord_deg = substr($geocord_exp[0], 0,2);
+			echo $geocord_deg.'<br>';
+		}elseif($len == 5)
+		{
+			$geocord_deg = substr($geocord_exp[0], 0,3);
+			echo $geocord_deg.'<br>';
+		}
+		$geocord_out = $geocord_deg + $geocord_div;
+		// 428.7753 ---- 4.4795883
 		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
 		$end = microtime(true);
 		if ($GLOBALS["bench"]  == 1)
@@ -722,6 +737,7 @@ class database
 			echo "Start Time: ".$start."<BR>";
 			echo "  End Time: ".$end."<BR>";
 		}
+		$geocord_out = substr($geocord_out, 0,10);
 		return $geocord_out;
 	}
 	#========================================================================================================================#
@@ -732,10 +748,10 @@ class database
 	{
 		$start = microtime(true);
 		//	GPS Convertion :
+		echo $geocord_in.'<BR>';
 		$neg=FALSE;
 		$geocord_exp = explode(".", $geocord_in);
 		$geocord_front = explode(" ", $geocord_exp[0]);
-		if(strlen($geocord_front[1])==4){return $geocord_in; continue;}
 		
 		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
 		$pattern[0] = '/N /';
@@ -746,16 +762,25 @@ class database
 		$geocord_exp[0] = preg_replace($pattern, $replacements, $geocord_exp[0]);
 		
 		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
-		// 42.146255 ---- 42 - 146255
+		// 4.146255 ---- 4 - 146255
+		echo $geocord_exp[1].'<br>';
 		$geocord_dec = "0.".$geocord_exp[1];
-		// 42.146255 ---- 42 - 0.146255
+		// 4.146255 ---- 4 - 0.146255
+		echo $geocord_dec.'<br>';
 		$geocord_mult = $geocord_dec*60;
-		// 42.146255 ---- 42 - (0.146255)*60 = 8.7753
-		$geocord_mult = "0".$geocord_mult;
-		// 42.146255 ---- 42 - 08.7753
+		// 4.146255 ---- 4 - (0.146255)*60 = 8.7753
+		echo $geocord_mult.'<br>';
+		$mult = explode(".",$geocord_mult);
+		$len = strlen($mult[0]);
+		echo $len.'<br>';
+		if($len < 2)
+		{
+			$geocord_mult = "0".$geocord_mult;
+		}
+		// 4.146255 ---- 4 - 08.7753
 		$geocord_out = $geocord_exp[0].$geocord_mult;
-		// 42.146255 ---- 4208.7753
-		if($neg === TRUE){$geocord_out = "-".$geocord_add;}
+		// 4.146255 ---- 408.7753
+		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
 		$end = microtime(true);
 		if ($GLOBALS["bench"]  == 1)
 		{
@@ -867,6 +892,7 @@ class database
 		<th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th>
 		</tr>
 		<?php
+		$start1 = microtime(true);
 		mysql_select_db($db_st, $conn);
 		$result = mysql_query("SELECT * FROM `$table` ORDER BY `id`", $conn) or die(mysql_error());
 		while ($field = mysql_fetch_array($result))
@@ -907,6 +933,7 @@ class database
 				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>">Graph Signal</a></td></tr>
 			<?php
 		}
+		$end1 = microtime(true);
 		?>
 		</table>
 		<?php
@@ -917,6 +944,7 @@ class database
 		<tr class="style4">
 		<th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
 		<?php
+		$start2 = microtime(true);
 		$result = mysql_query("SELECT * FROM `$table_gps` ORDER BY `id`", $conn) or die(mysql_error());
 		while ($field = mysql_fetch_array($result)) 
 		{
@@ -930,6 +958,7 @@ class database
 			<?php echo $field["time"]; ?></td></tr>
 			<?php
 		}
+		$end2 = microtime(true);
 		?>
 		</table>
 		<?php
@@ -941,6 +970,7 @@ class database
 		<tr class="style4">
 		<th>ID</th><th>User</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
 		<?php
+		$start3 = microtime(true);
 		mysql_select_db($db, $conn);
 		$result = mysql_query("SELECT * FROM `users`", $conn) or die(mysql_error());
 		while ($field = mysql_fetch_array($result)) 
@@ -950,7 +980,7 @@ class database
 			{
 				$access = explode(",", $AP);
 				$access1 = explode(":",$access[1]);
-				if (strcmp($ID, $access1[0]) == 0 )
+				if (strcmp($ID, $access1[0]) === 0 )
 				{
 					$list[]=$field['id'];
 				}
@@ -961,7 +991,7 @@ class database
 			$result = mysql_query("SELECT * FROM `users` WHERE `id`='$aplist'", $conn) or die(mysql_error());
 			while ($field = mysql_fetch_array($result)) 
 			{
-				if (!is_null($field["title"])){$field["title"]="Untitled";}
+				if($field["title"]==''){$field["title"]="Untitled";}
 				$points = explode('-' , $field['points']);
 				$total = count($points);
 				?>
@@ -969,6 +999,7 @@ class database
 				<?php
 			}
 		}
+		$end3 = microtime(true);
 		mysql_close($conn);
 		?>
 		</table><br>
@@ -977,8 +1008,14 @@ class database
 		if ($GLOBALS["bench"]  == 1)
 		{
 			echo "Time is [Unix Epoc]<BR>";
-			echo "Start Time: ".$start."<BR>";
-			echo "  End Time: ".$end."<BR>";
+			echo "Total Start Time: ".$start."<BR>";
+			echo "Total  End Time: ".$end."<BR>";
+			echo "Start Time 1: ".$start1."<BR>";
+			echo "  End Time 1: ".$end1."<BR>";
+			echo "Start Time 2: ".$start2."<BR>";
+			echo "  End Time 2: ".$end2."<BR>";
+			echo "Start Time 3: ".$start3."<BR>";
+			echo "  End Time 3: ".$end3."<BR>";
 		}
 		#END IMPORT LISTS FETCH FUNC
 	}
@@ -1621,18 +1658,12 @@ class database
 						{
 							case 1:
 								$type = "#openStyleDead";
-								$auth = "Open";
-								$encry = "None";
 								break;
 							case 2:
 								$type = "#wepStyleDead";
-								$auth = "Open";
-								$encry = "WEP";
 								break;
 							case 3:
 								$type = "#secureStyleDead";
-								$auth = "WPA-Personal";
-								$encry = "TKIP-PSK";
 								break;
 						}
 						
@@ -1692,8 +1723,8 @@ class database
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						$file_data .= ("<Placemark id=\"".$ap['mac']."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$ap['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$assid.'</td></tr>';
+						$file_data .= ("<Placemark id=\"".$aparray['mac']."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$aparray['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$aparray['chan']."<br /><b>Authentication: </b>".$aparray['auth']."<br /><b>Encryption: </b>".$aparray['encry']."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$aparray['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$aparray['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 					}
 				}else
 				{
