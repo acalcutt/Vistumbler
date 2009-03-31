@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-30",
+			"Last_Core_Edit" 	=> 	"2009-Mar-31",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.5", 
 										"apfetch"			=>	"2.4.2",
@@ -13,11 +13,13 @@ $ver = array(
 										"user_ap_list"		=>	"1.2",
 										"all_users_ap"		=>	"1.3",
 										"exp_KML"			=>	"3.3.0",
+										"exp_vs1"			=>	"1.0",
 										"convert_dm_dd"		=>	"1.3",
 										"convert_dd_dm"		=>	"1.3",
 										"manufactures"		=>	"1.0"
 										),
 			"Misc"				=>	array(
+										"pageheader"			=>	"1.0",
 										"footer"				=>	"1.2",
 										"smart_quotes"			=> 	"1.0",
 										"smart"					=> 	"1.0",
@@ -32,7 +34,7 @@ function pageheader($title)
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
 	?>
-	<link rel="stylesheet" href="../css/site4.0.css">
+	<link rel="stylesheet" href="<?php echo $hosturl.'/'.$root;?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="75%" cellspacing="10" cellpadding="2">
@@ -153,6 +155,21 @@ function smart($text="")
 
 class database
 {
+	function insert_table($field, $table, $condition)
+	{
+		
+	}
+	
+	function create_table($field, $table, $condition)
+	{
+		
+	}
+	
+	function select_from($field, $table, $condition)
+	{
+		
+	}
+	
 	#========================================================================================================================#
 	#						Grab the Manuf for a given MAC, return Unknown Manuf if not found								 #
 	#========================================================================================================================#
