@@ -1,60 +1,54 @@
 <?php
 include('../lib/database.inc.php');
 include('../lib/config.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Search Results Page</title>';
-?>
-<link rel="stylesheet" href="../css/site4.0.css">
-<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2">
-	<tr>
-		<td bgcolor="#315573">
-		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
-		<font color="#FFFFFF" size="2">
-            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
-		</font></b>
-		</td>
-	</tr>
-</table>
-</div>
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
-	<tr>
-<td width="17%" bgcolor="#304D80" valign="top">
-<?php
-mysql_select_db($db,$conn);
-$sqls = "SELECT * FROM links ORDER BY ID ASC";
-$result = mysql_query($sqls, $conn) or die(mysql_error());
-while ($newArray = mysql_fetch_array($result))
-{
-	$testField = $newArray['links'];
-    echo "<p>$testField</p>";
-}
-?>
-</td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
+
+pageheader("Search Results Page");
+	?>
+	</td>
+			<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+				<p align="center">
 			<h2>Search Results</h2>
 <?php
-$sql_a=array();
-$mac_explode = explode(':', $_POST['mac']);
-$mac_post = implode('', $mac_explode);
-strip_tags($_POST['ssid']);
-strip_tags($mac_post);
-strip_tags($_POST['radio']);
-strip_tags($_POST['chan']);
-strip_tags($_POST['auth']);
-strip_tags($_POST['encry']);
 
-if ($_POST['ssid']	!== '')	{ $sql_a[]	=	" `ssid` = '".$_POST['ssid']."' ";}
-if ($mac_post		!== '')	{ $sql_a[]	=	" `mac` = '".$mac_post."' ";}
-if ($_POST['radio']	!== '')	{ $sql_a[]	=	" `radio` = '".$_POST['radio']."' ";}
-if ($_POST['chan']	!== '')	{ $sql_a[]	=	" `chan` = '".$_POST['chan']."' ";}
-if ($_POST['auth']	!== '')	{ $sql_a[]	=	" `auth` = '".$_POST['auth']."' ";}
-if ($_POST['encry']	!== '')	{ $sql_a[]	=	" `encry` = '".$_POST['encry']."' ";}
+if (isset($_POST['ssid']))	{$ssid = $_POST['ssid'];  }elseif(isset($_GET['ssid'])){$ssid = $_GET['ssid'];}
+if (isset($_POST['mac']))	{$mac = $_POST['mac'];}elseif(isset($_GET['mac'])){$mac = $_GET['mac'];}
+if (isset($_POST['radio']))	{$radio = $_POST['radio']; }elseif(isset($_GET['radio'])){$radio = $_GET['radio'];}
+if (isset($_POST['chan']))	{$chan = $_POST['chan']; }elseif(isset($_GET['chan'])){$chan = $_GET['chan'];}
+if (isset($_POST['auth']))	{$auth = $_POST['auth']; }elseif(isset($_GET['auth'])){$auth = $_GET['auth'];}
+if (isset($_POST['encry']))	{$encry = $_POST['encry'];  }elseif(isset($_GET['encry'])){$encry = $_GET['encry'];}
+
+$ord   =	$_GET['ord'];
+$sort  =	$_GET['sort'];
+$from  =	$_GET['from'];
+$from_ =	$_GET['from'];
+$inc   =	$_GET['to'];
+
+strip_tags($ord);
+strip_tags($sort);
+strip_tags($from);
+strip_tags($from_);
+strip_tags($inc);
+
+strip_tags($ssid);
+strip_tags($mac);
+strip_tags($radio);
+strip_tags($chan);
+strip_tags($auth);
+strip_tags($encry);
+
+$mac_explode = explode(':', $mac);
+$mac_co = count($mac_explode);
+if($mac_co > 1){$mac = implode('', $mac_explode);}
+
+$sql_a[0]	=	" `ssid` like '".$ssid."%' ";
+$sql_a[1]	=	" `mac` like '".$mac."%' ";
+$sql_a[2]	=	" `radio` like '".$radio."%' ";
+$sql_a[3]	=	" `chan` like '".$chan."%' ";
+$sql_a[4]	=	" `auth` like '".$auth."%' ";
+$sql_a[5]	=	" `encry` like '".$encry."%' ";
 
 echo '<table border="1" width="100%" cellspacing="0">'
+.'<tr><td align="center" colspan="6"><a class="links" href="results.php?ord='.$ord.'&sort='.$sort.'&from='.$from.'&to='.$inc.'&ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'">Save this search</a></td></tr>'
 .'<tr class="style4"><th>SSID</th>'
 .'<th>MAC</th>'
 .'<th>Chan</th>'
@@ -62,16 +56,7 @@ echo '<table border="1" width="100%" cellspacing="0">'
 .'<th>Authentication</th>'
 .'<th>Encryption</th></tr>';
 
-$ord   =	$_GET['ord'];
-strip_tags($ord);
-$sort  =	$_GET['sort'];
-strip_tags($sort);
-$from  =	$_GET['from'];
-strip_tags($from);
-$from_ =	$_GET['from'];
-strip_tags($from_);
-$inc   =	$_GET['to'];
-strip_tags($inc);
+
 if ($from==""){$from=0;}
 if ($inc==""){$inc=100;}
 if ($ord==""){$ord="ASC";}

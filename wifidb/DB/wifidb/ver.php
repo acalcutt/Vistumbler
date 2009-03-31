@@ -55,7 +55,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-27</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-28</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -118,6 +118,9 @@ while ($newArray = mysql_fetch_array($result))
 						</OL>
 				</OL>
 			<LI>Fixed an issue where if there where removed rows in the users table, the index page would have a problem retrieving the Title, and Username of the last import.</LI>
+			<LI>Added Plotting of Signal history for an APs Import to KML.</LI>
+			<LI>Altered the Chan Column in the Pointers table to be Integer not Varchar. This fixes the sorting issue where 10 would be before 1.</LI>
+			<LI>Altered AP Fetch Page table layout.</LI>
 		</OL>
 	</td></tr>
 </table>

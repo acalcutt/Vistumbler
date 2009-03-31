@@ -147,11 +147,11 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>To insert new links into database.</td></tr>";
 }
 
-$sql2 = "ALTER TABLE  `$wtable` CHANGE  `chan`  `chan` VARCHAR( 3 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
+$sql2 = "ALTER TABLE  `$wtable` CHANGE  `chan`  `chan` int( 3 ) NOT NULL";
 $alter_chan = mysql_query($sql2, $conn);
 
 if($alter_chan)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Alter `Chan` column in WiFi Pointers table `".$wtable."`, to allow 3 digits (for 802.11a channels.)</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Alter `Chan` column in WiFi Pointers table `".$wtable."`, to allow 3 digits (for 802.11a channels.)<br>And convert it to an int() from varchar()</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>To alter `Chan` column in WiFi Pointers table `".$wtable."`.</td></tr>";
 }

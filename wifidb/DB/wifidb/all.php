@@ -51,7 +51,7 @@ if ($sort==""){$sort="id";}
 		.'<tr class="style4"><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"border="0" src="img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
 		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
 		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Radio Type<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Radio<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
 		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
 		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td></tr>';
 
@@ -96,7 +96,7 @@ while ($newArray = mysql_fetch_array($result))
 	elseif($radio=="n")
 	{$radio="802.11n";}
 	else
-	{$radio="Unknown Radio";}
+	{$radio="802.11u";}
 	echo '<td>'.$radio.'</td>';
 	echo '<td>'.$auth.'</td>';
 	echo '<td>'.$encry.'</td></tr>';	
