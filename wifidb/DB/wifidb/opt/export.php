@@ -11,16 +11,12 @@ pageheader("Export To File");
 <?php
 $database = new database();
 
-if(isset($_GET['func'])){$func=$_GET['func'];}elseif(isset($_POST['func'])){$func = $_POST['func'];}else{$func="";}
+	if(isset($_GET['func'])){$func=$_GET['func'];}elseif(isset($_POST['func'])){$func = $_POST['func'];}else{$func="";}
 
-if(isset($_GET['user'])){$user=$_GET['user'];}elseif(isset($_POST['user'])){$user = $_POST['user'];}else{$user="";}
+	if(isset($_GET['user'])){$user=$_GET['user'];}elseif(isset($_POST['user'])){$user = $_POST['user'];}else{$user="";}
 	
-if(isset($_GET['row'])){$row=$_GET['row'];}elseif(isset($_POST['row'])){$row = $_POST['row'];}else{$row=0;}
-
-$func = strip_tags($func);
-$user = strip_tags($user);
-$row  = strip_tags($row);
-
+	if(isset($_GET['row'])){$row=$_GET['row'];}elseif(isset($_POST['row'])){$row = $_POST['row'];}else{$row=0;}
+	
 switch($func)
 {
 	case "index":
@@ -32,6 +28,7 @@ switch($func)
 		<tr><td>Username</td><td>
 			<select name="user">
 			<?php
+			include('../lib/config.inc.php');
 			mysql_select_db($db,$conn);
 			$sql = "SELECT * FROM `users` ORDER BY username ASC";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
@@ -63,6 +60,7 @@ switch($func)
 		<tr><td>Access Point</td><td>
 			<select name="row">
 			<?php
+			include('../lib/config.inc.php');
 			mysql_select_db($db,$conn);
 			$sql = "SELECT `id`,`ssid` FROM `$wtable` order by id asc";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
@@ -109,6 +107,7 @@ switch($func)
 		<tr><td>User List</td><td>
 			<select name="row">
 			<?php
+			include('../lib/config.inc.php');
 			mysql_select_db($db,$conn);
 			$sql = "SELECT * FROM `users` order by username asc";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
@@ -146,18 +145,23 @@ switch($func)
 		break;
 	#--------------------------
 	case "exp_user_all_kml":
+
+		$row = 0;
 		$database->exp_kml($export="exp_user_all_kml", $user,$row);
 		break;
 	#--------------------------
 	case "exp_all_db_kml": 
+
 		$database->exp_kml($export="exp_all_db_kml");
 		break;
 	#--------------------------
 	case "exp_single_ap":
+		$user="";
 		$database->exp_kml($export="exp_single_ap",$user,$row);
 		break;
 	#--------------------------
-	case "exp_user_list":
+	case "exp_user_list": 
+		$user ="";
 		$database->exp_kml($export="exp_user_list",$user,$row);
 		break;
 	#--------------------------

@@ -139,7 +139,7 @@ $sqls =	"CREATE TABLE wifi0 ("
   ."  id int(255) default NULL,"
   ."  ssid varchar(25) NOT NULL,"
   ."  mac varchar(25) NOT NULL,"
-  ."  chan int(3) NOT NULL,"
+  ."  chan varchar(3) NOT NULL,"
   ."  sectype varchar(1) NOT NULL,"
   ."  radio varchar(1) NOT NULL,"
   ."  auth varchar(25) NOT NULL,"
@@ -292,12 +292,12 @@ $AD_CF_SH_Re = fwrite($fileappend, "#---------------- SQL Related Information --
 									."$"."sep 			=	'-';\r\n"
 									."$"."db			=	'$wifi';\r\n"
 									."$"."db_st 		=	'$wifi_st';\r\n"
-									."$"."db_user	=	'$sqlu';\r\n"
+									."$"."db_user		=	'$sqlu';\r\n"
 									."$"."db_pwd		=	'$sqlp';\r\n"
 									."$"."engine		=	'InnoDB';\r\n"
 									."$"."charset		=	'utf8';\r\n"
 									."$"."conn 	=	mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
-if($AD_CF_SU_Re)
+if($AD_CF_SH_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add SQL Connection Info</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Connection Info</td></tr>";}

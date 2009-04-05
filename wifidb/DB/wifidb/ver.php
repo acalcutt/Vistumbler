@@ -55,7 +55,7 @@ while ($newArray = mysql_fetch_array($result))
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-28</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-05</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
