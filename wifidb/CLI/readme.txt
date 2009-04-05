@@ -236,3 +236,13 @@ VERSION HISTORY
 ~~~~~~~~~~~~
 1-> Initial release
 ==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.2
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Changed layout so it is more readable
+2-> Fixed a few bugs with the switches
+3-> Added in bad character stripping.
+==============================
