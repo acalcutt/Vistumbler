@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.2'
+$version = '9.3 Alpha 1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/03/22')
+$last_modified = _DateLocalFormat('2009/04/05')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -37,6 +37,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include "UDFs\CommMG.au3"
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
+#include "UDFs\XpNativeWifi.au3"
 
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
@@ -60,7 +61,7 @@ GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
 Opt("TrayIconHide", 1);Hide icon in system tray
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
 ;Non Vista Warning---------------------------------------
-If @OSVersion <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only run in Vista. It relies on a netsh command that is not avalible in older versions of windows")
+;If @OSVersion <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only run in Vista. It relies on a netsh command that is not avalible in older versions of windows")
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
@@ -168,6 +169,7 @@ Dim $AutoKmlTrackProcess
 Dim $AutoKmlProcess
 Dim $RefreshWindowOpened
 Dim $NsCancel
+Dim $DefaultApapterID
 
 Dim $ListviewAPs
 Dim $TreeviewAPs
@@ -826,28 +828,55 @@ $ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(Filtered)', $Expor
 Dim $found_adapter = 0
 Dim $NetworkAdapters[2]
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
-$menuid = GUICtrlCreateMenuItem($Text_Default, $Interfaces)
-$NetworkAdapters[1] = $menuid
-GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
-;Get network interfaces and add the to the interface menu
-$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
-$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
-For $object In $colNIC
-	$adaptername = $object.NetConnectionID
-	$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
-	_ArrayAdd($NetworkAdapters, $menuid)
-	GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
-	If $DefaultApapter = $adaptername Then
-		$found_adapter = 1
+If @OSVersion = "Win_XP" Then
+	$wlanhandle = _Wlan_OpenHandle()
+	$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+	$numofint = UBound($wlaninterfaces) - 1
+	;_ArrayDisplay($wlaninterfaces)
+	$manuid = 0
+	For $antm = 0 To $numofint
+		$adapterid = $wlaninterfaces[$antm][0]
+		$adaptername = $wlaninterfaces[$antm][1]
+		$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
+		_ArrayAdd($NetworkAdapters, $menuid)
+		GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
+		If $DefaultApapter = $adaptername Then
+			$found_adapter = 1
+			$DefaultApapterID = $adapterid
+			GUICtrlSetState($menuid, $GUI_CHECKED)
+		EndIf
+	Next
+	If $menuid <> 0 And $found_adapter = 0 Then
+		$DefaultApapter = $adaptername
+		$DefaultApapterID = $adapterid
 		GUICtrlSetState($menuid, $GUI_CHECKED)
 	EndIf
-Next
-$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
-;If the old default network adapter is not found, set vistumbler to use the default adapter
-If $found_adapter = 0 Then
-	$DefaultApapter = $Text_Default
-	GUICtrlSetState($NetworkAdapters[1], $GUI_CHECKED)
+Else
+	$menuid = GUICtrlCreateMenuItem($Text_Default, $Interfaces)
+	$NetworkAdapters[1] = $menuid
+	GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
+	;Get network interfaces and add the to the interface menu
+	$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+	$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
+	For $object In $colNIC
+		$adaptername = $object.NetConnectionID
+		$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
+		_ArrayAdd($NetworkAdapters, $menuid)
+		GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
+		If $DefaultApapter = $adaptername Then
+			$found_adapter = 1
+			GUICtrlSetState($menuid, $GUI_CHECKED)
+		EndIf
+	Next
+	$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
+	;If the old default network adapter is not found, set vistumbler to use the default adapter
+	If $found_adapter = 0 Then
+		$DefaultApapter = $Text_Default
+		GUICtrlSetState($NetworkAdapters[1], $GUI_CHECKED)
+	EndIf
 EndIf
+
+ConsoleWrite($DefaultApapterID & @CRLF)
 
 $Extra = GUICtrlCreateMenu($Text_Extra)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
@@ -1182,78 +1211,118 @@ Exit
 
 Func _ScanAccessPoints()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, ' _ScanAccessPoints()') ;#Debug Display
-	$NewAP = 0
-	$FoundAPs = 0
-	$NewFoundAPs = 0
-	;Dump data from netsh
-	FileDelete($tempfile);delete old temp file
-	If $DefaultApapter = $Text_Default Then
-		_RunDOS($netsh & ' wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
-	Else
-		_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
-	EndIf
-	$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
-	;Go through data and pull AP information
-	If $arrayadded = 1 Then
-		;Strip out whitespace before and after text on each line
-		For $stripws = 1 To $TempFileArray[0]
-			$TempFileArray[$stripws] = StringStripWS($TempFileArray[$stripws], 3)
-		Next
-		;Go through each line to get data
-		For $loop = 1 To $TempFileArray[0]
-			$temp = StringSplit(StringStripWS($TempFileArray[$loop], 3), ":")
-			If IsArray($temp) Then
-				If $temp[0] = 2 Then
-					If StringInStr($TempFileArray[$loop], $SearchWord_SSID) And StringInStr($TempFileArray[$loop], $SearchWord_BSSID) <> 1 Then
-						$SSID = StringStripWS($temp[2], 3)
-						Dim $NetworkType = '', $Authentication = '', $Encryption = '', $BSSID = ''
-					EndIf
-					If StringInStr($TempFileArray[$loop], $SearchWord_NetworkType) Then $NetworkType = StringStripWS($temp[2], 3)
-					If StringInStr($TempFileArray[$loop], $SearchWord_Authentication) Then $Authentication = StringStripWS($temp[2], 3)
-					If StringInStr($TempFileArray[$loop], $SearchWord_Encryption) Then $Encryption = StringStripWS($temp[2], 3)
-					If StringInStr($TempFileArray[$loop], $SearchWord_Signal) Then $Signal = StringStripWS(StringReplace($temp[2], '%', ''), 3)
-					If StringInStr($TempFileArray[$loop], $SearchWord_RadioType) Then $RadioType = StringStripWS($temp[2], 3)
-					If StringInStr($TempFileArray[$loop], $SearchWord_Channel) Then $Channel = StringStripWS($temp[2], 3)
-					If StringInStr($TempFileArray[$loop], $SearchWord_BasicRates) Then $BasicTransferRates = StringStripWS($temp[2], 3)
-					If StringInStr($TempFileArray[$loop], $SearchWord_OtherRates) Then $OtherTransferRates = StringStripWS($temp[2], 3)
-				ElseIf $temp[0] = 7 Then
-					If StringInStr($TempFileArray[$loop], $SearchWord_BSSID) Then
-						Dim $Signal = '', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
-						$NewAP = 1
-						$BSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
-					EndIf
-				EndIf
+	If @OSVersion = "WIN_XP" Then
+		$FoundAPs = 0
+		$NewFoundAPs = 0
+		_Wlan_Scan($wlanhandle, $DefaultApapterID)
+		$aplist = _Wlan_GetAvailableNetworkList($wlanhandle, $DefaultApapterID, 2)
+		;_ArrayDisplay($aplist)
+		$aplistsize = UBound($aplist) - 1
+		For $add = 0 To $aplistsize
+			;ConsoleWrite($add & '-' & $aplistsize & @CRLF)
+			$RadioType = ''
+			$BasicTransferRates = ''
+			$OtherTransferRates = ''
+			$BSSID = ''
+			$Channel = ''
+			$SSID = $aplist[$add][0]
+			$NetworkType = $aplist[$add][1]
+			$Signal = $aplist[$add][3]
+			$Authentication = $aplist[$add][4]
+			$Encryption = $aplist[$add][5]
+			$FoundAPs += 1
+			;Add new GPS ID
+			If $FoundAPs = 1 Then
+				$GPS_ID += 1
+				_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
+				;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
 			EndIf
-			;Set Update Flag (if needed)
-			$Update = 0
-			If $loop = $TempFileArray[0] Then
-				$Update = 1
-			Else
-				If StringInStr($TempFileArray[$loop + 1], $SearchWord_SSID) Or StringInStr($TempFileArray[$loop + 1], $SearchWord_BSSID) Then $Update = 1
-			EndIf
-			;Add data into database and gui
-			If $Update = 1 And $NewAP = 1 And $BSSID <> '' Then
-				$NewAP = 0
-				If $BSSID <> "" Then
-					$FoundAPs += 1
-					;Add new GPS ID
-					If $FoundAPs = 1 Then
-						$GPS_ID += 1
-						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
-						;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
-					EndIf
-					;Add new access point
-					$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
-					If $NewFound = 1 Then $NewFoundAPs += 1
-				EndIf
-			EndIf
+			;Add new access point
+			$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+			If $NewFound = 1 Then $NewFoundAPs += 1
 		Next
 		;Play New AP sound if sounds are enabled
 		If $NewFoundAPs <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
 		;Return number of active APs
+
 		Return ($FoundAPs)
+
+
 	Else
-		Return ('-1')
+		$NewAP = 0
+		$FoundAPs = 0
+		$NewFoundAPs = 0
+		;Dump data from netsh
+		FileDelete($tempfile);delete old temp file
+		If $DefaultApapter = $Text_Default Then
+			_RunDOS($netsh & ' wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+		Else
+			_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+		EndIf
+		$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
+		;Go through data and pull AP information
+		If $arrayadded = 1 Then
+			;Strip out whitespace before and after text on each line
+			For $stripws = 1 To $TempFileArray[0]
+				$TempFileArray[$stripws] = StringStripWS($TempFileArray[$stripws], 3)
+			Next
+			;Go through each line to get data
+			For $loop = 1 To $TempFileArray[0]
+				$temp = StringSplit(StringStripWS($TempFileArray[$loop], 3), ":")
+				If IsArray($temp) Then
+					If $temp[0] = 2 Then
+						If StringInStr($TempFileArray[$loop], $SearchWord_SSID) And StringInStr($TempFileArray[$loop], $SearchWord_BSSID) <> 1 Then
+							$SSID = StringStripWS($temp[2], 3)
+							Dim $NetworkType = '', $Authentication = '', $Encryption = '', $BSSID = ''
+						EndIf
+						If StringInStr($TempFileArray[$loop], $SearchWord_NetworkType) Then $NetworkType = StringStripWS($temp[2], 3)
+						If StringInStr($TempFileArray[$loop], $SearchWord_Authentication) Then $Authentication = StringStripWS($temp[2], 3)
+						If StringInStr($TempFileArray[$loop], $SearchWord_Encryption) Then $Encryption = StringStripWS($temp[2], 3)
+						If StringInStr($TempFileArray[$loop], $SearchWord_Signal) Then $Signal = StringStripWS(StringReplace($temp[2], '%', ''), 3)
+						If StringInStr($TempFileArray[$loop], $SearchWord_RadioType) Then $RadioType = StringStripWS($temp[2], 3)
+						If StringInStr($TempFileArray[$loop], $SearchWord_Channel) Then $Channel = StringStripWS($temp[2], 3)
+						If StringInStr($TempFileArray[$loop], $SearchWord_BasicRates) Then $BasicTransferRates = StringStripWS($temp[2], 3)
+						If StringInStr($TempFileArray[$loop], $SearchWord_OtherRates) Then $OtherTransferRates = StringStripWS($temp[2], 3)
+					ElseIf $temp[0] = 7 Then
+						If StringInStr($TempFileArray[$loop], $SearchWord_BSSID) Then
+							Dim $Signal = '', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
+							$NewAP = 1
+							$BSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
+						EndIf
+					EndIf
+				EndIf
+				;Set Update Flag (if needed)
+				$Update = 0
+				If $loop = $TempFileArray[0] Then
+					$Update = 1
+				Else
+					If StringInStr($TempFileArray[$loop + 1], $SearchWord_SSID) Or StringInStr($TempFileArray[$loop + 1], $SearchWord_BSSID) Then $Update = 1
+				EndIf
+				;Add data into database and gui
+				If $Update = 1 And $NewAP = 1 And $BSSID <> '' Then
+					$NewAP = 0
+					If $BSSID <> "" Then
+						$FoundAPs += 1
+						;Add new GPS ID
+						If $FoundAPs = 1 Then
+							$GPS_ID += 1
+							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
+							;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
+						EndIf
+						;Add new access point
+						$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+						If $NewFound = 1 Then $NewFoundAPs += 1
+					EndIf
+				EndIf
+			Next
+			;Play New AP sound if sounds are enabled
+			If $NewFoundAPs <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+			;Return number of active APs
+
+			Return ($FoundAPs)
+		Else
+			Return ('-1')
+		EndIf
 	EndIf
 EndFunc   ;==>_ScanAccessPoints
 
@@ -1357,7 +1426,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$ExpFirstHistID = $HISTID
 				EndIf
 			EndIf
-			
+
 			;Set Highest GPS History ID
 			If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then ;If new latitude and longitude are valid
 				If $Found_HighGpsHistId = 0 Then ;If old HighGpsHistId is blank then use the new Hist ID
@@ -1401,7 +1470,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$DBLat = ''
 				$DBLon = ''
 			EndIf
-			
+
 			;If HighGpsHistID is different from the origional, update it
 			If $DBHighGpsHistId <> $Found_HighGpsHistId Then
 				$query = "UPDATE AP SET HighGpsHistId = '" & $DBHighGpsHistId & "' WHERE ApID = '" & $Found_APID & "'"
@@ -4205,7 +4274,7 @@ Func _ImportOk()
 							If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
 							$LoadTime = $loadlist[12]
 						EndIf
-						
+
 						$query = "SELECT OldGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $LoadGID & "'"
 						$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 						$FoundTempGidMatch = UBound($TempGidMatchArray) - 1
@@ -4296,7 +4365,7 @@ Func _ImportOk()
 						$LoadLastActive_Date = $tsplit[1]
 						$ld = StringSplit($LoadLastActive_Date, '-')
 						If StringLen($ld[1]) <> 4 Then $LoadLastActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
-						
+
 						;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4333,7 +4402,7 @@ Func _ImportOk()
 						;ExitLoop
 					EndIf
 				EndIf
-				
+
 				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $totallines) Then
 					$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 					$percent = ($currentline / $totallines) * 100
@@ -4436,7 +4505,7 @@ Func _ImportOk()
 							ElseIf $FoundGpsMatch = 1 Then
 								$LoadGID = $GpsMatchArray[1][1]
 							EndIf
-							
+
 							;Add Last AP Info to DB, Listview
 							$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal)
 							If $NewApAdded = 1 Then $AddAP += 1
@@ -4445,7 +4514,7 @@ Func _ImportOk()
 						ExitLoop
 					EndIf
 				EndIf
-				
+
 				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $totallines) Then
 					$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 					$percent = ($currentline / $totallines) * 100
@@ -7728,7 +7797,7 @@ EndFunc   ;==>_DateLocalFormat
 
 Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CompareDate()') ;#Debug Display
-	
+
 	$d1 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d1, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
 	$d2 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d2, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
 	If $d1 = $d2 Then
