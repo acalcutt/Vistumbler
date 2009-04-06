@@ -609,7 +609,7 @@ Func _Wlan_GetAvailableNetworkList($hClientHandle, $pGUID, $dwFlag)
 					If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_WPA_PSK 			Then $AvailableNetworkArray[$i][4] = "WPA-PSK"
 					If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_RSNA 				Then $AvailableNetworkArray[$i][4] = "WPA2"
 					If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_RSNA_PSK 			Then $AvailableNetworkArray[$i][4] = "WPA2-PSK"
-					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_NONE				Then $AvailableNetworkArray[$i][5] = "Unencrypted"
+					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_NONE				Then $AvailableNetworkArray[$i][5] = "None"
 					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_WEP40			Then $AvailableNetworkArray[$i][5] = "WEP-64"
 					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_TKIP				Then $AvailableNetworkArray[$i][5] = "TKIP"
 					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_CCMP				Then $AvailableNetworkArray[$i][5] = "AES"

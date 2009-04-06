@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Alpha 1'
+$version = '9.3 Beta 1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/04/05')
+$last_modified = _DateLocalFormat('2009/04/06')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -37,7 +37,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include "UDFs\CommMG.au3"
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
-#include "UDFs\XpNativeWifi.au3"
+#include "UDFs\NativeWifi.au3"
 
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
@@ -52,16 +52,18 @@ For $loop = 1 To $CmdLine[0]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vs1' Then $Load = $CmdLine[$loop]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vsz' Then $Load = $CmdLine[$loop]
 Next
-
 ; Set a COM Error handler--------------------------------
 $oMyError = ObjEvent("AutoIt.Error", "MyErrFunc")
+;Set Wifi Scan Type
+Dim $UseNativeWifi = IniRead($settings, 'Vistumbler', 'UseNativeWifi', 0)
+If @OSVersion = "WIN_XP" Then $UseNativeWifi = 1
 ; -------------------------------------------------------
 GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
 ;Options-------------------------------------------------
 Opt("TrayIconHide", 1);Hide icon in system tray
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
 ;Non Vista Warning---------------------------------------
-;If @OSVersion <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only run in Vista. It relies on a netsh command that is not avalible in older versions of windows")
+;If $OS <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only run in Vista. It relies on a netsh command that is not avalible in older versions of windows")
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
@@ -781,7 +783,12 @@ $SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
 $RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
-If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
+If $UseNativeWifi = 1 Then
+	GUICtrlSetState(-1, $GUI_DISABLE)
+	$RefreshNetworks = 0
+Else
+	If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
+EndIf
 $AutoSaveGUI = GUICtrlCreateMenuItem($Text_AutoSave, $Options)
 If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
 $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $Options)
@@ -802,8 +809,12 @@ $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $Options)
 If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GuiUseNativeWifi = GUICtrlCreateMenuItem("Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)", $Options)
+If $UseNativeWifi = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $Options)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+
 
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
 $SetMisc = GUICtrlCreateMenuItem($Text_VistumblerSettings, $SettingsMenu)
@@ -828,7 +839,7 @@ $ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(Filtered)', $Expor
 Dim $found_adapter = 0
 Dim $NetworkAdapters[2]
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
-If @OSVersion = "Win_XP" Then
+If $UseNativeWifi = 1 Then
 	$wlanhandle = _Wlan_OpenHandle()
 	$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
 	$numofint = UBound($wlaninterfaces) - 1
@@ -973,6 +984,7 @@ GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
 GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
 GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
+GUICtrlSetOnEvent($GuiUseNativeWifi, '_NativeWifiToggle')
 ;Export Menu
 GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
 GUICtrlSetOnEvent($ExportToTXT2, '_ExportData')
@@ -1211,7 +1223,7 @@ Exit
 
 Func _ScanAccessPoints()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, ' _ScanAccessPoints()') ;#Debug Display
-	If @OSVersion = "WIN_XP" Then
+	If $UseNativeWifi = 1 Then
 		$FoundAPs = 0
 		$NewFoundAPs = 0
 		_Wlan_Scan($wlanhandle, $DefaultApapterID)
@@ -2245,8 +2257,21 @@ Func _DebugToggle() ;Sets if current function should be displayed in the gui
 	Else
 		GUICtrlSetState($DebugFunc, $GUI_CHECKED)
 		$Debug = 1
-	EndIf ;==>_DebugToggle
+	EndIf
 EndFunc   ;==>_DebugToggle
+
+Func _NativeWifiToggle()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_NativeWifiToggle()') ;#Debug Display
+	If $UseNativeWifi = 1 Then
+		GUICtrlSetState($GuiUseNativeWifi, $GUI_UNCHECKED)
+		$UseNativeWifi = 0
+	Else
+		GUICtrlSetState($GuiUseNativeWifi, $GUI_CHECKED)
+		$UseNativeWifi = 1
+	EndIf
+	MsgBox(0, $Text_Information, "Vistumbler needs to be restarted. Vistumbler will now close")
+	_ExitVistumbler()
+EndFunc   ;==>_NativeWifiToggle
 
 Func _SoundToggle();turns new ap sound on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SoundToggle()') ;#Debug Display
@@ -4602,6 +4627,7 @@ Func _WriteINI()
 	Else
 		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
 	EndIf
+	IniWrite($settings, "Vistumbler", "UseNativeWifi", $UseNativeWifi)
 	IniWrite($settings, "Vistumbler", "DateFormat", $DateFormat)
 	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
 	IniWrite($settings, "Vistumbler", "CheckForBetaUpdates", $CheckForBetaUpdates)
@@ -7882,6 +7908,16 @@ Func _InterfaceChanged()
 		EndIf
 	Next
 	$DefaultApapter = GUICtrlRead(@GUI_CtrlId, 1)
+	;If Using Native Wifi, Find DefaultAdapterId
+	If $UseNativeWifi = 1 Then
+		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$numofint = UBound($wlaninterfaces) - 1
+		For $antm = 0 To $numofint
+			$adapterid = $wlaninterfaces[$antm][0]
+			$adaptername = $wlaninterfaces[$antm][1]
+			If $DefaultApapter = $adaptername Then $DefaultApapterID = $adapterid
+		Next
+	EndIf
 EndFunc   ;==>_InterfaceChanged
 
 Func Log10($x)
