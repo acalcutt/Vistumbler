@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Beta 1'
+$version = '9.3 Beta 1.1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/04/06')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -844,7 +844,7 @@ If $UseNativeWifi = 1 Then
 	$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
 	$numofint = UBound($wlaninterfaces) - 1
 	;_ArrayDisplay($wlaninterfaces)
-	$manuid = 0
+	$menuid = 0
 	For $antm = 0 To $numofint
 		$adapterid = $wlaninterfaces[$antm][0]
 		$adaptername = $wlaninterfaces[$antm][1]
@@ -862,6 +862,7 @@ If $UseNativeWifi = 1 Then
 		$DefaultApapterID = $adapterid
 		GUICtrlSetState($menuid, $GUI_CHECKED)
 	EndIf
+	If $menuid = 0 Then GUICtrlCreateMenuItem("No Adapters Found", $Interfaces)
 Else
 	$menuid = GUICtrlCreateMenuItem($Text_Default, $Interfaces)
 	$NetworkAdapters[1] = $menuid
