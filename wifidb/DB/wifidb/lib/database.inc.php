@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Mar-30",
+			"Last_Core_Edit" 	=> 	"2009-Apr-08",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.5", 
 										"apfetch"			=>	"2.4.2",
@@ -13,8 +13,8 @@ $ver = array(
 										"user_ap_list"		=>	"1.2",
 										"all_users_ap"		=>	"1.3",
 										"exp_KML"			=>	"3.3.0",
-										"convert_dm_dd"		=>	"1.3",
-										"convert_dd_dm"		=>	"1.3",
+										"convert_dm_dd"		=>	"1.3.0",
+										"convert_dd_dm"		=>	"1.3.1",
 										"manufactures"		=>	"1.0"
 										),
 			"Misc"				=>	array(
@@ -465,43 +465,23 @@ class database
 							
 							if($return_gps === 0)
 							{
-								$todo = "new";
+								$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
+											   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
+								if (mysql_query($sqlitgpsgp, $conn))
+								{
+									echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
+								}else
+								{
+									echo "There was an Error inserting the GPS information";
+								}
+								$signals[$gps_id] = $gps_id.",".$signal;
+								$gps_id++;
 							#	break;
 							}else
 							{
 								if($sats > $GPSDBArray['sats'])
 								{
-									$todo = "hi_sats";
-									$hi_sats_id=$dbid;
-							#		continue;
-								}else
-								{
-									$todo = "db";
-							#		break;
-								}
-							}
-							switch ($todo)
-							{	
-								case "new":
-									$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
-												   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
-									if (mysql_query($sqlitgpsgp, $conn))
-									{
-										echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
-									}else
-									{
-										echo "There was an Error inserting the GPS information";
-									}
-									$signals[$gps_id] = $gps_id.",".$signal;
-									$gps_id++;
-									break;
-								case "db":
-									echo "GPS Point already in DB<BR>----".$dbid."- <- DB ID<br>";
-									$signals[$gps_id] = $dbid.",".$signal;
-									$gps_id++;
-									break;
-								case "hi_sats":
-									$sqlupgpsgp = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats', `hdp` = '$hdp', `alt` = '$alt', `geo` = '$geo', `kmh` = '$kmh', `mph` = '$mph', `track` = '$track' , `date` = '$date' , `time` = '$time'  WHERE `id` = '$hi_sats_id'";
+									$sqlupgpsgp = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats', `hdp` = '$hdp', `alt` = '$alt', `geo` = '$geo', `kmh` = '$kmh', `mph` = '$mph', `track` = '$track' , `date` = '$date' , `time` = '$time'  WHERE `id` = '$dbid'";
 									$resource = mysql_query($sqlupgpsgp, $conn);
 									if ($resource)
 									{
@@ -510,8 +490,27 @@ class database
 									{
 										echo "A MySQL Update error has occured<br>";echo mysql_error($conn);
 									}
-									$signals[$gps_id] = $hi_sats_id.",".$signal;
+									$signals[$gps_id] = $dbid.",".$signal;
 									$gps_id++;
+							#		continue;
+								}else
+								{
+									echo "GPS Point already in DB<BR>----".$dbid."- <- DB ID<br>";
+									$signals[$gps_id] = $dbid.",".$signal;
+									$gps_id++;
+							#		break;
+								}
+							}
+							switch ($todo)
+							{	
+								case "new":
+									
+									break;
+								case "db":
+									
+									break;
+								case "hi_sats":
+									
 									break;
 							}
 							?>
@@ -723,7 +722,7 @@ class database
 	#													Convert GeoCord DM to DD									   	     #
 	#========================================================================================================================#
 	
-	function &convert_dm_dd($geocord_in)
+	function &convert_dm_dd($geocord_in = "")
 	{
 		$start = microtime(true);
 	//	GPS Convertion :
@@ -808,15 +807,17 @@ class database
 		// 4.146255 ---- 4 - (0.146255)*60 = 8.7753
 #		echo $geocord_mult.'<br>';
 		$mult = explode(".",$geocord_mult);
-		$len = strlen($mult[0]);
 #		echo $len.'<br>';
-		if($len < 2)
+		if( strlen($mult[0]) < 2 )
 		{
 			$geocord_mult = "0".$geocord_mult;
 		}
 		// 4.146255 ---- 4 - 08.7753
 		$geocord_out = $geocord_exp[0].$geocord_mult;
 		// 4.146255 ---- 408.7753
+		$geocord_o = explode(".", $geocord_out);
+		if( strlen($geocord_o[1]) > 4 ){ $geocord_o[1] = substr($geocord_o[1], 0 , 4); $geocord_out = implode('.', $geocord_o); }
+		
 		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
 		$end = microtime(true);
 		if ($GLOBALS["bench"]  == 1)
