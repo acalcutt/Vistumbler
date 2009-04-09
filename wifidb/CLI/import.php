@@ -152,12 +152,15 @@ function smart_quotes($text="")
 					8=>"&",
 					9=>"~",
 					10=>"@",
-					11=>"/",
+					11=>"\\",
 					12=>"ÿ",
-					13=>"`"
+					13=>"`",
+					14=>"/",
+					15=>",",
+					16=>":"
 				);
 	$text = preg_replace($pattern,"&#147;\\1&#148;",$text);
-	$text = str_replace($strip,"",$text);
+	$text = str_replace($strip,"_",$text);
 	$text = addslashes($text);
 	$text = strip_tags($text);
 	return $text;
