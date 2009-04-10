@@ -8,16 +8,16 @@
 #
 # To import the older Text files, you have to run them through the converter first.
 
-$lastedit="2009.04.08";
+$lastedit="2009.04.10";
 $start="2008.06.21";
-$ver="1.3";
+$ver="1.4";
 
 $localtimezone = date("T");
 echo $localtimezone."\n";
 
 date_default_timezone_set('GMT+0'); //setting the time zone to GMT(Zulu) for internal keeping, displays will soon be customizable for the users time zone
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
-error_reporting(E_STRICT|E_ALL); //show all erorrs
+error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
 
 $TOTAL_START = date("H:i:s");
 
@@ -112,7 +112,7 @@ $bench = array();
 foreach($file_a as $file)
 {
 	$source = $vs1dir.$file;
-	echo '\t->\t################=== Start Import of '.$file.' ===################';
+	echo "\t->\t################=== Start Import of ".$file." ===################";
 	echo "\n";
 	$bench[] = import_vs1($source, $user, $notes, $title);
 //	function  ( Source file , User that is importing, Notes for import, Title of Batch Import {will have "Batch: *title*" as title} )
@@ -213,6 +213,8 @@ function &check_gps_array($gpsarray, $test)
 
 	function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED" )
 	{
+		$FILENUM = 1;
+		
 		$start = microtime(true);
 		$times=date('Y-m-d H:i:s');
 		if ($source == NULL){echo "There was an error sending the file name to the function\n"; break;}
@@ -237,6 +239,7 @@ function &check_gps_array($gpsarray, $test)
 		if($count <= 8) { echo "You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.\n"; break;}
 		foreach($return as $ret)
 		{
+			
 			if ($ret[0] == "#"){continue;}
 			
 			$retexp = explode("|",$ret);
@@ -353,15 +356,18 @@ function &check_gps_array($gpsarray, $test)
 					$nt=$wifi[10];
 					$label = strip_tags(smart_quotes($wifi[11]));
 					
+					
 					//create table name to select from, insert into, or create
 					$table = $ssids.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 					$gps_table = $table.$gps_ext;
+					
 					if(!isset($table_ptb)){$table_ptb="";}
+					
 					if(strcmp($table,$table_ptb)===0)
 					{
-						$updated++;
+						
 						// They are the same
-						echo "\n".$APid."	||	".$table." -  is being updated ";
+						echo "\n".$FILENUM."   ( ".$APid." )   ||   ".$table." - is being updated ";
 						mysql_select_db($db_st,$conn);
 						$signal_exp = explode("-",$wifi[12]);
 						//setup ID number for new GPS cords
@@ -501,10 +507,12 @@ function &check_gps_array($gpsarray, $test)
 								}
 							}
 						}
+						$updated++;
+						$FILENUM++;
 					}else
 					{
-						$imported++;
-						echo "\n".$size."	||	".$table." - is Being Imported";
+						
+						echo "\n".$FILENUM."   ( ".$size." )   ||   ".$table." - is Being Imported";
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 						mysql_query($sqlct, $conn);
@@ -597,6 +605,8 @@ function &check_gps_array($gpsarray, $test)
 							}
 						}else{echo "Something went wrong, I couldn't add in the pointer :-( \n";}
 		#				echo "</td></tr></table>\n";
+						$imported++;
+						$FILENUM++;
 					}
 					unset($ssid_ptb);
 					unset($mac_ptb);
