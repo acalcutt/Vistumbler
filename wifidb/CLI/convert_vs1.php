@@ -1,14 +1,15 @@
 <?php
 $TOTAL_START=date("H:i:s");
-#error_reporting(E_ALL);
+error_reporting(E_ALL);
 $debug = 0;
-$lastedit="1.Mar.2009";
+$bench = 0;
+$lastedit="2009.Apr.10";
 $start="6.21.2008";
 $ver="1.3";
-echo "==-=-=-=-=-=-Vistumbler Summery Text to VS1 converter -=-=-=-=-=-==\n Version: ".$ver."\nLast Edit: ".$lastedit."\n";
+echo "\n\n==-=-=-=-=-=-Vistumbler Summery Text to VS1 converter -=-=-=-=-=-==\nVersion: ".$ver."\nLast Edit: ".$lastedit."\n";
 
 $vs1dir = getcwd();
-$vs1dir.="\\vs1\\";
+$vs1dir .="\\vs1\\";
 $textdir = getcwd();
 $textdir .="\\text\\";
 
@@ -18,7 +19,7 @@ if (file_exists($textdir)===FALSE){echo "You need to put some files in a folder 
 // self aware of Script location and where to search for Txt files
 
 
-echo "Directory: ".$textdir."\n\n";
+echo "|\n----------------\nDirectory: ".$textdir."\n\n";
 echo "Files to Convert: \n";
 
 $file_a = array();
@@ -26,7 +27,7 @@ $n=0;
 $dh = opendir($textdir) or die("couldn't open directory");
 while (!(($file = readdir($dh)) == false))
 {
-	if ((is_file("$textdir/$file"))) 
+	if (is_file($textdir."/".$file)) 
 	{
 		if($file == '.'){continue;}
 		if($file == '..'){continue;}
@@ -47,7 +48,7 @@ closedir($dh);
 foreach($file_a as $file)
 {
 	$source = $textdir.$file;
-	echo '################=== Start conversion of '.$source.' ===################';
+	echo '################=== Start conversion of '.$file.' ===################';
 	echo "\n";
 	convert_vs1($source, "file");
 //	function ( Source file , output destination type [ file only at the moment MySQL support soon ] )
@@ -94,51 +95,54 @@ return $return;
 	#													Convert GeoCord DD to DM									   	     #
 	#========================================================================================================================#
 	
-	function &convert_dd_dm($geocord_in)
+	function &convert_dd_dm($geocord_in="")
 	{
+		$start = microtime(true);
 		//	GPS Convertion :
+#		echo $geocord_in.'<BR>';
 		$neg=FALSE;
 		$geocord_exp = explode(".", $geocord_in);
-		$pattern[0] = '/S /';
-		$pattern[1] = '/W /';
-		$pattern[2] = '/E /';
-		$pattern[3] = '/N /';
-		$replacements[0] = "-";
-		$replacements[1] = "-";
-		$replacements[2] = "";
-		$replacements[3] = "";
-		$geocord = preg_replace($pattern, $replacements, $geocord_exp[0]);
+		$geocord_front = explode(" ", $geocord_exp[0]);
 		
-		if($geocord === "-"){$geocord = 0 - $geocord; $neg = TRUE;}
+		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
+		$pattern[0] = '/N /';
+		$pattern[1] = '/E /';
+		$pattern[2] = '/S /';
+		$pattern[3] = '/W /';
+		$replacements = "";
+		$geocord_exp[0] = preg_replace($pattern, $replacements, $geocord_exp[0]);
 		
-		// 42.146255 ---- 42 - 146255
+		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
+		// 4.146255 ---- 4 - 146255
+#		echo $geocord_exp[1].'<br>';
 		$geocord_dec = "0.".$geocord_exp[1];
-		// 42.146255 ---- 42 - 0.146255
+		// 4.146255 ---- 4 - 0.146255
+#		echo $geocord_dec.'<br>';
 		$geocord_mult = $geocord_dec*60;
-		// 42.146255 ---- 42 - (0.146255)*60 = 8.7753
-		$geocord_mult_exp = explode('.',$geocord_mult);
-		// 42.146255 ---- 42 -- 8 - 775
-		$geocord_mult_len = strlen($geocord_mult_exp[0]);
-		if($geocord_mult_len === 1){$geocord_mult_exp[0] = "0".$geocord_mult_exp[0]; // 42.146255 ---- 42 - 08.7753
-		}
-		// 42.146255 ---- 42 -- 08 - 7753
-		$geocord_mult_len_1 = strlen($geocord_mult_exp[1]); // if 7753 -> 4
-		if($geocord_mult_len_1 === 1){$geocord_mult_exp[1] = $geocord_mult_exp[1]."000"; // 42.146255 ---- 42 - 08.7000
-		}elseif($geocord_mult_len_1 === 2){$geocord_mult_exp[1] = $geocord_mult_exp[1]."00"; // 42.146255 ---- 42 - 08.7700
-		}elseif($geocord_mult_len_1 === 3){$geocord_mult_exp[1] = $geocord_mult_exp[1]."0"; // 42.146255 ---- 42 - 08.7750
-		}elseif($geocord_mult_len_1 > 4) // 42.146255 ---- 42 - 08.7757891
+		// 4.146255 ---- 4 - (0.146255)*60 = 8.7753
+#		echo $geocord_mult.'<br>';
+		$mult = explode(".",$geocord_mult);
+#		echo $len.'<br>';
+		if( strlen($mult[0]) < 2 )
 		{
-			$geocord_mult_exp[1] = substr_replace($geocord_mult_exp[1] , '' , 4 , strlen($geocord_mult_exp[1]));
-			// 42.146255 ---- 42 - 08.7757
-			$geocord_mult = $geocord_mult_exp[1];
+			$geocord_mult = "0".$geocord_mult;
 		}
-		$geocord_mult = implode(".", $geocord_mult_exp);
-		$geocord_add = $geocord.$geocord_mult;
-		// 42.146255 ---- 4208.7753
-		if($geocord_add === "000"){$geocord_add = "0000.0000";}
-		if($neg === TRUE){$geocord_add = "-".$geocord_add;}
+		// 4.146255 ---- 4 - 08.7753
+		$geocord_out = $geocord_exp[0].$geocord_mult;
+		// 4.146255 ---- 408.7753
+		echo $geocord_out."\n";
+		$geocord_o = explode(".", $geocord_out);
+		if( strlen($geocord_o[1]) > 4 ){ $geocord_o[1] = substr($geocord_o[1], 0 , 4); $geocord_out = implode('.', $geocord_o); }
 		
-		return $geocord_add;
+		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
+		$end = microtime(true);
+		if ($GLOBALS["bench"]  == 1)
+		{
+			echo "Time is [Unix Epoc]<BR>";
+			echo "Start Time: ".$start."<BR>";
+			echo "  End Time: ".$end."<BR>";
+		}
+		return $geocord_out;
 	}
 
 function convert_vs1($source, $out)
@@ -323,7 +327,10 @@ if ($ret_count == 17)// test to see if the data is in correct format
 
 		}
 	}
-}else{echo "\nLine: ".$c." - Wrong data type, dropping row\n";}
+}else
+{
+	echo "\nLine: ".$c." - Wrong data type, dropping row\n";
+}
 unset($gpsdata_t[0]);
 }
 if ($out == "file" or $out == "File" or $out=="FILE")
@@ -335,8 +342,16 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	foreach( $gpsdata as $gps )
 	{
 	//	GPS Convertion :
-	$lat  =& convert_dd_dm($gps['lat']);
-	$long =& convert_dd_dm($gps['long']);
+	$exp = explode(".", $gps['lat']);
+	if($exp[1] > 4 && $exp[1] < 4)
+	{
+		$lat  =& convert_dd_dm($gps['lat']);
+		$long =& convert_dd_dm($gps['long']);
+	}else
+	{
+		$lat  = $gps['lat'];
+		$long = $gps['long'];
+	}
 	//	END GPS convert
 		
 		
