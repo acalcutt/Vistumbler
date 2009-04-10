@@ -52,6 +52,20 @@ while ($newArray = mysql_fetch_array($result))
 	</tr>
 </table>
 <br>
+<table width="100%" border="2" id="15b80" cellpadding="1">
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.16 Build 2</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Apr-10</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
+		<OL>
+			<LI>Fixed a bug where the AP fetch would only show the first Signal history even if there was more then one in the table.</LI>
+			<LI>Fixed a bug in the txt to vs1 converter where it would convert a DDMM GEOCORD to DDMM resulting in a corrupted GEOCORD.</LI>
+			<LI>Improved import time by 2 by condensing the GPS compair.</LI>
+			
+		</OL>
+	</td></tr>
+</table>
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>

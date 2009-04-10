@@ -982,8 +982,8 @@ class database
 					$sig_exp = explode(',',$signal);
 					$id = $sig_exp[0];
 					$start2 = microtime(true);
-					$result = mysql_query("SELECT * FROM `$table_gps` WHERE `id` = '$id'", $conn) or die(mysql_error());
-					while ($field = mysql_fetch_array($result)) 
+					$result1 = mysql_query("SELECT * FROM `$table_gps` WHERE `id` = '$id'", $conn) or die(mysql_error());
+					while ($field = mysql_fetch_array($result1)) 
 					{
 						?>
 						<tr><td align="center">
