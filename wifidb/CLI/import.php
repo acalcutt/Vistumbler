@@ -8,7 +8,7 @@
 #
 # To import the older Text files, you have to run them through the converter first.
 
-$lastedit="2009.04.10";
+$lastedit="2009.04.12";
 $start="2008.06.21";
 $ver="1.4";
 
@@ -297,6 +297,12 @@ function &check_gps_array($gpsarray, $test)
 				$gpscount++;
 			}elseif($ret_len == 13)
 			{
+					if(!isset($SETFLAGTEST))
+					{
+						$count = $count - $gpscount;
+						$count = $count - 8;
+					}
+					$SETFLAGTEST = TRUE;
 					$wifi = explode("|",$ret, 13);
 					if($wifi[0] === "" && $wifi[1] === "" && $wifi[5] === "" && $wifi[6] === "" && $wifi[7] === ""){continue;}
 					mysql_select_db($db,$conn);
@@ -367,7 +373,7 @@ function &check_gps_array($gpsarray, $test)
 					{
 						
 						// They are the same
-						echo "\n".$FILENUM."   ( ".$APid." )   ||   ".$table." - is being updated ";
+						echo "\n".$FILENUM." / ".$count."   ( ".$APid." )   ||   ".$table." - is being updated ";
 						mysql_select_db($db_st,$conn);
 						$signal_exp = explode("-",$wifi[12]);
 						//setup ID number for new GPS cords
@@ -394,7 +400,7 @@ function &check_gps_array($gpsarray, $test)
 						
 						foreach($signal_exp as $exp)
 						{
-							echo ".";
+					#		echo ".";
 							//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re grab it to test the data
 							$DBresult = mysql_query("SELECT * FROM `$gps_table`", $conn);
 							while ($neArray = mysql_fetch_array($DBresult))
@@ -512,7 +518,7 @@ function &check_gps_array($gpsarray, $test)
 					}else
 					{
 						
-						echo "\n".$FILENUM."   ( ".$size." )   ||   ".$table." - is Being Imported";
+						echo "\n".$FILENUM." / ".$count."   ( ".$size." )   ||   ".$table." - is Being Imported";
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 						mysql_query($sqlct, $conn);
@@ -541,7 +547,7 @@ function &check_gps_array($gpsarray, $test)
 						$prev = '';
 						foreach($signal_exp as $exp)
 						{
-							echo ".";
+					#		echo ".";
 							$esp = explode(",",$exp);
 							$vs1_id = $esp[0];
 							$signal = $esp[1];
