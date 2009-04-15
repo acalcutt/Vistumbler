@@ -306,7 +306,7 @@ class database
 					$ssidss = strip_tags(smart_quotes($wifi[0]));
 					$ssidsss = str_split($ssidss,25);
 					$ssids = $ssidsss[0];
-					
+					if($wifi[1] == ''){$wifi[1] = "00:00:00:00:00:00";}
 					$mac1 = explode(':', $wifi[1]);
 					$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5];
 					
@@ -895,7 +895,7 @@ class database
 		$result = mysql_query($sqls, $conn) or die(mysql_error());
 		$newArray = mysql_fetch_array($result);
 		$ID = $newArray['id'];
-		
+
 		$macaddress = $newArray['mac'];
 		$manuf = database::manufactures($macaddress);
 		$mac = str_split($macaddress,2);
