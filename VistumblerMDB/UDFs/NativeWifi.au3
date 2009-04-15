@@ -1,5 +1,5 @@
 #cs
-20/03/2009 - Version 2
+20/03/2009 - Version 2.2
 -----------------------------------------------------------------
 ----------------------NATIVE WIFI FUNCTIONS----------------------
 --------------------------For WinXP SP3--------------------------
@@ -595,8 +595,6 @@ Func _Wlan_GetAvailableNetworkList($hClientHandle, $pGUID, $dwFlag)
 					$AvailableNetworkArray[$i][5] = DllStructGetData($NETWORK_LIST, "DOT11CIPHERALGORITHM" & $index)
 					$AvailableNetworkArray[$i][6] = DllStructGetData($NETWORK_LIST, "dwFlags" & $index)
 					$AvailableNetworkArray[$i][7] = DllStructGetData($NETWORK_LIST, "WLANREASONCODE" & $index)
-					;$AvailableNetworkArray[$i][8] = DllStructGetData($NETWORK_LIST, "dot11Bssid" & $index)
-					;ConsoleWrite($AvailableNetworkArray[$i][8] & @CRLF)
 					$index += 1
 					
 					If $AvailableNetworkArray[$i][1] == $dot11_BSS_type_infrastructure		Then $AvailableNetworkArray[$i][1] = "Infrastructure"
@@ -609,7 +607,7 @@ Func _Wlan_GetAvailableNetworkList($hClientHandle, $pGUID, $dwFlag)
 					If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_WPA_PSK 			Then $AvailableNetworkArray[$i][4] = "WPA-PSK"
 					If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_RSNA 				Then $AvailableNetworkArray[$i][4] = "WPA2"
 					If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_RSNA_PSK 			Then $AvailableNetworkArray[$i][4] = "WPA2-PSK"
-					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_NONE				Then $AvailableNetworkArray[$i][5] = "None"
+					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_NONE				Then $AvailableNetworkArray[$i][5] = "Unencrypted"
 					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_WEP40			Then $AvailableNetworkArray[$i][5] = "WEP-64"
 					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_TKIP				Then $AvailableNetworkArray[$i][5] = "TKIP"
 					If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_CCMP				Then $AvailableNetworkArray[$i][5] = "AES"
@@ -628,10 +626,10 @@ Func _Wlan_GetAvailableNetworkList($hClientHandle, $pGUID, $dwFlag)
 							$ArrayDuplicateCount += 1
 						EndIf
 						If $AvailableNetworkArray[$i][0] == $AvailableNetworkArray[$j][0] And $AvailableNetworkArray[$i][1] == $AvailableNetworkArray[$j][1] Then
-							If $AvailableNetworkArray[$i][6] == "No Profile" Then
+							If $AvailableNetworkArray[$i][6] == "No Profile" And $AvailableNetworkArray[$i][0] <> "@" Then
 								$AvailableNetworkArray[$i][0] = "@"
 								$ArrayDuplicateCount += 1
-							ElseIf $AvailableNetworkArray[$j][6] == "No Profile" Then
+							ElseIf $AvailableNetworkArray[$j][6] == "No Profile" And $AvailableNetworkArray[$i][0] <> "@" Then
 								$AvailableNetworkArray[$j][0] = "@"
 								$ArrayDuplicateCount += 1
 							EndIf
@@ -717,7 +715,7 @@ Func _Wlan_GetProfileList($hClientHandle, $pGUID)
 			SetError(1, $a_iCall[0])
 			Return $ErrorMessage
 		Else	
-			Global $pProfileList = $a_iCall[4]
+			$pProfileList = $a_iCall[4]
 			$PROFILE_LIST = DllStructCreate($WLAN_PROFILE_INFO_LIST, $pProfileList)
 			$NumberOfItems = DllStructGetData($PROFILE_LIST, "dwNumberOfItems")
 			
@@ -770,7 +768,7 @@ Func _Wlan_GetProfile($hClientHandle, $pGUID, $SSID)
 					If StringRegExp($ProfileAttributes2[$j], $ProfileAttributes[$i]) == 1 Then _
 					$Profile[$i - 1] = StringRegExpReplace($ProfileAttributes2[$j], $ProfileAttributes[$i], "")
 				Next
-				If String($Profile[$i - 1]) == "ESS"		Then $Profile[$i - 1] = "Infrastucture"
+				If String($Profile[$i - 1]) == "ESS"		Then $Profile[$i - 1] = "Infrastructure"
 				If String($Profile[$i - 1]) == "IBSS"		Then $Profile[$i - 1] = "Ad Hoc"
 				If String($Profile[$i - 1]) == "auto"		Then $Profile[$i - 1] = "Automatic"
 				If String($Profile[$i - 1]) == "manual"		Then $Profile[$i - 1] = "Manual"
@@ -825,7 +823,7 @@ Func _Wlan_SetProfile($hClientHandle, $pGUID, $Profile)
 			Next
 		Next
 		
-		If $Profile[1] == "Infrastucture"	Then $Profile[1] = "ESS"
+		If $Profile[1] == "Infrastructure"	Then $Profile[1] = "ESS"
 		If $Profile[1] == "Ad Hoc"			Then $Profile[1] = "IBSS"
 		If $Profile[2] == "Automatic"		Then $Profile[2] = "auto"
 		If $Profile[2] == "Manual"			Then $Profile[2] = "manual"
@@ -1130,62 +1128,3 @@ Func _Wlan_GetErrorMessage($iError)
 		Return DllStructGetData($tText, "Text")
 	EndIf
 EndFunc
-
-;----Debug Tools----;
-
-#cs
-Func _Wlan_Debug_EnumToString($ENUMERATION, $VALUE)
-	Local $String = "Unknown!"
-	If $ENUMERATION == $DOT11_AUTH_ALGORITHM Then
-		If $VALUE = $DOT11_AUTH_ALGO_80211_OPEN Then $String = "DOT11_AUTH_ALGO_80211_OPEN"
-		If $VALUE = $DOT11_AUTH_ALGO_80211_SHARED_KEY Then $String = "DOT11_AUTH_ALGO_80211_SHARED_KEY"
-		If $VALUE = $DOT11_AUTH_ALGO_WPA Then $String = "DOT11_AUTH_ALGO_WPA"
-		If $VALUE = $DOT11_AUTH_ALGO_WPA_PSK Then $String = "DOT11_AUTH_ALGO_WPA_PSK"
-		If $VALUE = $DOT11_AUTH_ALGO_WPA_NONE Then $String = "DOT11_AUTH_ALGO_WPA_NONE"
-		If $VALUE = $DOT11_AUTH_ALGO_RSNA Then $String = "DOT11_AUTH_ALGO_RSNA"
-		If $VALUE = $DOT11_AUTH_ALGO_RSNA_PSK Then $String = "DOT11_AUTH_ALGO_RSNA_PSK"
-	ElseIf $ENUMERATION == $DOT11_BSS_TYPE	Then
-		If $VALUE = $dot11_BSS_type_infrastructure Then $String = "dot11_BSS_type_infrastructure"
-		If $VALUE = $dot11_BSS_type_independent Then $String = "dot11_BSS_type_independent"
-		If $dot11_BSS_type_any Then $String = "dot11_BSS_type_any"
-	ElseIf $ENUMERATION == $DOT11_CIPHER_ALGORITHM Then
-		If $VALUE = $DOT11_CIPHER_ALGO_NONE Then $String = "DOT11_CIPHER_ALGO_NONE"
-		If $VALUE = $DOT11_CIPHER_ALGO_WEP40 Then $String = "DOT11_CIPHER_ALGO_WEP40"
-		If $VALUE = $DOT11_CIPHER_ALGO_TKIP Then $String = "DOT11_CIPHER_ALGO_TKIP"
-		If $VALUE = $DOT11_CIPHER_ALGO_CCMP Then $String = "DOT11_CIPHER_ALGO_CCMP"
-		If $VALUE = $DOT11_CIPHER_ALGO_WEP104 Then $String = "DOT11_CIPHER_ALGO_WEP104"
-		If $VALUE = $DOT11_CIPHER_ALGO_WEP Then $String = "DOT11_CIPHER_ALGO_WEP"
-	ElseIf $ENUMERATION == $WLAN_CONNECTION_MODE Then
-		If $VALUE = $wlan_connection_mode_profile Then $String = "wlan_connection_mode_profile"
-	ElseIf $ENUMERATION == $WLAN_INTERFACE_STATE Then
-		If $VALUE = $wlan_interface_state_connected Then $String = "wlan_interface_state_connected"
-		If $VALUE = $wlan_interface_state_disconnected Then $String = "wlan_interface_state_disconnected"
-		If $VALUE = $wlan_interface_state_authenticating Then $String = "wlan_interface_state_authenticating"
-	ElseIf $ENUMERATION == $WLAN_INTF_OPCODE Then
-		If $VALUE = $wlan_intf_opcode_autoconf_enabled Then $String = "wlan_intf_opcode_autoconf_enabled"
-		If $VALUE = $wlan_intf_opcode_bss_type Then $String = "wlan_intf_opcode_bss_type"
-		If $VALUE = $wlan_intf_opcode_interface_state Then $String = "wlan_intf_opcode_interface_state"
-		If $VALUE = $wlan_intf_opcode_current_connection Then $String = "wlan_intf_opcode_current_connection"
-	ElseIf $ENUMERATION == $WLAN_OPCODE_VALUE_TYPE Then
-		If $VALUE = $wlan_opcode_value_type_query_only Then $String = "wlan_opcode_value_type_query_only"
-		If $VALUE = $wlan_opcode_value_type_set_by_group_policy Then $String = "wlan_opcode_value_type_set_by_group_policy"
-		If $VALUE = $wlan_opcode_value_type_set_by_user Then $String = "wlan_opcode_value_type_set_by_user"
-		If $VALUE = $wlan_opcode_value_type_invalid Then $String = "wlan_opcode_value_type_invalid"
-	EndIf
-	Return $String
-EndFunc
-
-Func _Wlan_Debug_CheckDllError()
-	#include-once <WinAPI.au3>
-	
-	ConsoleWrite("Call Error:	" & @error & @LF)
-	Sleep(1000)
-	ConsoleWrite("Last Err Msg:	" & _WinAPI_GetLastErrorMessage())
-	ConsoleWrite("Ret Error:	" & $a_iCall[0] & @LF)
-	ConsoleWrite("Ret Err Msg:	" & _Wlan_GetErrorMessage($a_iCall[0]))
-	
-	For $i = 1 To Ubound($a_iCall) - 1
-		ConsoleWrite(" Element " & $i & ":	" & $a_iCall[$i] & @LF)
-	Next
-EndFunc
-#ce
