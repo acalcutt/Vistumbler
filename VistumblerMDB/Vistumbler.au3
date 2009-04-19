@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Beta 1.2'
+$version = '9.3 Beta 2'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/04/15')
+$last_modified = _DateLocalFormat('2009/04/19')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -447,6 +447,7 @@ Dim $Text_SetMacManu = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacManu', 'S
 
 Dim $Text_Export = IniRead($DefaultLanguagePath, 'GuiText', 'Export', 'Ex&port')
 Dim $Text_ExportToKML = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToKML', 'Export To KML')
+Dim $Text_ExportToGPX = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToGPX', 'Export To GPX')
 Dim $Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 'Export To TXT')
 Dim $Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
 Dim $Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
@@ -647,6 +648,7 @@ Dim $Text_NoActiveApFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoActiveAp
 Dim $Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', 'Donate')
 Dim $Text_VistumblerStore = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerStore', 'Store')
 Dim $Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
+Dim $Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -654,6 +656,11 @@ If $AutoCheckForUpdates = 1 Then
 		If $updatemsg = 6 Then _StartUpdate()
 	EndIf
 EndIf
+
+$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC, 1), ' ')
+$datestamp = $dt[1]
+$timestamp = $dt[2]
+$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
 
 If FileExists($VistumblerDB) Then
 	$recovermsg = MsgBox(4, $Text_Recover, $Text_RecoverMsg)
@@ -809,7 +816,7 @@ $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $Options)
 If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GuiUseNativeWifi = GUICtrlCreateMenuItem("Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)", $Options)
+$GuiUseNativeWifi = GUICtrlCreateMenuItem($Text_UseNativeWifi, $Options)
 If $UseNativeWifi = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $Options)
@@ -832,6 +839,7 @@ $Export = GUICtrlCreateMenu($Text_Export)
 $ExportToTXT2 = GUICtrlCreateMenuItem($Text_ExportToTXT, $Export)
 $ExportToVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1, $Export)
 $ExportToKML = GUICtrlCreateMenuItem($Text_ExportToKML, $Export)
+$ExportToGPX = GUICtrlCreateMenuItem($Text_ExportToGPX, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
 $ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(Filtered)', $Export)
 $ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(Filtered)', $Export)
@@ -988,6 +996,7 @@ GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
 GUICtrlSetOnEvent($GuiUseNativeWifi, '_NativeWifiToggle')
 ;Export Menu
 GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
+GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
 GUICtrlSetOnEvent($ExportToTXT2, '_ExportData')
 GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
 GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
@@ -4846,6 +4855,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "SetSearchWords", $Text_SetSearchWords)
 	IniWrite($DefaultLanguagePath, "GuiText", "Export", $Text_Export)
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToKML", $Text_ExportToKML)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToGPX", $Text_ExportToGPX)
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToTXT", $Text_ExportToTXT)
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToNS1", $Text_ExportToNS1)
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToVS1", $Text_ExportToVS1)
@@ -5042,6 +5052,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', $Text_VistumblerDonate)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerStore', $Text_VistumblerStore)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', $Text_SupportVistumbler)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', $Text_UseNativeWifi)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -6890,6 +6901,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SetMacManu = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacManu', 'Set Manufactures by Mac')
 		$Text_Export = IniRead($DefaultLanguagePath, 'GuiText', 'Export', 'Ex&port')
 		$Text_ExportToKML = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToKML', 'Export To KML')
+		$Text_ExportToGPX = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToGPX', 'Export To GSX')
 		$Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 'Export To TXT')
 		$Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
 		$Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
@@ -7084,7 +7096,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', 'Donate')
 		$Text_VistumblerStore = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerStore', 'Store')
 		$Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
-
+		$Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -7977,3 +7989,260 @@ Func _DeleteListviewRow($dapid)
 	;$query = "UPDATE AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
 	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 EndFunc   ;==>_DeleteListviewRow
+
+
+Func _SaveGarminGPX($gpx, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsTrack = 0, $Sanitize = 1)
+	$FoundApWithGps = 0
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveGarminGPX()') ;#Debug Display
+	If StringInStr($gpx, '.gpx') = 0 Then $gpx = $gpx & '.gpx'
+	FileDelete($gpx)
+	$file = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' & @CRLF _
+			 & '<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="Vistumbler ' & $version & '" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">' & @CRLF
+	If $MapOpenAPs = 1 Then
+		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '1' And HighGpsHistId <> '0'"
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][1]
+				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
+				$ExpBSSID = $ApMatchArray[$exp][2]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
+				$ExpDate = $GpsMatchArray[1][4]
+				$ExpTime = $GpsMatchArray[1][5]
+				
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
+							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
+							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
+							 & '<sym>Navaid, Green</sym>' & @CRLF _
+							 & '<extensions>' & @CRLF _
+							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
+							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
+							 & '<gpxx:Categories>' & @CRLF _
+							 & '<gpxx:Category>Category 1</gpxx:Category>' & @CRLF _
+							 & '</gpxx:Categories>' & @CRLF _
+							 & '</gpxx:WaypointExtension>' & @CRLF _
+							 & '</extensions>' & @CRLF _
+							 & '</wpt>' & @CRLF & @CRLF
+				EndIf
+			Next
+		EndIf
+	EndIf
+	If $MapWepAps = 1 Then
+		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '2' And HighGpsHistId <> '0'"
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving WEP AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][1]
+				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
+				$ExpBSSID = $ApMatchArray[$exp][2]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
+
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
+				$ExpDate = $GpsMatchArray[1][4]
+				$ExpTime = $GpsMatchArray[1][5]
+				
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
+							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
+							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
+							 & '<sym>Navaid, Amber</sym>' & @CRLF _
+							 & '<extensions>' & @CRLF _
+							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
+							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
+							 & '<gpxx:Categories>' & @CRLF _
+							 & '<gpxx:Category>Category 2</gpxx:Category>' & @CRLF _
+							 & '</gpxx:Categories>' & @CRLF _
+							 & '</gpxx:WaypointExtension>' & @CRLF _
+							 & '</extensions>' & @CRLF _
+							 & '</wpt>' & @CRLF & @CRLF
+				EndIf
+			Next
+		EndIf
+	EndIf
+	If $MapSecAps = 1 Then
+		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '3' And HighGpsHistId <> '0'"
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving Secure AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][1]
+				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
+				$ExpBSSID = $ApMatchArray[$exp][2]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
+				
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
+				$ExpDate = $GpsMatchArray[1][4]
+				$ExpTime = $GpsMatchArray[1][5]
+				
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
+							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
+							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
+							 & '<sym>Navaid, Red</sym>' & @CRLF _
+							 & '<extensions>' & @CRLF _
+							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
+							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
+							 & '<gpxx:Categories>' & @CRLF _
+							 & '<gpxx:Category>Category 3</gpxx:Category>' & @CRLF _
+							 & '</gpxx:Categories>' & @CRLF _
+							 & '</gpxx:WaypointExtension>' & @CRLF _
+							 & '</extensions>' & @CRLF _
+							 & '</wpt>' & @CRLF & @CRLF
+				EndIf
+			Next
+		EndIf
+	EndIf
+
+	If $GpsTrack = 1 Then
+		$query = "SELECT Latitude, Longitude, Alt, Date1, Time1, SpeedInKmH FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundGpsMatch = UBound($GpsMatchArray) - 1
+		If $FoundGpsMatch <> 0 Then
+			$file &= '<trk>' & @CRLF _
+					 & '<name>GPS Track</name>' & @CRLF _
+					 & '<trkseg>' & @CRLF
+			For $exp = 1 To $FoundGpsMatch
+				GUICtrlSetData($msgdisplay, 'Saving Gps Position ' & $exp & '/' & $FoundGpsMatch)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[$exp][3])
+				$ExpDate = $GpsMatchArray[$exp][4]
+				$ExpTime = $GpsMatchArray[$exp][5]
+				$ExpSpeedKmh = $GpsMatchArray[$exp][6]
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$FoundApWithGps = 1
+					$file &= '<trkpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '</trkpt>' & @CRLF
+				EndIf
+			Next
+			$file &= '</trkseg>' & @CRLF _
+					 & '</trk>' & @CRLF
+		EndIf
+	EndIf
+	$file &= '</gpx>' & @CRLF
+
+	If $FoundApWithGps = 1 Then
+		FileWrite($gpx, $file)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+	;EndIf
+EndFunc   ;==>_SaveGarminGPX
+
+Func _SaveToGPX()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveToGPX()') ;#Debug Display
+	Opt("GUIOnEventMode", 0)
+	$ExportGPXGUI = GUICreate($Text_ExportToGPX, 263, 143)
+	GUISetBkColor($BackgroundColor)
+	$GUI_ExportGPX_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 15, 240, 15)
+	If $MapOpen = 1 Then GUICtrlSetState($GUI_ExportGPX_MapOpen, $GUI_CHECKED)
+	$GUI_ExportGPX_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 35, 240, 15)
+	If $MapWEP = 1 Then GUICtrlSetState($GUI_ExportGPX_MapWEP, $GUI_CHECKED)
+	$GUI_ExportGPX_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 55, 240, 15)
+	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportGPX_MapSec, $GUI_CHECKED)
+	$GUI_ExportGPX_DrawTrack = GUICtrlCreateCheckbox($Text_DrawTrack, 15, 75, 240, 15)
+	If $ShowTrack = 1 Then GUICtrlSetState($GUI_ExportGPX_DrawTrack, $GUI_CHECKED)
+	$GUI_ExportGPX_OK = GUICtrlCreateButton($Text_Ok, 40, 115, 81, 25, 0)
+	$GUI_ExportGPX_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 115, 81, 25, 0)
+	GUISetState(@SW_SHOW)
+
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE
+				GUIDelete($ExportGPXGUI)
+				ExitLoop
+			Case $GUI_ExportGPX_Cancel
+				GUIDelete($ExportGPXGUI)
+				ExitLoop
+			Case $GUI_ExportGPX_OK
+				If GUICtrlRead($GUI_ExportGPX_MapOpen) = 1 Then
+					$MapOpen = 1
+				Else
+					$MapOpen = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportGPX_MapWEP) = 1 Then
+					$MapWEP = 1
+				Else
+					$MapWEP = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportGPX_MapSec) = 1 Then
+					$MapSec = 1
+				Else
+					$MapSec = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportGPX_DrawTrack) = 1 Then
+					$ShowTrack = 1
+				Else
+					$ShowTrack = 0
+				EndIf
+				GUIDelete($ExportGPXGUI)
+				DirCreate($SaveDir)
+				$gpx = FileSaveDialog("Garmin Output File", $SaveDir, 'GPS eXchange Format (*.gpx)', '', $ldatetimestamp & '.gpx')
+				If Not @error Then
+					$saveGPX = _SaveGarminGPX($gpx, $MapOpen, $MapWEP, $MapSec, $ShowTrack)
+					If $saveGPX = 1 Then
+						MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $gpx & '"')
+					Else
+						MsgBox(0, $Text_Done, $Text_NoApsWithGps & ' ' & $Text_NoFileSaved)
+					EndIf
+				EndIf
+				ExitLoop
+		EndSwitch
+	WEnd
+	Opt("GUIOnEventMode", 1)
+EndFunc   ;==>_SaveToGPX
+
+Func _MetersToFeet($meters)
+	$feet = $meters / 3.28
+	Return ($feet)
+EndFunc   ;==>_MetersToFeet
