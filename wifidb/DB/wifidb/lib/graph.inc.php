@@ -14,7 +14,7 @@ class graphs
 	function genboth()
 	{
 		include('../lib/config.php');
-	echo "Got Includes<br>";	
+	echo "Got include_onces<br>";	
 		mysql_select_db($db,$conn);
 	echo "Connected to Wifi<br>";
 		$this->sql = "SELECT `id` FROM $wtable";

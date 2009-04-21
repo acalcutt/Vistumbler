@@ -1,8 +1,7 @@
 <?php
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
-
-pageheader("User Statistics Page");
+pageheader("Users Stats Page");
 ?>
 </td>
 	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">

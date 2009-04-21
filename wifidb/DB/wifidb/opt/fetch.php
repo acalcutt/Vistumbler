@@ -1,7 +1,6 @@
 <?php
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
-
 pageheader("Access Point Info Page");
 ?>
 </td>

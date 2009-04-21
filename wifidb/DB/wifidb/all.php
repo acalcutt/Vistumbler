@@ -1,37 +1,8 @@
 <?php
 include('lib/config.inc.php');
 include('lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Main Page</title>';
-?>
-<link rel="stylesheet" href="css/site4.0.css">
-<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2">
-	<tr>
-		<td bgcolor="#315573">
-		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
-		<font color="#FFFFFF" size="2">
-            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
-		</font></b>
-		</td>
-	</tr>
-</table>
-</div>
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
-	<tr>
-<td width="17%" bgcolor="#304D80" valign="top">
+pageheader("Show all APs");
 
-<?php
-mysql_select_db($db,$conn);
-$sql = "SELECT * FROM links ORDER BY ID ASC";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-while ($newArray = mysql_fetch_array($result))
-{
-	$testField = $newArray['links'];
-    echo "<p>$testField</p>";
-}
 $ord   =	$_GET['ord'];
 $sort  =	$_GET['sort'];
 $from  =	$_GET['from'];
@@ -48,12 +19,12 @@ if ($sort==""){$sort="id";}
 			<p align="center">
 <?php
 		echo '<table border="1" width="100%" cellspacing="0">'
-		.'<tr class="style4"><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"border="0" src="img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Radio<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td></tr>';
+		.'<tr><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0"border="0" src="img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
+		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0"src="img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
+		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0"src="img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
+		.'<td>Radio Type<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
+		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td>'
+		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'"><br><img height="20" width="20" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'"><img height="20" width="20" border="0"src="img/up.png"></a></td></tr>';
 
 $x=0;
 $n=0;
@@ -61,23 +32,11 @@ $to=$from+$inc;
 mysql_select_db($db,$conn);
 $sql0 = "SELECT * FROM $wtable ORDER BY $sort $ord  LIMIT $from , $inc";
 $result = mysql_query($sql0, $conn) or die(mysql_error());
-$num = mysql_num_rows($result);
-
-if($num == 0)
-{
-	echo '<tr><td colspan="6" align="center">There where no results, please try again</td></tr></table>'; 
-	$filename = $_SERVER['SCRIPT_FILENAME'];
-	footer($filename);
-	die();
-}
-
 while ($newArray = mysql_fetch_array($result))
 {
     $id = $newArray['id'];
-
 	$ssid = $newArray['ssid'];
-	if($ssid == ""){$ssid = "No SSID";}
-	$mac = $newArray['mac'];
+    $mac = $newArray['mac'];
 	$mac_exp = str_split($mac,2);
 	$mac = implode(":",$mac_exp);
     $chan = $newArray['chan'];
@@ -96,7 +55,7 @@ while ($newArray = mysql_fetch_array($result))
 	elseif($radio=="n")
 	{$radio="802.11n";}
 	else
-	{$radio="802.11u";}
+	{$radio="Unknown Radio";}
 	echo '<td>'.$radio.'</td>';
 	echo '<td>'.$auth.'</td>';
 	echo '<td>'.$encry.'</td></tr>';	

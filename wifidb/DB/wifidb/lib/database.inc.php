@@ -3,10 +3,10 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 1",
-			"Last_Core_Edit" 	=> 	"2009-Apr-08",
+			"Last_Core_Edit" 	=> 	"2009-Apr-12",
 			"database"			=>	array(  
-										"import_vs1"		=>	"1.5.5", 
-										"apfetch"			=>	"2.4.2",
+										"import_vs1"		=>	"1.5.6", 
+										"apfetch"			=>	"2.5.0",
 										"gps_check_array"	=>	"1.1",
 										"all_users"			=>	"1.2",
 										"users_lists"		=>	"1.2",
@@ -18,6 +18,7 @@ $ver = array(
 										"manufactures"		=>	"1.0"
 										),
 			"Misc"				=>	array(
+										"pageheader"			=>  "1.0",
 										"footer"				=>	"1.2",
 										"smart_quotes"			=> 	"1.0",
 										"smart"					=> 	"1.0",
@@ -32,12 +33,12 @@ function pageheader($title)
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
 	?>
-	<link rel="stylesheet" href="../css/site4.0.css">
+	<link rel="stylesheet" href="<?php echo $root;?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="75%" cellspacing="10" cellpadding="2">
 		<tr>
-			<td bgcolor="#315573">
+			<td colspan="2" bgcolor="#315573">
 			<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
 			Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']["wifidb"]; ?></font>
 			<font color="#FFFFFF" size="2">
@@ -45,10 +46,6 @@ function pageheader($title)
 			</font></b>
 			</td>
 		</tr>
-	</table>
-	</div>
-	<div align="center">
-	<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
 		<tr>
 	<td width="17%" bgcolor="#304D80" valign="top">
 	<?php
@@ -171,6 +168,33 @@ class database
 		return $manuf;
 	}
 
+	function import_gpx($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED" )
+	{
+		$start = microtime(true);
+		$times=date('Y-m-d H:i:s');
+		
+		if ($source == NULL){?><h2>You did not submit a file, please <A HREF="javascript:history.go(-1)"> [Go Back]</A> and do so.</h2> <?php die();}
+		
+		include('../lib/config.inc.php');
+		
+		$apdata  = array();
+		$gpdata  = array();
+		$signals = array();
+		$sats_id = array();
+		
+		$fileex  = explode(".", $source);
+		$return  = file($source);
+		$count = count($return);
+		$rettest = substr($return[1], 1, -1);
+		
+		if ($rettest = 'gpx xmlns="http://www.topografix.com/GPX/1/1" creator="Vistumbler 9.3 Beta 2" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"')
+		{	
+			echo $rettest."<br>";
+		}else
+		{
+			echo '<h1>You need to upload a valid GPX file, go look up the santax for it, or the file that you saved is corrupted</h1>';
+		}
+	}
 	#========================================================================================================================#
 	#													VS1 File import													     #
 	#========================================================================================================================#
@@ -179,7 +203,7 @@ class database
 	{
 		$start = microtime(true);
 		$times=date('Y-m-d H:i:s');
-		if ($source == NULL){?><h2>You did not submit a file, please go back and do so.</h2> <?php die();}
+		if ($source == NULL){?><h2>You did not submit a file, please <A HREF="javascript:history.go(-1)"> [Go Back]</A> and do so.</h2> <?php die();}
 		include('../lib/config.inc.php');
 		//	$gdata [ ID ] [ object ]
 		//		   num     lat / long / sats / date / time
@@ -198,11 +222,12 @@ class database
 		$fileex  = explode(".", $source);
 		$return  = file($source);
 		$count = count($return);
-		if($count <= 8) { echo "<h3>You cannot upload an empty VS1 file, atleast scan for a few seconds to import some data.</h3><a href=\"index.php\">Go back and do it again</a>"; footer("../import/insertnew.php");die();}
+		if($count <= 8) { echo "<h3>You cannot upload an empty VS1 file, atleast scan for a few seconds to import some data.</h3><a href=\"index.php\"><A HREF=\"javascript:history.go(-1)\"> [Go Back]</A> and do it again</a>"; footer("../import/insertnew.php");die();}
+		
 		foreach($return as $ret)
 		{
 			if ($ret[0] == "#"){continue;}
-
+			
 			$retexp = explode("|",$ret);
 			$ret_len = count($retexp);
 
@@ -398,12 +423,17 @@ class database
 						$N=0;
 						$todo=array();
 						$prev='';
-						
+						?>
+							<tr><td colspan="8">
+						<?php
+						$sig_stats = array();
+						$sig_stats['db'] = 0;
+						$sig_stats['newf'] = 0;
+						$sig_stats['news'] = 0;
+						$sig_stats['updatef'] = 0;
+						$sig_stats['updates'] = 0;
 						foreach($signal_exp as $exp)
 						{
-							?>
-								<tr><td colspan="8">
-							<?php
 							//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re grab it to test the data
 							$DBresult = mysql_query("SELECT * FROM `$gps_table`", $conn);
 							while ($neArray = mysql_fetch_array($DBresult))
@@ -420,13 +450,13 @@ class database
 							$vs1_id = $esp[0];
 							$signal = $esp[1];
 							
-							if ($prev == $vs1_id)
+							if($prev == $vs1_id)
 							{
 								$gps_id_ = $gps_id-1;
 								$signals[$gps_id] = $gps_id_.",".$signal;
 								continue;
 							}
-							if ($GLOBALS["debug"]  === 1)
+							if($GLOBALS["debug"]  === 1)
 							{
 								$apecho = "+-+-+-+AP Data+-+-+-+<br> VS1 ID:".$vs1_id." <br> Next DB ID: ".$gps_id."<br>"
 								."Lat: ".$gdata[$vs1_id]["lat"]."<br>-+-+-+<br>"
@@ -449,13 +479,9 @@ class database
 							$track = $gdata[$vs1_id]["track"];
 							
 							$lat1 = smart($lat);
-							
 							$long1 = smart($long);
-							
 							$time1 = smart($time);
-							
 							$date1 = smart($date);
-							
 							$comp = $lat1."".$long1."".$date1."".$time1;
 							
 							$gpschk = database::check_gps_array($db_gps,$comp);
@@ -469,10 +495,12 @@ class database
 											   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
 								if (mysql_query($sqlitgpsgp, $conn))
 								{
-									echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
+									$sig_stats['news']++;
+						#			echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table<br>";
 								}else
 								{
-									echo "There was an Error inserting the GPS information";
+									$sig_stats['newf']++;
+						#			echo "There was an Error inserting the GPS information";
 								}
 								$signals[$gps_id] = $gps_id.",".$signal;
 								$gps_id++;
@@ -485,40 +513,30 @@ class database
 									$resource = mysql_query($sqlupgpsgp, $conn);
 									if ($resource)
 									{
-										echo "(4)Update [".$db_st."].{".$gps_table."} (ID: ".$hi_sats_id."<br>		 => Updated GPS History in Table<br>";
+										$sig_stats['updates']++;
+						#				echo "(4)Update [".$db_st."].{".$gps_table."} (ID: ".$hi_sats_id."<br>		 => Updated GPS History in Table<br>";
 									}else
 									{
-										echo "A MySQL Update error has occured<br>";echo mysql_error($conn);
+										$sig_stats['updatef']++;
+						#				echo "A MySQL Update error has occured<br>";echo mysql_error($conn);
 									}
 									$signals[$gps_id] = $dbid.",".$signal;
 									$gps_id++;
 							#		continue;
 								}else
 								{
-									echo "GPS Point already in DB<BR>----".$dbid."- <- DB ID<br>";
+									$sig_stats['db']++;
+						#			echo "GPS Point already in DB<BR>----".$dbid."- <- DB ID<br>";
 									$signals[$gps_id] = $dbid.",".$signal;
 									$gps_id++;
 							#		break;
 								}
 							}
-							switch ($todo)
-							{	
-								case "new":
-									
-									break;
-								case "db":
-									
-									break;
-								case "hi_sats":
-									
-									break;
-							}
-							?>
-								</td></tr>
-							<?php
 						}
+						echo "GPS in DB: ".$sig_stats['db']."<br>GPS New That failed import: ".$sig_stats['newf']."<br>GPS Imports that are good: ".$sig_stats['news']."<br>GPS That failed update: ".$sig_stats['updatef']."<br>GPS Updates that are good: ".$sig_stats['updates'];
 						?>
-						<td colspan="8">
+							</td></tr>
+							<td colspan="8">
 						<?php
 						$sig = implode("-",$signals);
 						$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
@@ -540,7 +558,9 @@ class database
 							{
 								echo "(1)Create Table [".$db_st."].{".$table."}<br>		 => Thats odd the table was missing, well I added a Table for ".$ssids."<br>";
 								if (mysql_query($sqlit, $conn)or die(mysql_error()))
-								{echo "(3)Insert into [".$db_st."].{".$table."}<br>		 => Added GPS History to Table<br>";}
+								{
+									echo "(3)Insert into [".$db_st."].{".$table."}<br>		 => Added GPS History to Table<br>";
+								}
 							}
 						}
 						?>
@@ -895,7 +915,7 @@ class database
 		$result = mysql_query($sqls, $conn) or die(mysql_error());
 		$newArray = mysql_fetch_array($result);
 		$ID = $newArray['id'];
-
+		$tablerowid = 0;
 		$macaddress = $newArray['mac'];
 		$manuf = database::manufactures($macaddress);
 		$mac = str_split($macaddress,2);
@@ -972,10 +992,21 @@ class database
 				<?php echo $field["label"]; ?></td><td>
 				<a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $field["user"]; ?>"><?php echo $field["user"]; ?></a></td><td>
 				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>">Plot Signal</a></td></tr>
-				<tr><td colspan="10"><table WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0 >
-				<tr><th colspan="6" class="style4">GPS History</th></tr>
+				<tr><td colspan="10" align="center">
+				<script type="text/javascript">
+				function displayRow<?php print ($tablerowid);?>()
+				{
+					var row = document.getElementById("captionRow<?php echo $tablerowid;?>");
+					if (row.style.display == '') row.style.display = 'none';
+					else row.style.display = '';
+				}
+				</script>
+				<button onclick="displayRow<?php echo $tablerowid;?>()" >Show / Hide GPS</button>
+				<table id="captionRow<?php echo $tablerowid;?>" WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+				<th colspan="6" class="style4">GPS History</th></tr>
 				<tr class="style4">		<th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
 				<?php
+				$tablerowid++;
 				$signals = explode('-',$field['sig']);
 				foreach($signals as $signal)
 				{
@@ -997,7 +1028,10 @@ class database
 					}
 					$end2 = microtime(true);
 				}
-				echo "</td></tr></table>";
+				?>
+				</table>
+				</td></tr>
+				<?php
 		}
 		$end1 = microtime(true);
 		?>
@@ -1005,14 +1039,13 @@ class database
 		<TABLE WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<?php
 		#END GPSFETCH FUNC
-		$list = array();
 		?>
 		<tr><td align="center" colspan="5" class="style4">Associated Lists</td></tr>
 		<tr class="style4"><th>ID</th><th>User</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
 		<?php
 		$start3 = microtime(true);
 		mysql_select_db($db, $conn);
-		$result = mysql_query("SELECT * FROM `users`", $conn) or die(mysql_error());
+		$result = mysql_query("SELECT * FROM `users`", $conn);
 		while ($field = mysql_fetch_array($result)) 
 		{
 			$APS = explode("-" , $field['points']);
@@ -1021,24 +1054,33 @@ class database
 				$access = explode(",", $AP);
 				$access1 = explode(":",$access[1]);
 				if($access[0] == 1){continue;}
-				if (strcmp($ID, $access1[0]) === 0 )
+				if ( $ID  ==  $access1[0] )
 				{
 					$list[]=$field['id'];
 				}
 			}
 		}
-		foreach($list as $aplist)
+		if(isset($list))
 		{
-			$result = mysql_query("SELECT * FROM `users` WHERE `id`='$aplist'", $conn) or die(mysql_error());
-			while ($field = mysql_fetch_array($result)) 
+			foreach($list as $aplist)
 			{
-				if($field["title"]==''){$field["title"]="Untitled";}
-				$points = explode('-' , $field['points']);
-				$total = count($points);
-				?>
-				<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
-				<?php
+				$result = mysql_query("SELECT * FROM `users` WHERE `id`='$aplist'", $conn);
+				while ($field = mysql_fetch_array($result)) 
+				{
+					if($field["title"]==''){$field["title"]="Untitled";}
+					$points = explode('-' , $field['points']);
+					$total = count($points);
+					?>
+					<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
+					<?php
+				}
 			}
+		}else
+		{
+			?>
+			<td colspan="5" align="center">There are no Other Lists with this AP in it.</td></tr>
+			<?php
+			
 		}
 		$end3 = microtime(true);
 		mysql_close($conn);
@@ -1791,6 +1833,7 @@ class database
 			#----------------------#
 			#----------------------#
 			case "exp_user_all_kml":
+				include('config.inc.php');
 				$start = microtime(true);
 				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start export of all APs for User: '.$user.', to KML</th></tr>';

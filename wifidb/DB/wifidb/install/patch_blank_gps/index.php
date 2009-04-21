@@ -1,5 +1,4 @@
 <?php
-include('../../lib/database.inc.php');
 echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title>';
 ?>
 <link rel="stylesheet" href="../../css/site4.0.css">
@@ -28,7 +27,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 
 <form action="patch.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Upgrade</h2>
-  <h4>Please Read <a class="links" target="_blank" href="notes.html">these notes</a> before Upgrading/fixing the Wireless Database</h4>
+  <h4>Please Read <a target="_blank" href="notes.html">these notes</a> before Upgrading/fixing the Wireless Database</h4>
 <?php
 $gd = gd_info(); 
 if(is_null($gd["GD Version"]))

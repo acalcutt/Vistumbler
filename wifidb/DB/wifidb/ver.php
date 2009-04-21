@@ -1,39 +1,8 @@
 <?php
 include('lib/config.inc.php');
 include('lib/database.inc.php');
+pageheader("Version Page");
 ?>
-<title>Wireless DataBase *Alpha*<?php echo $ver["wifidb"]?> --> Main Page</title>
-<link rel="stylesheet" href="css/site4.0.css">
-<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2">
-	<tr>
-		<td bgcolor="#315573">
-		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
-		<font color="#FFFFFF" size="2">
-            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
-		</font></b>
-		</td>
-	</tr>
-</table>
-</div>
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
-	<tr>
-<td width="17%" bgcolor="#304D80" valign="top">
-
-<?php
-mysql_select_db($db,$conn);
-$sql = "SELECT * FROM links ORDER BY ID ASC";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-while ($newArray = mysql_fetch_array($result))
-{
-	$testField = $newArray['links'];
-    echo "<p>$testField</p>";
-}
-?>
-
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
@@ -52,24 +21,31 @@ while ($newArray = mysql_fetch_array($result))
 	</tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b80" cellpadding="1">
-	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
-	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.16 Build 2</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Apr-10</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
+<table width="100%" border="2" id="16pb1">
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-20</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
-			<LI>Fixed a bug where the AP fetch would only show the first Signal history even if there was more then one in the table.</LI>
-			<LI>Fixed a bug in the txt to vs1 converter where it would convert a DDMM GEOCORD to DDMM resulting in a corrupted GEOCORD.</LI>
-			<LI>Improved import time by 2 by condensing the GPS compair.</LI>
-			
+			<LI>Changed the Import Page Layout so that it now summerizes the GPS import into,</LI>
+				<OL>
+					<LI>New: Good,Bad</LI>
+					<LI>Update: Good,Bad</LI>
+					<LI>Already in Database: </LI>
+				</OL>
+			<LI>Finished AP Fetch Page so that GPS can be hidden.</LI>
+			<LI>Most, if not all pages now have the footer() and pageheader() function to standardize page layout</LI>
+			<LI>Fixed an issue where if there is no MAC address it is set to "00:00:00:00:00:00". Before it would just be blank, and cause errors on fetch.</LI>
 		</OL>
 	</td></tr>
 </table>
+
+<br>
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-05</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-20</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -114,27 +90,12 @@ while ($newArray = mysql_fetch_array($result))
 				</OL>
 			<LI>The warning for the install folder sitll being available wasnot added into the installer. It now is, and also in the upgrader too.</LI>
 			<LI>Made the Default App internal timezone, GMT+0(Zulu).</LI>
-				<OL type="A">
+				<OL>
 					<LI>Soon you will beable to make the viewing time as your local timezon.</LI>
 					<LI><a class="links" href="http://wwp.greenwichmeantime.com/">greenwichmeantime.com</a></LI>
 					<LI><a class="links" href="http://en.wikipedia.org/wiki/Greenwich_Mean_Time">wikipedia -> Greenwich_Mean_Time</a></LI>
 				</OL>
-			<LI>GPS Update Issue has been resolved. Problem was PHP had an issue comparing the Time stamp from the DB and the VS1 file.</LI>
-				<OL type="A">
-					<LI>Sample Before: N 0.00000-E 0.00000-2009-03-19-17:51:56 [lat-long-date-time]</LI>
-					<LI>Sample After: 00000000000020090319175156 [latlongdatetime]</LI>
-						<OL>
-							<LI>The Sample strings are the lat, long, date, and time all cramed into one long string.</LI>
-							<LI>Sample Before was how I was comparing the GPS before the fix.</LI>
-							<LI>Sample After is how the comparison is done now.</LI>
-							<LI>With all the non-numerical data removed, GPS comparisons are done correctly.</LI>
-							<LI>Even when it had non-numerical data, but no time stamp the compare was successful, but we're not going to do that.</LI>
-						</OL>
-				</OL>
-			<LI>Fixed an issue where if there where removed rows in the users table, the index page would have a problem retrieving the Title, and Username of the last import.</LI>
-			<LI>Added Plotting of Signal history for an APs Import to KML.</LI>
-			<LI>Altered the Chan Column in the Pointers table to be Integer not Varchar. This fixes the sorting issue where 10 would be before 1.</LI>
-			<LI>Altered AP Fetch Page table layout.</LI>
+			<LI></LI>
 		</OL>
 	</td></tr>
 </table>
@@ -173,7 +134,7 @@ while ($newArray = mysql_fetch_array($result))
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
 		<OL>
-			<LI>Extra includes for database.inc.php slipped back in.</LI>
+			<LI>Extra include_once_onces for database.inc.php slipped back in.</LI>
 			<LI>Install script had a bug with the Links table.</LI>
 		</OL>
 	</td></tr>
@@ -186,7 +147,7 @@ while ($newArray = mysql_fetch_array($result))
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
-			<LI>Some headers had duplicate includes for database.inc.php.</LI>
+			<LI>Some headers had duplicate include_once_onces for database.inc.php.</LI>
 			<LI>Fixed import of GPS points.</LI>
 		</OL>
 	</td></tr>
