@@ -246,3 +246,30 @@ VERSION HISTORY
 2-> Fixed a few bugs with the switches
 3-> Added in bad character stripping.
 ==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.3
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Skipped, was an experimental version
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.4
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Forgot to add Change log for 1.4, 
+    logging was added, but not to SVN yet
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.5
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> Added in Support to Skip files if they have already been imported, 
+    the comparison is based off the file name and file size. all data 
+    is stored in `wifi`.`files`. the only data that is kept is filename, 
+    size, and date/time of import
+==============================
