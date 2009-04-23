@@ -33,10 +33,10 @@ function pageheader($title)
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
 	?>
-	<link rel="stylesheet" href="<?php echo $root;?>/css/site4.0.css">
+	<link rel="stylesheet" href="<?php echo "http://".$_SERVER['HTTP_HOST']."/".$root;?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
-	<table border="0" width="75%" cellspacing="10" cellpadding="2">
+	<table border="0" width="85%" cellspacing="5" cellpadding="2">
 		<tr>
 			<td colspan="2" bgcolor="#315573">
 			<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
@@ -47,7 +47,7 @@ function pageheader($title)
 			</td>
 		</tr>
 		<tr>
-	<td width="17%" bgcolor="#304D80" valign="top">
+	<td width="15%" bgcolor="#304D80" valign="top">
 	<?php
 	mysql_select_db($db,$conn);
 	$sqls = "SELECT * FROM links ORDER BY ID ASC";
@@ -948,7 +948,7 @@ class database
 		?>
 		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>">Export this AP to KML</a></td></tr>
 		</table>
-		<TABLE WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+		<TABLE WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<tr><td colspan="10" class="style4">Signal History</td></tr>
 		<tr class="style4"><th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th><th>Plot</th></tr>
 		<?php
@@ -991,7 +991,7 @@ class database
 				<?php echo $field["nt"]; ?></td><td>
 				<?php echo $field["label"]; ?></td><td>
 				<a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $field["user"]; ?>"><?php echo $field["user"]; ?></a></td><td>
-				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>">Plot Signal</a></td></tr>
+				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>">KML</a> OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php echo $row_id;?>">GPX</a></td></tr>
 				<tr><td colspan="10" align="center">
 				<script type="text/javascript">
 				function displayRow<?php print ($tablerowid);?>()
@@ -2323,6 +2323,143 @@ class database
 				break;
 			#----------------------#
 			#----------------------#
+		}
+	}
+		
+		function exp_gpx($export = "", $user = "", $row = 0)
+	{
+		include('config.inc.php');
+		include('manufactures.inc.php');
+		$gps_array = array();
+		switch ($export)
+		{
+			case "exp_all_signal":
+				$start = microtime(true);
+				$NN=0;
+				$signal_image ='';
+				$row_id_exp = explode(",",$row);
+				$id = $row_id_exp[1];
+				$row = $row_id_exp[0];
+				$date=date('Y-m-d_H-i-s');
+				$sql = "SELECT * FROM `$wtable` WHERE `ID`='$id'";
+				$result = mysql_query($sql, $conn) or die(mysql_error());
+				$aparray = mysql_fetch_array($result);
+				$ssid = smart_quotes($aparray['ssid']);
+				$file_ext = $ssid."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".gpx";
+				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$ssid.'\'s Signal History</th></tr>';
+				$filename = ($gpx_out.$file_ext);
+				// define initial write and appends
+				$filewrite = fopen($filename, "w");
+				if($filewrite != FALSE)
+				{
+					$table=$aparray['ssid'].'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
+					$table_gps = $table.$gps_ext;
+					
+					$file_data  = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\r\n<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"WiFiDB 0.16 Build 2\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">";
+					// write file header buffer var
+					
+					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
+		#			echo $table."<br>";
+					$sql = "SELECT * FROM `$table`";
+					$result = mysql_query($sql, $conn) or die(mysql_error());
+					$rows = mysql_num_rows($result);
+		#			echo $rows."<br>";
+					$sql = "SELECT * FROM `$table` WHERE `id`='$row'";
+					$result1 = mysql_query($sql, $conn) or die(mysql_error());
+					$mac_e = str_split($aparray['mac'],2);
+					$macadd = $mac_e[0].":".$mac_e[1].":".$mac_e[2].":".$mac_e[3].":".$mac_e[4].":".$mac_e[5];
+					
+					$newArray = mysql_fetch_array($result1);
+					$type = $aparray['sectype'];
+					if($type == 1){$color = "Navaid, Green";}
+					if($type == 2){$color = "Navaid, Amber";}
+					if($type == 3){$color = "Navaid, Red";}
+					
+					$sql6 = "SELECT * FROM `$table_gps`";
+					$result6 = mysql_query($sql6, $conn);
+					$max = mysql_num_rows($result6);
+					
+					$sql_1 = "SELECT * FROM `$table_gps`";
+					$result_1 = mysql_query($sql_1, $conn);
+					while($gps_table = mysql_fetch_array($result_1))
+					{
+						$lat_exp = explode(" ", $gps_table['lat']);
+						$test = $lat_exp[1]+0;
+						
+						if($test == "0.0000"){$zero = 1; continue;}
+						
+						$date = $gps_table["date"];
+						$time = $gps_table["time"];
+						$alt = $gps_table['alt'];
+						$alt = $alt * 3.28;
+						$lat =& database::convert_dm_dd($gps_table['lat']);
+						$long =& database::convert_dm_dd($gps_table['long']);
+						$zero = 0;
+						$NN++;
+						break;
+					}
+					if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
+
+					$file_data .= "<wpt lat=\"".$lat."\" lon=\"".$long."\">\r\n"
+									."<ele>".$alt."</ele>\r\n"
+									."<time>".$date."T".$time."Z</time>\r\n"
+									."<name>".$ssid."</name>\r\n"
+									."<cmt>".$macadd."</cmt>\r\n"
+									."<desc>".$macadd."</desc>\r\n"
+									."<sym>".$color."</sym>\r\n<extensions>\r\n"
+									."<gpxx:WaypointExtension xmlns:gpxx=\"http://www.garmin.com/xmlschemas/GpxExtensions/v3\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd\">\r\n"
+									."<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>\r\n<gpxx:Categories>\r\n"
+									."<gpxx:Category>Category ".$type."</gpxx:Category>\r\n</gpxx:Categories>\r\n</gpxx:WaypointExtension>\r\n</extensions>\r\n</wpt>\r\n\r\n";
+					echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
+					
+					$sql_3 = "SELECT * FROM `$table` WHERE `id`='$row'";
+					$sig_result = mysql_query($sql_3, $conn) or die(mysql_error($conn));
+					$array = mysql_fetch_array($sig_result);
+					$signals = explode("-",$array['sig']);
+					foreach($signals as $signal)
+					{
+						$sig_exp = explode(",",$signal);
+						$gpsid = $sig_exp[0];
+						
+						$sig = $sig_exp[1];
+						$sql_1 = "SELECT * FROM `$table_gps` WHERE `id` = '$gpsid'";
+						$result_1 = mysql_query($sql_1, $conn);
+						$gps = mysql_fetch_array($result_1);
+						$lat_exp = explode(" ", $gps['lat']);
+						$test = $lat_exp[1]+0;
+						if($test == "0.0000"){$zero = 1; continue;}
+						
+						$alt = $gps['alt'];
+						$alt = $alt * 3.28;
+						
+						$lat =& database::convert_dm_dd($gps['lat']);
+						
+						$long =& database::convert_dm_dd($gps['long']);
+						$file_data .= "<trk>\r\n<name>GPS Track</name>\r\n<trkseg>"
+									."<trkpt lat=\"".$lat."\" lon=\"".$long."\">\r\n"
+									."<ele>".$alt."</ele>\r\n"
+									."<time>".$date."T".$time."Z</time>\r\n"
+									."</trkpt>\r\n";
+						echo '<tr><td style="border-style: solid; border-width: 1px">Plotted Signal GPS Point</td></tr>';
+					}
+				}else
+				{
+					echo "Failed to write KML File, Check the permissions on the wifidb folder, and make sure that Apache (or what ever HTTP server you are using) has permissions to write";
+				}
+				$fileappend = fopen($filename, "a");
+				fwrite($fileappend, $file_data);
+				fclose( $fileappend );
+				echo '<tr class="style4"><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
+				
+				mysql_close($conn);
+				$end = microtime(true);
+				if ($GLOBALS["bench"]  == 1)
+				{
+					echo "Time is [Unix Epoc]<BR>";
+					echo "Start Time: ".$start."<BR>";
+					echo "  End Time: ".$end."<BR>";
+				}
+				break;
 		}
 	}
 

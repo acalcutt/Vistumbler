@@ -37,6 +37,7 @@ pageheader("Version Page");
 			<LI>Finished AP Fetch Page so that GPS can be hidden.</LI>
 			<LI>Most, if not all pages now have the footer() and pageheader() function to standardize page layout</LI>
 			<LI>Fixed an issue where if there is no MAC address it is set to "00:00:00:00:00:00". Before it would just be blank, and cause errors on fetch.</LI>
+			<LI>Added support for Exproting to GPX files, for Garmin Devices.</LI>
 		</OL>
 	</td></tr>
 </table>

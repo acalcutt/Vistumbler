@@ -93,22 +93,31 @@ switch($func)
 	case "exp_user_all_kml":
 
 		$row = 0;
-		$database->exp_kml($export="exp_user_all_kml", $user,$row);
+		$database->exp_kml($export="exp_user_all_kml", $user, $row);
 		break;
 	#--------------------------
 	case "exp_all_db_kml": 
-
-		$database->exp_kml($export="exp_all_db_kml");
+		$database->exp_kml($export="exp_all_db_kml", $user, $row);
 		break;
 	#--------------------------
 	case "exp_single_ap":
 		$user="";
-		$database->exp_kml($export="exp_single_ap",$user,$row);
+		$database->exp_kml($export="exp_single_ap", $user, $row);
 		break;
 	#--------------------------
 	case "exp_user_list": 
 		$user ="";
-		$database->exp_kml($export="exp_user_list",$user,$row);
+		$database->exp_kml($export="exp_user_list", $user, $row);
+		break;
+	#--------------------------
+	case "exp_all_signal": 
+		$user ="";
+		$database->exp_kml($export="exp_all_signal", $user, $row);
+		break;
+	#--------------------------
+	case "exp_all_signal_gpx": 
+		$user ="";
+		$database->exp_gpx($export="exp_all_signal", $user, $row);
 		break;
 	#--------------------------
 	case NULL:
