@@ -208,7 +208,7 @@ if($IN_TB_LN_Re)
 {echo "<tr><td>Success..........</td><td>INSERT INTO `links`</td></tr>";}
 else{echo "<tr><td>Failure..........</td><td>INSERT INTO `links`</td></tr>";}
 
-$sql1 = "CREATE TABLE `wifi`.`annunc-comm` (
+$sql1 = "CREATE TABLE `annunc-comm` (
 		`id` INT NOT NULL AUTO_INCREMENT ,
 		`author` VARCHAR( 32 ) NOT NULL ,
 		`title` VARCHAR( 120 ) NOT NULL ,
@@ -229,7 +229,7 @@ else{
 echo "<tr><td>Failure..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`; ";
 }
 
-$sql1 = "CREATE TABLE `wifi`.`annunc` (
+$sql1 = "CREATE TABLE `annunc` (
 		`id` INT NOT NULL AUTO_INCREMENT ,
 		`auth` VARCHAR( 32 ) NOT NULL DEFAULT 'Annon Coward',
 		`title` VARCHAR( 120 ) NOT NULL DEFAULT 'Blank',
@@ -249,6 +249,21 @@ else{
 echo "<tr><td>Failure..........</td><td>Create Announcements table `$db`.`annunc`; ";
 }
 
+$sql1 = "CREATE TABLE `files` (
+		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+		`file` VARCHAR( 255 ) NOT NULL ,
+		`size` TEXT NOT NULL ,
+		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+		UNIQUE (
+		`file`
+		)
+		) ENGINE = InnoDB";
+
+if($insert)
+{echo "<tr><td>Success..........</td><td>Create Files table `$db`.`files`;";
+else{
+echo "<tr><td>Failure..........</td><td>Create Files table `$db`.`files`; ";
+}
 
 	#========================================================================================================================#
 	#									Create WiFiDB user for WiFi and WiFi_st										   	     #
@@ -375,7 +390,8 @@ $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info --------------
 							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
 							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
 							."$"."kml_out				=	'../out/kml/';"
-							."$"."vs1_out				=	'../out/vs1/';");
+							."$"."vs1_out				=	'../out/vs1/';"
+							."$"."gpx_out				=	'../out/gpx/';");
 if($AD_CF_KM_Re){echo "<tr><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 

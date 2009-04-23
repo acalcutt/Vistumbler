@@ -113,7 +113,7 @@ else{
 echo "<tr><td>Failure..........</td><td>Insert new links into `$db`.`links`; ";
 }
 
-$sql1 = "CREATE TABLE `wifi`.`annunc-comm` (
+$sql1 = "CREATE TABLE `annunc-comm` (
 		`id` INT NOT NULL AUTO_INCREMENT ,
 		`author` VARCHAR( 32 ) NOT NULL ,
 		`title` VARCHAR( 120 ) NOT NULL ,
@@ -134,7 +134,7 @@ else{
 echo "<tr><td>Failure..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`; ";
 }
 
-$sql1 = "CREATE TABLE `wifi`.`annunc` (
+$sql1 = "CREATE TABLE `annunc` (
 		`id` INT NOT NULL AUTO_INCREMENT ,
 		`auth` VARCHAR( 32 ) NOT NULL DEFAULT 'Annon Coward',
 		`title` VARCHAR( 120 ) NOT NULL DEFAULT 'Blank',
@@ -154,6 +154,21 @@ else{
 echo "<tr><td>Failure..........</td><td>Create Announcements table `$db`.`annunc`; ";
 }
 
+$sql1 = "CREATE TABLE `files` (
+		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+		`file` VARCHAR( 255 ) NOT NULL ,
+		`size` TEXT NOT NULL ,
+		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+		UNIQUE (
+		`file`
+		)
+		) ENGINE = InnoDB";
+
+if($insert)
+{echo "<tr><td>Success..........</td><td>Create Files table `$db`.`files`;";
+else{
+echo "<tr><td>Failure..........</td><td>Create Files table `$db`.`files`; ";
+}
 
 mysql_close($conn);
 $file_ext = 'config.inc.php';
@@ -162,8 +177,8 @@ $fileappend = fopen($filename, "a");
 $AD_CF_FI_Re = fwrite($fileappend,"<?php\r\n#---------------- Footer Additional Info -----------------#\r\n"
 									."$"."ads		=	''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
 									."$"."tracker	=	''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n"
-									."$"."kml_out	=	'../out/kml/';\r\n$"."vs1_out	=	'../out/vs1/';"
-									"\r\n\r\n date_default_timezone_set('GMT+0');");
+									."$"."kml_out	=	'../out/kml/';\r\n$"."vs1_out	=	'../out/vs1/';\r\n$"."gpx_out				=	'../out/vs1/';"
+									."\r\n\r\n date_default_timezone_set('GMT+0');");
 if($AD_CF_FI_Re)
 {echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
