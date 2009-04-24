@@ -8,9 +8,9 @@
 #
 # To import the older Text files, you have to run them through the converter first.
 
-$lastedit="2009.04.22";
+$lastedit="2009.04.24";
 $start="2008.06.21";
-$ver="1.5";
+$ver="1.5.1";
 
 $localtimezone = date("T");
 echo $localtimezone."\n";
@@ -96,10 +96,11 @@ if (!file_exists($vs1dir))
 
 echo "Directory: ".$vs1dir."\n\n";
 echo "Files to Convert: \n";
-fwrite($fileappend, "Logging has been enabled by default, to turn of edit line 24 of import.php\r\n");
+fwrite($GLOBALS['fileappend'], "Logging has been enabled by default, to turn of edit line 24 of import.php\r\n");
+
+
 // Go through the VS1 folder and grab all the VS1 and tmp files
 // I included tmp because if you dont tell PHP to rename a file on upload to a website, it will give it a random name with a .tmp extension
-
 $file_a = array();
 $n = 0;
 $dh = opendir($vs1dir) or die("couldn't open directory");
@@ -118,10 +119,10 @@ while (!(($file = readdir($dh)) == false))
 			$n++;
 		}else{
 			echo "File not supported !\n";
-			if($log >= 1)
+			if($log == 1 or 2)
 			{
-				fwrite($fileappend, $file."	is not a supported file extention of ".$file_e[$file_max-1]."\r\n if the file is a txt file run it through the converter first.\r\n");
-			}elseif($log >=2){fwrite($fileappend, $file." has vaules of: ".var_dump($file));}
+				fwrite($GLOBALS['fileappend'], $file."	is not a supported file extention of ".$file_e[$file_max-1]."\r\n If the file is a txt file run it through the converter first.\r\n\r\n");
+			}elseif($log ==2){fwrite($GLOBALS['fileappend'], $file." has vaules of: ".var_dump($file));}
 		}
 	}
 }
@@ -136,14 +137,32 @@ foreach($file_a as $key => $file)
 {
 	$source = $vs1dir.$file;
 	echo "\n".$key."\t->\t################=== Start Import of ".$file." ===################";
+	if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+	{
+		fwrite($GLOBALS['fileappend'], "\r\n\r\n\t".$key."\t->\t################=== Start Import of ".$file." ===################\r\n\r\n");
+	}
 	echo "\n";
 	$check = check_file($source);
 	if($check == 1)
 	{
+		$uploadfile = $GLOBALS['wifidb'].'\import\up\\'.rand().'_'.$file;
 		$bencha[] = import_vs1($source, $user, $notes, $title);
+		if (!copy($source, $uploadfile))
+		{
+			echo "Failure to Move file to Upload Dir (".$GLOBALS['wifidb']."\import\up\), check the folder permisions if you are using Linux.<BR>";
+			if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+			{
+				fwrite($GLOBALS['fileappend'], "Failure to Move file to Upload Dir (".$GLOBALS['wifidb']."\import\up\), check the folder permisions if you are using Linux.\r\n");
+			}
+			die();
+		}
 	}elseif($check == 0)
 	{
 		echo "File has already been successfully imported into the Database, skipping.\n";
+		if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+		{
+			fwrite($GLOBALS['fileappend'], "File has already been successfully imported into the Database, skipping.\r\n".$source."\r\n\r\n");
+		}
 	}
 //	function  ( Source file , User that is importing, Notes for import, Title of Batch Import {will have "Batch: *title*" as title} )
 }
@@ -242,17 +261,20 @@ function &check_gps_array($gpsarray, $test)
 
 function check_file($file = '')
 {
-	$size = (filesize($file)/1024);
 	include($GLOBALS['wifidb'].'/lib/config.inc.php');
+	
+	$hash = hash_file('md5', $file);
+	$size = (filesize($file)/1024);
+	
 	$file_exp = explode("/", $file);
 	$file_exp_seg = count($file_exp);
 	$file1 = $file_exp[$file_exp_seg-1];
-	echo $size."KB , ".$file1."\n";
+
 	mysql_select_db($db,$conn);
-	$fileq = mysql_query("SELECT * FROM `files` WHERE `file` LIKE '$file1'", $conn) or die(mysql_error($conn));
+	$fileq = mysql_query("SELECT * FROM `files` WHERE `file` LIKE '$file1'", $conn);
 	$fileqq = mysql_fetch_array($fileq);
-	echo $fileqq['size']."KB , ".$fileqq['file']."\n";
-	if($fileqq['size'] != $size && $file1 != $fileqq['file'])
+
+	if( $hash != $fileqq['hash'] )
 	{
 		return 1;
 	}else
@@ -262,45 +284,104 @@ function check_file($file = '')
 }
 
 
-function insert_file($file = '')
+function insert_file($file = '', $totalaps = 0, $totalgps = 0)
 {
-	$size = (filesize($file)/1024);
 	include($GLOBALS['wifidb'].'/lib/config.inc.php');
+	
+	$size = (filesize($file)/1024);
+	$hash = hash_file('md5', $file);
+	$date = date("y-m-d H:i:s");
 	mysql_select_db($db,$conn);
-		
+	
 	$file_exp = explode("/", $file);
 	$file_exp_seg = count($file_exp);
 	$file = $file_exp[$file_exp_seg-1];
 	
-	$fileq = mysql_query("INSERT INTO `files` ( `id` , `file`, `size`, `date`) VALUES ('', '$file', '$size', '')", $conn) or die(mysql_error($conn));
-	if(!$fileq)
-	{
-		$A = array( 0=>0, 'error' => mysql_error($conn));
-		return $A;
-	}else
+	$sql = "INSERT INTO `wifi`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash`	)
+								VALUES ( NULL , '$file', '$size', 'CURRENT_TIMESTAMP' , '$totalaps', '$totalgps', '$hash' )";
+	if(mysql_query($sql, $conn))
 	{
 		return 1;
+	}else
+	{
+		$A = array( 0=>'0', 'error' => mysql_error($conn));
+		return $A;
 	}
 }
 
+function gen_gps($retexp = array(), $gpscount = 0)
+{
+	$ret_len = count($retexp);
+	$date_exp = explode("-",$retexp[4]);
+
+	if(strlen($date_exp[0]) <= 2)
+	{
+		$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
+	}else
+	{
+		$gpsdate = $retexp[4];
+	}
+	switch ($ret_len)
+	{
+		case 6:
+			# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)
+			$gdata = array(
+										"lat"=>$retexp[1],
+										"long"=>$retexp[2],
+										"sats"=>$retexp[3],
+										"hdp"=>'0.0',
+										"alt"=>'0.0',
+										"geo"=>'-0.0',
+										"kmh"=>'0.0',
+										"mph"=>'0.0',
+										"track"=>'0.0',
+										"date"=>$gpsdate,
+										"time"=>$retexp[5]
+										);
+			$gpscount++;
+			break;
+		case 12:
+			# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
+			$gdata = array(
+										"lat"=>$retexp[1],
+										"long"=>$retexp[2],
+										"sats"=>$retexp[3],
+										"hdp"=>$retexp[4],
+										"alt"=>$retexp[5],
+										"geo"=>$retexp[6],
+										"kmh"=>$retexp[7],
+										"mph"=>$retexp[8],
+										"track"=>$retexp[9],
+										"date"=>$gpsdate,
+										"time"=>$retexp[11]
+										);
+			$gpscount++;
+			break;
+	}
+	$list = array(0=>$gdata, 1=> $gpscount);
+	return $list;
+}
+
+
+
 function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED" )
 {
-	$FILENUM = 1;
+	include($GLOBALS['wifidb'].'/lib/config.inc.php');
 	
+	$FILENUM = 1;
 	$start = microtime(true);
 	$times=date('Y-m-d H:i:s');
+	
 	if ($source == NULL)
+	{
+		echo "There was an error sending the file name to the function\n";
+		if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2 )
 		{
-			echo "There was an error sending the file name to the function\n";
-			if($GLOBALS['log'] >= 1)
-		{
-				fwrite($fileappend, "	The source was corrupted or something before it could be parsed, try importing again.\r\n");
-			}
-			break;
+			fwrite($GLOBALS['fileappend'], "	The source was corrupted or something before it could be parsed, try importing again.\r\n".$source."\r\n\r\n");
 		}
-	include($GLOBALS['wifidb'].'/lib/config.inc.php');
-	//	$gdata [ ID ] [ object ]
-	//		   num     lat / long / sats / date / time
+		break;
+	}
+
 	$user_n	 = 0;
 	$N		 = 0;
 	$n		 = 0;
@@ -316,10 +397,17 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 	
 	$return  = file($source);
 	$count = count($return);
-	if($count <= 8) { echo "You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.\n"; break;}
+	if($count <= 8) 
+	{
+		echo "You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.\n";
+		if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2 )
+		{
+			fwrite($GLOBALS['fileappend'], "You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.\r\n".$source."\r\n\r\n");
+		}
+		break;
+	}
 	foreach($return as $ret)
 	{
-
 		if ($ret[0] == "#"){continue;}
 		
 		$retexp = explode("|",$ret);
@@ -327,82 +415,62 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 		
 		if ($ret_len == 12)
 		{
-			$date_exp = explode("-",$retexp[10]);
-			if(strlen($date_exp[0]) <= 2)
-			{
-				$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
-			}else
-			{
-				$gpsdate = $retexp[10];
-			}
-			# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
-			$gdata[$retexp[0]] = array(
-										"lat"=>$retexp[1],
-										"long"=>$retexp[2],
-										"sats"=>$retexp[3],
-										"hdp"=>$retexp[4],
-										"alt"=>$retexp[5],
-										"geo"=>$retexp[6],
-										"kmh"=>$retexp[7],
-										"mph"=>$retexp[8],
-										"track"=>$retexp[9],
-										"date"=>$gpsdate,
-										"time"=>$retexp[11]
-										);
-			$gpscount++;
+			list($gdata[$retexp[0]], $gpscount) = gen_gps($retexp, $gpscount);
 		}elseif($ret_len == 6)
 		{
-			$date_exp = explode("-",$retexp[4]);
-			if(strlen($date_exp[0]) <= 2)
-			{
-				$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
-			}else
-			{
-				$gpsdate = $retexp[4];
-			}
-			# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
-			$gdata[$retexp[0]] = array(
-										"lat"=>$retexp[1],
-										"long"=>$retexp[2],
-										"sats"=>$retexp[3],
-										"hdp"=>0.0,
-										"alt"=>0.0,
-										"geo"=>-0.0,
-										"kmh"=>0.0,
-										"mph"=>0.0,
-										"track"=>0.0,
-										"date"=>$gpsdate,
-										"time"=>$retexp[5]
-										);
-			$gpscount++;
+			list($gdata[$retexp[0]], $gpscount) = gen_gps($retexp, $gpscount);
 		}elseif($ret_len == 13)
 		{
+				
 				if(!isset($SETFLAGTEST))
 				{
 					$count = $count - $gpscount;
 					$count = $count - 8;
+					if($count == 0) 
+					{
+						echo "This File does not have any APs to import, just a bunch of GPS cords."; 
+						if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+						{
+								fwrite($GLOBALS['fileappend'], "This File does not have any APs to import, just a bunch of GPS cords.\r\n".$source."\r\n\r\n");
+						}
+						$user_aps = "";
+						break;
+					}
 				}
 				$SETFLAGTEST = TRUE;
 				$wifi = explode("|",$ret, 13);
-				if($wifi[0] === "" && $wifi[1] === "" && $wifi[5] === "" && $wifi[6] === "" && $wifi[7] === ""){continue;}
+				if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
 				mysql_select_db($db,$conn);
 				$dbsize = mysql_query("SELECT * FROM `$wtable`", $conn) or die(mysql_error($conn));
 				$size = mysql_num_rows($dbsize);
 				$size++;
-				if ($wifi[0]==""){$wifi[0]="UNNAMED";}
-		#		$wifi[12] = strip_tags($wifi[12]);
-				// sanitize wifi data to be used in table name
+				
+				//You cant have any blank data, thats just rude...
+				if($wifi[0] == ''){$wifi[0]="UNNAMED";}
 				if($wifi[1] == ''){$wifi[1] = "00:00:00:00:00:00";}
-				$ssidss = strip_tags(smart_quotes($wifi[0]));
-				$ssidsss = str_split($ssidss,25);
-				$ssids = $ssidsss[0];
+				if($wifi[5] == ''){$wifi[5] = "0";}
+				if($wifi[6] == ''){$wifi[6] = "u";}
+				if($wifi[7] == ''){$wifi[7] = "0";}
+				// sanitize wifi data to be used in table name
+				$ssidss = filter_var($wifi[0], FILTER_SANITIZE_SPECIAL_CHARS);
+
+				$ssidsss = str_split($ssidss,25); //split SSID in two on is 25 char long.
+				$ssids = $ssidsss[0]; //use the 25 char long word for the APs table name, 
+									  //this is due to a limitation in MySQL table name lengths
 				
 				$mac1 = explode(':', $wifi[1]);
-				$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5];
+				$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5]; //the APs table doesnt need :'s in its name, nor does the Pointers table, well it could I just dont want to
 				
-				$authen = strip_tags(smart_quotes($wifi[3]));
-				$encryp = strip_tags(smart_quotes($wifi[4]));
-				$sectype=$wifi[5];
+				$authen	=	filter_var($wifi[3], FILTER_SANITIZE_SPECIAL_CHARS);
+				$encryp	=	filter_var($wifi[4], FILTER_SANITIZE_SPECIAL_CHARS);
+				$sectype=	filter_var($wifi[5], FILTER_SANITIZE_SPECIAL_CHARS);
+				$chan	=	filter_var($wifi[7], FILTER_SANITIZE_SPECIAL_CHARS);
+				$btx	=	filter_var($wifi[8], FILTER_SANITIZE_SPECIAL_CHARS);
+				$otx	=	filter_var($wifi[9], FILTER_SANITIZE_SPECIAL_CHARS);
+				$nt		=	filter_var($wifi[10], FILTER_SANITIZE_SPECIAL_CHARS);
+				$label	=	filter_var($wifi[11], FILTER_SANITIZE_SPECIAL_CHARS);
+				$san_sig	=	filter_var($wifi[12], FILTER_SANITIZE_SPECIAL_CHARS);
+				
 				if($wifi[6] == "802.11a")
 					{$radios = "a";}
 				elseif($wifi[6] == "802.11b")
@@ -413,8 +481,6 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 					{$radios = "n";}
 				else
 					{$radios = "U";}
-				
-				$chan = $wifi[7];
 				
 				$conn1 = mysql_connect($host, $db_user, $db_pwd);
 				mysql_select_db($db,$conn1);
@@ -438,12 +504,6 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 				}
 				mysql_close($conn1);
 				
-				$btx=$wifi[8];
-				$otx=$wifi[9];
-				$nt=$wifi[10];
-				$label = strip_tags(smart_quotes($wifi[11]));
-				
-				
 				//create table name to select from, insert into, or create
 				$table = $ssids.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 				$gps_table = $table.$gps_ext;
@@ -454,30 +514,31 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 				{
 					// They are the same
 					echo "\n".$FILENUM." / ".$count."   ( ".$APid." )   ||   ".$table." - is being updated ";
-					if($GLOBALS['log'] >= 1)
-						{
-							fwrite($fileappend, $FILENUM." / ".$count."   ( ".$APid." )   ||   ".$table." - is being updated \r\n");
-						}elseif($GLOBALS['log'] >=2)
-						{
-							fwrite($fileappend, $file." has vaules of: ".var_dump($file));
-						}
+					if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+					{
+							fwrite($GLOBALS['fileappend'], $FILENUM." / ".$count."   ( ".$APid." )   ||   ".$table." - is being updated \r\n");
+					}
+					if($GLOBALS['log'] == 2)
+					{
+						ob_start();
+						var_dump($file);
+						$a=ob_get_contents();
+						ob_end_clean();
+						fwrite($GLOBALS['fileappend'], $file." has vaules of: ".$a."\r\n");
+					}
 					mysql_select_db($db_st,$conn);
-					$signal_exp = explode("-",$wifi[12]);
 					//setup ID number for new GPS cords
 					$DB_result = mysql_query("SELECT * FROM `$gps_table`", $conn);
 					$gpstableid = mysql_num_rows($DB_result);
-					if ($GLOBALS["debug"]  == 1){echo $gpstableid."\n";}
 					if ( $gpstableid === 0)
 					{
 						$gps_id = 1;
-						if ($GLOBALS["debug"]  === 1){echo "0x00 \n";}
 					}
 					else
 					{
 						//if the table is already populated set it to the last ID's number
 						$gps_id = $gpstableid;
 						$gps_id++;
-						if ($GLOBALS["debug"]  === 1){echo "0x01 \n";}
 					}
 					//pull out all GPS rows to be tested against for duplicates
 						
@@ -485,6 +546,7 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 					$todo=array();
 					$prev='';
 					
+					$signal_exp = explode("-",$san_sig);
 					foreach($signal_exp as $exp)
 					{
 				#		echo ".";
@@ -542,23 +604,23 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 							$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 							if (mysql_query($sqlitgpsgp, $conn))
 							{
-								if($GLOBALS['log'] >= 1)
-									{
-										fwrite($fileappend, "	- Successful import of GPS data \r\n".'$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time'."\r\n");
-									}
+								if($GLOBALS['log'] == 2)
+								{
+									fwrite($GLOBALS['fileappend'], "	- Successful import of GPS data \r\n $gps_id - $lat - $long - $sats - $hdp - $alt - $geo - $kmh - $mph - $track - $date - $time \r\n");
+								}
 							}else
 							{
 								echo "There was an Error inserting the GPS information";
-								if($GLOBALS['log'] >= 1)
+								if($GLOBALS['log'] == 2)
 								{
-										fwrite($fileappend, "	- Failed import of GPS data \r\n".'$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time'."\r\n"."	".mysql_error($conn)."\r\n");
+									fwrite($GLOBALS['fileappend'], "	- FAILED import of GPS data \r\n $gps_id - $lat - $long - $sats - $hdp - $alt - $geo - $kmh - $mph - $track - $date - $time \r\n".mysql_error($conn)."\r\n");
 								}
 							}
 							$signals[$gps_id] = $gps_id.",".$signal;
-							if($GLOBALS['log'] >= 1)
-								{
-									fwrite($fileappend, $signals[$gps_id]."\r\n");
-								}
+							if($GLOBALS['log'] == 2)
+							{
+								fwrite($GLOBALS['fileappend'], $signals[$gps_id]."\r\n");
+							}
 							
 							$gps_id++;
 						#	break;
@@ -570,18 +632,19 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 								$resource = mysql_query($sqlupgpsgp, $conn);
 								if ($resource)
 								{
-								if($GLOBALS['log'] >= 1)
-									{
-										fwrite($fileappend, "	- Successful Update of GPS data \r\n".'$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time'."\r\n");
-									}
+								if($GLOBALS['log'] == 2)
+								{
+									fwrite($GLOBALS['fileappend'], "	- Successful Update of GPS data \r\n $gps_id - $lat - $long - $sats - $hdp - $alt - $geo - $kmh - $mph - $track - $date - $time \r\n");
+								}
 								}else
 								{
-									echo "A MySQL Update error has occured\n";echo mysql_error($conn);
-									
-									if($GLOBALS['log'] >= 1)
-										{
-											fwrite($fileappend, "	- Failed Update of GPS data \r\n".'$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time'."\r\n"."	".mysql_error($conn)."\r\n");
-										}								}
+									echo "A MySQL Update error has occured\n";
+									echo mysql_error($conn);
+									if($GLOBALS['log'] == 2)
+									{
+										fwrite($GLOBALS['fileappend'], "	- FAILED Update of GPS data \r\n $gps_id - $lat - $long - $sats - $hdp - $alt - $geo - $kmh - $mph - $track - $date - $time \r\n".mysql_error($conn)."\r\n");
+									}								
+								}
 								$signals[$gps_id] = $dbid.",".$signal;
 								$gps_id++;
 						#		continue;
@@ -589,9 +652,13 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 							{
 								$signals[$gps_id] = $dbid.",".$signal;
 								$gps_id++;
-						if($GLOBALS['log'] >= 1)
+								if($GLOBALS['log'] == 2)
 									{
-										fwrite($fileappend, "	- GPS already in the database\r\n".var_dump($gdata[$vs1_id])."\r\n");
+										ob_start();
+										var_dump($gdata[$vs1_id]);
+										$a=ob_get_contents();
+										ob_end_clean();
+										fwrite($GLOBALS['fileappend'], "	- GPS already in the database\r\n".$a."\r\n");
 									}
 							}
 						}
@@ -599,48 +666,41 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 					echo ".";
 					$sig = implode("-",$signals);
 					$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
+					if (mysql_query($sqlit, $conn))
+					{
+						if($GLOBALS['log'] == 2)
+						{
+							fwrite($GLOBALS['fileappend'], "Insert into [".$db_st."].{".$table."}\n		 => Add Signal History to Table\r\n");
+						}
+					}else
+					{
+						if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+						{
+							fwrite($GLOBALS['fileappend'], "(3)Insert into [".$db_st."].{".$table."}\n		 => FAILED to added GPS History to Table\n".mysql_error($conn)."\r\n");
+						}
+					}
 					
 					$sqlit_ = "SELECT * FROM `$table`";
 					$sqlit_res = mysql_query($sqlit_, $conn) or die(mysql_error());
 					$sqlit_num_rows = mysql_num_rows($sqlit_res);
 					$sqlit_num_rows++;
 					$user_aps[$user_n]="1,".$APid.":".$sqlit_num_rows; //User import tracking //UPDATE AP
-					if($GLOBALS['log'] >= 1)
+					if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
 					{
-						fwrite($fileappend, $user_aps[$user_n]."\r\n");
+						fwrite($GLOBALS['fileappend'], $user_aps[$user_n]."\r\n");
 					}
 					$user_n++;
 					
-					if (mysql_query($sqlit, $conn))
-					{
-						if($GLOBALS['log'] >= 1)
-						{
-							fwrite($fileappend, "Insert into [".$db_st."].{".$table."}\n		 => Add Signal History to Table\r\n".mysql_error($conn)."\r\n");
-						}
-					}else
-					{
-						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL , INDEX ( `id` ), PRIMARY KEY (`id`) )  ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
-						if (mysql_query($sqlcgt, $conn) or die(mysql_error()))
-						{
-#							echo "(1)Create Table [".$db_st."].{".$table."}\n		 => Thats odd the table was missing, well I added a Table for ".$ssids."\n";
-							if (mysql_query($sqlit, $conn)or die(mysql_error()))
-							{
-								if($GLOBALS['log'] >= 1)
-								{
-									fwrite($fileappend, "(3)Insert into [".$db_st."].{".$table."}\n		 => Failed to added GPS History to Table\n".mysql_error($conn)."\r\n");
-								}
-							}
-						}
-					}
+					
 					$updated++;
 					$FILENUM++;
 				}else
 				{
-					
+					// NEW AP
 					echo "\n".$FILENUM." / ".$count."   ( ".$size." )   ||   ".$table." - is Being Imported";
-					if($GLOBALS['log'] >= 1)
+					if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
 					{
-						fwrite($fileappend, $FILENUM." / ".$count."   ( ".$size." )   ||   ".$table." - is Being Imported\r\n");
+						fwrite($GLOBALS['fileappend'], $FILENUM." / ".$count."   ( ".$size." )   ||   ".$table." - is Being Imported\r\n");
 					}
 					mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 					$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
@@ -660,14 +720,16 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 								."`track` FLOAT NOT NULL ,"
 								."`date` VARCHAR( 10 ) NOT NULL , "
 								."`time` VARCHAR( 8 ) NOT NULL , "
-								."INDEX ( `id` ) ) CHARACTER SET = latin1";
-					mysql_query($sqlcgt, $conn);
+								."INDEX ( `id` ) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 					$create_table = mysql_query($sqlcgt, $conn);
-					if($GLOBALS['log'] >= 1 && !$create_table)
+					if(!$create_table)
 					{
-						fwrite($fileappend, "[".$db_st."].{".$table."}\n		 => Failed to create Signal History Table \r\n".mysql_error($conn)."\r\n");
+						if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+						{
+							fwrite($GLOBALS['fileappend'], "[".$db_st."].{".$table."}\n		 => FAILED to create Signal History Table \r\n".mysql_error($conn)."\r\n");
+						}
 					}
-					$signal_exp = explode("-",$wifi[12]);
+					$signal_exp = explode("-",$san_sig);
 				#	echo $wifi[12]."\n";
 					$gps_id = 1;
 					$N=0;
@@ -705,9 +767,9 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 						}else
 						{
 							echo "There was an error inserting the GPS data.\n".mysql_error($conn);
-							if($GLOBALS['log'] >= 1)
+							if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
 							{
-								fwrite($fileappend, "Insert into [".$db_st."].{".$table_gps."}\n		 => Failed to added GPS History to Table\n".mysql_error($conn));
+								fwrite($GLOBALS['fileappend'], "Insert into [".$db_st."].{".$table_gps."}\n		 => FAILED to added GPS History to Table\r\n $gps_id - $lat - $long - $sats - $hdp - $alt - $geo - $kmh - $mph - $track - $date - $time \r\n".mysql_error($conn)."\r\n");
 							}
 						}
 						$signals[$gps_id] = $gps_id.",".$signal;
@@ -723,15 +785,15 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 	#				echo "(3)Insert into [".$db_st."].{".$table."}\n		 => Add Signal History to Table\n";
 					if($insertsqlresult)
 					{
-						if($GLOBALS['log'] >= 1)
+						if($GLOBALS['log'] == 2)
 						{
-							fwrite($fileappend, "Insert Signal History into [".$db_st."].{".$table."}\n		 => Failed to added GPS History to Table\n".mysql_error($conn));
+							fwrite($GLOBALS['fileappend'], "Insert Signal History into [".$db_st."].{".$table."}\n		 => Successfully to added GPS History to Table\r\n");
 						}
 					}else
 					{
-						if($GLOBALS['log'] >= 1)
+						if($GLOBALS['log'] == 2)
 						{
-							fwrite($fileappend, "Insert Signal History into [".$db_st."].{".$table."} FAILED!\n		 => Failed to added GPS History to Table\n".mysql_error($conn));
+							fwrite($GLOBALS['fileappend'], "Insert Signal History into [".$db_st."].{".$table."} FAILED!\n		 => FAILED to added GPS History to Table\n".mysql_error($conn));
 						}
 					}
 					# pointers
@@ -746,26 +808,26 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 						if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 						{
 		#					echo 'Updated ['.$db.'].{'.$wtable."} with new Size \n		=> ".$size."\n";
-							if($insertsqlresult)
+							if($GLOBALS['log'] == 2)
 							{
-								if($GLOBALS['log'] >= 1)
-								{
-									fwrite($fileappend, "Insert Signal History into [".$db_st."].{".$table."}\n		 => Failed to added GPS History to Table\n".mysql_error($conn));
-								}
-							}else
-							{
-								if($GLOBALS['log'] >= 1)
-								{
-									fwrite($fileappend, "Insert Signal History into [".$db_st."].{".$table."} FAILED!\n		 => Failed to added GPS History to Table\n".mysql_error($conn));
-								}
+								fwrite($GLOBALS['fileappend'], "Updated Settings table with new size [".$db."].{ settings }\r\n");
 							}
-							
 						}else
 						{
-							echo mysql_error($conn)." => Could not Add new pointer to table (this has been logged) \n";
+							echo mysql_error($conn)." => Could not update settings table with new size, this is a problem....\n";
+							if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+							{
+								fwrite($GLOBALS['fileappend'], mysql_error($conn)." => Could not update settings table with new size, this is a problem.... \r\n");
+							}
 						}
-					}else{echo "Something went wrong, I couldn't add in the pointer :-( \n";}
-	#				echo "</td></tr></table>\n";
+					}else
+					{
+						echo "Something went wrong, I couldn't add in the pointer :-( \n";
+						if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+						{
+							fwrite($GLOBALS['fileappend'], mysql_error($conn)." => Something went wrong, I couldn't add in the pointer :-( \r\n");
+						}
+					}
 					$imported++;
 					$FILENUM++;
 				}
@@ -787,39 +849,62 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 		}elseif($ret_len == 17)
 		{
 			echo "Text files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu option in Vistumbler\n";
+			if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+			{
+				fwrite($GLOBALS['fileappend'], "Text files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu option in Vistumbler \r\n");
+			}
 			break;
 		}elseif($ret_len == 0)
 		{
-			echo "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again\n"; die();
+			echo "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again\n"; 
+			if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+			{
+				fwrite($GLOBALS['fileappend'], "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again \r\n");
+			}
+			die();
 		}else
 		{
-			echo "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again\n"; die();
+			echo "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again\n"; 
+			if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+			{
+				fwrite($GLOBALS['fileappend'], "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again \r\n");
+			}
+			die();
 		}
 	}
 	mysql_select_db($db,$conn);
 	
-	if(isset($user_aps)){$user_ap_s = implode("-",$user_aps);}else{$user_ap_s = "";}
+	if(is_array($user_aps))
+	{
+		$user_ap_s = implode("-",$user_aps);
+	}else
+	{
+		$user_ap_s = "";
+	}
 	$notes = addslashes($notes);
 	
 	if($title === ''){$title = "Untitled";}
 	if($user === ''){$user="Unknown";}
 	if($notes === ''){$notes="No Notes";}
 
-	if ($user_ap_s != "")
+	$total_ap = count($user_aps);
+	$gdatacount = count($gdata);
+	if(isset($user_ap_s))
 	{
-		$sqlu = "INSERT INTO `users` ( `id` , `username` , `points` ,  `notes`, `date`, `title`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title')";
+		$sqlu = "INSERT INTO `users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount')";
 		mysql_query($sqlu, $conn) or die(mysql_error($conn));
-		$inserted = insert_file($source);
+		$inserted = insert_file( $source, $total_ap, $gdatacount );
 		if(is_array($inserted))
 		{
 			echo "Error Inserting File (".$source.") into Table for later checking\n".$inserted[1];
+			if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+			{
+				fwrite($GLOBALS['fileappend'], "Error Inserting File (".$source.") into Table for later checking\n".$inserted[1]."\r\n");
+			}
 			die();
 		}
 	}
-	
 	mysql_close($conn);
-	$total_ap = count($user_aps);
-	$gdatacount = count($gdata);
 	echo "\nFile DONE!\n|\n|\n";
 	$end = microtime(true);
 	$times = array(

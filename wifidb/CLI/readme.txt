@@ -1,4 +1,4 @@
-wiFiDB CLI Folder
+WiFiDB CLI [aka Tools] Folder
 http://www.randomintervals.com/
 
     This program is free software; you can redistribute it and/or modify it under
@@ -138,11 +138,11 @@ VERSION HISTORY
 --------------------------------------------------------------
 --------------------------------------------------------------
 
-  All you need to do is run the manufmac.exe or manufmac.php script and it will download the 
-text file from: http://standards.ieee.org/regauth/oui/oui.txt
+  All you need to do is run the manufmac.exe or manufmac.php script and it 
+  will download the text file from: http://standards.ieee.org/regauth/oui/oui.txt
 
   Then it converts it to a WiFiDB compatible PHP (manufactures.inc.php) file 
-and a Vistumbler compatible INI (manufactures.ini) file.
+  and a Vistumbler compatible INI (manufactures.ini) file.
 
 
 ----------------------------------------
@@ -174,7 +174,8 @@ Initial release, was just WiFiDB generation, no Vistumbler yet.
 1.1.2
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
-1-> Forgot to add in the Debug variable and wrapper around the line echo, performance was severley hindered.
+1-> Forgot to add in the Debug variable and wrapper around the line echo,
+	performance was severley hindered.
 2-> Changed console header and layout a little.
 ==============================
 
@@ -271,5 +272,20 @@ VERSION HISTORY
 1-> Added in Support to Skip files if they have already been imported, 
     the comparison is based off the file name and file size. all data 
     is stored in `wifi`.`files`. the only data that is kept is filename, 
-    size, and date/time of import
+    size, and date/time of import.
+2-> Fixed up the Loging some more. had some formating issues. 
+		There are two logging levels: 
+		  1) is just what was updated/imported, 
+		  2) is all the details of what was imported/updated
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.5.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1-> The GPS Table for each AP was still being created with the MySQL 
+	default storage engine (MyISAM in most cases). The Default is now
+	hard coded as InnoDB.
+2-> Minor code changes to try something new.
 ==============================
