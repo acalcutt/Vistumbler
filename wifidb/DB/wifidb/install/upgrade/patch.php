@@ -1,31 +1,14 @@
 <?php
 include('lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title>';
+pageheader("Upgrade Page");
 ?>
-<link rel="stylesheet" href="../css/site4.0.css">
-<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2">
-	<tr>
-		<td bgcolor="#315573">
-		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		<?php echo 'Wireless DataBase *Alpha* '.$ver["wifidb"].'</font>';?>
-		<font color="#FFFFFF" size="2">
-            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
-		</font></b>
-		</p>
-		</td>
-	</tr>
-</table>
-</div>
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
-	<tr>
-<td width="17%" bgcolor="#304D80" valign="top">
+</td>
+	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+		<p align="center">
 <table><tr><th>Status</th><th>Step of Install</th></tr>
 <tr><TH colspan="2">Upgrade DB for 0.15 Build 7x to 0.16 Build 1</TH><tr>
 <?php
-
+$ENG = "InnoDB";
 $date = date("Y-m-d");
 $root_sql_user	=	$_POST['root_sql_user'];
 strip_tags($root_sql_user);
@@ -91,9 +74,9 @@ $sql = "TRUNCATE TABLE `links`";
 $drop = mysql_query($sql, $conn) or die(mysql_error());
 
 if($drop)
-{echo "<tr><td>Success..........</td><td>EMPTY TABLE `links`";}
+{echo "<tr><td>Success..........</td><td>EMPTY TABLE `links`</td></tr>";}
 else{
-echo "<tr><td>Failure..........</td><td>EMPTY TABLE `links`";}
+echo "<tr><td>Failure..........</td><td>EMPTY TABLE `links`</td></tr>";}
 
 $sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES"
 		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
@@ -108,9 +91,9 @@ $sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES"
 $insert = mysql_query($sql, $conn) or die(mysql_error());
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Insert new links into `$db`.`links`; ";
+{echo "<tr><td>Success..........</td><td>Insert new links into `$db`.`links`;</td></tr> ";
 else{
-echo "<tr><td>Failure..........</td><td>Insert new links into `$db`.`links`; ";
+echo "<tr><td>Failure..........</td><td>Insert new links into `$db`.`links`; </td></tr>";
 }
 
 $sql1 = "CREATE TABLE `annunc-comm` (
@@ -124,14 +107,14 @@ $sql1 = "CREATE TABLE `annunc-comm` (
 		UNIQUE (
 		`title`
 		)
-		) ENGINE = InnoDB";
+		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 
 $insert = mysql_query($sql, $conn) or die(mysql_error());
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`; ";
+{echo "<tr><td>Success..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`;</td></tr> ";
 else{
-echo "<tr><td>Failure..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`; ";
+echo "<tr><td>Failure..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`;</td></tr> ";
 }
 
 $sql1 = "CREATE TABLE `annunc` (
@@ -146,30 +129,54 @@ $sql1 = "CREATE TABLE `annunc` (
 		UNIQUE (
 		`title`
 		)
-		) ENGINE = InnoDB";
+		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Announcements table `$db`.`annunc`;";
+{echo "<tr><td>Success..........</td><td>Create Announcements table `$db`.`annunc`;</td></tr>";
 else{
-echo "<tr><td>Failure..........</td><td>Create Announcements table `$db`.`annunc`; ";
+echo "<tr><td>Failure..........</td><td>Create Announcements table `$db`.`annunc`;</td></tr> ";
 }
 
 $sql1 = "CREATE TABLE `files` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-		`file` VARCHAR( 255 ) NOT NULL ,
-		`size` TEXT NOT NULL ,
+		`file` TEXT NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		UNIQUE (
-		`file`
-		)
-		) ENGINE = InnoDB";
+		`size` FLOAT( 12, 12 ) NOT NULL ,
+		`aps` INT NOT NULL ,
+		`gps` INT NOT NULL ,
+		`hash` VARCHAR( 255 ) NOT NULL
+		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Files table `$db`.`files`;";
+{echo "<tr><td>Success..........</td><td>Create Files table `$db`.`files`;</td></tr>";
 else{
-echo "<tr><td>Failure..........</td><td>Create Files table `$db`.`files`; ";
+echo "<tr><td>Failure..........</td><td>Create Files table `$db`.`files`; </td></tr>";
 }
 
+$sql1 = "CREATE TABLE `files_tmp` (
+		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+		`file` VARCHAR( 255 ) NOT NULL ,
+		`user` VARCHAR ( 32 ) NOT NULL,
+		`notes` TEXT NOT NULL,
+		`title` VARCHAR ( 128 ) NOT NULL,
+		`size` FLOAT (12,12 ) NOT NULL ,
+		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+		UNIQUE ( `file` )
+		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+
+if($insert)
+{echo "<tr><td>Success..........</td><td>Create tmp File table `$db`.`files`;</td></tr>";
+else{
+echo "<tr><td>Failure..........</td><td>Create tmp Files table `$db`.`files`; </td></tr>";
+}
+ 
+$sql1 = "ALTER TABLE `users` ADD `aps` INT NOT NULL , ADD `gps` INT NOT NULL";
+
+if($insert)
+{echo "<tr><td>Success..........</td><td>Altered `$db`.`users` to add aps and gps count fields;</td></tr>";
+else{
+echo "<tr><td>Failure..........</td><td>Alter `$db`.`users` to add aps and gps count fields;</td></tr>";
+}
 mysql_close($conn);
 $file_ext = 'config.inc.php';
 $filename = '../../lib/'.$file_ext;

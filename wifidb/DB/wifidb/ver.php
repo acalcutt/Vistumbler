@@ -24,7 +24,7 @@ pageheader("Version Page");
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-23</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-24</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -36,11 +36,19 @@ pageheader("Version Page");
 				</OL>
 			<LI>Finished AP Fetch Page so that GPS can be hidden.</LI>
 			<LI>Most, if not all pages now have the footer() and pageheader() function to standardize page layout</LI>
-			<LI>Fixed an issue where if there is no MAC address it is set to "00:00:00:00:00:00". Before it would just be blank, and cause errors on fetch.</LI>
+			<LI>Fixed an issue where if there is no MAC/Sectype/Chan/Radio it would just be blank, and cause errors on fetch. </LI>
+				<OL>
+					<LI>New Defaults:</LI>
+					<LI>Mac (00:00:00:00:00:00)</LI>
+					<LI>Sectype (0)</LI>
+					<LI>Chan (0)</LI>
+					<LI>Radio (u)</LI>
+				</OL>
 			<LI>Added support for Exproting to GPX files, for Garmin Devices.</LI>
 			<LI>Moved the code from insertnew.php into the index.php file, this is for the token that has been added for validation.</LI>
 			<LI>Added a comment tag to <i>`line 2`</i>of the KML exports to tell if it was a Full DB/Users list/Single AP/All Users APs/All Signal for AP</LI>
 			<LI>Made the tables that hold the page one table so when there is a skeew in the page doesnt get deformed like it did before. (I'm not a GUI person)</LI>
+			<LI>Fixed some formating issues with the install/upgrade/patching paths.</LI>
 		</OL>
 	</td></tr>
 </table>

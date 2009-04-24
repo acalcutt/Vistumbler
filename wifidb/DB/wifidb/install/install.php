@@ -1,27 +1,7 @@
 <?php
 include('../lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb'"].' --> Install Page</title>';
+pageheader("Install Page");
 ?>
-<link rel="stylesheet" href="../css/site4.0.css">
-<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2">
-	<tr>
-		<td bgcolor="#315573">
-		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
-		<font color="#FFFFFF" size="2">
-            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
-		</font></b>
-		</td>
-	</tr>
-</table>
-</div>
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
-	<tr>
-<td width="17%" bgcolor="#304D80" valign="top">
-
 </td>
 	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 		<p align="center">
@@ -30,6 +10,11 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb'"].' --> Install Page</titl
 	#========================================================================================================================#
 	#													Gather the needed infomation								   	     #
 	#========================================================================================================================#
+	
+	
+	#################### ALTER TABLE `files_tmp`  ENGINE = MYISAM  ROW_FORMAT = COMPACT
+	
+	
 	
 $timezn = 'GMT+0';
 date_default_timezone_set($timezn);
@@ -120,7 +105,19 @@ else{echo "<tr><td>Failure..........</td><td>INSERT INTO `settings`</td></tr>";}
 	#													Create Users table											   	     #
 	#========================================================================================================================#
 #create users table (History for imports)
-$sqls =	"CREATE TABLE `users` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`username` VARCHAR( 25 ) NOT NULL ,`points` TEXT NOT NULL ,`notes` TEXT NOT NULL ,`title` varchar(32) NOT NULL ,`date` varchar(25) NOT NULL, INDEX ( `id` )) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+$sqls =	"CREATE TABLE `users` (
+		`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
+		`username` VARCHAR( 25 ) NOT NULL ,
+		`points` TEXT NOT NULL ,
+		`notes` TEXT NOT NULL ,
+		`title` varchar(32) NOT NULL ,
+		`date` varchar(25) NOT NULL, 
+		`aps` INT NOT NULL, 
+		`gps` INT NOT NULL, 
+		INDEX ( `id` )) 
+		ENGINE=InnoDB 
+		DEFAULT CHARSET=utf8 
+		AUTO_INCREMENT=1 ;";
 $CR_TB_US_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($CR_TB_US_Re)
@@ -142,7 +139,9 @@ $sqls =	"CREATE TABLE wifi0 ("
   ."  auth varchar(25) NOT NULL,"
   ."  encry varchar(25) NOT NULL,"
   ."  KEY id (id) "
-  .") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+  .") ENGINE=InnoDB 
+  DEFAULT CHARSET=utf8 
+  AUTO_INCREMENT=1 ;";
 $CR_TB_W0_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($CR_TB_W0_Re)
@@ -158,7 +157,7 @@ $sqls =	"CREATE TABLE `links` ("
 	."`ID` int(255) NOT NULL auto_increment,"
 	."`links` varchar(255) NOT NULL,"
 	."KEY `INDEX` (`ID`)"
-	.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=6 ;";
+	.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;";
 $CR_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($CR_TB_LN_Re)
@@ -216,17 +215,15 @@ $sql1 = "CREATE TABLE `annunc-comm` (
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		PRIMARY KEY ( `id` ) ,
 		INDEX ( `id` ) ,
-		UNIQUE (
-		`title`
-		)
-		) ENGINE = InnoDB";
+		UNIQUE (`title` )
+		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 
 $insert = mysql_query($sql, $conn) or die(mysql_error());
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`; ";
+{echo "<tr><td>Success..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`;</td></tr> ";
 else{
-echo "<tr><td>Failure..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`; ";
+echo "<tr><td>Failure..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`;</td></tr> ";
 }
 
 $sql1 = "CREATE TABLE `annunc` (
@@ -238,31 +235,29 @@ $sql1 = "CREATE TABLE `annunc` (
 		`comments` TEXT NOT NULL ,
 		PRIMARY KEY ( `id` ) ,
 		INDEX ( `id` ) ,
-		UNIQUE (
-		`title`
-		)
-		) ENGINE = InnoDB";
+		UNIQUE ( `title` )
+		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Announcements table `$db`.`annunc`;";
+{echo "<tr><td>Success..........</td><td>Create Announcements table `$db`.`annunc`;</td></tr>";
 else{
-echo "<tr><td>Failure..........</td><td>Create Announcements table `$db`.`annunc`; ";
+echo "<tr><td>Failure..........</td><td>Create Announcements table `$db`.`annunc`; </td></tr>";
 }
 
 $sql1 = "CREATE TABLE `files` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-		`file` VARCHAR( 255 ) NOT NULL ,
-		`size` TEXT NOT NULL ,
+		`file` TEXT NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		UNIQUE (
-		`file`
-		)
-		) ENGINE = InnoDB";
+		`size` FLOAT( 12, 12 ) NOT NULL ,
+		`aps` INT NOT NULL ,
+		`gps` INT NOT NULL ,
+		`hash` VARCHAR( 255 ) NOT NULL
+		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Files table `$db`.`files`;";
+{echo "<tr><td>Success..........</td><td>Create Files table `$db`.`files`;</td></tr>";
 else{
-echo "<tr><td>Failure..........</td><td>Create Files table `$db`.`files`; ";
+echo "<tr><td>Failure..........</td><td>Create Files table `$db`.`files`;</td></tr> ";
 }
 
 
@@ -272,15 +267,15 @@ $sql1 = "CREATE TABLE `files_tmp` (
 		`user` VARCHAR ( 32 ) NOT NULL,
 		`notes` TEXT NOT NULL,
 		`title` VARCHAR ( 128 ) NOT NULL,
-		`size` FLOAT (12,23 ) NOT NULL ,
+		`size` FLOAT (12,12 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		UNIQUE ( `file` )
-		) ENGINE = $ENG";
+		`hash` VARCHAR ( 255 ) NOT NULL
+		) ENGINE = $ENG  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create tmp File table `$db`.`files`;";
+{echo "<tr><td>Success..........</td><td>Create tmp File table `$db`.`files`;</td></tr>";
 else{
-echo "<tr><td>Failure..........</td><td>Create tmp Files table `$db`.`files`; ";
+echo "<tr><td>Failure..........</td><td>Create tmp Files table `$db`.`files`;</td></tr> ";
 }
 	#========================================================================================================================#
 	#									Create WiFiDB user for WiFi and WiFi_st										   	     #

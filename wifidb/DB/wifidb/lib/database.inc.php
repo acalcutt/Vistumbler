@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 2",
-			"Last_Core_Edit" 	=> 	"2009-Apr-23",
+			"Last_Core_Edit" 	=> 	"2009-Apr-24",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.6", 
 										"apfetch"			=>	"2.5.0",
@@ -53,11 +53,14 @@ function pageheader($title)
 	<?php
 	mysql_select_db($db,$conn);
 	$sqls = "SELECT * FROM links ORDER BY ID ASC";
-	$result = mysql_query($sqls, $conn) or die(mysql_error());
-	while ($newArray = mysql_fetch_array($result))
+	$result = mysql_query($sqls, $conn);
+	if($result)
 	{
-		$testField = $newArray['links'];
-		echo "<p>$testField</p>";
+		while ($newArray = mysql_fetch_array($result))
+		{
+			$testField = $newArray['links'];
+			echo "<p>$testField</p>";
+		}
 	}
 }
 
@@ -76,7 +79,7 @@ function footer($filename = '')
 	</td>
 	</tr>
 	<tr>
-	<td bgcolor="#315573" height="23"><a href="<?php echo $root; ?>/img/moon.png"><img border="0" src="<?php echo $root; ?>/img/moon_tn.png"></a></td>
+	<td bgcolor="#315573" height="23"><a href="<?php echo "http://".$_SERVER['HTTP_HOST']."/".$root; ?>/img/moon.png"><img border="0" src="<?php echo "http://".$_SERVER['HTTP_HOST']."/".$root; ?>/img/moon_tn.png"></a></td>
 	<td bgcolor="#315573" width="0" align="center">
 	<?php
 	if (file_exists($filename)) {?>
@@ -595,7 +598,7 @@ class database
 									."`track` FLOAT NOT NULL ,"
 									."`date` VARCHAR( 10 ) NOT NULL , "
 									."`time` VARCHAR( 8 ) NOT NULL , "
-									."INDEX ( `id` ) ) CHARACTER SET = latin1";
+									."INDEX ( `id` ) ) ENGINE = 'InnoDB' DEFAULT CHARSET = 'utf8'";
 						mysql_query($sqlcgt, $conn);
 						echo "(2)Create Table [".$db_st."].{".$gps_table."}<br>		 => Added new GPS Table for ".$ssids."<br>";
 						$signal_exp = explode("-",$wifi[12]);
@@ -642,7 +645,7 @@ class database
 							$track = $gdata[$vs1_id]["track"];
 							
 							$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
-												   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
+															."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
 							if (mysql_query($sqlitgpsgp, $conn))
 							{
 								echo "(3)Insert into [".$db_st."].{".$gps_table."}<br>		 => Added GPS History to Table";

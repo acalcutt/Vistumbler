@@ -2,10 +2,11 @@
 include('../lib/database.inc.php');
 include('../lib/config.inc.php');
 pageheader("Import Page");
-?></td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
-			<h2>Import Access Points</h2>
+?>
+</td>
+	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+		<p align="center">
+		<h2>Import Access Points</h2>
 <?php
 
 session_start();
@@ -19,10 +20,10 @@ if(isset($_GET['func']))
 {
 	$func = '';
 }
-
+//Switchboard for import file or index form to upload file
 switch($func)
 {
-	case 'import':
+	case 'import': //Import file that has been uploaded
 		if (isset($_POST['token']))
 		{
 			if (isset($_SESSION['token']) && $_POST['token'] == $_SESSION['token'])
@@ -34,40 +35,36 @@ switch($func)
 				$tmp	=	$_FILES['file']['tmp_name'];
 				$filename	=	$_FILES['file']['name'];
 
-				$rand	=	rand();
+				$rand	=	rand(); //generate a random number to be added to the new filename so there isnot a chance of being a duplicate name.
 
-				$user = smart_quotes($user);
-
+				$user = filter_var($user, FILTER_SANITIZE_SPECIAL_CHARS);
+				$notes = filter_var($notes, FILTER_SANITIZE_SPECIAL_CHARS);
+				$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
+				
 				$uploaddir = getcwd()."/up/";
 				$uploadfile = $uploaddir.$rand.'_'.$filename;
 
 				$return  = file($tmp);
+				
+				if (!copy($tmp, $uploadfile))
+				{
+					echo "Failure to Move file to Upload Dir (/import/up/), check the folder permisions if you are using Linux.<BR>";
+					die();
+				}
 				$VS1Test = str_split($return[0], 12);
 				$file_e = explode('.',$filename);
 				$file_max = count($file_e);
-
+				
+				//What file are we tring to import, a VS1 or a GPX file?
 				if($file_e[$file_max-1] == 'gpx' )
 				{
-					if (!move_uploaded_file($tmp, $uploadfile))
-					{
-						echo "Failure to Move file to Upload Dir (/import/up/), check the folder permisions if you are using Linux.<BR>";
-						die();
-					}
-
 					echo "<h2>Importing GPX File</h2><h1>Imported By: ".$user."<BR></h1>";
 					echo "<h2>With Title: ".$title."</h2>";
-				#	echo $uploadfile;
 					$database = new database();
 					$database->import_gpx($uploadfile, $user, $notes, $title );
 				}
 				elseif($VS1Test[0] == "# Vistumbler" )
 				{
-					if (!move_uploaded_file($tmp, $uploadfile))
-					{
-						echo "Failure to Move file to Upload Dir (/import/up/), check the folder permisions if you are using Linux.<BR>";
-						footer($_SERVER['SCRIPT_FILENAME']);
-						die();
-					}
 
 					echo "<h2>Importing VS1 File</h2><h1>Imported By: ".$user."<BR></h1>";
 					echo "<h2>With Title: ".$title."</h2>";
@@ -76,9 +73,6 @@ switch($func)
 					//lets try a schedualed import table that has a cron job
 					//that runs and imports all of them at once into the DB 
 					//in order that they where uploaded
-					$user = filter_var($user, FILTER_SANITIZE_SPECIAL_CHARS);
-					$notes = filter_var($notes, FILTER_SANITIZE_SPECIAL_CHARS);
-					$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
 					
 					$sql = "INSERT INTO `files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`,  ) VALUES ( '', '$$uploadfile', '$date', '$user', '$notes', '$title', '$size')";
 					$result = mysqli_query($conn, $sql);
@@ -113,12 +107,11 @@ switch($func)
 		}
 		break;
 	#----------------------
-	default:
+	default: //index page that has form to upload file
 		if (isset($_GET['file']))
 		{
-		echo "Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <b>".$_GET['file']."</b><br>Copy and Paste the bolded text into the file location field to import it.<br>";
+		echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <b>".$_GET['file']."</b><br>Copy and Paste the bolded text into the file location field to import it.<br></h2>";
 		}
-
 		echo "<br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br>";
 		$token = md5(uniqid(rand(), true));
 		$_SESSION['token'] = $token;
