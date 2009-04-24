@@ -71,9 +71,25 @@ switch($func)
 
 					echo "<h2>Importing VS1 File</h2><h1>Imported By: ".$user."<BR></h1>";
 					echo "<h2>With Title: ".$title."</h2>";
-
+					
 					$database = new database();
-					$database->import_vs1($uploadfile, $user, $notes, $title );
+					//lets try a schedualed import table that has a cron job
+					//that runs and imports all of them at once into the DB 
+					//in order that they where uploaded
+					$user = filter_var($user, FILTER_SANITIZE_SPECIAL_CHARS);
+					$notes = filter_var($notes, FILTER_SANITIZE_SPECIAL_CHARS);
+					$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
+					
+					$sql = "INSERT INTO `files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`,  ) VALUES ( '', '$$uploadfile', '$date', '$user', '$notes', '$title', '$size')";
+					$result = mysqli_query($conn, $sql);
+					if($result)
+					{
+						echo "<h2>File has been inserted for Importing at a later time at a schedualed time.<br>This is a trial to see how well it will work.</h2>";
+					}else
+					{
+						echo "<h2>There was an error inserting file for schedualed import.</h2>".mysql_error($conn);
+					}
+				#	$database->import_vs1($uploadfile, $user, $notes, $title );
 				}else
 				{
 					echo '<H1>Hey! You have to upload a valid VS1 or GPX File <A HREF="javascript:history.go(-1)"> [Go Back]</A> and do it again the right way.</h1>';

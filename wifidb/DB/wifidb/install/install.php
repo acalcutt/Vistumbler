@@ -59,7 +59,7 @@ echo '<tr><TH colspan="2">Database Install</TH><tr>';
 	#									and remove any existing databases and replace with empty ones						 #
 	#========================================================================================================================#
 $conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
-
+$ENG = "InnoDB";
 #drop exisiting db if it is there and create a new one [this is the install after all / not the upgrade]
 $sqls0 =	"DROP DATABASE $wifi_st";
 $sqls1 =	"CREATE DATABASE $wifi_st";
@@ -265,6 +265,23 @@ else{
 echo "<tr><td>Failure..........</td><td>Create Files table `$db`.`files`; ";
 }
 
+
+$sql1 = "CREATE TABLE `files_tmp` (
+		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
+		`file` VARCHAR( 255 ) NOT NULL ,
+		`user` VARCHAR ( 32 ) NOT NULL,
+		`notes` TEXT NOT NULL,
+		`title` VARCHAR ( 128 ) NOT NULL,
+		`size` FLOAT (12,23 ) NOT NULL ,
+		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+		UNIQUE ( `file` )
+		) ENGINE = $ENG";
+
+if($insert)
+{echo "<tr><td>Success..........</td><td>Create tmp File table `$db`.`files`;";
+else{
+echo "<tr><td>Failure..........</td><td>Create tmp Files table `$db`.`files`; ";
+}
 	#========================================================================================================================#
 	#									Create WiFiDB user for WiFi and WiFi_st										   	     #
 	#========================================================================================================================#
