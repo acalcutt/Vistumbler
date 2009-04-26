@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Beta 4.1'
+$version = '9.3 Beta 4.2'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/04/26')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -870,7 +870,7 @@ Else
 	For $object In $colNIC
 		$adaptername = $object.NetConnectionID
 		$adapterdesc = $object.Description
-		$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
+		$menuid = GUICtrlCreateMenuItem($adaptername & ' (' & $adapterdesc & ')', $Interfaces)
 		_ArrayAdd($NetworkAdapters, $menuid)
 		GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
 		If $DefaultApapter = $adaptername Then
@@ -7886,7 +7886,8 @@ Func _InterfaceChanged()
 			GUICtrlSetState($NetworkAdapters[$uc], $GUI_UNCHECKED)
 		EndIf
 	Next
-	$DefaultApapter = GUICtrlRead(@GUI_CtrlId, 1)
+	$das = StringSplit(GUICtrlRead(@GUI_CtrlId, 1), ' (', 1)
+	$DefaultApapter = $das[1]
 	;If Using Native Wifi, Find DefaultAdapterId
 	If $UseNativeWifi = 1 Then
 		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
