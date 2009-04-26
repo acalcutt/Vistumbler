@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Beta 2.1'
+$version = '9.3 Beta 3'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/04/26')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -240,7 +240,6 @@ Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
 Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4F2")
-Dim $RefreshNetworks = IniRead($settings, 'Vistumbler', 'RefreshNetworks', 0)
 Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'RefreshTime', 2000)
 Dim $MapOpen = IniRead($settings, 'Vistumbler', 'MapOpen', 1)
 Dim $MapWEP = IniRead($settings, 'Vistumbler', 'MapWEP', 1)
@@ -493,7 +492,6 @@ Dim $Text_SpeedInKmh = IniRead($DefaultLanguagePath, 'GuiText', 'SpeedInKmh', 'S
 Dim $Text_TrackAngle = IniRead($DefaultLanguagePath, 'GuiText', 'TrackAngle', 'Track Angle')
 Dim $Text_Close = IniRead($DefaultLanguagePath, 'GuiText', 'Close', 'Close')
 Dim $Text_ConnectToWindowName = IniRead($DefaultLanguagePath, 'GuiText', 'ConnectToWindowName', 'Connect to a network')
-Dim $Text_RefreshNetworks = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', 'Auto Refresh Networks')
 Dim $Text_Start = IniRead($DefaultLanguagePath, 'GuiText', 'Start', 'Start')
 Dim $Text_Stop = IniRead($DefaultLanguagePath, 'GuiText', 'Stop', 'Stop')
 Dim $Text_ConnectToWindowTitle = IniRead($DefaultLanguagePath, 'GuiText', 'ConnectToWindowTitle', '"Connect to" window title:')
@@ -789,13 +787,6 @@ $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 $SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
-$RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
-If $UseNativeWifi = 1 Then
-	GUICtrlSetState(-1, $GUI_DISABLE)
-	$RefreshNetworks = 0
-Else
-	If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
-EndIf
 $AutoSaveGUI = GUICtrlCreateMenuItem($Text_AutoSave, $Options)
 If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
 $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $Options)
@@ -844,8 +835,9 @@ $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
 $ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(Filtered)', $Export)
 $ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(Filtered)', $Export)
 
+Dim $DefaultApapterDesc
 Dim $found_adapter = 0
-Dim $NetworkAdapters[2]
+Dim $NetworkAdapters[1]
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
 If $UseNativeWifi = 1 Then
 	$wlanhandle = _Wlan_OpenHandle()
@@ -872,28 +864,34 @@ If $UseNativeWifi = 1 Then
 	EndIf
 	If $menuid = 0 Then GUICtrlCreateMenuItem("No Adapters Found", $Interfaces)
 Else
-	$menuid = GUICtrlCreateMenuItem($Text_Default, $Interfaces)
-	$NetworkAdapters[1] = $menuid
-	GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
 	;Get network interfaces and add the to the interface menu
 	$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
 	$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
 	For $object In $colNIC
 		$adaptername = $object.NetConnectionID
+		$adapterdesc = $object.Description
 		$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
 		_ArrayAdd($NetworkAdapters, $menuid)
 		GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
 		If $DefaultApapter = $adaptername Then
+			$DefaultApapterDesc = $adapterdesc
 			$found_adapter = 1
 			GUICtrlSetState($menuid, $GUI_CHECKED)
 		EndIf
 	Next
-	$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
-	;If the old default network adapter is not found, set vistumbler to use the default adapter
-	If $found_adapter = 0 Then
-		$DefaultApapter = $Text_Default
-		GUICtrlSetState($NetworkAdapters[1], $GUI_CHECKED)
+	If $menuid <> 0 And $found_adapter = 0 Then
+		$DefaultApapter = $adaptername
+		$DefaultApapterDesc = $adapterdesc
+		GUICtrlSetState($menuid, $GUI_CHECKED)
 	EndIf
+	$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
+	;Find adapterid
+	$wlanhandle = _Wlan_OpenHandle()
+	$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+	$numofint = UBound($wlaninterfaces) - 1
+	For $antm = 0 To $numofint
+		If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
+	Next
 EndIf
 
 ConsoleWrite($DefaultApapterID & @CRLF)
@@ -981,7 +979,6 @@ GUICtrlSetOnEvent($SelectConnected, '_SelectConnectedAp')
 GUICtrlSetOnEvent($SortTree, '_SortTree')
 ;Optons Menu
 GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
-GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
 GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
 GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
@@ -1110,8 +1107,6 @@ While 1
 			_PlayMidiForActiveAPs()
 		EndIf
 		If $ScanResults > 0 Then $UpdateAutoSave = 1
-		;Refresh Networks If Enabled
-		If $RefreshNetworks = 1 Then _RefreshNetworks()
 	ElseIf $Scan = 0 And $UpdatedAPs <> 1 Then
 		$UpdatedAPs = 1
 		;Add GPS ID If AP Scanning is off, UseGPS is on, and Save GPS when no AP are active is on
@@ -1276,11 +1271,7 @@ Func _ScanAccessPoints()
 		$NewFoundAPs = 0
 		;Dump data from netsh
 		FileDelete($tempfile);delete old temp file
-		If $DefaultApapter = $Text_Default Then
-			_RunDOS($netsh & ' wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
-		Else
-			_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
-		EndIf
+		_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
 		$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
 		;Go through data and pull AP information
 		If $arrayadded = 1 Then
@@ -1339,8 +1330,9 @@ Func _ScanAccessPoints()
 			Next
 			;Play New AP sound if sounds are enabled
 			If $NewFoundAPs <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+			;Refresh Wireless networks
+			_Wlan_Scan($DefaultApapterID, $wlanhandle)
 			;Return number of active APs
-
 			Return ($FoundAPs)
 		Else
 			Return ('-1')
@@ -2118,21 +2110,10 @@ Func ScanToggle();Turns AP scanning on or off
 		GUICtrlSetState($ScanWifiGUI, $GUI_CHECKED)
 		GUICtrlSetData($ScanButton, $Text_StopScanAps)
 		$save_timer = TimerInit()
+		;Refresh Wireless networks
+		_Wlan_Scan($DefaultApapterID, $wlanhandle)
 	EndIf
 EndFunc   ;==>ScanToggle
-
-Func _AutoRefreshToggle()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRefreshToggle()') ;#Debug Display
-	If $RefreshNetworks = 1 Then
-		GUICtrlSetState($RefreshMenuButton, $GUI_UNCHECKED)
-		$RefreshNetworks = 0
-		WinClose($Text_ConnectToWindowName)
-	Else
-		GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
-		$RefreshNetworks = 1
-		$RefreshTimer = TimerInit()
-	EndIf
-EndFunc   ;==>_AutoRefreshToggle
 
 Func _ActiveApMidiToggle()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ActiveApMidiToggle()') ;#Debug Display
@@ -3533,33 +3514,6 @@ Func _AddToYourWDB();Send data to phils wireless ap database
 EndFunc   ;==>_AddToYourWDB
 
 ;-------------------------------------------------------------------------------------------------------------------------------
-;                                                       REFRESH NETWORK FUNCTION
-;-------------------------------------------------------------------------------------------------------------------------------
-
-Func _RefreshNetworks();Automates clicking the refresh button on the windows 'connect to' window
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RefreshNetworks()') ;#Debug Display
-	If WinActive($Vistumbler) Then
-		$ActivateVistumbler = 1
-	Else
-		$ActivateVistumbler = 0
-	EndIf
-	If $Scan = 1 And $RefreshNetworks = 1 Then
-		If TimerDiff($RefreshTimer) >= $RefreshTime Then
-			If WinExists($Text_ConnectToWindowName) = 0 Then
-				Run("RunDll32.exe van.dll,RunVAN")
-				$RefreshWindowOpened = 1
-			EndIf
-			ControlClick($Text_ConnectToWindowName, "", $ConnectToButton)
-			$RefreshTimer = TimerInit()
-		EndIf
-		If WinActive($Text_ConnectToWindowName) And BitOR($ActivateVistumbler, $RefreshWindowOpened) Then
-			WinActivate($Vistumbler)
-			$RefreshWindowOpened = 0
-		EndIf
-	EndIf
-EndFunc   ;==>_RefreshNetworks
-
-;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       HELP FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
@@ -4661,7 +4615,6 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "TextColor", $TextColor)
 	IniWrite($settings, "Vistumbler", "Language", $DefaultLanguage)
 	IniWrite($settings, "Vistumbler", "LanguageFile", $DefaultLanguageFile)
-	IniWrite($settings, "Vistumbler", "RefreshNetworks", $RefreshNetworks)
 	IniWrite($settings, "Vistumbler", "RefreshTime", $RefreshTime)
 	IniWrite($settings, "Vistumbler", "ConnectToButton", $ConnectToButton)
 	IniWrite($settings, "Vistumbler", 'MapOpen', $MapOpen)
@@ -4900,7 +4853,6 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'TrackAngle', $Text_TrackAngle)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Close', $Text_Close)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ConnectToWindowName', $Text_ConnectToWindowName)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', $Text_RefreshNetworks)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Start', $Text_Start)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Stop', $Text_Stop)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ConnectToWindowTitle', $Text_ConnectToWindowTitle)
@@ -6508,17 +6460,6 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_SortTime = GUICtrlCreateInput($SortTime, 30, 305, 115, 20)
 		GUICtrlCreateLabel($Text_Seconds, 150, 310, 505, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 340, 650, 125);Auto Refresh Group
-		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 360, 625, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_ConnectToWindowTitle, 30, 380, 615, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_CTWN = GUICtrlCreateInput($Text_ConnectToWindowName, 30, 395, 615, 20)
-		GUICtrlCreateLabel($Text_RefreshTime, 30, 420, 615, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 435, 115, 20)
-		GUICtrlCreateLabel($Text_Seconds, 150, 440, 505, 15)
 
 		;AutoKML Tab
 		$Tab_AutoKML = GUICtrlCreateTabItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI)
@@ -6943,7 +6884,6 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SpeedInKmh = IniRead($DefaultLanguagePath, 'GuiText', 'SpeedInKmh', 'Speed(km/h)')
 		$Text_TrackAngle = IniRead($DefaultLanguagePath, 'GuiText', 'TrackAngle', 'Track Angle')
 		$Text_Close = IniRead($DefaultLanguagePath, 'GuiText', 'Close', 'Track Close')
-		$Text_RefreshNetworks = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', 'Auto Refresh Networks')
 		$Text_Start = IniRead($DefaultLanguagePath, 'GuiText', 'Start', 'Start')
 		$Text_Stop = IniRead($DefaultLanguagePath, 'GuiText', 'Stop', 'Stop')
 		$Text_ConnectToWindowTitle = IniRead($DefaultLanguagePath, 'GuiText', 'ConnectToWindowTitle', '"Connect to" window title:')
@@ -7223,11 +7163,6 @@ Func _ApplySettingsGUI();Applys settings
 		$SortTime = GUICtrlRead($GUI_SortTime)
 		If GUICtrlRead($GUI_AutoSort) = 4 And $AutoSort = 1 Then _AutoSortToggle()
 		If GUICtrlRead($GUI_AutoSort) = 1 And $AutoSort = 0 Then _AutoSortToggle()
-		;Auto Refresh
-		If GUICtrlRead($GUI_RefreshNetworks) = 4 And $RefreshNetworks = 1 Then _AutoRefreshToggle()
-		If GUICtrlRead($GUI_RefreshNetworks) = 1 And $RefreshNetworks = 0 Then _AutoRefreshToggle()
-		$Text_ConnectToWindowName = GUICtrlRead($GUI_CTWN)
-		$RefreshTime = (GUICtrlRead($GUI_RefreshTime) * 1000)
 	EndIf
 	If $Apply_AutoKML = 1 Then
 		If GUICtrlRead($AutoSaveKML) = 4 And $AutoKML = 1 Then _AutoKmlToggle()
@@ -7930,7 +7865,25 @@ Func _InterfaceChanged()
 			$adaptername = $wlaninterfaces[$antm][1]
 			If $DefaultApapter = $adaptername Then $DefaultApapterID = $adapterid
 		Next
+	Else
+		Dim $DefaultApapterID = '', $DefaultApapterDesc = ''
+		$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+		$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
+		For $object In $colNIC
+			$adaptername = $object.NetConnectionID
+			$adapterdesc = $object.Description
+			If $DefaultApapter = $adaptername Then $DefaultApapterDesc = $adapterdesc
+		Next
+		;Find adapterid
+		$wlanhandle = _Wlan_OpenHandle()
+		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$numofint = UBound($wlaninterfaces) - 1
+		For $antm = 0 To $numofint
+			If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
+		Next
 	EndIf
+	
+	ConsoleWrite($DefaultApapter & '-' & $DefaultApapterDesc & '-' & $DefaultApapterID & @CRLF)
 EndFunc   ;==>_InterfaceChanged
 
 Func Log10($x)
