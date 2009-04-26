@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Beta 2'
+$version = '9.3 Beta 2.1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/04/19')
+$last_modified = _DateLocalFormat('2009/04/26')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1236,8 +1236,8 @@ Func _ScanAccessPoints()
 	If $UseNativeWifi = 1 Then
 		$FoundAPs = 0
 		$NewFoundAPs = 0
-		_Wlan_Scan($wlanhandle, $DefaultApapterID)
-		$aplist = _Wlan_GetAvailableNetworkList($wlanhandle, $DefaultApapterID, 2)
+		_Wlan_Scan($DefaultApapterID, $wlanhandle)
+		$aplist = _Wlan_GetAvailableNetworkList(2, $DefaultApapterID, $wlanhandle)
 		;_ArrayDisplay($aplist)
 		$aplistsize = UBound($aplist) - 1
 		For $add = 0 To $aplistsize
