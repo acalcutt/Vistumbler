@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Beta 4.2'
+$version = '9.3 Beta 4.3'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/04/26')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -3552,7 +3552,7 @@ EndFunc   ;==>_OpenVistumblerForum
 
 Func _OpenVistumblerWiki();Opens Vistumbler Wiki
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerWiki() ') ;#Debug Display
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://vistumbler.wiki.sourceforge.net')
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'https://apps.sourceforge.net/mediawiki/vistumbler/')
 EndFunc   ;==>_OpenVistumblerWiki
 
 ;-------------------------------------------------------------------------------------------------------------------------------
