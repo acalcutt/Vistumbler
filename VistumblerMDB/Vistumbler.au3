@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Beta 3'
+$version = '9.3 Beta 4'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/04/26')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -214,7 +214,6 @@ $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/Vistumb
 Dim $Direction[23];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
 Dim $Direction2[3]
 Dim $Direction3[3]
-
 ;Load-Settings-From-INI-File----------------------------
 Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
@@ -240,7 +239,8 @@ Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
 Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4F2")
-Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'RefreshTime', 2000)
+Dim $RefreshNetworks = IniRead($settings, 'Vistumbler', 'AutoRefreshNetworks', 1)
+Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'AutoRefreshTime', 1000)
 Dim $MapOpen = IniRead($settings, 'Vistumbler', 'MapOpen', 1)
 Dim $MapWEP = IniRead($settings, 'Vistumbler', 'MapWEP', 1)
 Dim $MapSec = IniRead($settings, 'Vistumbler', 'MapSec', 1)
@@ -495,7 +495,8 @@ Dim $Text_ConnectToWindowName = IniRead($DefaultLanguagePath, 'GuiText', 'Connec
 Dim $Text_Start = IniRead($DefaultLanguagePath, 'GuiText', 'Start', 'Start')
 Dim $Text_Stop = IniRead($DefaultLanguagePath, 'GuiText', 'Stop', 'Stop')
 Dim $Text_ConnectToWindowTitle = IniRead($DefaultLanguagePath, 'GuiText', 'ConnectToWindowTitle', '"Connect to" window title:')
-Dim $Text_RefreshTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshTime', 'Refresh time (in ms)')
+Dim $Text_RefreshNetworks = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', 'Auto Refresh Networks')
+Dim $Text_RefreshTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshTime', 'Refresh time')
 Dim $Text_SetColumnWidths = IniRead($DefaultLanguagePath, 'GuiText', 'SetColumnWidths', 'Set Column Widths')
 Dim $Text_Enable = IniRead($DefaultLanguagePath, 'GuiText', 'Enable', 'Enable')
 Dim $Text_Disable = IniRead($DefaultLanguagePath, 'GuiText', 'Disable', 'Disable')
@@ -787,6 +788,8 @@ $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 $SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
+$RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
+If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
 $AutoSaveGUI = GUICtrlCreateMenuItem($Text_AutoSave, $Options)
 If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
 $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $Options)
@@ -979,6 +982,7 @@ GUICtrlSetOnEvent($SelectConnected, '_SelectConnectedAp')
 GUICtrlSetOnEvent($SortTree, '_SortTree')
 ;Optons Menu
 GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
+GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
 GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
 GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
@@ -1107,6 +1111,8 @@ While 1
 			_PlayMidiForActiveAPs()
 		EndIf
 		If $ScanResults > 0 Then $UpdateAutoSave = 1
+		;Refresh Networks If Enabled
+		If $RefreshNetworks = 1 Then _RefreshNetworks()
 	ElseIf $Scan = 0 And $UpdatedAPs <> 1 Then
 		$UpdatedAPs = 1
 		;Add GPS ID If AP Scanning is off, UseGPS is on, and Save GPS when no AP are active is on
@@ -1231,7 +1237,6 @@ Func _ScanAccessPoints()
 	If $UseNativeWifi = 1 Then
 		$FoundAPs = 0
 		$NewFoundAPs = 0
-		_Wlan_Scan($DefaultApapterID, $wlanhandle)
 		$aplist = _Wlan_GetAvailableNetworkList(2, $DefaultApapterID, $wlanhandle)
 		;_ArrayDisplay($aplist)
 		$aplistsize = UBound($aplist) - 1
@@ -1330,8 +1335,6 @@ Func _ScanAccessPoints()
 			Next
 			;Play New AP sound if sounds are enabled
 			If $NewFoundAPs <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
-			;Refresh Wireless networks
-			_Wlan_Scan($DefaultApapterID, $wlanhandle)
 			;Return number of active APs
 			Return ($FoundAPs)
 		Else
@@ -2114,6 +2117,18 @@ Func ScanToggle();Turns AP scanning on or off
 		_Wlan_Scan($DefaultApapterID, $wlanhandle)
 	EndIf
 EndFunc   ;==>ScanToggle
+
+Func _AutoRefreshToggle()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRefreshToggle()') ;#Debug Display
+	If $RefreshNetworks = 1 Then
+		GUICtrlSetState($RefreshMenuButton, $GUI_UNCHECKED)
+		$RefreshNetworks = 0
+	Else
+		GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
+		$RefreshNetworks = 1
+		$RefreshTimer = TimerInit()
+	EndIf
+EndFunc   ;==>_AutoRefreshToggle
 
 Func _ActiveApMidiToggle()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ActiveApMidiToggle()') ;#Debug Display
@@ -3513,6 +3528,19 @@ Func _AddToYourWDB();Send data to phils wireless ap database
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 EndFunc   ;==>_AddToYourWDB
 
+;------------------------------------------------------------------------------------------------------------------------------- 	 ;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       REFRESH NETWORK FUNCTION
+;-------------------------------------------------------------------------------------------------------------------------------
+
+Func _RefreshNetworks() ;Refresh Wireless networks
+	If $Scan = 1 And $RefreshNetworks = 1 Then
+		If TimerDiff($RefreshTimer) >= $RefreshTime Then
+			_Wlan_Scan($DefaultApapterID, $wlanhandle)
+			$RefreshTimer = TimerInit()
+		EndIf
+	EndIf
+EndFunc   ;==>_RefreshNetworks
+
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       HELP FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4615,7 +4643,8 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "TextColor", $TextColor)
 	IniWrite($settings, "Vistumbler", "Language", $DefaultLanguage)
 	IniWrite($settings, "Vistumbler", "LanguageFile", $DefaultLanguageFile)
-	IniWrite($settings, "Vistumbler", "RefreshTime", $RefreshTime)
+	IniWrite($settings, "Vistumbler", "AutoRefreshNetworks", $RefreshNetworks)
+	IniWrite($settings, "Vistumbler", "AutoRefreshTime", $RefreshTime)
 	IniWrite($settings, "Vistumbler", "ConnectToButton", $ConnectToButton)
 	IniWrite($settings, "Vistumbler", 'MapOpen', $MapOpen)
 	IniWrite($settings, 'Vistumbler', 'MapWEP', $MapWEP)
@@ -4852,10 +4881,9 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeedInKmh', $Text_SpeedInKmh)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'TrackAngle', $Text_TrackAngle)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Close', $Text_Close)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ConnectToWindowName', $Text_ConnectToWindowName)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Start', $Text_Start)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Stop', $Text_Stop)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ConnectToWindowTitle', $Text_ConnectToWindowTitle)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', $Text_RefreshNetworks)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshTime', $Text_RefreshTime)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SetColumnWidths', $Text_SetColumnWidths)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Enable', $Text_Enable)
@@ -6458,7 +6486,13 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_AutoSortEvery, 30, 290, 625, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_SortTime = GUICtrlCreateInput($SortTime, 30, 305, 115, 20)
-		GUICtrlCreateLabel($Text_Seconds, 150, 310, 505, 15)
+		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 340, 650, 125);Auto Refresh Group
+		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 360, 625, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 30, 380, 615, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 395, 115, 20)
 		GUICtrlSetColor(-1, $TextColor)
 
 		;AutoKML Tab
@@ -6884,10 +6918,11 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SpeedInKmh = IniRead($DefaultLanguagePath, 'GuiText', 'SpeedInKmh', 'Speed(km/h)')
 		$Text_TrackAngle = IniRead($DefaultLanguagePath, 'GuiText', 'TrackAngle', 'Track Angle')
 		$Text_Close = IniRead($DefaultLanguagePath, 'GuiText', 'Close', 'Track Close')
+		$Text_RefreshNetworks = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', 'Auto Refresh Networks')
 		$Text_Start = IniRead($DefaultLanguagePath, 'GuiText', 'Start', 'Start')
 		$Text_Stop = IniRead($DefaultLanguagePath, 'GuiText', 'Stop', 'Stop')
 		$Text_ConnectToWindowTitle = IniRead($DefaultLanguagePath, 'GuiText', 'ConnectToWindowTitle', '"Connect to" window title:')
-		$Text_RefreshTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshTime', 'Refresh time (in ms)')
+		$Text_RefreshTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshTime', 'Refresh time')
 		$Text_SetColumnWidths = IniRead($DefaultLanguagePath, 'GuiText', 'SetColumnWidths', 'Set Column Widths')
 		$Text_Enable = IniRead($DefaultLanguagePath, 'GuiText', 'Enable', 'Enable')
 		$Text_Disable = IniRead($DefaultLanguagePath, 'GuiText', 'Disable', 'Disable')
@@ -7163,6 +7198,10 @@ Func _ApplySettingsGUI();Applys settings
 		$SortTime = GUICtrlRead($GUI_SortTime)
 		If GUICtrlRead($GUI_AutoSort) = 4 And $AutoSort = 1 Then _AutoSortToggle()
 		If GUICtrlRead($GUI_AutoSort) = 1 And $AutoSort = 0 Then _AutoSortToggle()
+		;Auto Refresh
+		If GUICtrlRead($GUI_RefreshNetworks) = 4 And $RefreshNetworks = 1 Then _AutoRefreshToggle()
+		If GUICtrlRead($GUI_RefreshNetworks) = 1 And $RefreshNetworks = 0 Then _AutoRefreshToggle()
+		$RefreshTime = (GUICtrlRead($GUI_RefreshTime) * 1000)
 	EndIf
 	If $Apply_AutoKML = 1 Then
 		If GUICtrlRead($AutoSaveKML) = 4 And $AutoKML = 1 Then _AutoKmlToggle()
