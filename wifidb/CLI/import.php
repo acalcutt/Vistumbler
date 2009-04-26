@@ -7,8 +7,12 @@
 # That will replace 'Import' in this example.
 #
 # To import the older Text files, you have to run them through the converter first.
-
-$lastedit="2009.04.24";
+#
+# Import.php is inteneded to be fully stand alone as in the file can move 
+# around and not need any other files to be followed ( Besides a valid config.inc.php file
+# for connecting to the Database backend ).
+#
+$lastedit="2009.04.26";
 $start="2008.06.21";
 $ver="1.5.1";
 
@@ -21,11 +25,10 @@ date_default_timezone_set('GMT+0'); //setting the time zone to GMT(Zulu) for int
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
 
-$TOTAL_START = date("H:i:s");
+$TOTAL_START = date("Y-m-d H:i:s");
 
 $log = 1;
 $debug = 0;
-
 
 $CLI_script = $argv[0];
 
@@ -146,7 +149,7 @@ foreach($file_a as $key => $file)
 	if($check == 1)
 	{
 		$uploadfile = $GLOBALS['wifidb'].'\import\up\\'.rand().'_'.$file;
-		$bencha[] = import_vs1($source, $user, $notes, $title);
+		import_vs1($source, $user, $notes, $title);
 		if (!copy($source, $uploadfile))
 		{
 			echo "Failure to Move file to Upload Dir (".$GLOBALS['wifidb']."\import\up\), check the folder permisions if you are using Linux.<BR>";
@@ -166,18 +169,7 @@ foreach($file_a as $key => $file)
 	}
 //	function  ( Source file , User that is importing, Notes for import, Title of Batch Import {will have "Batch: *title*" as title} )
 }
-$TOTAL_END = date("H:i:s");
-foreach($bencha as $ben)
-{
-	echo "FileName:	".$ben['name']."\n";
-	echo "Start:	".$ben['start']."\n";
-	echo "End:	".$ben['end']."\n";
-	echo "# of GPS:	".$ben['gdatacount']."\n";
-	echo "Total AP:	".$ben['total_ap']."\n";
-	echo "Total Import:	".$ben['imp']."\n";
-	echo "Total Update:	".$ben['up']."\n";
-	
-}
+$TOTAL_END = date("Y-m-d H:i:s");
 echo "\nTOTAL Running time::\n\nStart: ".$TOTAL_START."\nStop : ".$TOTAL_END."\n";
 
 
@@ -899,9 +891,16 @@ function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="U
 			echo "Error Inserting File (".$source.") into Table for later checking\n".$inserted[1];
 			if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
 			{
-				fwrite($GLOBALS['fileappend'], "Error Inserting File (".$source.") into Table for later checking\n".$inserted[1]."\r\n");
+				fwrite($GLOBALS['fileappend'], "Error Inserting File (".$source.") into Table for later checking\r\n".$inserted[1]."\r\n");
 			}
 			die();
+		}else
+		{
+			echo "Inserted File (".$source.") into Table for later checking\n";
+			if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
+			{
+				fwrite($GLOBALS['fileappend'], "Inserted File (".$source.") into Table for later checking\r\n");
+			}
 		}
 	}
 	mysql_close($conn);
