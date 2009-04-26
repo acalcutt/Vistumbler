@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3 Beta 4'
+$version = '9.3 Beta 4.1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
 $last_modified = _DateLocalFormat('2009/04/26')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -197,7 +197,7 @@ Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
-Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_CTWN, $GUI_RefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
+Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal
@@ -248,7 +248,6 @@ Dim $ShowTrack = IniRead($settings, 'Vistumbler', 'ShowTrack', 1)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 1)
 Dim $PhilsGraphURL = IniRead($settings, 'Vistumbler', 'PhilsGraphURL', 'http://www.randomintervals.com/wifi/?')
 Dim $PhilsWdbURL = IniRead($settings, 'Vistumbler', 'PhilsWdbURL', 'http://www.randomintervals.com/wifidb/import/?')
-Dim $ConnectToButton = IniRead($settings, 'Vistumbler', 'ConnectToButton', "Button4")
 Dim $UseLocalKmlImagesOnExport = IniRead($settings, 'Vistumbler', 'UseLocalKmlImagesOnExport', 0)
 Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
 Dim $SpeakSignal = IniRead($settings, 'Vistumbler', 'SpeakSignal', 0)
@@ -491,10 +490,8 @@ Dim $Text_SpeedInMPH = IniRead($DefaultLanguagePath, 'GuiText', 'SpeedInMPH', 'S
 Dim $Text_SpeedInKmh = IniRead($DefaultLanguagePath, 'GuiText', 'SpeedInKmh', 'Speed(km/h)')
 Dim $Text_TrackAngle = IniRead($DefaultLanguagePath, 'GuiText', 'TrackAngle', 'Track Angle')
 Dim $Text_Close = IniRead($DefaultLanguagePath, 'GuiText', 'Close', 'Close')
-Dim $Text_ConnectToWindowName = IniRead($DefaultLanguagePath, 'GuiText', 'ConnectToWindowName', 'Connect to a network')
 Dim $Text_Start = IniRead($DefaultLanguagePath, 'GuiText', 'Start', 'Start')
 Dim $Text_Stop = IniRead($DefaultLanguagePath, 'GuiText', 'Stop', 'Stop')
-Dim $Text_ConnectToWindowTitle = IniRead($DefaultLanguagePath, 'GuiText', 'ConnectToWindowTitle', '"Connect to" window title:')
 Dim $Text_RefreshNetworks = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', 'Auto Refresh Networks')
 Dim $Text_RefreshTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshTime', 'Refresh time')
 Dim $Text_SetColumnWidths = IniRead($DefaultLanguagePath, 'GuiText', 'SetColumnWidths', 'Set Column Widths')
@@ -2070,7 +2067,6 @@ EndFunc   ;==>_ExitVistumbler
 
 Func _Exit()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Exit()') ;#Debug Display
-	If WinExists($Text_ConnectToWindowName) Then WinClose($Text_ConnectToWindowName)
 	GUISetState(@SW_HIDE, $Vistumbler)
 	_AccessCloseConn($DB_OBJ)
 	_AccessCloseConn($ManuDB_OBJ)
@@ -2107,7 +2103,6 @@ Func ScanToggle();Turns AP scanning on or off
 		$Scan = 0
 		GUICtrlSetState($ScanWifiGUI, $GUI_UNCHECKED)
 		GUICtrlSetData($ScanButton, $Text_ScanAPs)
-		If WinExists($Text_ConnectToWindowName) Then WinClose($Text_ConnectToWindowName)
 	Else
 		$Scan = 1
 		GUICtrlSetState($ScanWifiGUI, $GUI_CHECKED)
@@ -4645,7 +4640,6 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "LanguageFile", $DefaultLanguageFile)
 	IniWrite($settings, "Vistumbler", "AutoRefreshNetworks", $RefreshNetworks)
 	IniWrite($settings, "Vistumbler", "AutoRefreshTime", $RefreshTime)
-	IniWrite($settings, "Vistumbler", "ConnectToButton", $ConnectToButton)
 	IniWrite($settings, "Vistumbler", 'MapOpen', $MapOpen)
 	IniWrite($settings, 'Vistumbler', 'MapWEP', $MapWEP)
 	IniWrite($settings, 'Vistumbler', 'MapSec', $MapSec)
@@ -6775,7 +6769,6 @@ Func _LanguageChanged();Sets language information in gui if language changed
 	GUICtrlSetData($SearchWord_Infrastructure_GUI, IniRead($languagefile, 'SearchWords', 'Infrastructure', 'Infrastructure'))
 	GUICtrlSetData($SearchWord_Adhoc_GUI, IniRead($languagefile, 'SearchWords', 'Adhoc', 'Adhoc'))
 	GUICtrlSetData($SearchWord_Adhoc_GUI, IniRead($languagefile, 'SearchWords', 'Adhoc', 'Adhoc'))
-	GUICtrlSetData($GUI_CTWN, IniRead($languagefile, 'GuiText', 'ConnectToWindowName', 'Connect to a network'))
 EndFunc   ;==>_LanguageChanged
 
 Func _CloseSettingsGUI();closes settings gui
@@ -6921,7 +6914,6 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_RefreshNetworks = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', 'Auto Refresh Networks')
 		$Text_Start = IniRead($DefaultLanguagePath, 'GuiText', 'Start', 'Start')
 		$Text_Stop = IniRead($DefaultLanguagePath, 'GuiText', 'Stop', 'Stop')
-		$Text_ConnectToWindowTitle = IniRead($DefaultLanguagePath, 'GuiText', 'ConnectToWindowTitle', '"Connect to" window title:')
 		$Text_RefreshTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshTime', 'Refresh time')
 		$Text_SetColumnWidths = IniRead($DefaultLanguagePath, 'GuiText', 'SetColumnWidths', 'Set Column Widths')
 		$Text_Enable = IniRead($DefaultLanguagePath, 'GuiText', 'Enable', 'Enable')
