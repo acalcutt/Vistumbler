@@ -25,7 +25,7 @@ switch($func)
 		
 		<form action="export.php?func=exp_user_all_kml" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
-		<tr><th colspan="2">Export All Acess Points for a User</th></tr>
+		<tr class="style4"><th colspan="2">Export All Acess Points for a User</th></tr>
 		<tr><td>Username</td><td>
 			<select name="user">
 			<?php
@@ -45,7 +45,7 @@ switch($func)
 		
 		<form action="export.php?func=exp_single_ap" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
-		<tr><th colspan="2">Export an Acess Point to KML</th></tr>
+		<tr class="style4"><th colspan="2">Export an Acess Point to KML</th></tr>
 		<tr><td>Username</td><td>
 			<select name="row">
 			<?php
@@ -64,13 +64,13 @@ switch($func)
 		</form>
 		
 		<table border="1" cellspacing="0" cellpadding="3">
-		<tr><th colspan="2">Export All Acess Points in the Database to KML</th></tr>
+		<tr class="style4"><th colspan="2">Export All Acess Points in the Database to KML</th></tr>
 		<tr><td colspan="2" align="center"><a class="links" href="export.php?func=exp_all_db_kml">Export All Access Points</a></td></tr>
 		</table>
 		<br>
 		<form action="export.php?func=exp_user_list" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
-		<tr><th colspan="2">Export a Users Import List to KML</th></tr>
+		<tr class="style4"><th colspan="2">Export a Users Import List to KML</th></tr>
 		<tr><td>Username</td><td>
 			<select name="row">
 			<?php
@@ -93,31 +93,32 @@ switch($func)
 	case "exp_user_all_kml":
 
 		$row = 0;
-		$database->exp_kml($export="exp_user_all_kml", $user, $row);
+		$database->exp_kml($export="exp_user_all_kml", $user,$row);
 		break;
 	#--------------------------
 	case "exp_all_db_kml": 
-		$database->exp_kml($export="exp_all_db_kml", $user, $row);
+
+		$database->exp_kml($export="exp_all_db_kml");
 		break;
 	#--------------------------
 	case "exp_single_ap":
 		$user="";
-		$database->exp_kml($export="exp_single_ap", $user, $row);
+		$database->exp_kml($export="exp_single_ap",$user,$row);
 		break;
 	#--------------------------
 	case "exp_user_list": 
 		$user ="";
-		$database->exp_kml($export="exp_user_list", $user, $row);
+		$database->exp_kml($export="exp_user_list",$user,$row);
+		break;
+	#--------------------------	\
+	case "exp_all_signal_gpx": 
+		$user ="";
+		$database->exp_kml($export="exp_all_signal_gpx",$user,$row);
 		break;
 	#--------------------------
 	case "exp_all_signal": 
 		$user ="";
-		$database->exp_kml($export="exp_all_signal", $user, $row);
-		break;
-	#--------------------------
-	case "exp_all_signal_gpx": 
-		$user ="";
-		$database->exp_gpx($export="exp_all_signal", $user, $row);
+		$database->exp_kml($export="exp_all_signal",$user,$row);
 		break;
 	#--------------------------
 	case NULL:

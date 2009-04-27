@@ -331,7 +331,8 @@ echo "<tr><td>Failure..........</td><td>Add Install date</td></tr>";}
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n$"."rebuild	=	0;\r\n"
 									."$"."debug	=	0;\r\n"
-									."$"."loglev	=	0;\r\n\r\n");
+									."$"."loglev	=	0;\r\n
+									."$"."log_\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr><td>Success..........</td><td>Add default debug values</td></tr>";}

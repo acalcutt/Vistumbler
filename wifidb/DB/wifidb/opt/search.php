@@ -14,7 +14,7 @@ pageheader("Search Page");
 								<TD WIDTH=84% VALIGN=TOP></TD>
 							</TR>
 							<TR>
-								<TD WIDTH=16%>
+								<TD class="style3" WIDTH=16%>
 									<P>SSID  <font size="2"><i>(Linksys)</i></font>: 
 									</P>
 								</TD>
@@ -23,7 +23,7 @@ pageheader("Search Page");
 								</TD>
 							</TR>
 							<TR>
-								<TD WIDTH=16% HEIGHT=35>
+								<TD class="style3" WIDTH=16% HEIGHT=35>
 									<P>MAC Address  <font size="2"><i>(00:11:22:33:44:55)</i></font>: 
 									</P>
 								</TD>
@@ -32,7 +32,7 @@ pageheader("Search Page");
 								</TD>
 							</TR>
 							<TR>
-								<TD WIDTH=16%>
+								<TD class="style3" WIDTH=16%>
 									<P>Radio Type  <font size="2"><i>(a/b/g/n)</i></font>: 
 									</P>
 								</TD>
@@ -41,7 +41,7 @@ pageheader("Search Page");
 								</TD>
 							</TR>
 							<TR>
-								<TD WIDTH=16%>
+								<TD class="style3" WIDTH=16%>
 									<P>Channel <font size="2"><i>(1/2/3/..)</i></font>: 
 									</P>
 								</TD>
@@ -50,7 +50,7 @@ pageheader("Search Page");
 								</TD>
 							</TR>
 							<TR>
-								<TD WIDTH=16%>
+								<TD class="style3" WIDTH=16%>
 									<P>Authentication <font size="2"><i>(WPA/WPA2/OPEN)</i></font>: 
 									</P>
 								</TD>
@@ -59,7 +59,7 @@ pageheader("Search Page");
 								</TD>
 							</TR>
 							<TR>
-								<TD WIDTH=16%>
+								<TD class="style3" WIDTH=16%>
 									<P>Encryption <font size="2"><i>(None/WEP/TKIP)</i></font>: 
 									</P>
 								</TD>

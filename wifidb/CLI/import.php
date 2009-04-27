@@ -15,7 +15,6 @@
 $lastedit="2009.04.26";
 $start="2008.06.21";
 $ver="1.5.1";
-
 $localtimezone = date("T");
 echo $localtimezone."\n";
 
@@ -148,7 +147,7 @@ foreach($file_a as $key => $file)
 	$check = check_file($source);
 	if($check == 1)
 	{
-		$uploadfile = $GLOBALS['wifidb'].'\import\up\\'.rand().'_'.$file;
+		$uploadfile = $GLOBALS['wifidb'].'.\import\up\\'.rand().'_'.$file;
 		import_vs1($source, $user, $notes, $title);
 		if (!copy($source, $uploadfile))
 		{

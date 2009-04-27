@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 2",
-			"Last_Core_Edit" 	=> 	"2009-Apr-24",
+			"Last_Core_Edit" 	=> 	"2009-Apr-26",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.6", 
 										"apfetch"			=>	"2.5.0",
@@ -22,20 +22,79 @@ $ver = array(
 			"Misc"				=>	array(
 										"pageheader"		=>  "1.1",
 										"footer"			=>	"1.2",
+										"breadcrumbs"		=>	"1.0",
 										"smart_quotes"		=> 	"1.0",
 										"smart"				=> 	"1.0",
 										"Manufactures-list"	=> 	"2.0",
-										"Languages-List"	=>	"1.0"
+										"Languages-List"	=>	"1.0",
+										"log_write"			=>	"1.0",
+										"verbose"			=>	"1.0"
 										),
 			);
 
+function log_write($message, $log_level, $log_interval)
+{
+	if($message == ''){echo "Logd was told to write a blank string, this has NOT been logged.\n and will not be allowed\n"; continue;}
+	$message = date("Y-m-d H:i:s.").microtime(true)."   ->    ".$message."\r\n";
+
+	include('config.inc.php');
+
+	if($log_interval==0)
+	{
+		$filename = $GLOBALS['wifidb'].'\log\wifidbd_log.log';
+		if(!is_file($filename))
+		{
+			fopen($filename, "w");
+		}
+		$fileappend = fopen($filename, "a");
+		if($log_level == 2)
+		{
+			$message = $message."\n==Details==\n".$detail."\n===========\n";
+		}
+		$write_message = fwrite($fileappend, $message);
+		
+		if(!$write_message){die("Could not message to the file, thats not good...");}
+		
+	}elseif($log_interval==1)
+	{
+		$date = date("y-m-d");
+		$filename = $GLOBALS['wifidb'].'\log\wifidbd_'.$date.'_log.log';
+		if(!is_file($filename))
+		{
+			fopen($filename, "w");
+		}
+		$fileappend = fopen($filename, "a");
+		if($log_level == 2)
+		{
+			$message = $message."\n==Details==\n".$detail."\n===========\n";
+		}
+		$write_message = fwrite($fileappend, $message);
+		if(!$write_message){die("Could not message to the file, thats not good...");}
+	}
+}
+
+function verbose($message = "", $level = 0)
+{
+	if($message == ''){echo "Verbose was told to write a blank string"; continue;}
+	$message = date("Y-m-d H:i:s.").microtime(true)."   ->    ".$message;
+	if($level==1)
+	{
+		echo $message."\n";
+	}
+}
+
+function breadcrumb()
+{
+
+}
 
 function pageheader($title)
 {
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
+	$hosturl =  "http://".$_SERVER['HTTP_HOST']."/".$root;
 	?>
-	<link rel="stylesheet" href="<?php echo "http://".$_SERVER['HTTP_HOST']."/".$root;?>/css/site4.0.css">
+	<link rel="stylesheet" href="<?php echo $hosturl;?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="85%" cellspacing="5" cellpadding="2">
@@ -44,24 +103,21 @@ function pageheader($title)
 			<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
 			Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']["wifidb"]; ?></font>
 			<font color="#FFFFFF" size="2">
-				<a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
+				<?php breadcrumb(); ?>
 			</font></b>
 			</td>
 		</tr>
 		<tr>
 	<td width="15%" bgcolor="#304D80" valign="top">
+	<p><a class="links" href="/wifidb/">Main Page</a></p>
+	<p><a class="links" href="/wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a></p>
+	<p><a class="links" href="/wifidb/import/">Import</a></p>
+	<p><a class="links" href="/wifidb/opt/export.php?func=index">Export</a></p>
+	<p><a class="links" href="/wifidb/opt/search.php">Search</a></p>
+	<p><a class="links" href="/wifidb/opt/userstats.php?func=allusers">View All Users</a></p>
+	<p><a class="links" href="/wifidb/ver.php">WiFiDB Version</a></p>
+	<p><a class="links" href="/wifidb/down.php">Download WiFiDB</a></p>
 	<?php
-	mysql_select_db($db,$conn);
-	$sqls = "SELECT * FROM links ORDER BY ID ASC";
-	$result = mysql_query($sqls, $conn);
-	if($result)
-	{
-		while ($newArray = mysql_fetch_array($result))
-		{
-			$testField = $newArray['links'];
-			echo "<p>$testField</p>";
-		}
-	}
 }
 
 #========================================================================================================================#
@@ -155,6 +211,108 @@ function smart($text="")
 
 class database
 {
+	function gen_gps($retexp = array(), $gpscount = 0)
+	{
+		$ret_len = count($retexp);
+		$date_exp = explode("-",$retexp[4]);
+
+		if(strlen($date_exp[0]) <= 2)
+		{
+			$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
+		}else
+		{
+			$gpsdate = $retexp[4];
+		}
+		switch ($ret_len)
+		{
+			case 6:
+				# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)
+				$gdata = array(
+											"lat"=>$retexp[1],
+											"long"=>$retexp[2],
+											"sats"=>$retexp[3],
+											"hdp"=>'0.0',
+											"alt"=>'0.0',
+											"geo"=>'-0.0',
+											"kmh"=>'0.0',
+											"mph"=>'0.0',
+											"track"=>'0.0',
+											"date"=>$gpsdate,
+											"time"=>$retexp[5]
+											);
+				$gpscount++;
+				break;
+			case 12:
+				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
+				$gdata = array(
+											"lat"=>$retexp[1],
+											"long"=>$retexp[2],
+											"sats"=>$retexp[3],
+											"hdp"=>$retexp[4],
+											"alt"=>$retexp[5],
+											"geo"=>$retexp[6],
+											"kmh"=>$retexp[7],
+											"mph"=>$retexp[8],
+											"track"=>$retexp[9],
+											"date"=>$gpsdate,
+											"time"=>$retexp[11]
+											);
+				$gpscount++;
+				break;
+		}
+		$list = array(0=>$gdata, 1=> $gpscount);
+		return $list;
+	}
+	function check_file($file = '')
+	{
+		include($GLOBALS['wifidb'].'/lib/config.inc.php');
+		
+		$hash = hash_file('md5', $file);
+		$size = (filesize($file)/1024);
+		
+		$file_exp = explode("/", $file);
+		$file_exp_seg = count($file_exp);
+		$file1 = $file_exp[$file_exp_seg-1];
+		
+		mysql_select_db($db,$conn);
+		$fileq = mysql_query("SELECT * FROM `files` WHERE `file` LIKE '$file1'", $conn);
+		$fileqq = mysql_fetch_array($fileq);
+		
+		if( $hash != $fileqq['hash'] )
+		{
+			return 1;
+		}else
+		{
+			return 0;
+		}
+	}
+
+
+	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled")
+	{
+		include($GLOBALS['wifidb'].'/lib/config.inc.php');
+		
+		$size = (filesize($file)/1024);
+		$hash = hash_file('md5', $file);
+		$date = date("y-m-d H:i:s");
+		mysql_select_db($db,$conn);
+		
+		$file_exp = explode("/", $file);
+		$file_exp_seg = count($file_exp);
+		$file1 = $file_exp[$file_exp_seg-1];
+		
+		$sql = "INSERT INTO `wifi`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash` , `user` , `notes` , `title`	)
+									VALUES ( NULL , '$file1', '$size', 'CURRENT_TIMESTAMP' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' )";
+		if(mysql_query($sql, $conn))
+		{
+			return 1;
+		}else
+		{
+			$A = array( 0=>'0', 'error' => mysql_error($conn));
+			return $A;
+		}
+	}
+
 	#========================================================================================================================#
 	#						Grab the Manuf for a given MAC, return Unknown Manuf if not found								 #
 	#========================================================================================================================#
@@ -204,7 +362,7 @@ class database
 	#													VS1 File import													     #
 	#========================================================================================================================#
 	
-	function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED" )
+	function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED")
 	{
 		$start = microtime(true);
 		$times=date('Y-m-d H:i:s');
@@ -740,6 +898,8 @@ class database
 				 .'<tr><td> Total APs:</td><td>'.$total_ap.'</td></tr>'
 				 .'</table>';
 		}
+		$QA = array('aps'=>$total_ap,'gps'=>$gdatacount);
+	 return $QA;
 	}
 	
 	
@@ -871,10 +1031,8 @@ class database
 			$gps_t 	= $lat1."".$long1."".$date1."".$time1;
 			$gps_t = $gps_t+0;
 			$test	 = $test+0;
-		#	echo $test."<BR>".$gps_t."<BR>";
-			$testing = strcasecmp($gps_t,$test);
-		#	echo $testing."<BR>";
-			if ($testing===0)
+			
+			if ($gps_t===$test)
 			{
 				if ($GLOBALS["debug"]  == 1 ) {
 					echo  "  SAME<br>";
@@ -953,8 +1111,9 @@ class database
 		?>
 		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>">Export this AP to KML</a></td></tr>
 		</table>
+		<br>
 		<TABLE WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0>
-		<tr><td colspan="10" class="style4">Signal History</td></tr>
+		<tr class="style4"><th colspan="10">Signal History</th></tr>
 		<tr class="style4"><th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th><th>Plot</th></tr>
 		<?php
 		$start1 = microtime(true);
@@ -1041,11 +1200,12 @@ class database
 		$end1 = microtime(true);
 		?>
 		</table>
+		<br>
 		<TABLE WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<?php
 		#END GPSFETCH FUNC
 		?>
-		<tr><td align="center" colspan="5" class="style4">Associated Lists</td></tr>
+		<tr class="style4"><th colspan="5">Associated Lists</th></tr>
 		<tr class="style4"><th>ID</th><th>User</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
 		<?php
 		$start3 = microtime(true);

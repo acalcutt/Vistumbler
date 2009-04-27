@@ -49,6 +49,8 @@ pageheader("Version Page");
 			<LI>Added a comment tag to <i>`line 2`</i>of the KML exports to tell if it was a Full DB/Users list/Single AP/All Users APs/All Signal for AP</LI>
 			<LI>Made the tables that hold the page one table so when there is a skeew in the page doesnt get deformed like it did before. (I'm not a GUI person)</LI>
 			<LI>Fixed some formating issues with the install/upgrade/patching paths.</LI>
+			<LI>For Security reasons, temparaly will be using hard links for the side links, untill furtur notice.</LI>
+			<LI>Starting to create a 'daemon' of sorts. This is optional uppon install, and changeable afterwards in the config file.</LI>
 		</OL>
 	</td></tr>
 </table>

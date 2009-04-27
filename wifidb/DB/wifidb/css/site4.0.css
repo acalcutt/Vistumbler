@@ -21,6 +21,7 @@ body {
 }
 .style1 {
 	font-family: "Courier New", Courier, monospace;
+	background-color: #477DA9;
 }
   
 .style2 {
@@ -30,8 +31,22 @@ body {
 .style3 {
 
 	border: 1;
+	background-color: #477DA9;
 }
 .style4
+{
+	text-align: center;
+	border-width: 1; 
+	background-color: #477DA9;
+}
+.style4.ha
+{
+	border-width: 1px;
+	padding: 1px;
+	border-style: inset;
+	background-color: #477DA9;
+}
+.style4.td
 {
 	text-align: center;
 	border-width: 1; 

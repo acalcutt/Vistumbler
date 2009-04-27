@@ -1,6 +1,7 @@
 <?php
 include('../lib/database.inc.php');
 include('../lib/config.inc.php');
+session_start();
 pageheader("Import Page");
 ?>
 </td>
@@ -9,7 +10,6 @@ pageheader("Import Page");
 		<h2>Import Access Points</h2>
 <?php
 
-session_start();
 $domain = $_SERVER['HTTP_HOST'];
 if ($domain === "rihq.randomintervals.com" or $domain === "lanncafe.dynu.com" or $domain === "192.168.3.23")
 {echo '<h2>This is my Development server </h2><H4>(which is unstable because I am always working in it)</H4><H2>Go on over to my <i><a href="http://www.randomintervals.com/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
@@ -28,29 +28,31 @@ switch($func)
 		{
 			if (isset($_SESSION['token']) && $_POST['token'] == $_SESSION['token'])
 			{
+				echo $_POST["file"]."<br>";
 				if($_POST["user"] !== ''){$user = addslashes($_POST["user"]);}else{$user="Unknown";}
 				if($_POST["notes"] !== ''){$notes = addslashes($_POST["notes"]);}else{$notes="No Notes";}
 				if($_POST['title'] !== ''){$title = addslashes($_POST['title']);}else{$title="Untitled";}
-
+				
 				$tmp	=	$_FILES['file']['tmp_name'];
 				$filename	=	$_FILES['file']['name'];
-
+				
 				$rand	=	rand(); //generate a random number to be added to the new filename so there isnot a chance of being a duplicate name.
-
+				
 				$user = filter_var($user, FILTER_SANITIZE_SPECIAL_CHARS);
 				$notes = filter_var($notes, FILTER_SANITIZE_SPECIAL_CHARS);
 				$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
 				
-				$uploaddir = getcwd()."/up/";
-				$uploadfile = $uploaddir.$rand.'_'.$filename;
-
-				$return  = file($tmp);
-				
+				$uploadfile = getcwd().'/up/'.$rand.'_'.$filename;
 				if (!copy($tmp, $uploadfile))
 				{
 					echo "Failure to Move file to Upload Dir (/import/up/), check the folder permisions if you are using Linux.<BR>";
 					die();
 				}
+				
+				$hash = hash_file('md5', $uploadfile);
+				$size = filesize($uploadfile)/1024;
+				$return  = file($tmp);
+				
 				$VS1Test = str_split($return[0], 12);
 				$file_e = explode('.',$filename);
 				$file_max = count($file_e);
@@ -65,7 +67,6 @@ switch($func)
 				}
 				elseif($VS1Test[0] == "# Vistumbler" )
 				{
-
 					echo "<h2>Importing VS1 File</h2><h1>Imported By: ".$user."<BR></h1>";
 					echo "<h2>With Title: ".$title."</h2>";
 					
@@ -73,9 +74,10 @@ switch($func)
 					//lets try a schedualed import table that has a cron job
 					//that runs and imports all of them at once into the DB 
 					//in order that they where uploaded
-					
-					$sql = "INSERT INTO `files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`,  ) VALUES ( '', '$$uploadfile', '$date', '$user', '$notes', '$title', '$size')";
-					$result = mysqli_query($conn, $sql);
+					$imp_file = $rand.'_'.$filename;
+					$date = date("y-m-d H:i:s");
+					$sql = "INSERT INTO `$db`.`files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) VALUES ( '', '$imp_file', '$date', '$user', '$notes', '$title', '$size', '$hash')";
+					$result = mysql_query( $sql , $conn);
 					if($result)
 					{
 						echo "<h2>File has been inserted for Importing at a later time at a schedualed time.<br>This is a trial to see how well it will work.</h2>";
