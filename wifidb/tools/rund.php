@@ -1,21 +1,20 @@
 <?php
-$filename = "/var/run/wifidbd.pid";
-$CLI_script = $argv[0];
+global $pid_file;
+$pid_file = "/var/run/wifidbd.pid";
+if($_SERVER['OS'] == "Windows_NT"){die("The Daemon will only run on a Linux based OS, go get something better then windows");}
 
 if(isset($argv[1])) //parse WiFiDB argument to get value
 {
-	$cmd_exp = explode("=",$argv[1]);
-	$cmd = $cmd_exp[1];
-
-	switch ($cmd)
+	switch ($argv[1])
 	{
 		case "restart" :
-			if(file_exists($filename))
+			if(file_exists($pid_file))
 			{
 				stop();
 				start();
 			}else
 			{
+				echo "WiFiDB Daemon was not running..\n";
 				start();
 			}
 			break;
@@ -30,15 +29,15 @@ if(isset($argv[1])) //parse WiFiDB argument to get value
 	}
 }else
 {
-	echo "Ypu need to specify weather you want to start/restart/stop the WiFiDB Daemon\n";
+	echo "You need to specify whether you want to start/restart/stop the WiFiDB Daemon\n";
 }
+
+
 
 function start()
 {
-	$filename = "/var/run/wifidbd.pid";
-	require 'config.inc.php';
 	echo "Starting WiFiDB Daemon..\n";
-	$command = "php ".$wifidb_tools."/wifidbd.php&";
+	$command = "php ".$wifidb_tools."/daemon/wifidbd.php&";
 	echo $command."\n";
 	$start = popen($command, 'r');
 	if($start)
@@ -52,17 +51,15 @@ function start()
 
 function stop()
 {
-	$filename = "/var/run/wifidbd.pid";
-	require 'config.inc.php';
-	if(file_exists($filename))
+	if(file_exists($GLOBALS['pid_file']))
 	{
-		echo $filename."\n";
-		$pidfile = file($filename);
+		echo $GLOBALS['pid_file']."\n";
+		$pidfile = file($$GLOBALS['pid_file']);
 		echo $pidfile[0]."\n";
 		$stop = popen("kill -9 ".$pidfile[0], 'r');
 		if(!$stop)
 		{echo "Error stoping the WiFiDB Daemon..\n";}
-		else{unlink($filename);}
+		else{unlink($GLOBALS['pid_file']);}
 	}else
 	{
 		echo "WiFiDB Daemon was not running..\n";
