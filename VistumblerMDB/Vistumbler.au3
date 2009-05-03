@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.3'
+$version = '9.4 Beta 1'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/04/27')
+$last_modified = _DateLocalFormat('2009/05/03')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -34,6 +34,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include <GDIPlus.au3>
 #include <Date.au3>
 #include <GuiButton.au3>
+#include <Misc.au3>
 #include "UDFs\CommMG.au3"
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
@@ -6104,13 +6105,16 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$Browse3 = GUICtrlCreateButton($Text_Browse, 556, 171, 97, 20, 0)
 		GUICtrlCreateLabel($Text_BackgroundColor, 31, 196, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 31, 211, 300, 21)
+		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 31, 211, 195, 21)
+		$cbrowse1 = GUICtrlCreateButton($Text_Browse, 235, 211, 97, 20, 0)
 		GUICtrlCreateLabel($Text_ControlColor, 353, 196, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_CBKColor = GUICtrlCreateInput(StringReplace($ControlBackgroundColor, '0x', ''), 353, 211, 300, 21)
+		$GUI_CBKColor = GUICtrlCreateInput(StringReplace($ControlBackgroundColor, '0x', ''), 353, 211, 195, 21)
+		$cbrowse2 = GUICtrlCreateButton($Text_Browse, 556, 211, 97, 20, 0)
 		GUICtrlCreateLabel($Text_BgFontColor, 31, 236, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_TextColor = GUICtrlCreateInput(StringReplace($TextColor, '0x', ''), 31, 251, 300, 21)
+		$GUI_TextColor = GUICtrlCreateInput(StringReplace($TextColor, '0x', ''), 31, 251, 195, 21)
+		$cbrowse3 = GUICtrlCreateButton($Text_Browse, 235, 251, 97, 20, 0)
 		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 236, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 251, 300, 21)
@@ -6665,6 +6669,10 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetOnEvent($browse1, '_BrowseSave')
 		GUICtrlSetOnEvent($Browse2, '_BrowseAutoSave')
 		GUICtrlSetOnEvent($Browse3, '_BrowseKmlSave')
+		
+		GUICtrlSetOnEvent($cbrowse1, '_ColorBrowse1')
+		GUICtrlSetOnEvent($cbrowse2, '_ColorBrowse2')
+		GUICtrlSetOnEvent($cbrowse3, '_ColorBrowse3')
 
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseSettingsGUI')
 		GUICtrlSetOnEvent($GUI_Set_Can, '_CloseSettingsGUI')
@@ -6702,6 +6710,21 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUISetState(@SW_SHOW)
 	EndIf
 EndFunc   ;==>_SettingsGUI
+
+Func _ColorBrowse1()
+	$color = _ChooseColor(2, $BackgroundColor, 2, $SetMisc)
+	If $color <> -1 Then GUICtrlSetData($GUI_BKColor, StringReplace($color, "0x", ""))
+EndFunc   ;==>_ColorBrowse1
+
+Func _ColorBrowse2()
+	$color = _ChooseColor(2, $ControlBackgroundColor, 2, $SetMisc)
+	If $color <> -1 Then GUICtrlSetData($GUI_CBKColor, StringReplace($color, "0x", ""))
+EndFunc   ;==>_ColorBrowse2
+
+Func _ColorBrowse3()
+	$color = _ChooseColor(2, $TextColor, 2, $SetMisc)
+	If $color <> -1 Then GUICtrlSetData($GUI_TextColor, StringReplace($color, "0x", ""))
+EndFunc   ;==>_ColorBrowse3
 
 Func _BrowseSave()
 	$folder = FileSelectFolder($Text_VistumblerSaveDirectory, '', 1, GUICtrlRead($GUI_Set_SaveDir))
