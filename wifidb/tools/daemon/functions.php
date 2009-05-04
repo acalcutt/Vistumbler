@@ -10,8 +10,8 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 	if($log_interval==0)
 	{
 		$cidir = getcwd();
-		$filename = '/CLI/log/wifidbd_log.log';
-		if(!is_file($filename))
+		$filename = $GLOBALS['wifidb_tools'].'/log/wifidbd_log.log';
+		if(!file_exists($filename))
 		{
 			fopen($filename, "w");
 		}
@@ -26,8 +26,8 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 	}elseif($log_interval==1)
 	{
 		$cidir = getcwd();
-		$filename = '/CLI/log/wifidbd_'.$date.'_log.log';
-		if(!is_file($filename))
+		$filename = $GLOBALS['wifidb_tools'].'/log/wifidbd_'.$date.'_log.log';
+		if(!file_exists($filename))
 		{
 			fopen($filename, "w");
 		}
@@ -40,12 +40,13 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 		$write_message = fwrite($fileappend, $message);
 		if(!$write_message){die("Could not message to the file, thats not good...");}
 	}
+	fclose($fileappend);
 }
 
 	function check_file($file = '')
 	{
 		include($GLOBALS['wifidb_install'].'/lib/config.inc.php');
-		$file = $GLOBALS['wifidb_install'].'/import/up/'.$file;
+		$file1 = $GLOBALS['wifidb_install'].'/import/up/'.$file;
 		$hash = hash_file('md5', $file);
 		$size = (filesize($file)/1024);
 		
