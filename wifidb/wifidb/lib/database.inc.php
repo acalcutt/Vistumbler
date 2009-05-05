@@ -92,9 +92,8 @@ function pageheader($title)
 {
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
-	$hosturl =  $root;
 	?>
-	<link rel="stylesheet" href="<?php echo $hosturl;?>/css/site4.0.css">
+	<link rel="stylesheet" href="<?php echo $root;?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="85%" cellspacing="5" cellpadding="2">
@@ -209,8 +208,21 @@ function smart($text="")
 	return $text;
 }
 
+function dos_filesize($fn) 
+{
+	if (is_file($fn))
+		return exec('FOR %A IN ("'.$fn.'") DO @ECHO %~zA');
+	else
+		return '0';
+}
 
-
+function format_size($size, $round = 2)
+{
+	//Size must be bytes!
+	$sizes = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+	for ($i=0; $size > 1024 && $i < count($sizes) - 1; $i++) $size /= 1024;
+	return round($size,$round).$sizes[$i];
+}
 class database
 {
 	function gen_gps($retexp = array(), $gpscount = 0)

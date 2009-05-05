@@ -28,7 +28,6 @@ switch($func)
 		{
 			if (isset($_SESSION['token']) && $_POST['token'] == $_SESSION['token'])
 			{
-				echo $_POST["file"]."<br>";
 				if($_POST["user"] !== ''){$user = addslashes($_POST["user"]);}else{$user="Unknown";}
 				if($_POST["notes"] !== ''){$notes = addslashes($_POST["notes"]);}else{$notes="No Notes";}
 				if($_POST['title'] !== ''){$title = addslashes($_POST['title']);}else{$title="Untitled";}
@@ -50,7 +49,9 @@ switch($func)
 				}
 				
 				$hash = hash_file('md5', $uploadfile);
-				$size = filesize($uploadfile)/1024;
+
+				$size1 = format_size(dos_filesize($uploadfile));
+								
 				$return  = file($tmp);
 				
 				$VS1Test = str_split($return[0], 12);
@@ -78,7 +79,7 @@ switch($func)
 						//in order that they where uploaded
 						$imp_file = $rand.'_'.$filename;
 						$date = date("y-m-d H:i:s");
-						$sql = "INSERT INTO `$db`.`files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) VALUES ( '', '$imp_file', '$date', '$user', '$notes', '$title', '$size', '$hash')";
+						$sql = "INSERT INTO `$db`.`files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) VALUES ( '', '$imp_file', '$date', '$user', '$notes', '$title', '$size1', '$hash')";
 						$result = mysql_query( $sql , $conn);
 						if($result)
 						{

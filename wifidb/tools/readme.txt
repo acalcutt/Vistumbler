@@ -65,11 +65,13 @@ VERSION HISTORY
 ~~~~~~~~~~~~
 Initial release, just scheduled imports.
 ==============================
+
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 1.1
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
+Windows capable, I still wouldn't recommend it, but it works. Although it has a cmd window of its own, so to stay running it needs to stay open.
 Better intergration with scheduling.php, added in Current AP, Importing? (Yes/No), Current AP/Total APs.
 ==============================
 

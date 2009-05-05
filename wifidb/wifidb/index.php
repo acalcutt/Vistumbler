@@ -8,7 +8,7 @@ if(file_exists('lib/config.inc.php'))
 }
 include('lib/database.inc.php');
 pageheader("Main Page");
-
+$usersa =  array();
 mysql_select_db($db, $conn);
 $sql = "SELECT `size` FROM `settings` WHERE `table` LIKE 'wifi0'";
 $result = mysql_query($sql, $conn) or die(mysql_error());
@@ -50,7 +50,8 @@ mysql_close($conn);
 $usersa = array_unique($usersa);
 $usercount = count($usersa);
 
-if ($usercount == NULL){$lastuser['username'] = "No one has imported any APs yet.";}
+if ($usercount == NULL){$lastuser['username'] = "No imports have finished yet.";}
+if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
 ?>
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">

@@ -23,7 +23,7 @@ pageheader("Version Page");
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-04</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-05</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -36,7 +36,7 @@ pageheader("Version Page");
 			<LI>Had to alter SQL statement for Total APs in the Main Stats Page. This is because I have added the next Import run as an element in the `settings` table.</LI>
 			<LI>Main Stats Page Last Import list link didn't have a row id in the URL.</LI>
 			<LI>The Corrupted dates on GPS cords was, I stupidly moved the Date conversion check outside the GPS array creation, which is dependent on the number of segements returned for the GPS in the VS1 file, so for the newer VS1 file that has 12 segements it was grabing the wrong data.</LI>
-			
+			<LI>Fixed an issue where on windows based systems the file size wouldnt be correct.</LI>
 		</OL>
 	</td></tr>
 </table>

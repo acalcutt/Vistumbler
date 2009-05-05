@@ -145,7 +145,7 @@ $sql1 = "CREATE TABLE `files` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`file` TEXT NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		`size` FLOAT( 12, 12 ) NOT NULL ,
+		`size` VARCHAR( 12 ) NOT NULL ,
 		`aps` INT NOT NULL ,
 		`gps` INT NOT NULL ,
 		`hash` VARCHAR( 255 ) NOT NULL,
@@ -169,7 +169,7 @@ $sql1 = "CREATE TABLE `files_tmp` (
 		`user` VARCHAR ( 32 ) NOT NULL,
 		`notes` TEXT NOT NULL,
 		`title` VARCHAR ( 128 ) NOT NULL,
-		`size` FLOAT (12,12 ) NOT NULL ,
+		`size` VARCHAR( 12 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		`hash` VARCHAR( 255 ) NOT NULL,
 		PRIMARY KEY ( `id` ) ,
@@ -186,6 +186,20 @@ $sql1 = "ALTER TABLE `users` ADD `aps` INT NOT NULL , ADD `gps` INT NOT NULL";
 
 if($insert)
 {echo "<tr><td>Success..........</td><td>Altered `$db`.`users` to add aps and gps count fields;</td></tr>";
+else{
+echo "<tr><td>Failure..........</td><td>Alter `$db`.`users` to add aps and gps count fields;</td></tr>";
+}
+$sql1 = "ALTER TABLE `files` CHANGE `size` `size` VARCHAR( 14 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ";
+
+if($insert)
+{echo "<tr><td>Success..........</td><td>Altered `$db`.`users` to add aps and gps count fields;</td></tr>";
+else{
+echo "<tr><td>Failure..........</td><td>Altered `$db`.`files` `size` fields, from float to varchar(12);</td></tr>";
+}
+$sql1 = "ALTER TABLE `files_tmp` CHANGE `size` `size` VARCHAR( 12 ) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL ";
+
+if($insert)
+{echo "<tr><td>Success..........</td><td>Altered `$db`.`files_tmp` `size` fields, from float to varchar(12);</td></tr>";
 else{
 echo "<tr><td>Failure..........</td><td>Alter `$db`.`users` to add aps and gps count fields;</td></tr>";
 }

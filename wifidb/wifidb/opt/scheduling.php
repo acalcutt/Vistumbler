@@ -7,7 +7,7 @@ if (isset($_POST['token']))
 	if (isset($_SESSION['token']) && $_POST['token'] == $_SESSION['token'])
 	{
 		$refresh = $_POST['refresh'];
-		$refresh = filter_var($refresh , FILTER_VALIDATE_INT, array('min_range'=>5, 'max_range'=>99999999999));
+		$refresh = filter_var($refresh , FILTER_VALIDATE_INT, array('min_range'=>5, 'max_range'=>30720));
 		if(!$refresh)
 		{
 			echo '<font color="white">You must choose between 5 seconds and 512 Minutes, I have set it to 15 for you, you dumbass.</font>';
@@ -16,6 +16,9 @@ if (isset($_POST['token']))
 		fopen($refresh_file, "w");
 		$fileappend = fopen($refresh_file, "a");
 		fwrite($fileappend, $refresh);
+	}else
+	{
+		$refresh = "15";
 	}
 }else
 {
@@ -25,7 +28,6 @@ if (isset($_POST['token']))
 include('../lib/database.inc.php');
 
 echo '<meta http-equiv="refresh" content="'.$refresh.'">';
-
 
 pageheader("Search results Page");
 mysql_select_db($db,$conn);
@@ -40,11 +42,18 @@ $_SESSION['token'] = $token;
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
 			<h2>Import Results</h2>
-			<h2>Next Import scheduled on: <?php echo $file_array['size'];?> GMT</h2>
+			<h2>Next Import scheduled on: <br>
+			<?php
+				echo $file_array['size'];
+			?> GMT / 
+			<?php
+				$nextrun = date("Y-m-d H:i:s", (strtotime($file_array['size'])-14400));
+				echo $nextrun				
+			?> EST</h2>
 			<h4>If none are already importing...</h4>
 			<form action="scheduling.php" method="post" enctype="multipart/form-data">
 			<input type="hidden" name="token" value="<?php echo $token; ?>" />
-			Select a Refresh Rate:   
+			Select a Refresh Rate : <br> 
 			<SELECT NAME="refresh">  
 			<OPTION VALUE="5"> 5 Seconds
 			<OPTION VALUE="10"> 10 Seconds
@@ -60,8 +69,9 @@ $_SESSION['token'] = $token;
 			<OPTION VALUE="5760"> 96 Minutes
 			<OPTION VALUE="7680"> 128 Minutes
 			<OPTION VALUE="30720"> 512 Minutes
-			</SELECT>
-			<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
+			</SELECT><br>
+			<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit"><br>
+			(Currently set to: <?php echo $refresh;?>)
 			</form>
 			<table width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr>
 <?php
@@ -111,9 +121,7 @@ if($total_rows === 0)
 		?>
 		</td><td align="center">
 		<?php
-		$size_exp = explode('.', $newArray['size']);
-		$size1 = str_split($size_exp[1], 2);
-		echo $size_exp[0].'.'.$size1[0].' kb';
+		echo $newArray['size'];
 		?>
 		</td></tr>
 		<tr class="style4">
@@ -151,7 +159,6 @@ if($total_rows === 0)
 ?>
 			<table border="1" width="90%"><tr class="style4">
 			<th colspan="9" align="center">Files already imported</th></tr>
-			<tr class="style4"><th>ID</th><th>Filename</th><th>Date</th><th>user</th><th>title</th></tr>
 <?php
 $sql = "SELECT * FROM `files` ORDER BY `id` DESC";
 $result = mysql_query($sql, $conn) or die(mysql_error());
@@ -163,7 +170,7 @@ if($total_rows === 0)
 {
 	while ($newArray = mysql_fetch_array($result))
 	{
-		?><tr><td align="center">
+		?><tr class="style4"><th>ID</th><th>Filename</th><th>Date</th><th>user</th><th>title</th></tr><tr><td align="center">
 		<?php
 		echo $newArray['id'];
 		?>
@@ -183,9 +190,9 @@ if($total_rows === 0)
 		<?php
 		echo $newArray['title'];
 		?></td></tr>
-		<tr class="style4">
-		<th></th><th>Total AP's</th><th>Total GPS</th><th>Size</th><th>Hash Sum</th></tr><tr><td></td>
-		<td align="center">
+		<tr>
+		<th></th><th class="style4">Total AP's</th><th class="style4">Total GPS</th><th class="style4">Size</th><th class="style4">Hash Sum</th></tr>
+		<tr><td></td><td align="center">
 		<?php
 		echo $newArray['aps'];
 		?>
@@ -201,7 +208,7 @@ if($total_rows === 0)
 		<?php
 		echo $newArray['hash'];
 		?>
-		</td></tr>
+		</td></tr><tr></tr>
 		<?php
 	}
 	?>

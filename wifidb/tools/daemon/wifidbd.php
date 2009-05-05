@@ -9,7 +9,7 @@ require('config.inc.php');
 require('functions.php'); //need to include the functions file so that the daemon can do things...
 
 $start_date = "2009-04-23";
-$last_edit = "2009-05-04";
+$last_edit = "2009-05-05";
 $ver = "1.1";
 verbose("Starting WiFiDB 'Daemon'\nVersion: ".$ver." - Last Edit: ".$last_edit."\nBy: Phillip Ferland\nhttp://www.randomintervals.com\r", $verbose);
 
@@ -24,10 +24,13 @@ date_default_timezone_set($timezn);
 $This_is_me = getmypid();
 
 //Now we need to write the PID file so that the init.d file can control it.
-$pid_file = '/var/run/wifidbd.pid';
+echo $GLOBALS['wifidb_tools']."\n";
+if ($_SERVER['OS'] == "Windows_NT")
+{$pid_file = $GLOBALS['wifidb_tools'].'/daemon/wifidbd.pid';}
+else{$pid_file = '/var/run/wifidbd.pid';}
 fopen($pid_file, "w");
 $fileappend = fopen($pid_file, "a");
-$write_pid = fwrite($fileappend, "$"."pid	=	'$This_is_me';");
+$write_pid = fwrite($fileappend, "$This_is_me");
 if(!$write_pid){die("Could not write pid file, thats not good...");}
 logd("Have writen the PID file at /var/run/wifidbd.pid (".$This_is_me.")", $log_interval,0 ,  $log_level);
 verbose("PID Writen ".$This_is_me, $verbose); 
