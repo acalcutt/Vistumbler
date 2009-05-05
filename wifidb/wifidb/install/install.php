@@ -10,12 +10,6 @@ pageheader("Install Page");
 	#========================================================================================================================#
 	#													Gather the needed infomation								   	     #
 	#========================================================================================================================#
-	
-	
-	#################### ALTER TABLE `files_tmp`  ENGINE = MYISAM  ROW_FORMAT = COMPACT
-	
-	
-	
 $timezn = 'GMT+0';
 date_default_timezone_set($timezn);
 $date = date("Y-m-d");
@@ -38,6 +32,11 @@ $wifi		=	$_POST['wifidb'];
 strip_tags($wifi);
 $wifi_st	=	$_POST['wifistdb'];
 strip_tags($wifi_st);
+$daemon	=	$_POST['daemon'];
+strip_tags($daemon);
+if($daemon == "on")
+{$daemon = 1;}else{$daemon = 0;}
+
 echo '<tr><TH colspan="2">Database Install</TH><tr>';
 	#========================================================================================================================#
 	#													Connect to MySQL with Root											 #
@@ -251,7 +250,10 @@ $sql1 = "CREATE TABLE `files` (
 		`size` FLOAT( 12, 12 ) NOT NULL ,
 		`aps` INT NOT NULL ,
 		`gps` INT NOT NULL ,
-		`hash` VARCHAR( 255 ) NOT NULL
+		`hash` VARCHAR( 255 ) NOT NULL,
+		`user_row` INT NOT NULL ,
+		PRIMARY KEY ( `id` ) ,
+		UNIQUE ( `file` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 
 if($insert)
@@ -269,7 +271,9 @@ $sql1 = "CREATE TABLE `files_tmp` (
 		`title` VARCHAR ( 128 ) NOT NULL,
 		`size` FLOAT (12,12 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		`hash` VARCHAR ( 255 ) NOT NULL
+		`hash` VARCHAR ( 255 ) NOT NULL,
+		PRIMARY KEY ( `id` ) ,
+		UNIQUE ( `file` )
 		) ENGINE = $ENG  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 
 if($insert)
@@ -328,10 +332,21 @@ if($CR_CF_FL_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Add Install date</td></tr>";}
 
+
+#add default debug values
+$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n$"."rebuild	=	0;\r\n"
+									."$"."daemon	=	".$daemon.";\r\n");
+
+if($AD_CF_DG_Re)
+{echo "<tr><td>Success..........</td><td>Add default daemon values</td></tr>";}
+else{
+echo "<tr><td>Failure..........</td><td>Add default daemon values</td></tr>";}
+
+
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n$"."rebuild	=	0;\r\n"
 									."$"."debug	=	0;\r\n"
-									."$"."loglev	=	0;\r\n
+									."$"."loglev	=	0;\r\n"
 									."$"."log_\r\n");
 
 if($AD_CF_DG_Re)

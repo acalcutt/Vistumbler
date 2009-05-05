@@ -10,7 +10,7 @@ include('lib/database.inc.php');
 pageheader("Main Page");
 
 mysql_select_db($db, $conn);
-$sql = "SELECT `size` FROM `settings`";
+$sql = "SELECT `size` FROM `settings` WHERE `table` LIKE 'wifi0'";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $DB_size = mysql_fetch_array($result);
 $total = $DB_size['size'];
@@ -41,7 +41,7 @@ while($user_array = mysql_fetch_array($result))
 	$usersa[]=$user_array['username'];
 }
 
-$sql = "SELECT username, title FROM `users` WHERE `id`='$row_users'";
+$sql = "SELECT username, title, id FROM `users` WHERE `id`='$row_users'";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $lastuser = mysql_fetch_array($result);
 

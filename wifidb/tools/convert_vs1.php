@@ -1,6 +1,7 @@
 <?php
 $TOTAL_START=date("H:i:s");
 error_reporting(E_ALL);
+ini_set("memory_limit","3072M");
 $debug = 0;
 $bench = 0;
 $lastedit="2009.Apr.10";
@@ -9,9 +10,9 @@ $ver="1.3";
 echo "\n\n==-=-=-=-=-=-Vistumbler Summery Text to VS1 converter -=-=-=-=-=-==\nVersion: ".$ver."\nLast Edit: ".$lastedit."\n";
 
 $vs1dir = getcwd();
-$vs1dir .="\\vs1\\";
+$vs1dir .="/vs1/";
 $textdir = getcwd();
-$textdir .="\\text\\";
+$textdir .="/text/";
 
 
 if (file_exists($vs1dir)===FALSE){if(mkdir($vs1dir)){echo "made VS1 folder for the converted VS1 Files\n";}}
@@ -163,7 +164,7 @@ $return = file($source);
 $apdata=array();
 global $gpsdata;
 // create file name of VS1 file from the name of the Txt file, 
-$src=explode("\\",$source);
+$src=explode("/",$source);
 $f_max = count($src);
 $file_src = explode(".",$src[$f_max-1]);
 $file_ext = $dir.$file_src[0].'.vs1';
@@ -342,19 +343,10 @@ if ($out == "file" or $out == "File" or $out=="FILE")
 	foreach( $gpsdata as $gps )
 	{
 	//	GPS Convertion :
-	$exp = explode(".", $gps['lat']);
-	if($exp[1] > 4 && $exp[1] < 4)
-	{
 		$lat  =& convert_dd_dm($gps['lat']);
 		$long =& convert_dd_dm($gps['long']);
-	}else
-	{
-		$lat  = $gps['lat'];
-		$long = $gps['long'];
-	}
 	//	END GPS convert
-		
-		
+
 		if ($GLOBALS["debug"] ==1 ){echo "Lat : ".$gps['lat']." - Long : ".$gps['long']."\n";}
 		
 		$gpsd = $n."|".$lat."|".$long."|".$gps["sats"]."|".$gps["date"]."|".$gps["time"]."\r\n";

@@ -2,8 +2,8 @@
 #include('manufactures.inc.php');
 global $ver;
 $ver = array(
-			"wifidb"			=>	"0.16 Build 2",
-			"Last_Core_Edit" 	=> 	"2009-Apr-26",
+			"wifidb"			=>	"0.16 Build 2.1",
+			"Last_Core_Edit" 	=> 	"2009-May-02",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.6", 
 										"apfetch"			=>	"2.5.0",
@@ -92,7 +92,7 @@ function pageheader($title)
 {
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
-	$hosturl =  "http://".$_SERVER['HTTP_HOST']."/".$root;
+	$hosturl =  $root;
 	?>
 	<link rel="stylesheet" href="<?php echo $hosturl;?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
@@ -112,6 +112,7 @@ function pageheader($title)
 	<p><a class="links" href="/wifidb/">Main Page</a></p>
 	<p><a class="links" href="/wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a></p>
 	<p><a class="links" href="/wifidb/import/">Import</a></p>
+	<p><a class="links" href="/wifidb/opt/scheduling.php">Files Waiting for Import</a></p>
 	<p><a class="links" href="/wifidb/opt/export.php?func=index">Export</a></p>
 	<p><a class="links" href="/wifidb/opt/search.php">Search</a></p>
 	<p><a class="links" href="/wifidb/opt/userstats.php?func=allusers">View All Users</a></p>
@@ -182,7 +183,8 @@ function smart_quotes($text="")
 					18=>"!",
 					19=>"@",
 					20=>"-",
-					21=>"/"
+					21=>"/",
+					22=>"ÿ"
 				);
 	$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
 	$text = str_replace($strip,"_",$text);
@@ -214,18 +216,17 @@ class database
 	function gen_gps($retexp = array(), $gpscount = 0)
 	{
 		$ret_len = count($retexp);
-		$date_exp = explode("-",$retexp[4]);
-
-		if(strlen($date_exp[0]) <= 2)
-		{
-			$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
-		}else
-		{
-			$gpsdate = $retexp[4];
-		}
 		switch ($ret_len)
 		{
 			case 6:
+				$date_exp = explode("-",$retexp[4]);
+				if(strlen($date_exp[0]) <= 2)
+				{
+					$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
+				}else
+				{
+					$gpsdate = $retexp[4];
+				}
 				# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)
 				$gdata = array(
 											"lat"=>$retexp[1],
@@ -243,6 +244,14 @@ class database
 				$gpscount++;
 				break;
 			case 12:
+				$date_exp = explode("-",$retexp[10]);
+				if(strlen($date_exp[0]) <= 2)
+				{
+					$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
+				}else
+				{
+					$gpsdate = $retexp[10];
+				}
 				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
 				$gdata = array(
 											"lat"=>$retexp[1],
@@ -393,17 +402,25 @@ class database
 			
 			$retexp = explode("|",$ret);
 			$ret_len = count($retexp);
-
+			
 			if ($ret_len == 12)
 			{
 				$date_exp = explode("-",$retexp[10]);
 				if(strlen($date_exp[0]) <= 2)
 				{
-					$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
-				}else
-				{
-					$gpsdate = $retexp[10];
+					$retexp[10] = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
 				}
+				
+				$retexp[1]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[2]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[6]	=	filter_var($retexp[6], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[7]	=	filter_var($retexp[7], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[8]	=	filter_var($retexp[8], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[9]	=	filter_var($retexp[9], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[11]	=	filter_var($retexp[11], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_SANITIZE_MAGIC_QUOTES);
 				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
 				$gdata[$retexp[0]] = array(
 											"lat"=>$retexp[1],
@@ -415,58 +432,31 @@ class database
 											"kmh"=>$retexp[7],
 											"mph"=>$retexp[8],
 											"track"=>$retexp[9],
-											"date"=>$gpsdate,
+											"date"=>$retexp[10],
 											"time"=>$retexp[11]
 											);
-				if ($GLOBALS["debug"]  == 1)
-				{
-					$gpecho = "GP Data : \r\n"
-					."Return length: ".$ret_len."\n+-+-+-+-+\r\n"
-					."ID: ".$retexp[0]."\n+-+-+-+-+\r\n"
-					."Lat: ".$gdata[$retexp[0]]["lat"]."\n+-+-+-+-+\r\n"
-					."Long: ".$gdata[$retexp[0]]["long"]."\n+-+-+-+-+\r\n"
-					."Satellites: ".$gdata[$retexp[0]]["sats"]."\n+-+-+-+-+\r\n"
-					."Date: ".$gdata[$retexp[0]]["date"]."\n+-+-+-+-+\r\n"
-					."Time: ".$gdata[$retexp[0]]["time"]."+-+-+-+-+\r\r\n\n";
-					echo $gpecho;
-				}
-				$gpscount++;
 			}elseif($ret_len == 6)
 			{
 				$date_exp = explode("-",$retexp[4]);
 				if(strlen($date_exp[0]) <= 2)
 				{
-					$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
-				}else
-				{
-					$gpsdate = $retexp[4];
+					$retexp[4] = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
 				}
+				
 				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
 				$gdata[$retexp[0]] = array(
 											"lat"=>$retexp[1],
 											"long"=>$retexp[2],
 											"sats"=>$retexp[3],
-											"hdp"=>0.0,
-											"alt"=>0.0,
-											"geo"=>-0.0,
-											"kmh"=>0.0,
-											"mph"=>0.0,
-											"track"=>0.0,
-											"date"=>$gpsdate,
+											"hdp"=>"0.0",
+											"alt"=>"0.0",
+											"geo"=>"-0.0",
+											"kmh"=>"0.0",
+											"mph"=>"0.0",
+											"track"=>"0.0",
+											"date"=>$retexp[4],
 											"time"=>$retexp[5]
 											);
-				if ($GLOBALS["debug"]  == 1)
-				{
-					$gpecho = "GP Data : \r\n"
-					."Return length: ".$ret_len."\n+-+-+-+-+\r\n"
-					."ID: ".$retexp[0]."\n+-+-+-+-+\r\n"
-					."Lat: ".$gdata[$retexp[0]]["lat"]."\n+-+-+-+-+\r\n"
-					."Long: ".$gdata[$retexp[0]]["long"]."\n+-+-+-+-+\r\n"
-					."Satellites: ".$gdata[$retexp[0]]["sats"]."\n+-+-+-+-+\r\n"
-					."Date: ".$gdata[$retexp[0]]["date"]."\n+-+-+-+-+\r\n"
-					."Time: ".$gdata[$retexp[0]]["time"]."+-+-+-+-+\r\r\n\n";
-					echo $gpecho;
-				}
 				$gpscount++;
 			}elseif($ret_len == 13)
 			{

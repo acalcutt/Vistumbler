@@ -44,7 +44,12 @@ else
   <tr>
     <td>WiFi Storage DB name (Default `wifi_st` )</td><td>........................................</td>
     <td><input name="wifist"></td>
-</TR><TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
+  </TR>
+  <tr>
+    <td>Use Daemon?</td><td>........................................</td>
+    <td><input type="checkbox" name="daemon"></td>
+  </TR>
+<TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
 <INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
 </TD>
 </TR>

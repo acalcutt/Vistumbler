@@ -24,6 +24,14 @@ pageheader("Show all Downloads APs");
 <br>
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-29</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Archives:</td><td><a class="links" href="https://sourceforge.net/project/showfiles.php?group_id=235720&package_id=286323&release_id=669476">SourceForge Download</a></td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td><a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifidb/DB/wifidb/?pathrev=310">SourceForge SVN</a></td></tr>
+</table>
+<br>
+<table width="100%" border="2" id="16pb1">
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-05</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Archives:</td><td><a class="links" href="https://sourceforge.net/project/showfiles.php?group_id=235720&package_id=286323&release_id=669476">SourceForge Download</a></td></tr>

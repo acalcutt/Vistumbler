@@ -1,6 +1,7 @@
 <?php
 //YAY FUNCTIONS!!!, well they have to tell the daemon how to do something
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
+require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
 function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 {
 	if($message == ''){echo "Logd was told to write a blank string, this has NOT been logged.\n and will not be allowed\n"; continue;}
@@ -10,8 +11,8 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 	if($log_interval==0)
 	{
 		$cidir = getcwd();
-		$filename = $GLOBALS['wifidb_tools'].'/log/wifidbd_log.log';
-		if(!file_exists($filename))
+		$filename = '/CLI/log/wifidbd_log.log';
+		if(!is_file($filename))
 		{
 			fopen($filename, "w");
 		}
@@ -26,8 +27,8 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 	}elseif($log_interval==1)
 	{
 		$cidir = getcwd();
-		$filename = $GLOBALS['wifidb_tools'].'/log/wifidbd_'.$date.'_log.log';
-		if(!file_exists($filename))
+		$filename = '/CLI/log/wifidbd_'.$date.'_log.log';
+		if(!is_file($filename))
 		{
 			fopen($filename, "w");
 		}
@@ -40,13 +41,12 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 		$write_message = fwrite($fileappend, $message);
 		if(!$write_message){die("Could not message to the file, thats not good...");}
 	}
-	fclose($fileappend);
 }
 
 	function check_file($file = '')
 	{
 		include($GLOBALS['wifidb_install'].'/lib/config.inc.php');
-		$file1 = $GLOBALS['wifidb_install'].'/import/up/'.$file;
+		$file = $GLOBALS['wifidb_install'].'/import/up/'.$file;
 		$hash = hash_file('md5', $file);
 		$size = (filesize($file)/1024);
 		
@@ -67,21 +67,17 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 		}
 	}
 
-	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled")
+	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled", $user_row = 0)
 	{
-		include($GLOBALS['wifidb_install'].'/lib/config.inc.php');
-		
-		$size = (filesize($file)/1024);
-		$hash = hash_file('md5', $file);
+		include $GLOBALS['wifidb_install'].'/lib/config.inc.php';
+		$file1 = $GLOBALS['wifidb_install'].'/import/up/'.$file;
+		$size = (filesize($file1)/1024);
+		$hash = hash_file('md5', $file1);
 		$date = date("y-m-d H:i:s");
 		mysql_select_db($db,$GLOBALS['conn']);
 		
-		$file_exp = explode("/", $file);
-		$file_exp_seg = count($file_exp);
-		$file1 = $file_exp[$file_exp_seg-1];
-		
-		$sql = "INSERT INTO `wifi`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash`, `user` , `notes` , `title`	)
-									VALUES ( NULL , '$file1', '$size', '$date' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' )";
+		$sql = "INSERT INTO `$db`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash`, `user` , `notes` , `title` , `user_row`	)
+									VALUES ( NULL , '$file', '$size', '$date' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' , '$user_row' )";
 		if(mysql_query($sql, $GLOBALS['conn']))
 		{
 			return 1;
@@ -94,22 +90,36 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 
 class daemon extends database
 {
-	function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 0 )
+	function importvs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 0 )
 	{
-		require $GLOBALS['wifidb_install']."/lib/config.inc.php";
-		require 'config.inc.php';
-		
-		$FILENUM = 1;
-		$start = microtime(true);
-		$times=date('Y-m-d H:i:s');
-		
 		if ($source == NULL)
 		{
 			logd("There was an error sending the file name to the function", $log_interval, 0,  $log_level);
 			verbose("There was an error sending the file name to the function", $verbose);
 			break;
 		}
-
+		$return  = file($source);
+		$count = count($return);
+		
+		$file_row =  0;
+		if($count <= 8) 
+		{
+			logd("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $log_interval, 0,  $log_level);
+			verbose("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $verbose);
+			break;
+		}
+		
+		require $GLOBALS['wifidb_install']."/lib/config.inc.php";
+		require 'config.inc.php';
+		
+		$file_exp = explode("/", $source);
+		$file_exp_seg = count($file_exp);
+		$file1 = $file_exp[$file_exp_seg-1];
+		
+		$FILENUM = 1;
+		$start = microtime(true);
+		$times=date('Y-m-d H:i:s');
+		
 		$user_n	 = 0;
 		$N		 = 0;
 		$n		 = 0;
@@ -125,6 +135,8 @@ class daemon extends database
 		
 		$return  = file($source);
 		$count = count($return);
+		
+		$file_row =  0;
 		if($count <= 8) 
 		{
 			logd("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $log_interval, 0,  $log_level);
@@ -132,22 +144,29 @@ class daemon extends database
 
 			break;
 		}
+		mysql_select_db($db,$conn);
+		$result = mysql_query("SELECT * FROM `$db`.`files_tmp` WHERE `file` LIKE '$file1' LIMIT 1", $conn);
+		$newArray = mysql_fetch_array($result);
+		
 		foreach($return as $ret)
 		{
+			if($file_row != $newArray['file_row'] AND $newArray['file_row'] != 0 AND $newArray['file_row'] >= $file_row )
+			{
+				continue;
+			}else
+			{
+				$file_row++;
+			}
 			if ($ret[0] == "#"){continue;}
 			
 			$retexp = explode("|",$ret);
 			$ret_len = count($retexp);
 			
-			if ($ret_len == 12)
-			{
-				list($gdata[$retexp[0]], $gpscount) = database::gen_gps($retexp, $gpscount);
-			}elseif($ret_len == 6)
+			if ($ret_len == 12 or $ret_len == 6)
 			{
 				list($gdata[$retexp[0]], $gpscount) = database::gen_gps($retexp, $gpscount);
 			}elseif($ret_len == 13)
 			{
-					
 					if(!isset($SETFLAGTEST))
 					{
 						$count = $count - $gpscount;
@@ -163,8 +182,8 @@ class daemon extends database
 					$SETFLAGTEST = TRUE;
 					$wifi = explode("|",$ret, 13);
 					if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
-					mysql_select_db($db,$GLOBALS['conn']);
-					$dbsize = mysql_query("SELECT * FROM `$wtable`", $GLOBALS['conn']);
+					mysql_select_db($db,$conn);
+					$dbsize = mysql_query("SELECT * FROM `$wtable`", $conn);
 					$size = mysql_num_rows($dbsize);
 					$size++;
 					
@@ -176,22 +195,29 @@ class daemon extends database
 					if($wifi[7] == ''){$wifi[7] = "0";}
 					// sanitize wifi data to be used in table name
 					$ssidss = filter_var($wifi[0], FILTER_SANITIZE_SPECIAL_CHARS);
-
+					$ssidss = smart_quotes($ssidss);
 					$ssidsss = str_split($ssidss,25); //split SSID in two on is 25 char long.
-					$ssids = $ssidsss[0]; //use the 25 char long word for the APs table name, 
-										  //this is due to a limitation in MySQL table name lengths
+					$ssids = $ssidsss[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
+										  //the rest of the info will suffice for unique table names
+					$this_of_this = $FILENUM." / ".$count;
+					$sqlup = "UPDATE `files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssidss', `row` = '$file_row' WHERE `file` = '$file1';";
+					if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
+					{
+						logd("Updated files_tmp table with this runs data.", $log_interval, 0,  $log_level);
+						verbose("Updated files_tmp table with this runs data.", $verbose);
+					}
 					
 					$mac1 = explode(':', $wifi[1]);
 					$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5]; //the APs table doesnt need :'s in its name, nor does the Pointers table, well it could I just dont want to
 					
-					$authen	=	filter_var($wifi[3], FILTER_SANITIZE_SPECIAL_CHARS);
-					$encryp	=	filter_var($wifi[4], FILTER_SANITIZE_SPECIAL_CHARS);
-					$sectype=	filter_var($wifi[5], FILTER_SANITIZE_SPECIAL_CHARS);
-					$chan	=	filter_var($wifi[7], FILTER_SANITIZE_SPECIAL_CHARS);
-					$btx	=	filter_var($wifi[8], FILTER_SANITIZE_SPECIAL_CHARS);
-					$otx	=	filter_var($wifi[9], FILTER_SANITIZE_SPECIAL_CHARS);
-					$nt		=	filter_var($wifi[10], FILTER_SANITIZE_SPECIAL_CHARS);
-					$label	=	filter_var($wifi[11], FILTER_SANITIZE_SPECIAL_CHARS);
+					$authen		=	filter_var($wifi[3], FILTER_SANITIZE_SPECIAL_CHARS);
+					$encryp		=	filter_var($wifi[4], FILTER_SANITIZE_SPECIAL_CHARS);
+					$sectype	=	filter_var($wifi[5], FILTER_SANITIZE_SPECIAL_CHARS);
+					$chan		=	filter_var($wifi[7], FILTER_SANITIZE_SPECIAL_CHARS);
+					$btx		=	filter_var($wifi[8], FILTER_SANITIZE_SPECIAL_CHARS);
+					$otx		=	filter_var($wifi[9], FILTER_SANITIZE_SPECIAL_CHARS);
+					$nt			=	filter_var($wifi[10], FILTER_SANITIZE_SPECIAL_CHARS);
+					$label		=	filter_var($wifi[11], FILTER_SANITIZE_SPECIAL_CHARS);
 					$san_sig	=	filter_var($wifi[12], FILTER_SANITIZE_SPECIAL_CHARS);
 					
 					if($wifi[6] == "802.11a")
@@ -236,13 +262,12 @@ class daemon extends database
 					if(strcmp($table,$table_ptb)===0)
 					{
 						// They are the same
+						logd($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated ", $log_interval, 0,  $log_level);
+						verbose($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated ", $verbose);
 						
-						logd($FILENUM." / ".$count."   ( ".$APid." )   ||   ".$table." - is being updated ", $log_interval, 0,  $log_level);
-						verbose($FILENUM." / ".$count."   ( ".$APid." )   ||   ".$table." - is being updated ", $verbose);
-						
-						mysql_select_db($db_st,$GLOBALS['conn']);
+						mysql_select_db($db_st,$conn);
 						//setup ID number for new GPS cords
-						$DB_result = mysql_query("SELECT * FROM `$gps_table`", $GLOBALS['conn']);
+						$DB_result = mysql_query("SELECT * FROM `$gps_table`", $conn);
 						$gpstableid = mysql_num_rows($DB_result);
 						if ( $gpstableid === 0)
 						{
@@ -257,7 +282,6 @@ class daemon extends database
 						//pull out all GPS rows to be tested against for duplicates
 							
 						$N=0;
-						$todo=array();
 						$prev='';
 						$sql_multi = array();
 						$signal_exp = explode("-",$san_sig);
@@ -266,7 +290,7 @@ class daemon extends database
 						{
 					#		echo ".";
 							//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re grab it to test the data
-							$DBresult = mysql_query("SELECT * FROM `$gps_table`", $GLOBALS['conn']);
+							$DBresult = mysql_query("SELECT * FROM `$gps_table`", $conn);
 							while ($neArray = mysql_fetch_array($DBresult))
 							{
 								$db_gps[$neArray["id"]]["id"]=$neArray["id"];
@@ -311,7 +335,7 @@ class daemon extends database
 							
 							$gpschk = database::check_gps_array($db_gps,$comp);
 							list($return_gps, $dbid) = $gpschk;
-							$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$dbid'", $GLOBALS['conn']);
+							$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$dbid'", $conn);
 							$GPSDBArray = mysql_fetch_array($DBresult);
 							if($return_gps === 0)
 							{
@@ -354,6 +378,7 @@ class daemon extends database
 							$NNN++;
 							if($verbose == 1){echo ".";}
 						}
+						if($verbose == 1){echo "\n";}
 						$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
 						if (mysqli_connect_errno())
 						{
@@ -374,14 +399,14 @@ class daemon extends database
 						}
 						$sig = implode("-",$signals);
 						$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
-						if (!mysql_query($sqlit, $GLOBALS['conn']))
+						if (!mysql_query($sqlit, $conn))
 						{
-							logd("FAILED to added GPS History to Table\r\n".mysql_error($GLOBALS['conn']), $log_interval, 0,  $log_level);
-							verbose("FAILED to added GPS History to Table\n".mysql_error($GLOBALS['conn']), $verbose);
+							logd("FAILED to added GPS History to Table\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+							verbose("FAILED to added GPS History to Table\n".mysql_error($conn), $verbose);
 						}
 						
 						$sqlit_ = "SELECT * FROM `$table`";
-						$sqlit_res = mysql_query($sqlit_, $GLOBALS['conn']) or die(mysql_error());
+						$sqlit_res = mysql_query($sqlit_, $conn) or die(mysql_error());
 						$sqlit_num_rows = mysql_num_rows($sqlit_res);
 						$sqlit_num_rows++;
 						$user_aps[$user_n]="1,".$APid.":".$sqlit_num_rows; //User import tracking //UPDATE AP
@@ -391,20 +416,19 @@ class daemon extends database
 						$user_n++;
 						
 						$updated++;
-						$FILENUM++;
 					}else
 					{
 						// NEW AP
-						logd($FILENUM." / ".$count."   ( ".$size." )   ||   ".$table." - is Being Imported", $log_interval, 0,  $log_level);
-						verbose($FILENUM." / ".$count."   ( ".$size." )   ||   ".$table." - is Being Imported", $verbose);
+						logd($this_of_this."   ( ".$size." )   ||   ".$table." - is Being Imported", $log_interval, 0,  $log_level);
+						verbose($this_of_this."   ( ".$size." )   ||   ".$table." - is Being Imported", $verbose);
 						
-						mysql_select_db($db_st,$GLOBALS['conn'])or die(mysql_error($GLOBALS['conn']));
+						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 				#		echo "(1)Create Table [".$db_st."].{".$table."}\n		 => Added new Table for ".$ssids."\n";
-						if(!mysql_query($sqlct, $GLOBALS['conn']))
+						if(!mysql_query($sqlct, $conn))
 						{
-							logd("FAILED to create Signal History Table \r\n".mysql_error($GLOBALS['conn']), $log_interval, 0,  $log_level);
-							verbose("FAILED to create Signal History Table\n".mysql_error($GLOBALS['conn']), $verbose);
+							logd("FAILED to create Signal History Table \r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+							verbose("FAILED to create Signal History Table\n".mysql_error($conn), $verbose);
 						}
 						$sqlcgt = "CREATE TABLE `$gps_table` ("
 									."`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,"
@@ -420,11 +444,11 @@ class daemon extends database
 									."`date` VARCHAR( 10 ) NOT NULL , "
 									."`time` VARCHAR( 8 ) NOT NULL , "
 									."INDEX ( `id` ) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
-						$create_table = mysql_query($sqlcgt, $GLOBALS['conn']);
+						$create_table = mysql_query($sqlcgt, $conn);
 						if(!$create_table)
 						{
-							logd("FAILED to create GPS History Table \r\n".mysql_error($GLOBALS['conn']), $log_interval, 0,  $log_level);
-							verbose("FAILED to create GPS History Table\n".mysql_error($GLOBALS['conn']), $verbose);
+							logd("FAILED to create GPS History Table \r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+							verbose("FAILED to create GPS History Table\n".mysql_error($conn), $verbose);
 						}
 						$signal_exp = explode("-",$san_sig);
 					#	echo $wifi[12]."\n";
@@ -458,53 +482,55 @@ class daemon extends database
 							
 							$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
 												   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
-							if(!mysql_query($sqlitgpsgp, $GLOBALS['conn']))
+							if(!mysql_query($sqlitgpsgp, $conn))
 							{
-								logd("FAILED to insert the GPS data.\r\n".mysql_error($GLOBALS['conn']), $log_interval, 0,  $log_level);
-								verbose("FAILED to insert the GPS data.\n".mysql_error($GLOBALS['conn']), $verbose);
+								logd("FAILED to insert the GPS data.\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+								verbose("FAILED to insert the GPS data.\n".mysql_error($conn), $verbose);
 							}
 							$signals[$gps_id] = $gps_id.",".$signal;
 					#		echo $signals[$gps_id];
 							$gps_id++;
 							$prev = $vs1_id;
+							if($verbose == 1){echo ".";}
 						}
+						if($verbose == 1){echo "\n";}
 						$sig = implode("-",$signals);
 						
 						$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
-						$insertsqlresult = mysql_query($sqlit, $GLOBALS['conn']);
+						$insertsqlresult = mysql_query($sqlit, $conn);
 		#				echo "(3)Insert into [".$db_st."].{".$table."}\n		 => Add Signal History to Table\n";
 						if(!$insertsqlresult)
 						{
-							logd("FAILED to insert the Signal data.\r\n".mysql_error($GLOBALS['conn']), $log_interval, 0,  $log_level);
-							verbose("FAILED to insert the Signal data.\n".mysql_error($GLOBALS['conn']), $verbose);
+							logd("FAILED to insert the Signal data.\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+							verbose("FAILED to insert the Signal data.\n".mysql_error($conn), $verbose);
 						}
 						# pointers
-						mysql_select_db($db,$GLOBALS['conn']);
+						mysql_select_db($db,$conn);
 						$sqlp = "INSERT INTO `$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '$size', '$ssidss', '$macs','$chan', '$radios', '$authen', '$encryp', '$sectype')";
-						if (mysql_query($sqlp, $GLOBALS['conn']))
+						if (mysql_query($sqlp, $conn))
 						{
 			#				echo "(1)Insert into [".$db."].{".$wtable."} => Added Pointer Record\n";
 							$user_aps[$user_n]="0,".$size.":1";
 							$user_n++;
 							$sqlup = "UPDATE `$settings_tb` SET `size` = '$size' WHERE `table` = '$wtable' LIMIT 1;";
-							if (mysql_query($sqlup, $GLOBALS['conn']))
+							if (mysql_query($sqlup, $conn))
 							{
 			#					echo 'Updated ['.$db.'].{'.$wtable."} with new Size \n		=> ".$size."\n";
 								logd("Updated Settings table with new size", $log_interval, 0,  $log_level);
 								verbose("Updated Settings table with new size", $verbose);
 							}else
 							{
-								logd("Error Updating Settings table with new size\r\n".mysql_error($GLOBALS['conn']), $log_interval, 0,  $log_level);
-								verbose("Error Updating Settings table with new size\n".mysql_error($GLOBALS['conn']), $verbose);
+								logd("Error Updating Settings table with new size\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+								verbose("Error Updating Settings table with new size\n".mysql_error($conn), $verbose);
 							}
 						}else
 						{
-							logd("Error Updating Pointers table with new AP\r\n".mysql_error($GLOBALS['conn']), $log_interval, 0,  $log_level);
-							verbose("Error Updating Pointers table with new AP\r\n".mysql_error($GLOBALS['conn']), $verbose);
+							logd("Error Updating Pointers table with new AP\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+							verbose("Error Updating Pointers table with new AP\r\n".mysql_error($conn), $verbose);
 						}
 						$imported++;
-						$FILENUM++;
 					}
+					$FILENUM++;
 					unset($ssid_ptb);
 					unset($mac_ptb);
 					unset($sectype_ptb);
@@ -537,7 +563,7 @@ class daemon extends database
 				break;
 			}
 		}
-		mysql_select_db($db,$GLOBALS['conn']);
+		mysql_select_db($db,$conn);
 		
 		if(is_array($user_aps))
 		{
@@ -554,22 +580,26 @@ class daemon extends database
 
 		$total_ap = count($user_aps);
 		$gdatacount = count($gdata);
-		if($user_ap_s != "")
-		{
-			$sqlu = "INSERT INTO `users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount')";
-			mysql_query($sqlu, $GLOBALS['conn']);
-		}
-		mysql_close($GLOBALS['conn']);
+#		if($user_ap_s != "")
+#		{
+			$sqlu = "INSERT INTO `$db`.`users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount')";
+			if(!mysql_query($sqlu, $conn))
+			{
+				logd("Failed to Insert User data into Users table\n".mysql_error($conn), $log_interval, 0,  $log_level);
+				verbose("Failed to Insert User data into Users table\n".mysql_error($conn), $verbose);
+				die();
+			}else
+			{
+				logd("Succesfully Inserted User data into Users table", $log_interval, 0,  $log_level);
+				verbose("Succesfully Inserted User data into Users table", $verbose);
+			}
+			
+#		}
 		echo "\nFile DONE!\n|\n|\n";
 		$end = microtime(true);
 		$times = array(
-						"name"	=> $source,
-						"start" => $start,
-						"end"	=> $end,
-						"gdatacount" => $gdatacount,
-						"total_ap"	=> $total_ap,
-						"up"		=> $updated,
-						"imp"		=> $imported
+						"aps"	=> $total_ap,
+						"gps" => $gdatacount
 						);
 		return $times;
 	}

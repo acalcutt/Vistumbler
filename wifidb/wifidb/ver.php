@@ -20,11 +20,31 @@ pageheader("Version Page");
 		<td>Project Dev(s)..............</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b><td>
 	</tr>
 </table>
+<table width="100%" border="2" id="16pb1">
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-04</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+		<OL>
+			<LI>Daemon was unable to remove files from `files_tmp` table and put them into the uploaded `files` table.</LI>
+			<LI>The inportvs1 function for the daemon was not returning the AP and GPS totals, and 0 was being entered into the users table.</LI>
+			<LI>Added a link to the side for "Files Waiting to be imported" (/opt/scheduling.php).</LI>
+			<LI>Fixed the issue where the Import page would not switch to 'non-daemon' mode when $daemon var was set to 0.</LI>
+			<LI>Rearranged the table for scheduling.php, and added in Current AP, Importing? (Yes/No), Current AP/Total APs.</LI>
+			<LI>Added color for Files waiting to be imported, Green = Currently Importing, Yellow = Waiting.</LI>
+			<LI>Had to alter SQL statement for Total APs in the Main Stats Page. This is because I have added the next Import run as an element in the `settings` table.</LI>
+			<LI>Main Stats Page Last Import list link didn't have a row id in the URL.</LI>
+			<LI>The Corrupted dates on GPS cords was, I stupidly moved the Date conversion check outside the GPS array creation, which is dependent on the number of segements returned for the GPS in the VS1 file, so for the newer VS1 file that has 12 segements it was grabing the wrong data.</LI>
+			
+		</OL>
+	</td></tr>
+</table>
 <br>
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-24</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-29</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
@@ -37,8 +57,7 @@ pageheader("Version Page");
 			<LI>Finished AP Fetch Page so that GPS can be hidden.</LI>
 			<LI>Most, if not all pages now have the footer() and pageheader() function to standardize page layout</LI>
 			<LI>Fixed an issue where if there is no MAC/Sectype/Chan/Radio it would just be blank, and cause errors on fetch. </LI>
-				<OL>
-					<LI>New Defaults:</LI>
+				<OL>New Defaults:
 					<LI>Mac (00:00:00:00:00:00)</LI>
 					<LI>Sectype (0)</LI>
 					<LI>Chan (0)</LI>
@@ -50,7 +69,7 @@ pageheader("Version Page");
 			<LI>Made the tables that hold the page one table so when there is a skeew in the page doesnt get deformed like it did before. (I'm not a GUI person)</LI>
 			<LI>Fixed some formating issues with the install/upgrade/patching paths.</LI>
 			<LI>For Security reasons, temparaly will be using hard links for the side links, untill furtur notice.</LI>
-			<LI>Starting to create a 'daemon' of sorts. This is optional uppon install, and changeable afterwards in the config file.</LI>
+			<LI>Added a 'daemon' of sorts. This is optional uppon install, and changeable afterwards in the config file. <br>Notes are in the readme.txt of the tools folder.</LI>
 		</OL>
 	</td></tr>
 </table>

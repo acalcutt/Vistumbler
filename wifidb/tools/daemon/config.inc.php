@@ -1,13 +1,13 @@
 <?php
 global $wifidb_install, $wifidb_tools, $log_level, $verbose;
 //path to the folder that wifidb is installed in default is /var/www/wifidb/ , because I use Debian. fuck windows 
-$wifidb_install				=		'C:/wamp/www/wifidb';
+$wifidb_install				=		'/var/www/wifidb';
 
 //this is the installed path of the tools folder that comes with WiFiDB
-$wifidb_tools				=		'C:/CLI';
+$wifidb_tools				=		'/CLI';
 
 //In seconds 1800 = 30 min interval
-$time_interval_to_check		=		"250";
+$time_interval_to_check		=		"1800";
 
 //The level that you want the log file to write, default is off (0), Errors only (1), Detailed Errors (2). That is all for now.
 $log_level	=	0;
@@ -24,5 +24,5 @@ $timezn		=	'GMT+0';
 $log_interval				=		0;
 
 //0; no out put, STUF, 1; let me see the world.
-$verbose					=		0;
+$verbose					=		1;
 ?>

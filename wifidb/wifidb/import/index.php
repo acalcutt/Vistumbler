@@ -71,34 +71,100 @@ switch($func)
 					echo "<h2>With Title: ".$title."</h2>";
 					
 					$database = new database();
-					//lets try a schedualed import table that has a cron job
-					//that runs and imports all of them at once into the DB 
-					//in order that they where uploaded
-					$imp_file = $rand.'_'.$filename;
-					$date = date("y-m-d H:i:s");
-					$sql = "INSERT INTO `$db`.`files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) VALUES ( '', '$imp_file', '$date', '$user', '$notes', '$title', '$size', '$hash')";
-					$result = mysql_query( $sql , $conn);
-					if($result)
-					{
-						echo "<h2>File has been inserted for Importing at a later time at a schedualed time.<br>This is a trial to see how well it will work.</h2>";
+					if($GLOBALS['daemon']==1)
+					{	
+						//lets try a schedualed import table that has a cron job
+						//that runs and imports all of them at once into the DB 
+						//in order that they where uploaded
+						$imp_file = $rand.'_'.$filename;
+						$date = date("y-m-d H:i:s");
+						$sql = "INSERT INTO `$db`.`files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) VALUES ( '', '$imp_file', '$date', '$user', '$notes', '$title', '$size', '$hash')";
+						$result = mysql_query( $sql , $conn);
+						if($result)
+						{
+							echo "<h2>File has been inserted for Importing at a later time at a schedualed time.<br>This is a trial to see how well it will work.</h2>";
+						}else
+						{
+							echo "<h2>There was an error inserting file for schedualed import.</h2>".mysql_error($conn);
+						}
 					}else
 					{
-						echo "<h2>There was an error inserting file for schedualed import.</h2>".mysql_error($conn);
+						$database->import_vs1($uploadfile, $user, $notes, $title );
 					}
-				#	$database->import_vs1($uploadfile, $user, $notes, $title );
 				}else
 				{
 					echo '<H1>Hey! You have to upload a valid VS1 or GPX File <A HREF="javascript:history.go(-1)"> [Go Back]</A> and do it again the right way.</h1>';
 					footer($_SERVER['SCRIPT_FILENAME']);
 					die();
 				}
-
+				?>
+				<p>Go and check out your new <a class="links" href="/wifidb/opt/scheduling.php">Import</a>, go on, you know you want to...</p>
+				<?php
 				mysql_select_db($db,$conn);
 
 				$sqls = "SELECT * FROM `users`";
 				$result = mysql_query($sqls, $conn) or die(mysql_error());
 				$row = mysql_num_rows($result);
 				#$database->exp_kml($export="exp_newest_kml");
+				
+				// ASK FOR ANOTHER IMPORT
+				$token = md5(uniqid(rand(), true));
+				$_SESSION['token'] = $token;
+				?>
+				<CENTER><form action="?func=import" method="post" enctype="multipart/form-data">
+					<input type="hidden" name="token" value="<?php echo $token; ?>" />
+					<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
+						<TR height="40">
+							<TD class="style4">
+								<P>Title of Import: 
+								</P>
+							</TD>
+							<TD>
+								<P><A NAME="title"></A><INPUT TYPE=TEXT NAME="title" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+							</TD>
+						</TR>
+						<TR height="40">
+							<TD class="style4">
+								<P>File location: 
+								</P>
+							</TD>
+							<TD>
+								<P><A NAME="file"></A><INPUT TYPE=FILE NAME="file" SIZE=56 STYLE="width: 5.41in; height: 0.25in"></P>
+							</TD>
+						</TR>
+						<TR height="40">
+							<TD class="style4">
+								<P>Username: 
+								</P>
+							</TD>
+							<TD>
+								<P><A NAME="user"></A><INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+							</TD>
+						</TR>
+						<TR>
+							<TD class="style4">
+								<P>Notes: 
+								</P>
+							</TD>
+							<TD>
+								<P><TEXTAREA NAME="notes" ROWS=4 COLS=50 STYLE="width: 4.42in; height: 1.01in"></TEXTAREA><BR>
+								</P>
+							</TD>
+						</TR>
+							<TD>.</TD><TD>
+								<P>
+							<?php	
+								if($rebuild === 0)
+								{
+								echo '<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in"></P>';
+								}else{echo "The database is in  rebuild mode, please wait...";}
+							?>
+							</TD>
+						</TR>
+					</TABLE>
+					</form>
+				</CENTER>
+				<?php
 			}else
 			{
 				echo "Failure to compare tokens, try again.<BR>";

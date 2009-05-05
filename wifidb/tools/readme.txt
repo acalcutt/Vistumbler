@@ -1,7 +1,9 @@
 WiFiDB CLI [aka Tools] Folder
 http://www.randomintervals.com/
 
-    This program is free software; you can redistribute it and/or modify it under
+
+GNU Header:
+	This program is free software; you can redistribute it and/or modify it under
 	the terms of the GNU General Public License version 2, as published by the 
 	Free Software Foundation.   This program is distributed in the hope that it 
 	will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty 
@@ -15,12 +17,67 @@ http://www.randomintervals.com/
 	
 	Or go here:  http://www.gnu.org/licenses/gpl-2.0.txt
 
-1 -> Convert Txt to VS1 (Converter.exe | converter.php).
-2 -> Manufactures Generation script (manufmac.exe | manufmac.php).
-3 -> Wireless Database Batch Import script [command line only].
+
+
+CONTENTS:
+
+1 -> WiFiDB Daemon (daemon folder in the tools dir)
+2 -> Convert Txt to VS1 (Converter.exe | converter.php).
+3 -> Manufactures Generation script (manufmac.exe | manufmac.php).
+4 -> Wireless Database Batch Import script [command line only].
+
+
+
+
 --------------------------------------------------------------
 --------------------------------------------------------------
-1			Convert Txt to VS1
+1		WiFiDB Daemon
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+  The WiFiDB daemon is just a php script that I wrote that runs in the backgound
+  and checks a fils_tmp table to see if there are any files wating to be imported.
+  If there is a file or more then one, it will atempt to import them.
+
+  There is a file called rund.php that starts/stops/and restarts the daemon. To use
+  type 'php rund.php [start,stop,restart]'. This script will only run on linux 
+  based systems. Windows is NOT supported. This is also an optional item it is not
+  needed at all to run WiFiDB. To turn it on or off in the DB itself go to the 
+  config.inc.php in the lib folder of where you have your WiFiDB installed, and 
+  change the variable named sched to 0 (off) or 1 (on).
+
+  To change settings for the daemon itself go to the daemon folder inside the tools 
+  folder and open the config.inc.php file and change sleep to the number of seconds
+  that you want to sleep before checking the files_tmp again, there is a safety so
+  you cannot set it less then 5 min.
+
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release, just scheduled imports.
+==============================
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Better intergration with scheduling.php, added in Current AP, Importing? (Yes/No), Current AP/Total APs.
+==============================
+
+
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+2			Convert Txt to VS1
 --------------------------------------------------------------
 --------------------------------------------------------------
 
@@ -134,7 +191,7 @@ VERSION HISTORY
 
 --------------------------------------------------------------
 --------------------------------------------------------------
-2		Manufactures Generation script
+3		Manufactures Generation script
 --------------------------------------------------------------
 --------------------------------------------------------------
 
@@ -202,7 +259,7 @@ Initial release, was just WiFiDB generation, no Vistumbler yet.
 
 --------------------------------------------------------------
 --------------------------------------------------------------
-3		Wireless Database Batch Import script [command line only]
+4		Wireless Database Batch Import script [command line only]
 --------------------------------------------------------------
 --------------------------------------------------------------
 

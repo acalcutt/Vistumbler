@@ -6,7 +6,7 @@ pageheader("Upgrade Page");
 	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 		<p align="center">
 <table><tr><th>Status</th><th>Step of Install</th></tr>
-<tr><TH colspan="2">Upgrade DB for 0.15 Build 7x to 0.16 Build 1</TH><tr>
+<tr><TH colspan="2">Upgrade DB for 0.16 Build 1 to 0.16 Build 2</TH><tr>
 <?php
 $ENG = "InnoDB";
 $date = date("Y-m-d");
@@ -24,6 +24,10 @@ $wifi		=	$_POST['wifi'];
 strip_tags($wifi);
 $wifi_st	=	$_POST['wifist'];
 strip_tags($wifi_st);
+$daemon	=	$_POST['daemon'];
+strip_tags($daemon);
+if($daemon == "on")
+{$daemon = 1;}else{$daemon = 0;}
 
 if ($sqlhost !== 'localhost' or $sqlhost !== "127.0.0.1")
 {$phphost = 'localhost';}
@@ -144,7 +148,13 @@ $sql1 = "CREATE TABLE `files` (
 		`size` FLOAT( 12, 12 ) NOT NULL ,
 		`aps` INT NOT NULL ,
 		`gps` INT NOT NULL ,
-		`hash` VARCHAR( 255 ) NOT NULL
+		`hash` VARCHAR( 255 ) NOT NULL,
+		`user` VARCHAR( 64 ) NOT NULL,
+		`title` VARCHAR( 128 ) NOT NULL,
+		`notes` TEXT NOT NULL,
+		`user_row` INT NOT NULL ,
+		PRIMARY KEY ( `id` ) ,
+		UNIQUE ( `file` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 
 if($insert)
@@ -161,7 +171,9 @@ $sql1 = "CREATE TABLE `files_tmp` (
 		`title` VARCHAR ( 128 ) NOT NULL,
 		`size` FLOAT (12,12 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		UNIQUE ( `file` )
+		`hash` VARCHAR( 255 ) NOT NULL,
+		PRIMARY KEY ( `id` ) ,
+		UNIQUE ( `file` )	
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 
 if($insert)
@@ -169,7 +181,7 @@ if($insert)
 else{
 echo "<tr><td>Failure..........</td><td>Create tmp Files table `$db`.`files`; </td></tr>";
 }
- 
+
 $sql1 = "ALTER TABLE `users` ADD `aps` INT NOT NULL , ADD `gps` INT NOT NULL";
 
 if($insert)
@@ -178,6 +190,7 @@ else{
 echo "<tr><td>Failure..........</td><td>Alter `$db`.`users` to add aps and gps count fields;</td></tr>";
 }
 mysql_close($conn);
+
 $file_ext = 'config.inc.php';
 $filename = '../../lib/'.$file_ext;
 $fileappend = fopen($filename, "a");
@@ -190,6 +203,15 @@ if($AD_CF_FI_Re)
 {echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
 echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
+
+$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n$"."rebuild	=	0;\r\n"
+									."$"."daemon	=	".$daemon.";\r\n");
+
+if($AD_CF_DG_Re)
+{echo "<tr><td>Success..........</td><td>Add default daemon values</td></tr>";}
+else{
+echo "<tr><td>Failure..........</td><td>Add default daemon values</td></tr>";}
+
 
 $install_warning = fwrite($fileappend,"if(is_dir('install')){echo '<h2>The install Folder is still there, remove it!</h2>';}\nelseif(is_dir('../install')){echo '<h2>The install Folder is still there, remove it!</h2>';}");
 if($install_warning)
