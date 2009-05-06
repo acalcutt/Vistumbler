@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 2.1",
-			"Last_Core_Edit" 	=> 	"2009-May-02",
+			"Last_Core_Edit" 	=> 	"2009-May-05",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.6", 
 										"apfetch"			=>	"2.5.0",
