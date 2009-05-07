@@ -210,10 +210,16 @@ function smart($text="")
 
 function dos_filesize($fn) 
 {
-	if (is_file($fn))
-		return exec('FOR %A IN ("'.$fn.'") DO @ECHO %~zA');
-	else
-		return '0';
+	if(PHP_OS == "WINNT")
+	{
+		if (is_file($fn))
+			return exec('FOR %A IN ("'.$fn.'") DO @ECHO %~zA');
+		else
+			return '0';
+	}else
+	{
+		return filesize($fn);
+	}
 }
 
 function format_size($size, $round = 2)

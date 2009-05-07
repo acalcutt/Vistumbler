@@ -42,9 +42,21 @@ switch($func)
 				$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
 				
 				$uploadfile = getcwd().'/up/'.$rand.'_'.$filename;
+				$return  = file($uploadfile);
+				$count = count($return);
+				if($count <= 8) 
+				{
+					logd("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $log_interval, 0,  $log_level);
+					verbose("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $verbose);
+					$filename = $_SERVER['SCRIPT_FILENAME'];
+					footer($filename);
+					die();
+				}
 				if (!copy($tmp, $uploadfile))
 				{
 					echo "Failure to Move file to Upload Dir (/import/up/), check the folder permisions if you are using Linux.<BR>";
+					$filename = $_SERVER['SCRIPT_FILENAME'];
+					footer($filename);
 					die();
 				}
 				

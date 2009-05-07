@@ -1,7 +1,7 @@
 <?php
 global $wifidb_install, $wifidb_tools, $log_level, $verbose;
 //path to the folder that wifidb is installed in default is /var/www/wifidb/ , because I use Debian. fuck windows 
-$wifidb_install				=		'/wamp/www/wifidb';
+$wifidb_install				=		'/var/www/wifidb';
 
 //this is the installed path of the tools folder that comes with WiFiDB
 $wifidb_tools				=		'/CLI';

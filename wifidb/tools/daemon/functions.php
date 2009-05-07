@@ -1,7 +1,7 @@
 <?php
 //YAY FUNCTIONS!!!, well they have to tell the daemon how to do something
-require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
-require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
+require $GLOBALS['wifidb_install']."/lib/database.inc.php";
+require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 {
 	if($message == ''){echo "Logd was told to write a blank string, this has NOT been logged.\n and will not be allowed\n"; continue;}
@@ -48,12 +48,9 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 		include($GLOBALS['wifidb_install'].'/lib/config.inc.php');
 		$file = $GLOBALS['wifidb_install'].'/import/up/'.$file;
 		$hash = hash_file('md5', $file);
-		$size = (filesize($file)/1024);
-		
 		$file_exp = explode("/", $file);
 		$file_exp_seg = count($file_exp);
 		$file1 = $file_exp[$file_exp_seg-1];
-
 		mysql_select_db($db,$GLOBALS['conn']);
 		$fileq = mysql_query("SELECT * FROM `files` WHERE `file` LIKE '$file1'", $GLOBALS['conn']);
 		$fileqq = mysql_fetch_array($fileq);
@@ -71,7 +68,8 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 	{
 		include $GLOBALS['wifidb_install'].'/lib/config.inc.php';
 		$file1 = $GLOBALS['wifidb_install'].'/import/up/'.$file;
-		$size = (filesize($file1)/1024);
+		$size = dos_filesize($file1);
+		$size = format_size($size, 2);
 		$hash = hash_file('md5', $file1);
 		$date = date("y-m-d H:i:s");
 		mysql_select_db($db,$GLOBALS['conn']);
@@ -102,12 +100,6 @@ class daemon extends database
 		$count = count($return);
 		
 		$file_row =  0;
-		if($count <= 8) 
-		{
-			logd("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $log_interval, 0,  $log_level);
-			verbose("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $verbose);
-			break;
-		}
 		
 		require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 		require 'config.inc.php';
