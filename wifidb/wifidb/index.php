@@ -1,13 +1,13 @@
-<html>
 <?php
+include('lib/database.inc.php');
+pageheader("Main Page");
+
 if(file_exists('lib/config.inc.php'))
 {
 	include('lib/config.inc.php');
 }else{
 	die('<h1>You need to install WiFiDB first. Please go <a href="install/">here</a> to do that.</h1>');
 }
-include('lib/database.inc.php');
-pageheader("Main Page");
 $usersa =  array();
 mysql_select_db($db, $conn);
 $sql = "SELECT `size` FROM `settings` WHERE `table` LIKE 'wifi0'";
@@ -55,7 +55,7 @@ if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
 ?>
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">To View all AP's click <a class="links" href="all.php?sort=SSID&ord=ASC&from=0&to=100">Here</a><br><br>
+			<p align="center">To View all AP's click <a class="links" href="all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $_SESSION['token'];?>">Here</a><br><br>
 			<?php
 			$domain = $_SERVER['HTTP_HOST'];
 			if ($domain === "rihq.randomintervals.com")
@@ -87,9 +87,9 @@ if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
 	</tr>
 	<tr>
 		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
-		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>"><?php echo $lastuser['username'];?></a></td>
-		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No AP";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
-		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No Imports Yet";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>"><?php echo $lastuser['title'];?></a><?php } ?></td>
+		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['username'];?></a></td>
+		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No AP";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
+		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No Imports Yet";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['title'];?></a><?php } ?></td>
 	</tr>
 </table>
 <?php

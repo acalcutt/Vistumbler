@@ -2,8 +2,8 @@
 #include('manufactures.inc.php');
 global $ver;
 $ver = array(
-			"wifidb"			=>	"0.16 Build 2.1",
-			"Last_Core_Edit" 	=> 	"2009-May-05",
+			"wifidb"			=>	"0.16 Build 2.1A",
+			"Last_Core_Edit" 	=> 	"2009-May-10",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.6", 
 										"apfetch"			=>	"2.5.0",
@@ -17,7 +17,8 @@ $ver = array(
 										"exp_gpx"			=>	"1.0.0",
 										"convert_dm_dd"		=>	"1.3.0",
 										"convert_dd_dm"		=>	"1.3.1",
-										"manufactures"		=>	"1.0"
+										"manufactures"		=>	"1.0",
+										"gen_gps"			=>	"1.0"
 										),
 			"Misc"				=>	array(
 										"pageheader"		=>  "1.1",
@@ -28,48 +29,50 @@ $ver = array(
 										"Manufactures-list"	=> 	"2.0",
 										"Languages-List"	=>	"1.0",
 										"log_write"			=>	"1.0",
-										"verbose"			=>	"1.0"
+										"verbose"			=>	"1.0",
+										"make_ssid"			=>	"1.0"
 										),
 			);
 
-function log_write($message, $log_level, $log_interval)
+function log_write($message, $log_interval, $log_level)
 {
 	if($message == ''){echo "Logd was told to write a blank string, this has NOT been logged.\n and will not be allowed\n"; continue;}
 	$message = date("Y-m-d H:i:s.").microtime(true)."   ->    ".$message."\r\n";
-
 	include('config.inc.php');
-
-	if($log_interval==0)
+	if($log_level != 0)
 	{
-		$filename = $GLOBALS['wifidb'].'\log\wifidbd_log.log';
-		if(!is_file($filename))
+		if($log_interval==0)
 		{
-			fopen($filename, "w");
-		}
-		$fileappend = fopen($filename, "a");
-		if($log_level == 2)
+			$filename = $GLOBALS['wifidb'].'/log/wifidbd_log.log';
+			if(!is_file($filename))
+			{
+				fopen($filename, "w");
+			}
+			$fileappend = fopen($filename, "a");
+			if($log_level == 2)
+			{
+				$message = $message."\n==Details==\n".$detail."\n===========\n";
+			}
+			$write_message = fwrite($fileappend, $message);
+			
+			if(!$write_message){die("Could not write message to the file, thats not good...");}
+			
+		}elseif($log_interval==1)
 		{
-			$message = $message."\n==Details==\n".$detail."\n===========\n";
+			$date = date("y-m-d");
+			$filename = $GLOBALS['wifidb'].'/log/wifidbd_'.$date.'_log.log';
+			if(!is_file($filename))
+			{
+				fopen($filename, "w");
+			}
+			$fileappend = fopen($filename, "a");
+			if($log_level == 2)
+			{
+				$message = $message."\n==Details==\n".$detail."\n===========\n";
+			}
+			$write_message = fwrite($fileappend, $message);
+			if(!$write_message){die("Could not write message to the file, thats not good...");}
 		}
-		$write_message = fwrite($fileappend, $message);
-		
-		if(!$write_message){die("Could not message to the file, thats not good...");}
-		
-	}elseif($log_interval==1)
-	{
-		$date = date("y-m-d");
-		$filename = $GLOBALS['wifidb'].'\log\wifidbd_'.$date.'_log.log';
-		if(!is_file($filename))
-		{
-			fopen($filename, "w");
-		}
-		$fileappend = fopen($filename, "a");
-		if($log_level == 2)
-		{
-			$message = $message."\n==Details==\n".$detail."\n===========\n";
-		}
-		$write_message = fwrite($fileappend, $message);
-		if(!$write_message){die("Could not message to the file, thats not good...");}
 	}
 }
 
@@ -90,6 +93,15 @@ function breadcrumb()
 
 function pageheader($title)
 {
+	session_start();
+	if(!isset($_SESSION['token']) or !isset($_GET['token']))
+	{
+		$token = md5(uniqid(rand(), true));
+		$_SESSION['token'] = $token;
+	}else
+	{
+		$token = $_SESSION['token'];
+	}
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
 	?>
@@ -107,16 +119,16 @@ function pageheader($title)
 			</td>
 		</tr>
 		<tr>
-	<td width="15%" bgcolor="#304D80" valign="top">
-	<p><a class="links" href="/wifidb/">Main Page</a></p>
-	<p><a class="links" href="/wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a></p>
-	<p><a class="links" href="/wifidb/import/">Import</a></p>
-	<p><a class="links" href="/wifidb/opt/scheduling.php">Files Waiting for Import</a></p>
-	<p><a class="links" href="/wifidb/opt/export.php?func=index">Export</a></p>
-	<p><a class="links" href="/wifidb/opt/search.php">Search</a></p>
-	<p><a class="links" href="/wifidb/opt/userstats.php?func=allusers">View All Users</a></p>
-	<p><a class="links" href="/wifidb/ver.php">WiFiDB Version</a></p>
-	<p><a class="links" href="/wifidb/down.php">Download WiFiDB</a></p>
+			<td width="15%" bgcolor="#304D80" valign="top">
+			<p><a class="links" href="<?php echo $root;?>/?token=<?php echo $token;?>">Main Page</a></p>
+			<p><a class="links" href="<?php echo $root;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
+			<p><a class="links" href="<?php echo $root;?>/import/?token=<?php echo $token;?>">Import</a></p>
+			<p><a class="links" href="<?php echo $root;?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></p>
+			<p><a class="links" href="<?php echo $root;?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></p>
+			<p><a class="links" href="<?php echo $root;?>/opt/search.php?token=<?php echo $token;?>">Search</a></p>
+			<p><a class="links" href="<?php echo $root;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></p>
+			<p><a class="links" href="<?php echo $root;?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
+			<p><a class="links" href="<?php echo $root;?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></p>
 	<?php
 }
 
@@ -183,7 +195,8 @@ function smart_quotes($text="")
 					19=>"@",
 					20=>"-",
 					21=>"/",
-					22=>"ÿ"
+					22=>"ÿ",
+					23=>""
 				);
 	$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
 	$text = str_replace($strip,"_",$text);
@@ -229,6 +242,19 @@ function format_size($size, $round = 2)
 	for ($i=0; $size > 1024 && $i < count($sizes) - 1; $i++) $size /= 1024;
 	return round($size,$round).$sizes[$i];
 }
+
+function make_ssid($ssid_frm_src_or_pnt_tbl = '')
+		{
+			$ssids = filter_var($ssid_frm_src_or_pnt_tbl, FILTER_SANITIZE_SPECIAL_CHARS);
+			$ssid_safe_full_length = smart_quotes($ssids);
+			$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char long.
+			$ssid_table_safe = $ssid_sized[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
+			if($ssid_table_safe == ''){$ssid_table_safe = "UNNAMED";}
+			if($ssids == ''){$ssids = "UNNAMED";}
+			$A = array(0=> $ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
+			return $A;
+		}
+
 class database
 {
 	function gen_gps($retexp = array(), $gpscount = 0)
@@ -887,12 +913,12 @@ class database
 		if($title === ''){$title = "Untitled";}
 		if($user === ''){$user="Unknown";}
 		if($notes === ''){$notes="No Notes";}
-		if (!$user_ap_s == "")
-		{$sqlu = "INSERT INTO `users` ( `id` , `username` , `points` ,  `notes`, `date`, `title`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title')";
-		mysql_query($sqlu, $conn) or die(mysql_error($conn));}
-		mysql_close($conn);
 		$total_ap = count($user_aps);
 		$gdatacount = count($gdata);
+		if (!$user_ap_s == "")
+		{$sqlu = "INSERT INTO `$db`.`users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount')";
+		mysql_query($sqlu, $conn) or die(mysql_error($conn));}
+		mysql_close($conn);
 		echo "<br>DONE!";
 		$end = microtime(true);
 		if ($GLOBALS["bench"]  == 1)
@@ -1117,7 +1143,7 @@ class database
 				<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Channel #</P></TD><TD WIDTH=439><P><?php echo $newArray['chan'];?></P></TD></TR>
 		<?php
 		?>
-		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>">Export this AP to KML</a></td></tr>
+		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>&token=<?php echo $_SESSION['token'];?>">">Export this AP to KML</a></td></tr>
 		</table>
 		<br>
 		<TABLE WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0>
@@ -1130,7 +1156,7 @@ class database
 		while ($field = mysql_fetch_array($result))
 		{
 			$row = $field["id"];
-			$row_id = $row.','.$id;
+			$row_id = $row.','.$ID;
 			$sig_exp = explode("-", $field["sig"]);
 			$sig_size = count($sig_exp)-1;
 
@@ -1162,8 +1188,8 @@ class database
 				<?php echo $lu; ?></td><td>
 				<?php echo $field["nt"]; ?></td><td>
 				<?php echo $field["label"]; ?></td><td>
-				<a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $field["user"]; ?>"><?php echo $field["user"]; ?></a></td><td>
-				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>">KML</a> OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php echo $row_id;?>">GPX</a></td></tr>
+				<a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $field["user"]; ?>&token=<?php echo $_SESSION['token'];?>">"><?php echo $field["user"]; ?></a></td><td>
+				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>&token=<?php echo $_SESSION['token'];?>">">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">">KML</a> OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">">GPX</a></td></tr>
 				<tr><td colspan="10" align="center">
 				<script type="text/javascript">
 				function displayRow<?php print ($tablerowid);?>()
@@ -1244,7 +1270,7 @@ class database
 					$points = explode('-' , $field['points']);
 					$total = count($points);
 					?>
-					<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
+					<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>">"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
 					<?php
 				}
 			}
@@ -1327,12 +1353,12 @@ class database
 				if($user_array['points'] === ""){continue;}
 				if($pre_user !== $username)
 				{
-					echo '<tr><td>'.$user_array['id'].'</td><td><a class="links" href="userstats.php?func=alluserlists&user='.$username.'">'.$username.'</a></td><td><a class="links" href="userstats.php?func=useraplist&row='.$user_array["id"].'">'.$user_array['title'].'</a></td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
+					echo '<tr><td>'.$user_array['id'].'</td><td><a class="links" href="userstats.php?func=alluserlists&user='.$username.'&token='.$_SESSION['token'].'">'.$username.'</a></td><td><a class="links" href="userstats.php?func=useraplist&row='.$user_array["id"].'">'.$user_array['title'].'</a></td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
 				}
 				else
 				{
 					?>
-					<tr><td></td><td></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>"><?php echo $user_array['title'];?></a></td><td><?php echo $pc;?></td><td><?php echo $user_array['date'];?></td></tr>
+					<tr><td></td><td></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user_array['title'];?></a></td><td><?php echo $pc;?></td><td><?php echo $user_array['date'];?></td></tr>
 					<?php
 				}
 				$pre_user = $username;
@@ -1363,9 +1389,9 @@ class database
 	{
 		$start = microtime(true);
 		?>
-		<h3>View All Users <a class="links" href="userstats.php?func=allusers">Here</a></h3>
-		<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $user;?>"><?php echo $user;?></a></h1>
-		<h3><a class="links" href="../opt/export.php?func=exp_user_all_kml&user=<?php echo $user;?>">Export To KML File</a></h3>
+		<h3>View All Users <a class="links" href="userstats.php?func=allusers&token=<?php echo $_SESSION['token'];?>">Here</a></h3>
+		<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $user;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user;?></a></h1>
+		<h3><a class="links" href="../opt/export.php?func=exp_user_all_kml&user=<?php echo $user;?>&token=<?php echo $_SESSION['token'];?>">Export To KML File</a></h3>
 		<table border="1"><tr class="style4"><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr>
 		<?php
 		include('config.inc.php');
@@ -1422,7 +1448,7 @@ class database
 				<?php
 				echo $row;
 				?>
-				</td><td align="center"><a class="links" href="fetch.php?id=<?php echo $apid;?>"><?php echo $ssid;?></a></td>
+				</td><td align="center"><a class="links" href="fetch.php?id=<?php echo $apid;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $ssid;?></a></td>
 				<td>
 				<?php echo $mac;?></td><td align="center">
 				<?php echo $auth;?></td><td align="center">
@@ -1450,10 +1476,10 @@ class database
 	{
 		$start = microtime(true);
 		include('config.inc.php');
-		echo '<h1>Import Lists For: <a class="links" href ="../opt/userstats.php?func=allap&user='.$user.'">'.$user.'</a></h1>';		
-		echo '<h3>View All Users <a class="links" href="userstats.php?func=allusers">Here</a></h3>';
-		echo '<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user='.$user.'">'.$user.'</a>';
-		echo '<h2><a class="links" href=../opt/export.php?func=exp_user_all_kml&user='.$user.'>Export To KML File</a></h2>';
+		echo '<h1>Import Lists For: <a class="links" href ="../opt/userstats.php?func=allap&user='.$user.'&token='.$_SESSION['token'].'">'.$user.'</a></h1>';		
+		echo '<h3>View All Users <a class="links" href="userstats.php?func=allusers&token='.$_SESSION['token'].'">Here</a></h3>';
+		echo '<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user='.$user.'&token='.$_SESSION['token'].'">'.$user.'</a>';
+		echo '<h2><a class="links" href=../opt/export.php?func=exp_user_all_kml&user='.$user.'&token='.$_SESSION['token'].'">Export To KML File</a></h2>';
 		echo '<table border="1"><tr class="style4"><th>ID</th><th>Title</th><th># of APs</th><th>Imported on</th></tr><tr>';
 		mysql_select_db($db,$conn);
 		$sql = "SELECT * FROM `users` WHERE `username` = '$user'";
@@ -1463,7 +1489,7 @@ class database
 			if($user_array['title']==''){$title = "Untitled";}else{$title = $user_array['title'];}
 			$points = explode('-',$user_array['points']);
 			$total = count($points);
-			echo '<tr><td align="center">'.$user_array["id"].'</td><td align="center"><a class="links" href="../opt/userstats.php?func=useraplist&row='.$user_array["id"].'">'.$title.'</a></td><td align="center">'.$total.'</td><td align="center">'.$user_array["date"].'</td></tr>';
+			echo '<tr><td align="center">'.$user_array["id"].'</td><td align="center"><a class="links" href="../opt/userstats.php?func=useraplist&row='.$user_array["id"].'&token='.$_SESSION['token'].'">'.$title.'</a></td><td align="center">'.$total.'</td><td align="center">'.$user_array["date"].'</td></tr>';
 			
 		}
 		echo "</table><br>";
@@ -1490,11 +1516,11 @@ class database
 		$result = mysql_query($sql, $conn) or die(mysql_error());
 		$user_array = mysql_fetch_array($result);
 		$aps=explode("-",$user_array["points"]);
-		echo '<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=allap&user='.$user_array["username"].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
+		echo '<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user='.$user_array["username"].'&token='.$_SESSION['token'].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
 		?>
-		<h3>View All Users <a class="links" href="userstats.php?func=allusers">Here</a></h3>
+		<h3>View All Users <a class="links" href="userstats.php?func=allusers&token=<?php echo $_SESSION['token'];?>">Here</a></h3>
 		<?php
-		echo '<a class="links" href=../opt/export.php?func=exp_user_list&row='.$user_array["id"].'>Export To KML File</a>';
+		echo '<a class="links" href=../opt/export.php?func=exp_user_list&row='.$user_array["id"].'&token='.$_SESSION['token'].'">Export To KML File</a>';
 		echo '<table border="1"><tr class="style4"><th>New/Update</th><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
 		foreach($aps as $ap)
 		{
@@ -1516,7 +1542,7 @@ class database
 				$radio = $ap_array['radio'];
 				$auth = $ap_array['auth'];
 				$encry = $ap_array['encry'];
-			    echo '<tr><td align="center">'.$flag.'</td><td align="center">'.$apid.'</td><td align="center">'.$row.'</td><td align="center"><a class="links" href="fetch.php?id='.$apid.'">'.$ssid.'</a></td>';
+			    echo '<tr><td align="center">'.$flag.'</td><td align="center">'.$apid.'</td><td align="center">'.$row.'</td><td align="center"><a class="links" href="fetch.php?id='.$apid.'&token='.$_SESSION['token'].'">'.$ssid.'</a></td>';
 			    echo '<td align="center">'.$mac.'</td>';
 			    echo '<td align="center">'.$auth.'</td>';
 				if($radio=="a")
@@ -1585,7 +1611,7 @@ class database
 				{
 					$man 		= database::manufactures($ap_array['mac']);
 					$id			= $ap_array['id'];
-					$ssid		= $ap_array['ssid'];
+					list($ssid) = make_ssid($ap_array['ssid']);
 					$mac		= $ap_array['mac'];
 					$sectype	= $ap_array['sectype'];
 					$radio		= $ap_array['radio'];
@@ -1593,101 +1619,96 @@ class database
 					
 					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
 					$table_gps = $table.$gps_ext;
-					$ssid = smart_quotes($ssid);
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
-		#			echo $table."<br>";
 					$sql1 = "SELECT * FROM `$table`";
 					$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
 					$rows = mysql_num_rows($result1);
-		#			echo $rows."<br>";
 					$sql = "SELECT * FROM `$table` WHERE `id`='1'";
-		#			echo $ap['mac']."<BR>";
-		#			while (
 					$newArray = mysql_fetch_array($result1);
-		#			){
-						switch($sectype)
-						{
-							case 1:
-								$type = "#openStyleDead";
-								$auth = "Open";
-								$encry = "None";
-								break;
-							case 2:
-								$type = "#wepStyleDead";
-								$auth = "Open";
-								$encry = "WEP";
-								break;
-							case 3:
-								$type = "#secureStyleDead";
-								$auth = "WPA-Personal";
-								$encry = "TKIP-PSK";
-								break;
-						}
-						switch($radio)
-						{
-							case "a":
-								$radio="802.11a";
-								break;
-							case "b":
-								$radio="802.11b";
-								break;
-							case "g":
-								$radio="802.11g";
-								break;
-							case "n":
-								$radio="802.11n";
-								break;
-							default:
-								$radio="Unknown Radio";
-								break;
-						}
-						
-						$otx = $newArray["otx"];
-						$btx = $newArray["btx"];
-						$nt = $newArray['nt'];
-						$label = $newArray['label'];
-						
-						$sql6 = "SELECT * FROM `$table_gps`";
-						$result6 = mysql_query($sql6, $conn);
-						$max = mysql_num_rows($result6);
-						
-						$sql_1 = "SELECT * FROM `$table_gps`";
-						$result_1 = mysql_query($sql_1, $conn);
-						$zero = 0;
-						while($gps_table_first = mysql_fetch_array($result_1))
-						{
-							$lat_exp = explode(" ", $gps_table_first['lat']);
-							
-							$test = $lat_exp[1]+0;
-							
-							if($test == "0.0000"){$zero = 1; continue;}
-							
-							$date_first = $gps_table_first["date"];
-							$time_first = $gps_table_first["time"];
-							$fa   = $date_first." ".$time_first;
-							$alt  = $gps_table_first['alt'];
-							$lat  =& database::convert_dm_dd($gps_table_first['lat']);
-							$long =& database::convert_dm_dd($gps_table_first['long']);
-							$zero = 0;
-							$NN++;
+					switch($sectype)
+					{
+						case 1:
+							$type = "#openStyleDead";
+							$auth = "Open";
+							$encry = "None";
 							break;
-						}
-						if($zero == 1){$zero == 0; continue;}
-						//=====================================================================================================//
+						case 2:
+							$type = "#wepStyleDead";
+							$auth = "Open";
+							$encry = "WEP";
+							break;
+						case 3:
+							$type = "#secureStyleDead";
+							$auth = "WPA-Personal";
+							$encry = "TKIP-PSK";
+							break;
+					}
+					switch($radio)
+					{
+						case "a":
+							$radio="802.11a";
+							break;
+						case "b":
+							$radio="802.11b";
+							break;
+						case "g":
+							$radio="802.11g";
+							break;
+						case "n":
+							$radio="802.11n";
+							break;
+						default:
+							$radio="Unknown Radio";
+							break;
+					}
+					
+					$otx = $newArray["otx"];
+					$btx = $newArray["btx"];
+					$nt = $newArray['nt'];
+					$label = $newArray['label'];
+					
+					$sql6 = "SELECT * FROM `$table_gps`";
+					$result6 = mysql_query($sql6, $conn);
+					$max = mysql_num_rows($result6);
+					
+					$sql_1 = "SELECT * FROM `$table_gps`";
+					$result_1 = mysql_query($sql_1, $conn);
+					$zero = 0;
+					while($gps_table_first = mysql_fetch_array($result_1))
+					{
+						$lat_exp = explode(" ", $gps_table_first['lat']);
 						
-						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
-						$result_2 = mysql_query($sql_2, $conn);
-						$gps_table_last = mysql_fetch_array($result_2);
-						$date_last = $gps_table_last["date"];
-						$time_last = $gps_table_last["time"];
-						$la = $date_last." ".$time_last;
-						$fdata .= "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-						echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'<td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
-						unset($lat);
-						unset($long);
-						unset($gps_table_first["lat"]);
-						unset($gps_table_first["long"]);
-#					}
+						$test = $lat_exp[1]+0;
+						
+						if($test == "0"){$zero = 1; continue;}
+						
+						$date_first = $gps_table_first["date"];
+						$time_first = $gps_table_first["time"];
+						$fa   = $date_first." ".$time_first;
+						$alt  = $gps_table_first['alt'];
+						$lat  =& database::convert_dm_dd($gps_table_first['lat']);
+						$long =& database::convert_dm_dd($gps_table_first['long']);
+						$zero = 0;
+						$NN++;
+						break;
+					}
+					if($zero == 1){$zero == 0; continue;}
+					//=====================================================================================================//
+					
+					$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+					$result_2 = mysql_query($sql_2, $conn);
+					$gps_table_last = mysql_fetch_array($result_2);
+					$date_last = $gps_table_last["date"];
+					$time_last = $gps_table_last["time"];
+					$la = $date_last." ".$time_last;
+					$ssid_name = '';
+					if ($named == 1){$ssid_name = $ssid;}
+					$fdata .= "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid_name."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
+					echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'<td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
+					unset($lat);
+					unset($long);
+					unset($gps_table_first["lat"]);
+					unset($gps_table_first["long"]);
 				}
 				if($zero == 0)
 				{
@@ -2349,18 +2370,21 @@ class database
 				$id = $row_id_exp[1];
 				$row = $row_id_exp[0];
 				$date=date('Y-m-d_H-i-s');
-				$sql = "SELECT * FROM `$wtable` WHERE `ID`='$id'";
+				$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$id'";
 				$result = mysql_query($sql, $conn) or die(mysql_error());
 				$aparray = mysql_fetch_array($result);
-				$ssid = smart_quotes($aparray['ssid']);
-				$file_ext = $ssid."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".kml";
+				$ssid_array = make_ssid($aparray['ssid']);
+				$ssid_f = $ssid_array[1];
+				$ssid_t = $ssid_array[0];
+				$ssid = $ssid_array[2];
+				$file_ext = $ssid_f."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".kml";
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$ssid.'\'s Signal History</th></tr>';
 				$filename = ($kml_out.$file_ext);
 				// define initial write and appends
 				$filewrite = fopen($filename, "w");
 				if($filewrite != FALSE)
 				{
-					$table=$aparray['ssid'].'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
+					$table=$ssid.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
 					$table_gps = $table.$gps_ext;
 					
 					$file_data  = ("");
@@ -2478,7 +2502,7 @@ class database
 						$lat =& database::convert_dm_dd($gps['lat']);
 		#				echo "out: ".$lat.'<br>';
 						$long =& database::convert_dm_dd($gps['long']);
-						$file_data .= ("<Placemark id=\"".$gps['id']."\"><styleUrl>".$signal_image."</styleUrl>\r\n<Point id=\"".$aparray['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>");
+						$file_data .= ("<Placemark id=\"".$gps['id']."\"><styleUrl>".$signal_image."</styleUrl>\r\n<description><![CDATA[<b>Signal Strength: </b>".$sig."%<br />]]></description>\r\n<Point id=\"".$aparray['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>");
 						echo '<tr><td style="border-style: solid; border-width: 1px">Plotted Signal GPS Point</td></tr>';
 					}
 				}else

@@ -1,7 +1,6 @@
 <?php
 include('../lib/database.inc.php');
 include('../lib/config.inc.php');
-session_start();
 pageheader("Import Page");
 ?>
 </td>
@@ -24,9 +23,9 @@ if(isset($_GET['func']))
 switch($func)
 {
 	case 'import': //Import file that has been uploaded
-		if (isset($_POST['token']))
+		if (isset($_GET['token']))
 		{
-			if (isset($_SESSION['token']) && $_POST['token'] == $_SESSION['token'])
+			if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])
 			{
 				if($_POST["user"] !== ''){$user = addslashes($_POST["user"]);}else{$user="Unknown";}
 				if($_POST["notes"] !== ''){$notes = addslashes($_POST["notes"]);}else{$notes="No Notes";}
@@ -42,12 +41,11 @@ switch($func)
 				$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
 				
 				$uploadfile = getcwd().'/up/'.$rand.'_'.$filename;
-				$return  = file($uploadfile);
+				$return  = file($tmp);
 				$count = count($return);
 				if($count <= 8) 
 				{
-					logd("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $log_interval, 0,  $log_level);
-					verbose("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $verbose);
+					echo "<br><br><h2>You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.</h2>";
 					$filename = $_SERVER['SCRIPT_FILENAME'];
 					footer($filename);
 					die();
@@ -121,11 +119,8 @@ switch($func)
 				#$database->exp_kml($export="exp_newest_kml");
 				
 				// ASK FOR ANOTHER IMPORT
-				$token = md5(uniqid(rand(), true));
-				$_SESSION['token'] = $token;
 				?>
-				<CENTER><form action="?func=import" method="post" enctype="multipart/form-data">
-					<input type="hidden" name="token" value="<?php echo $token; ?>" />
+				<CENTER><form action="?func=import&?token=<?php echo $token;?>" method="post" enctype="multipart/form-data">
 					<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
 						<TR height="40">
 							<TD class="style4">
@@ -189,16 +184,21 @@ switch($func)
 		break;
 	#----------------------
 	default: //index page that has form to upload file
+		if(isset($_SESSION['token']))
+		{
+			$token = $_SESSION['token'];
+		}else
+		{
+			$token = md5(uniqid(rand(), true));
+			$_SESSION['token'] = $token;
+		}
 		if (isset($_GET['file']))
 		{
 		echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <b>".$_GET['file']."</b><br>Copy and Paste the bolded text into the file location field to import it.<br></h2>";
 		}
 		echo "<br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br>";
-		$token = md5(uniqid(rand(), true));
-		$_SESSION['token'] = $token;
 		?>
-		<CENTER><form action="?func=import" method="post" enctype="multipart/form-data">
-			<input type="hidden" name="token" value="<?php echo $token; ?>" />
+		<CENTER><form action="?func=import&?token=<?php echo $token;?>" method="post" enctype="multipart/form-data">
 			<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
 				<TR height="40">
 					<TD class="style4">

@@ -10,7 +10,7 @@ $wifidb_tools				=		'/CLI';
 $time_interval_to_check		=		"800";
 
 //The level that you want the log file to write, default is off (0), Errors only (1), Detailed Errors (2). That is all for now.
-$log_level	=	0;
+$log_level	=	1;
 
 //If you are messing with the code, like me, you can turn this on to have things echoed out to the screen for easy well.. debuging.
 $debug		=	0;

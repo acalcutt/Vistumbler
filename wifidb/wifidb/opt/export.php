@@ -2,16 +2,13 @@
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
 pageheader("Export Page");
-
 ?>
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
 			<h2>Export Access Points to KML</h2>
 <?php
-
 $database = new database();
-
 $func=$_GET['func'];
 
 	if(isset($_GET['user'])){$user=$_GET['user'];}elseif(isset($_POST['user'])){$user = $_POST['user'];}

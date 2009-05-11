@@ -1,5 +1,7 @@
 <?php
-session_start();
+include('../lib/database.inc.php');
+pageheader("Search results Page");
+
 include('../lib/config.inc.php');
 $refresh_file = "refresh.txt";
 if (isset($_POST['token']))
@@ -25,19 +27,22 @@ if (isset($_POST['token']))
 	$refresh_fopen = file($refresh_file);
 	$refresh = $refresh_fopen[0];
 }
-include('../lib/database.inc.php');
 
 echo '<meta http-equiv="refresh" content="'.$refresh.'">';
 
-pageheader("Search results Page");
 mysql_select_db($db,$conn);
 $sql = "SELECT * FROM `settings` WHERE `table` LIKE 'files'";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $file_array = mysql_fetch_array($result);
 
-$token = md5(uniqid(rand(), true));
-$_SESSION['token'] = $token;
-
+if(isset($_SESSION['token']))
+{
+	$token = $_SESSION['token'];
+}else
+{
+	$token = md5(uniqid(rand(), true));
+	$_SESSION['token'] = $token;
+}
 ?></td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">

@@ -3,44 +3,66 @@ include('lib/config.inc.php');
 include('lib/database.inc.php');
 pageheader("Version Page");
 ?>
-</td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
-<div align="left">
 <font face="Courier New">
-<p align="center"><font size="7"><b>WiFiDB Version History</b></font></p>
-<table border="0" cellpadding="4">
-	<tr>
-		<td>Project Name(pseudo-name)...</td><td><b>WiFiDB</b> </td>
-	</tr>
-	<tr>
-		<td>Project State...............</td><td><b>Alpha (planning and early dev)</b><td>
-	</tr>
-	<tr>
-		<td>Project Dev(s)..............</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b><td>
-	</tr>
-</table>
-<table width="100%" border="2" id="16pb1">
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
-	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-05</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
-		<OL>
-			<LI>Daemon was unable to remove files from `files_tmp` table and put them into the uploaded `files` table.</LI>
-			<LI>The inportvs1 function for the daemon was not returning the AP and GPS totals, and 0 was being entered into the users table.</LI>
-			<LI>Added a link to the side for "Files Waiting to be imported" (/opt/scheduling.php).</LI>
-			<LI>Fixed the issue where the Import page would not switch to 'non-daemon' mode when $daemon var was set to 0.</LI>
-			<LI>Rearranged the table for scheduling.php, and added in Current AP, Importing? (Yes/No), Current AP/Total APs.</LI>
-			<LI>Added color for Files waiting to be imported, Green = Currently Importing, Yellow = Waiting.</LI>
-			<LI>Had to alter SQL statement for Total APs in the Main Stats Page. This is because I have added the next Import run as an element in the `settings` table.</LI>
-			<LI>Main Stats Page Last Import list link didn't have a row id in the URL.</LI>
-			<LI>The Corrupted dates on GPS cords was, I stupidly moved the Date conversion check outside the GPS array creation, which is dependent on the number of segements returned for the GPS in the VS1 file, so for the newer VS1 file that has 12 segements it was grabing the wrong data.</LI>
-			<LI>Fixed an issue where on windows based systems the file size wouldnt be correct.</LI>
-		</OL>
-	</td></tr>
-</table>
-<br>
+</td>
+	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
+		<div align="left">
+		<p align="center"><font size="7"><b>WiFiDB Version History</b></font></p>
+		<table border="0" cellpadding="4">
+			<tr>
+				<td>Project Name(pseudo-name)...</td><td><b>WiFiDB</b> </td>
+			</tr>
+			<tr>
+				<td>Project State...............</td><td><b>Alpha (planning and early dev)</b><td>
+			</tr>
+			<tr>
+				<td>Project Dev(s)..............</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b><td>
+			</tr>
+		</table>
+		
+		<table width="100%" border="2" id="16pb1">
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1A</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-10</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+				<OL>
+					<LI>Fixed an issue where if you had sent a file from vistumber the token would not be able to be compared.</LI>
+					<LI>Added Token support on almost every page that takes user input, or input from the URL.</LI>
+					<LI>Added signal strength to Access Point Signal Plot KML export.</LI>
+					<LI>Changed Individual User Stat Page to new layout.</LI>
+					<LI>Standardized SSID usage, there are three types:</LI>
+					<OL>
+						<LI><ny-paq>sayz oh-m [ is the unsanatized, but still safe ssid, used to name APs, 32 char limit, no special chars].</LI>
+						<LI>&#60;ny-paq&#62;sayz oh-m [safe for file names, no special chars, 32 char limit].</LI>
+						<LI>_ny-paq_sayz oh-m [safe for table names, max 24 char, no special chars]
+					</OL>
+					<LI></LI>
+				</OL>
+			</td></tr>
+		</table>
+		<br>
+		<table width="100%" border="2" id="16pb1">
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-05</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+				<OL>
+					<LI>Daemon was unable to remove files from `files_tmp` table and put them into the uploaded `files` table.</LI>
+					<LI>The inportvs1 function for the daemon was not returning the AP and GPS totals, and 0 was being entered into the users table.</LI>
+					<LI>Added a link to the side for "Files Waiting to be imported" (/opt/scheduling.php).</LI>
+					<LI>Fixed the issue where the Import page would not switch to 'non-daemon' mode when $daemon var was set to 0.</LI>
+					<LI>Rearranged the table for scheduling.php, and added in Current AP, Importing? (Yes/No), Current AP/Total APs.</LI>
+					<LI>Added color for Files waiting to be imported, Green = Currently Importing, Yellow = Waiting.</LI>
+					<LI>Had to alter SQL statement for Total APs in the Main Stats Page. This is because I have added the next Import run as an element in the `settings` table.</LI>
+					<LI>Main Stats Page Last Import list link didn't have a row id in the URL.</LI>
+					<LI>The Corrupted dates on GPS cords was, I stupidly moved the Date conversion check outside the GPS array creation, which is dependent on the number of segements returned for the GPS in the VS1 file, so for the newer VS1 file that has 12 segements it was grabing the wrong data.</LI>
+					<LI>Fixed an issue where on windows based systems the file size wouldnt be correct.</LI>
+				</OL>
+			</td></tr>
+		</table>
+		<br>
 <table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2</td></tr>
