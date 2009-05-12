@@ -1,9 +1,10 @@
 <?php
 include('../lib/database.inc.php');
+include('../lib/config.inc.php');
+
 if(isset($_GET['user'])){pageheader("Stats for User: ".$_GET['user']);}
 else{pageheader("Users Stats Page");}
 
-include('../lib/config.inc.php');
 ?>
 </td>
 	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">

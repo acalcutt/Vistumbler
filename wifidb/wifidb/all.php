@@ -1,7 +1,7 @@
 <?php
 include('lib/database.inc.php');
-pageheader("Show all APs");
 include('lib/config.inc.php');
+pageheader("Show all APs");
 		?>
 		</td>
 				<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">

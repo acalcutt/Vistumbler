@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 2.1A",
-			"Last_Core_Edit" 	=> 	"2009-May-10",
+			"Last_Core_Edit" 	=> 	"2009-May-12",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.6", 
 										"apfetch"			=>	"2.5.0",
@@ -21,7 +21,7 @@ $ver = array(
 										"gen_gps"			=>	"1.0"
 										),
 			"Misc"				=>	array(
-										"pageheader"		=>  "1.1",
+										"pageheader"		=>  "1.2",
 										"footer"			=>	"1.2",
 										"breadcrumbs"		=>	"1.0",
 										"smart_quotes"		=> 	"1.0",
@@ -105,7 +105,7 @@ function pageheader($title)
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
 	?>
-	<link rel="stylesheet" href="<?php echo $root;?>/css/site4.0.css">
+	<link rel="stylesheet" href="/<?php echo $root;?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="85%" cellspacing="5" cellpadding="2">
@@ -120,15 +120,15 @@ function pageheader($title)
 		</tr>
 		<tr>
 			<td width="15%" bgcolor="#304D80" valign="top">
-			<p><a class="links" href="<?php echo $root;?>/?token=<?php echo $token;?>">Main Page</a></p>
-			<p><a class="links" href="<?php echo $root;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
-			<p><a class="links" href="<?php echo $root;?>/import/?token=<?php echo $token;?>">Import</a></p>
-			<p><a class="links" href="<?php echo $root;?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></p>
-			<p><a class="links" href="<?php echo $root;?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></p>
-			<p><a class="links" href="<?php echo $root;?>/opt/search.php?token=<?php echo $token;?>">Search</a></p>
-			<p><a class="links" href="<?php echo $root;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></p>
-			<p><a class="links" href="<?php echo $root;?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
-			<p><a class="links" href="<?php echo $root;?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/?token=<?php echo $token;?>">Main Page</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/import/?token=<?php echo $token;?>">Import</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/opt/search.php?token=<?php echo $token;?>">Search</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
+			<p><a class="links" href="/<?php echo $root;?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></p>
 	<?php
 }
 

@@ -83,14 +83,14 @@ else{
 echo "<tr><td>Failure..........</td><td>EMPTY TABLE `links`</td></tr>";}
 
 $sql1 = "INSERT INTO `links` (`ID`, `links`) VALUES"
-		."(1, '<a class=\"links\" href=\"$hosturl/$root/\">Main Page</a>'),"
-		."(2, '<a class=\"links\" href=\"$hosturl/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
-		."(3, '<a class=\"links\" href=\"$hosturl/$root/import/\">Import</a>'),"
-		."(4, '<a class=\"links\" href=\"$hosturl/$root/opt/export.php?func=index\">Export</a>'),"
-		."(5, '<a class=\"links\" href=\"$hosturl/$root/opt/search.php\">Search</a>'),"
-		."(6, '<a class=\"links\" href=\"$hosturl/$root/opt/userstats.php?func=allusers\">View All Users</a>'),"
-		."(7, '<a class=\"links\" href=\"$hosturl/$root/ver.php\">WiFiDB Version</a>'),"
-		."(8, '<a class=\"links\" href=\"$hosturl/$root/announce.php?func=allusers\">Announcements</a>')";
+		."(1, '<a class=\"links\" href=\"/$root/\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"/$root/import/\">Import</a>'),"
+		."(4, '<a class=\"links\" href=\"/$root/opt/export.php?func=index\">Export</a>'),"
+		."(6, '<a class=\"links\" href=\"/$root/opt/userstats.php?func=allusers\">View All Users</a>'),"
+		."(5, '<a class=\"links\" href=\"/$root/opt/search.php\">Search</a>'),"
+		."(7, '<a class=\"links\" href=\"/$root/ver.php\">WiFiDB Version</a>'),"
+		."(8, '<a class=\"links\" href=\"/$root/announce.php?func=allusers\">Announcements</a>')";
 
 $insert = mysql_query($sql, $conn) or die(mysql_error());
 

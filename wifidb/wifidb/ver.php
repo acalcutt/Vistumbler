@@ -23,7 +23,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16pb1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1A</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-10</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-12</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -37,7 +37,7 @@ pageheader("Version Page");
 						<LI>&#60;ny-paq&#62;sayz oh-m [safe for file names, no special chars, 32 char limit].</LI>
 						<LI>_ny-paq_sayz oh-m [safe for table names, max 24 char, no special chars]
 					</OL>
-					<LI></LI>
+					<LI>Changed the way WiFiDB looks for the install folder.</LI>
 				</OL>
 			</td></tr>
 		</table>

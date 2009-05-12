@@ -1,13 +1,12 @@
 <?php
 include('lib/database.inc.php');
-pageheader("Main Page");
-
 if(file_exists('lib/config.inc.php'))
 {
 	include('lib/config.inc.php');
 }else{
 	die('<h1>You need to install WiFiDB first. Please go <a href="install/">here</a> to do that.</h1>');
 }
+pageheader("Main Page");
 $usersa =  array();
 mysql_select_db($db, $conn);
 $sql = "SELECT `size` FROM `settings` WHERE `table` LIKE 'wifi0'";

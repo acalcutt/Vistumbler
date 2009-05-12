@@ -180,14 +180,14 @@ if($hosturl !== "" && $root !== "")
 }elseif($root !== "")
 { 
 	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
-		."(1, '<a class=\"links\" href=\"$root/\">Main Page</a>'),"
-		."(2, '<a class=\"links\" href=\"$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
-		."(3, '<a class=\"links\" href=\"$root/import/\">Import</a>'),"
-		."(4, '<a class=\"links\" href=\"$root/opt/export.php?func=index\">Export</a>'),"
-		."(5, '<a class=\"links\" href=\"$root/opt/search.php\">Search</a>'),"
-		."(6, '<a class=\"links\" href=\"$root/opt/userstats.php?func=allusers\">View All Users</a>'),"
-		."(7, '<a class=\"links\" href=\"$root/ver.php\">WiFiDB Version</a>'),"
-		."(8, '<a class=\"links\" href=\"$root/announce.php?func=allusers\">Announcements</a>')";
+		."(1, '<a class=\"links\" href=\"/$root/\">Main Page</a>'),"
+		."(2, '<a class=\"links\" href=\"/$root/all.php?sort=SSID&ord=ASC&from=0&to=100\">View All APs</a>'),"
+		."(3, '<a class=\"links\" href=\"/$root/import/\">Import</a>'),"
+		."(4, '<a class=\"links\" href=\"/$root/opt/export.php?func=index\">Export</a>'),"
+		."(5, '<a class=\"links\" href=\"/$root/opt/search.php\">Search</a>'),"
+		."(6, '<a class=\"links\" href=\"/$root/opt/userstats.php?func=allusers\">View All Users</a>'),"
+		."(7, '<a class=\"links\" href=\"/$root/ver.php\">WiFiDB Version</a>'),"
+		."(8, '<a class=\"links\" href=\"/$root/announce.php?func=allusers\">Announcements</a>')";
 }else
 {
 	$sqls =	"INSERT INTO `links` (`ID`, `links`) VALUES"
@@ -432,7 +432,26 @@ if($AD_CF_FI_Re)
 else{
 echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
 
-$install_warning = fwrite($fileappend,"\r\n\r\nif(is_dir('install')){echo '<h2>The install Folder is still there, remove it!</h2>';}\nelseif(is_dir('../install')){echo '<h2>The install Folder is still there, remove it!</h2>';}");
+$install_warning = fwrite($fileappend,"\r\n\#---------------- Install Folder Warning Code -----------------#
+					if(PHP_OS == 'Linux'){$div = '';}
+					if(PHP_OS == 'WINNT'){$div = '\\';}
+					$path = getcwd();
+					$path_exp = explode($div, $path);
+					$path_count = count($path_exp);
+					foreach($path_exp as $key=>$val)
+					{
+						if($val == $root){$path_key = $key;}
+					}
+					$full_path = '';
+					$I = 0;
+					while($I!=($path_key+1))
+					{
+						$full_path = $full_path.$path_exp[$I].$div;
+						$I++;
+					}
+					$full_path = $full_path.'install';
+					if(is_dir($full_path)){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}");
+
 if($install_warning){}
 fwrite($fileappend, "\r\n?>");
 
