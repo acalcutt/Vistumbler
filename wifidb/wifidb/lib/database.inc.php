@@ -3,10 +3,10 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 2.1A",
-			"Last_Core_Edit" 	=> 	"2009-May-12",
+			"Last_Core_Edit" 	=> 	"2009-May-13",
 			"database"			=>	array(  
-										"import_vs1"		=>	"1.5.6", 
-										"apfetch"			=>	"2.5.0",
+										"import_vs1"		=>	"1.5.7", 
+										"apfetch"			=>	"2.5.1",
 										"gps_check_array"	=>	"1.1",
 										"all_users"			=>	"1.2",
 										"users_lists"		=>	"1.2",
@@ -169,7 +169,7 @@ function footer($filename = '')
 #													Smart Quotes (char filtering)										 #
 #========================================================================================================================#
 
-function smart_quotes($text="")
+function smart_quotes($text="") // Used for SSID Sanatization
 {
 	$pattern = '/"((.)*?)"/i';
 	$strip = array(
@@ -203,7 +203,7 @@ function smart_quotes($text="")
 	return $text;
 }
 
-function smart($text="")
+function smart($text="") // Used for GPS
 {
 	$pattern = '/"((.)*?)"/i';
 	$strip = array(
@@ -525,9 +525,9 @@ class database
 					if ($wifi[0]==""){$wifi[0]="UNNAMED";}
 			#		$wifi[12] = strip_tags($wifi[12]);
 					// sanitize wifi data to be used in table name
-					$ssidss = strip_tags(smart_quotes($wifi[0]));
+					$ssidss = addslashes(strip_tags($wifi[0]));
 					$ssidsss = str_split($ssidss,25);
-					$ssids = $ssidsss[0];
+					$ssids = smart_quotes($ssidsss[0]);
 					if($wifi[1] == ''){$wifi[1] = "00:00:00:00:00:00";}
 					$mac1 = explode(':', $wifi[1]);
 					$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5];
@@ -553,11 +553,10 @@ class database
 					$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `ssid` LIKE '$ssids' AND `radio` LIKE '$radios' LIMIT 1", $conn1) or die(mysql_error());
 					while ($newArray = mysql_fetch_array($result))
 					{
-
 						$APid = $newArray['id'];
 						$ssid_ptb_ = $newArray["ssid"];
 						$ssids_ptb = str_split($newArray['ssid'],25);
-						$ssid_ptb = $ssids_ptb[0];
+						$ssid_ptb = smart_quotes($ssids_ptb[0]);
 						$mac_ptb=$newArray['mac'];
 						$radio_ptb=$newArray['radio'];
 						$sectype_ptb=$newArray['sectype'];
@@ -1131,6 +1130,21 @@ class database
 		$table		=	$newArray['ssid'].'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
 		$table_gps	=	$newArray['ssid'].'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'].$gps_ext;
 		?>
+				<SCRIPT LANGUAGE="JavaScript">
+				// Row Hide function.
+				// by tcadieux
+				function expandcontract(tbodyid,ClickIcon)
+				{
+					if (document.getElementById(ClickIcon).innerHTML == "+")
+					{
+						document.getElementById(tbodyid).style.display = "";
+						document.getElementById(ClickIcon).innerHTML = "-";
+					}else{
+						document.getElementById(tbodyid).style.display = "none";
+						document.getElementById(ClickIcon).innerHTML = "+";
+					}
+				}
+				</SCRIPT>
 				<h1><?php echo $newArray['ssid'];?></h1>
 				<TABLE WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 				<TABLE WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
@@ -1143,10 +1157,10 @@ class database
 				<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Channel #</P></TD><TD WIDTH=439><P><?php echo $newArray['chan'];?></P></TD></TR>
 		<?php
 		?>
-		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>&token=<?php echo $_SESSION['token'];?>">">Export this AP to KML</a></td></tr>
+		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>&token=<?php echo $_SESSION['token'];?>">Export this AP to KML</a></td></tr>
 		</table>
 		<br>
-		<TABLE WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0>
+		<TABLE WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0 id="gps">
 		<tr class="style4"><th colspan="10">Signal History</th></tr>
 		<tr class="style4"><th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th><th>Plot</th></tr>
 		<?php
@@ -1188,21 +1202,15 @@ class database
 				<?php echo $lu; ?></td><td>
 				<?php echo $field["nt"]; ?></td><td>
 				<?php echo $field["label"]; ?></td><td>
-				<a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $field["user"]; ?>&token=<?php echo $_SESSION['token'];?>">"><?php echo $field["user"]; ?></a></td><td>
-				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>&token=<?php echo $_SESSION['token'];?>">">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">">KML</a> OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">">GPX</a></td></tr>
+				<a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $field["user"]; ?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["user"]; ?></a></td><td>
+				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>&token=<?php echo $_SESSION['token'];?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">KML</a> OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">GPX</a></td></tr>
 				<tr><td colspan="10" align="center">
-				<script type="text/javascript">
-				function displayRow<?php print ($tablerowid);?>()
-				{
-					var row = document.getElementById("captionRow<?php echo $tablerowid;?>");
-					if (row.style.display == '') row.style.display = 'none';
-					else row.style.display = '';
-				}
-				</script>
-				<button onclick="displayRow<?php echo $tablerowid;?>()" >Show / Hide GPS</button>
-				<table id="captionRow<?php echo $tablerowid;?>" WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+				
+				<table WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+				<tr><td class="style4" onclick="expandcontract('Row<?php echo $tablerowid;?>','ClickIcon<?php echo $tablerowid;?>')" id="ClickIcon<?php echo $tablerowid;?>" style="cursor: pointer; cursor: hand;">+</td>
 				<th colspan="6" class="style4">GPS History</th></tr>
-				<tr class="style4">		<th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
+				<tbody id="Row<?php echo $tablerowid;?>" style="display:none">
+				<tr class="style4"><th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
 				<?php
 				$tablerowid++;
 				$signals = explode('-',$field['sig']);

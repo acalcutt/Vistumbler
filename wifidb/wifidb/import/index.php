@@ -46,14 +46,14 @@ switch($func)
 				$count = count($return);
 				if($count <= 8) 
 				{
-					echo "<br><br><h2>You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.</h2>";
+					echo '<br><br><h2>You cannot upload an empty VS1 file, at least scan for a few seconds to import some data. <A HREF="javascript:history.go(-1)"> [Go Back]</A></h2>';
 					$filename = $_SERVER['SCRIPT_FILENAME'];
 					footer($filename);
 					die();
 				}
 				if (!copy($tmp, $uploadfile))
 				{
-					echo "Failure to Move file to Upload Dir (/import/up/), check the folder permisions if you are using Linux.<BR>";
+					echo 'Failure to Move file to Upload Dir (/import/up/), check the folder permisions if you are using Linux.<BR>';
 					$filename = $_SERVER['SCRIPT_FILENAME'];
 					footer($filename);
 					die();
@@ -176,7 +176,7 @@ switch($func)
 				<?php
 			}else
 			{
-				echo "Failure to compare tokens, Session not set. Try again.<BR>";
+				echo "Failure to compare tokens, session not set. Try again.<BR>";
 			}
 		}else
 		{

@@ -180,17 +180,13 @@ if($total_rows === 0)
 		echo $newArray['id'];
 		?>
 		</td><td align="center">
-		<?php
-		echo '<a class="links" href="../opt/userstats.php?func=useraplist&row='.$newArray["user_row"].'">'.$newArray['file'].'</a>';
-		?>
+		<a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $newArray["user_row"];?>&token=<?php echo $_SESSION['token']?>"><?php echo $newArray['file'];?></a>
 		</td><td align="center">
 		<?php
 		echo $newArray['date'];
 		?>
 		</td><td align="center">
-		<?php
-		echo '<a class="links" href ="../opt/userstats.php?func=allap&user='.$newArray["user"].'">'.$newArray["user"].'</a>';
-		?>
+		<a class="links" href ="../opt/userstats.php?func=allap&user=<?php echo $newArray["user"];?>&token=<?php echo $_SESSION['token']?>"><?php echo $newArray["user"];?></a>
 		</td><td align="center">
 		<?php
 		echo $newArray['title'];

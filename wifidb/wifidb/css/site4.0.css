@@ -7,6 +7,13 @@ body {
 	font-size/* */:/**/small; font-style:normal; font-variant:normal; font-weight:normal; font-family:Trebuchet MS
 }
 
+#foo {
+	position: absolute;
+	z-index: 99;
+	left: 120px;
+	top: 60px;
+}
+
 .active-box-resize {
 	display: none;
 }

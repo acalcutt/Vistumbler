@@ -23,7 +23,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16pb1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1A</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-12</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-13</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -35,9 +35,12 @@ pageheader("Version Page");
 					<OL>
 						<LI><ny-paq>sayz oh-m [ is the unsanatized, but still safe ssid, used to name APs, 32 char limit, no special chars].</LI>
 						<LI>&#60;ny-paq&#62;sayz oh-m [safe for file names, no special chars, 32 char limit].</LI>
-						<LI>_ny-paq_sayz oh-m [safe for table names, max 24 char, no special chars]
+						<LI>_ny-paq_sayz oh-m [safe for table names, max 25 char, no special chars]
 					</OL>
 					<LI>Changed the way WiFiDB looks for the install folder.</LI>
+					<LI>Daemon now has all SQL based errors being echoed out to the screen.</LI>
+					<LI>Changed the table hide for GPS history, so it is now hidden by default. Has a +/- symbol to either expand or contract the table next to the GPS History Title.</LI>
+					<LI>For some reason the Save Search link was missing after 0.16 Build 1, is now back, with a few enhancements</LI>
 				</OL>
 			</td></tr>
 		</table>

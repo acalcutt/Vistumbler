@@ -82,7 +82,7 @@ if (isset($_GET['token']))
 				$other_imports = mysql_query($sql, $conn) or die(mysql_error());
 				while($imports = mysql_fetch_array($other_imports))
 				{
-					if($imports['id'] == $user_array['id'] ){continue;}
+					if($imports['id'] == $user_first['id'] ){continue;}
 					$import_id = $imports['id'];
 					$import_title = $imports['title'];
 					$import_date = $imports['date'];
