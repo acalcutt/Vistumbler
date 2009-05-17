@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.4 Beta 1'
+$version = '9.4 Beta 2'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/05/03')
+$last_modified = _DateLocalFormat('2009/05/17')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -39,6 +39,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
 #include "UDFs\NativeWifi.au3"
+#include "UDFs\cfxUDF.au3"
 
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
@@ -173,6 +174,8 @@ Dim $AutoKmlProcess
 Dim $RefreshWindowOpened
 Dim $NsCancel
 Dim $DefaultApapterID
+Dim $OpenedPort
+Dim $LastGpsString
 
 Dim $ListviewAPs
 Dim $TreeviewAPs
@@ -191,7 +194,7 @@ Dim $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSounds
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadNs
 
 Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1
-Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
+Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
@@ -268,7 +271,8 @@ Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
 Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
 Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
 Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
-Dim $UseNetcomm = IniRead($settings, 'GpsSettings', 'UseNetcomm', 1)
+Dim $UseNetcomm = IniRead($settings, 'GpsSettings', 'UseNetcomm', 0)
+Dim $GpsType = IniRead($settings, 'GpsSettings', 'GpsType', $UseNetcomm)
 Dim $GPSformat = IniRead($settings, 'GpsSettings', 'GPSformat', 1)
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 
@@ -895,7 +899,7 @@ Else
 	Next
 EndIf
 
-ConsoleWrite($DefaultApapterID & @CRLF)
+;ConsoleWrite($DefaultApapterID & @CRLF)
 
 $Extra = GUICtrlCreateMenu($Text_Extra)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
@@ -1075,8 +1079,8 @@ While 1
 			GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
 			$UpdatedGPS = 1
 		Else
-			If $UseNetcomm = 1 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorBufferEmpty)
-			If $UseNetcomm = 0 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorStopped)
+			If $GpsType = 1 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorBufferEmpty)
+			If $GpsType = 0 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorStopped)
 			Sleep(1000)
 		EndIf
 	EndIf
@@ -2158,6 +2162,7 @@ Func _GpsToggle();Turns GPS on or off
 		$TurnOffGPS = 1
 	Else
 		$openport = _OpenComPort($ComPort, $BAUD, $PARITY, $DATABIT, $STOPBIT);Open The GPS COM port
+		
 		If $openport = 1 Then
 			$UseGPS = 1
 			GUICtrlSetData($GpsButton, $Text_StopGPS)
@@ -2384,7 +2389,25 @@ EndFunc   ;==>_ClearAll
 
 Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = '8', $sStopBit = '1', $sFlow = '0');Open specified COM port
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenComPort()') ;#Debug Display
-	If $UseNetcomm = 1 Then
+	If $GpsType = 0 Then
+		If $sPARITY = 'O' Then ;Odd
+			$iPar = '1'
+		ElseIf $sPARITY = 'E' Then ;Even
+			$iPar = '2'
+		ElseIf $sPARITY = 'M' Then ;Mark
+			$iPar = '3'
+		ElseIf $sPARITY = 'S' Then ;Space
+			$iPar = '4'
+		Else
+			$iPar = '0';None
+		EndIf
+		$OpenedPort = _CommSetPort($CommPort, $sErr, $sBAUD, $sDataBit, $iPar, $sStopBit, $sFlow)
+		If $OpenedPort = 1 Then
+			Return (1)
+		Else
+			Return (0)
+		EndIf
+	ElseIf $GpsType = 1 Then
 		$return = 0
 		$ComError = 0
 		$CommSettings = $sBAUD & ',' & $sPARITY & ',' & $sDataBit & ',' & $sStopBit
@@ -2404,7 +2427,7 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = 
 			EndIf
 		EndIf
 		Return ($return)
-	Else
+	ElseIf $GpsType = 2 Then
 		If $sPARITY = 'O' Then ;Odd
 			$iPar = '1'
 		ElseIf $sPARITY = 'E' Then ;Even
@@ -2416,11 +2439,18 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = 
 		Else
 			$iPar = '0';None
 		EndIf
-		$OpenedPort = _CommSetPort($CommPort, $sErr, $sBAUD, $sDataBit, $iPar, $sStopBit, $sFlow)
-		If $OpenedPort = 1 Then
-			Return (1)
-		Else
+		If $sStopBit = '1' Then
+			$iStop = '0'
+		ElseIf $sStopBit = '1.5' Then
+			$iStop = '1'
+		ElseIf $sStopBit = '2' Then
+			$iStop = '2'
+		EndIf
+		$OpenedPort = _OpenComm($CommPort, $sBAUD, $sDataBit, $iPar, $iStop)
+		If $OpenedPort = '-1' Then
 			Return (0)
+		Else
+			Return (1)
 		EndIf
 	EndIf
 EndFunc   ;==>_OpenComPort
@@ -2428,13 +2458,15 @@ EndFunc   ;==>_OpenComPort
 Func _CloseComPort($CommPort = '8');Closes specified COM port
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseComPort()') ;#Debug Display
 	;Close the COM Port
-	If $UseNetcomm = 1 Then
+	If $GpsType = 0 Then
+		_CommClosePort()
+	ElseIf $GpsType = 1 Then
 		With $NetComm
 			.CommPort = $CommPort ;Set port number
 			.PortOpen = "False"
 		EndWith
-	Else
-		_CommClosePort()
+	ElseIf $GpsType = 2 Then
+		_CloseComm($OpenedPort)
 	EndIf
 EndFunc   ;==>_CloseComPort
 
@@ -2452,10 +2484,24 @@ Func _GetGPS(); Recieves data from gps device
 
 	While 1 ;Loop to extract gps data untill location is found or timout time is reached
 		If $UseGPS = 0 Then ExitLoop
-		If $UseNetcomm = 1 Then ;Use Netcomm ocx to get data (more stable right now)
+		;ConsoleWrite($GpsType & @CRLF)
+		If $GpsType = 0 Then ;Use CommMG
+			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
+			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
+			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+				$FoundData = 1
+				If StringInStr($dataline, "$GPGGA") Then
+					_GPGGA($dataline);Split GPGGA data from data string
+					$disconnected_time = -1
+				ElseIf StringInStr($dataline, "$GPRMC") Then
+					_GPRMC($dataline);Split GPRMC data from data string
+					$disconnected_time = -1
+				EndIf
+			EndIf
+		ElseIf $GpsType = 1 Then ;Use Netcomm ocx to get data (more stable right now)
 			If $NetComm.InBufferCount Then
 				$Buffer = $NetComm.InBufferCount
-				If $Buffer > 75 And $LatTest = 0 And TimerDiff($timeout) < $maxtime Then
+				If $Buffer > 85 And $LatTest = 0 And TimerDiff($timeout) < $maxtime Then
 					$inputdata = $NetComm.inputdata
 					If StringInStr($inputdata, '$') And StringInStr($inputdata, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 						$FoundData = 1
@@ -2476,22 +2522,33 @@ Func _GetGPS(); Recieves data from gps device
 					EndIf
 				EndIf
 			EndIf
-		Else ;Use CommMG.dll instead of the netcomm ocx (less stable, but works with x64)
-			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
-			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
-			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+		ElseIf $GpsType = 2 Then ;Use Kernel32
+			$gstring = StringStripWS(_rxwait($OpenedPort, '1000', $maxtime), 8);Read data line from GPS
+			$dataline = $gstring; & $LastGpsString
+			$LastGpsString = $gstring
+			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
 				$FoundData = 1
-				If StringInStr($dataline, "$GPGGA") Then
-					_GPGGA($dataline);Split GPGGA data from data string
-					$disconnected_time = -1
-				ElseIf StringInStr($dataline, "$GPRMC") Then
-					_GPRMC($dataline);Split GPRMC data from data string
-					$disconnected_time = -1
-				EndIf
+				$dlsplit = StringSplit($dataline, '$')
+				For $gda = 1 To $dlsplit[0]
+					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
+					;ConsoleWrite('-' & $dlsplit[$gda] & @CRLF)
+					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+						
+						If StringInStr($dlsplit[$gda], "GPGGA") Then
+							_GPGGA($dlsplit[$gda]);Split GPGGA data from data string
+							$disconnected_time = -1
+						ElseIf StringInStr($dlsplit[$gda], "GPRMC") Then
+							_GPRMC($dlsplit[$gda]);Split GPRMC data from data string
+							$disconnected_time = -1
+						EndIf
+					EndIf
+					
+				Next
 			EndIf
 		EndIf
 		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
 		If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
+
 	WEnd
 	If $FoundData = 1 Then
 		$disconnected_time = -1
@@ -4685,7 +4742,7 @@ Func _WriteINI()
 	IniWrite($settings, 'GpsSettings', 'Parity', $PARITY)
 	IniWrite($settings, 'GpsSettings', 'DataBit', $DATABIT)
 	IniWrite($settings, 'GpsSettings', 'StopBit', $STOPBIT)
-	IniWrite($settings, 'GpsSettings', 'UseNetcomm', $UseNetcomm)
+	IniWrite($settings, 'GpsSettings', 'GpsType', $GpsType)
 	IniWrite($settings, 'GpsSettings', 'GPSformat', $GPSformat)
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
 
@@ -6135,16 +6192,20 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		;GPS Tab
 		$Tab_Gps = GUICtrlCreateTabItem($Text_Gps)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		$GroupComInt = GUICtrlCreateGroup($Text_ComInterface, 24, 48, 633, 97)
+		$GroupComInt = GUICtrlCreateGroup($Text_ComInterface, 24, 48, 633, 105)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseNetcomm = GUICtrlCreateRadio($Text_UseNetcomm, 40, 72, 361, 17)
+		$Rad_UseNetcomm = GUICtrlCreateRadio($Text_UseNetcomm, 40, 70, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 104, 361, 17)
+		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 95, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		If $UseNetcomm = 1 Then
-			GUICtrlSetState($Rad_UseNetcomm, $GUI_CHECKED)
-		Else
+		$Rad_UseKernel32 = GUICtrlCreateRadio("Use Kernel32", 40, 120, 361, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		If $GpsType = 0 Then
 			GUICtrlSetState($Rad_UseCommMG, $GUI_CHECKED)
+		ElseIf $GpsType = 1 Then
+			GUICtrlSetState($Rad_UseNetcomm, $GUI_CHECKED)
+		ElseIf $GpsType = 2 Then
+			GUICtrlSetState($Rad_UseKernel32, $GUI_CHECKED)
 		EndIf
 		$GroupComSet = GUICtrlCreateGroup($Text_ComSettings, 24, 160, 633, 185)
 		GUICtrlSetColor(-1, $TextColor)
@@ -6829,8 +6890,9 @@ Func _ApplySettingsGUI();Applys settings
 		If GUICtrlRead($GUI_Format) = "ddmm.mmmm" Then $GPSformat = 3
 		GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
 		GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
-		If GUICtrlRead($Rad_UseNetcomm) = 1 Then $UseNetcomm = 1 ;Set Netcomm as default comm interface
-		If GUICtrlRead($Rad_UseCommMG) = 1 Then $UseNetcomm = 0 ;Set CommMG as default comm interface
+		If GUICtrlRead($Rad_UseCommMG) = 1 Then $GpsType = 0 ;Set CommMG as default comm interface
+		If GUICtrlRead($Rad_UseNetcomm) = 1 Then $GpsType = 1 ;Set Netcomm as default comm interface
+		If GUICtrlRead($Rad_UseKernel32) = 1 Then $GpsType = 2 ;Set Kernel32 as default comm interface
 	EndIf
 	If $Apply_Language = 1 Then
 		$DefaultLanguage = GUICtrlRead($LanguageBox)
@@ -7938,7 +8000,7 @@ Func _InterfaceChanged()
 		Next
 	EndIf
 	
-	ConsoleWrite($DefaultApapter & '-' & $DefaultApapterDesc & '-' & $DefaultApapterID & @CRLF)
+	;ConsoleWrite($DefaultApapter & '-' & $DefaultApapterDesc & '-' & $DefaultApapterID & @CRLF)
 EndFunc   ;==>_InterfaceChanged
 
 Func Log10($x)
