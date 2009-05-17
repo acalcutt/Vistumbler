@@ -1278,7 +1278,7 @@ class database
 					$points = explode('-' , $field['points']);
 					$total = count($points);
 					?>
-					<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>">"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
+					<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
 					<?php
 				}
 			}
@@ -1361,7 +1361,7 @@ class database
 				if($user_array['points'] === ""){continue;}
 				if($pre_user !== $username)
 				{
-					echo '<tr><td>'.$user_array['id'].'</td><td><a class="links" href="userstats.php?func=alluserlists&user='.$username.'&token='.$_SESSION['token'].'">'.$username.'</a></td><td><a class="links" href="userstats.php?func=useraplist&row='.$user_array["id"].'">'.$user_array['title'].'</a></td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
+					echo '<tr><td>'.$user_array['id'].'</td><td><a class="links" href="userstats.php?func=alluserlists&user='.$username.'&token='.$_SESSION['token'].'">'.$username.'</a></td><td><a class="links" href="userstats.php?func=useraplist&row='.$user_array["id"].'&token='.$_SESSION['token'].'">'.$user_array['title'].'</a></td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
 				}
 				else
 				{
@@ -1624,12 +1624,12 @@ class database
 					$sectype	= $ap_array['sectype'];
 					$radio		= $ap_array['radio'];
 					$chan		= $ap_array['chan'];
-					
-					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
+					$table = $ap_array['ssid'].'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
 					$table_gps = $table.$gps_ext;
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 					$sql1 = "SELECT * FROM `$table`";
-					$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+					$result1 = mysql_query($sql1, $conn);
+					if(!$result1){continue;}
 					$rows = mysql_num_rows($result1);
 					$sql = "SELECT * FROM `$table` WHERE `id`='1'";
 					$newArray = mysql_fetch_array($result1);

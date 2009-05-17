@@ -15,17 +15,26 @@ if (isset($_POST['token']))
 			echo '<font color="white">You must choose between 5 seconds and 512 Minutes, I have set it to 15 for you, you dumbass.</font>';
 			$refresh = "15";
 		}
+		#echo $refresh;
 		fopen($refresh_file, "w");
 		$fileappend = fopen($refresh_file, "a");
 		fwrite($fileappend, $refresh);
 	}else
 	{
 		$refresh = "15";
+		#echo $refresh;
 	}
 }else
 {
-	$refresh_fopen = file($refresh_file);
-	$refresh = $refresh_fopen[0];
+	if($refresh_fopen = file($refresh_file))
+	{
+		$refresh = $refresh_fopen[0];
+		#echo $refresh;
+	}else
+	{
+		$refresh = "15";
+		#echo $refresh;
+	}
 }
 
 echo '<meta http-equiv="refresh" content="'.$refresh.'">';
@@ -56,27 +65,26 @@ if(isset($_SESSION['token']))
 				echo $nextrun				
 			?> EST</h2>
 			<h4>If none are already importing...</h4>
-			<form action="scheduling.php" method="post" enctype="multipart/form-data">
+			<form action="scheduling.php?token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 			<input type="hidden" name="token" value="<?php echo $token; ?>" />
 			Select a Refresh Rate : <br> 
 			<SELECT NAME="refresh">  
-			<OPTION VALUE="5"> 5 Seconds
-			<OPTION VALUE="10"> 10 Seconds
-			<OPTION VALUE="15"> 15 Seconds
-			<OPTION VALUE="30"> 30 Seconds
-			<OPTION VALUE="60"> 60 Seconds
-			<OPTION VALUE="120"> 2 Minutes
-			<OPTION VALUE="240"> 4 Minutes
-			<OPTION VALUE="480"> 8 Minutes
-			<OPTION VALUE="960"> 16 Minutes
-			<OPTION VALUE="1920"> 32 Minutes
-			<OPTION VALUE="3840"> 64 Minutes
-			<OPTION VALUE="5760"> 96 Minutes
-			<OPTION VALUE="7680"> 128 Minutes
-			<OPTION VALUE="30720"> 512 Minutes
+			<OPTION <?php if($refresh == 5){ echo "selected ";}?> VALUE="5"> 5 Seconds
+			<OPTION <?php if($refresh == 10){ echo "selected ";}?> VALUE="10"> 10 Seconds
+			<OPTION <?php if($refresh == 15){ echo "selected ";}?> VALUE="15"> 15 Seconds
+			<OPTION <?php if($refresh == 30){ echo "selected ";}?> VALUE="30"> 30 Seconds
+			<OPTION <?php if($refresh == 60){ echo "selected ";}?> VALUE="60"> 60 Seconds
+			<OPTION <?php if($refresh == 120){ echo "selected ";}?> VALUE="120"> 2 Minutes
+			<OPTION <?php if($refresh == 240){ echo "selected ";}?> VALUE="240"> 4 Minutes
+			<OPTION <?php if($refresh == 480){ echo "selected ";}?> VALUE="480"> 8 Minutes
+			<OPTION <?php if($refresh == 960){ echo "selected ";}?> VALUE="960"> 16 Minutes
+			<OPTION <?php if($refresh == 1920){ echo "selected ";}?> VALUE="1920"> 32 Minutes
+			<OPTION <?php if($refresh == 3840){ echo "selected ";}?> VALUE="3840"> 64 Minutes
+			<OPTION <?php if($refresh == 5760){ echo "selected ";}?> VALUE="5760"> 96 Minutes
+			<OPTION <?php if($refresh == 7680){ echo "selected ";}?> VALUE="7680"> 128 Minutes
+			<OPTION <?php if($refresh == 30720){ echo "selected ";}?> VALUE="30720"> 512 Minutes
 			</SELECT><br>
 			<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit"><br>
-			(Currently set to: <?php echo $refresh;?>)
 			</form>
 			<table width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr>
 <?php

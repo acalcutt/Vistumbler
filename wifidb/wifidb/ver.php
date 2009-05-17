@@ -20,10 +20,10 @@ pageheader("Version Page");
 			</tr>
 		</table>
 		
-		<table width="100%" border="2" id="16pb1">
+		<table width="100%" border="2" id="16b21A">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1A</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-13</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-17</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -40,12 +40,22 @@ pageheader("Version Page");
 					<LI>Changed the way WiFiDB looks for the install folder.</LI>
 					<LI>Daemon now has all SQL based errors being echoed out to the screen.</LI>
 					<LI>Changed the table hide for GPS history, so it is now hidden by default. Has a +/- symbol to either expand or contract the table next to the GPS History Title.</LI>
-					<LI>For some reason the Save Search link was missing after 0.16 Build 1, is now back, with a few enhancements</LI>
+					<LI>For some reason the Save Search link was missing after 0.16 Build 1, is now back, with a few enhancements.</LI>
+					<LI>Fixed the No Token error with imports directly from Vistumbler.</LI>
+					<LI>Fixed the formating of the file location that is in the URL from the import directly from Vistumbler that gets printed on the page.</LI>
+					<OL>Issues reported by Acalcutt:
+						<LI>"Access" is spelled incorrectly multiple times on Export page.</LI>
+						<LI>(Export an Access Point to KML) "Username" should be "SSID".</LI>
+						<LI>Fixed the links for Access Points on the All AP page. (Add tokens to the ssid urls in the "View all APs" page)</LI>
+						<LI>Refresh time on the scheduling page went to 15 seconds when I set it to 5 seconds. On the next refresh it went back to 30 seconds.</LI>
+					</OL>
+					<LI>Also made the drop down for selecting the refresh time on the scheduled imports page, so it has a default of the current selection instead fo going back to 5 sec.</LI>
+					
 				</OL>
 			</td></tr>
 		</table>
 		<br>
-		<table width="100%" border="2" id="16pb1">
+		<table width="100%" border="2" id="16b21">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-05</td></tr>
@@ -66,7 +76,7 @@ pageheader("Version Page");
 			</td></tr>
 		</table>
 		<br>
-<table width="100%" border="2" id="16pb1">
+<table width="100%" border="2" id="16b2">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-29</td></tr>
@@ -80,7 +90,7 @@ pageheader("Version Page");
 					<LI>Already in Database: </LI>
 				</OL>
 			<LI>Finished AP Fetch Page so that GPS can be hidden.</LI>
-			<LI>Most, if not all pages now have the footer() and pageheader() function to standardize page layout</LI>
+			<LI>Most, if not all pages now have the footer() and pageheader() function to standardize page layout.</LI>
 			<LI>Fixed an issue where if there is no MAC/Sectype/Chan/Radio it would just be blank, and cause errors on fetch. </LI>
 				<OL>New Defaults:
 					<LI>Mac (00:00:00:00:00:00)</LI>
@@ -90,8 +100,8 @@ pageheader("Version Page");
 				</OL>
 			<LI>Added support for Exproting to GPX files, for Garmin Devices.</LI>
 			<LI>Moved the code from insertnew.php into the index.php file, this is for the token that has been added for validation.</LI>
-			<LI>Added a comment tag to <i>`line 2`</i>of the KML exports to tell if it was a Full DB/Users list/Single AP/All Users APs/All Signal for AP</LI>
-			<LI>Made the tables that hold the page one table so when there is a skeew in the page doesnt get deformed like it did before. (I'm not a GUI person)</LI>
+			<LI>Added a comment tag to <i>`line 2`</i>of the KML exports to tell if it was a Full DB/Users list/Single AP/All Users APs/All Signal for AP.</LI>
+			<LI>Made the tables that hold the page one table so when there is a skeew in the page doesnt get deformed like it did before. (I'm not a GUI person).</LI>
 			<LI>Fixed some formating issues with the install/upgrade/patching paths.</LI>
 			<LI>For Security reasons, temparaly will be using hard links for the side links, untill furtur notice.</LI>
 			<LI>Added a 'daemon' of sorts. This is optional uppon install, and changeable afterwards in the config file. <br>Notes are in the readme.txt of the tools folder.</LI>
@@ -100,7 +110,7 @@ pageheader("Version Page");
 </table>
 
 <br>
-<table width="100%" border="2" id="16pb1">
+<table width="100%" border="2" id="16b1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-20</td></tr>
@@ -133,7 +143,6 @@ pageheader("Version Page");
 			<LI>Added link to Last User on Index page.</LI>
 			<LI>Cleaned up the tables on the new version page.</LI>
 			<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumblers save file.</LI>
-			
 			<LI>Fixed up the List KML export, there is a link to the KML file now.</LI>
 			<LI>Finished KML export for entire database.</LI>
 			<LI>Added option for a black background on the Signal Graphs.</LI>
@@ -218,8 +227,8 @@ pageheader("Version Page");
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
-			<LI>There where a few major bugs in the install script that are now fixed</LI>
-			<LI>There was no Upgrade script in the install folder to do a safe upgrade from v0.14 to v0.15. go to /install/upgrade.php</LI>
+			<LI>There where a few major bugs in the install script that are now fixed.</LI>
+			<LI>There was no Upgrade script in the install folder to do a safe upgrade from v0.14 to v0.15. go to /install/upgrade.php.</LI>
 		</OL>
 	</td></tr>
 </table>
@@ -277,7 +286,7 @@ pageheader("Version Page");
 		<OL>
 			<LI>Changed the All users list, so that it displays only the first ID for a user (which is considered the users Unique ID).</LI>
 			<LI>Fixed an issue where randomly an AP would have more signal history points then GPS history points.</LI>
-			<LI>Added installer for easy setup. Just go to /[WifiDB path]/install/</LI>
+			<LI>Added installer for easy setup. Just go to /[WifiDB path]/install/.</LI>
 			<LI>Fixed a few more bugs/PEBKAC errors.</LI>
 		</OL>
 	</td></tr>
@@ -317,7 +326,7 @@ pageheader("Version Page");
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
-			<LI>Fixed the issue where the signal history was getting corrupted and adding in way more signal points then there actually where for the AP. [functions.php->import_vs1()]</LI>
+			<LI>Fixed the issue where the signal history was getting corrupted and adding in way more signal points then there actually where for the AP. [functions.php->import_vs1()].</LI>
 			<LI>Added in a `Users` table to keep track of what users imported/updated AP's.</LI>
 			<LI>Added in `notes` for the group of AP's to be added into the `Users` table, by the user appon import.</LI>
 			<LI>Fixed most if not all CSS issues.</LI>

@@ -185,78 +185,68 @@ switch($func)
 		break;
 	#----------------------
 	default: //index page that has form to upload file
-		if (isset($_GET['token']))
+		?><h2>Import Access Points</h2><?php
+		$get_exp = explode('\\\\',$_GET['file']);
+		$file_imp = implode('\\', $get_exp);
+		if (isset($_GET['file']))
 		{
-			if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])
-			{
-				?><h2>Import Access Points</h2><?php
-				if (isset($_GET['file']))
-				{
-				echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <b>".$_GET['file']."</b><br>Copy and Paste the bolded text into the file location field to import it.<br></h2>";
-				}
-				echo "<br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br>";
-				?>
-				<CENTER><form action="?func=import&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
-					<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
-						<TR height="40">
-							<TD class="style4">
-								<P>Title of Import: 
-								</P>
-							</TD>
-							<TD>
-								<P><A NAME="title"></A><INPUT TYPE=TEXT NAME="title" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
-							</TD>
-						</TR>
-						<TR height="40">
-							<TD class="style4">
-								<P>File location: 
-								</P>
-							</TD>
-							<TD>
-								<P><A NAME="file"></A><INPUT TYPE=FILE NAME="file" SIZE=56 STYLE="width: 5.41in; height: 0.25in"></P>
-							</TD>
-						</TR>
-						<TR height="40">
-							<TD class="style4">
-								<P>Username: 
-								</P>
-							</TD>
-							<TD>
-								<P><A NAME="user"></A><INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
-							</TD>
-						</TR>
-						<TR>
-							<TD class="style4">
-								<P>Notes: 
-								</P>
-							</TD>
-							<TD>
-								<P><TEXTAREA NAME="notes" ROWS=4 COLS=50 STYLE="width: 4.42in; height: 1.01in"></TEXTAREA><BR>
-								</P>
-							</TD>
-						</TR>
-							<TD>.</TD><TD>
-								<P>
-							<?php	
-								if($rebuild === 0)
-								{
-								echo '<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in"></P>';
-								}else{echo "The database is in  rebuild mode, please wait...";}
-							?>
-							</TD>
-						</TR>
-					</TABLE>
-					</form>
-				</CENTER>
-				<?php
-			}else
-			{
-				echo "Failure to compare tokens, Session not set. Try again.<BR>";
-			}
-		}else
-		{
-			echo "Failure to compare tokens, token not set. Try again.<BR>";
+		echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <br><b><u>".$file_imp."</u></b><br>Copy and Paste the bolded text into the file location field to import it.<br></h2>";
 		}
+		echo "<br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br>";
+		?>
+		<CENTER><form action="?func=import&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+			<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
+				<TR height="40">
+					<TD class="style4">
+						<P>Title of Import: 
+						</P>
+					</TD>
+					<TD>
+						<P><A NAME="title"></A><INPUT TYPE=TEXT NAME="title" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+					</TD>
+				</TR>
+				<TR height="40">
+					<TD class="style4">
+						<P>File location: 
+						</P>
+					</TD>
+					<TD>
+						<P><A NAME="file"></A><INPUT TYPE=FILE NAME="file" SIZE=56 STYLE="width: 5.41in; height: 0.25in"></P>
+					</TD>
+				</TR>
+				<TR height="40">
+					<TD class="style4">
+						<P>Username: 
+						</P>
+					</TD>
+					<TD>
+						<P><A NAME="user"></A><INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+					</TD>
+				</TR>
+				<TR>
+					<TD class="style4">
+						<P>Notes: 
+						</P>
+					</TD>
+					<TD>
+						<P><TEXTAREA NAME="notes" ROWS=4 COLS=50 STYLE="width: 4.42in; height: 1.01in"></TEXTAREA><BR>
+						</P>
+					</TD>
+				</TR>
+					<TD>.</TD><TD>
+						<P>
+					<?php	
+						if($rebuild === 0)
+						{
+						echo '<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in"></P>';
+						}else{echo "The database is in  rebuild mode, please wait...";}
+					?>
+					</TD>
+				</TR>
+			</TABLE>
+			</form>
+		</CENTER>
+		<?php
 		break;
 }
 $filename = $_SERVER['SCRIPT_FILENAME'];

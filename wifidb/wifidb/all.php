@@ -21,12 +21,12 @@ if (isset($_GET['token']))
 		if ($ord=="" or !is_string($ord)){$ord="ASC";}
 		if ($sort=="" or !is_string($sort)){$sort="id";}
 		echo '<table border="1" width="100%" cellspacing="0">'
-		.'<tr class="style4"><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"border="0" src="img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Radio Type<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="img/up.png"></a></td></tr>';
+		.'<tr class="style4"><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"border="0" src="img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Radio Type<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"&token='.$_SESSION["token"].'><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
+		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td></tr>';
 
 		$x=0;
 		$n=0;
@@ -46,7 +46,7 @@ if (isset($_GET['token']))
 			$radio = $newArray['radio'];
 			$auth = $newArray['auth'];
 			$encry = $newArray['encry'];
-			echo '<tr><td><a class="links" href="opt/fetch.php?id='.$id.'">'.$ssid.'</a></td>';
+			echo '<tr><td><a class="links" href="opt/fetch.php?id='.$id.'&token='.$_SESSION["token"].'">'.$ssid.'</a></td>';
 			echo '<td>'.$mac.'</td>';
 			echo '<td>'.$chan.'</td>';
 			if($radio=="a")
@@ -78,7 +78,7 @@ if (isset($_GET['token']))
 		if ($from=0)
 		{
 			$from_back=$to_back-$inc;
-			echo '<a class="links" href="?from='.$from_back.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'"><- </a> ';
+			echo '<a class="links" href="?from='.$from_back.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'"><- </a> ';
 		}
 		else
 		{
@@ -86,7 +86,7 @@ if (isset($_GET['token']))
 		}
 		for($I=0; $I<=$pages; $I++)
 		{
-				echo ' <a class="links" href="?from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'">'.$page.'</a> - ';
+				echo ' <a class="links" href="?from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">'.$page.'</a> - ';
 				$from=$from+$inc;
 				$page++;
 		}
@@ -96,7 +96,7 @@ if (isset($_GET['token']))
 		}
 		else
 		{
-			echo '<a class="links" href="?from='.$from_fwd.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'">></a>';
+			echo '<a class="links" href="?from='.$from_fwd.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">></a>';
 		}
 	}else
 	{

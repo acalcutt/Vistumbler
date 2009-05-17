@@ -22,7 +22,7 @@ switch($func)
 		
 		<form action="export.php?func=exp_user_all_kml" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
-		<tr class="style4"><th colspan="2">Export All Acess Points for a User</th></tr>
+		<tr class="style4"><th colspan="2">Export All Access Points for a User</th></tr>
 		<tr><td>Username</td><td>
 			<select name="user">
 			<?php
@@ -42,8 +42,8 @@ switch($func)
 		
 		<form action="export.php?func=exp_single_ap" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
-		<tr class="style4"><th colspan="2">Export an Acess Point to KML</th></tr>
-		<tr><td>Username</td><td>
+		<tr class="style4"><th colspan="2">Export an Access Point to KML</th></tr>
+		<tr><td>SSID</td><td>
 			<select name="row">
 			<?php
 			mysql_select_db($db,$conn);
@@ -61,14 +61,14 @@ switch($func)
 		</form>
 		
 		<table border="1" cellspacing="0" cellpadding="3">
-		<tr class="style4"><th colspan="2">Export All Acess Points in the Database to KML</th></tr>
+		<tr class="style4"><th colspan="2">Export All Access Points in the Database to KML</th></tr>
 		<tr><td colspan="2" align="center"><a class="links" href="export.php?func=exp_all_db_kml">Export All Access Points</a></td></tr>
 		</table>
 		<br>
 		<form action="export.php?func=exp_user_list" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
 		<tr class="style4"><th colspan="2">Export a Users Import List to KML</th></tr>
-		<tr><td>Username</td><td>
+		<tr><td>User Import List</td><td>
 			<select name="row">
 			<?php
 			mysql_select_db($db,$conn);
