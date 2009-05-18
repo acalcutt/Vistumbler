@@ -86,8 +86,58 @@ if(isset($_SESSION['token']))
 			</SELECT><br>
 			<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit"><br>
 			</form>
-			<table width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr>
+			
+			
 <?php
+echo "<h3>Daemon Status:</H3>";
+####################
+function getMemoryUsage()
+{
+	if ( substr(PHP_OS,0,3) == 'WIN')
+	{
+		$output = array();
+		$WFDBD_PID = "C:\CLI\daemon\wifidbd.pid";
+		$pid_open = file($WFDBD_PID);
+		exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+		return $output[2];
+	}
+}
+#############
+if(PHP_OS == "LINUX")
+{
+	$WFDBD_PID = "/var/run/wifidbd.pid";
+	$pid_open = file($WFDBD_PID);
+	$cmd = "ps -p $pid_open[0]";
+	exec($cmd, $start, $starter);
+	?><table border="1" width="90%"><tr class="style4"><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+	if($start != "")
+	{
+		$ps_stats = explode("\t" , $start);
+		?><tr align="center"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+	}else
+	{
+		?><tr><td colspan="3">The Daemon is not running, FIX IT! FIX IT! FIX IT!</td></tr><?php
+	}
+}else
+{
+	?><table border="1" width="90%"><tr class="style4"><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+	$start = getMemoryUsage();
+	if($start != "")
+	{
+		$ps_stats = explode("," , $start);
+		?><tr align="center"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+	}else
+	{
+		?><tr><td colspan="3">The Daemon is not running, FIX IT! FIX IT! FIX IT!</td></tr><?php
+	}
+}
+?></table><br><?php
+if(!$start)
+{
+	echo "WiFiDB Could not read Daemon status: ".$start;
+}
+
+?><table border="1" width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr><?php
 $sql = "SELECT * FROM `files_tmp` ORDER BY `id` ASC";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $total_rows = mysql_num_rows($result);
@@ -96,9 +146,7 @@ if($total_rows === 0)
 	?><tr><td border="1" colspan="7" align="center">There where no files waiting to be imported, Go and import a file</td></tr></table><?php
 }else
 {
-	?>
-	<tr align="center"><td border="1"><br>
-	<?php
+	?><tr align="center"><td border="1"><br><?php
 	while ($newArray = mysql_fetch_array($result))
 	{
 		if($newArray['importing'] == '1' )
@@ -167,10 +215,10 @@ if($total_rows === 0)
 		<br>
 		<?php
 	}
-	?></td></tr></table><?php
+	?></td></tr></table><br><?php
 }
 ?>
-			<table border="1" width="90%"><tr class="style4">
+			<br><table border="1" width="90%"><tr class="style4">
 			<th colspan="9" align="center">Files already imported</th></tr>
 <?php
 $sql = "SELECT * FROM `files` ORDER BY `id` DESC";
