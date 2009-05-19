@@ -21,7 +21,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b21A">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1A</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-17</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-18</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -33,7 +33,7 @@ pageheader("Version Page");
 					<OL>
 						<LI><ny-paq>sayz oh-m [ is the unsanatized, but still safe ssid, used to name APs, 32 char limit, no special chars].</LI>
 						<LI>&#60;ny-paq&#62;sayz oh-m [safe for file names, no special chars, 32 char limit].</LI>
-						<LI>_ny-paq_sayz oh-m [safe for table names, max 25 char, no special chars]
+						<LI>_ny-paq_sayz oh-m [safe for table names, max 25 char, no special chars]</LI>
 					</OL>
 					<LI>Changed the way WiFiDB looks for the install folder.</LI>
 					<LI>Daemon now has all SQL based errors being echoed out to the screen.</LI>
@@ -41,14 +41,17 @@ pageheader("Version Page");
 					<LI>For some reason the Save Search link was missing after 0.16 Build 1, is now back, with a few enhancements.</LI>
 					<LI>Fixed the No Token error with imports directly from Vistumbler.</LI>
 					<LI>Fixed the formating of the file location that is in the URL from the import directly from Vistumbler that gets printed on the page.</LI>
-					<OL>Issues reported by Acalcutt:
-						<LI>"Access" is spelled incorrectly multiple times on Export page.</LI>
-						<LI>(Export an Access Point to KML) "Username" should be "SSID".</LI>
-						<LI>Fixed the links for Access Points on the All AP page. (Add tokens to the ssid urls in the "View all APs" page)</LI>
-						<LI>Refresh time on the scheduling page went to 15 seconds when I set it to 5 seconds. On the next refresh it went back to 30 seconds.</LI>
-					</OL>
+					<LI><b>[ Issues reported by Acalcutt ]</b>
+						<OL>
+							<LI>"Access" is spelled incorrectly multiple times on Export page.</LI>
+							<LI>(Export an Access Point to KML) "Username" should be "SSID".</LI>
+							<LI>Fixed the links for Access Points on the All AP page. (Add tokens to the ssid urls in the "View all APs" page.)</LI>
+							<LI>Refresh time on the scheduling page went to 15 seconds when I set it to 5 seconds. On the next refresh it went back to 30 seconds.</LI>
+						</OL>
+					</LI>	
 					<LI>Also made the drop down for selecting the refresh time on the scheduled imports page, so it has a default of the current selection instead fo going back to 5 sec.</LI>
-					
+					<LI>Fixed the Upgrade script in /install/upgrade/path.php.</LI>
+					<LI>Added Daemon Status to the scheduling.php page.</LI>
 				</OL>
 			</td></tr>
 		</table>
