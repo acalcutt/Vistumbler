@@ -3,10 +3,6 @@ include('lib/config.inc.php');
 include('lib/database.inc.php');
 pageheader("Show all Downloads APs");
 ?>
-
-</td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
 <div align="left">
 <font face="Courier New">
 <p align="center"><font size="7"><b>WiFiDB Downloads</b></font></p>

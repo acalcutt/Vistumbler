@@ -15,11 +15,6 @@ include('../lib/config.inc.php');
 include('../lib/database.inc.php');
 include('../lib/graph.inc.php');
 pageheader("Graph AP Signal History Page");
-?>
-</td>
-		<td bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
-<?php
 $graphs = new graphs();
 if($_POST['line']==='line')
 {

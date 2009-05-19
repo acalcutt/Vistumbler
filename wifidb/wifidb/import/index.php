@@ -2,12 +2,7 @@
 include('../lib/database.inc.php');
 include('../lib/config.inc.php');
 pageheader("Import Page");
-?>
-</td>
-	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-		<p align="center">
-		
-<?php
+
 $domain = $_SERVER['HTTP_HOST'];
 if ($domain === "rihq.randomintervals.com" or $domain === "lanncafe.dynu.com" or $domain === "192.168.3.25")
 {echo '<h2>This is my Development server </h2><H4>(which is unstable because I am always working in it)</H4><H2>Go on over to my <i><a href="http://www.randomintervals.com/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}

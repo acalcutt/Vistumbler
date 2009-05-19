@@ -2,9 +2,7 @@
 include('../lib/database.inc.php');
 include('../lib/config.inc.php');
 pageheader("Search Results Page");
-?></td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
+?>
 			<h2>Search Results</h2>
 <?php
 if (isset($_GET['token']))

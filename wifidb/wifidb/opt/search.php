@@ -6,9 +6,7 @@ if (isset($_GET['token']))
 {
 	if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])
 	{
-		?></td>
-				<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-					<p align="center"><h2>Search for Access Points</h2>
+		?><h2>Search for Access Points</h2>
 						<form action="results.php?ord=ASC&sort=ssid&from=0&to=25&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 								<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 									<COL WIDTH=40*>

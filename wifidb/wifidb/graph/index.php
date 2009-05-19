@@ -15,12 +15,7 @@ include('../lib/database.inc.php');
 include('../lib/graph.inc.php');
 pageheader("Graph AP Signal History Page");
 ?>
-</td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
-
 <form action="genline.php" method="post" enctype="multipart/form-data">
-
 <?php
 echo '<h1>Graph an Access Points Signal history *Beta*</h1><h4>Bar Graph=>'.$ver_graph['graphs']['wifibar'].'<br>Line Graph=>'.$ver_graph['graphs']['wifiline'].'</h4>';
 

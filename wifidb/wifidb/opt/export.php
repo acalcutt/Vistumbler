@@ -4,8 +4,6 @@ include('../lib/database.inc.php');
 pageheader("Export Page");
 ?>
 </td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
 			<h2>Export Access Points to KML</h2>
 <?php
 $database = new database();

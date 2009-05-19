@@ -110,16 +110,17 @@ function pageheader($title)
 	<div align="center">
 	<table border="0" width="85%" cellspacing="5" cellpadding="2">
 		<tr>
-			<td colspan="2" bgcolor="#315573">
-			<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-			Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']["wifidb"]; ?></font>
-			<font color="#FFFFFF" size="2">
+			<td colspan="2" style="background-color: #315573;">
+			<p align="center"><b>
+			<font style="size: 5;font-family: Arial;color: #FFFFFF;">
+			Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']["wifidb"]; ?>
+			<font style="size: 2;font-family: Arial;color: #FFFFFF;">
 				<?php breadcrumb(); ?>
-			</font></b>
+			</font></font></b>
 			</td>
 		</tr>
 		<tr>
-			<td width="15%" bgcolor="#304D80" valign="top">
+			<td style="background-color: #304D80;width: 15%;vertical-align: top;">
 			<p><a class="links" href="/<?php echo $root;?>/?token=<?php echo $token;?>">Main Page</a></p>
 			<p><a class="links" href="/<?php echo $root;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
 			<p><a class="links" href="/<?php echo $root;?>/import/?token=<?php echo $token;?>">Import</a></p>
@@ -129,7 +130,9 @@ function pageheader($title)
 			<p><a class="links" href="/<?php echo $root;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></p>
 			<p><a class="links" href="/<?php echo $root;?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
 			<p><a class="links" href="/<?php echo $root;?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></p>
-	<?php
+		</td>
+		<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
+		<?php
 }
 
 #========================================================================================================================#
@@ -143,11 +146,10 @@ function footer($filename = '')
 	$count = count($file_ex);
 	$file = $file_ex[($count)-1];
 	?>
-	</p>
 	</td>
 	</tr>
 	<tr>
-	<td bgcolor="#315573" height="23"><a href="<?php echo "http://".$_SERVER['HTTP_HOST']."/".$root; ?>/img/moon.png"><img border="0" src="<?php echo "http://".$_SERVER['HTTP_HOST']."/".$root; ?>/img/moon_tn.png"></a></td>
+	<td bgcolor="#315573" height="23"><a href="/<?php echo $root; ?>/img/moon.png"><img border="0" src="/<?php echo $root; ?>/img/moon_tn.png"></a></td>
 	<td bgcolor="#315573" width="0" align="center">
 	<?php
 	if (file_exists($filename)) {?>

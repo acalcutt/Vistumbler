@@ -1,7 +1,6 @@
 <?php
 include('../lib/database.inc.php');
 pageheader("Search results Page");
-
 include('../lib/config.inc.php');
 $refresh_file = "refresh.txt";
 if (isset($_POST['token']))
@@ -36,7 +35,6 @@ if (isset($_POST['token']))
 		#echo $refresh;
 	}
 }
-
 echo '<meta http-equiv="refresh" content="'.$refresh.'">';
 
 mysql_select_db($db,$conn);
@@ -52,10 +50,7 @@ if(isset($_SESSION['token']))
 	$token = md5(uniqid(rand(), true));
 	$_SESSION['token'] = $token;
 }
-?></td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
-			<h2>Import Results</h2>
+?>		<h2>Import Results</h2>
 			<h2>Next Import scheduled on: <br>
 			<?php
 				echo $file_array['size'];
@@ -91,7 +86,7 @@ if(isset($_SESSION['token']))
 <?php
 echo "<h3>Daemon Status:</H3>";
 ####################
-function getMemoryUsage()
+function getdaemonstats()
 {
 	if ( substr(PHP_OS,0,3) == 'WIN')
 	{
@@ -100,37 +95,43 @@ function getMemoryUsage()
 		$pid_open = file($WFDBD_PID);
 		exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
 		return $output[2];
+	}elseif( substr(PHP_OS,0,3) == 'Lin')
+	{
+		$output = array();
+		$WFDBD_PID = "/var/run/wifidbd.pid";
+		$pid_open = file($WFDBD_PID);
+		exec('ps vp '.$pid_open[0] , $output, $sta);
+		return $output[1];
 	}
 }
+$os = substr(PHP_OS,0,3);
 #############
-if(PHP_OS == "LINUX")
-{
-	$WFDBD_PID = "/var/run/wifidbd.pid";
-	$pid_open = file($WFDBD_PID);
-	$cmd = "ps -p $pid_open[0]";
-	exec($cmd, $start, $starter);
-	?><table border="1" width="90%"><tr class="style4"><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
-	if($start != "")
+?>
+<table border="1" width="90%">
+<?php
+	$start = getdaemonstats();
+	if($start)
 	{
-		$ps_stats = explode("\t" , $start);
-		?><tr align="center"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+		if($os == "WIN")
+		{
+			?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+			$ps_stats = explode("," , $start);
+			?><tr align="center"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+		}elseif($os == "Lin")
+		{
+			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
+			$patterns[0] = '/    /';
+			$patterns[1] = '/  /';
+			$patterns[2] = '/ /';
+			$ps_stats = preg_replace($patterns , "|" , $start);
+			$ps_Sta_exp = explode("|", $ps_stats);
+			?><tr align="center"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[4];?></td><td><?php echo $ps_Sta_exp[10]."%";?></td><td><?php echo $ps_Sta_exp[11]." ".$ps_Sta_exp[12];?></td></tr><?php		
+		}
 	}else
 	{
-		?><tr><td colspan="3">The Daemon is not running, FIX IT! FIX IT! FIX IT!</td></tr><?php
+		?><tr class="style4"><th>WiFiDB Daemon Error!</th></tr><tr><td colspan="4">The Daemon is not running, FIX IT! FIX IT! FIX IT!</td></tr><?php
 	}
-}else
-{
-	?><table border="1" width="90%"><tr class="style4"><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
-	$start = getMemoryUsage();
-	if($start != "")
-	{
-		$ps_stats = explode("," , $start);
-		?><tr align="center"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
-	}else
-	{
-		?><tr><td colspan="3">The Daemon is not running, FIX IT! FIX IT! FIX IT!</td></tr><?php
-	}
-}
+	
 ?></table><br><?php
 if(!$start)
 {
@@ -156,7 +157,7 @@ if($total_rows === 0)
 		{
 			$color = 'style="background-color: yellow"';
 		}
- 		?>
+			?>
 		<table <?php echo $color;?> border="1"  width="100%">
 		<tr class="style4"><th>ID</th><th>Filename</th><th>Date</th><th>user</th><th>title</th><th>size</th></tr>
 		<tr <?php echo $color;?>>

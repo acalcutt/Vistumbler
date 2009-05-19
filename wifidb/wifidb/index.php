@@ -52,9 +52,7 @@ $usercount = count($usersa);
 if ($usercount == NULL){$lastuser['username'] = "No imports have finished yet.";}
 if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
 ?>
-</td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">To View all AP's click <a class="links" href="all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $_SESSION['token'];?>">Here</a><br><br>
+			To View all AP's click <a class="links" href="all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $_SESSION['token'];?>">Here</a><br><br>
 			<?php
 			$domain = $_SERVER['HTTP_HOST'];
 			if ($domain === "rihq.randomintervals.com")

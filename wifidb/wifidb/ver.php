@@ -4,8 +4,6 @@ include('lib/database.inc.php');
 pageheader("Version Page");
 ?>
 <font face="Courier New">
-</td>
-	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 		<div align="left">
 		<p align="center"><font size="7"><b>WiFiDB Version History</b></font></p>
 		<table border="0" cellpadding="4">
@@ -23,7 +21,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b21A">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1A</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-18</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-17</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -50,7 +48,7 @@ pageheader("Version Page");
 						<LI>Refresh time on the scheduling page went to 15 seconds when I set it to 5 seconds. On the next refresh it went back to 30 seconds.</LI>
 					</OL>
 					<LI>Also made the drop down for selecting the refresh time on the scheduled imports page, so it has a default of the current selection instead fo going back to 5 sec.</LI>
-					<LI>Added a small table with info on the status of the Daemon (scheduling.php)</LI>
+					
 				</OL>
 			</td></tr>
 		</table>

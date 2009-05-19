@@ -2,9 +2,7 @@
 include('../lib/database.inc.php');
 pageheader("Install Page");
 ?>
-</td>
-	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-		<p align="center">
+
 <table><tr><th>Status</th><th>Step of Install</th></tr>
 <?php
 	#========================================================================================================================#

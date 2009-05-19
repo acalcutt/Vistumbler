@@ -2,9 +2,6 @@
 include('../../lib/database.inc.php');
 pageheader("Upgrade Page");
 ?>
-</td>
-	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-		<p align="center">
 <form action="patch.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Upgrade</h2>
   <h3>Upgrade DB for 0.15 Build 7x to 0.16 Build 1</h3>

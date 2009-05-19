@@ -2,11 +2,6 @@
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
 pageheader("Access Point Info Page");
-?>
-</td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
-<?php
 $database = new database();
 if ($debug === 1 ){echo '<p align="right"><a class="links" href="../opt/debug/fetch.php">Debug</a></p>';}
 $id = $_GET['id'];

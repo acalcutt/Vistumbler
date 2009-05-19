@@ -114,3 +114,25 @@ table.update ha {
 	border-color: #F00;
 	background-color: #477DA9;
 }
+
+.title_text{
+	size: 5;
+	font-family: Arial;
+	color: #FFFFFF;
+}
+.title_pane.td{
+	background-color: #315573;
+}
+
+.contents_pane.td{
+	background-color: #304D80;
+	width: 15%;
+	vertical-align: top;
+}
+
+.center_pane.td{
+	background-color: #A9C6FA;
+	width: 80%;
+	vertical-align: top;
+	text-align: center;
+}
