@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 2.1A",
-			"Last_Core_Edit" 	=> 	"2009-May-13",
+			"Last_Core_Edit" 	=> 	"2009-May-20",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.5.7", 
 										"apfetch"			=>	"2.5.1",
@@ -33,6 +33,10 @@ $ver = array(
 										"make_ssid"			=>	"1.0"
 										),
 			);
+
+#========================================================================================================================#
+#											log write (writes a message to the log file)								 #
+#========================================================================================================================#
 
 function log_write($message, $log_interval, $log_level)
 {
@@ -76,6 +80,10 @@ function log_write($message, $log_interval, $log_level)
 	}
 }
 
+#========================================================================================================================#
+#											verbose (Echos out a message to the screen or page)							 #
+#========================================================================================================================#
+
 function verbose($message = "", $level = 0)
 {
 	if($message == ''){echo "Verbose was told to write a blank string"; continue;}
@@ -86,10 +94,119 @@ function verbose($message = "", $level = 0)
 	}
 }
 
-function breadcrumb()
-{
+#========================================================================================================================#
+#											regenerateSession (regens Token for a session)								 #
+#========================================================================================================================#
 
+function regenerateSession($reload = false)
+{
+	// This token is used by forms to prevent cross site forgery attempts
+	if(!isset($_SESSION['token']) || $reload)
+		$_SESSION['token'] = md5(microtime(true));
+
+	if(!isset($_SESSION['IPaddress']) || $reload)
+		$_SESSION['IPaddress'] = $_SERVER['REMOTE_ADDR'];
+
+	if(!isset($_SESSION['userAgent']) || $reload)
+		$_SESSION['userAgent'] = $_SERVER['HTTP_USER_AGENT'];
+
+	//$_SESSION['user_id'] = $this->user->getId();
+
+	// Set current session to expire in 1 minute
+	$_SESSION['OBSOLETE'] = true;
+	$_SESSION['EXPIRES'] = time() + 60;
+
+	// Create new session without destroying the old one
+	session_regenerate_id(false);
+
+	// Grab current session ID and close both sessions to allow other scripts to use them
+	$newSession = session_id();
+	session_write_close();
+
+	// Set session ID to the new one, and start it back up again
+	session_id($newSession);
+	session_start();
+
+	// Don't want this one to expire
+	unset($_SESSION['OBSOLETE']);
+	unset($_SESSION['EXPIRES']);
+	return $_SESSION['token'];
 }
+
+#========================================================================================================================#
+#									check session (checks to see if a session is live or not)					 		 #
+#========================================================================================================================#
+
+function checkSession()
+{
+	try{
+		if($_SESSION['OBSOLETE'] && ($_SESSION['EXPIRES'] < time()))
+			throw new Exception('Attempt to use expired session.');
+		if(!is_numeric($_SESSION['user_id']))
+			throw new Exception('No session started.');
+		if($_SESSION['IPaddress'] != $_SERVER['REMOTE_ADDR'])
+			throw new Exception('IP Address mixmatch (possible session hijacking attempt).');
+		if($_SESSION['userAgent'] != $_SERVER['HTTP_USER_AGENT'])
+			throw new Exception('Useragent mixmatch (possible session hijacking attempt).');
+		if(!$this->loadUser($_SESSION['user_id']))
+			throw new Exception('Attempted to log in user that does not exist with ID: ' . $_SESSION['user_id']);
+		if(!$_SESSION['OBSOLETE'] && mt_rand(1, 100) == 1)
+		{
+			$this->regenerateSession();
+		}
+		return true;
+	}catch(Exception $e){
+		return false;
+	}
+}
+
+#========================================================================================================================#
+#									breadcrumb (creates a breadcrumb to follow on each page)							 #
+#========================================================================================================================#
+
+function breadcrumb($PATH_INFO)
+{
+	global $page_title, $root_url;
+
+	// Remove these comments if you like, but only distribute 
+	// commented versions.
+	
+	// Replace all instances of _ with a space
+	$PATH_INFO = str_replace("_", " ", $PATH_INFO);
+	// split up the path at each slash
+	$pathArray = explode("/",$PATH_INFO);
+	
+	// Initialize variable and add link to home page
+	if(!isset($root_url)) { $root_url=""; }
+	$breadCrumbHTML = '<a class="links" href="'.$root_url.'/" title="Home Page">Home</a> &gt; ';
+	
+	// initialize newTrail
+	$newTrail = $root_url."/";
+	
+	// starting for loop at 1 to remove root
+	for($a=1;$a<count($pathArray)-1;$a++) {
+		// capitalize the first letter of each word in the section name
+		$crumbDisplayName = ucwords($pathArray[$a]);
+		// rebuild the navigation path
+		$newTrail .= $pathArray[$a].'/';
+		// build the HTML for the breadcrumb trail
+		$breadCrumbHTML .= '<a class="links" href="'.$newTrail.'">'.$crumbDisplayName.'</a> &gt; ';
+	}
+	// Add the current page
+	if(!isset($page_title)) { $page_title = "Current Page"; }
+	$breadCrumbHTML .= '<strong>'.$page_title.'</strong>';
+	
+	// print the generated HTML
+	print($breadCrumbHTML);
+	
+	// return success (not necessary, but maybe the 
+	// user wants to test its success?
+	return true;
+}
+
+#========================================================================================================================#
+#											Header (writes the Headers for all pages)									 #
+#========================================================================================================================#
 
 function pageheader($title)
 {
@@ -102,6 +219,8 @@ function pageheader($title)
 	{
 		$token = $_SESSION['token'];
 	}
+#	$token = regenerateSession();
+#	checkSession();
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
 	?>
@@ -109,13 +228,13 @@ function pageheader($title)
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="85%" cellspacing="5" cellpadding="2">
-		<tr>
-			<td colspan="2" style="background-color: #315573;">
+		<tr style="background-color: #315573;">
+			<td colspan="2">
 			<p align="center"><b>
 			<font style="size: 5;font-family: Arial;color: #FFFFFF;">
-			Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']["wifidb"]; ?>
-			<font style="size: 2;font-family: Arial;color: #FFFFFF;">
-				<?php breadcrumb(); ?>
+			Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']['wifidb'].'<br />'; ?>
+			<font size="2">
+				<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
 			</font></font></b>
 			</td>
 		</tr>
@@ -131,7 +250,7 @@ function pageheader($title)
 			<p><a class="links" href="/<?php echo $root;?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
 			<p><a class="links" href="/<?php echo $root;?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></p>
 		</td>
-		<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
+		<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center"><br>
 		<?php
 }
 
@@ -205,6 +324,10 @@ function smart_quotes($text="") // Used for SSID Sanatization
 	return $text;
 }
 
+#========================================================================================================================#
+#													Smart (filtering for GPS)											 #
+#========================================================================================================================#
+
 function smart($text="") // Used for GPS
 {
 	$pattern = '/"((.)*?)"/i';
@@ -223,6 +346,10 @@ function smart($text="") // Used for GPS
 	return $text;
 }
 
+#========================================================================================================================#
+#							dos_filesize (gives file size for either windows or linux machines)				 			 #
+#========================================================================================================================#
+
 function dos_filesize($fn) 
 {
 	if(PHP_OS == "WINNT")
@@ -237,6 +364,10 @@ function dos_filesize($fn)
 	}
 }
 
+#========================================================================================================================#
+#							format_size (formats bytes based size to B, kB, MB, GB... and so on)					 	 #
+#========================================================================================================================#
+
 function format_size($size, $round = 2)
 {
 	//Size must be bytes!
@@ -244,6 +375,10 @@ function format_size($size, $round = 2)
 	for ($i=0; $size > 1024 && $i < count($sizes) - 1; $i++) $size /= 1024;
 	return round($size,$round).$sizes[$i];
 }
+
+#========================================================================================================================#
+#							make ssid (makes a DB safe, File safe and Unsan versions of an SSID)			 			 #
+#========================================================================================================================#
 
 function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 		{
@@ -257,8 +392,22 @@ function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 			return $A;
 		}
 
+
+	
+	#========================================================================================================================#
+	#																														 #
+	#									WiFiDB Database Class that holds DB based functions									 #
+	#																														 #
+	#========================================================================================================================#
+
+
+
 class database
 {
+	#========================================================================================================================#
+	#										gen_gps (generate GPS cords from a VS1 file to Array)				 			 #
+	#========================================================================================================================#
+
 	function gen_gps($retexp = array(), $gpscount = 0)
 	{
 		$ret_len = count($retexp);
@@ -318,6 +467,11 @@ class database
 		$list = array(0=>$gdata, 1=> $gpscount);
 		return $list;
 	}
+
+	#========================================================================================================================#
+	#						check file (check to see if a file has already been imported into the DB)			 			 #
+	#========================================================================================================================#
+
 	function check_file($file = '')
 	{
 		include($GLOBALS['wifidb'].'/lib/config.inc.php');
@@ -342,6 +496,9 @@ class database
 		}
 	}
 
+	#========================================================================================================================#
+	#							insert file (put a file that was just imported into the Files table)				 			 #
+	#========================================================================================================================#
 
 	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled")
 	{
@@ -386,6 +543,10 @@ class database
 		return $manuf;
 	}
 
+	#========================================================================================================================#
+	#											import GPX (Import Garmin Based GPX files)						 			 #
+	#========================================================================================================================#
+
 	function import_gpx($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED" )
 	{
 		$start = microtime(true);
@@ -413,6 +574,7 @@ class database
 			echo '<h1>You need to upload a valid GPX file, go look up the santax for it, or the file that you saved is corrupted</h1>';
 		}
 	}
+	
 	#========================================================================================================================#
 	#													VS1 File import													     #
 	#========================================================================================================================#
@@ -1591,6 +1753,9 @@ class database
 		include('manufactures.inc.php');
 		switch ($export)
 		{
+			#--------------------#
+			#-					-#
+			#--------------------#
 			case "exp_all_db_kml":
 				$start = microtime(true);
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th colspan="2" style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
@@ -1739,8 +1904,9 @@ class database
 					echo "  End Time: ".$end."<BR>";
 				}
 				break;
-			#---------------------#
-			#---------------------#
+			#--------------------#
+			#-					-#
+			#--------------------#
 			case "exp_user_list":
 				$start = microtime(true);
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start of export Users List to KML</th></tr>';
@@ -1909,6 +2075,7 @@ class database
 				}
 				break;
 			#--------------------#
+			#-					-#
 			#--------------------#
 			case "exp_single_ap":
 				$start = microtime(true);
@@ -2040,8 +2207,9 @@ class database
 					echo "  End Time: ".$end."<BR>";
 				}
 				break;
-			#----------------------#
-			#----------------------#
+			#--------------------#
+			#-					-#
+			#--------------------#
 			case "exp_user_all_kml":
 				include('config.inc.php');
 				$start = microtime(true);
@@ -2216,6 +2384,7 @@ class database
 				}
 				break;
 			#--------------------#
+			#-					-#
 			#--------------------#
 			case "exp_newest_kml":
 				$date=date('Y-m-d_H-i-s');
@@ -2372,6 +2541,10 @@ class database
 					echo "Start Time: ".$start."<BR>";
 					echo "  End Time: ".$end."<BR>";
 				}
+				break;
+			#--------------------#
+			#-					-#
+			#--------------------#
 			case "exp_all_signal":
 				$start = microtime(true);
 				$NN=0;
@@ -2534,12 +2707,17 @@ class database
 					echo "  End Time: ".$end."<BR>";
 				}
 				break;
-			#----------------------#
-			#----------------------#
+			#--------------------#
+			#-					-#
+			#--------------------#
 		}
 	}
-		
-		function exp_gpx($export = "", $user = "", $row = 0)
+	
+	#========================================================================================================================#
+	#													Export to Garmin GPX File											 #
+	#========================================================================================================================#
+
+	function exp_gpx($export = "", $user = "", $row = 0)
 	{
 		include('config.inc.php');
 		include('manufactures.inc.php');
@@ -2612,7 +2790,7 @@ class database
 						break;
 					}
 					if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
-
+					
 					$file_data .= "<wpt lat=\"".$lat."\" lon=\"".$long."\">\r\n"
 									."<ele>".$alt."</ele>\r\n"
 									."<time>".$date."T".$time."Z</time>\r\n"
@@ -2676,6 +2854,10 @@ class database
 				break;
 		}
 	}
+	
+	#========================================================================================================================#
+	#													Export to Vistumbler VS1 File										 #
+	#========================================================================================================================#
 
 	function exp_vs1($export = "", $user = "", $row = 0)
 	{

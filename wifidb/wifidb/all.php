@@ -9,7 +9,7 @@ if (isset($_GET['token']))
 		$ord	=	addslashes($_GET['ord']);
 		$sort	=	addslashes($_GET['sort']);
 		$from	=	addslashes($_GET['from']);
-		$from	=	addslashes($_GET['from']);
+		$from_	=	addslashes($_GET['from']);
 		$inc	=	addslashes($_GET['to']);
 		if ($from=="" or !is_int($from)){$from=0;}
 		if ($inc=="" or !is_int($inc)){$inc=100;}
@@ -28,35 +28,42 @@ if (isset($_GET['token']))
 		$to=$from+$inc;
 		mysql_select_db($db,$conn);
 		$sql0 = "SELECT * FROM $wtable ORDER BY $sort $ord  LIMIT $from , $inc";
-		$result = mysql_query($sql0, $conn) or die(mysql_error());
-		while ($newArray = mysql_fetch_array($result))
+		$result = mysql_query($sql0, $conn);
+		$total_rows = mysql_num_rows($result);
+		if($total_rows != 0)
 		{
-			$id = $newArray['id'];
-			$ssid_array = make_ssid($newArray['ssid']);
-			$ssid = $ssid_array[2];
-			$mac = $newArray['mac'];
-			$mac_exp = str_split($mac,2);
-			$mac = implode(":",$mac_exp);
-			$chan = $newArray['chan'];
-			$radio = $newArray['radio'];
-			$auth = $newArray['auth'];
-			$encry = $newArray['encry'];
-			echo '<tr><td><a class="links" href="opt/fetch.php?id='.$id.'&token='.$_SESSION["token"].'">'.$ssid.'</a></td>';
-			echo '<td>'.$mac.'</td>';
-			echo '<td>'.$chan.'</td>';
-			if($radio=="a")
-			{$radio="802.11a";}
-			elseif($radio=="b")
-			{$radio="802.11b";}
-			elseif($radio=="g")
-			{$radio="802.11g";}
-			elseif($radio=="n")
-			{$radio="802.11n";}
-			else
-			{$radio="Unknown Radio";}
-			echo '<td>'.$radio.'</td>';
-			echo '<td>'.$auth.'</td>';
-			echo '<td>'.$encry.'</td></tr>';	
+			while ($newArray = mysql_fetch_array($result))
+			{
+				$id = $newArray['id'];
+				$ssid_array = make_ssid($newArray['ssid']);
+				$ssid = $ssid_array[2];
+				$mac = $newArray['mac'];
+				$mac_exp = str_split($mac,2);
+				$mac = implode(":",$mac_exp);
+				$chan = $newArray['chan'];
+				$radio = $newArray['radio'];
+				$auth = $newArray['auth'];
+				$encry = $newArray['encry'];
+				echo '<tr><td><a class="links" href="opt/fetch.php?id='.$id.'&token='.$_SESSION["token"].'">'.$ssid.'</a></td>';
+				echo '<td>'.$mac.'</td>';
+				echo '<td>'.$chan.'</td>';
+				if($radio=="a")
+				{$radio="802.11a";}
+				elseif($radio=="b")
+				{$radio="802.11b";}
+				elseif($radio=="g")
+				{$radio="802.11g";}
+				elseif($radio=="n")
+				{$radio="802.11n";}
+				else
+				{$radio="Unknown Radio";}
+				echo '<td>'.$radio.'</td>';
+				echo '<td>'.$auth.'</td>';
+				echo '<td>'.$encry.'</td></tr>';	
+			}
+		}else
+		{
+			?><tr><td align="center" colspan="6"><b>There are no Access Points imported as of yet, go grab some with Vistumbler and import them.<br />Come on... you know you want too.</b></td></tr><?php
 		}
 		?>
 		</table>

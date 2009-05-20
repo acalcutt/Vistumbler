@@ -3,7 +3,6 @@ include('../lib/config.inc.php');
 include('../lib/database.inc.php');
 pageheader("Export Page");
 ?>
-</td>
 			<h2>Export Access Points to KML</h2>
 <?php
 $database = new database();

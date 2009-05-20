@@ -116,7 +116,7 @@ $os = substr(PHP_OS,0,3);
 		{
 			?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
 			$ps_stats = explode("," , $start);
-			?><tr align="center"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+			?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
 		}elseif($os == "Lin")
 		{
 			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
@@ -125,11 +125,11 @@ $os = substr(PHP_OS,0,3);
 			$patterns[2] = '/ /';
 			$ps_stats = preg_replace($patterns , "|" , $start);
 			$ps_Sta_exp = explode("|", $ps_stats);
-			?><tr align="center"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[4];?></td><td><?php echo $ps_Sta_exp[10]."%";?></td><td><?php echo $ps_Sta_exp[11]." ".$ps_Sta_exp[12];?></td></tr><?php		
+			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[4];?></td><td><?php echo $ps_Sta_exp[10]."%";?></td><td><?php echo $ps_Sta_exp[11]." ".$ps_Sta_exp[12];?></td></tr><?php		
 		}
 	}else
 	{
-		?><tr class="style4"><th>WiFiDB Daemon Error!</th></tr><tr><td colspan="4">The Daemon is not running, FIX IT! FIX IT! FIX IT!</td></tr><?php
+		?><tr class="style4"><th>WiFiDB Daemon Error!</th></tr><tr bgcolor="red"><td colspan="4">The Daemon is not running, FIX IT! FIX IT! FIX IT!</td></tr><?php
 	}
 	
 ?></table><br><?php

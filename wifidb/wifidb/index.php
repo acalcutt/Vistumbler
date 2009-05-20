@@ -8,49 +8,60 @@ if(file_exists('lib/config.inc.php'))
 }
 pageheader("Main Page");
 $usersa =  array();
-mysql_select_db($db, $conn);
-$sql = "SELECT `size` FROM `settings` WHERE `table` LIKE 'wifi0'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-$DB_size = mysql_fetch_array($result);
-$total = $DB_size['size'];
+$sql = "SELECT `size` FROM `$db`.`settings` WHERE `table` LIKE 'wifi0' LIMIT 1";
+$result0 = mysql_query($sql, $conn);
 
-$sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='1'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-$open = mysql_num_rows($result);
 
-$sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='2'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-$WEP = mysql_num_rows($result);
+$sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `sectype`='1'";
+$result1 = mysql_query($sql, $conn);
 
-$sql = "SELECT `id` FROM `$wtable` WHERE `sectype`='3'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-$Sec = mysql_num_rows($result);
+$sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `sectype`='2'";
+$result2 = mysql_query($sql, $conn);
 
-$sql = "SELECT `id`,`ssid` FROM `$wtable` ORDER BY ID DESC LIMIT 1";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-$lastap_array = mysql_fetch_array($result);
-$lastap_id = $lastap_array['id'];
-$lastap_ssid = $lastap_array['ssid'];
+$sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `sectype`='3'";
+$result3 = mysql_query($sql, $conn);
 
-$sql = "SELECT `username` FROM `users`";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-$row_users = mysql_num_rows($result);
-while($user_array = mysql_fetch_array($result))
+$sql = "SELECT `id`,`ssid` FROM `$db`.`$wtable` ORDER BY ID DESC LIMIT 1";
+$result4 = mysql_query($sql, $conn);
+
+$sql = "SELECT `username` FROM `$db`.`users`";
+$result5 = mysql_query($sql, $conn);
+if(!$result0 && !$result1 && !$result2 && !$result3 && !$result4 && !$result5)
+{
+	echo "<br /><p><h2>There is a serious error trying to get data from the Database, check it out.<br />You may need to reinstall.</h2></p>";
+	footer($_SERVER['SCRIPT_FILENAME']);
+	die();
+}
+#
+$row_users = mysql_num_rows($result5);
+while($user_array = mysql_fetch_array($result5))
 {
 	$usersa[]=$user_array['username'];
 }
-
-$sql = "SELECT username, title, id FROM `users` WHERE `id`='$row_users'";
-$result = mysql_query($sql, $conn) or die(mysql_error());
-$lastuser = mysql_fetch_array($result);
-
-mysql_close($conn);
-
 $usersa = array_unique($usersa);
 $usercount = count($usersa);
-
 if ($usercount == NULL){$lastuser['username'] = "No imports have finished yet.";}
 if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
+
+$sql = "SELECT username, title, id FROM `$db`.`users` WHERE `id`='$row_users'";
+$result6 = mysql_query($sql, $conn);
+
+#
+$DB_size = mysql_fetch_array($result0);
+$total = $DB_size['size'];
+#
+$open = mysql_num_rows($result1);
+#
+$WEP = mysql_num_rows($result2);
+#
+$Sec = mysql_num_rows($result3);
+#
+$lastap_array = mysql_fetch_array($result4);
+$lastap_id = $lastap_array['id'];
+$lastap_ssid = $lastap_array['ssid'];
+#
+$lastuser = mysql_fetch_array($result6);
+
 ?>
 			To View all AP's click <a class="links" href="all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $_SESSION['token'];?>">Here</a><br><br>
 			<?php
@@ -90,6 +101,5 @@ if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
 	</tr>
 </table>
 <?php
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+footer($_SERVER['SCRIPT_FILENAME']);
 ?>
