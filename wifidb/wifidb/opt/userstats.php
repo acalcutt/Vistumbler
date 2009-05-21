@@ -17,7 +17,7 @@ if (isset($_GET['token']))
 				$username_get = $_GET['user'];
 				$username_get = strip_tags($username_get);
 				$username = smart_quotes($username_get);
-				$sql = "SELECT * FROM `$db`.`users` WHERE `username` LIKE '$username' ORDER BY `id` DESC LIMIT 1";
+				$sql = "SELECT * FROM `$db`.`users` WHERE `username` LIKE '$username' AND `points` != '' ORDER BY `id` DESC LIMIT 1";
 				$user_query = mysql_query($sql, $conn) or die(mysql_error());
 				$user_last = mysql_fetch_array($user_query);
 				$last_import_id = $user_last['id'];
@@ -36,6 +36,7 @@ if (isset($_GET['token']))
 				$other_imports = mysql_query($sql, $conn) or die(mysql_error());
 				while($imports = mysql_fetch_array($other_imports))
 				{
+					if($imports['points'] == ""){continue;}
 					$points = explode("-",$imports['points']);
 					foreach($points as $key=>$pt)
 					{
@@ -77,6 +78,7 @@ if (isset($_GET['token']))
 				$other_imports = mysql_query($sql, $conn) or die(mysql_error());
 				while($imports = mysql_fetch_array($other_imports))
 				{
+					if($imports['points'] == ""){continue;}
 					if($imports['id'] == $user_first['id'] ){continue;}
 					$import_id = $imports['id'];
 					$import_title = $imports['title'];

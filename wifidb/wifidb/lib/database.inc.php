@@ -2,18 +2,18 @@
 #include('manufactures.inc.php');
 global $ver;
 $ver = array(
-			"wifidb"			=>	"0.16 Build 2.1A",
-			"Last_Core_Edit" 	=> 	"2009-May-20",
+			"wifidb"			=>	"0.16 Build 3",
+			"Last_Core_Edit" 	=> 	"2009-May-21",
 			"database"			=>	array(  
-										"import_vs1"		=>	"1.5.7", 
-										"apfetch"			=>	"2.5.1",
+										"import_vs1"		=>	"1.6.0", 
+										"apfetch"			=>	"2.6.0",
 										"gps_check_array"	=>	"1.1",
 										"all_users"			=>	"1.2",
 										"users_lists"		=>	"1.2",
 										"user_ap_list"		=>	"1.2",
 										"all_users_ap"		=>	"1.3",
-										"exp_kml"			=>	"3.3.0",
-										"exp_vs1"			=>	"1.0.0",
+										"exp_kml"			=>	"3.4.0",
+										"exp_vs1"			=>	"1.1.0",
 										"exp_gpx"			=>	"1.0.0",
 										"convert_dm_dd"		=>	"1.3.0",
 										"convert_dd_dm"		=>	"1.3.1",
@@ -29,7 +29,6 @@ $ver = array(
 										"Manufactures-list"	=> 	"2.0",
 										"Languages-List"	=>	"1.0",
 										"log_write"			=>	"1.0",
-										"verbose"			=>	"1.0",
 										"make_ssid"			=>	"1.0"
 										),
 			);
@@ -80,19 +79,6 @@ function log_write($message, $log_interval, $log_level)
 	}
 }
 
-#========================================================================================================================#
-#											verbose (Echos out a message to the screen or page)							 #
-#========================================================================================================================#
-
-function verbose($message = "", $level = 0)
-{
-	if($message == ''){echo "Verbose was told to write a blank string"; continue;}
-	$message = date("Y-m-d H:i:s.").microtime(true)."   ->    ".$message;
-	if($level==1)
-	{
-		echo $message."\n";
-	}
-}
 
 #========================================================================================================================#
 #											regenerateSession (regens Token for a session)								 #
@@ -1291,8 +1277,11 @@ class database
 			{$radio = "802.11n";}
 		else
 			{$radio = "802.11u";}
-		$table		=	$newArray['ssid'].'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
-		$table_gps	=	$newArray['ssid'].'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'].$gps_ext;
+		$ssid_ptb_ = $newArray["ssid"];
+		$ssids_ptb = str_split($newArray['ssid'],25);
+		$ssid_ptb = smart_quotes($ssids_ptb[0]);
+		$table		=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
+		$table_gps	=	$table.$gps_ext;
 		?>
 				<SCRIPT LANGUAGE="JavaScript">
 				// Row Hide function.
@@ -1419,15 +1408,18 @@ class database
 		$result = mysql_query("SELECT * FROM `users`", $conn);
 		while ($field = mysql_fetch_array($result)) 
 		{
-			$APS = explode("-" , $field['points']);
-			foreach ($APS as $AP)
+			if($field['points'] != '')
 			{
-				$access = explode(",", $AP);
-				$access1 = explode(":",$access[1]);
-				if($access[0] == 1){continue;}
-				if ( $ID  ==  $access1[0] )
+				$APS = explode("-" , $field['points']);
+				foreach ($APS as $AP)
 				{
-					$list[]=$field['id'];
+					$access = explode(",", $AP);
+					$access1 = explode(":",$access[1]);
+					if($access[0] == 1){continue;}
+					if ( $ID  ==  $access1[0] )
+					{
+						$list[]=$field['id'];
+					}
 				}
 			}
 		}
@@ -1572,17 +1564,20 @@ class database
 		$re = mysql_query($sql, $conn) or die(mysql_error());
 		while($user_array = mysql_fetch_array($re))
 		{
-			$explode = explode("-",$user_array["points"]);
-			foreach($explode as $explo)
+			if($user_array["points"] != '')
 			{
-				$exp = explode(",",$explo);
-				$flag = $exp[0];
-				$ap_exp = explode(":",$exp[1]);
-				$aps[] = array(
-								"flag"=>$flag,
-								"apid"=>$ap_exp[0],
-								"row"=>$ap_exp[1]
-								);
+				$explode = explode("-",$user_array["points"]);
+				foreach($explode as $explo)
+				{
+					$exp = explode(",",$explo);
+					$flag = $exp[0];
+					$ap_exp = explode(":",$exp[1]);
+					$aps[] = array(
+									"flag"=>$flag,
+									"apid"=>$ap_exp[0],
+									"row"=>$ap_exp[1]
+									);
+				}
 			}
 		}
 		foreach($aps as $ap)
@@ -1786,12 +1781,14 @@ class database
 				{
 					$man 		= database::manufactures($ap_array['mac']);
 					$id			= $ap_array['id'];
-					list($ssid) = make_ssid($ap_array['ssid']);
+					$ssid_ptb_ = $ap_array['ssid'];
+					$ssids_ptb = str_split($ssid_ptb_,25);
+					$ssid_ptb = smart_quotes($ssids_ptb[0]);
 					$mac		= $ap_array['mac'];
 					$sectype	= $ap_array['sectype'];
 					$radio		= $ap_array['radio'];
 					$chan		= $ap_array['chan'];
-					$table = $ap_array['ssid'].'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
+					$table = $ssid_ptb.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
 					$table_gps = $table.$gps_ext;
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 					$sql1 = "SELECT * FROM `$table`";
@@ -1964,7 +1961,8 @@ class database
 					$newArray = mysql_fetch_array($result0);
 					
 					$id = $newArray['id'];
-					$ssid = smart_quotes($newArray['ssid']);
+					$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
+					$ssid = $ssids_ptb[0];
 					$mac = $newArray['mac'];
 					$man =& database::manufactures($mac);
 					$chan = $newArray['chan'];
@@ -2010,7 +2008,7 @@ class database
 							break;
 					}
 					
-					$table=$newArray['ssid'].'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
+					$table=$ssid.'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
 					mysql_select_db($db_st) or die("Unable to select Database: ".$db_st);
 					
 					$sql = "SELECT * FROM `$table` WHERE `id`='$update_row'";
@@ -2102,8 +2100,9 @@ class database
 					// open file and write header:
 					
 					$manuf =& database::manufactures($aparray['mac']);
-					$ssid = smart_quotes($aparray['ssid']);
-					$table=$aparray['ssid'].'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
+					$ssids_ptb = str_split(smart_quotes($aparray['ssid']),25);
+					$ssid = $ssids_ptb[0];
+					$table=$ssid.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
 					$table_gps = $table.$gps_ext;
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 		#			echo $table."<br>";
@@ -2261,14 +2260,15 @@ class database
 					$result = mysql_query($sql, $conn);
 					$aps = mysql_fetch_array($result);
 					
-					$ssid = smart_quotes($aps['ssid']);
+					$ssids_ptb = str_split(smart_quotes($aps['ssid']),25);
+					$ssid = $ssids_ptb[0];
 					$mac = $aps['mac'];
 					$sectype = $aps['sectype'];
 					$r = $aps['radio'];
 					$chan = $aps['chan'];
 					$manuf =& database::manufactures($mac);
 					
-					$table = $aps['ssid'].'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
+					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
 					$table_gps = $table.$gps_ext;
 					
 					switch($r)
@@ -2412,8 +2412,9 @@ class database
 					$file_data .= ('<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
 					echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td></tr>';
 					// open file and write header:
-					
-					$table=$ap_array['ssid'].'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
+					$ssids_ptb = str_split(smart_quotes($ap_array['ssid']),25);
+					$ssid = $ssids_ptb[0];
+					$table=$ssid.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
 					$table_gps = $table.$gps_ext;
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 		#			echo $table."<br>";
@@ -2557,8 +2558,8 @@ class database
 				$result = mysql_query($sql, $conn) or die(mysql_error());
 				$aparray = mysql_fetch_array($result);
 				$ssid_array = make_ssid($aparray['ssid']);
-				$ssid_f = $ssid_array[1];
 				$ssid_t = $ssid_array[0];
+				$ssid_f = $ssid_array[1];
 				$ssid = $ssid_array[2];
 				$file_ext = $ssid_f."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".kml";
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$ssid.'\'s Signal History</th></tr>';
@@ -2567,7 +2568,7 @@ class database
 				$filewrite = fopen($filename, "w");
 				if($filewrite != FALSE)
 				{
-					$table=$ssid.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
+					$table=$ssid_t.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
 					$table_gps = $table.$gps_ext;
 					
 					$file_data  = ("");
@@ -2735,15 +2736,18 @@ class database
 				$sql = "SELECT * FROM `$wtable` WHERE `ID`='$id'";
 				$result = mysql_query($sql, $conn) or die(mysql_error());
 				$aparray = mysql_fetch_array($result);
-				$ssid = smart_quotes($aparray['ssid']);
-				$file_ext = $ssid."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".gpx";
+				$ssid_array = make_ssid($aparray['ssid']);
+				$ssid_t = $ssid_array[0];
+				$ssid_f = $ssid_array[1];
+				$ssid = $ssid_array[2];
+				$file_ext = $ssid_f."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".gpx";
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$ssid.'\'s Signal History</th></tr>';
 				$filename = ($gpx_out.$file_ext);
 				// define initial write and appends
 				$filewrite = fopen($filename, "w");
 				if($filewrite != FALSE)
 				{
-					$table=$aparray['ssid'].'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
+					$table=$ssid_t.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
 					$table_gps = $table.$gps_ext;
 					
 					$file_data  = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\r\n<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"WiFiDB 0.16 Build 2\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">";
@@ -2913,8 +2917,11 @@ class database
 								break;
 						}
 					mysql_select_db($db_st,$conn) or die("Unable to select Database: ".$db_st);
-					
-					$table	=	$ap_array['ssid'].'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
+					$ssid_array = make_ssid($aparray['ssid']);
+					$ssid_t = $ssid_array[0];
+					$ssid_f = $ssid_array[1];
+					$ssid = $ssid_array[2];
+					$table	=	$ssid_t.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
 					$sql	=	"SELECT * FROM `$table`";
 					$result	=	mysql_query($sql, $conn) or die(mysql_error());
 					$rows	=	mysql_num_rows($result);
@@ -2956,7 +2963,7 @@ class database
 					$sig		=	$ap['sig'];
 					$signals	=	explode("-", $sig);
 	#				echo $sig."<BR>";
-					$table_gps		=	$ap['ssid'].'-'.$ap['mac'].'-'.$ap['sectype'].'-'.$ap['r'].'-'.$ap['chan'].$gps_ext;
+					$table_gps		=	$table.$gps_ext;
 					echo $table_gps."<BR>";
 					foreach($signals as $sign)
 					{

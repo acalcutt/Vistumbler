@@ -94,4 +94,12 @@ function stop()
 		echo "WiFiDB Daemon was not running..\n";
 	}
 }
+
+function ver()
+{
+}
+
+function help()
+{
+}
 ?>

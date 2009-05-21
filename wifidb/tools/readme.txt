@@ -52,6 +52,19 @@ CONTENTS:
   you cannot set it less then 5 min.
 
 
+Usage: 
+	rund.php {start|stop|restart|version(NIY)|help(NIY)}
+
+		start			-	Start The WiFiDB Daemon.
+
+		stop			-	Stop the WiFiDB Daemon.
+
+		restart			-	Restart the WiFiDB Daemon.
+
+		version (NIY)		-	The Version History that is below, just CLI.
+
+		help (NIY)		-	This just on the CLI.
+
 ----------------------------------------
 ----------------------------------------
 VERSION HISTORY
@@ -75,6 +88,19 @@ Windows capable, I still wouldn't recommend it, but it works. Although it has a 
 Better intergration with scheduling.php, added in Current AP, Importing? (Yes/No), Current AP/Total APs.
 ==============================
 
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.2
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+There was an issue with it sometimes not skipping a file if the hashes matched up.
+Some spelling errors in messages.
+For some reason the rund.php script sometimes would not properly execute the daemon 
+	script, and result in rund.php saying the daemon has started, yet if you did 
+	a ps -ax | grep "wifidbd", there would be no daemon running. Changing 
+	popen($cmd, 'r') from 'r' to 'w' fixed this.
+
+==============================
 
 
 --------------------------------------------------------------

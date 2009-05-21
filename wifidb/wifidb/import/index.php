@@ -105,7 +105,7 @@ switch($func)
 					die();
 				}
 				?>
-				<p>Go and check out your new <a class="links" href="/wifidb/opt/scheduling.php?token=<?php echo $_SESSION['token'];?>">Import</a>, go on, you know you want to...</p>
+				<p><a class="links" href="/wifidb/opt/scheduling.php?token=<?php echo $_SESSION['token'];?>">Go and check out your new Import</a>. Go on, you know you want to...</p>
 				<?php
 				mysql_select_db($db,$conn);
 
@@ -181,11 +181,11 @@ switch($func)
 	#----------------------
 	default: //index page that has form to upload file
 		?><h2>Import Access Points</h2><?php
-		$get_exp = explode('\\\\',$_GET['file']);
-		$file_imp = implode('\\', $get_exp);
 		if (isset($_GET['file']))
 		{
-		echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <br><b><u>".$file_imp."</u></b><br>Copy and Paste the bolded text into the file location field to import it.<br></h2>";
+			$get_exp = explode('\\\\',$_GET['file']);
+			$file_imp = implode('\\', $get_exp);
+			echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <br><b><u>".$file_imp."</u></b><br>Copy and Paste the bolded text into the file location field to import it.<br></h2>";
 		}
 		echo "<br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br>";
 		?>

@@ -106,14 +106,11 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users` (
 		`username` VARCHAR( 25 ) NOT NULL ,
 		`points` TEXT NOT NULL ,
 		`notes` TEXT NOT NULL ,
-		`title` varchar(32) NOT NULL ,
-		`date` varchar(25) NOT NULL, 
+		`title` VARCHAR ( 32 ) NOT NULL ,
+		`date` VARCHAR ( 25 ) NOT NULL, 
 		`aps` INT NOT NULL, 
-		`gps` INT NOT NULL, 
-		INDEX ( `id` )) 
-		ENGINE=InnoDB 
-		DEFAULT CHARSET=utf8 
-		AUTO_INCREMENT=1 ;";
+		`gps` INT NOT NULL,
+		INDEX ( `id` )) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 $CR_TB_US_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($CR_TB_US_Re)
@@ -127,7 +124,7 @@ echo "<tr><td>Failure..........</td><td>CREATE TABLE `users`</td></tr>";}
 #Create Wifi0 table (Pointers to _ST tables
 $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`wifi0` ("
   ."  id int(255) default NULL,"
-  ."  ssid varchar(25) NOT NULL,"
+  ."  ssid varchar(32) NOT NULL,"
   ."  mac varchar(25) NOT NULL,"
   ."  chan varchar(2) NOT NULL,"
   ."  sectype varchar(1) NOT NULL,"
@@ -249,6 +246,9 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`gps` INT NOT NULL ,
 		`hash` VARCHAR( 255 ) NOT NULL,
 		`user_row` INT NOT NULL ,
+		`user` VARCHAR ( 32 ) NOT NULL,
+		`notes` TEXT NOT NULL,
+		`title` VARCHAR ( 128 ) NOT NULL,
 		UNIQUE ( `file` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn) or die(mysql_error());
@@ -268,6 +268,10 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files_tmp` (
 		`size` VARCHAR( 12 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		`hash` VARCHAR ( 255 ) NOT NULL,
+		`importing` BOOL NOT NULL,
+		`ap` VARCHAR ( 32 ) NOT NULL,
+		`tot` VARCHAR ( 128 ) NOT NULL,
+		`row` INT ( 255 ) NOT NULL,
 		UNIQUE ( `file` )
 		) ENGINE = $ENG  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 $insert = mysql_query($sql1, $conn) or die(mysql_error());
@@ -343,7 +347,8 @@ $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ---------------
 									."$"."rebuild		=	0;\r\n"
 									."$"."debug			=	0;\r\n"
 									."$"."log_level		=	0;\r\n"
-									."$"."log_interval	=	0;\r\n");
+									."$"."log_interval	=	0;\r\n"
+									."$"."bench			=	0;\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr><td>Success..........</td><td>Add default debug values</td></tr>";}

@@ -94,14 +94,14 @@ function getdaemonstats()
 		$WFDBD_PID = "C:\CLI\daemon\wifidbd.pid";
 		$pid_open = file($WFDBD_PID);
 		exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
-		return $output[2];
+		if(isset($output[2])){return $output[2];}
 	}elseif( substr(PHP_OS,0,3) == 'Lin')
 	{
 		$output = array();
 		$WFDBD_PID = "/var/run/wifidbd.pid";
 		$pid_open = file($WFDBD_PID);
 		exec('ps vp '.$pid_open[0] , $output, $sta);
-		return $output[1];
+		if(isset($output[1])){return $output[1];}
 	}
 }
 $os = substr(PHP_OS,0,3);
