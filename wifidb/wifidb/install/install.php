@@ -11,27 +11,26 @@ pageheader("Install Page");
 $timezn = 'GMT+0';
 date_default_timezone_set($timezn);
 $date = date("Y-m-d");
+$root_sql_user	=	addslashes(strip_tags($_POST['root_sql_user']));
 
-$root_sql_user	=	$_POST['root_sql_user'];
-strip_tags($root_sql_user);
-$root_sql_pwd	=	$_POST['root_sql_pwd'];
-strip_tags($root_sql_pwd);
-$root		=	$_POST['root'];
-strip_tags($root);
-$hosturl	=	$_POST['hosturl'];
-strip_tags($hosturl);
-$sqlhost	=	$_POST['sqlhost'];
-strip_tags($sqlhost);
-$sqlu		=	$_POST['sqlu'];
-strip_tags($sqlu);
-$sqlp		=	$_POST['sqlp'];
-strip_tags($sqlp);
-$wifi		=	$_POST['wifidb'];
-strip_tags($wifi);
-$wifi_st	=	$_POST['wifistdb'];
-strip_tags($wifi_st);
-$daemon	=	$_POST['daemon'];
-strip_tags($daemon);
+$root_sql_pwd	=	addslashes(strip_tags($_POST['root_sql_pwd']));
+
+$root			=	addslashes(strip_tags($_POST['root']));
+
+$hosturl		=	addslashes(strip_tags($_POST['hosturl']));
+
+$sqlhost		=	addslashes(strip_tags($_POST['sqlhost']));
+
+$sqlu			=	addslashes(strip_tags($_POST['sqlu']));
+
+$sqlp			=	addslashes(strip_tags($_POST['sqlp']));
+
+$wifi			=	addslashes(strip_tags($_POST['wifidb']));
+
+$wifi_st		=	addslashes(strip_tags($_POST['wifistdb']));
+
+$daemon			=	addslashes(strip_tags($_POST['daemon']));
+
 if($daemon == "on")
 {$daemon = 1;}else{$daemon = 0;}
 
@@ -43,28 +42,28 @@ echo '<tr><TH colspan="2">Database Install</TH><tr>';
 $conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
 $ENG = "InnoDB";
 #drop exisiting db if it is there and create a new one [this is the install after all / not the upgrade]
-$sqls0 =	"DROP DATABASE $wifi_st";
-$sqls1 =	"CREATE DATABASE $wifi_st";
+$sqls0 =	"DROP DATABASE `$wifi_st`";
+$sqls1 =	"CREATE DATABASE `$wifi_st`";
 $RE_DB_ST_Re = mysql_query($sqls0, $conn);
 $RE_DB_ST_Re = mysql_query($sqls1, $conn) or die(mysql_error());
 
 if($RE_DB_ST_Re)
 {echo "<tr><td>Success..........</td><td>DROP DATABASE `$wifi_st`; "
-		."CREATE DATABASE `$wifi_st`</td></tr>";}
+		."CREATE DATABASE IF NOT EXISTS `$wifi_st`</td></tr>";}
 else{
 echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi_st`; "
-		."CREATE DATABASE `$wifi_st`</td></tr>";
+		."CREATE DATABASE IF NOT EXISTS `$wifi_st`</td></tr>";
 }
 
 #same thing for the ST db
-$sqls0 =	"DROP DATABASE $wifi";
-$sqls1 =	"CREATE DATABASE $wifi";
+$sqls0 =	"DROP DATABASE `$wifi`";
+$sqls1 =	"CREATE DATABASE `$wifi`";
 $sqls2 =	"USE $wifi";
-$DB_WF_Re = mysql_query($sqls0, $conn);
-$DB_WF_Re = mysql_query($sqls1, $conn) or die(mysql_error());
-$DB_WF_Re = mysql_query($sqls2, $conn) or die(mysql_error());
+$wifi_WF_Re = mysql_query($sqls0, $conn);
+$wifi_WF_Re = mysql_query($sqls1, $conn) or die(mysql_error());
+$wifi_WF_Re = mysql_query($sqls2, $conn) or die(mysql_error());
 
-if($DB_WF_Re)
+if($wifi_WF_Re)
 {echo "<tr><td>Success..........</td><td>DROP DATABASE `$wifi`; "
 		."CREATE DATABASE `$wifi`</td></tr>";}
 else{
@@ -75,7 +74,7 @@ echo "<tr><td>Failure..........</td><td>DROP DATABASE `$wifi`; "
 	#									Create the Settings table and populate it									   	     #
 	#========================================================================================================================#
 #create Settings table
-$sqls =	"CREATE TABLE `settings` ("
+$sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`settings` ("
 		."`id` int(255) NOT NULL auto_increment,"
 		."`table` varchar(25) NOT NULL,"
 		."`size` int(254) default NULL,"
@@ -91,7 +90,7 @@ else{
 echo "<tr><td>Failure..........</td><td>CREATE TABLE `settings`</td></tr>";}
 
 #insert data into the settings table
-$sqls =	"INSERT INTO `settings` (`id`, `table`, `size`) VALUES (0, 'wifi0', 0);";
+$sqls =	"INSERT INTO `$wifi`.`settings` (`id`, `table`, `size`) VALUES (0, 'wifi0', 0);";
 $IN_TB_SE_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($IN_TB_SE_Re)
@@ -102,7 +101,7 @@ else{echo "<tr><td>Failure..........</td><td>INSERT INTO `settings`</td></tr>";}
 	#													Create Users table											   	     #
 	#========================================================================================================================#
 #create users table (History for imports)
-$sqls =	"CREATE TABLE `users` (
+$sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users` (
 		`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
 		`username` VARCHAR( 25 ) NOT NULL ,
 		`points` TEXT NOT NULL ,
@@ -126,7 +125,7 @@ echo "<tr><td>Failure..........</td><td>CREATE TABLE `users`</td></tr>";}
 	#													Create WiFi Pointers table									   	     #
 	#========================================================================================================================#
 #Create Wifi0 table (Pointers to _ST tables
-$sqls =	"CREATE TABLE wifi0 ("
+$sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`wifi0` ("
   ."  id int(255) default NULL,"
   ."  ssid varchar(25) NOT NULL,"
   ."  mac varchar(25) NOT NULL,"
@@ -150,7 +149,7 @@ echo "<tr><td>Failure..........</td><td>CREATE TABLE `wifi0`</td></tr>";}
 	#													Create links table and populate								   	     #
 	#========================================================================================================================#
 #Create Links table
-$sqls =	"CREATE TABLE `links` ("
+$sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`links` ("
 	."`ID` int(255) NOT NULL auto_increment,"
 	."`links` varchar(255) NOT NULL,"
 	."KEY `INDEX` (`ID`)"
@@ -204,7 +203,7 @@ if($IN_TB_LN_Re)
 {echo "<tr><td>Success..........</td><td>INSERT INTO `links`</td></tr>";}
 else{echo "<tr><td>Failure..........</td><td>INSERT INTO `links`</td></tr>";}
 
-$sql1 = "CREATE TABLE `annunc-comm` (
+$sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc-comm` (
 		`id` INT NOT NULL AUTO_INCREMENT ,
 		`author` VARCHAR( 32 ) NOT NULL ,
 		`title` VARCHAR( 120 ) NOT NULL ,
@@ -215,15 +214,15 @@ $sql1 = "CREATE TABLE `annunc-comm` (
 		UNIQUE (`title` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 
-$insert = mysql_query($sql, $conn) or die(mysql_error());
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
 
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`;</td></tr> ";
+{echo "<tr><td>Success..........</td><td>Create Announcement Comments table `$wifi`.`annunc-comm`;</td></tr> ";}
 else{
-echo "<tr><td>Failure..........</td><td>Create Announcement Comments table `$db`.`annunc-comm`;</td></tr> ";
+echo "<tr><td>Failure..........</td><td>Create Announcement Comments table `$wifi`.`annunc-comm`;</td></tr> ";
 }
 
-$sql1 = "CREATE TABLE `annunc` (
+$sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc` (
 		`id` INT NOT NULL AUTO_INCREMENT ,
 		`auth` VARCHAR( 32 ) NOT NULL DEFAULT 'Annon Coward',
 		`title` VARCHAR( 120 ) NOT NULL DEFAULT 'Blank',
@@ -234,34 +233,33 @@ $sql1 = "CREATE TABLE `annunc` (
 		INDEX ( `id` ) ,
 		UNIQUE ( `title` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
-
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Announcements table `$db`.`annunc`;</td></tr>";
+{echo "<tr><td>Success..........</td><td>Create Announcements table `$wifi`.`annunc`;</td></tr>";}
 else{
-echo "<tr><td>Failure..........</td><td>Create Announcements table `$db`.`annunc`; </td></tr>";
+echo "<tr><td>Failure..........</td><td>Create Announcements table `$wifi`.`annunc`; </td></tr>";
 }
 
-$sql1 = "CREATE TABLE `files` (
+$sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
-		`file` TEXT NOT NULL ,
+		`file` VARCHAR ( 255 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		`size` VARCHAR( 12 ) NOT NULL ,
 		`aps` INT NOT NULL ,
 		`gps` INT NOT NULL ,
 		`hash` VARCHAR( 255 ) NOT NULL,
 		`user_row` INT NOT NULL ,
-		PRIMARY KEY ( `id` ) ,
 		UNIQUE ( `file` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create Files table `$db`.`files`;</td></tr>";
+{echo "<tr><td>Success..........</td><td>Create Files table `$wifi`.`files`;</td></tr>";}
 else{
-echo "<tr><td>Failure..........</td><td>Create Files table `$db`.`files`;</td></tr> ";
+echo "<tr><td>Failure..........</td><td>Create Files table `$wifi`.`files`;</td></tr> ";
 }
 
 
-$sql1 = "CREATE TABLE `files_tmp` (
+$sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files_tmp` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`file` VARCHAR( 255 ) NOT NULL ,
 		`user` VARCHAR ( 32 ) NOT NULL,
@@ -270,14 +268,13 @@ $sql1 = "CREATE TABLE `files_tmp` (
 		`size` VARCHAR( 12 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		`hash` VARCHAR ( 255 ) NOT NULL,
-		PRIMARY KEY ( `id` ) ,
 		UNIQUE ( `file` )
 		) ENGINE = $ENG  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
-
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
 if($insert)
-{echo "<tr><td>Success..........</td><td>Create tmp File table `$db`.`files`;</td></tr>";
+{echo "<tr><td>Success..........</td><td>Create tmp File table `$wifi`.`files`;</td></tr>";}
 else{
-echo "<tr><td>Failure..........</td><td>Create tmp Files table `$db`.`files`;</td></tr> ";
+echo "<tr><td>Failure..........</td><td>Create tmp Files table `$wifi`.`files`;</td></tr> ";
 }
 	#========================================================================================================================#
 	#									Create WiFiDB user for WiFi and WiFi_st										   	     #
@@ -342,10 +339,11 @@ echo "<tr><td>Failure..........</td><td>Add default daemon values</td></tr>";}
 
 
 #add default debug values
-$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n$"."rebuild	=	0;\r\n"
-									."$"."debug	=	0;\r\n"
-									."$"."loglev	=	0;\r\n"
-									."$"."log_\r\n");
+$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n"
+									."$"."rebuild		=	0;\r\n"
+									."$"."debug			=	0;\r\n"
+									."$"."log_level		=	0;\r\n"
+									."$"."log_interval	=	0;\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr><td>Success..........</td><td>Add default debug values</td></tr>";}
@@ -354,7 +352,7 @@ echo "<tr><td>Failure..........</td><td>Add default debug values</td></tr>";}
 
 #add url info
 $AD_CF_UR_Re = fwrite($fileappend, "#---------------- URL Info ----------------#\r\n"
-									."$"."root		=	'/$root';\r\n"
+									."$"."root		=	'$root';\r\n"
 									."$"."hosturl	=	'$hosturl';\r\n\r\n");
 
 if($AD_CF_UR_Re)
@@ -375,7 +373,7 @@ echo "<tr><td>Failure..........</td><td>Adding SQL Host info</td></tr>";}
 $AD_CF_WT_Re = fwrite($fileappend, "#---------------- Tables ----------------#\r\n"
 									."$"."settings_tb 	=	'settings';\r\n"
 									."$"."users_tb 		=	'users';\r\n"
-									."$"."links 		=	'links';\r\n"
+									."$"."links 			=	'links';\r\n"
 									."$"."wtable 		=	'wifi0';\r\n"
 									."$"."gps_ext 		=	'_GPS';\r\n"
 									."$"."sep 			=	'-';\r\n\r\n");
@@ -396,7 +394,7 @@ echo "<tr><td>Failure..........</td><td>Adding DataBase names</td></tr>";}
 #add sql host info
 $AD_CF_SU_Re = fwrite($fileappend, "#---------------- SQL User Info ----------------#\r\n"
 									."$"."db_user		=	'$sqlu';\r\n"
-									."$"."db_pwd		=	'$sqlp';\r\n\r\n");
+									."$"."db_pwd			=	'$sqlp';\r\n\r\n");
 if($AD_CF_SU_Re)
 {echo "<tr><td>Success..........</td><td>Add DataBase names</td></tr>";}
 else{
@@ -414,7 +412,7 @@ $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info --------------
 							."$"."open_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
 							."$"."WEP_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
 							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
-							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
+							."$"."KML_SOURCE_URL			=	'http://www.opengis.net/kml/2.2';\r\n"
 							."$"."kml_out				=	'../out/kml/';"
 							."$"."vs1_out				=	'../out/vs1/';"
 							."$"."gpx_out				=	'../out/gpx/';");
@@ -423,32 +421,18 @@ else{echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
 
 $AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
-								."$"."ads = ''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
-								."$"."tracker = ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
+								."$"."ads 		= ''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+								."$"."tracker 	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
 if($AD_CF_FI_Re)
 {echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
 echo "<tr><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
 
-$install_warning = fwrite($fileappend,"\r\n\#---------------- Install Folder Warning Code -----------------#
-					if(PHP_OS == 'Linux'){$div = '';}
-					if(PHP_OS == 'WINNT'){$div = '\\';}
-					$path = getcwd();
-					$path_exp = explode($div, $path);
-					$path_count = count($path_exp);
-					foreach($path_exp as $key=>$val)
-					{
-						if($val == $root){$path_key = $key;}
-					}
-					$full_path = '';
-					$I = 0;
-					while($I!=($path_key+1))
-					{
-						$full_path = $full_path.$path_exp[$I].$div;
-						$I++;
-					}
-					$full_path = $full_path.'install';
-					if(is_dir($full_path)){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}");
+$install_warning = fwrite($fileappend,"\r\n#---------------- Install Folder Warning Code -----------------#\r\n"
+."if(PHP_OS == 'Linux'){ $"."div = '/';}\r\nif(PHP_OS == 'WINNT'){ $"."div = '\\\\';}\r\n$"."path = getcwd();\r\n$"."path_exp = explode($"."div, $"."path);\r\n"
+."$"."path_count = count($"."path_exp);\r\nforeach($"."path_exp as $"."key=>$"."val)\r\n{\r\n\tif($"."val == $"."root){ $"."path_key = $"."key;}\r\n"
+."}\r\n$"."full_path = '';\r\n$"."I = 0;\r\nif(isset($"."path_key))\r\n{\r\n\twhile($"."I!=($"."path_key+1))\r\n\t{\r\n\t\t$"."full_path = $"."full_path.$"."path_exp[$"."I].$"."div;\r\n"
+."\t\t$"."I++;\r\n\t}\r\n\t$"."full_path = $"."full_path.'install';\r\n\tif(is_dir($"."full_path)){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}\r\n}");
 
 if($install_warning){}
 fwrite($fileappend, "\r\n?>");
