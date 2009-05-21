@@ -1,29 +1,59 @@
 <?php
 //YAY FUNCTIONS!!!, well they have to tell the daemon how to do something
+require $GLOBALS['wifidb_install']."/lib/database.inc.php";
+require $GLOBALS['wifidb_install']."/lib/config.inc.php";
+date_default_timezone_set($timezn);
 global $vers;
 $vers = array(
 			"WiFiDB_Daemon"				=>	"1.2",
-			"Last_Daemon_Core_Edit" 	=> 	"2009-May-20"
+			"Last_Daemon_Core_Edit" 	=> 	"2009-May-21",
 			"Misc"						=> array(
-												"logd"			=>	"1.0",
-												"check_file"	=>	"1.0",
-												"insert_file"	=>	"1.0"
+												"logd"			=>	"1.1",
+												"verbose"		=>	"1.1",
+												"check_file"	=>	"1.1",
+												"insert_file"	=>	"1.1"
 												),
-			"daemon_ext_import_vs1"		=>	"1.0"
+			"daemon_ext_import_vs1"		=>	"1.1"
 			);
+			
 
-require $GLOBALS['wifidb_install']."/lib/database.inc.php";
-require $GLOBALS['wifidb_install']."/lib/config.inc.php";
+#========================================================================================================================#
+#											verbose (Echos out a message to the screen or page)							 #
+#========================================================================================================================#
+
+function verbose($message = "", $level = 0, $header = 0)
+{
+	require('config.inc.php');
+	$time = time()+$DST;
+	$datetime = date("Y-m-d H:i:s",$time);
+	if($message != '')
+	{
+		if($header == 0)
+		{
+			$message = $datetime."   ->    ".$message;
+		}	
+		if($level==1)
+		{
+			echo $message."\n";
+		}
+	}else
+	{
+		echo "Verbose was told to write a blank string";
+	}
+}
 
 function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 {
+	require('config.inc.php');
 	if($log_level != 0)
 	{
-		if($message == ''){echo "Logd was told to write a blank string.\nThis has NOT been logged!\nThis will NOT be allowed!\n"; continue;}
+		if($message == ''){echo "Logd was told to write a blank string.\nThis has NOT been logged.\nThis will NOT be allowed!\n"; continue;}
 		$date = date("y-m-d");
-		$message = date("Y-m-d H:i:s.").microtime(true)."   ->    ".$message."\r\n";
+		$time = time()+$DST;
+		$datetime = date("Y-m-d H:i:s",$time);
+		$message = $datetime."   ->    ".$message."\r\n";
 		include('config.inc.php');
-		if($log_interval==0)
+		if($log_interval==1)
 		{
 			$cidir = getcwd();
 			$filename = '/CLI/log/wifidbd_log.log';
@@ -61,22 +91,25 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 
 	function check_file($file = '')
 	{
-		include($GLOBALS['wifidb_install'].'/lib/config.inc.php');
-		$file = $GLOBALS['wifidb_install'].'/import/up/'.$file;
+		if(PHP_OS == "WINNT"){$dim = "\\";}
+		if(PHP_OS == "Linux"){$dim = "/";}
+		include($GLOBALS['wifidb_install'].$dim.'lib'.$dim.'config.inc.php');
+		$file = $GLOBALS['wifidb_install'].$dim.'import'.$dim.'up'.$dim.$file;
 		$hash = hash_file('md5', $file);
-		$file_exp = explode("/", $file);
+		$file_exp = explode($dim, $file);
 		$file_exp_seg = count($file_exp);
 		$file1 = $file_exp[$file_exp_seg-1];
+		$file2 = trim(strstr($file1, '_'), "_");
 		mysql_select_db($db,$GLOBALS['conn']);
-		$fileq = mysql_query("SELECT * FROM `files` WHERE `file` LIKE '$file1'", $GLOBALS['conn']);
+		$sql = "SELECT * FROM `files` WHERE `file` LIKE '%$file2'";
+		$fileq = mysql_query($sql, $GLOBALS['conn']);
 		$fileqq = mysql_fetch_array($fileq);
-
-		if( $hash != $fileqq['hash'] )
-		{
-			return 1;
-		}else
+		if( strcmp($hash ,$fileqq['hash']) == 0 )
 		{
 			return 0;
+		}else
+		{
+			return 1;
 		}
 	}
 
@@ -116,7 +149,6 @@ class daemon extends database
 		$count = count($return);
 		
 		$file_row =  0;
-		
 		require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 		require 'config.inc.php';
 		
@@ -158,13 +190,13 @@ class daemon extends database
 		
 		foreach($return as $ret)
 		{
-			if($file_row != $newArray['file_row'] AND $newArray['file_row'] != 0 AND $newArray['file_row'] >= $file_row )
-			{
-				continue;
-			}else
-			{
-				$file_row++;
-			}
+#			if($file_row != $newArray['row'] AND $newArray['row'] != 0 AND $newArray['row'] >= $file_row )
+#			{
+#				continue;
+#			}else
+#			{
+#				$file_row++;
+#			}
 			if ($ret[0] == "#"){continue;}
 			
 			$retexp = explode("|",$ret);
@@ -226,7 +258,7 @@ class daemon extends database
 					$otx		=	filter_var($wifi[9], FILTER_SANITIZE_SPECIAL_CHARS);
 					$nt			=	filter_var($wifi[10], FILTER_SANITIZE_SPECIAL_CHARS);
 					$label		=	filter_var($wifi[11], FILTER_SANITIZE_SPECIAL_CHARS);
-					$san_sig	=	addslashes($wifi[12]);
+					$san_sig	=	filter_var($wifi[12], FILTER_SANITIZE_SPECIAL_CHARS);
 					
 					if($wifi[6] == "802.11a")
 						{$radios = "a";}
