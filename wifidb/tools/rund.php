@@ -5,6 +5,7 @@ echo $GLOBALS['wifidb_tools']."\n";
 if ($_SERVER['OS'] == "Windows_NT")
 {$pid_file = $GLOBALS['wifidb_tools'].'/daemon/wifidbd.pid';}
 else{$pid_file = '/var/run/wifidbd.pid';}
+strtolower($argv[1]);
 if(isset($argv[1])) //parse WiFiDB argument to get value
 {
 	switch ($argv[1])
@@ -20,13 +21,21 @@ if(isset($argv[1])) //parse WiFiDB argument to get value
 				start();
 			}
 			break;
-		
+			
 		case "stop" :
 			stop();
 			break;
 			
 		case "start" :
 			start();
+			break;
+			
+		case "version" :
+			ver();
+			break;
+			
+		case "help" :
+			help();
 			break;
 	}
 }else
@@ -38,20 +47,25 @@ if(isset($argv[1])) //parse WiFiDB argument to get value
 function start()
 {
 	echo "Starting WiFiDB Daemon..\n";
-	if ($_SERVER['OS'] == "Windows_NT")
+	if (PHP_OS == "WINNT")
 	{$cmd = "start C:\wamp\bin\php\php5.2.9-1\php ".$GLOBALS['wifidb_tools']."/daemon/wifidbd.php";}
 	else{$cmd = "php ".$GLOBALS['wifidb_tools']."/daemon/wifidbd.php&";}
 	
 	echo $cmd."\n";
 	if(file_exists($GLOBALS['wifidb_tools']."/daemon/wifidbd.php"))
 	{
-		$start = popen($cmd, 'r');
+		$start = popen($cmd, 'w');
+		#exec($cmd, $screen_output , $start);
 		if($start)
 		{
 			echo "WiFiDB Daemon Started..\n";
 		}else
 		{
-			echo "WiFiDB Daemon Could not start\n".$start;
+			echo "WiFiDB Daemon Could not start\nStatus: ".$start."\n";
+			foreach($screen_output as $line)
+			{
+				echo $line."\n";
+			}
 		}
 	}else
 	{

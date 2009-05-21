@@ -215,7 +215,7 @@ class daemon extends database
 					$otx		=	filter_var($wifi[9], FILTER_SANITIZE_SPECIAL_CHARS);
 					$nt			=	filter_var($wifi[10], FILTER_SANITIZE_SPECIAL_CHARS);
 					$label		=	filter_var($wifi[11], FILTER_SANITIZE_SPECIAL_CHARS);
-					$san_sig	=	filter_var($wifi[12], FILTER_SANITIZE_SPECIAL_CHARS);
+					$san_sig	=	addslashes($wifi[12]);
 					
 					if($wifi[6] == "802.11a")
 						{$radios = "a";}

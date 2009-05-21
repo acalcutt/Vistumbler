@@ -124,8 +124,9 @@ $os = substr(PHP_OS,0,3);
 			$patterns[1] = '/  /';
 			$patterns[2] = '/ /';
 			$ps_stats = preg_replace($patterns , "|" , $start);
+			echo $ps_stats."<br />";
 			$ps_Sta_exp = explode("|", $ps_stats);
-			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[4];?></td><td><?php echo $ps_Sta_exp[10]."%";?></td><td><?php echo $ps_Sta_exp[11]." ".$ps_Sta_exp[12];?></td></tr><?php		
+			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[1]);?></td><td><?php echo $ps_Sta_exp[6];?></td><td><?php echo $ps_Sta_exp[11]."%";?></td><td><?php echo $ps_Sta_exp[12]." ".$ps_Sta_exp[13];?></td></tr><?php		
 		}
 	}else
 	{
