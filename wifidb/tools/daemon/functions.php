@@ -1,5 +1,16 @@
 <?php
 //YAY FUNCTIONS!!!, well they have to tell the daemon how to do something
+global $vers;
+$vers = array(
+			"WiFiDB_Daemon"				=>	"1.2",
+			"Last_Daemon_Core_Edit" 	=> 	"2009-May-20"
+			"Misc"						=> array(
+												"logd"			=>	"1.0",
+												"check_file"	=>	"1.0",
+												"insert_file"	=>	"1.0"
+												),
+			"daemon_ext_import_vs1"		=>	"1.0"
+			);
 
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
@@ -8,7 +19,7 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 {
 	if($log_level != 0)
 	{
-		if($message == ''){echo "Logd was told to write a blank string, this has NOT been logged.\n and will not be allowed\n"; continue;}
+		if($message == ''){echo "Logd was told to write a blank string.\nThis has NOT been logged!\nThis will NOT be allowed!\n"; continue;}
 		$date = date("y-m-d");
 		$message = date("Y-m-d H:i:s.").microtime(true)."   ->    ".$message."\r\n";
 		include('config.inc.php');
@@ -27,7 +38,7 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 				$message = $message."\n==Details==\n".$detail."\n===========\n";
 			}
 			$write_message = fwrite($fileappend, $message);
-			if(!$write_message){die("Could not message to the file, thats not good...");}
+			if(!$write_message){die("Could not write message to the file, thats not good...");}
 		}elseif($log_interval==1)
 		{
 			$cidir = getcwd();
@@ -43,7 +54,7 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 				$message = $message."\n==Details==\n".$detail."\n===========\n";
 			}
 			$write_message = fwrite($fileappend, $message);
-			if(!$write_message){die("Could not message to the file, thats not good...");}
+			if(!$write_message){die("Could not write message to the file, thats not good...");}
 		}
 	}
 }
