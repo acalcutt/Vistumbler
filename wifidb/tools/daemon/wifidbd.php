@@ -1,21 +1,21 @@
 <?php
-//Now this is not what i would call a 'true' 'daemon' by any sorts
-//I mean it does have an init.d/sh script that can turn it on and off,
-//but it is a php script that is running perpetually in the background
-//i dont think this is how php was intended to be used. i am hoping to
-//get a C++ version working sometime soon, untill then i am using php
+//Now this is not what I would call a 'true' 'daemon' by any sorts,
+//I mean it does have a php script (/tools/rund.php) that can turn 
+//the daemon on and off. But it is a php script that is running 
+//perpetually in the background. I dont think this is how php was 
+//intended to be used. I am hoping to get a C++ version working 
+//sometime soon, untill then I am using php.
 
 require('config.inc.php');
 require('functions.php'); //need to include the functions file so that the daemon can do things...
 
 $start_date = "2009-04-23";
-$last_edit = "2009-05-10";
-$ver = "1.1";
-verbose("Starting WiFiDB 'Daemon'\nVersion: ".$ver." - Last Edit: ".$last_edit."\nBy: Phillip Ferland\nhttp://www.randomintervals.com\r", $verbose);
+$last_edit = "2009-05-20";
+verbose("Starting WiFiDB 'Daemon'\nVersion: ".$GLOBALS['vers']['WiFiDB_Daemon']."\n - Last Daemon File Edit (/tools/daemon/wifidbd.php): ".$last_edit."\n - Last Core File Edit (/tools/daemon/functions.php): ".$GLOBALS['vers']['Last_Daemon_Core_Edit']."\n - By: Phillip Ferland\n http://www.randomintervals.com\n", $verbose);
 verbose("Log Level is: ".$log_level, $verbose);
 
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
-error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
+#error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
 
 logd("Have included the WiFiDB Tools Functions file for the 'Daemon'.", $log_interval, 0,  $log_level);
 verbose("Have included the WiFiDB Tools Functions file for the 'Daemon'.", $verbose); 
@@ -32,15 +32,11 @@ else{$pid_file = '/var/run/wifidbd.pid';}
 fopen($pid_file, "w");
 $fileappend = fopen($pid_file, "a");
 $write_pid = fwrite($fileappend, "$This_is_me");
-if(!$write_pid){die("Could not write pid file, thats not good...");}
+if(!$write_pid){die("Could not write pid file, thats not good... :[");}
 logd("Have writen the PID file at /var/run/wifidbd.pid (".$This_is_me.")", $log_interval,0 ,  $log_level);
 verbose("PID Writen ".$This_is_me, $verbose); 
-
 if($time_interval_to_check < '300'){$time_interval_to_check = '300';} //its really pointless to check more then 5 min at a time, becuse if it is 
 																	  //importing something it is probably going to take more then that to imort the file
-
-#$daemon = new daemon();
-
 $finished = 0;
 //Main loop
 while(1) //while my pid file is still in the /var/run/ folder i will still run, this is for the init.d script or crash override
