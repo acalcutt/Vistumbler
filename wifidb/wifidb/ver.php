@@ -21,7 +21,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b21A">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1A</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-18</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-20</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -52,26 +52,7 @@ pageheader("Version Page");
 					<LI>Also made the drop down for selecting the refresh time on the scheduled imports page, so it has a default of the current selection instead fo going back to 5 sec.</LI>
 					<LI>Fixed the Upgrade script in /install/upgrade/path.php.</LI>
 					<LI>Added Daemon Status to the scheduling.php page.</LI>
-					<code>
-					function getdaemonstats()<br />
-{<br />
-&#09;if ( substr(PHP_OS,0,3) == 'WIN')<br />
-&#09;{<br />
-&#09;&#09;$output = array();<br />
-&#09;&#09;$WFDBD_PID = "C:\CLI\daemon\wifidbd.pid";<br />
-&#09;&#09;$pid_open = file($WFDBD_PID);<br />
-&#09;&#09;exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);<br />
-&#09;&#09;return $output[2];<br />
-&#09;}elseif( substr(PHP_OS,0,3) == 'Lin')<br />
-&#09;{<br />
-&#09;&#09;$output = array();<br />
-&#09;&#09;$WFDBD_PID = "/var/run/wifidbd.pid";<br />
-&#09;&#09;$pid_open = file($WFDBD_PID);<br />
-&#09;&#09;exec('ps vp '.$pid_open[0] , $output, $sta);<br />
-&#09;&#09;return $output[1];<br />
-&#09;}<br />
-}<br />
-					</code>
+					<LI>Fixed an issue where the Signal history was being corrupted by being sanatized. The 'special' characters '-' and ',' were being encoded.</LI>
 				</OL>
 			</td></tr>
 		</table>
