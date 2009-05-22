@@ -1274,7 +1274,6 @@ Func _ScanAccessPoints()
 
 	Else
 		$NewAP = 0
-		$NewSSID = 0
 		$FoundAPs = 0
 		$NewFoundAPs = 0
 		;Dump data from netsh
@@ -1322,7 +1321,6 @@ Func _ScanAccessPoints()
 				EndIf
 				;Add data into database and gui
 				If $Update = 1 And $NewAP = 1 And $BSSID <> '' Then
-					;ConsoleWrite($Update & ' - ' & $NewAP & ' - ' & $BSSID & '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' & @CRLF)
 					$NewAP = 0
 					If $BSSID <> "" Then
 						$FoundAPs += 1
