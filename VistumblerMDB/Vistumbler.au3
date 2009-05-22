@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.4 Beta 2'
+$version = '9.4 Beta 3'
 $Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/05/17')
+$last_modified = _DateLocalFormat('2009/05/22')
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -198,7 +198,7 @@ Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, 
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
-Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
+Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
@@ -262,9 +262,11 @@ Dim $Midi_Instument = IniRead($settings, 'Vistumbler', 'Midi_Instument', 56)
 Dim $Midi_PlayTime = IniRead($settings, 'Vistumbler', 'Midi_PlayTime', 500)
 Dim $Midi_PlayForActiveAps = IniRead($settings, 'Vistumbler', 'Midi_PlayForActiveAps', 0)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 0)
+Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
+Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
-Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
+
 
 Dim $ComPort = IniRead($settings, 'GpsSettings', 'ComPort', '4')
 Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
@@ -1130,8 +1132,6 @@ While 1
 		_FilterReAddMatchingNotInList()
 	EndIf
 
-
-
 	;Graph Selected AP
 	If $UpdatedGraph <> 1 Then
 		$UpdatedGraph = 1
@@ -1274,12 +1274,13 @@ Func _ScanAccessPoints()
 
 	Else
 		$NewAP = 0
+		$NewSSID = 0
 		$FoundAPs = 0
 		$NewFoundAPs = 0
 		;Dump data from netsh
 		FileDelete($tempfile);delete old temp file
 		_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
-		$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
+		$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Array
 		;Go through data and pull AP information
 		If $arrayadded = 1 Then
 			;Strip out whitespace before and after text on each line
@@ -1292,6 +1293,7 @@ Func _ScanAccessPoints()
 				If IsArray($temp) Then
 					If $temp[0] = 2 Then
 						If StringInStr($TempFileArray[$loop], $SearchWord_SSID) And StringInStr($TempFileArray[$loop], $SearchWord_BSSID) <> 1 Then
+							$NewSSID = 1
 							$SSID = StringStripWS($temp[2], 3)
 							Dim $NetworkType = '', $Authentication = '', $Encryption = '', $BSSID = ''
 						EndIf
@@ -1320,6 +1322,7 @@ Func _ScanAccessPoints()
 				EndIf
 				;Add data into database and gui
 				If $Update = 1 And $NewAP = 1 And $BSSID <> '' Then
+					;ConsoleWrite($Update & ' - ' & $NewAP & ' - ' & $BSSID & '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!' & @CRLF)
 					$NewAP = 0
 					If $BSSID <> "" Then
 						$FoundAPs += 1
@@ -1521,49 +1524,57 @@ EndFunc   ;==>_AddApData
 
 Func _MarkDeadAPs()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_MarkDeadAPs()') ;#Debug Display
-	;Set APs without current GPS_ID to Dead
-	If $Scan = 0 Then;Or $FoundTempAp = 0 Then
-		$LastActiveGID = 0
-	Else
-		$LastActiveGID = $GPS_ID
-	EndIf
-	If $GraphDeadTime = 1 Then
-		$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "'"
-	Else
-		$query = "SELECT ApID, ListRow, Active, LastGpsID FROM AP WHERE LastGpsID <> '" & $LastActiveGID & "' And Active = '1'"
-	EndIf
+	$query = "SELECT ApID, ListRow, LastGpsID FROM AP WHERE Active = '1'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	;Set APs Dead in Listview
 	For $resetdead = 1 To $FoundApMatch
 		$Found_APID = $ApMatchArray[$resetdead][1]
 		$Found_ListRow = $ApMatchArray[$resetdead][2]
-		$Found_Active = $ApMatchArray[$resetdead][3]
-		$Found_LastGpsID = $ApMatchArray[$resetdead][4]
-		If $Found_Active = 1 Then
-			If $Found_ListRow <> -1 Then
-				_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
-				_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
-			EndIf
-			;Set APs Dead in AP table, Set New HistID
-			$HISTID += 1
-			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $datestamp & '|' & $timestamp)
-			$query = "UPDATE AP SET Active = '0' WHERE ApID = '" & $Found_APID & "'"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		ElseIf $Found_Active = 0 Then
-			If $GraphDeadTime = 1 And $Scan = 1 Then
-				;Create New HistID, Update AP LastHistID
+		$Found_LastGpsID = $ApMatchArray[$resetdead][3]
+		;Get Last Time
+		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $Found_LastGpsID & "'"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$Found_Date = $GpsMatchArray[1][1]
+		$Found_Time = $GpsMatchArray[1][2]
+		$dts = StringSplit($GpsMatchArray[1][2], ":") ;Split time so it can be converted to seconds
+		$Found_Time = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+		$dts = StringSplit($timestamp, ":") ;Split time so it can be converted to seconds
+		$Current_Time = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+		$Found_dts = StringReplace($Found_Date & $Found_Time, '-', '')
+		$Current_dts = StringReplace($datestamp & $Current_Time, '-', '')
+		;Set APs that have been inactive for specified time dead
+		If ($Current_dts - $Found_dts) > $TimeBeforeMarkedDead Then
+			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
+			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
+			If $GraphDeadTime = 0 Then
 				$HISTID += 1
 				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $datestamp & '|' & $timestamp)
 			EndIf
+			$query = "UPDATE AP SET Active = '0' WHERE ApID = '" & $Found_APID & "'"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
 	Next
+	If $GraphDeadTime = 1 And $Scan = 1 Then _GraphDeadTime()
 	;Update active/total ap label
 	$query = "SELECT ApID FROM AP WHERE Active = '1'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $FoundApMatch & " / " & $APID)
 EndFunc   ;==>_MarkDeadAPs
+
+Func _GraphDeadTime()
+	$query = "SELECT ApID, LastGpsID FROM AP WHERE Active = '0'"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	;Set APs Dead in Listview
+	For $deadaps = 1 To $FoundApMatch
+		$Found_APID = $ApMatchArray[$deadaps][1]
+		$Found_LastGpsID = $ApMatchArray[$deadaps][2]
+		$HISTID += 1
+		_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $datestamp & '|' & $timestamp)
+	Next
+EndFunc   ;==>_GraphDeadTime
 
 Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add_SSID = '', $Add_Authentication = '', $Add_Encryption = '', $Add_Signal = '', $Add_Channel = '', $Add_RadioType = '', $Add_BasicTransferRates = '', $Add_OtherTransferRates = '', $Add_NetworkType = '', $Add_FirstAcvtive = '', $Add_LastActive = '', $Add_LatitudeDMM = '', $Add_LongitudeDMM = '', $Add_MANU = '', $Add_Label = '')
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ListViewAdd()') ;#Debug Display
@@ -4717,6 +4728,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'Midi_PlayForActiveAps', $Midi_PlayForActiveAps)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
 	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
+	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
 
 	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
 	IniWrite($settings, 'AutoKML', 'AutoKML_Alt', $AutoKML_Alt)
@@ -6146,7 +6158,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 		$GroupMisc = GUICtrlCreateGroup($Text_Misc, 8, 32, 665, 425)
 		GUICtrlSetColor(-1, $TextColor)
-		$GroupMiscOpt = GUICtrlCreateGroup($Text_Options, 16, 56, 649, 257)
+		$GroupMiscOpt = GUICtrlCreateGroup($Text_Options, 16, 56, 649, 265)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 31, 76, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
@@ -6174,11 +6186,14 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$cbrowse3 = GUICtrlCreateButton($Text_Browse, 235, 251, 97, 20, 0)
 		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 236, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 251, 300, 21)
-		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 31, 285, 300, 15)
+		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 251, 195, 21)
+		GUICtrlCreateLabel("Time to wait before marking AP dead (s)", 31, 277, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 31, 292, 195, 21)
+		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 277, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
-		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 285, 300, 15)
+		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 297, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
 		$GroupMiscPHP = GUICtrlCreateGroup($Text_PHPgraphing, 16, 328, 649, 121)
@@ -6198,7 +6213,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 95, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseKernel32 = GUICtrlCreateRadio("Use Kernel32", 40, 120, 361, 20)
+		$Rad_UseKernel32 = GUICtrlCreateRadio("Use Kernel32 - x32 - x64", 40, 120, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
 		If $GpsType = 0 Then
 			GUICtrlSetState($Rad_UseCommMG, $GUI_CHECKED)
@@ -7234,6 +7249,8 @@ Func _ApplySettingsGUI();Applys settings
 		$BackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_BKColor))
 		$ControlBackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_CBKColor))
 		$TextColor = '0x' & StringUpper(GUICtrlRead($GUI_TextColor))
+		$TimeBeforeMarkedDead = GUICtrlRead($GUI_TimeBeforeMarkingDead)
+		If $TimeBeforeMarkedDead > 86400 Then $TimeBeforeMarkedDead = 86400
 		If GUICtrlRead($GUI_AutoCheckForUpdates) = 1 Then
 			$AutoCheckForUpdates = 1
 		Else
