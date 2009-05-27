@@ -1,27 +1,24 @@
 <?php
 //YAY FUNCTIONS!!!, well they have to tell the daemon how to do something
+require_once('config.inc.php');
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 date_default_timezone_set($timezn);
 global $vers;
 $vers = array(
-			"WiFiDB_Daemon"				=>	"1.2",
-			"Last_Daemon_Core_Edit" 	=> 	"2009-May-21",
+			"WiFiDB_Daemon"				=>	"1.3",
+			"Last_Daemon_Core_Edit" 	=> 	"2009-May-24",
 			"Misc"						=> array(
 												"logd"			=>	"1.1",
-												"verbose"		=>	"1.1",
-												"check_file"	=>	"1.1",
-												"insert_file"	=>	"1.1"
+												"verbosed"		=>	"1.1",
 												),
-			"daemon_ext_import_vs1"		=>	"1.1"
+			"daemon_ext_import_vs1"		=>	"1.2"
 			);
-			
-
 #========================================================================================================================#
 #											verbose (Echos out a message to the screen or page)							 #
 #========================================================================================================================#
 
-function verbose($message = "", $level = 0, $header = 0)
+function verbosed($message = "", $level = 0, $header = 0)
 {
 	require('config.inc.php');
 	$time = time()+$DST;
@@ -89,52 +86,6 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 	}
 }
 
-	function check_file($file = '')
-	{
-		if(PHP_OS == "WINNT"){$dim = "\\";}
-		if(PHP_OS == "Linux"){$dim = "/";}
-		include($GLOBALS['wifidb_install'].$dim.'lib'.$dim.'config.inc.php');
-		$file = $GLOBALS['wifidb_install'].$dim.'import'.$dim.'up'.$dim.$file;
-		$hash = hash_file('md5', $file);
-		$file_exp = explode($dim, $file);
-		$file_exp_seg = count($file_exp);
-		$file1 = $file_exp[$file_exp_seg-1];
-		$file2 = trim(strstr($file1, '_'), "_");
-		mysql_select_db($db,$GLOBALS['conn']);
-		$sql = "SELECT * FROM `files` WHERE `file` LIKE '%$file2'";
-		$fileq = mysql_query($sql, $GLOBALS['conn']);
-		$fileqq = mysql_fetch_array($fileq);
-		if( strcmp($hash ,$fileqq['hash']) == 0 )
-		{
-			return 0;
-		}else
-		{
-			return 1;
-		}
-	}
-
-	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled", $user_row = 0)
-	{
-		include $GLOBALS['wifidb_install'].'/lib/config.inc.php';
-		$file1 = $GLOBALS['wifidb_install'].'/import/up/'.$file;
-		$size = dos_filesize($file1);
-		$size = format_size($size, 2);
-		$hash = hash_file('md5', $file1);
-		$date = date("y-m-d H:i:s");
-		mysql_select_db($db,$GLOBALS['conn']);
-		
-		$sql = "INSERT INTO `$db`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash`, `user` , `notes` , `title` , `user_row`	)
-									VALUES ( NULL , '$file', '$size', '$date' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' , '$user_row' )";
-		if(mysql_query($sql, $GLOBALS['conn']))
-		{
-			return 1;
-		}else
-		{
-			$A = array( 0=>'0', 'error' => mysql_error($GLOBALS['conn']));
-			return $A;
-		}
-	}
-
 class daemon extends database
 {
 	function importvs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 0 )
@@ -142,7 +93,7 @@ class daemon extends database
 		if ($source == NULL)
 		{
 			logd("There was an error sending the file name to the function", $log_interval, 0,  $log_level);
-			verbose("There was an error sending the file name to the function", $verbose);
+			verbosed("There was an error sending the file name to the function", $verbose);
 			break;
 		}
 		$return  = file($source);
@@ -180,7 +131,7 @@ class daemon extends database
 		if($count <= 8) 
 		{
 			logd("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $log_interval, 0,  $log_level);
-			verbose("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $verbose);
+			verbosed("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $verbose);
 
 			break;
 		}
@@ -214,7 +165,7 @@ class daemon extends database
 						if($count == 0) 
 						{
 							logd("This File does not have any APs to import, just a bunch of GPS cords.", $log_interval, 0,  $log_level);
-							verbose("This File does not have any APs to import, just a bunch of GPS cords.", $verbose);
+							verbosed("This File does not have any APs to import, just a bunch of GPS cords.", $verbose);
 							$user_aps = "";
 							break;
 						}
@@ -223,8 +174,9 @@ class daemon extends database
 					$wifi = explode("|",$ret, 13);
 					if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
 					mysql_select_db($db,$conn);
-					$dbsize = mysql_query("SELECT * FROM `$wtable`", $conn);
-					$size = mysql_num_rows($dbsize);
+					$dbsize = mysql_query("SELECT `id` FROM `$wtable` ORDER BY `id` DESC LIMIT 1", $GLOBALS['conn']);
+					$size1 = mysql_fetch_array($dbsize);
+					$size = $size1['id']+0;
 					$size++;
 					
 					//You cant have any blank data, thats just rude...
@@ -233,18 +185,19 @@ class daemon extends database
 					if($wifi[5] == ''){$wifi[5] = "0";}
 					if($wifi[6] == ''){$wifi[6] = "u";}
 					if($wifi[7] == ''){$wifi[7] = "0";}
+					
 					// sanitize wifi data to be used in table name
-					$ssidss = filter_var($wifi[0], FILTER_SANITIZE_SPECIAL_CHARS);
-					$ssidss = smart_quotes($ssidss);
-					$ssidsss = str_split($ssidss,25); //split SSID in two on is 25 char long.
-					$ssids = $ssidsss[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
+					$ssids = filter_var($wifi[0], FILTER_SANITIZE_SPECIAL_CHARS);
+					$ssidss = smart_quotes($ssids);
+					$ssidsss = str_split($ssidss,25); //split SSID in two at is 25th char.
+					$ssid_S = $ssidsss[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
 										  //the rest of the info will suffice for unique table names
 					$this_of_this = $FILENUM." / ".$count;
-					$sqlup = "UPDATE `files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssidss', `row` = '$file_row' WHERE `file` = '$file1';";
+					$sqlup = "UPDATE `files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `file` = '$file1';";
 					if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 					{
 						logd("Updated files_tmp table with this runs data.", $log_interval, 0,  $log_level);
-						verbose("Updated files_tmp table with this runs data.", $verbose);
+						verbosed("Updated files_tmp table with this runs data.", $verbose);
 					}
 					
 					$mac1 = explode(':', $wifi[1]);
@@ -294,7 +247,7 @@ class daemon extends database
 					mysql_close($conn1);
 					
 					//create table name to select from, insert into, or create
-					$table = $ssids.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
+					$table = $ssid_S.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 					$gps_table = $table.$gps_ext;
 					
 					if(!isset($table_ptb)){$table_ptb="";}
@@ -303,7 +256,7 @@ class daemon extends database
 					{
 						// They are the same
 						logd($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated ", $log_interval, 0,  $log_level);
-						verbose($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated ", $verbose);
+						verbosed($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated ", $verbose);
 						
 						mysql_select_db($db_st,$conn);
 						//setup ID number for new GPS cords
@@ -372,9 +325,10 @@ class daemon extends database
 							$date1 = smart($date);
 							
 							$comp = $lat1."".$long1."".$date1."".$time1;
-							
-							$gpschk = database::check_gps_array($db_gps,$comp);
-							list($return_gps, $dbid) = $gpschk;
+							if(!isset($db_gps)){$db_gps == array();}
+							list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
+						#	echo $return_gps."\n";
+						#	echo $dbid."\n";
 							$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$dbid'", $conn);
 							$GPSDBArray = mysql_fetch_array($DBresult);
 							if($return_gps === 0)
@@ -384,7 +338,7 @@ class daemon extends database
 						#		if (!mysql_query($sqlitgpsgp, $GLOBALS['conn']))
 						#		{
 						#			logd("There was an Error inserting the GPS information" , $log_interval, 0,  $log_level);
-						#			verbose("There was an Error inserting the GPS information", $verbose);
+						#			verbosed("There was an Error inserting the GPS information", $verbose);
 						#		}
 								$signals[$gps_id] = $gps_id.",".$signal;
 								
@@ -400,7 +354,7 @@ class daemon extends database
 						#			if (!$resource)
 						#			{
 						#				logd("A MySQL Update error has occured\r\n".mysql_error($GLOBALS['conn']) , $log_interval, 0,  $log_level);
-						#				verbose("A MySQL Update error has occured\n".mysql_error($GLOBALS['conn']), $verbose);
+						#				verbosed("A MySQL Update error has occured\n".mysql_error($GLOBALS['conn']), $verbose);
 						#			}
 									$signals[$gps_id] = $dbid.",".$signal;
 									$gps_id++;
@@ -442,7 +396,7 @@ class daemon extends database
 						if (!mysql_query($sqlit, $conn))
 						{
 							logd("FAILED to added GPS History to Table\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							verbose("FAILED to added GPS History to Table\n".mysql_error($conn), $verbose);
+							verbosed("FAILED to added GPS History to Table\n".mysql_error($conn), $verbose);
 						}
 						
 						$sqlit_ = "SELECT * FROM `$table`";
@@ -452,7 +406,7 @@ class daemon extends database
 						$user_aps[$user_n]="1,".$APid.":".$sqlit_num_rows; //User import tracking //UPDATE AP
 						
 						logd($user_aps[$user_n], $log_interval, 0,  $log_level);
-						verbose($user_aps[$user_n], $verbose);
+						verbosed($user_aps[$user_n], $verbose);
 						$user_n++;
 						
 						$updated++;
@@ -460,7 +414,7 @@ class daemon extends database
 					{
 						// NEW AP
 						logd($this_of_this."   ( ".$size." )   ||   ".$table." - is Being Imported", $log_interval, 0,  $log_level);
-						verbose($this_of_this."   ( ".$size." )   ||   ".$table." - is Being Imported", $verbose);
+						verbosed($this_of_this."   ( ".$size." )   ||   ".$table." - is Being Imported", $verbose);
 						
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
@@ -468,7 +422,7 @@ class daemon extends database
 						if(!mysql_query($sqlct, $conn))
 						{
 							logd("FAILED to create Signal History Table \r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							verbose("FAILED to create Signal History Table\n".mysql_error($conn), $verbose);
+							verbosed("FAILED to create Signal History Table\n".mysql_error($conn), $verbose);
 						}
 						$sqlcgt = "CREATE TABLE `$gps_table` ("
 									."`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,"
@@ -488,7 +442,7 @@ class daemon extends database
 						if(!$create_table)
 						{
 							logd("FAILED to create GPS History Table \r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							verbose("FAILED to create GPS History Table\n".mysql_error($conn), $verbose);
+							verbosed("FAILED to create GPS History Table\n".mysql_error($conn), $verbose);
 						}
 						$signal_exp = explode("-",$san_sig);
 					#	echo $wifi[12]."\n";
@@ -521,11 +475,11 @@ class daemon extends database
 							$track = $gdata[$vs1_id]["track"];
 							
 							$sqlitgpsgp = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
-												   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', $hdp, $alt, $geo, $kmh, $mph, $track, '$date', '$time')";
+												   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 							if(!mysql_query($sqlitgpsgp, $conn))
 							{
 								logd("FAILED to insert the GPS data.\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-								verbose("FAILED to insert the GPS data.\n".mysql_error($conn), $verbose);
+								verbosed("FAILED to insert the GPS data.\n".mysql_error($conn), $verbose);
 							}
 							$signals[$gps_id] = $gps_id.",".$signal;
 					#		echo $signals[$gps_id];
@@ -542,11 +496,11 @@ class daemon extends database
 						if(!$insertsqlresult)
 						{
 							logd("FAILED to insert the Signal data.\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							verbose("FAILED to insert the Signal data.\n".mysql_error($conn), $verbose);
+							verbosed("FAILED to insert the Signal data.\n".mysql_error($conn), $verbose);
 						}
 						# pointers
 						mysql_select_db($db,$conn);
-						$sqlp = "INSERT INTO `$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '$size', '$ssidss', '$macs','$chan', '$radios', '$authen', '$encryp', '$sectype')";
+						$sqlp = "INSERT INTO `$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '', '$ssid_S', '$macs','$chan', '$radios', '$authen', '$encryp', '$sectype')";
 						if (mysql_query($sqlp, $conn))
 						{
 			#				echo "(1)Insert into [".$db."].{".$wtable."} => Added Pointer Record\n";
@@ -557,16 +511,16 @@ class daemon extends database
 							{
 			#					echo 'Updated ['.$db.'].{'.$wtable."} with new Size \n		=> ".$size."\n";
 								logd("Updated Settings table with new size", $log_interval, 0,  $log_level);
-								verbose("Updated Settings table with new size", $verbose);
+								verbosed("Updated Settings table with new size", $verbose);
 							}else
 							{
 								logd("Error Updating Settings table with new size\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-								verbose("Error Updating Settings table with new size\n".mysql_error($conn), $verbose);
+								verbosed("Error Updating Settings table with new size\n".mysql_error($conn), $verbose);
 							}
 						}else
 						{
 							logd("Error Updating Pointers table with new AP\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							verbose("Error Updating Pointers table with new AP\r\n".mysql_error($conn), $verbose);
+							verbosed("Error Updating Pointers table with new AP\r\n".mysql_error($conn), $verbose);
 						}
 						$imported++;
 					}
@@ -589,17 +543,17 @@ class daemon extends database
 			}elseif($ret_len == 17)
 			{
 				logd("Text files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu option in Vistumbler", $log_interval, 0,  $log_level);
-				verbose("Text files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu option in Vistumbler", $verbose);
+				verbosed("Text files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu option in Vistumbler", $verbose);
 				break;
 			}elseif($ret_len == 0)
 			{
 				logd("There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again", $log_interval, 0,  $log_level);
-				verbose("There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again", $verbose);
+				verbosed("There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again", $verbose);
 				break;
 			}else
 			{
 				logd("There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again", $log_interval, 0,  $log_level);
-				verbose("There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again", $verbose);
+				verbosed("There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again", $verbose);
 				break;
 			}
 		}
@@ -626,12 +580,12 @@ class daemon extends database
 			if(!mysql_query($sqlu, $conn))
 			{
 				logd("Failed to Insert User data into Users table\n".mysql_error($conn), $log_interval, 0,  $log_level);
-				verbose("Failed to Insert User data into Users table\n".mysql_error($conn), $verbose);
+				verbosed("Failed to Insert User data into Users table\n".mysql_error($conn), $verbose);
 				die();
 			}else
 			{
 				logd("Succesfully Inserted User data into Users table", $log_interval, 0,  $log_level);
-				verbose("Succesfully Inserted User data into Users table", $verbose);
+				verbosed("Succesfully Inserted User data into Users table", $verbose);
 			}
 			
 #		}

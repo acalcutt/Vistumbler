@@ -3,9 +3,9 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3",
-			"Last_Core_Edit" 	=> 	"2009-May-21",
+			"Last_Core_Edit" 	=> 	"2009-May-24",
 			"database"			=>	array(  
-										"import_vs1"		=>	"1.6.0", 
+										"import_vs1"		=>	"1.6.1", 
 										"apfetch"			=>	"2.6.0",
 										"gps_check_array"	=>	"1.1",
 										"all_users"			=>	"1.2",
@@ -18,7 +18,9 @@ $ver = array(
 										"convert_dm_dd"		=>	"1.3.0",
 										"convert_dd_dm"		=>	"1.3.1",
 										"manufactures"		=>	"1.0",
-										"gen_gps"			=>	"1.0"
+										"gen_gps"			=>	"1.0",
+										"check_file"		=>	"1.1",
+										"insert_file"		=>	"1.1"
 										),
 			"Misc"				=>	array(
 										"pageheader"		=>  "1.2",
@@ -367,16 +369,16 @@ function format_size($size, $round = 2)
 #========================================================================================================================#
 
 function make_ssid($ssid_frm_src_or_pnt_tbl = '')
-		{
-			$ssids = filter_var($ssid_frm_src_or_pnt_tbl, FILTER_SANITIZE_SPECIAL_CHARS);
-			$ssid_safe_full_length = smart_quotes($ssids);
-			$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char long.
-			$ssid_table_safe = $ssid_sized[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
-			if($ssid_table_safe == ''){$ssid_table_safe = "UNNAMED";}
-			if($ssids == ''){$ssids = "UNNAMED";}
-			$A = array(0=> $ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
-			return $A;
-		}
+{
+	$ssids = filter_var($ssid_frm_src_or_pnt_tbl, FILTER_SANITIZE_SPECIAL_CHARS);
+	$ssid_safe_full_length = smart_quotes($ssids);
+	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char long.
+	$ssid_table_safe = $ssid_sized[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
+	if($ssid_table_safe == ''){$ssid_table_safe = "UNNAMED";}
+	if($ssids == ''){$ssids = "UNNAMED";}
+	$A = array(0=> $ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
+	return $A;
+}
 
 
 	
@@ -400,6 +402,11 @@ class database
 		switch ($ret_len)
 		{
 			case 6:
+				$retexp[1]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[2]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
 				$date_exp = explode("-",$retexp[4]);
 				if(strlen($date_exp[0]) <= 2)
 				{
@@ -425,6 +432,15 @@ class database
 				$gpscount++;
 				break;
 			case 12:
+				$retexp[1]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[2]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[6]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[7]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[8]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[9]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
 				$date_exp = explode("-",$retexp[10]);
 				if(strlen($date_exp[0]) <= 2)
 				{
@@ -449,6 +465,21 @@ class database
 											);
 				$gpscount++;
 				break;
+			default :
+				$gdata = array(
+											"lat"=>"N 0.0000",
+											"long"=>"E 0.0000",
+											"sats"=>"00",
+											"hdp"=>"0",
+											"alt"=>"0",
+											"geo"=>"0",
+											"kmh"=>"0",
+											"mph"=>"0",
+											"track"=>"0",
+											"date"=>"1970-06-17",
+											"time"=>"12:00:00"
+											);
+				$gpscount++;
 		}
 		$list = array(0=>$gdata, 1=> $gpscount);
 		return $list;
@@ -460,25 +491,23 @@ class database
 
 	function check_file($file = '')
 	{
-		include($GLOBALS['wifidb'].'/lib/config.inc.php');
-		
+		include($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
+#		$file = $GLOBALS['wifidb_install'].$GLOBALS['dim'].'import'.$GLOBALS['dim'].'up'.$GLOBALS['dim'].$file;
 		$hash = hash_file('md5', $file);
-		$size = (filesize($file)/1024);
-		
-		$file_exp = explode("/", $file);
+		$file_exp = explode($GLOBALS['dim'], $file);
 		$file_exp_seg = count($file_exp);
 		$file1 = $file_exp[$file_exp_seg-1];
-		
-		mysql_select_db($db,$conn);
-		$fileq = mysql_query("SELECT * FROM `files` WHERE `file` LIKE '$file1'", $conn);
+		$file2 = trim(strstr($file1, '_'), "_");
+		mysql_select_db($db,$GLOBALS['conn']);
+		$sql = "SELECT * FROM `files` WHERE `file` LIKE '%$file2'";
+		$fileq = mysql_query($sql, $GLOBALS['conn']);
 		$fileqq = mysql_fetch_array($fileq);
-		
-		if( $hash != $fileqq['hash'] )
-		{
-			return 1;
-		}else
+		if( strcmp($hash ,$fileqq['hash']) == 0 )
 		{
 			return 0;
+		}else
+		{
+			return 1;
 		}
 	}
 
@@ -486,27 +515,24 @@ class database
 	#							insert file (put a file that was just imported into the Files table)				 			 #
 	#========================================================================================================================#
 
-	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled")
+	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled", $user_row = 0)
 	{
-		include($GLOBALS['wifidb'].'/lib/config.inc.php');
-		
-		$size = (filesize($file)/1024);
-		$hash = hash_file('md5', $file);
+		include $GLOBALS['wifidb_install'].'/lib/config.inc.php';
+		$file1 = $GLOBALS['wifidb_install'].'/import/up/'.$file;
+		$size = dos_filesize($file1);
+		$size = format_size($size, 2);
+		$hash = hash_file('md5', $file1);
 		$date = date("y-m-d H:i:s");
-		mysql_select_db($db,$conn);
+		mysql_select_db($db,$GLOBALS['conn']);
 		
-		$file_exp = explode("/", $file);
-		$file_exp_seg = count($file_exp);
-		$file1 = $file_exp[$file_exp_seg-1];
-		
-		$sql = "INSERT INTO `wifi`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash` , `user` , `notes` , `title`	)
-									VALUES ( NULL , '$file1', '$size', 'CURRENT_TIMESTAMP' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' )";
-		if(mysql_query($sql, $conn))
+		$sql = "INSERT INTO `$db`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash`, `user` , `notes` , `title` , `user_row`	)
+									VALUES ( NULL , '$file', '$size', '$date' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' , '$user_row' )";
+		if(mysql_query($sql, $GLOBALS['conn']))
 		{
 			return 1;
 		}else
 		{
-			$A = array( 0=>'0', 'error' => mysql_error($conn));
+			$A = array( 0=>'0', 'error' => mysql_error($GLOBALS['conn']));
 			return $A;
 		}
 	}
@@ -597,69 +623,17 @@ class database
 			$retexp = explode("|",$ret);
 			$ret_len = count($retexp);
 			
-			if ($ret_len == 12)
+			if ($ret_len == 12 or $ret_len == 6)
 			{
-				$date_exp = explode("-",$retexp[10]);
-				if(strlen($date_exp[0]) <= 2)
-				{
-					$retexp[10] = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
-				}
-				
-				$retexp[1]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[2]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[6]	=	filter_var($retexp[6], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[7]	=	filter_var($retexp[7], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[8]	=	filter_var($retexp[8], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[9]	=	filter_var($retexp[9], FILTER_SANITIZE_SPECIAL_CHARS);
-				$retexp[11]	=	filter_var($retexp[11], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_SANITIZE_MAGIC_QUOTES);
-				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
-				$gdata[$retexp[0]] = array(
-											"lat"=>$retexp[1],
-											"long"=>$retexp[2],
-											"sats"=>$retexp[3],
-											"hdp"=>$retexp[4],
-											"alt"=>$retexp[5],
-											"geo"=>$retexp[6],
-											"kmh"=>$retexp[7],
-											"mph"=>$retexp[8],
-											"track"=>$retexp[9],
-											"date"=>$retexp[10],
-											"time"=>$retexp[11]
-											);
-			}elseif($ret_len == 6)
-			{
-				$date_exp = explode("-",$retexp[4]);
-				if(strlen($date_exp[0]) <= 2)
-				{
-					$retexp[4] = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
-				}
-				
-				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
-				$gdata[$retexp[0]] = array(
-											"lat"=>$retexp[1],
-											"long"=>$retexp[2],
-											"sats"=>$retexp[3],
-											"hdp"=>"0.0",
-											"alt"=>"0.0",
-											"geo"=>"-0.0",
-											"kmh"=>"0.0",
-											"mph"=>"0.0",
-											"track"=>"0.0",
-											"date"=>$retexp[4],
-											"time"=>$retexp[5]
-											);
-				$gpscount++;
+				list($gdata[$retexp[0]], $gpscount) = database::gen_gps($retexp, $gpscount);
 			}elseif($ret_len == 13)
 			{
 					$wifi = explode("|",$ret, 13);
 					if($wifi[0] === "" && $wifi[1] === "" && $wifi[5] === "" && $wifi[6] === "" && $wifi[7] === ""){continue;}
 					mysql_select_db($db,$conn);
-					$dbsize = mysql_query("SELECT * FROM `$wtable`", $conn) or die(mysql_error($conn));
-					$size = mysql_num_rows($dbsize);
-					$size++;
+					$dbsize = mysql_query("SELECT `id` FROM `$wtable` ORDER BY `id` DESC` LIMIT 1", $conn);
+					$size1 = mysql_fetch_array($dbsize);
+					$size = $size1['id']++;
 					if ($GLOBALS["debug"]  == 1)
 					{
 						?>
@@ -1201,41 +1175,57 @@ class database
 	#													GPS check, make sure there are no duplicates						 #
 	#========================================================================================================================#
 
-	function &check_gps_array($gpsarray, $test)
+	function &check_gps_array($gpsarray, $test, $table)
 	{
+		include('config.inc.php');
 		$start = microtime(true);
-		foreach($gpsarray as $gps)
+		$count = count($gpsarray);
+		if($count !=0)
 		{
-			$id = $gps['id'];
-			$lat1 = smart($gps['lat']);
-			$long1 = smart($gps['long']);
-			$time1 = smart($gps['time']);
-			$date1 = smart($gps['date']);
-			$gps_t 	= $lat1."".$long1."".$date1."".$time1;
-			$gps_t = $gps_t+0;
-			$test	 = $test+0;
-			
-			if ($gps_t===$test)
+			foreach($gpsarray as $gps)
 			{
-				if ($GLOBALS["debug"]  == 1 ) {
-					echo  "  SAME<br>";
-					echo  "  Array data: ".$gps_t."<br>";
-					echo  "  Testing data: ".$test."<br>.-.-.-.-.=.-.-.-.-.<br>";
-					echo  "-----=-----=-----<br>|<br>|<br>"; 
+				$id = $gps['id'];
+				$lat = smart($gps['lat']);
+				$long = smart($gps['long']);
+				$time = smart($gps['time']);
+				$date = smart($gps['date']);
+				$gps_t 	= $lat."".$long."".$date."".$time;
+				$gps_t = $gps_t+0;
+				$test	 = $test+0;
+				
+				if ($gps_t===$test)
+				{
+					if ($GLOBALS["debug"]  == 1 ) {
+						echo  "  SAME<br>";
+						echo  "  Array data: ".$gps_t."<br>";
+						echo  "  Testing data: ".$test."<br>.-.-.-.-.=.-.-.-.-.<br>";
+						echo  "-----=-----=-----<br>|<br>|<br>"; 
+					}
+					$lat_a = $gps['lat'];
+					$long_a = $gps['long'];
+					$sql = "select `id` from `$table` where `lat` like '$lat_a' and `long` like '$long_a' limit 1";
+					$gpsresult = mysql_query($sql, $conn);
+					$gpsdbarray = mysql_fetch_array($gpsresult);
+					$id_ = $gpsdbarray['id'];
+					#echo $sql."\n";
+					
+					$return = array(0=>1,1=>$id_);
+					return $return;
+					break;
+				}else
+				{
+					if ($GLOBALS["debug"]  == 1){
+						echo  "  NOT SAME<br>";
+						echo  "  Array data: ".$gps_t."<br>";
+						echo  "  Testing data: ".$test."<br>----<br>";
+						echo  "-----=-----<br>";
+					}
+					$return = array(0=>0,1=>0);
 				}
-				$returns = array(0=>1,1=>$id);
-				return $returns;
-				break;
-			}else
-			{
-				if ($GLOBALS["debug"]  == 1){
-					echo  "  NOT SAME<br>";
-					echo  "  Array data: ".$gps_t."<br>";
-					echo  "  Testing data: ".$test."<br>----<br>";
-					echo  "-----=-----<br>";
-				}
-				$return = array(0=>0,1=>0);
 			}
+		}else
+		{
+			$return = array(0=>0,1=>0);
 		}
 		$end = microtime(true);
 		if ($GLOBALS["bench"]  == 1)

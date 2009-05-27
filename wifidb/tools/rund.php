@@ -5,7 +5,7 @@ echo $GLOBALS['wifidb_tools']."\n";
 if ($_SERVER['OS'] == "Windows_NT")
 {$pid_file = $GLOBALS['wifidb_tools'].'/daemon/wifidbd.pid';}
 else{$pid_file = '/var/run/wifidbd.pid';}
-strtolower($argv[1]);
+$argv[1] = strtolower($argv[1]);
 if(isset($argv[1])) //parse WiFiDB argument to get value
 {
 	switch ($argv[1])

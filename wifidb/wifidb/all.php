@@ -1,7 +1,7 @@
 <?php
 include('lib/database.inc.php');
-include('lib/config.inc.php');
 pageheader("Show all APs");
+include('lib/config.inc.php');
 if (isset($_GET['token']))
 {
 	if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])

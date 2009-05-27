@@ -102,11 +102,11 @@ else{echo "<tr><td>Failure..........</td><td>INSERT INTO `settings`</td></tr>";}
 	#========================================================================================================================#
 #create users table (History for imports)
 $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users` (
-		`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
-		`username` VARCHAR( 25 ) NOT NULL ,
-		`points` TEXT NOT NULL ,
-		`notes` TEXT NOT NULL ,
-		`title` VARCHAR ( 32 ) NOT NULL ,
+		`id` INT( 255 ) NOT NULL AUTO_INCREMENT,
+		`username` VARCHAR( 25 ) NOT NULL,
+		`points` TEXT NOT NULL,
+		`notes` TEXT NOT NULL,
+		`title` VARCHAR ( 32 ) NOT NULL,
 		`date` VARCHAR ( 25 ) NOT NULL, 
 		`aps` INT NOT NULL, 
 		`gps` INT NOT NULL,
@@ -123,7 +123,7 @@ echo "<tr><td>Failure..........</td><td>CREATE TABLE `users`</td></tr>";}
 	#========================================================================================================================#
 #Create Wifi0 table (Pointers to _ST tables
 $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`wifi0` ("
-  ."  id int(255) default NULL,"
+  ."  id int(255) NOT NULL AUTO_INCREMENT PRIMARY KEY, "
   ."  ssid varchar(32) NOT NULL,"
   ."  mac varchar(25) NOT NULL,"
   ."  chan varchar(2) NOT NULL,"
@@ -426,7 +426,8 @@ else{echo "<tr><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
 
 $AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
-								."$"."ads 		= ''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+								."$"."ads 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
+<meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
 								."$"."tracker 	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
 if($AD_CF_FI_Re)
 {echo "<tr><td>Success..........</td><td>Add Footer Information Info</td></tr>";}

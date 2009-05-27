@@ -1,5 +1,8 @@
 <?php
-global $wifidb_install, $wifidb_tools, $log_level, $verbose, $log_interval;
+global $wifidb_install, $wifidb_tools, $log_level, $verbose, $log_interval, $dim;;
+if(PHP_OS == "WINNT"){$dim = "\\";}
+if(PHP_OS == "Linux"){$dim = "/";}
+
 //path to the folder that wifidb is installed in default is /var/www/wifidb/ , because I use Debian. fuck windows 
 $wifidb_install		=	'/var/www/wifidb';
 
@@ -14,16 +17,13 @@ $log_level		=	0;
 //0, one file 'log/wifidbd_log.log'. 1, one file a day 'log/wifidbd_log_[yyyy-mm-dd].log'.
 $log_interval	=	0;
 
-//If you are messing with the code, like me, you can turn this on to have things echoed out to the screen for easy well.. debuging.
-$debug		=	0;
-
 //The Default time zone is GMT ( Greenwich Time / Zulu Time / UTC )but you can 
 //choose what ever the hell you want. It is only this because vistumblers interal 
 //clock is also GMT.
 $timezn		=	'EST';
 
 //0; no out put, STUF, 1; let me see the world.
-$verbose	=	0;
+$verbose	=	1;
 
 //in seconds how much off the Dayligh savings time is (3600 is 1 hour forward, -3600 is 1 hour backwards)
 $DST		=	3600;

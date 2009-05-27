@@ -212,7 +212,7 @@ else{
 echo "<tr><td>Failure..........</td><td>Create tmp Files table `$wifi`.`files_tmp`;<br>".mysql_error($conn)."</td></tr>";
 }
 
-$sql1 = "ALTER TABLE `$wifi`.`wifi0` CHANGE `ssid` `ssid` VARCHAR( 32 )";
+$sql1 = "ALTER TABLE `$wifi`.`wifi0` CHANGE `ssid` `ssid` VARCHAR( 32 ), CHANGE `id` `id` AUTO_INCREMENT";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr><td>Success..........</td><td>Altered `$wifi`.`users` to add aps, gps, username, notes, and title fields;</td></tr>";}
@@ -221,7 +221,7 @@ echo "<tr><td>Failure..........</td><td>Alter `$wifi`.`users` to add aps, gps, u
 }
 
 
-$sql1 = "ALTER TABLE `$wifi`.`users` ADD `aps` INT NOT NULL , ADD `gps` INT NOT NULL, ADD `title` VARCHAR ( 128 ) NOT NULL, ADD `notes` TEXT NOT NULL, ADD `user` VARCHAR ( 64 ) NOT NULL";
+$sql1 = "ALTER TABLE `$wifi`.`users` ADD `hash` VARCHAR ( 255 ) NOT NULL, ADD `aps` INT NOT NULL , ADD `gps` INT NOT NULL, ADD `title` VARCHAR ( 128 ) NOT NULL, ADD `notes` TEXT NOT NULL, ADD `user` VARCHAR ( 64 ) NOT NULL";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr><td>Success..........</td><td>Altered `$wifi`.`users` to add aps, gps, username, notes, and title fields;</td></tr>";}
@@ -254,7 +254,8 @@ $file_ext = 'config.inc.php';
 $filename = '../../lib/'.$file_ext;
 $fileappend = fopen($filename, "a");
 $AD_CF_FI_Re = fwrite($fileappend,"<?php\r\n#---------------- Footer Additional Info -----------------#\r\n"
-									."$"."ads		=	''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+									."$"."ads		=	'<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
+<meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
 									."$"."tracker	=	''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n"
 									."$"."kml_out	=	'../out/kml/';\r\n$"."vs1_out	=	'../out/vs1/';\r\n$"."gpx_out				=	'../out/vs1/';"
 									."\r\n\r\n date_default_timezone_set('GMT+0');");

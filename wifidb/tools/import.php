@@ -17,7 +17,8 @@ $start="2008.06.21";
 $ver="1.5.1";
 $localtimezone = date("T");
 echo $localtimezone."\n";
-
+include('daemon/functions.php')
+include('daemon/config.inc.php')
 global $wifidb, $user, $notes, $title, $debug ;
 
 date_default_timezone_set('GMT+0'); //setting the time zone to GMT(Zulu) for internal keeping, displays will soon be customizable for the users time zone
@@ -82,7 +83,7 @@ if($log >= 1)
 {
 	$logdir .= "/log/";
 	if (!file_exists($logdir)){mkdir($vs1dir);}
-	$logfile = $logdir.date("d-m-Y-H-i-s").".log";
+	$logfile = $logdir.date("d-m-Y-H-i-s")."_mass_import.log";
 	$filename = ($logfile);
 	// define initial write and appends
 	$filewrite = fopen($filename, "w");
@@ -114,7 +115,8 @@ while (!(($file = readdir($dh)) == false))
 		if($file == '..'){continue;}
 		$file_e = explode('.',$file);
 		$file_max = count($file_e);
-		if ($file_e[$file_max-1]=='vs1' or $file_e[$file_max-1]=="VS1" or $file_e[$file_max-1]=="tmp" or $file_e[$file_max-1]=="TMP")
+		$fileext = strtolower($file_e[$file_max-1]);
+		if ($fileext=='vs1' or $fileext=="VS1" or $fileext=="tmp" or $fileext=="TMP")
 		{
 			$file_a[] = $file; //if Filename is valid, throw it into an array for later use
 			echo $n." ".$file."\n";
@@ -148,7 +150,7 @@ foreach($file_a as $key => $file)
 	if($check == 1)
 	{
 		$uploadfile = $GLOBALS['wifidb'].'.\import\up\\'.rand().'_'.$file;
-		import_vs1($source, $user, $notes, $title);
+#		import_vs1($source, $user, $notes, $title);
 		if (!copy($source, $uploadfile))
 		{
 			echo "Failure to Move file to Upload Dir (".$GLOBALS['wifidb']."\import\up\), check the folder permisions if you are using Linux.<BR>";
@@ -158,6 +160,38 @@ foreach($file_a as $key => $file)
 			}
 			die();
 		}
+		$tmp = daemon::importvs1($source, $files_array['user'], $files_array['notes'], $files_array['title'], $verbose);
+		$temp = $files_array['file']." | ".$tmp['aps']." - ".$tmp['gps'];
+		logd("Finished Import of : ".$files_array['file'] , 2 , $temp ,  $GLOBALS['log_level']); //same thing here, hard coded as log_lev 2
+		verbose("Finished Import of :".$files_array['file']."" , $verbose);
+		$remove_file = $files_array['id'];
+		
+		$result = mysql_query("SELECT * FROM `$db`.`users` ORDER BY `id` DESC", $conn);
+		$user_array = mysql_fetch_array($result);
+		$user_row = $user_array['id'];
+		$inserted_new_file = insert_file($files_array['file'], $tmp['aps'], $tmp['gps'],$files_array['user'],$files_array['notes'],$files_array['title'], $user_row );
+		if($inserted_new_file == 1)
+		{
+			logd("Added ".$remove_file." to the Files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
+			verbose("Added ".$remove_file." to the Files table\n\t".mysql_error($GLOBALS['conn']), 1);
+			
+			$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
+			if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
+			{
+				logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
+				verbose("Error removing ".$remove_file." from the Temp files table\n\t".mysql_error($GLOBALS['conn']), 1);
+			}else
+			{
+				logd("Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.", $log_interval, 0,  $GLOBALS['log_level']);
+				verbose("Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.", $verbose);
+			}
+		}else
+		{
+			logd("Error Adding ".$remove_file." to the Files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
+			verbose("Error Adding ".$remove_file." to the Files table\n\t".mysql_error($GLOBALS['conn']), 1);
+		}
+
+
 	}elseif($check == 0)
 	{
 		echo "File has already been successfully imported into the Database, skipping.\n";

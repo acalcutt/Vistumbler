@@ -120,13 +120,14 @@ $os = substr(PHP_OS,0,3);
 		}elseif($os == "Lin")
 		{
 			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
-			$patterns[0] = '/    /';
-			$patterns[1] = '/  /';
-			$patterns[2] = '/ /';
+			$start = trim($start," ");
+			$patterns[0] = '/  /';
+			$patterns[1] = '/ /';
 			$ps_stats = preg_replace($patterns , "|" , $start);
-			echo $ps_stats."<br />";
 			$ps_Sta_exp = explode("|", $ps_stats);
-			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[1]);?></td><td><?php echo $ps_Sta_exp[6];?></td><td><?php echo $ps_Sta_exp[11]."%";?></td><td><?php echo $ps_Sta_exp[12]." ".$ps_Sta_exp[13];?></td></tr><?php		
+			$count = count($ps_Sta_exp);
+#			echo $count."<BR />".$ps_stats."<br />";
+			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[6];?></td><td><?php echo $ps_Sta_exp[$count-3]."%";?></td><td><?php echo $ps_Sta_exp[$count-2]." ".$ps_Sta_exp[$count-1];?></td></tr><?php		
 		}
 	}else
 	{

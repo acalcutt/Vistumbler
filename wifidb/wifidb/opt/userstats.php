@@ -1,9 +1,10 @@
 <?php
 include('../lib/database.inc.php');
-include('../lib/config.inc.php');
 
 if(isset($_GET['user'])){pageheader("Stats for User: ".$_GET['user']);}
 else{pageheader("Users Stats Page");}
+
+include('../lib/config.inc.php');
 
 $database = new database();
 if (isset($_GET['token']))

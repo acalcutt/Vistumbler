@@ -10,10 +10,10 @@
 $startdate="14-10-2007";
 $lastedit="29-Jan-2009";
 
-include('../lib/config.inc.php');
 include('../lib/database.inc.php');
-include('../lib/graph.inc.php');
 pageheader("Graph AP Signal History Page");
+include('../lib/config.inc.php');
+include('../lib/graph.inc.php');
 ?>
 <form action="genline.php" method="post" enctype="multipart/form-data">
 <?php

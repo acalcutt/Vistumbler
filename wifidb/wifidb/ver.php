@@ -1,7 +1,7 @@
 <?php
-include('lib/config.inc.php');
 include('lib/database.inc.php');
 pageheader("Version Page");
+include('lib/config.inc.php');
 ?>
 <font face="Courier New">
 		<div align="left">

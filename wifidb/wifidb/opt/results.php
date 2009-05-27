@@ -1,7 +1,7 @@
 <?php
 include('../lib/database.inc.php');
-include('../lib/config.inc.php');
 pageheader("Search Results Page");
+include('../lib/config.inc.php');
 ?>
 			<h2>Search Results</h2>
 <?php

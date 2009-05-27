@@ -1,7 +1,7 @@
 <?php
-include('lib/config.inc.php');
 include('lib/database.inc.php');
 pageheader("Show all Downloads APs");
+include('lib/config.inc.php');
 ?>
 <div align="left">
 <font face="Courier New">

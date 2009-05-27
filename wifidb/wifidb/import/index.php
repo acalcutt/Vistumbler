@@ -1,7 +1,7 @@
 <?php
 include('../lib/database.inc.php');
-include('../lib/config.inc.php');
 pageheader("Import Page");
+include('../lib/config.inc.php');
 
 $domain = $_SERVER['HTTP_HOST'];
 if ($domain === "rihq.randomintervals.com" or $domain === "lanncafe.dynu.com" or $domain === "192.168.3.25")
