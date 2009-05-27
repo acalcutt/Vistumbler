@@ -7,7 +7,7 @@ date_default_timezone_set($timezn);
 global $vers;
 $vers = array(
 			"WiFiDB_Daemon"				=>	"1.3",
-			"Last_Daemon_Core_Edit" 	=> 	"2009-May-24",
+			"Last_Daemon_Core_Edit" 	=> 	"2009-May-27",
 			"Misc"						=> array(
 												"logd"			=>	"1.1",
 												"verbosed"		=>	"1.1",
@@ -136,8 +136,21 @@ class daemon extends database
 			break;
 		}
 		mysql_select_db($db,$conn);
-		$result = mysql_query("SELECT * FROM `$db`.`files_tmp` WHERE `file` LIKE '$file1' LIMIT 1", $conn);
-		$newArray = mysql_fetch_array($result);
+		
+		
+#		$result = mysql_query("SELECT `row` FROM `$db`.`files_tmp` WHERE `file` LIKE '$file1' LIMIT 1", $conn);
+#		$newArray = mysql_fetch_array($result);
+		$sqlu = "INSERT INTO `$db`.`users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`) VALUES ( '', '$user', '','$notes', '', '$title', '', '')";
+		$user_row_new_result = mysql_query("SELECT `id` FROM `$db`.`users` ORDER BY `id` DESC LIMIT 1", $conn);
+		if(!$user_row_new_result)
+		{
+			logd("Could not reserve user import row!\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+			verbosed("Could not reserve user import row!\n".mysql_error($conn), $verbose);
+			die();
+		}
+		$user_row_result = mysql_query("SELECT `id` FROM `$db`.`users` ORDER BY `id` DESC LIMIT 1", $conn);
+		$user_row_array = mysql_fetch_array($user_row_result);
+		$user_row_id = $user_row_array['id'];  //STILL NEED TO IMPLEMENT THIS, ONLY JUST STARTED
 		
 		foreach($return as $ret)
 		{
@@ -325,7 +338,7 @@ class daemon extends database
 							$date1 = smart($date);
 							
 							$comp = $lat1."".$long1."".$date1."".$time1;
-							if(!isset($db_gps)){$db_gps == array();}
+							if(!isset($db_gps)){$db_gps = array();}
 							list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
 						#	echo $return_gps."\n";
 						#	echo $dbid."\n";
@@ -348,7 +361,9 @@ class daemon extends database
 							{
 								if($sats > $GPSDBArray['sats'])
 								{
-									$sql_multi[$NNN] = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats', `hdp` = '$hdp', `alt` = '$alt', `geo` = '$geo', `kmh` = '$kmh', `mph` = '$mph', `track` = '$track' , `date` = '$date' , `time` = '$time'  WHERE `id` = '$dbid'";
+									$sql_multi[$NNN] = "DELETE FROM `$db_st`.`$gps_table` WHERE `$gps_table`.`id` = '$dbid' AND `$gps_table`.`lat` LIKE '$lat' AND `$gps_table`.`long` = '$long' LIMIT 1";
+									$NNN++;
+									$sql_multi[$NNN] = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 						#			$sqlupgpsgp = "UPDATE `$gps_table` SET `lat`= '$lat' , `long` = '$long', `sats` = '$sats', `hdp` = '$hdp', `alt` = '$alt', `geo` = '$geo', `kmh` = '$kmh', `mph` = '$mph', `track` = '$track' , `date` = '$date' , `time` = '$time'  WHERE `id` = '$dbid'";
 						#			$resource = mysql_query($sqlupgpsgp, $GLOBALS['conn']);
 						#			if (!$resource)

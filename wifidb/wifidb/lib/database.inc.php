@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3",
-			"Last_Core_Edit" 	=> 	"2009-May-24",
+			"Last_Core_Edit" 	=> 	"2009-May-22",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.6.1", 
 										"apfetch"			=>	"2.6.0",
@@ -18,9 +18,7 @@ $ver = array(
 										"convert_dm_dd"		=>	"1.3.0",
 										"convert_dd_dm"		=>	"1.3.1",
 										"manufactures"		=>	"1.0",
-										"gen_gps"			=>	"1.0",
-										"check_file"		=>	"1.1",
-										"insert_file"		=>	"1.1"
+										"gen_gps"			=>	"1.0"
 										),
 			"Misc"				=>	array(
 										"pageheader"		=>  "1.2",
@@ -515,24 +513,27 @@ class database
 	#							insert file (put a file that was just imported into the Files table)				 			 #
 	#========================================================================================================================#
 
-	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled", $user_row = 0)
+	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled")
 	{
-		include $GLOBALS['wifidb_install'].'/lib/config.inc.php';
-		$file1 = $GLOBALS['wifidb_install'].'/import/up/'.$file;
-		$size = dos_filesize($file1);
-		$size = format_size($size, 2);
-		$hash = hash_file('md5', $file1);
-		$date = date("y-m-d H:i:s");
-		mysql_select_db($db,$GLOBALS['conn']);
+		include($GLOBALS['wifidb'].'/lib/config.inc.php');
 		
-		$sql = "INSERT INTO `$db`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash`, `user` , `notes` , `title` , `user_row`	)
-									VALUES ( NULL , '$file', '$size', '$date' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' , '$user_row' )";
-		if(mysql_query($sql, $GLOBALS['conn']))
+		$size = (filesize($file)/1024);
+		$hash = hash_file('md5', $file);
+		$date = date("y-m-d H:i:s");
+		mysql_select_db($db,$conn);
+		
+		$file_exp = explode("/", $file);
+		$file_exp_seg = count($file_exp);
+		$file1 = $file_exp[$file_exp_seg-1];
+		
+		$sql = "INSERT INTO `wifi`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash` , `user` , `notes` , `title`	)
+									VALUES ( NULL , '$file1', '$size', 'CURRENT_TIMESTAMP' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' )";
+		if(mysql_query($sql, $conn))
 		{
 			return 1;
 		}else
 		{
-			$A = array( 0=>'0', 'error' => mysql_error($GLOBALS['conn']));
+			$A = array( 0=>'0', 'error' => mysql_error($conn));
 			return $A;
 		}
 	}
@@ -623,17 +624,69 @@ class database
 			$retexp = explode("|",$ret);
 			$ret_len = count($retexp);
 			
-			if ($ret_len == 12 or $ret_len == 6)
+			if ($ret_len == 12)
 			{
-				list($gdata[$retexp[0]], $gpscount) = database::gen_gps($retexp, $gpscount);
+				$date_exp = explode("-",$retexp[10]);
+				if(strlen($date_exp[0]) <= 2)
+				{
+					$retexp[10] = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
+				}
+				
+				$retexp[1]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[2]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[6]	=	filter_var($retexp[6], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[7]	=	filter_var($retexp[7], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[8]	=	filter_var($retexp[8], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[9]	=	filter_var($retexp[9], FILTER_SANITIZE_SPECIAL_CHARS);
+				$retexp[11]	=	filter_var($retexp[11], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_SANITIZE_MAGIC_QUOTES);
+				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
+				$gdata[$retexp[0]] = array(
+											"lat"=>$retexp[1],
+											"long"=>$retexp[2],
+											"sats"=>$retexp[3],
+											"hdp"=>$retexp[4],
+											"alt"=>$retexp[5],
+											"geo"=>$retexp[6],
+											"kmh"=>$retexp[7],
+											"mph"=>$retexp[8],
+											"track"=>$retexp[9],
+											"date"=>$retexp[10],
+											"time"=>$retexp[11]
+											);
+			}elseif($ret_len == 6)
+			{
+				$date_exp = explode("-",$retexp[4]);
+				if(strlen($date_exp[0]) <= 2)
+				{
+					$retexp[4] = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
+				}
+				
+				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
+				$gdata[$retexp[0]] = array(
+											"lat"=>$retexp[1],
+											"long"=>$retexp[2],
+											"sats"=>$retexp[3],
+											"hdp"=>"0.0",
+											"alt"=>"0.0",
+											"geo"=>"-0.0",
+											"kmh"=>"0.0",
+											"mph"=>"0.0",
+											"track"=>"0.0",
+											"date"=>$retexp[4],
+											"time"=>$retexp[5]
+											);
+				$gpscount++;
 			}elseif($ret_len == 13)
 			{
 					$wifi = explode("|",$ret, 13);
 					if($wifi[0] === "" && $wifi[1] === "" && $wifi[5] === "" && $wifi[6] === "" && $wifi[7] === ""){continue;}
 					mysql_select_db($db,$conn);
-					$dbsize = mysql_query("SELECT `id` FROM `$wtable` ORDER BY `id` DESC` LIMIT 1", $conn);
-					$size1 = mysql_fetch_array($dbsize);
-					$size = $size1['id']++;
+					$dbsize = mysql_query("SELECT * FROM `$wtable` ORDER BY `id` DESC LIMIT 1", $conn);
+					$size_1 = mysql_fetch_array($dbsize);
+					$size = $size_1['id']++;
 					if ($GLOBALS["debug"]  == 1)
 					{
 						?>
@@ -1773,12 +1826,12 @@ class database
 					$id			= $ap_array['id'];
 					$ssid_ptb_ = $ap_array['ssid'];
 					$ssids_ptb = str_split($ssid_ptb_,25);
-					$ssid_ptb = smart_quotes($ssids_ptb[0]);
+					$ssid = smart_quotes($ssids_ptb[0]);
 					$mac		= $ap_array['mac'];
 					$sectype	= $ap_array['sectype'];
 					$radio		= $ap_array['radio'];
 					$chan		= $ap_array['chan'];
-					$table = $ssid_ptb.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
+					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
 					$table_gps = $table.$gps_ext;
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 					$sql1 = "SELECT * FROM `$table`";
@@ -1899,7 +1952,7 @@ class database
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start of export Users List to KML</th></tr>';
 				if($row == 0)
 				{
-					$sql_row = "SELECT * FROM `users` ORDER BY `id` DESC";
+					$sql_row = "SELECT * FROM `users` ORDER BY `id` DESC LIMIT 1";
 					$result_row = mysql_query($sql_row, $conn) or die(mysql_error());
 					$row_array = mysql_fetch_array($result_row);
 					$row = $row_array['id'];
@@ -2042,7 +2095,9 @@ class database
 					$date_last = $gps_table_last["date"];
 					$time_last = $gps_table_last["time"];
 					$la = $date_last." ".$time_last;
-					fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"<a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n	");
+					$ssid_name = '';
+					if ($named == 1){$ssid_name = $ssid;}
+					fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid_name."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"<a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n	");
 					fwrite( $fileappend, "<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 					echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'</td><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 					unset($gps_table_first["lat"]);
@@ -2174,7 +2229,9 @@ class database
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						$file_data .= ("<Placemark id=\"".$aparray['mac']."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$aparray['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$aparray['chan']."<br /><b>Authentication: </b>".$aparray['auth']."<br /><b>Encryption: </b>".$aparray['encry']."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$aparray['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$aparray['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						$ssid_name = '';
+						if ($named == 1){$ssid_name = $ssid;}
+						$file_data .= ("<Placemark id=\"".$aparray['mac']."\">\r\n	<name>".$ssid_name."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$aparray['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$aparray['chan']."<br /><b>Authentication: </b>".$aparray['auth']."<br /><b>Encryption: </b>".$aparray['encry']."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$aparray['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$aparray['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 						echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 					}
 				}else
@@ -2345,7 +2402,7 @@ class database
 							$NN++;
 							break;
 						}
-						if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
+						if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$aps['ssid'].'</td></tr>'; $zero == 0; continue;}
 						
 						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$last_sig_gps_id'";
 						$result_2 = mysql_query($sql_2, $conn);
@@ -2353,8 +2410,10 @@ class database
 						$date_last = $gps_table_last["date"];
 						$time_last = $gps_table_last["time"];
 						$la = $date_last." ".$time_last;
-						fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
-						echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'</td><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
+						$ssid_name = '';
+						if ($named == 1){$ssid_name = $aps['ssid'];}
+						fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid_name."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$aps['ssid']."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+						echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'</td><td style="border-style: solid; border-width: 1px">Wrote AP: '.$aps['ssid'].'</td></tr>';
 						
 						unset($gps_table_first["lat"]);
 						unset($gps_table_first["long"]);
@@ -2481,7 +2540,7 @@ class database
 						$zero = 0;
 						break;
 					}
-					if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap['ssid'].'</td></tr>'; $zero == 0; continue;}
+					if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ap_array['ssid'].'</td></tr>'; $zero == 0; continue;}
 					{
 						?>
 						<tr>
@@ -2514,7 +2573,9 @@ class database
 					$date_last = $gps_table_last["date"];
 					$time_last = $gps_table_last["time"];
 					$la = $date_last." ".$time_last;
-					$file_data .= ("<Placemark id=\"".$ap_array['mac']."\">\r\n	<name>".$ap_array['ssid']."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap_array['ssid']."<br /><b>Mac Address: </b>".$ap_array['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap_array['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap_array['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+					$ssid_name = '';
+					if ($named == 1){$ssid_name = $ssid;}
+					$file_data .= ("<Placemark id=\"".$ap_array['mac']."\">\r\n	<name>".$ssid_name."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ap_array['ssid']."<br /><b>Mac Address: </b>".$ap_array['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$ap_array['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$ap_array['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 					echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ap_array['ssid'].'</td></tr>';
 				}else
 				{

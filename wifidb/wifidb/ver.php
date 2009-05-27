@@ -1,7 +1,7 @@
 <?php
+include('lib/config.inc.php');
 include('lib/database.inc.php');
 pageheader("Version Page");
-include('lib/config.inc.php');
 ?>
 <font face="Courier New">
 		<div align="left">
@@ -21,7 +21,7 @@ include('lib/config.inc.php');
 		<table width="100%" border="2" id="16b21A">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-21</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-22</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -48,6 +48,8 @@ include('lib/config.inc.php');
 					<LI>Fixed an issue where the Signal history was being corrupted by being sanatized. The 'special' characters '-' and ',' were being encoded.</LI>
 					<LI>Fixed Some Issues with the daemon, details are in the Tools Readme.</LI>
 					<LI>The WiFiDB Web log vars $log_level and $log_interval where interfearing with the Daemon vars, they are now changed to $log_level_W and $log_interval_W.</LI>
+					<LI>The Username in the 'Files already imported' table was pointing to the All APs for that user page, when it is supposed to point to the Users stat page.</LI>
+					<LI>Fixed an issue where if some AP Pointers are removed from the `wifi0` table, some APs will fail to import or have the same ID as another AP and not be linkable to their data.</LI>
 					<LI><b>[ Issues reported by Acalcutt ]</b>
 						<OL>
 							<LI>"Access" is spelled incorrectly multiple times on Export page.</LI>

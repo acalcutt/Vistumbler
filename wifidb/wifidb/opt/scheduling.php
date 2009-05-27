@@ -120,14 +120,13 @@ $os = substr(PHP_OS,0,3);
 		}elseif($os == "Lin")
 		{
 			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
-			$start = trim($start," ");
-			$patterns[0] = '/  /';
-			$patterns[1] = '/ /';
+			trim($start, " ");
+			$patterns[1] = '/  /';
+			$patterns[2] = '/ /';
 			$ps_stats = preg_replace($patterns , "|" , $start);
+			echo $ps_stats."<br />";
 			$ps_Sta_exp = explode("|", $ps_stats);
-			$count = count($ps_Sta_exp);
-#			echo $count."<BR />".$ps_stats."<br />";
-			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[6];?></td><td><?php echo $ps_Sta_exp[$count-3]."%";?></td><td><?php echo $ps_Sta_exp[$count-2]." ".$ps_Sta_exp[$count-1];?></td></tr><?php		
+			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[6];?></td><td><?php echo $ps_Sta_exp[11]."%";?></td><td><?php echo $ps_Sta_exp[12]." ".$ps_Sta_exp[13];?></td></tr><?php		
 		}
 	}else
 	{
@@ -245,7 +244,7 @@ if($total_rows === 0)
 		echo $newArray['date'];
 		?>
 		</td><td align="center">
-		<a class="links" href ="../opt/userstats.php?func=allap&user=<?php echo $newArray["user"];?>&token=<?php echo $_SESSION['token']?>"><?php echo $newArray["user"];?></a>
+		<a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $newArray["user"];?>&token=<?php echo $_SESSION['token']?>"><?php echo $newArray["user"];?></a>
 		</td><td align="center">
 		<?php
 		echo $newArray['title'];
