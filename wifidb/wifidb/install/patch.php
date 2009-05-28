@@ -23,7 +23,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 	<tr>
 <td width="17%" bgcolor="#304D80" valign="top">
 <?php
-header("Location: patch/");
+header("Location: patches.php");
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);
 ?>
