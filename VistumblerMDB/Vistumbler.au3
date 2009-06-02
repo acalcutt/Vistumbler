@@ -9,20 +9,15 @@
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-;Get Date Format--------------------------------------------------------
-Dim $SettingsDir = @ScriptDir & '\Settings\'
-Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
-Dim $DateFormat = IniRead($settings, 'Vistumbler', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
 ;--------------------------------------------------------
 ;AutoIt Version: v3.3.0.0
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.4 Beta 3'
-$Script_Start_Date = _DateLocalFormat('2007/07/10')
-$last_modified = _DateLocalFormat('2009/05/22')
-$title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
+$version = '9.4 Beta 4'
+$Script_Start_Date = '2007/07/10'
+$last_modified = '2009/06/01'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -40,7 +35,22 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include "UDFs\ZIP.au3"
 #include "UDFs\NativeWifi.au3"
 #include "UDFs\cfxUDF.au3"
-
+;Set/Create Folders
+Dim $SettingsDir = @ScriptDir & '\Settings\'
+Dim $DefaultSaveDir = @ScriptDir & '\Save\'
+Dim $LanguageDir = @ScriptDir & '\Languages\'
+Dim $SoundDir = @ScriptDir & '\Sounds\'
+Dim $ImageDir = @ScriptDir & '\Images\'
+Dim $TmpDir = @ScriptDir & '\temp\'
+DirCreate($SettingsDir)
+DirCreate($DefaultSaveDir)
+DirCreate($SettingsDir)
+DirCreate($LanguageDir)
+DirCreate($SoundDir)
+DirCreate($ImageDir)
+DirCreate($TmpDir)
+;Set Settings file
+Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
 	RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
@@ -77,20 +87,12 @@ Dim $Debug
 Dim $debugdisplay
 Dim $sErr
 Dim $CompassGraphic, $compasspos_old, $compasspos, $north, $south, $east, $west, $CompassBack, $CompassHeight, $CompassBrush
-Dim $DefaultSaveDir = @ScriptDir & '\Save\'
-Dim $LanguageDir = @ScriptDir & '\Languages\'
-Dim $SoundDir = @ScriptDir & '\Sounds\'
-Dim $ImageDir = @ScriptDir & '\Images\'
-Dim $TmpDir = @ScriptDir & '\temp\'
-DirCreate($DefaultSaveDir)
-DirCreate($SettingsDir)
-DirCreate($LanguageDir)
-DirCreate($SoundDir)
-DirCreate($ImageDir)
 Dim $VistumblerDB = $TmpDir & 'VistumblerDB.mdb'
 Dim $ManuDB = $SettingsDir & 'Manufacturers.mdb'
 Dim $LabDB = $SettingsDir & 'Labels.mdb'
 Dim $InstDB = $SettingsDir & 'Instruments.mdb'
+Dim $DateFormat = IniRead($settings, 'Vistumbler', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
+Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & _DateLocalFormat($last_modified)
 
 Dim $DB_OBJ
 Dim $ManuDB_OBJ
@@ -310,8 +312,8 @@ Dim $Filter_Latitude = IniRead($settings, 'Filters', 'FilterLatitude', '*')
 Dim $Filter_Longitude = IniRead($settings, 'Filters', 'FilterLongitude', '*')
 Dim $Filter_MANU = IniRead($settings, 'Filters', 'FilterMANU', '*')
 Dim $Filter_LAB = IniRead($settings, 'Filters', 'FilterLAB', '*')
-Dim $FilterQuery = IniRead($settings, 'Filters', 'FilterQuery', 'SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP')
-
+Dim $AddQuery = IniRead($settings, "Filters", "AddQuery", "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP")
+Dim $RemoveQuery = IniRead($settings, "Filters", "RemoveQuery", "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP")
 Dim $column_Line = IniRead($settings, 'Columns', 'Column_Line', 0)
 Dim $column_Active = IniRead($settings, 'Columns', 'Column_Active', 1)
 Dim $column_SSID = IniRead($settings, 'Columns', 'Column_SSID', 2)
@@ -652,6 +654,7 @@ Dim $Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'Vistumble
 Dim $Text_VistumblerStore = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerStore', 'Store')
 Dim $Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
 Dim $Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
+Dim $Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -679,6 +682,12 @@ If FileExists($VistumblerDB) Then
 		$GPS_ID = UBound($GpsMatchArray) - 1
 		$query = "DELETE * FROM TreeviewPos"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		;Fix missing Signal field in AP table (MDB backward compatibitly fix)
+		If _FieldExists($VistumblerDB, 'AP', 'Signal') <> 1 Then
+			_CreateField($VistumblerDB, "AP", "Signal", "TEXT(3)", $DB_OBJ)
+			$query = "UPDATE AP SET Signal = '0'"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		EndIf
 		;Fix missing GPS table fields (MDB backward compatibitly fix)
 		If _FieldExists($VistumblerDB, 'GPS', 'TrackAngle') <> 1 Then
 			;Create new fields
@@ -901,7 +910,7 @@ Else
 	Next
 EndIf
 
-;ConsoleWrite($DefaultApapterID & @CRLF)
+;($DefaultApapterID & @CRLF)
 
 $Extra = GUICtrlCreateMenu($Text_Extra)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
@@ -1243,7 +1252,6 @@ Func _ScanAccessPoints()
 		;_ArrayDisplay($aplist)
 		$aplistsize = UBound($aplist) - 1
 		For $add = 0 To $aplistsize
-			;ConsoleWrite($add & '-' & $aplistsize & @CRLF)
 			$RadioType = ''
 			$BasicTransferRates = ''
 			$OtherTransferRates = ''
@@ -1375,7 +1383,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	$NewApFound = 0
 	If $GpsMatchArray <> 0 Then ;If GPS ID Is Found
 		;Query AP table for New AP
-		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & $CHAN & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
+		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $CHAN) & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
@@ -1404,7 +1412,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			;Check If AP matches filter parameters
 			$ListRow = -1
 			;Add AP Data into the AP table
-			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $APID & '|' & $ListRow & '|' & $AP_StatusNum & '|' & $BSSID & '|' & $SSID & '|' & $CHAN & '|' & $AUTH & '|' & $ENCR & '|' & $SecType & '|' & $NETTYPE & '|' & $RADTYPE & '|' & $BTX & '|' & $OtX & '|' & $DBHighGpsHistId & '|' & $NewGpsId & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL)
+			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $APID & '|' & $ListRow & '|' & $AP_StatusNum & '|' & $BSSID & '|' & $SSID & '|' & StringFormat("%03i", $CHAN) & '|' & $AUTH & '|' & $ENCR & '|' & $SecType & '|' & $NETTYPE & '|' & $RADTYPE & '|' & $BTX & '|' & $OtX & '|' & $DBHighGpsHistId & '|' & $NewGpsId & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL & '|' & StringFormat("%03i", $SIG))
 			;Add AP Data into treeview
 			;-->_TreeViewAdd($SSID, $BSSID, $AUTH, $ENCR, $CHAN, $RADTYPE, $BTX, $OtX, $NETTYPE, $MANUF, $LABEL)
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
@@ -1497,7 +1505,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			EndIf
 			;Update AP in DB. Set Active, LastGpsID, and LastHistID
-			$query = "UPDATE AP SET Active = '" & $AP_StatusNum & "', LastGpsID = '" & $ExpGpsID & "', LastHistId = '" & $ExpLastHistID & "' WHERE ApId = '" & $Found_APID & "'"
+			$query = "UPDATE AP SET Active = '" & $AP_StatusNum & "', LastGpsID = '" & $ExpGpsID & "', LastHistId = '" & $ExpLastHistID & "',Signal = '" & StringFormat("%03i", $SIG) & "' WHERE ApId = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Update AP in DB. Set FirstHistID
 			If $ExpFirstHistID <> '' Then
@@ -1549,7 +1557,7 @@ Func _MarkDeadAPs()
 				$HISTID += 1
 				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $datestamp & '|' & $timestamp)
 			EndIf
-			$query = "UPDATE AP SET Active = '0' WHERE ApID = '" & $Found_APID & "'"
+			$query = "UPDATE AP SET Active = '0', Signal = '000' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
 	Next
@@ -1606,7 +1614,7 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 	If $Add_Authentication <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Authentication, $column_Authentication)
 	If $Add_Encryption <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Encryption, $column_Encryption)
 	If $Add_RadioType <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RadioType, $column_RadioType)
-	If $Add_Channel <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Channel, $column_Channel)
+	If $Add_Channel <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Channel), $column_Channel)
 	If $LatDDD <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LatDDD, $column_Latitude)
 	If $LonDDD <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LonDDD, $column_Longitude)
 	If $LatDMS <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LatDMS, $column_LatitudeDMS)
@@ -1745,9 +1753,8 @@ Func _RemoveTreeviewItem($Treeview, $RootTree, $ImpApID)
 EndFunc   ;==>_RemoveTreeviewItem
 
 Func _FilterRemoveNonMatchingInList()
-	If StringInStr($FilterQuery, 'WHERE') Then
-		$infq = StringReplace(StringReplace(StringReplace(StringReplace($FilterQuery, '=', '<>'), ' Or ', ' And '), ')', ''), '(', '');Invert Filter Query
-		$query = $infq & " And Listrow<>'-1'"
+	If StringInStr($RemoveQuery, 'WHERE') Then
+		$query = $RemoveQuery & " And (Listrow <> '-1')"
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
 		If $FoundApMatch <> 0 Then
@@ -1785,10 +1792,10 @@ Func _FilterRemoveNonMatchingInList()
 EndFunc   ;==>_FilterRemoveNonMatchingInList
 
 Func _FilterReAddMatchingNotInList()
-	If StringInStr($FilterQuery, "WHERE") Then
-		$fquery = $FilterQuery & " And (ListRow='-1')"
+	If StringInStr($AddQuery, "WHERE") Then
+		$fquery = $AddQuery & " AND ListRow = '-1'"
 	Else
-		$fquery = $FilterQuery & " WHERE (ListRow='-1')"
+		$fquery = $AddQuery & " WHERE ListRow = '-1'"
 	EndIf
 	$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
 	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
@@ -1984,7 +1991,7 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'Hist', $DB_OBJ)
 	_CreateTable($dbfile, 'TreeviewPos', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 
@@ -2493,7 +2500,6 @@ Func _GetGPS(); Recieves data from gps device
 
 	While 1 ;Loop to extract gps data untill location is found or timout time is reached
 		If $UseGPS = 0 Then ExitLoop
-		;ConsoleWrite($GpsType & @CRLF)
 		If $GpsType = 0 Then ;Use CommMG
 			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
 			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
@@ -2540,7 +2546,6 @@ Func _GetGPS(); Recieves data from gps device
 				$dlsplit = StringSplit($dataline, '$')
 				For $gda = 1 To $dlsplit[0]
 					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
-					;ConsoleWrite('-' & $dlsplit[$gda] & @CRLF)
 					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 						
 						If StringInStr($dlsplit[$gda], "GPGGA") Then
@@ -4085,7 +4090,7 @@ Func _ExportFilteredData();Saves data to a selected file
 	If @error <> 1 Then
 		If StringInStr($file, '.VS1') = 0 Then $file = $file & '.VS1'
 		FileDelete($file)
-		_ExportFileredTXT($file, $FilterQuery)
+		_ExportFileredTXT($file, $AddQuery)
 		MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $file & '"')
 		GUICtrlSetData($msgdisplay, '')
 		$newdata = 0
@@ -4774,7 +4779,8 @@ Func _WriteINI()
 	IniWrite($settings, 'Filters', 'FilterLongitude', $Filter_Longitude)
 	IniWrite($settings, 'Filters', 'FilterMANU', $Filter_MANU)
 	IniWrite($settings, 'Filters', 'FilterLAB', $Filter_LAB)
-	IniWrite($settings, 'Filters', 'FilterQuery', $FilterQuery)
+	IniWrite($settings, 'Filters', 'AddQuery', $AddQuery)
+	IniWrite($settings, 'Filters', 'RemoveQuery', $RemoveQuery)
 
 	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
 	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
@@ -5095,6 +5101,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerStore', $Text_VistumblerStore)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', $Text_SupportVistumbler)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', $Text_UseNativeWifi)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterMsg', $Text_FilterMsg)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5523,7 +5530,7 @@ Func _ExportFilteredKML()
 				DirCreate($SaveDirKml)
 				$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
 				If Not @error Then
-					$savekml = _SaveFilteredKML($kml, $FilterQuery, $UseLocalKmlImagesOnExport, $MapOpen, $MapWEP, $MapSec, $ShowTrack)
+					$savekml = _SaveFilteredKML($kml, $AddQuery, $UseLocalKmlImagesOnExport, $MapOpen, $MapWEP, $MapSec, $ShowTrack)
 					If $savekml = 1 Then
 						MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $kml & '"')
 					Else
@@ -6708,7 +6715,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$Filter_Active_GUI = GUICtrlCreateInput($Filter_Active, 353, 260, 300, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel('Use "*" as wildcard. Seperate multiple filters with a "|"', 32, 72, 618, 41)
+		GUICtrlCreateLabel($Text_FilterMsg, 32, 72, 618, 41)
 		GUICtrlSetColor(-1, $TextColor)
 
 
@@ -7162,6 +7169,8 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_VistumblerStore = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerStore', 'Store')
 		$Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
 		$Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
+		$Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as a wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
+
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -7356,45 +7365,116 @@ Func _ApplySettingsGUI();Applys settings
 		$Filter_OTX = GUICtrlRead($Filter_OTX_GUI)
 		$Filter_Line = GUICtrlRead($Filter_Line_GUI)
 		$Filter_Active = GUICtrlRead($Filter_Active_GUI)
+		
+		If $Filter_SSID = '' Then $Filter_SSID = '*'
+		If $Filter_BSSID = '' Then $Filter_BSSID = '*'
+		If $Filter_CHAN = '' Then $Filter_CHAN = '*'
+		If $Filter_AUTH = '' Then $Filter_AUTH = '*'
+		If $Filter_ENCR = '' Then $Filter_ENCR = '*'
+		If $Filter_RADTYPE = '' Then $Filter_RADTYPE = '*'
+		If $Filter_NETTYPE = '' Then $Filter_NETTYPE = '*'
+		If $Filter_SIG = '' Then $Filter_SIG = '*'
+		If $Filter_BTX = '' Then $Filter_BTX = '*'
+		If $Filter_OTX = '' Then $Filter_OTX = '*'
+		If $Filter_Line = '' Then $Filter_Line = '*'
+		If $Filter_Active = '' Then $Filter_Active = '*'
+		
+		$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+		$aquery = ''
+		$aquery = _AddFilerString($aquery, 'SSID', $Filter_SSID)
+		$aquery = _AddFilerString($aquery, 'BSSID', $Filter_BSSID)
+		$aquery = _AddFilerString($aquery, 'CHAN', $Filter_CHAN)
+		$aquery = _AddFilerString($aquery, 'AUTH', $Filter_AUTH)
+		$aquery = _AddFilerString($aquery, 'ENCR', $Filter_ENCR)
+		$aquery = _AddFilerString($aquery, 'RADTYPE', $Filter_RADTYPE)
+		$aquery = _AddFilerString($aquery, 'NETTYPE', $Filter_NETTYPE)
+		$aquery = _AddFilerString($aquery, 'Signal', $Filter_SIG)
+		$aquery = _AddFilerString($aquery, 'BTX', $Filter_BTX)
+		$aquery = _AddFilerString($aquery, 'OTX', $Filter_OTX)
+		$aquery = _AddFilerString($aquery, 'ApID', $Filter_Line)
+		$aquery = _AddFilerString($aquery, 'Active', $Filter_Active)
+		If $aquery <> '' Then $AddQuery &= ' WHERE ' & $aquery
 
-		$fquery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
-		$wquery = ''
-		$wquery = _AddQueryFilers($wquery, 'SSID', $Filter_SSID)
-		$wquery = _AddQueryFilers($wquery, 'BSSID', $Filter_BSSID)
-		$wquery = _AddQueryFilers($wquery, 'CHAN', $Filter_CHAN)
-		$wquery = _AddQueryFilers($wquery, 'AUTH', $Filter_AUTH)
-		$wquery = _AddQueryFilers($wquery, 'ENCR', $Filter_ENCR)
-		$wquery = _AddQueryFilers($wquery, 'RADTYPE', $Filter_RADTYPE)
-		$wquery = _AddQueryFilers($wquery, 'NETTYPE', $Filter_NETTYPE)
-		$wquery = _AddQueryFilers($wquery, 'BTX', $Filter_BTX)
-		$wquery = _AddQueryFilers($wquery, 'OTX', $Filter_OTX)
-		$wquery = _AddQueryFilers($wquery, 'ApID', $Filter_Line)
-		$wquery = _AddQueryFilers($wquery, 'Active', $Filter_Active)
-		If $wquery <> '' Then $fquery &= ' WHERE' & $wquery
-		$FilterQuery = $fquery
+		$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+		$rquery = ''
+		$rquery = _RemoveFilterString($rquery, 'SSID', $Filter_SSID)
+		$rquery = _RemoveFilterString($rquery, 'BSSID', $Filter_BSSID)
+		$rquery = _RemoveFilterString($rquery, 'CHAN', $Filter_CHAN)
+		$rquery = _RemoveFilterString($rquery, 'AUTH', $Filter_AUTH)
+		$rquery = _RemoveFilterString($rquery, 'ENCR', $Filter_ENCR)
+		$rquery = _RemoveFilterString($rquery, 'RADTYPE', $Filter_RADTYPE)
+		$rquery = _RemoveFilterString($rquery, 'NETTYPE', $Filter_NETTYPE)
+		$rquery = _RemoveFilterString($rquery, 'Signal', $Filter_SIG)
+		$rquery = _RemoveFilterString($rquery, 'BTX', $Filter_BTX)
+		$rquery = _RemoveFilterString($rquery, 'OTX', $Filter_OTX)
+		$rquery = _RemoveFilterString($rquery, 'ApID', $Filter_Line)
+		$rquery = _RemoveFilterString($rquery, 'Active', $Filter_Active)
+		If $rquery <> '' Then $RemoveQuery &= ' WHERE (' & $rquery & ')'
 	EndIf
 
 	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1
 	If $RestartVistumbler = 1 Then MsgBox(0, $Text_Restart, $Text_RestartMsg)
 EndFunc   ;==>_ApplySettingsGUI
 
-Func _AddQueryFilers($q_query, $q_field, $q_searchstring, $q_delimeter = '|', $q_allchar = '*')
-	If $q_searchstring = $q_allchar Then
+Func _AddFilerString($q_query, $q_field, $FilterValues)
+	Local $ret
+	If $FilterValues = '*' Then
 		Return ($q_query)
 	Else
-		$q_splitstring = StringSplit($q_searchstring, $q_delimeter)
-		If $q_query <> '' Then $q_query &= ' And'
-		For $q = 1 To $q_splitstring[0]
-			If $q = 1 Then $q_query &= ' ('
-			If $q <> 1 Then $q_query &= ' Or '
-			$q_query &= $q_field & "='" & $q_splitstring[$q] & "'"
-			If $q = $q_splitstring[0] Then $q_query &= ')'
-		Next
-		Return ($q_query)
+		If $q_query <> '' Then $q_query &= ' AND '
+		$FilterValues = StringReplace($FilterValues, "|", ",")
+		If StringInStr($FilterValues, ",") Then
+			$q_splitstring = StringSplit($FilterValues, ",")
+			For $q = 1 To $q_splitstring[0]
+				If $q <> 1 Then $ret &= ","
+				$ret &= "'" & $q_splitstring[$q] & "'"
+			Next
+			$q_query &= $q_field & " IN (" & $ret & ")"
+			Return ($q_query)
+		ElseIf StringInStr($FilterValues, "-") Then
+			$q_splitstring = StringSplit($FilterValues, "-")
+			If $q_field = "CHAN" Or $q_field = "Signal" Then
+				$q_query &= "(" & $q_field & " BETWEEN '" & StringFormat("%03i", $q_splitstring[1]) & "' AND '" & StringFormat("%03i", $q_splitstring[2]) & "')"
+			Else
+				$q_query &= "(" & $q_field & " BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+			EndIf
+			Return ($q_query)
+		Else
+			$q_query &= $q_field & " = '" & $FilterValues & "'"
+			Return ($q_query)
+		EndIf
 	EndIf
-EndFunc   ;==>_AddQueryFilers
+EndFunc   ;==>_AddFilerString
 
-
+Func _RemoveFilterString($q_query, $q_field, $FilterValues)
+	Local $ret
+	If $FilterValues = '*' Then
+		Return ($q_query)
+	Else
+		If $q_query <> '' Then $q_query &= ' OR '
+		$FilterValues = StringReplace($FilterValues, "|", ",")
+		If StringInStr($FilterValues, ",") Then
+			$q_splitstring = StringSplit($FilterValues, ",")
+			For $q = 1 To $q_splitstring[0]
+				If $q <> 1 Then $ret &= ","
+				$ret &= "'" & $q_splitstring[$q] & "'"
+			Next
+			$q_query &= $q_field & " NOT IN (" & $ret & ")"
+			Return ($q_query)
+		ElseIf StringInStr($FilterValues, "-") Then
+			$q_splitstring = StringSplit($FilterValues, "-")
+			If $q_field = "CHAN" Or $q_field = "Signal" Then
+				$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringFormat("%03i", $q_splitstring[1]) & "' AND '" & StringFormat("%03i", $q_splitstring[2]) & "')"
+			Else
+				$q_query &= "(" & $q_field & " NOT BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+			EndIf
+			Return ($q_query)
+		Else
+			$q_query &= $q_field & " <> '" & $FilterValues & "'"
+			Return ($q_query)
+		EndIf
+	EndIf
+EndFunc   ;==>_RemoveFilterString
 
 Func _SetWidthValue_RadioType()
 	_SetWidthValue($CWCB_RadioType, $CWIB_RadioType, $column_Width_RadioType, $settings, 'Column_Width', 'Column_RadioType', 100)
@@ -8014,8 +8094,6 @@ Func _InterfaceChanged()
 			If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
 		Next
 	EndIf
-	
-	;ConsoleWrite($DefaultApapter & '-' & $DefaultApapterDesc & '-' & $DefaultApapterID & @CRLF)
 EndFunc   ;==>_InterfaceChanged
 
 Func Log10($x)
