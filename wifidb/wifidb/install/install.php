@@ -333,7 +333,7 @@ echo "<tr><td>Failure..........</td><td>Add Install date</td></tr>";}
 
 
 #add default debug values
-$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n$"."rebuild	=	0;\r\n"
+$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n"
 									."$"."daemon	=	".$daemon.";\r\n");
 
 if($AD_CF_DG_Re)

@@ -1,5 +1,5 @@
 <?php
-global $wifidb_install, $wifidb_tools, $log_level, $verbose, $log_interval, $dim;;
+global $wifidb_install, $wifidb_tools, $log_level, $verbose, $log_interval, $dim, $time_interval_to_check;
 if(PHP_OS == "WINNT"){$dim = "\\";}
 if(PHP_OS == "Linux"){$dim = "/";}
 

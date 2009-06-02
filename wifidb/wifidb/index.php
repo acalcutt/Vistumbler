@@ -8,9 +8,9 @@ if(file_exists('lib/config.inc.php'))
 	die('<h1>You need to install WiFiDB first. Please go <a href="install/">here</a> to do that.</h1>');
 }
 $usersa =  array();
-$sql = "SELECT `size` FROM `$db`.`settings` WHERE `table` LIKE 'wifi0' LIMIT 1";
+$sql = "SELECT `id` FROM `$db`.`wifi0`";
 $result0 = mysql_query($sql, $conn);
-
+$rows = mysql_num_rows($result0);
 
 $sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `sectype`='1'";
 $result1 = mysql_query($sql, $conn);
@@ -81,7 +81,7 @@ $lastuser = mysql_fetch_array($result6);
 		<th class="style3">Secure AP&#39;s</th>
 	</tr>
 	<tr>
-		<td align="center" class="style2" style="width: 100px"><?php echo $total; ?></td>
+		<td align="center" class="style2" style="width: 100px"><?php echo $rows; ?></td>
 		<td align="center" class="style2"><?php echo $open; ?></td>
 		<td align="center" class="style2"><?php echo $WEP; ?></td>
 		<td align="center" class="style2"><?php echo $Sec; ?></td>

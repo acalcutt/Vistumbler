@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 //Now this is not what I would call a 'true' 'daemon' by any sorts,
 //I mean it does have a php script (/tools/rund.php) that can turn 
@@ -6,15 +5,15 @@
 //perpetually in the background. I dont think this is how php was 
 //intended to be used. I am hoping to get a C++ version working 
 //sometime soon, untill then I am using php.
-include('config.inc.php');
-include('functions.php'); //need to include the functions file so that the daemon can do things...
+require('config.inc.php');
+require('functions.php'); //need to include the functions file so that the daemon can do things...
 
-$start_date = "2009-Apr-23";
-$last_edit = "2009-May-24";
+$start_date = "2009-04-23";
+$last_edit = "2009-June-02";
 if($GLOBALS['log_level'] == 0){$de = "Off";}
 elseif($GLOBALS['log_level'] == 1){$de = "Errors";}
 elseif($GLOBALS['log_level'] == 2){$de = "Detailed Errors (when available)";}
-verbosed("\nWiFiDB 'Daemon'\nVersion: ".$GLOBALS['vers']['WiFiDB_Daemon']."\n - Daemon Start: ".$start_date."\n - Last Daemon File Edit: ".$last_edit."\n\t(/tools/daemon/wifidbd.php)\n - Last Core File Edit: ".$GLOBALS['vers']['Last_Daemon_Core_Edit']."\n\t(/tools/daemon/functions.php)\n - By: Phillip Ferland\n - http://www.randomintervals.com\n", $verbose, 1);
+verbosed("\nWiFiDB 'Daemon'\nVersion: ".$GLOBALS['vers']['WiFiDB_Daemon']."\n - Daemon Start: ".$start_date."\n - Last Daemon File Edit: ".$last_edit."\n\t(/tools/daemon/wifidbd.php)\n - Last Daemon Lib File Edit: ".$GLOBALS['vers']['Last_Daemon_Core_Edit']."\n\t(/tools/daemon/functions.php)\n - By: Phillip Ferland\n - http://www.randomintervals.com\n", $verbose,1);
 verbosed("Log Level is: ".$GLOBALS['log_level']." (".$de.")", $verbose);
 if($log_level != 0)
 {
@@ -23,7 +22,7 @@ if($log_level != 0)
 	verbosed("Log Interval is: ".$GLOBALS['log_interval']." (".$de.")", $verbose);
 }
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
-error_reporting(E_ALL); //show all erorrs with strict santex
+#error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
 
 logd("Have included the WiFiDB Tools Functions file for the 'Daemon'.", $log_interval, 0,  $GLOBALS['log_level']);
 verbosed("Have included the WiFiDB Tools Functions file for the 'Daemon'.", $verbose); 
@@ -92,17 +91,19 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					$tmp = daemon::importvs1($source, $files_array['user'], $files_array['notes'], $files_array['title'], $verbose);
 					$temp = $files_array['file']." | ".$tmp['aps']." - ".$tmp['gps'];
 					logd("Finished Import of : ".$files_array['file'] , 2 , $temp ,  $GLOBALS['log_level']); //same thing here, hard coded as log_lev 2
-					verbosed("Finished Import of :".$files_array['file']."" , $verbose);
+					verbosed("Finished Import of :".$files_array['file'] , $verbose);
 					$remove_file = $files_array['id'];
 					
-					$result = mysql_query("SELECT * FROM `$db`.`users` ORDER BY `id` DESC", $conn);
-					$user_array = mysql_fetch_array($result);
+					$hash = hash_file('md5', $source);
+					$result1 = mysql_query("SELECT * FROM `$db`.`users` WHERE `hash` LIKE '$hash' LIMIT 1", $conn);
+					$user_array = mysql_fetch_array($result1);
 					$user_row = $user_array['id'];
-					$inserted_new_file = database::insert_file($files_array['file'], $tmp['aps'], $tmp['gps'],$files_array['user'],$files_array['notes'],$files_array['title'], $user_row );
+					echo $source."\n";
+					$inserted_new_file = database::insert_file($source, $tmp['aps'], $tmp['gps'],$files_array['user'],$files_array['notes'],$files_array['title'], $user_row );
 					if($inserted_new_file == 1)
 					{
-						logd("Added ".$remove_file." to the Files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
-						verbosed("Added ".$remove_file." to the Files table\n\t".mysql_error($GLOBALS['conn']), 1);
+						logd("Added ".$remove_file." to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
+						verbosed("Added ".$remove_file." to the Files table", 1);
 						
 						$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 						if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
@@ -111,8 +112,8 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 							verbosed("Error removing ".$remove_file." from the Temp files table\n\t".mysql_error($GLOBALS['conn']), 1);
 						}else
 						{
-							logd("Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.", $log_interval, 0,  $GLOBALS['log_level']);
-							verbosed("Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.", $verbose);
+							logd("Removed ".$remove_file." from the Temp files table.", $log_interval, 0,  $GLOBALS['log_level']);
+							verbosed("Removed ".$remove_file." from the Temp files table.", $verbose);
 						}
 					}else
 					{
@@ -140,10 +141,22 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			}else
 			{
 				$finished = 0;
-				logd("File tmp table is empty, go and import something.\n", $log_interval, 0,  $GLOBALS['log_level']);
-				verbosed("File tmp table is empty, go and import something.\n", $verbose);
+				logd("File is empty, go and import something.\n", $log_interval, 0,  $GLOBALS['log_level']);
+				verbosed("File is empty, go and import something.\n", $verbose);
+				$remove_file = $files_array['id'];
+				$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
+				if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
+				{
+					logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
+					verbosed("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), 1);
+				}else
+				{
+					logd("Removed empty ".$remove_file." from the Temp files table.", $log_interval, 0,  $GLOBALS['log_level']);
+					verbosed("Removed empty ".$remove_file." from the Temp files table.", $verbose);
+				}
 			}
-			$result = mysql_query("SELECT * FROM `$db`.`files_tmp` ORDER BY `id` ASC", $conn);//requery after a file import to make sure that no one has imported something while im importing APS, so that they can be imported sooner then waiting another sleep loop to get imported.
+		#	$result = mysql_query("SELECT * FROM `$db`.`files_tmp` ORDER BY `id` ASC", $conn);//requery after a file import to make sure that no one has imported something while im importing APS, so that they can be imported sooner then waiting another sleep loop to get imported.
+			echo "\n";
 		}
 	}else
 	{

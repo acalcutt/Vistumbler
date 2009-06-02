@@ -513,10 +513,9 @@ class database
 	#							insert file (put a file that was just imported into the Files table)				 			 #
 	#========================================================================================================================#
 
-	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user="Unknown", $notes="No Notes", $title="Untitled")
+	function insert_file($file = '', $totalaps = 0, $totalgps = 0, $user = "Unknown", $notes = "No Notes", $title = "Untitled", $user_row = 0)
 	{
-		include($GLOBALS['wifidb'].'/lib/config.inc.php');
-		
+		include('config.inc.php');
 		$size = (filesize($file)/1024);
 		$hash = hash_file('md5', $file);
 		$date = date("y-m-d H:i:s");
@@ -526,8 +525,8 @@ class database
 		$file_exp_seg = count($file_exp);
 		$file1 = $file_exp[$file_exp_seg-1];
 		
-		$sql = "INSERT INTO `wifi`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash` , `user` , `notes` , `title`	)
-									VALUES ( NULL , '$file1', '$size', 'CURRENT_TIMESTAMP' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title' )";
+		$sql = "INSERT INTO `wifi`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash` , `user` , `notes` , `title`, `user_row`	)
+									VALUES ( NULL , '$file1', '$size', '$date' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title', '$user_row' )";
 		if(mysql_query($sql, $conn))
 		{
 			return 1;

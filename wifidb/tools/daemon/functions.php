@@ -7,7 +7,7 @@ date_default_timezone_set($timezn);
 global $vers;
 $vers = array(
 			"WiFiDB_Daemon"				=>	"1.3",
-			"Last_Daemon_Core_Edit" 	=> 	"2009-May-27",
+			"Last_Daemon_Core_Edit" 	=> 	"2009-Jun-02",
 			"Misc"						=> array(
 												"logd"			=>	"1.1",
 												"verbosed"		=>	"1.1",
@@ -220,6 +220,7 @@ class daemon extends database
 					$encryp		=	filter_var($wifi[4], FILTER_SANITIZE_SPECIAL_CHARS);
 					$sectype	=	filter_var($wifi[5], FILTER_SANITIZE_SPECIAL_CHARS);
 					$chan		=	filter_var($wifi[7], FILTER_SANITIZE_SPECIAL_CHARS);
+					$chan=$chan+0;
 					$btx		=	filter_var($wifi[8], FILTER_SANITIZE_SPECIAL_CHARS);
 					$otx		=	filter_var($wifi[9], FILTER_SANITIZE_SPECIAL_CHARS);
 					$nt			=	filter_var($wifi[10], FILTER_SANITIZE_SPECIAL_CHARS);
@@ -239,22 +240,106 @@ class daemon extends database
 					
 					$conn1 = mysql_connect($host, $db_user, $db_pwd);
 					mysql_select_db($db,$conn1);
-					$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `ssid` LIKE '$ssids' AND `radio` LIKE '$radios' LIMIT 1", $conn1) or die(mysql_error($conn1));
-					while ($newArray = mysql_fetch_array($result))
+					$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs'", $conn1) or die(mysql_error($conn1));
+					$rows = mysql_num_rows($result);
+					$newArray = mysql_fetch_array($result);
+					$result_count = count($rows);
+					if($result_count > 1)
 					{
-
+						$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssids'", $conn1) or die(mysql_error($conn1));
+						$rows = mysql_num_rows($result);
+						$newArray = mysql_fetch_array($result);
+						$result_count = count($rows);
+						if($result_count > 1)
+						{	
+							$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan'", $conn1) or die(mysql_error($conn1));
+							$rows = mysql_num_rows($result);
+							$newArray = mysql_fetch_array($result);
+							$result_count = count($rows);
+							if($result_count > 1)
+							{	
+								$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype'", $conn1) or die(mysql_error($conn1));
+								$rows = mysql_num_rows($result);
+								$newArray = mysql_fetch_array($result);
+								$result_count = count($rows);
+								if($result_count > 1)
+								{	
+									$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs'  AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios'", $conn1) or die(mysql_error($conn1));
+									$rows = mysql_num_rows($result);
+									$newArray = mysql_fetch_array($result);
+									$result_count = count($rows);
+									if($result_count > 1)
+									{	
+										echo "There are too many Pointers for this one Access Point, defaulting to the first one in the list";
+										$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs'  AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios'", $conn1) or die(mysql_error($conn1));
+										$rows = mysql_num_rows($result);
+										$newArray = mysql_fetch_array($result);
+										$APid = $newArray['id'];
+										$ssid_ptb_ = $newArray["ssid"];
+										$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
+										$ssid_ptb = $ssids_ptb[0];
+										$mac_ptb=$newArray['mac'];
+										$radio_ptb=$newArray['radio'];
+										$sectype_ptb=$newArray['sectype'];
+										$auth_ptb=$newArray['auth'];
+										$encry_ptb=$newArray['encry'];
+										$chan_ptb=$newArray['chan'];
+										$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
+									}
+								}else
+								{
+									$APid = $newArray['id'];
+									$ssid_ptb_ = $newArray["ssid"];
+									$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
+									$ssid_ptb = $ssids_ptb[0];
+									$mac_ptb=$newArray['mac'];
+									$radio_ptb=$newArray['radio'];
+									$sectype_ptb=$newArray['sectype'];
+									$auth_ptb=$newArray['auth'];
+									$encry_ptb=$newArray['encry'];
+									$chan_ptb=$newArray['chan'];
+									$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
+								}
+							}else
+							{
+								$APid = $newArray['id'];
+								$ssid_ptb_ = $newArray["ssid"];
+								$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
+								$ssid_ptb = $ssids_ptb[0];
+								$mac_ptb=$newArray['mac'];
+								$radio_ptb=$newArray['radio'];
+								$sectype_ptb=$newArray['sectype'];
+								$auth_ptb=$newArray['auth'];
+								$encry_ptb=$newArray['encry'];
+								$chan_ptb=$newArray['chan'];
+								$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
+							}
+						}else
+						{
+							$APid = $newArray['id'];
+							$ssid_ptb_ = $newArray["ssid"];
+							$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
+							$ssid_ptb = $ssids_ptb[0];
+							$mac_ptb=$newArray['mac'];
+							$radio_ptb=$newArray['radio'];
+							$sectype_ptb=$newArray['sectype'];
+							$auth_ptb=$newArray['auth'];
+							$encry_ptb=$newArray['encry'];
+							$chan_ptb=$newArray['chan'];
+							$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
+						}
+					}else
+					{
 						$APid = $newArray['id'];
 						$ssid_ptb_ = $newArray["ssid"];
-						$ssids_ptb = str_split($newArray['ssid'],25);
+						$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
 						$ssid_ptb = $ssids_ptb[0];
 						$mac_ptb=$newArray['mac'];
 						$radio_ptb=$newArray['radio'];
 						$sectype_ptb=$newArray['sectype'];
 						$auth_ptb=$newArray['auth'];
-
 						$encry_ptb=$newArray['encry'];
 						$chan_ptb=$newArray['chan'];
-
 						$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
 					}
 					mysql_close($conn1);
@@ -265,7 +350,7 @@ class daemon extends database
 					
 					if(!isset($table_ptb)){$table_ptb="";}
 					
-					if(strcmp($table,$table_ptb)===0)
+					if($table == $table_ptb)
 					{
 						// They are the same
 						logd($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated ", $log_interval, 0,  $log_level);
@@ -586,12 +671,12 @@ class daemon extends database
 		if($title === ''){$title = "Untitled";}
 		if($user === ''){$user="Unknown";}
 		if($notes === ''){$notes="No Notes";}
-
+		$hash = hash_file('md5', $source);
 		$total_ap = count($user_aps);
 		$gdatacount = count($gdata);
 #		if($user_ap_s != "")
 #		{
-			$sqlu = "INSERT INTO `$db`.`users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount')";
+			$sqlu = "INSERT INTO `$db`.`users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`, `hash`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount', '$hash')";
 			if(!mysql_query($sqlu, $conn))
 			{
 				logd("Failed to Insert User data into Users table\n".mysql_error($conn), $log_interval, 0,  $log_level);

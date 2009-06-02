@@ -35,8 +35,47 @@ if (isset($_POST['token']))
 		#echo $refresh;
 	}
 }
-echo '<meta http-equiv="refresh" content="'.$refresh.'">';
+####################
+function getdaemonstats()
+{
+	$os = PHP_OS;
+	if ( PHP_OS == 'Linux')
+	{
+		#echo $os."<br>";
+		$output = array();
+		$WFDBD_PID = "/var/run/wifidbd.pid";
+		$pid_open = file($WFDBD_PID);
+		exec('ps vp '.$pid_open[0] , $output, $sta);
+		if(isset($output[1]))
+		{
+			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
+			$start = trim($output[1], " ");
+			$mem = preg_match("[[0-9]+\.[0-9]+]", $start);
+			echo $mem;
+			$patterns[1] = '/  /';
+			$patterns[2] = '/ /';
+			$ps_stats = preg_replace($patterns , "|" , $start);
+			echo $ps_stats;
+			$ps_Sta_exp = explode("|", $ps_stats);
+			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[5];?></td><td><?php echo $ps_Sta_exp[11]."%";?></td><td><?php echo $ps_Sta_exp[12]." ".$ps_Sta_exp[13];?></td></tr><?php
+		}
+	}elseif( $os == 'WIN')
+	{
+		$output = array();
+		$WFDBD_PID = "C:\CLI\daemon\wifidbd.pid";
+		$pid_open = file($WFDBD_PID);
+		exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+		if(isset($output[2]))
+		{
+			?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+			$ps_stats = explode("," , $output[2]);
+			?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+		}
+	}
+}
+#####################
 
+echo '<meta http-equiv="refresh" content="'.$refresh.'"><table border="1" width="90%"><tr class="style4"><th colspan="4">Scheduled Imports</th></tr>';
 mysql_select_db($db,$conn);
 $sql = "SELECT * FROM `settings` WHERE `table` LIKE 'files'";
 $result = mysql_query($sql, $conn) or die(mysql_error());
@@ -50,96 +89,39 @@ if(isset($_SESSION['token']))
 	$token = md5(uniqid(rand(), true));
 	$_SESSION['token'] = $token;
 }
-?>		<h2>Import Results</h2>
-			<h2>Next Import scheduled on: <br>
-			<?php
-				echo $file_array['size'];
-			?> GMT / 
-			<?php
-				$nextrun = date("Y-m-d H:i:s", (strtotime($file_array['size'])-14400));
-				echo $nextrun				
-			?> EST</h2>
-			<h4>If none are already importing...</h4>
-			<form action="scheduling.php?token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
-			<input type="hidden" name="token" value="<?php echo $token; ?>" />
-			Select a Refresh Rate : <br> 
-			<SELECT NAME="refresh">  
-			<OPTION <?php if($refresh == 5){ echo "selected ";}?> VALUE="5"> 5 Seconds
-			<OPTION <?php if($refresh == 10){ echo "selected ";}?> VALUE="10"> 10 Seconds
-			<OPTION <?php if($refresh == 15){ echo "selected ";}?> VALUE="15"> 15 Seconds
-			<OPTION <?php if($refresh == 30){ echo "selected ";}?> VALUE="30"> 30 Seconds
-			<OPTION <?php if($refresh == 60){ echo "selected ";}?> VALUE="60"> 60 Seconds
-			<OPTION <?php if($refresh == 120){ echo "selected ";}?> VALUE="120"> 2 Minutes
-			<OPTION <?php if($refresh == 240){ echo "selected ";}?> VALUE="240"> 4 Minutes
-			<OPTION <?php if($refresh == 480){ echo "selected ";}?> VALUE="480"> 8 Minutes
-			<OPTION <?php if($refresh == 960){ echo "selected ";}?> VALUE="960"> 16 Minutes
-			<OPTION <?php if($refresh == 1920){ echo "selected ";}?> VALUE="1920"> 32 Minutes
-			<OPTION <?php if($refresh == 3840){ echo "selected ";}?> VALUE="3840"> 64 Minutes
-			<OPTION <?php if($refresh == 5760){ echo "selected ";}?> VALUE="5760"> 96 Minutes
-			<OPTION <?php if($refresh == 7680){ echo "selected ";}?> VALUE="7680"> 128 Minutes
-			<OPTION <?php if($refresh == 30720){ echo "selected ";}?> VALUE="30720"> 512 Minutes
-			</SELECT><br>
-			<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit"><br>
-			</form>
-			
-			
-<?php
-echo "<h3>Daemon Status:</H3>";
-####################
-function getdaemonstats()
-{
-	if ( substr(PHP_OS,0,3) == 'WIN')
-	{
-		$output = array();
-		$WFDBD_PID = "C:\CLI\daemon\wifidbd.pid";
-		$pid_open = file($WFDBD_PID);
-		exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
-		if(isset($output[2])){return $output[2];}
-	}elseif( substr(PHP_OS,0,3) == 'Lin')
-	{
-		$output = array();
-		$WFDBD_PID = "/var/run/wifidbd.pid";
-		$pid_open = file($WFDBD_PID);
-		exec('ps vp '.$pid_open[0] , $output, $sta);
-		if(isset($output[1])){return $output[1];}
-	}
-}
-$os = substr(PHP_OS,0,3);
-#############
 ?>
+	<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> GMT</td><td><?php $nextrun = date("Y-m-d H:i:s", (strtotime($file_array['size'])-18000)); echo $nextrun; ?> EST</td></tr>
+	<tr><td colspan="1">Select Refresh Rate:</td><td colspan="2">
+		<form action="scheduling.php?token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+		<input type="hidden" name="token" value="<?php echo $token; ?>" />
+		<SELECT NAME="refresh">  
+		<OPTION <?php if($refresh == 5){ echo "selected ";}?> VALUE="5"> 5 Seconds
+		<OPTION <?php if($refresh == 10){ echo "selected ";}?> VALUE="10"> 10 Seconds
+		<OPTION <?php if($refresh == 15){ echo "selected ";}?> VALUE="15"> 15 Seconds
+		<OPTION <?php if($refresh == 30){ echo "selected ";}?> VALUE="30"> 30 Seconds
+		<OPTION <?php if($refresh == 60){ echo "selected ";}?> VALUE="60"> 60 Seconds
+		<OPTION <?php if($refresh == 120){ echo "selected ";}?> VALUE="120"> 2 Minutes
+		<OPTION <?php if($refresh == 240){ echo "selected ";}?> VALUE="240"> 4 Minutes
+		<OPTION <?php if($refresh == 480){ echo "selected ";}?> VALUE="480"> 8 Minutes
+		<OPTION <?php if($refresh == 960){ echo "selected ";}?> VALUE="960"> 16 Minutes
+		<OPTION <?php if($refresh == 1920){ echo "selected ";}?> VALUE="1920"> 32 Minutes
+		<OPTION <?php if($refresh == 3840){ echo "selected ";}?> VALUE="3840"> 64 Minutes
+		<OPTION <?php if($refresh == 5760){ echo "selected ";}?> VALUE="5760"> 96 Minutes
+		<OPTION <?php if($refresh == 7680){ echo "selected ";}?> VALUE="7680"> 128 Minutes
+		<OPTION <?php if($refresh == 30720){ echo "selected ";}?> VALUE="30720"> 512 Minutes
+		</SELECT>
+		<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit">
+		</form>
+	</td></tr>
+</table><br />
 <table border="1" width="90%">
+<tr class="style4"><th colspan="4">Daemon Status:</TH></tr>
 <?php
-	$start = getdaemonstats();
-	if($start)
-	{
-		if($os == "WIN")
-		{
-			?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
-			$ps_stats = explode("," , $start);
-			?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
-		}elseif($os == "Lin")
-		{
-			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
-			trim($start, " ");
-			$patterns[1] = '/  /';
-			$patterns[2] = '/ /';
-			$ps_stats = preg_replace($patterns , "|" , $start);
-			echo $ps_stats."<br />";
-			$ps_Sta_exp = explode("|", $ps_stats);
-			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[6];?></td><td><?php echo $ps_Sta_exp[11]."%";?></td><td><?php echo $ps_Sta_exp[12]." ".$ps_Sta_exp[13];?></td></tr><?php		
-		}
-	}else
-	{
-		?><tr class="style4"><th>WiFiDB Daemon Error!</th></tr><tr bgcolor="red"><td colspan="4">The Daemon is not running, FIX IT! FIX IT! FIX IT!</td></tr><?php
-	}
-	
-?></table><br><?php
-if(!$start)
-{
-	echo "WiFiDB Could not read Daemon status: ".$start;
-}
-
-?><table border="1" width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr><?php
+getdaemonstats();
+?>
+</table>
+<br>
+<table border="1" width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr><?php
 $sql = "SELECT * FROM `files_tmp` ORDER BY `id` ASC";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $total_rows = mysql_num_rows($result);
