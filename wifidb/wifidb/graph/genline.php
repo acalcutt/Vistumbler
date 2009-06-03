@@ -8,12 +8,15 @@
 //  Filename: genline.php                                      //
 /////////////////////////////////////////////////////////////////
 
-$startdate = "2009-Oct-14";
-$lastedit  = "2009-Mar-14";
+$startdate = "14-Oct-2009";
+$lastedit  = "03-Jun-2009";
+
 include('../lib/database.inc.php');
 pageheader("Graph AP Signal History Page");
 include('../lib/config.inc.php');
 include('../lib/graph.inc.php');
+
+?><form action="genline.php?token=<?php echo $_SESSION['token'];?>"" method="post" enctype="multipart/form-data"><?php
 
 $graphs = new graphs();
 if($_POST['line']==='line')
@@ -38,30 +41,29 @@ if($_POST['line']==='line')
 	$text = $_POST['text'];
 	$linec = $_POST['linec'];
 	$bgc = $_POST['bgc'];
-	echo '<form action="genline.php" method="post" enctype="multipart/form-data">';
-	echo '<input name="ssid" type="hidden" value="'.$ssid.'"/>';
-	echo '<input name="mac" type="hidden" value="'.$mac.'"/>';
-	echo '<input name="man" type="hidden" value="'.$man.'"/>';
-	echo '<input name="auth" type="hidden" value="'.$auth.'"/>';
-	echo '<input name="encry" type="hidden" value="'.$encry.'"/>';
-	echo '<input name="radio" type="hidden" value="'.$radio.'"/>';
-	echo '<input name="chan" type="hidden" value="'.$chan.'"/>';
-	echo '<input name="lat" type="hidden" value="'.$lat.'"/>';
-	echo '<input name="long" type="hidden" value="'.$long.'"/>';
-	echo '<input name="btx" type="hidden" value="'.$btx.'"/>';
-	echo '<input name="otx" type="hidden" value="'.$otx.'"/>';
-	echo '<input name="fa" type="hidden" value="'.$fa.'"/>';
-	echo '<input name="lu" type="hidden" value="'.$lu.'"/>';
-	echo '<input name="nt" type="hidden" value="'.$nt.'"/>';
-	echo '<input name="label" type="hidden" value="'.$label.'"/>';
-	echo '<input name="sig" type="hidden" value="'.$sig.'"/>';
-	echo '<input name="text" type="hidden" value="'.$text.'"/>';
-	echo '<input name="linec" type="hidden" value="'.$linec.'"/>';
-	echo '<input name="bgc" type="hidden" value="'.$bgc.'"/>';
-	echo '<input name="name" type="hidden" value="'.$name.'"/>';
-	echo '<input name="line" type="hidden" value=""/>';
-	echo '<input name="Genline" type="submit" value="Generate Bar Graph" />';
-	echo '</form>';
+	
+	echo '<input name="ssid" type="hidden" value="'.$ssid.'"/>'
+	.'<input name="mac" type="hidden" value="'.$mac.'"/>'
+	.'<input name="man" type="hidden" value="'.$man.'"/>'
+	.'<input name="auth" type="hidden" value="'.$auth.'"/>'
+	.'<input name="encry" type="hidden" value="'.$encry.'"/>'
+	.'<input name="radio" type="hidden" value="'.$radio.'"/>'
+	.'<input name="chan" type="hidden" value="'.$chan.'"/>'
+	.'<input name="lat" type="hidden" value="'.$lat.'"/>'
+	.'<input name="long" type="hidden" value="'.$long.'"/>'
+	.'<input name="btx" type="hidden" value="'.$btx.'"/>'
+	.'<input name="otx" type="hidden" value="'.$otx.'"/>'
+	.'<input name="fa" type="hidden" value="'.$fa.'"/>'
+	.'<input name="lu" type="hidden" value="'.$lu.'"/>'
+	.'<input name="nt" type="hidden" value="'.$nt.'"/>'
+	.'<input name="label" type="hidden" value="'.$label.'"/>'
+	.'<input name="sig" type="hidden" value="'.$sig.'"/>'
+	.'<input name="text" type="hidden" value="'.$text.'"/>'
+	.'<input name="linec" type="hidden" value="'.$linec.'"/>'
+	.'<input name="bgc" type="hidden" value="'.$bgc.'"/>'
+	.'<input name="name" type="hidden" value="'.$name.'"/>'
+	.'<input name="line" type="hidden" value=""/>'
+	.'<input name="Genline" type="submit" value="Generate Bar Graph" /></form>';
 	
 	$graphs->wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $bgc, $linec, $text );
 	
@@ -89,35 +91,34 @@ if($_POST['line']==='line')
 	$text = $_POST['text'];
 	$linec = $_POST['linec'];
 	$bgc = $_POST['bgc'];
-	echo '<form action="genline.php" method="post" enctype="multipart/form-data">';
-	echo '<input name="ssid" type="hidden" value="'.$ssid.'"/>';
-	echo '<input name="mac" type="hidden" value="'.$mac.'"/>';
-	echo '<input name="man" type="hidden" value="'.$man.'"/>';
-	echo '<input name="auth" type="hidden" value="'.$auth.'"/>';
-	echo '<input name="encry" type="hidden" value="'.$encry.'"/>';
-	echo '<input name="radio" type="hidden" value="'.$radio.'"/>';
-	echo '<input name="chan" type="hidden" value="'.$chan.'"/>';
-	echo '<input name="lat" type="hidden" value="'.$lat.'"/>';
-	echo '<input name="long" type="hidden" value="'.$long.'"/>';
-	echo '<input name="btx" type="hidden" value="'.$btx.'"/>';
-	echo '<input name="otx" type="hidden" value="'.$otx.'"/>';
-	echo '<input name="fa" type="hidden" value="'.$fa.'"/>';
-	echo '<input name="lu" type="hidden" value="'.$lu.'"/>';
-	echo '<input name="nt" type="hidden" value="'.$nt.'"/>';
-	echo '<input name="label" type="hidden" value="'.$label.'"/>';
-	echo '<input name="sig" type="hidden" value="'.$sig.'"/>';
-	echo '<input name="text" type="hidden" value="'.$text.'"/>';
-	echo '<input name="linec" type="hidden" value="'.$linec.'"/>';
-	echo '<input name="bgc" type="hidden" value="'.$bgc.'"/>';
-	echo '<input name="name" type="hidden" value="'.$name.'"/>';
-	echo '<input name="line" type="hidden" value="line"/>';
-	echo '<input name="Genline" type="submit" value="Generate Line Graph" />';
-	echo '</form>';
+	
+	echo '<input name="ssid" type="hidden" value="'.$ssid.'"/>'
+	.'<input name="mac" type="hidden" value="'.$mac.'"/>'
+	.'<input name="man" type="hidden" value="'.$man.'"/>'
+	.'<input name="auth" type="hidden" value="'.$auth.'"/>'
+	.'<input name="encry" type="hidden" value="'.$encry.'"/>'
+	.'<input name="radio" type="hidden" value="'.$radio.'"/>'
+	.'<input name="chan" type="hidden" value="'.$chan.'"/>'
+	.'<input name="lat" type="hidden" value="'.$lat.'"/>'
+	.'<input name="long" type="hidden" value="'.$long.'"/>'
+	.'<input name="btx" type="hidden" value="'.$btx.'"/>'
+	.'<input name="otx" type="hidden" value="'.$otx.'"/>'
+	.'<input name="fa" type="hidden" value="'.$fa.'"/>'
+	.'<input name="lu" type="hidden" value="'.$lu.'"/>'
+	.'<input name="nt" type="hidden" value="'.$nt.'"/>'
+	.'<input name="label" type="hidden" value="'.$label.'"/>'
+	.'<input name="sig" type="hidden" value="'.$sig.'"/>'
+	.'<input name="text" type="hidden" value="'.$text.'"/>'
+	.'<input name="linec" type="hidden" value="'.$linec.'"/>'
+	.'<input name="bgc" type="hidden" value="'.$bgc.'"/>'
+	.'<input name="name" type="hidden" value="'.$name.'"/>'
+	.'<input name="line" type="hidden" value=""/>'
+	.'<input name="Genline" type="submit" value="Generate Line Graph" /></form>';
+	
 	$graphs->wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $bgc, $linec, $text);
 
 	echo 'You can find your Wifi Graph here -> <a href="../out/graph/'.$name.'.png">'.$name.'.png</a>';
 
 }
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+footer($_SERVER['SCRIPT_FILENAME']);
 ?>

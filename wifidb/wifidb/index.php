@@ -45,10 +45,6 @@ if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
 
 $sql = "SELECT username, title, id FROM `$db`.`users` WHERE `id`='$row_users'";
 $result6 = mysql_query($sql, $conn);
-
-#
-$DB_size = mysql_fetch_array($result0);
-$total = $DB_size['size'];
 #
 $open = mysql_num_rows($result1);
 #

@@ -31,9 +31,9 @@ pageheader("Version Page");
 					<LI>Changed Individual User Stat Page to new layout.</LI>
 					<LI>Standardized SSID usage, there are three types:</LI>
 					<OL>
-						<LI><ny-paq>sayz oh-m [ is the unsanatized, but still safe ssid, used to name APs, 32 char limit, no special chars].</LI>
-						<LI>&#60;ny-paq&#62;sayz oh-m [safe for file names, no special chars, 32 char limit].</LI>
-						<LI>_ny-paq_sayz oh-m [safe for table names, max 25 char, no special chars]</LI>
+						<LI>&#60;ny-paq&#62;&#124;sayz oh-my this is fun [ is the unsanatized, but still safe ssid, used to name APs, 32 char limit, no special chars].</LI>
+						<LI>&#60;ny-paq&#62;_sayz oh-my this is fun [safe for file names, no special chars, 32 char limit].</LI>
+						<LI>_ny-paq__sayz oh-my this [safe for table names, max 25 char, no special chars]</LI>
 					</OL>
 					<LI>Changed the way WiFiDB looks for the install folder.</LI>
 					<LI>Daemon now has all SQL based errors being echoed out to the screen.</LI>
