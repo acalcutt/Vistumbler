@@ -3,7 +3,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3",
-			"Last_Core_Edit" 	=> 	"2009-May-22",
+			"Last_Core_Edit" 	=> 	"2009-Jun-04",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.6.1", 
 										"apfetch"			=>	"2.6.0",
@@ -205,10 +205,14 @@ function pageheader($title)
 	{
 		$token = $_SESSION['token'];
 	}
+	
 #	$token = regenerateSession();
 #	checkSession();
 	include('config.inc.php');
 	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
+	$sql = "SELECT `id` FROM `$db`.`files`";
+	$result1 = mysql_query($sql, $conn);
+	if(!$result1){echo "<font color=\"red\"><h2>You need to <a class=\"upgrade\" href=\"install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB Build 3.</h3></font>";}
 	?>
 	<link rel="stylesheet" href="/<?php echo $root;?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">

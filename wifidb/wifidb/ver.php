@@ -21,7 +21,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b21A">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-22</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jun-04</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>

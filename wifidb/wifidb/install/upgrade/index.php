@@ -2,9 +2,10 @@
 include('../../lib/database.inc.php');
 pageheader("Upgrade Page");
 ?>
+<link rel="stylesheet" href="../../css/site4.0.css">
 <form action="patch.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Upgrade</h2>
-  <h3>Upgrade DB for 0.15 Build 7x to 0.16 Build 1</h3>
+  <h3>Upgrade DB for 0.16 Build 1 / 2 / 2.1 <b>--></b> 0.16 Build 3</h3>
   <h4>Please Read <a target="_blank" href="../notes.html">these notes</a> before installing the Wireless Database</h4>
 <?php
 $gd = gd_info(); 

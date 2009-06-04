@@ -42,32 +42,32 @@ if($_POST['line']==='line')
 	$linec = $_POST['linec'];
 	$bgc = $_POST['bgc'];
 	
-	echo '<input name="ssid" type="hidden" value="'.$ssid.'"/>'
-	.'<input name="mac" type="hidden" value="'.$mac.'"/>'
-	.'<input name="man" type="hidden" value="'.$man.'"/>'
-	.'<input name="auth" type="hidden" value="'.$auth.'"/>'
-	.'<input name="encry" type="hidden" value="'.$encry.'"/>'
-	.'<input name="radio" type="hidden" value="'.$radio.'"/>'
-	.'<input name="chan" type="hidden" value="'.$chan.'"/>'
-	.'<input name="lat" type="hidden" value="'.$lat.'"/>'
-	.'<input name="long" type="hidden" value="'.$long.'"/>'
-	.'<input name="btx" type="hidden" value="'.$btx.'"/>'
-	.'<input name="otx" type="hidden" value="'.$otx.'"/>'
-	.'<input name="fa" type="hidden" value="'.$fa.'"/>'
-	.'<input name="lu" type="hidden" value="'.$lu.'"/>'
-	.'<input name="nt" type="hidden" value="'.$nt.'"/>'
-	.'<input name="label" type="hidden" value="'.$label.'"/>'
-	.'<input name="sig" type="hidden" value="'.$sig.'"/>'
-	.'<input name="text" type="hidden" value="'.$text.'"/>'
-	.'<input name="linec" type="hidden" value="'.$linec.'"/>'
-	.'<input name="bgc" type="hidden" value="'.$bgc.'"/>'
-	.'<input name="name" type="hidden" value="'.$name.'"/>'
-	.'<input name="line" type="hidden" value=""/>'
-	.'<input name="Genline" type="submit" value="Generate Bar Graph" /></form>';
+	echo "<input name=\"ssid\" type=\"hidden\" value=\"".$ssid."\"/>\r\n"
+	."<input name=\"mac\" type=\"hidden\" value=\"".$mac."\"/>\r\n"
+	."<input name=\"man\" type=\"hidden\" value=\"".$man."\"/>\r\n"
+	."<input name=\"auth\" type=\"hidden\" value=\"".$auth."\"/>\r\n"
+	."<input name=\"encry\" type=\"hidden\" value=\"".$encry."\"/>\r\n"
+	."<input name=\"radio\" type=\"hidden\" value=\"".$radio."\"/>\r\n"
+	."<input name=\"chan\" type=\"hidden\" value=\"".$chan."\"/>\r\n"
+	."<input name=\"lat\" type=\"hidden\" value=\"".$lat."\"/>\r\n"
+	."<input name=\"long\" type=\"hidden\" value=\"".$long."\"/>\r\n"
+	."<input name=\"btx\" type=\"hidden\" value=\"".$btx."\"/>\r\n"
+	."<input name=\"otx\" type=\"hidden\" value=\"".$otx."\"/>\r\n"
+	."<input name=\"fa\" type=\"hidden\" value=\"".$fa."\"/>\r\n"
+	."<input name=\"lu\" type=\"hidden\" value=\"".$lu."\"/>\r\n"
+	."<input name=\"nt\" type=\"hidden\" value=\"".$nt."\"/>\r\n"
+	."<input name=\"label\" type=\"hidden\" value=\"".$label."\"/>\r\n"
+	."<input name=\"sig\" type=\"hidden\" value=\"".$sig."\"/>\r\n"
+	."<input name=\"text\" type=\"hidden\" value=\"".$text."\"/>\r\n"
+	."<input name=\"linec\" type=\"hidden\" value=\"".$linec."\"/>\r\n"
+	."<input name=\"bgc\" type=\"hidden\" value=\"".$bgc."\"/>\r\n"
+	."<input name=\"name\" type=\"hidden\" value=\"".$name."\"/>\r\n"
+	."<input name=\"line\" type=\"hidden\" value=\"\"/>\r\n"
+	."<input name=\"Genline\" type=\"submit\" value=\"Generate Bar Graph\"/>\r\n</form>\r\n";
 	
 	$graphs->wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $bgc, $linec, $text );
 	
-	echo 'You can find your Wifi Graph here -> <a href="../out/graph/'.$name.'v.png">'.$name.'v.png</a>';
+	echo 'You can find your Wifi Graph here -> <a class="links" href="../out/graph/'.$name.'v.png">'.$name.'v.png</a>';
 
 }else
 {
@@ -92,32 +92,32 @@ if($_POST['line']==='line')
 	$linec = $_POST['linec'];
 	$bgc = $_POST['bgc'];
 	
-	echo '<input name="ssid" type="hidden" value="'.$ssid.'"/>'
-	.'<input name="mac" type="hidden" value="'.$mac.'"/>'
-	.'<input name="man" type="hidden" value="'.$man.'"/>'
-	.'<input name="auth" type="hidden" value="'.$auth.'"/>'
-	.'<input name="encry" type="hidden" value="'.$encry.'"/>'
-	.'<input name="radio" type="hidden" value="'.$radio.'"/>'
-	.'<input name="chan" type="hidden" value="'.$chan.'"/>'
-	.'<input name="lat" type="hidden" value="'.$lat.'"/>'
-	.'<input name="long" type="hidden" value="'.$long.'"/>'
-	.'<input name="btx" type="hidden" value="'.$btx.'"/>'
-	.'<input name="otx" type="hidden" value="'.$otx.'"/>'
-	.'<input name="fa" type="hidden" value="'.$fa.'"/>'
-	.'<input name="lu" type="hidden" value="'.$lu.'"/>'
-	.'<input name="nt" type="hidden" value="'.$nt.'"/>'
-	.'<input name="label" type="hidden" value="'.$label.'"/>'
-	.'<input name="sig" type="hidden" value="'.$sig.'"/>'
-	.'<input name="text" type="hidden" value="'.$text.'"/>'
-	.'<input name="linec" type="hidden" value="'.$linec.'"/>'
-	.'<input name="bgc" type="hidden" value="'.$bgc.'"/>'
-	.'<input name="name" type="hidden" value="'.$name.'"/>'
-	.'<input name="line" type="hidden" value=""/>'
-	.'<input name="Genline" type="submit" value="Generate Line Graph" /></form>';
+	echo "<input name=\"ssid\" type=\"hidden\" value=\"".$ssid."\"/>\r\n"
+	."<input name=\"mac\" type=\"hidden\" value=\"".$mac."\"/>\r\n"
+	."<input name=\"man\" type=\"hidden\" value=\"".$man."\"/>\r\n"
+	."<input name=\"auth\" type=\"hidden\" value=\"".$auth."\"/>\r\n"
+	."<input name=\"encry\" type=\"hidden\" value=\"".$encry."\"/>\r\n"
+	."<input name=\"radio\" type=\"hidden\" value=\"".$radio."\"/>\r\n"
+	."<input name=\"chan\" type=\"hidden\" value=\"".$chan."\"/>\r\n"
+	."<input name=\"lat\" type=\"hidden\" value=\"".$lat."\"/>\r\n"
+	."<input name=\"long\" type=\"hidden\" value=\"".$long."\"/>\r\n"
+	."<input name=\"btx\" type=\"hidden\" value=\"".$btx."\"/>\r\n"
+	."<input name=\"otx\" type=\"hidden\" value=\"".$otx."\"/>\r\n"
+	."<input name=\"fa\" type=\"hidden\" value=\"".$fa."\"/>\r\n"
+	."<input name=\"lu\" type=\"hidden\" value=\"".$lu."\"/>\r\n"
+	."<input name=\"nt\" type=\"hidden\" value=\"".$nt."\"/>\r\n"
+	."<input name=\"label\" type=\"hidden\" value=\"".$label."\"/>\r\n"
+	."<input name=\"sig\" type=\"hidden\" value=\"".$sig."\"/>\r\n"
+	."<input name=\"text\" type=\"hidden\" value=\"".$text."\"/>\r\n"
+	."<input name=\"linec\" type=\"hidden\" value=\"".$linec."\"/>\r\n"
+	."<input name=\"bgc\" type=\"hidden\" value=\"".$bgc."\"/>\r\n"
+	."<input name=\"name\" type=\"hidden\" value=\"".$name."\"/>\r\n"
+	."<input name=\"line\" type=\"hidden\" value=\"line\"/>\r\n"
+	."<input name=\"Genline\" type=\"submit\" value=\"Generate Line Graph\" />\r\n</form>\r\n";
 	
 	$graphs->wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $bgc, $linec, $text);
 
-	echo 'You can find your Wifi Graph here -> <a href="../out/graph/'.$name.'.png">'.$name.'.png</a>';
+	echo 'You can find your Wifi Graph here -> <a class="links" href="../out/graph/'.$name.'.png">'.$name.'.png</a>';
 
 }
 footer($_SERVER['SCRIPT_FILENAME']);

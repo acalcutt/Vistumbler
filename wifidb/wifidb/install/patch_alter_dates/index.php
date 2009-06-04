@@ -2,9 +2,6 @@
 include('../../lib/database.inc.php');
 pageheader("Patch (Alter Dates) Page");
 ?>
-</td>
-	<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-		<p align="center">
 <form action="patch.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Upgrade</h2>
   <h4>Please Read <a target="_blank" href="notes.html">these notes</a> before Upgrading/fixing the Wireless Database</h4>

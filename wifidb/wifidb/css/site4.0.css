@@ -64,6 +64,13 @@ a.links {
 	font-weight: bold; 
 	color: #123;
 }
+a.upgrade {
+	font-weight: bold; 
+	color: #0F0;
+}
+
+
+
 table.importconvert
 { 
 	color: #123;

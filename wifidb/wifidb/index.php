@@ -91,9 +91,9 @@ $lastuser = mysql_fetch_array($result6);
 	</tr>
 	<tr>
 		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
-		<td align="center" class="style2"><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['username'];?></a></td>
-		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No AP";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
-		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No Imports Yet";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['title'];?></a><?php } ?></td>
+		<td align="center" class="style2"><?php if ($usercount == NULL){echo "No users in Database.";}else{?><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['username'];?></a><?php } ?></a></td>
+		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No APs imported yet.";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
+		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No imports yet.";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['title'];?></a><?php } ?></td>
 	</tr>
 </table>
 <?php
