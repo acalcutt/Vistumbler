@@ -32,6 +32,42 @@ $ver = array(
 										"make_ssid"			=>	"1.0"
 										),
 			);
+#========================================================================================================================#
+#											log write (writes a message to the log file)								 #
+#========================================================================================================================#
+
+function verbosed($message = "", $level = 0, $out="CLI", $header = 0)
+{
+	require('config.inc.php');
+	$time = time()+$DST;
+	$datetime = date("Y-m-d H:i:s",$time);
+	if($out == "CLI")
+	{
+		if($message != '')
+		{
+			if($header == 0)
+			{
+				$message = $datetime."   ->    ".$message;
+			}	
+			if($level==1)
+			{
+				echo $message."\n";
+			}
+		}else
+		{
+			echo "Verbose was told to write a blank string";
+		}
+	}elseif($out == "HTML")
+	{
+		if($message != '')
+		{
+			echo $message."<br>";
+		}else
+		{
+			echo "Verbose was told to write a blank string";
+		}
+	}
+}
 
 #========================================================================================================================#
 #											log write (writes a message to the log file)								 #
@@ -775,7 +811,7 @@ class database
 						
 						mysql_select_db($db_st,$conn);
 						?><table border="1" width="90%" class="update"><tr class="style4"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
-						<tr><td><?php echo $APid; ?></td><td><b>U</b></td><td><?php echo $ssids; ?></td><td><?php echo $wifi[1]; ?></td><td><?php echo $authen; ?></td><td><?php echo $encryp; ?></td><td><?php echo $radios; ?></td><td><?php echo $chan; ?></td></tr>
+						<tr><td><?php echo $APid; ?></td><td><b>U</b></td><td><?php echo $ssids; ?></td><td><?php echo $wifi[1]; ?></td><td><?php echo $authen; ?></td><td><?php echo $encryp; ?></td><td><?php echo $radios; ?></td><td><?php echo $chan; ?></td></tr><tr><td colspan="8">
 						<?php
 						$signal_exp = explode("-",$wifi[12]);
 						//setup ID number for new GPS cords
@@ -799,9 +835,6 @@ class database
 						$N=0;
 						$todo=array();
 						$prev='';
-						?>
-							<tr><td colspan="8">
-						<?php
 						$sig_stats = array();
 						$sig_stats['db'] = 0;
 						$sig_stats['newf'] = 0;
@@ -945,10 +978,7 @@ class database
 					}else
 					{
 						?><table border="1" width="90%" class="new"><tr class="style4"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
-						<tr><td><?php echo $size;?></td><td><b>N</b></td><td><?php echo $ssids;?></td><td><?php echo $wifi[1];?></td><td><?php echo $authen;?></td><td><?php echo $encryp;?></td><td><?php echo $radios;?></td><td><?php echo $chan;?></td></tr>
-						<?php
-						?>
-						<tr><td colspan="8">
+						<tr><td><?php echo $size;?></td><td><b>N</b></td><td><?php echo $ssids;?></td><td><?php echo $wifi[1];?></td><td><?php echo $authen;?></td><td><?php echo $encryp;?></td><td><?php echo $radios;?></td><td><?php echo $chan;?></td></tr><tr><td colspan="8">
 						<?php
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						

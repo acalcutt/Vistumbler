@@ -18,27 +18,6 @@ $vers = array(
 #											verbose (Echos out a message to the screen or page)							 #
 #========================================================================================================================#
 
-function verbosed($message = "", $level = 0, $header = 0)
-{
-	require('config.inc.php');
-	$time = time()+$DST;
-	$datetime = date("Y-m-d H:i:s",$time);
-	if($message != '')
-	{
-		if($header == 0)
-		{
-			$message = $datetime."   ->    ".$message;
-		}	
-		if($level==1)
-		{
-			echo $message."\n";
-		}
-	}else
-	{
-		echo "Verbose was told to write a blank string";
-	}
-}
-
 function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 {
 	require('config.inc.php');
@@ -88,13 +67,20 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 
 class daemon extends database
 {
-	function importvs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 0 )
+	function importvs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 0 , $out = "CLI"||"HTML")
 	{
 		if ($source == NULL)
 		{
 			logd("There was an error sending the file name to the function", $log_interval, 0,  $log_level);
-			verbosed("There was an error sending the file name to the function", $verbose);
-			break;
+			if($out=="CLI")
+			{
+				verbosed("There was an error sending the file name to the function", $verbose, "CLI");
+				break;
+			}elseif($out=="HTML")
+			{
+				verbosed("<h2>You did not submit a file, please <A HREF=\"javascript:history.go(-1)\"> [Go Back]</A> and do so.</h2>", $verbose);
+				die();
+			}
 		}
 		$return  = file($source);
 		$count = count($return);
@@ -131,9 +117,15 @@ class daemon extends database
 		if($count <= 8) 
 		{
 			logd("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $log_interval, 0,  $log_level);
-			verbosed("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $verbose);
-
-			break;
+			if($out=="CLI")
+			{
+				verbosed("You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.", $verbose, "CLI");
+				break;
+			}elseif($out=="HTML")
+			{
+				verbosed("<h2>You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.</h2>", $verbose);
+				die();
+			}
 		}
 		mysql_select_db($db,$conn);
 		
@@ -145,8 +137,15 @@ class daemon extends database
 		if(!$user_row_new_result)
 		{
 			logd("Could not reserve user import row!\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-			verbosed("Could not reserve user import row!\n".mysql_error($conn), $verbose);
-			die();
+			if($out=="CLI")
+			{
+				verbosed("Could not reserve user import row!\n".mysql_error($conn), $verbose, "CLI");
+				die();
+			}elseif($out=="HTML")
+			{
+				verbosed("Could not reserve user import row!<BR>".mysql_error($conn), $verbose);
+				die();
+			}
 		}
 		$user_row_result = mysql_query("SELECT `id` FROM `$db`.`users` ORDER BY `id` DESC LIMIT 1", $conn);
 		$user_row_array = mysql_fetch_array($user_row_result);
@@ -173,14 +172,20 @@ class daemon extends database
 			{
 					if(!isset($SETFLAGTEST))
 					{
-						$count = $count - $gpscount;
-						$count = $count - 8;
-						if($count == 0) 
+						$count1 = $count1 - $gpscount;
+						$count1 = $count1 - 8;
+						if($count1 == 0) 
 						{
-							logd("This File does not have any APs to import, just a bunch of GPS cords.", $log_interval, 0,  $log_level);
-							verbosed("This File does not have any APs to import, just a bunch of GPS cords.", $verbose);
-							$user_aps = "";
-							break;
+							logd("This File does not have any APs to import, just a bunch of GPS cords.\r\n", $log_interval, 0,  $log_level);
+							if($out=="CLI")
+							{
+								verbosed("This File does not have any APs to import, just a bunch of GPS cords.\n", $verbose, "CLI");
+								die();
+							}elseif($out=="HTML")
+							{
+								verbosed("This File does not have any APs to import, just a bunch of GPS cords.<BR>", $verbose);
+								die();
+							}
 						}
 					}
 					$SETFLAGTEST = TRUE;
@@ -205,14 +210,16 @@ class daemon extends database
 					$ssidsss = str_split($ssidss,25); //split SSID in two at is 25th char.
 					$ssid_S = $ssidsss[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
 										  //the rest of the info will suffice for unique table names
-					$this_of_this = $FILENUM." / ".$count;
-					$sqlup = "UPDATE `files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `file` = '$file1';";
-					if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
+					if($out=="CLI")
 					{
-						logd("Updated files_tmp table with this runs data.", $log_interval, 0,  $log_level);
-						verbosed("Updated files_tmp table with this runs data.", $verbose);
+						$this_of_this = $FILENUM." / ".$count;
+						$sqlup = "UPDATE `files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `file` = '$file1';";
+						if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
+						{
+							logd("Updated files_tmp table with this runs data.", $log_interval, 0,  $log_level);
+							verbosed("Updated files_tmp table with this runs data.", $verbose, "CLI");
+						}
 					}
-					
 					$mac1 = explode(':', $wifi[1]);
 					$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5]; //the APs table doesnt need :'s in its name, nor does the Pointers table, well it could I just dont want to
 					
@@ -270,7 +277,14 @@ class daemon extends database
 									$result_count = count($rows);
 									if($result_count > 1)
 									{	
-										echo "There are too many Pointers for this one Access Point, defaulting to the first one in the list";
+										logd("There are too many Pointers for this one Access Point, defaulting to the first one in the list.\r\n", $log_interval, 0,  $log_level);
+										if($out=="CLI")
+										{
+											verbosed("There are too many Pointers for this one Access Point, defaulting to the first one in the list.\n", $verbose, "CLI");
+										}elseif($out=="HTML")
+										{
+											verbosed("There are too many Pointers for this one Access Point, defaulting to the first one in the list.<BR>", $verbose, "HTML");
+										}
 										$result = mysql_query("SELECT * FROM `$wtable` WHERE `mac` LIKE '$macs'  AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios'", $conn1) or die(mysql_error($conn1));
 										$rows = mysql_num_rows($result);
 										$newArray = mysql_fetch_array($result);
@@ -353,9 +367,15 @@ class daemon extends database
 					if($table == $table_ptb)
 					{
 						// They are the same
-						logd($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated ", $log_interval, 0,  $log_level);
-						verbosed($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated ", $verbose);
-						
+						logd($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated.\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+						if($out=="CLI")
+						{
+							verbosed($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated.\n", $verbose, "CLI");
+						}elseif($out=="HTML")
+						{
+							verbosed('<table border="1" width="90%" class="update"><tr class="style4"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
+									<tr><td>'.$APid.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
+						}
 						mysql_select_db($db_st,$conn);
 						//setup ID number for new GPS cords
 						$DB_result = mysql_query("SELECT * FROM `$gps_table`", $conn);
@@ -379,8 +399,8 @@ class daemon extends database
 						$NNN = 0;
 						foreach($signal_exp as $exp)
 						{
-					#		echo ".";
-							//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re grab it to test the data
+							$NNN++;
+							//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re-grab it to test the data
 							$DBresult = mysql_query("SELECT * FROM `$gps_table`", $conn);
 							while ($neArray = mysql_fetch_array($DBresult))
 							{
@@ -415,11 +435,8 @@ class daemon extends database
 							$track = $gdata[$vs1_id]["track"];
 							
 							$lat1 = smart($lat);
-							
 							$long1 = smart($long);
-							
 							$time1 = smart($time);
-							
 							$date1 = smart($date);
 							
 							$comp = $lat1."".$long1."".$date1."".$time1;
@@ -466,13 +483,19 @@ class daemon extends database
 								}
 							}else
 							{
-								echo "there was an error running gps check";
+								logd("There was an error running gps check.\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+								if($out=="CLI")
+								{
+									verbosed("There was an error running gps check.\n".mysql_error($conn), $verbose, "CLI");
+								}elseif($out=="HTML")
+								{
+									verbosed("There was an error running gps check.<BR>".mysql_error($conn), $verbose, "HTML");
+								}
 								die();
 							}
-							$NNN++;
-							if($verbose == 1){echo ".";}
+							if($verbose == 1 && $out == "CLI"){echo ".";}
 						}
-						if($verbose == 1){echo "\n";}
+						if($verbose == 1 && $out == "CLI"){echo "\n";}
 						$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
 						if (mysqli_connect_errno())
 						{
@@ -491,12 +514,28 @@ class daemon extends database
 								die();
 							}
 						}
+						if($out=="HTML")
+						{
+							$DB_COUNT = count($db_gps);
+							logd("Total GPS in DB: ".$DB_COUNT." || GPS Imports: ".$NNN." .\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+							verbosed("Total GPS in DB: ".$DB_COUNT."<br>GPS Imports: ".$NNN."<br>".mysql_error($conn), $verbose, "HTML");
+							?>
+								</td></tr>
+								<td colspan="8">
+							<?php
+						}
 						$sig = implode("-",$signals);
 						$sqlit = "INSERT INTO `$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
 						if (!mysql_query($sqlit, $conn))
 						{
-							logd("FAILED to added GPS History to Table\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							verbosed("FAILED to added GPS History to Table\n".mysql_error($conn), $verbose);
+							logd("FAILED to added GPS History to Table.\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+							if($out=="CLI")
+							{
+								verbosed("FAILED to added GPS History to Table.\n".mysql_error($conn), $verbose, "CLI");
+							}elseif($out=="HTML")
+							{
+								verbosed("FAILED to added GPS History to Table.<BR>".mysql_error($conn), $verbose, "HTML");
+							}
 						}
 						
 						$sqlit_ = "SELECT * FROM `$table`";
@@ -506,23 +545,47 @@ class daemon extends database
 						$user_aps[$user_n]="1,".$APid.":".$sqlit_num_rows; //User import tracking //UPDATE AP
 						
 						logd($user_aps[$user_n], $log_interval, 0,  $log_level);
-						verbosed($user_aps[$user_n], $verbose);
+						if($out=="CLI")
+						{
+							verbosed($user_aps[$user_n], $verbose."\n".mysql_error($conn), $verbose, "CLI");
+						}elseif($out=="HTML")
+						{
+							verbosed($user_aps[$user_n]."<br>", $verbose, "HTML");
+						}
 						$user_n++;
-						
 						$updated++;
+						if($out == "HTML")
+						{
+							?>
+							</td></tr></table><br>
+							<?php
+						}
 					}else
 					{
 						// NEW AP
-						logd($this_of_this."   ( ".$size." )   ||   ".$table." - is Being Imported", $log_interval, 0,  $log_level);
-						verbosed($this_of_this."   ( ".$size." )   ||   ".$table." - is Being Imported", $verbose);
+						logd($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated.\r\n" $log_interval, 0,  $log_level);
+						if($out=="CLI")
+						{
+							verbosed($this_of_this."   ( ".$APid." )   ||   ".$table." - is being updated.\n", $verbose, "CLI");
+						}elseif($out=="HTML")
+						{
+							verbosed('<table border="1" width="90%" class="new"><tr class="style4"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
+									<tr><td>'.$APid.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
+						}
 						
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						$sqlct = "CREATE TABLE `$table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT , `btx` VARCHAR( 10 ) NOT NULL , `otx` VARCHAR( 10 ) NOT NULL , `nt` VARCHAR( 15 ) NOT NULL , `label` VARCHAR( 25 ) NOT NULL , `sig` TEXT NOT NULL , `user` VARCHAR(25) NOT NULL ,PRIMARY KEY (`id`) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 				#		echo "(1)Create Table [".$db_st."].{".$table."}\n		 => Added new Table for ".$ssids."\n";
 						if(!mysql_query($sqlct, $conn))
 						{
-							logd("FAILED to create Signal History Table \r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							verbosed("FAILED to create Signal History Table\n".mysql_error($conn), $verbose);
+							logd("FAILED to create Signal History Table\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
+							if($out=="CLI")
+							{
+								verbosed("FAILED to create Signal History Table\n\t-> ".mysql_error($conn), $verbose, "CLI");
+							}elseif($out=="HTML")
+							{
+								verbosed("FAILED to create Signal History Table.<br>\t-> ".mysql_error($conn), $verbose, "HTML");
+							}
 						}
 						$sqlcgt = "CREATE TABLE `$gps_table` ("
 									."`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,"
@@ -543,6 +606,7 @@ class daemon extends database
 						{
 							logd("FAILED to create GPS History Table \r\n".mysql_error($conn), $log_interval, 0,  $log_level);
 							verbosed("FAILED to create GPS History Table\n".mysql_error($conn), $verbose);
+							die();
 						}
 						$signal_exp = explode("-",$san_sig);
 					#	echo $wifi[12]."\n";

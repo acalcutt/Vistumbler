@@ -377,5 +377,33 @@ class graphs
 		ImagePNG($img, $name);
 		ImageDestroy($img);
 	}
+	
+	function timeline($test = "", $lcolor = "", $start = "", $end = "", $users = array("BLANK" => array( "Title" => "", "aps"=> 0, "id"=>0, )) )
+	{
+		if ($text == 'rand')
+		{
+			$tr = rand(50,200);
+			$tg = rand(50,200);
+			$tb = rand(50,200);
+		}else
+		{
+			$text_color = explode(':', $text);
+			$tr=$text_color[0];
+			$tg=$text_color[1];
+			$tb=$text_color[2];
+		}
+		if ($linec == 'rand')
+		{
+			$r = rand(50,200);
+			$g = rand(50,200);
+			$b = rand(50,200);
+		}else
+		{
+			$line_color = explode(':', $linec);
+			$r=$line_color[0];
+			$g=$line_color[1];
+			$b=$line_color[2];
+		}
+	}
 }#end Graphs CLASS
 ?>
