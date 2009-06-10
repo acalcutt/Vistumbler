@@ -8046,7 +8046,8 @@ Func _SelectConnectedAp()
 		Next
 		If $IntBSSID <> '' Then
 			$return = 1
-			$query = "SELECT ListRow FROM AP WHERE BSSID = '" & $IntBSSID & "' And SSID ='" & StringReplace($IntSSID, "'", "''") & "' And CHAN = '" & $IntChan & "' And AUTH = '" & $IntAuth & "'"
+			$query = "SELECT ListRow FROM AP WHERE BSSID = '" & $IntBSSID & "' And SSID ='" & StringReplace($IntSSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $IntChan) & "' And AUTH = '" & $IntAuth & "'"
+			ConsoleWrite($query & @CRLF)
 			$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$FoundApMatch = UBound($ApMatchArray) - 1
 			If $FoundApMatch > 0 Then
