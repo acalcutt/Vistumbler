@@ -53,7 +53,14 @@ if(isset($_POST['daemon'])){$daemon = $_POST['daemon'];}else{$daemon = "off";}
 $daemon			=	addslashes(strip_tags($daemon));
 
 if($daemon == "on")
-{$daemon = 1;}else{$daemon = 0;}
+{
+	$daemon = 1;
+	$tools_dir		=	addslashes(strip_tags($_POST['tools']));
+}else
+{
+	$daemon = 0;
+	$tools_dir		=	"NO PATH";
+}
 
 echo '<tr class="style4"><TH colspan="2">Database Install</TH><tr>';
 	#========================================================================================================================#
@@ -344,7 +351,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 
 #Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\ndate_default_timezone_set('$timezn');\r\n$"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\nglobal $"."conn, $"."wifidb_tools, $"."daemon\r\ndate_default_timezone_set('$timezn');\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -453,15 +460,6 @@ if($AD_CF_FI_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
-
-$install_warning = fwrite($fileappend,"\r\n#---------------- Install Folder Warning Code -----------------#\r\n"
-."if(PHP_OS == 'Linux'){ $"."div = '/';}\r\nif(PHP_OS == 'WINNT'){ $"."div = '\\\\';}\r\n$"."path = getcwd();\r\n$"."path_exp = explode($"."div, $"."path);\r\n"
-."$"."path_count = count($"."path_exp);\r\nforeach($"."path_exp as $"."key=>$"."val)\r\n{\r\n\tif($"."val == $"."root){ $"."path_key = $"."key;}\r\n"
-."}\r\n$"."full_path = '';\r\n$"."I = 0;\r\nif(isset($"."path_key))\r\n{\r\n\twhile($"."I!=($"."path_key+1))\r\n\t{\r\n\t\t$"."full_path = $"."full_path.$"."path_exp[$"."I].$"."div;\r\n"
-."\t\t$"."I++;\r\n\t}\r\n\t$"."full_path = $"."full_path.'install';\r\n\tif(is_dir($"."full_path)){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}\r\n}");
-
-if($install_warning){}
-fwrite($fileappend, "\r\n?>");
 
 	#========================================================================================================================#
 	#													Install has finished										   	     #

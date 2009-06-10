@@ -19,10 +19,24 @@ $sqlu			=	addslashes(strip_tags($_POST['sqlu']));
 $sqlp			=	addslashes(strip_tags($_POST['sqlp']));
 $wifi			=	addslashes(strip_tags($_POST['wifi']));
 $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
-if(isset($_POST['daemon'])){$daemon = $_POST['daemon'];}else{$daemon = "off";}
+
+if(isset($_POST['daemon']))
+{
+	$daemon = $_POST['daemon'];
+}else
+{
+	$daemon = "off";
+}
 $daemon			=	addslashes(strip_tags($daemon));
 if($daemon == "on")
-{$daemon = 1;}else{$daemon = 0;}
+{
+	$daemon = 1;
+	$tools_dir		=	addslashes(strip_tags($_POST['tools']));
+}else
+{
+	$daemon = 0;
+	$tools_dir		=	"NO PATH";
+}
 
 if ($sqlhost !== 'localhost' or $sqlhost !== "127.0.0.1")
 {$phphost = 'localhost';}
@@ -343,7 +357,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 
 #Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\ndate_default_timezone_set('GMT+0');\r\n$"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\nglobal $"."conn, $"."wifidb_tools, $"."daemon\r\ndate_default_timezone_set('GMT+0');\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -356,6 +370,7 @@ $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info --------------
 									."$"."daemon			=	".$daemon.";\r\n"
 									."$"."debug			=	$debug;\r\n"
 									."$"."log_level		=	$loglev;\r\n"
+									."$"."wifidb_tools	=	$tools_dir\r\n";
 									);
 
 if($AD_CF_DG_Re)
@@ -453,19 +468,7 @@ if($AD_CF_FI_Re)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
 
-$install_warning = fwrite($fileappend,"\r\n#---------------- Install Folder Warning Code -----------------#\r\n"
-."if(PHP_OS == 'Linux'){ $"."div = '/';}\r\nif(PHP_OS == 'WINNT'){ $"."div = '\\\\';}\r\n$"."path = getcwd();\r\n$"."path_exp = explode($"."div, $"."path);\r\n"
-."$"."path_count = count($"."path_exp);\r\nforeach($"."path_exp as $"."key=>$"."val)\r\n{\r\n\tif($"."val == $"."root){ $"."path_key = $"."key;}\r\n"
-."}\r\n$"."full_path = '';\r\n$"."I = 0;\r\nif(isset($"."path_key))\r\n{\r\n\twhile($"."I!=($"."path_key+1))\r\n\t{\r\n\t\t$"."full_path = $"."full_path.$"."path_exp[$"."I].$"."div;\r\n"
-."\t\t$"."I++;\r\n\t}\r\n\t$"."full_path = $"."full_path.'install';\r\n\tif(is_dir($"."full_path)){echo '<h2><font color=\"red\">The install Folder is still there, remove it!</font></h2>';}\r\n}");
-
-if($install_warning){}
-fwrite($fileappend, "\r\n?>");
-fclose($fileappend);
-
-echo "</table>";
-
-echo "<h2>Now you can remove the /install folder from the WiFiDB install root</h2>";
+?></table><h2>Now you can remove the /install folder from the WiFiDB install root</h2><?php
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);

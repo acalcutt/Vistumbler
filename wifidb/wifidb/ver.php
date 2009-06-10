@@ -21,7 +21,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b21A">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jun-04</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jun-09</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -50,7 +50,7 @@ pageheader("Version Page");
 					<LI>The WiFiDB Web log vars $log_level and $log_interval where interfearing with the Daemon vars, they are now changed to $log_level_W and $log_interval_W.</LI>
 					<LI>The Username in the 'Files already imported' table was pointing to the All APs for that user page, when it is supposed to point to the Users stat page.</LI>
 					<LI>Fixed an issue where if some AP Pointers are removed from the `wifi0` table, some APs will fail to import or have the same ID as another AP and not be linkable to their data.</LI>
-					<LI><b>[ Issues reported by Acalcutt ]</b>
+					<LI><b>[ Issues reported by ACalcutt ]</b>
 						<OL>
 							<LI>"Access" is spelled incorrectly multiple times on Export page.</LI>
 							<LI>(Export an Access Point to KML) "Username" should be "SSID".</LI>
@@ -58,6 +58,10 @@ pageheader("Version Page");
 							<LI>Refresh time on the scheduling page went to 15 seconds when I set it to 5 seconds. On the next refresh it went back to 30 seconds.</LI>
 						</OL>
 					</LI>
+					<LI>Unified the import_vs1() and importvs1d() functions, added an $out var to import_vs1() and verbose(), valid values are "CLI" and "HTML".</LI>
+					<LI>Moved the Install folder warning code to the database.inc.php file from config.inc.php</LI>
+					<LI>All Messages in import_vs1 are in a group of variables in the begining of the function, for easy editing.</LI>
+					<LI>Numerous other small fixes that I have forgotten about.</LI>
 				</OL>
 			</td></tr>
 		</table>

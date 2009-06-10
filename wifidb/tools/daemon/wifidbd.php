@@ -6,15 +6,18 @@
 //intended to be used. I am hoping to get a C++ version working 
 //sometime soon, untill then I am using php.
 require_once('config.inc.php');
-require('functions.php'); //need to include the functions file so that the daemon can do things...
+date_default_timezone_set($timezn);
 
+$daemon_ver	=	"1.4";
 $start_date = "2009-04-23";
-$last_edit = "2009-June-02";
+$last_edit = "2009-June-09";
 if($GLOBALS['log_level'] == 0){$de = "Off";}
 elseif($GLOBALS['log_level'] == 1){$de = "Errors";}
 elseif($GLOBALS['log_level'] == 2){$de = "Detailed Errors (when available)";}
-verbosed("\nWiFiDB 'Daemon'\nVersion: ".$GLOBALS['vers']['WiFiDB_Daemon']."\n - Daemon Start: ".$start_date."\n - Last Daemon File Edit: ".$last_edit."\n\t(/tools/daemon/wifidbd.php)\n - Last Daemon Lib File Edit: ".$GLOBALS['vers']['Last_Daemon_Core_Edit']."\n\t(/tools/daemon/functions.php)\n - By: Phillip Ferland\n - http://www.randomintervals.com\n", $verbose, "CLI",1);
+
+verbosed("\nWiFiDB 'Daemon'\nVersion: ".$daemon_ver."\n - Daemon Start: ".$start_date."\n - Last Daemon File Edit: ".$last_edit."\n\t(/tools/daemon/wifidbd.php)\n - By: Phillip Ferland\n - http://www.randomintervals.com\n", $verbose, "CLI",1);
 verbosed("Log Level is: ".$GLOBALS['log_level']." (".$de.")", $verbose, "CLI");
+
 if($log_level != 0)
 {
 	if($GLOBALS['log_interval'] == 0){$de = "One File 'log/wifidbd_log.log'";}
@@ -88,7 +91,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					logd("Start Import of :".$files_array['file'], 2, $details,  $GLOBALS['log_level']); //write the details array to the log if the level is 2 /this one is hard coded, beuase i wanted to show an example.
 					verbosed("Start Import of :".$files_array['file'], $verbose, "CLI"); //default verbise is 0 or none, or STFU, IE dont do shit.
 					
-					$tmp = daemon::importvs1($source, $files_array['user'], $files_array['notes'], $files_array['title'], $verbose);
+					$tmp = database::import_vs1($source, $files_array['user'], $files_array['notes'], $files_array['title'], $verbose);
 					$temp = $files_array['file']." | ".$tmp['aps']." - ".$tmp['gps'];
 					logd("Finished Import of : ".$files_array['file'] , 2 , $temp ,  $GLOBALS['log_level']); //same thing here, hard coded as log_lev 2
 					verbosed("Finished Import of :".$files_array['file'] , $verbose, "CLI");
