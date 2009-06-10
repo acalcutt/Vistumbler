@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.4 Beta 4'
+$version = '9.4'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/06/01'
+$last_modified = '2009/06/09'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -655,6 +655,18 @@ Dim $Text_VistumblerStore = IniRead($DefaultLanguagePath, 'GuiText', 'Vistumbler
 Dim $Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
 Dim $Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
 Dim $Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
+Dim $Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
+Dim $Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
+Dim $Text_NoAdaptersFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', 'No Adapters Found')
+Dim $Text_RecoveringMDB = IniRead($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', 'Recovering MDB')
+Dim $Text_FixingGpsTableDates = IniRead($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', 'Fixing GPS table date(s)')
+Dim $Text_FixingHistTableDates = IniRead($DefaultLanguagePath, 'GuiText', 'FixingHistTableDates', 'Fixing HIST table date(s)')
+Dim $Text_VistumblerNeedsToRestart = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerNeedsToRestart', 'Vistumbler needs to be restarted. Vistumbler will now close')
+Dim $Text_AddingApsIntoList = IniRead($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', 'Adding new APs into list')
+Dim $Text_GoogleEarthDoesNotExist = IniRead($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', 'Google earth file does not exist or is set wrong in the AutoKML settings')
+Dim $Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
+Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
+Dim $Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -840,7 +852,7 @@ $SetMacManu = GUICtrlCreateMenuItem($Text_SetMacManu, $SettingsMenu)
 $SetColumnWidths = GUICtrlCreateMenuItem($Text_SetColumnWidths, $SettingsMenu)
 $SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort, $SettingsMenu)
 $SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI, $SettingsMenu)
-$SetFilters = GUICtrlCreateMenuItem('Set Filters', $SettingsMenu)
+$SetFilters = GUICtrlCreateMenuItem($Text_SetFilters, $SettingsMenu)
 
 $Export = GUICtrlCreateMenu($Text_Export)
 $ExportToTXT2 = GUICtrlCreateMenuItem($Text_ExportToTXT, $Export)
@@ -848,8 +860,8 @@ $ExportToVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1, $Export)
 $ExportToKML = GUICtrlCreateMenuItem($Text_ExportToKML, $Export)
 $ExportToGPX = GUICtrlCreateMenuItem($Text_ExportToGPX, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
-$ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(Filtered)', $Export)
-$ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(Filtered)', $Export)
+$ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(' & $Text_Filtered & ')', $Export)
+$ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(' & $Text_Filtered & ')', $Export)
 
 Dim $DefaultApapterDesc
 Dim $found_adapter = 0
@@ -878,7 +890,7 @@ If $UseNativeWifi = 1 Then
 		$DefaultApapterID = $adapterid
 		GUICtrlSetState($menuid, $GUI_CHECKED)
 	EndIf
-	If $menuid = 0 Then GUICtrlCreateMenuItem("No Adapters Found", $Interfaces)
+	If $menuid = 0 Then GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
 Else
 	;Get network interfaces and add the to the interface menu
 	$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
@@ -900,6 +912,7 @@ Else
 		$DefaultApapterDesc = $adapterdesc
 		GUICtrlSetState($menuid, $GUI_CHECKED)
 	EndIf
+	If $menuid = 0 Then GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
 	$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
 	;Find adapterid
 	$wlanhandle = _Wlan_OpenHandle()
@@ -909,8 +922,6 @@ Else
 		If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
 	Next
 EndIf
-
-;($DefaultApapterID & @CRLF)
 
 $Extra = GUICtrlCreateMenu($Text_Extra)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
@@ -1106,6 +1117,8 @@ While 1
 		Else
 			;Set Update flag so APs do not get scanned again on this loop
 			$UpdatedAPs = 1
+			;Set flag that new data has been added
+			If $ScanResults <> 0 Then $newdata = 1
 			;Add GPS ID If no access points are found and Save GPS when no APs are active is on
 			If $ScanResults = 0 And $SaveGpsWithNoAps = 1 Then
 				$GPS_ID += 1
@@ -1113,13 +1126,10 @@ While 1
 			EndIf
 			;Mark Dead Access Points
 			_MarkDeadAPs()
-			;MsgBox(0, '1', '_MarkDeadAPs()')
 			;Remove APs that do not match the filter
 			_FilterRemoveNonMatchingInList()
-			;MsgBox(0, '1', '_FilterRemoveNonMatchingInList()')
 			;Add APs back into the listview that match but are not there
 			_FilterReAddMatchingNotInList()
-			;MsgBox(0, '1', '_FilterReAddMatchingNotInList()')
 			;Play Midi Sounds for all active APs (if enabled)
 			_PlayMidiForActiveAPs()
 		EndIf
@@ -1267,7 +1277,6 @@ Func _ScanAccessPoints()
 			If $FoundAPs = 1 Then
 				$GPS_ID += 1
 				_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
-				;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
 			EndIf
 			;Add new access point
 			$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
@@ -1276,10 +1285,7 @@ Func _ScanAccessPoints()
 		;Play New AP sound if sounds are enabled
 		If $NewFoundAPs <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
 		;Return number of active APs
-
 		Return ($FoundAPs)
-
-
 	Else
 		$NewAP = 0
 		$FoundAPs = 0
@@ -1336,7 +1342,6 @@ Func _ScanAccessPoints()
 						If $FoundAPs = 1 Then
 							$GPS_ID += 1
 							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
-							;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $datestamp & '|' & $timestamp)
 						EndIf
 						;Add new access point
 						$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
@@ -1390,6 +1395,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$APID += 1
 			$HISTID += 1
 			$NewApFound = 1
+			$ListRow = -1
 			;Set Security Type
 			If $AUTH = $SearchWord_Open And $ENCR = $SearchWord_None Then
 				$SecType = 1
@@ -1409,12 +1415,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			EndIf
 			;Add History Information
 			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
-			;Check If AP matches filter parameters
-			$ListRow = -1
 			;Add AP Data into the AP table
 			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $APID & '|' & $ListRow & '|' & $AP_StatusNum & '|' & $BSSID & '|' & $SSID & '|' & StringFormat("%03i", $CHAN) & '|' & $AUTH & '|' & $ENCR & '|' & $SecType & '|' & $NETTYPE & '|' & $RADTYPE & '|' & $BTX & '|' & $OtX & '|' & $DBHighGpsHistId & '|' & $NewGpsId & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL & '|' & StringFormat("%03i", $SIG))
-			;Add AP Data into treeview
-			;-->_TreeViewAdd($SSID, $BSSID, $AUTH, $ENCR, $CHAN, $RADTYPE, $BTX, $OtX, $NETTYPE, $MANUF, $LABEL)
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
 			$Found_APID = $ApMatchArray[1][1]
 			$Found_ListRow = $ApMatchArray[1][2]
@@ -1424,7 +1426,6 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$Found_LastHistID = $ApMatchArray[1][6]
 			$Found_Active = $ApMatchArray[1][7]
 			$HISTID += 1
-
 			;Set Last Time and First Time
 			If $New = 1 Then ;If this is a new access point, use new information
 				$ExpLastHistID = $HISTID
@@ -1454,7 +1455,6 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$ExpFirstHistID = $HISTID
 				EndIf
 			EndIf
-
 			;Set Highest GPS History ID
 			If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then ;If new latitude and longitude are valid
 				If $Found_HighGpsHistId = 0 Then ;If old HighGpsHistId is blank then use the new Hist ID
@@ -1498,7 +1498,6 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$DBLat = ''
 				$DBLon = ''
 			EndIf
-
 			;If HighGpsHistID is different from the origional, update it
 			If $DBHighGpsHistId <> $Found_HighGpsHistId Then
 				$query = "UPDATE AP SET HighGpsHistId = '" & $DBHighGpsHistId & "' WHERE ApID = '" & $Found_APID & "'"
@@ -1779,7 +1778,6 @@ Func _FilterRemoveNonMatchingInList()
 						$lApID = $ListRowArray[$lrnu][1]
 						$lListRow = $ListRowArray[$lrnu][2]
 						If StringFormat("%09i", $lListRow) > StringFormat("%09i", $fListRow) Then
-							;If ($lListRow >= $fListRow) = 1 Then
 							$nListRow = $lListRow - 1
 							$query = "UPDATE AP SET ListRow='" & $nListRow & "' WHERE ApID='" & $lApID & "'"
 							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -1911,13 +1909,12 @@ Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 		$APNUM = _GUICtrlListView_GetItemText($ListviewAPs, $lisviewrow, $column_Line)
 		$query = "UPDATE AP SET ListRow = '" & $lisviewrow & "' WHERE ApId = '" & $APNUM & "'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-
 	Next
 EndFunc   ;==>_FixLineNumbers
 
 Func _RecoverMDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RecoverMDB()') ;#Debug Display
-	GUICtrlSetData($msgdisplay, 'Recovering MDB')
+	GUICtrlSetData($msgdisplay, $Text_RecoveringMDB)
 	;Start - Fix dates of old mdb format
 	$query = "SELECT Date1 FROM GPS WHERE GpsID='1'"
 	$LoadGpsMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -1933,7 +1930,7 @@ Func _RecoverMDB()
 				$igpsid = $LoadGpsMatchArray[$impg][1]
 				$igs = StringSplit($LoadGpsMatchArray[$impg][2], '-')
 				If StringLen($igs[1]) <> 4 Then
-					GUICtrlSetData($msgdisplay, 'Fixing GPS table date(s) ' & $impg & '/' & $FoundLoadGpsMatch)
+					GUICtrlSetData($msgdisplay, $Text_FixingGpsTableDates & ' ' & $impg & '/' & $FoundLoadGpsMatch)
 					$query = "UPDATE GPS SET Date1='" & $igs[3] & "-" & $igs[1] & "-" & $igs[2] & "' WHERE GpsID='" & $igpsid & "'"
 					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				Else
@@ -1948,7 +1945,7 @@ Func _RecoverMDB()
 				$ihistid = $LoadGpsMatchArray[$impg][1]
 				$igs = StringSplit($LoadGpsMatchArray[$impg][2], '-')
 				If StringLen($igs[1]) <> 4 Then
-					GUICtrlSetData($msgdisplay, 'Fixing HIST table date(s) ' & $impg & '/' & $FoundLoadGpsMatch)
+					GUICtrlSetData($msgdisplay, $Text_FixingHistTableDates & ' ' & $impg & '/' & $FoundLoadGpsMatch)
 					$query = "UPDATE Hist SET Date1='" & $igs[3] & "-" & $igs[1] & "-" & $igs[2] & "' WHERE HistID='" & $ihistid & "'"
 					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				Else
@@ -2292,7 +2289,7 @@ Func _NativeWifiToggle()
 		GUICtrlSetState($GuiUseNativeWifi, $GUI_CHECKED)
 		$UseNativeWifi = 1
 	EndIf
-	MsgBox(0, $Text_Information, "Vistumbler needs to be restarted. Vistumbler will now close")
+	MsgBox(0, $Text_Information, $Text_VistumblerNeedsToRestart)
 	_ExitVistumbler()
 EndFunc   ;==>_NativeWifiToggle
 
@@ -2829,7 +2826,6 @@ Func _SetCompassSizes();Takes the size of a hidden label in the compass window a
 	GUICtrlSetPos($east, $CompassHeight + 15, $CompassMidHeight, 15, 15)
 	GUICtrlSetPos($west, 0, $CompassMidHeight, 15, 15)
 
-
 	_GDIPlus_GraphicsDispose($CompassGraphic)
 	_GDIPlus_Shutdown()
 	_GDIPlus_Startup()
@@ -2838,7 +2834,6 @@ Func _SetCompassSizes();Takes the size of a hidden label in the compass window a
 	$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
 	$hBrush = _GDIPlus_BrushCreateSolid($CompassColor) ;red
 	_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, $CompassHeight, $CompassHeight, $hBrush)
-
 EndFunc   ;==>_SetCompassSizes
 
 Func _DrawCompassLine($Degree);Draws compass in GPS Details GUI
@@ -2882,7 +2877,6 @@ Func _DrawCompassLine($Degree);Draws compass in GPS Details GUI
 			$CircleX = $CenterX - (Cos($Radians) * $Radius)
 			$CircleY = $CenterY - (Sin($Radians) * $Radius)
 		EndIf
-
 		_GDIPlus_GraphicsDrawLine($CompassGraphic, $CenterX, $CenterY, $CircleX, $CircleY)
 		;Draw Compass
 		;GUICtrlSetGraphic($CompassGraphic, $GUI_GR_ELLIPSE, 1, 1, $CompassHeight - 2, $CompassHeight - 2);Draw compass cicle
@@ -3193,7 +3187,6 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			_WinAPI_MoveWindow($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
-			;GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		EndIf
 		$sizes_old = $sizes
@@ -3218,7 +3211,6 @@ Func _TreeviewListviewResize()
 			GUISetCursor(13, 1);  13 = SIZEWE
 			$TreeviewAPs_width = $cursorInfo[0] - $TreeviewAPs_left
 			_WinAPI_MoveWindow($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
-			;GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
 			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
 			$ListviewAPs_width = ($DataChild_Width * 0.99) - $ListviewAPs_left
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
@@ -4458,7 +4450,6 @@ Func _ImportOk()
 							$AddGID += 1
 							$GPS_ID += 1
 							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
-							;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
 							$LoadGID = $GPS_ID
 						Else
 							$LoadGID = $GpsMatchArray[1][1]
@@ -4474,7 +4465,6 @@ Func _ImportOk()
 							$AddGID += 1
 							$GPS_ID += 1
 							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
-							;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
 							$LoadGID = $GPS_ID
 						Else
 							$LoadGID = $GpsMatchArray[1][1]
@@ -4535,11 +4525,7 @@ Func _ImportOk()
 			For $Load = 1 To $totallines
 				$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
 				If @error = -1 Then ExitLoop
-				If StringInStr($linein, "# $DateGMT:") Then ;If the date tag is found, reformat and set date
-					$Date = StringTrimLeft($linein, 12)
-					;$datereformat = StringSplit($Date, "-")
-					;If $datereformat[0] = 3 Then $Date = $datereformat[2] & "-" & $datereformat[3] & "-" & $datereformat[1]
-				EndIf
+				If StringInStr($linein, "# $DateGMT:") Then $Date = StringTrimLeft($linein, 12);If the date tag is found, set date
 				If StringLeft($linein, 1) <> "#" Then ;If the line is not commented out, get AP information
 					$array = StringSplit($linein, "	");Seperate AP information
 					If $array[0] = 13 Then
@@ -4584,12 +4570,10 @@ Func _ImportOk()
 								$AddGID += 1
 								$GPS_ID += 1
 								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|00|0|0|0|0|0|0|' & $Date & '|' & $time)
-								;_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & '00' & '|' & $Date & '|' & $time)
 								$LoadGID = $GPS_ID
 							ElseIf $FoundGpsMatch = 1 Then
 								$LoadGID = $GpsMatchArray[1][1]
 							EndIf
-
 							;Add Last AP Info to DB, Listview
 							$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal)
 							If $NewApAdded = 1 Then $AddAP += 1
@@ -4623,7 +4607,7 @@ Func _ImportOk()
 	EndIf
 	$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 	GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & 'Adding new APs into list')
+	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_AddingApsIntoList)
 	_FilterReAddMatchingNotInList()
 	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_SortingList)
 	If $AddDirection = 0 Then
@@ -5102,6 +5086,18 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', $Text_SupportVistumbler)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', $Text_UseNativeWifi)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterMsg', $Text_FilterMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SetFilters', $Text_SetFilters)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Filters', $Text_Filtered)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', $Text_NoAdaptersFound)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', $Text_RecoveringMDB)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', $Text_FixingGpsTableDates)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingHistTableDates', $Text_FixingHistTableDates)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerNeedsToRestart', $Text_VistumblerNeedsToRestart)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', $Text_AddingApsIntoList)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', $Text_GoogleEarthDoesNotExist)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', $Text_AutoKmlIsNotStarted)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', $Text_UnableToGuessSearchwords)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5920,10 +5916,10 @@ Func _StartGoogleAutoKmlRefresh()
 				Run('"' & $GoogleEarth_EXE & '" "' & $kml & '"')
 			EndIf
 		Else
-			MsgBox(0, $Text_Error, "Google earth file does not exist or is set wrong in the AutoKML settings")
+			MsgBox(0, $Text_Error, $Text_GoogleEarthDoesNotExist)
 		EndIf
 	Else
-		$updatemsg = MsgBox(4, $Text_Error, 'AutoKML is not yet started. Would you like to turn it on now?')
+		$updatemsg = MsgBox(4, $Text_Error, $Text_AutoKmlIsNotStarted)
 		If $updatemsg = 6 Then
 			_AutoKmlToggle()
 			_StartGoogleAutoKmlRefresh()
@@ -6218,7 +6214,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 95, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseKernel32 = GUICtrlCreateRadio("Use Kernel32 - x32 - x64", 40, 120, 361, 20)
+		$Rad_UseKernel32 = GUICtrlCreateRadio($Text_UseKernel32, 40, 120, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
 		If $GpsType = 0 Then
 			GUICtrlSetState($Rad_UseCommMG, $GUI_CHECKED)
@@ -7170,7 +7166,18 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
 		$Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
 		$Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as a wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
-
+		$Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
+		$Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
+		$Text_NoAdaptersFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', 'No Adapters Found')
+		$Text_RecoveringMDB = IniRead($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', 'Recovering MDB')
+		$Text_FixingGpsTableDates = IniRead($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', 'Fixing GPS table date(s)')
+		$Text_FixingHistTableDates = IniRead($DefaultLanguagePath, 'GuiText', 'FixingHistTableDates', 'Fixing HIST table date(s)')
+		$Text_VistumblerNeedsToRestart = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerNeedsToRestart', 'Vistumbler needs to be restarted. Vistumbler will now close')
+		$Text_AddingApsIntoList = IniRead($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', 'Adding new APs into list')
+		$Text_GoogleEarthDoesNotExist = IniRead($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', 'Google earth file does not exist or is set wrong in the AutoKML settings')
+		$Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
+		$Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
+		$Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -7364,7 +7371,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Filter_BTX = GUICtrlRead($Filter_BTX_GUI)
 		$Filter_OTX = GUICtrlRead($Filter_OTX_GUI)
 		$Filter_Line = GUICtrlRead($Filter_Line_GUI)
-		$Filter_Active = GUICtrlRead($Filter_Active_GUI)
+		$Filter_Active = StringReplace(StringReplace(GUICtrlRead($Filter_Active_GUI), $Text_Active, '1'), $Text_Dead, '0')
 		
 		If $Filter_SSID = '' Then $Filter_SSID = '*'
 		If $Filter_BSSID = '' Then $Filter_BSSID = '*'
@@ -7797,7 +7804,7 @@ Func _GuessNetshSearchwords()
 			;Show Done Message
 			MsgBox(0, $Text_Information, $Text_AddedGuessedSearchwords)
 		Else
-			MsgBox(0, $Text_Error, "Vistumbler was unable to guess searchwords")
+			MsgBox(0, $Text_Error, $Text_UnableToGuessSearchwords)
 		EndIf
 	EndIf
 EndFunc   ;==>_GuessNetshSearchwords
