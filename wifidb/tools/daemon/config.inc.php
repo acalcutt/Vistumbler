@@ -1,8 +1,6 @@
 <?php
-require $GLOBALS['wifidb_install']."/lib/database.inc.php";
-require $GLOBALS['wifidb_install']."/lib/config.inc.php";
-
 global $wifidb_install, $log_level, $verbose, $log_interval, $time_interval_to_check;
+
 if(PHP_OS == "WINNT"){$dim = "\\";}
 if(PHP_OS == "Linux"){$dim = "/";}
 
@@ -27,4 +25,9 @@ $verbose	=	1;
 
 //in seconds how much off the Dayligh savings time is (3600 is 1 hour forward, -3600 is 1 hour backwards)
 $DST		=	3600;
+
+
+require $GLOBALS['wifidb_install']."/lib/database.inc.php";
+require $GLOBALS['wifidb_install']."/lib/config.inc.php";
+
 ?>

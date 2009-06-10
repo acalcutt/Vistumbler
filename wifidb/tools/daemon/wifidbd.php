@@ -8,9 +8,9 @@
 require_once('config.inc.php');
 date_default_timezone_set($timezn);
 
-$daemon_ver	=	"1.4";
+$daemon_ver	=	"1.5";
 $start_date = "2009-04-23";
-$last_edit = "2009-June-09";
+$last_edit = "2009-June-10";
 if($GLOBALS['log_level'] == 0){$de = "Off";}
 elseif($GLOBALS['log_level'] == 1){$de = "Errors";}
 elseif($GLOBALS['log_level'] == 2){$de = "Detailed Errors (when available)";}
