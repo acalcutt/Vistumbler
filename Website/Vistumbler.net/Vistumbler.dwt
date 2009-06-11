@@ -64,9 +64,9 @@
 								<div class="inside_text_bold"><strong>
 									<a href="http://forum.vistumbler.net">Forum</a></strong></div>
 								<div class="inside_text_bold"><strong>
-									<a href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/">SVN</a></strong></div>
-								<div class="inside_text_bold"><strong>
 									<a href="http://vistumbler.wiki.sourceforge.net/">Wiki</a></strong></div>
+								<div class="inside_text_bold"><strong>
+									<a href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/">SVN</a> (<a href="https://sourceforge.net/scm/?type=svn&amp;group_id=235720">Info</a>)</strong></div>								
 								<div class="inside_text_bold"><strong>
 									<a href="https://sourceforge.net/projects/vistumbler/">Sourceforge Page</a></strong></div>
 								<div class="inside_text_bold"><strong>
@@ -77,9 +77,6 @@
 									<a href="http://www.techidiots.net/project-pages">Other Projects</a></strong></div>
 								<div class="inside_text_bold"><strong>
 									<a href="http://www.techidiots.net">TechIdiots.net</a></strong><br />
-								</div>
-								<div class="inside_text_bold"><strong>
-									<a href="http://www.w3counter.com/stats/15214">Stats</a></strong><br />
 								</div>
 							</td>
 							<td class="cell_side_right">&nbsp;</td>
@@ -209,19 +206,6 @@
 							<script type="text/javascript"
 							src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 							</script>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<!-- Begin W3Counter Tracking Code -->
-							<script type="text/javascript" src="http://www.w3counter.com/tracker.js"></script>
-							<script type="text/javascript">
-							w3counter(15214);
-							</script>
-							<noscript>
-							<div><a href="http://www.w3counter.com"><img src="http://www.w3counter.com/tracker.php?id=15214" style="border: 0" alt="W3Counter" /></a></div>
-							</noscript>
-							<!-- End W3Counter Tracking Code-->
 						</td>
 					</tr>
 				</table>
