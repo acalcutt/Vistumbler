@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 #
 #
@@ -6,12 +5,16 @@
 #
 #
 
-include('daemon/functions.php');
-include('daemon/config.inc.php');
+$default_user = 'pferland';
+$default_title = 'Stolen Pre-Build 3 Import';
+$default_notes = "No Notes";
 
-$lastedit="2009.05.24";
+require 'daemon/config.inc.php';
+require $GLOBALS['wifidb_install']."/lib/database.inc.php";
+require $GLOBALS['wifidb_install']."/lib/config.inc.php";
+$lastedit="2009.06.10";
 $start="2008.05.23";
-$ver="1.0";
+$ver="1.1";
 $localtimezone = date("T");
 echo $localtimezone."\n";
 global $log, $debug;
@@ -50,7 +53,7 @@ if (!file_exists($vs1dir))
 
 echo "Directory: ".$vs1dir."\n\n";
 echo "Files to Convert: \n";
-fwrite($GLOBALS['fileappend'], "Logging has been enabled by default, to turn of edit line 24 of import.php\r\n");
+fwrite($fileappend, "Logging has been enabled by default, to turn of edit line 24 of import.php\r\n");
 
 
 // Go through the VS1 folder and grab all the VS1 and tmp files
@@ -76,8 +79,8 @@ while (!(($file = readdir($dh)) == false))
 			echo "File not supported !\n";
 			if($log == 1 or 2)
 			{
-				fwrite($GLOBALS['fileappend'], $file."	is not a supported file extention of ".$file_e[$file_max-1]."\r\n If the file is a txt file run it through the converter first.\r\n\r\n");
-			}elseif($log ==2){fwrite($GLOBALS['fileappend'], $file." has vaules of: ".var_dump($file));}
+				fwrite($fileappend, $file."	is not a supported file extention of ".$file_e[$file_max-1]."\r\n If the file is a txt file run it through the converter first.\r\n\r\n");
+			}elseif($log ==2){fwrite($fileappend, $file." has vaules of: ".var_dump($file));}
 		}
 	}
 }
@@ -110,16 +113,16 @@ foreach($file_a as $key => $file)
 		$notes = $file_names[$hash]['notes'];
 	}else
 	{
-		$user = 'pferland';
-		$title = 'Stolen Pre-Build 2 Import';
-		$notes = "No Notes";
+		$user = $default_user;
+		$title = $default_title;
+		$notes = $default_notes;
 	}
 	echo $user." - ".$title." - ".$notes."\n\t".$file_names[$hash]['hash'].' - '.$hash."\n";
 	echo $source."\n";
 #	echo "\n".$key."\t->\t################=== Start Daemon prep of ".$file." ===################\n";
 	if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)
 	{
-		fwrite($GLOBALS['fileappend'], "\r\n\r\n\t".$key."\t->\t################=== Start Daemon Prep of ".$file." ===################\r\n\r\n");
+		fwrite($fileappend, "\r\n\r\n\t".$key."\t->\t################=== Start Daemon Prep of ".$file." ===################\r\n\r\n");
 	}
 	$date = date("y-m-d H:i:s");
 	$sql = "INSERT INTO `$db`.`files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) 

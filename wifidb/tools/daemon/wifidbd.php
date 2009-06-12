@@ -5,30 +5,33 @@
 //perpetually in the background. I dont think this is how php was 
 //intended to be used. I am hoping to get a C++ version working 
 //sometime soon, untill then I am using php.
-require_once('config.inc.php');
-date_default_timezone_set($timezn);
+require 'config.inc.php';
+require $GLOBALS['wifidb_install']."/lib/database.inc.php";
+require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 
 $daemon_ver	=	"1.5";
 $start_date = "2009-04-23";
 $last_edit = "2009-June-10";
+
+date_default_timezone_set($timezn);
+
 if($GLOBALS['log_level'] == 0){$de = "Off";}
 elseif($GLOBALS['log_level'] == 1){$de = "Errors";}
 elseif($GLOBALS['log_level'] == 2){$de = "Detailed Errors (when available)";}
 
-verbosed("\nWiFiDB 'Daemon'\nVersion: ".$daemon_ver."\n - Daemon Start: ".$start_date."\n - Last Daemon File Edit: ".$last_edit."\n\t(/tools/daemon/wifidbd.php)\n - By: Phillip Ferland\n - http://www.randomintervals.com\n", $verbose, "CLI",1);
-verbosed("Log Level is: ".$GLOBALS['log_level']." (".$de.")", $verbose, "CLI");
+verbosed($GREEN."\nWiFiDB 'Daemon'\nVersion: ".$daemon_ver."\n - Daemon Start: ".$start_date."\n - Last Daemon File Edit: ".$last_edit."\n\t(/tools/daemon/wifidbd.php)\n - By: Phillip Ferland\n - http://www.randomintervals.com\nLog Level is: ".$GLOBALS['log_level']." (".$de.")".$WHITE, $verbose, "CLI",1);
 
 if($log_level != 0)
 {
 	if($GLOBALS['log_interval'] == 0){$de = "One File 'log/wifidbd_log.log'";}
 	elseif($GLOBALS['log_interval'] == 1){$de = "one file a day 'log/wifidbd_log_[yyyy-mm-dd].log'";}
-	verbosed("Log Interval is: ".$GLOBALS['log_interval']." (".$de.")", $verbose, "CLI");
+	verbosed($GREEN."Log Interval is: ".$GLOBALS['log_interval']." (".$de.")".$WHITE, $verbose, "CLI");
 }
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 #error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
 
 logd("Have included the WiFiDB Tools Functions file for the 'Daemon'.", $log_interval, 0,  $GLOBALS['log_level']);
-verbosed("Have included the WiFiDB Tools Functions file for the 'Daemon'.", $verbose, "CLI"); 
+verbosed($GREEN."Have included the WiFiDB Tools Functions file for the 'Daemon'.".$WHITE, $verbose, "CLI"); 
 
 //Before running you will need to edit the config.ini file
 
@@ -41,9 +44,9 @@ else{$pid_file = '/var/run/wifidbd.pid';}
 fopen($pid_file, "w");
 $fileappend = fopen($pid_file, "a");
 $write_pid = fwrite($fileappend, "$This_is_me");
-if(!$write_pid){die("Could not write pid file, thats not good... :[");}
+if(!$write_pid){die($RED."Could not write pid file, thats not good... :[".$WHITE);}
 logd("Have writen the PID file at /var/run/wifidbd.pid (".$This_is_me.")", $log_interval,0 ,  $GLOBALS['log_level']);
-verbosed("PID Writen ".$This_is_me, $verbose, "CLI"); 
+verbosed($GREEN."PID Writen ".$This_is_me.$WHITE, $verbose, "CLI"); 
 
 #	if($time_interval_to_check < '300'){$time_interval_to_check = '300';} //its really pointless to check more then 5 min at a time, becuse if it is 
 																	  //importing something it is probably going to take more then that to imort the file
@@ -61,11 +64,11 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	if (mysql_query($sqlup, $conn))
 	{
 		logd("Updated settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
-		verbosed("Updated settings table with next run time: ".$nextrun, $verbose, "CLI");
+		verbosed($GREEN."Updated settings table with next run time: ".$nextrun.$WHITE, $verbose, "CLI");
 	}else
 	{
 		logd("ERROR!! COULD NOT Update settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
-		verbosed("ERROR!! COULD NOT Update settings table with next run time: ".$nextrun, $verbose, "CLI");
+		verbosed($RED."ERROR!! COULD NOT Update settings table with next run time: ".$nextrun.$WHITE, $verbose, "CLI");
 	}
 
 	$result = mysql_query("SELECT * FROM `$db`.`files_tmp` ORDER BY `id` ASC", $conn);
@@ -106,56 +109,56 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					if($inserted_new_file == 1)
 					{
 						logd("Added ".$remove_file." to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
-						verbosed("Added ".$remove_file." to the Files table",1 "CLI");
+						verbosed($GREEN."Added ".$remove_file." to the Files table".$WHITE, 1, "CLI");
 						
 						$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 						if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 						{
 							logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
-							verbosed("Error removing ".$remove_file." from the Temp files table\n\t".mysql_error($GLOBALS['conn']), 1);
+							verbosed($RED."Error removing ".$remove_file." from the Temp files table\n\t".mysql_error($GLOBALS['conn']).$WHITE, 1);
 						}else
 						{
 							logd("Removed ".$remove_file." from the Temp files table.", $log_interval, 0,  $GLOBALS['log_level']);
-							verbosed("Removed ".$remove_file." from the Temp files table.", $verbose, "CLI");
+							verbosed($GREEN."Removed ".$remove_file." from the Temp files table.".$WHITE, $verbose, "CLI");
 						}
 					}else
 					{
 						logd("Error Adding ".$remove_file." to the Files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
-						verbosed("Error Adding ".$remove_file." to the Files table\n\t".mysql_error($GLOBALS['conn']),1, "CLI");
+						verbosed($RED."Error Adding ".$remove_file." to the Files table\n\t".mysql_error($GLOBALS['conn']).$WHITE,1, "CLI");
 					}
 					$finished = 1;
 				}else
 				{
 					logd("File has already been successfully imported into the Database, skipping.\r\n\t\t\t".$files_array['file'], $log_interval, 0,  $GLOBALS['log_level']);
-					verbosed("File has already been successfully imported into the Database, skipping.\r\n\t\t\t".$files_array['file'], $verbose, "CLI");
+					verbosed($YELLOW."File has already been successfully imported into the Database, skipping.\r\n\t\t\t".$files_array['file'].$WHITE, $verbose, "CLI");
 					
 					$remove_file = $files_array['id'];
 					$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 					if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 					{
 						logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
-						verbosed("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), 1, "CLI");
+						verbosed($RED."Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']).$WHITE, 1, "CLI");
 					}else
 					{
 						logd("Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.", $log_interval, 0,  $GLOBALS['log_level']);
-						verbosed("Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.", $verbose, "CLI");
+						verbosed($RED."Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.".$WHITE, $verbose, "CLI");
 					}
 				}
 			}else
 			{
 				$finished = 0;
 				logd("File is empty, go and import something.\n", $log_interval, 0,  $GLOBALS['log_level']);
-				verbosed("File is empty, go and import something.\n", $verbose);
+				verbosed($YELLOW."File is empty, go and import something.\n".$WHITE, $verbose);
 				$remove_file = $files_array['id'];
 				$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 				if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 				{
 					logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
-					verbosed("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), 1, "CLI");
+					verbosed($RED."Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']).$WHITE, 1, "CLI");
 				}else
 				{
 					logd("Removed empty ".$remove_file." from the Temp files table.", $log_interval, 0,  $GLOBALS['log_level']);
-					verbosed("Removed empty ".$remove_file." from the Temp files table.", $verbose, "CLI");
+					verbosed($GREEN."Removed empty ".$remove_file." from the Temp files table.".$WHITE, $verbose, "CLI");
 				}
 			}
 		#	$result = mysql_query("SELECT * FROM `$db`.`files_tmp` ORDER BY `id` ASC", $conn);//requery after a file import to make sure that no one has imported something while im importing APS, so that they can be imported sooner then waiting another sleep loop to get imported.
@@ -164,14 +167,14 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	}else
 	{
 		logd("There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn), $log_interval, 0,  $GLOBALS['log_level']);
-		verbosed("There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn), $verbose, "CLI");
+		verbosed($RED."There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn).$WHITE, $verbose, "CLI");
 	}
 	if($finished == 0)
 	{$message = "File tmp table is empty, go and import something. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minuets.\n";}
 	else{$message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minuets.\n";}
 	
 	logd($message, $log_interval, 0,  $GLOBALS['log_level']);
-	verbosed($message, $verbose, "CLI");
+	verbosed($YELLOW.$message.$WHITE, $verbose, "CLI");
 	$finished = 0;
 	sleep($time_interval_to_check);
 }

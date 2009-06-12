@@ -27,7 +27,26 @@ $verbose	=	1;
 $DST		=	3600;
 
 
-require $GLOBALS['wifidb_install']."/lib/database.inc.php";
-require $GLOBALS['wifidb_install']."/lib/config.inc.php";
+$BLACK = "\033[0;30m";
+$DARKGRAY="\033[1;30m";
+$LIGHTGRAY = "\033[0;37m";
+$WHITE= "\033[1;37m";
 
+$BLUE="\033[0;34m";
+$LIGHTBLUE="\033[1;34m";
+
+$GREEN="\033[0;32m";
+$LIGHTGREEN="\033[1;32m";
+
+$CYAN="\033[0;36m";
+$LIGHTCYAN="\033[1;36m";
+
+$RED="\033[0;31m";
+$LIGHTRED="\033[1;31m";
+
+$PURPLE="\033[0;35m";
+$LIGHTPURPLE="\033[1;35m";
+
+$BROWN="\033[0;33m";
+$YELLOW="\033[1;33m";
 ?>

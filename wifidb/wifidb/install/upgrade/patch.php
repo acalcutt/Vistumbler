@@ -22,20 +22,20 @@ $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 
 if(isset($_POST['daemon']))
 {
-	$daemon = $_POST['daemon'];
+	$daemon		= addslashes(strip_tags($_POST['daemon']));
+	$toolsdir	= addslashes(strip_tags($_POST['toolsdir']));
 }else
 {
 	$daemon = "off";
+	$toolsdir		=	"NO PATH";
 }
-$daemon			=	addslashes(strip_tags($daemon));
+
 if($daemon == "on")
 {
 	$daemon = 1;
-	$tools_dir		=	addslashes(strip_tags($_POST['tools']));
 }else
 {
 	$daemon = 0;
-	$tools_dir		=	"NO PATH";
 }
 
 if ($sqlhost !== 'localhost' or $sqlhost !== "127.0.0.1")
@@ -357,7 +357,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 
 #Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\nglobal $"."conn, $"."wifidb_tools, $"."daemon;\r\ndate_default_timezone_set('GMT+0');\r\n$"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon;\r\ndate_default_timezone_set('GMT+0');\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -370,8 +370,7 @@ $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info --------------
 									."$"."daemon			=	".$daemon.";\r\n"
 									."$"."debug			=	$debug;\r\n"
 									."$"."log_level		=	$loglev;\r\n"
-									."$"."wifidb_tools	=	$tools_dir\r\n";
-									);
+									."$"."wifidb_tools	=	$tools_dir\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}

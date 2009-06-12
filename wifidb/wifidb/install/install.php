@@ -49,17 +49,22 @@ $sqlp			=	addslashes(strip_tags($_POST['sqlp']));
 $wifi			=	addslashes(strip_tags($_POST['wifidb']));
 
 $wifi_st		=	addslashes(strip_tags($_POST['wifistdb']));
-if(isset($_POST['daemon'])){$daemon = $_POST['daemon'];}else{$daemon = "off";}
-$daemon			=	addslashes(strip_tags($daemon));
+if(isset($_POST['daemon']))
+{
+	$daemon		= addslashes(strip_tags($_POST['daemon']));
+	$toolsdir	= addslashes(strip_tags($_POST['toolsdir']));
+}else
+{
+	$daemon = "off";
+	$toolsdir		=	"NO PATH";
+}
 
 if($daemon == "on")
 {
 	$daemon = 1;
-	$tools_dir		=	addslashes(strip_tags($_POST['tools']));
 }else
 {
 	$daemon = 0;
-	$tools_dir		=	"NO PATH";
 }
 
 echo '<tr class="style4"><TH colspan="2">Database Install</TH><tr>';
@@ -137,6 +142,7 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users` (
 		`date` VARCHAR ( 25 ) NOT NULL, 
 		`aps` INT NOT NULL, 
 		`gps` INT NOT NULL,
+		`hash` VARCHAR( 255 ) NOT NULL,
 		INDEX ( `id` )) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 $CR_TB_US_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
@@ -351,7 +357,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 
 #Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php \r\nglobal $"."conn, $"."wifidb_tools, $"."daemon;\r\ndate_default_timezone_set('$timezn');\r\n$"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon;\r\ndate_default_timezone_set('$timezn');\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -363,7 +369,8 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Install date</td></tr>
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n"
 									."$"."daemon	=	".$daemon.";\r\n"
 									."$"."debug			=	0;\r\n"
-									."$"."log_level		=	0;\r\n");
+									."$"."log_level		=	0;\r\n"
+									."$"."wifidb_tools	=	'".$toolsdir."';\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}

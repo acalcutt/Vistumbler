@@ -47,6 +47,10 @@ else
     <td>Use Daemon?</td><td>........................................</td>
     <td><input type="checkbox" name="daemon"></td>
   </TR>
+  <tr>
+    <td>Tools Directory (if you are using the daemon)</td><td>........................................</td>
+    <td><input name="toolsdir"></td>
+</TR>
 <TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
 <INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
 </TD>

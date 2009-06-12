@@ -50,8 +50,9 @@ function getdaemonstats()
 		{
 			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
 			$start = trim($output[1], " ");
-			$mem = preg_match("[[0-9]+\.[0-9]+]", $start);
-			echo $mem;
+			preg_match_all("/\d+:\d+/", $start, $match, PREG_PATTERN_ORDER );
+			$mem = $match[1];
+			echo $mem."<BR>";
 			$patterns[1] = '/  /';
 			$patterns[2] = '/ /';
 			$ps_stats = preg_replace($patterns , "|" , $start);
@@ -142,7 +143,7 @@ if($total_rows === 0)
 		}
 			?>
 		<table <?php echo $color;?> border="1"  width="100%">
-		<tr class="style4"><th>ID</th><th>Filename</th><th>Date</th><th>user</th><th>title</th><th>size</th></tr>
+		<tr class="style4"><th>ID</th><th>Filename</th><th>Date</th><th>title</th><th>size</th></tr>
 		<tr <?php echo $color;?>>
 		<td align="center">
 		<?php
@@ -158,10 +159,6 @@ if($total_rows === 0)
 		?>
 		</td><td align="center">
 		<?php
-		echo $newArray['user'];
-		?>
-		</td><td align="center">
-		<?php
 		echo $newArray['title'];
 		?>
 		</td><td align="center">
@@ -172,7 +169,7 @@ if($total_rows === 0)
 		<tr class="style4">
 		<th <?php echo $color;?>>
 		</th>
-		<th>Hash Sum</th><th>Importing?</th><th colspan="2">Current SSID</th><th>AP / Total AP's</th></tr>
+		<th>Hash Sum</th><th>User</th><th >Current SSID</th><th>AP / Total AP's</th></tr>
 		<tr <?php echo $color;?>>
 		<td></td>
 		<td align="center">
@@ -181,10 +178,9 @@ if($total_rows === 0)
 		?>
 		</td><td align="center">
 		<?php
-		if($newArray['importing'] == '1'){$importing = "Yes";}else{$importing = "No";}
-		echo $importing;
+		echo $newArray['user'];
 		?>
-		</td><td align="center" colspan="2">
+		</td><td align="center">
 		<?php
 		if($newArray['ap'] == NULL){$ssid = "None being imported";}else{$ssid = $newArray['ap'];}
 		echo $ssid;
