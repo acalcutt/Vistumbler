@@ -5,7 +5,7 @@ if(PHP_OS == "WINNT"){$dim = "\\";}
 if(PHP_OS == "Linux"){$dim = "/";}
 
 //path to the folder that wifidb is installed in default is /var/www/wifidb/ , because I use Debian. fuck windows 
-$wifidb_install		=	'/var/www/wifidb';
+$wifidb_install		=	'/var/www/html';
 
 //In seconds 1800 = 30 min interval
 $time_interval_to_check		=	"800";

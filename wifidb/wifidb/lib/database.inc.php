@@ -3,35 +3,35 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3",
-			"Last_Core_Edit" 	=> 	"2009-Jun-10",
+			"Last_Core_Edit" 		=> 	"2009-Jun-12",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.0", 
-										"apfetch"			=>	"2.6.0",
+										"apfetch"		=>	"2.6.1",
 										"gps_check_array"	=>	"1.1",
-										"all_users"			=>	"1.2",
+										"all_users"		=>	"1.2",
 										"users_lists"		=>	"1.2",
 										"user_ap_list"		=>	"1.2",
 										"all_users_ap"		=>	"1.3",
-										"exp_kml"			=>	"3.4.0",
-										"exp_vs1"			=>	"1.1.0",
-										"exp_gpx"			=>	"1.0.0",
+										"exp_kml"		=>	"3.4.0",
+										"exp_vs1"		=>	"1.1.0",
+										"exp_gpx"		=>	"1.0.0",
 										"convert_dm_dd"		=>	"1.3.0",
 										"convert_dd_dm"		=>	"1.3.1",
 										"manufactures"		=>	"1.0",
-										"gen_gps"			=>	"1.0"
+										"gen_gps"		=>	"1.0"
 										),
 			"Misc"				=>	array(
-										"pageheader"		=>  "1.2",
-										"footer"			=>	"1.2",
+										"pageheader"		=>  	"1.2",
+										"footer"		=>	"1.2",
 										"breadcrumbs"		=>	"1.0",
 										"smart_quotes"		=> 	"1.0",
-										"smart"				=> 	"1.0",
+										"smart"			=> 	"1.0",
 										"Manufactures-list"	=> 	"2.0",
 										"Languages-List"	=>	"1.0",
-										"make_ssid"			=>	"1.0",
-										"verbosed"			=>	"1.2",
-										"logd"				=>	"1.2",
-										"IFWC"				=>	"2.0"
+										"make_ssid"		=>	"1.0",
+										"verbosed"		=>	"1.2",
+										"logd"			=>	"1.2",
+										"IFWC"			=>	"2.0"
 										),
 			);
 
@@ -286,7 +286,7 @@ function pageheader($title)
 	check_install_folder();	
 	if(!$result1){echo "<font color=\"red\"><h2>You need to <a class=\"upgrade\" href=\"install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB Build 3.</h3></font>";}
 	?>
-	<link rel="stylesheet" href="/<?php echo $root;?>/css/site4.0.css">
+	<link rel="stylesheet" href="<?php if($root != ''){echo '/'.$root;}?>/css/site4.0.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="85%" cellspacing="5" cellpadding="2">
@@ -302,15 +302,15 @@ function pageheader($title)
 		</tr>
 		<tr>
 			<td style="background-color: #304D80;width: 15%;vertical-align: top;">
-			<p><a class="links" href="/<?php echo $root;?>/?token=<?php echo $token;?>">Main Page</a></p>
-			<p><a class="links" href="/<?php echo $root;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
-			<p><a class="links" href="/<?php echo $root;?>/import/?token=<?php echo $token;?>">Import</a></p>
-			<p><a class="links" href="/<?php echo $root;?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></p>
-			<p><a class="links" href="/<?php echo $root;?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></p>
-			<p><a class="links" href="/<?php echo $root;?>/opt/search.php?token=<?php echo $token;?>">Search</a></p>
-			<p><a class="links" href="/<?php echo $root;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></p>
-			<p><a class="links" href="/<?php echo $root;?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
-			<p><a class="links" href="/<?php echo $root;?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
+			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></p>
 		</td>
 		<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center"><br>
 		<?php
@@ -992,7 +992,11 @@ class database
 					
 					if($table == $table_ptb)
 					{
-						// They are the same
+	#################################################################################################################################################################
+	#################################################################################################################################################################
+	#										UPDATE AP									#
+	#################################################################################################################################################################
+	#################################################################################################################################################################
 						logd($this_of_this."   ( ".$APid." )   ||   ".$table." - ".$being_updated_msg."\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
 						if($out=="CLI")
 						{
@@ -1171,7 +1175,11 @@ class database
 						}
 					}else
 					{
-						// NEW AP
+	#################################################################################################################################################################
+	#################################################################################################################################################################
+	#										NEW AP										#
+	#################################################################################################################################################################
+	#################################################################################################################################################################
 						logd($this_of_this."   ( ".$size." )   ||   ".$table." - ".$being_imported_msg."\r\n", $log_interval, 0,  $log_level);
 						if($out=="CLI")
 						{
@@ -1181,7 +1189,6 @@ class database
 							verbosed('<table border="1" width="90%" class="new"><tr class="style4"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
 									<tr><td>'.$size.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
 						}
-						echo "booga booga";
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						$sqlct = "CREATE TABLE `$db_st`.`$table` (
 									`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,

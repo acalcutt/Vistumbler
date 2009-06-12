@@ -18,10 +18,10 @@ pageheader("Version Page");
 			</tr>
 		</table>
 		
-		<table width="100%" border="2" id="16b21A">
+		<table width="100%" border="2" id="16b3">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jun-09</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jun-12</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -31,9 +31,9 @@ pageheader("Version Page");
 					<LI>Changed Individual User Stat Page to new layout.</LI>
 					<LI>Standardized SSID usage, there are three types:</LI>
 					<OL>
-						<LI>&#60;ny-paq&#62;&#124;sayz oh-my this is fun [ is the unsanatized, but still safe ssid, used to name APs, 32 char limit, no special chars].</LI>
-						<LI>&#60;ny-paq&#62;_sayz oh-my this is fun [safe for file names, no special chars, 32 char limit].</LI>
-						<LI>_ny-paq__sayz oh-my this [safe for table names, max 25 char, no special chars]</LI>
+						<LI>&#60;ny-paq&#62;&#124;sayz oh-my this is fun [ is the unsanatized, but still safe ssid, used to name APs, 32 char limit, no special chars.]</LI>
+						<LI>&#60;ny-paq&#62;_sayz oh-my this is fun [safe for file names, no special chars, 32 char limit.]</LI>
+						<LI>_ny-paq__sayz oh-my this [safe for table names, max 25 char, no special chars.]</LI>
 					</OL>
 					<LI>Changed the way WiFiDB looks for the install folder.</LI>
 					<LI>Daemon now has all SQL based errors being echoed out to the screen.</LI>
@@ -42,8 +42,8 @@ pageheader("Version Page");
 					<LI>Fixed the No Token error with imports directly from Vistumbler.</LI>
 					<LI>Fixed the formating of the file location that is in the URL from the import directly from Vistumbler that gets printed on the page.</LI>
 					<LI>Also made the drop down for selecting the refresh time on the scheduled imports page, so it has a default of the current selection instead fo going back to 5 sec.</LI>
-					<LI>Fixed the Upgrade script in /install/upgrade/patch.php. (Was broken in Build 2 and 2.1)</LI>
-					<LI>Fixed the Install script in /install/install.php. (Was broken in Build 2 and 2.1)</LI>
+					<LI>Fixed the Upgrade script in /install/upgrade/patch.php. (Was broken in Build 2 and 2.1.)</LI>
+					<LI>Fixed the Install script in /install/install.php. (Was broken in Build 2 and 2.1.)</LI>
 					<LI>Added Daemon Status to the scheduling.php page.</LI>
 					<LI>Fixed an issue where the Signal history was being corrupted by being sanatized. The 'special' characters '-' and ',' were being encoded.</LI>
 					<LI>Fixed Some Issues with the daemon, details are in the Tools Readme.</LI>
@@ -59,8 +59,10 @@ pageheader("Version Page");
 						</OL>
 					</LI>
 					<LI>Unified the import_vs1() and importvs1d() functions, added an $out var to import_vs1() and verbose(), valid values are "CLI" and "HTML".</LI>
-					<LI>Moved the Install folder warning code to the database.inc.php file from config.inc.php</LI>
+					<LI>Moved the Install folder warning code to the database.inc.php file from config.inc.php.</LI>
 					<LI>All Messages in import_vs1 are in a group of variables in the begining of the function, for easy editing.</LI>
+					<LI>Added in some code to handle obsure APs that get taged as new when they are not new.</LI>
+					<LI>There was missing Token links on the Associated Lists section of the AP Fetch page.</LI>
 					<LI>Numerous other small fixes that I have forgotten about.</LI>
 				</OL>
 			</td></tr>
