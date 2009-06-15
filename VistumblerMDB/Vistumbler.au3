@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.4'
+$version = '9.41'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/06/09'
+$last_modified = '2009/06/14'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -361,7 +361,7 @@ Dim $column_Width_NetworkType = IniRead($settings, 'Column_Width', 'Column_Netwo
 Dim $column_Width_Label = IniRead($settings, 'Column_Width', 'Column_Label', 110)
 
 ;Load GUI Text from language file
-Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English.ini')
+Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
 Dim $DefaultLanguageFile = IniRead($settings, 'Vistumbler', 'LanguageFile', $DefaultLanguage & '.ini')
 Dim $DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
 If FileExists($DefaultLanguagePath) = 0 Then
@@ -694,12 +694,6 @@ If FileExists($VistumblerDB) Then
 		$GPS_ID = UBound($GpsMatchArray) - 1
 		$query = "DELETE * FROM TreeviewPos"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		;Fix missing Signal field in AP table (MDB backward compatibitly fix)
-		If _FieldExists($VistumblerDB, 'AP', 'Signal') <> 1 Then
-			_CreateField($VistumblerDB, "AP", "Signal", "TEXT(3)", $DB_OBJ)
-			$query = "UPDATE AP SET Signal = '0'"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		EndIf
 		;Fix missing GPS table fields (MDB backward compatibitly fix)
 		If _FieldExists($VistumblerDB, 'GPS', 'TrackAngle') <> 1 Then
 			;Create new fields
@@ -724,6 +718,12 @@ If FileExists($VistumblerDB) Then
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			_DropField($VistumblerDB, "GPS", "Date2", $DB_OBJ)
 			_DropField($VistumblerDB, "GPS", "Time2", $DB_OBJ)
+		EndIf
+		;Fix missing Signal field in AP table (MDB backward compatibitly fix)
+		If _FieldExists($VistumblerDB, 'AP', 'Signal') <> 1 Then
+			_CreateField($VistumblerDB, "AP", "Signal", "TEXT(3)", $DB_OBJ)
+			$query = "UPDATE AP SET Signal = '0'"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
 		;Fix missing TreeviewPos table (MDB backward compatibitly fix)
 		_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
@@ -863,16 +863,15 @@ $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
 $ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(' & $Text_Filtered & ')', $Export)
 $ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(' & $Text_Filtered & ')', $Export)
 
+Dim $NetworkAdapters[1]
 Dim $DefaultApapterDesc
 Dim $found_adapter = 0
-Dim $NetworkAdapters[1]
+Dim $menuid = 0
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
 If $UseNativeWifi = 1 Then
 	$wlanhandle = _Wlan_OpenHandle()
 	$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
 	$numofint = UBound($wlaninterfaces) - 1
-	;_ArrayDisplay($wlaninterfaces)
-	$menuid = 0
 	For $antm = 0 To $numofint
 		$adapterid = $wlaninterfaces[$antm][0]
 		$adaptername = $wlaninterfaces[$antm][1]
@@ -6287,7 +6286,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateGroup($Text_LanguageDate, 32, 150, 300, 41)
 		GUICtrlSetColor(-1, $TextColor)
-		$LabDate = GUICtrlCreateLabel(IniRead($DefaultLanguagePath, 'Info', 'Date', ''), 40, 166, 280, 17)
+		$LabDate = GUICtrlCreateLabel(_DateLocalFormat(IniRead($DefaultLanguagePath, 'Info', 'Date', '')), 40, 166, 280, 17)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateGroup($Text_LanguageCode, 340, 150, 293, 41)
 		GUICtrlSetColor(-1, $TextColor)
@@ -6850,7 +6849,7 @@ Func _LanguageChanged();Sets language information in gui if language changed
 	$Language = GUICtrlRead($LanguageBox)
 	$languagefile = $LanguageDir & $Language & ".ini"
 	GUICtrlSetData($LabAuth, IniRead($languagefile, 'Info', 'Author', ''))
-	GUICtrlSetData($LabDate, IniRead($languagefile, 'Info', 'Date', ''))
+	GUICtrlSetData($LabDate, _DateLocalFormat(IniRead($languagefile, 'Info', 'Date', '')))
 	GUICtrlSetData($LabWinCode, IniRead($languagefile, 'Info', 'WindowsLanguageCode', ''))
 	GUICtrlSetData($LabDesc, IniRead($languagefile, 'Info', 'Description', ''))
 	GUICtrlSetData($SearchWord_SSID_GUI, IniRead($languagefile, 'SearchWords', 'SSID', 'SSID'))
