@@ -793,16 +793,16 @@ Else
 	;Split ini posion string
 	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]);Resize window to ini value
 EndIf
-
+;File Menu
 $file = GUICtrlCreateMenu($Text_File)
 $SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
 $ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
 $ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
 $ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
-
-$ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 $ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
+$ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
+;Edit Menu
 $Edit = GUICtrlCreateMenu($Text_Edit)
 ;$Cut = GUICtrlCreateMenuitem("Cut", $Edit)
 $Copy = GUICtrlCreateMenuItem($Text_Copy, $Edit)
