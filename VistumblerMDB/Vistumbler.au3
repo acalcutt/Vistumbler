@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.5 Beta 1'
+$version = '9.5 Beta 2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/06/20'
 ;Includes------------------------------------------------
@@ -5216,12 +5216,13 @@ Func _KmlSignalMapSelectedAP()
 		$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '-' & $ExpSSID & '.kml')
 		If Not @error Then
 			If StringInStr($kml, '.kml') = 0 Then $kml = $kml & '.kml'
-			$query = "SELECT GpsID, Signal FROM Hist Where ApID='" & $ExpAPID & "' ORDER BY Date1, Time1 DESC"
+			$query = "SELECT GpsID, Signal, Date1, Time1 FROM Hist Where ApID='" & $ExpAPID & "' ORDER BY Date1, Time1 DESC"
 			$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$GpsIDMatch = UBound($GpsIDArray) - 1
 			$SigStrengthLevel = -1
 			$SigData = 0
 			$ExpString = ''
+			$NewTimeString = ''
 			If $GpsIDMatch <> 0 Then
 				$file = '<?xml version="1.0" encoding="UTF-8"?>' & @CRLF _
 						 & '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">' & @CRLF _
@@ -5233,6 +5234,13 @@ Func _KmlSignalMapSelectedAP()
 				For $e = 1 To $GpsIDMatch
 					$ExpGID = $GpsIDArray[$e][1]
 					$ExpSig = $GpsIDArray[$e][2]
+					$ExpDate = StringReplace($GpsIDArray[$e][3], '-', '')
+					$ExpTime = $GpsIDArray[$e][4]
+					$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
+					$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+					$LastTimeString = $NewTimeString
+					$NewTimeString = $ExpDate & $ExpTime
+					If $LastTimeString = '' Then $LastTimeString = $NewTimeString
 					$LastSigStrengthLevel = $SigStrengthLevel
 					$LastSigData = $SigData
 					If $ExpSig >= 0 And $ExpSig <= 16 Then
@@ -5261,20 +5269,20 @@ Func _KmlSignalMapSelectedAP()
 						$SigData = 1
 					EndIf
 					
-					If $LastSigStrengthLevel <> $SigStrengthLevel Then
+					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) >= 2 Then
 						If $LastSigData <> 0 Then
-							$file &= '</coordinates>' & @CRLF _
-									 & '</LineString>' & @CRLF _
-									 & '</Placemark>' & @CRLF
+							$file &= '				</coordinates>' & @CRLF _
+									 & '			</LineString>' & @CRLF _
+									 & '		</Placemark>' & @CRLF
 						EndIf
-						$file &= '<Placemark>' & @CRLF _
-								 & '<styleUrl>' & $SigCat & '</styleUrl>' & @CRLF _
-								 & '<LineString>' & @CRLF _
-								 & '<extrude>1</extrude>' & @CRLF _
-								 & '<tessellate>0</tessellate>' & @CRLF _
-								 & '<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
-								 & '<coordinates>' & @CRLF
-						If $ExpString <> '' Then $file &= $ExpString & @CRLF
+						$file &= '		<Placemark>' & @CRLF _
+								 & '			<styleUrl>' & $SigCat & '</styleUrl>' & @CRLF _
+								 & '			<LineString>' & @CRLF _
+								 & '				<extrude>1</extrude>' & @CRLF _
+								 & '				<tessellate>0</tessellate>' & @CRLF _
+								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
+								 & '				<coordinates>' & @CRLF
+						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2  Then $file &= $ExpString
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
@@ -5332,18 +5340,26 @@ Func _KmlSignalMap($Filter=0)
 			$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatchArray[$aid][2], '&', ''), '>', ''), '<', '')
 			$ExpBSSID = $ApIDMatchArray[$aid][3]
 			$LineCoords = ''
-			$query = "SELECT GpsID, Signal FROM Hist Where ApID='" & $ExpAPID & "' ORDER BY Date1, Time1 DESC"
+			$query = "SELECT GpsID, Signal, Date1, Time1 FROM Hist Where ApID='" & $ExpAPID & "' ORDER BY Date1, Time1 DESC"
 			$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$GpsIDMatch = UBound($GpsIDArray) - 1
 			$SigStrengthLevel = -1
 			$SigData = 0
 			$ExpString = ''
+			$NewTimeString = ''
 			If $GpsIDMatch <> 0 Then
 				$file &= '	<Folder>' & @CRLF _
 						 & '		<name>' & $ExpSSID & ' - '& $ExpBSSID & '</name>' & @CRLF
 				For $e = 1 To $GpsIDMatch
 					$ExpGID = $GpsIDArray[$e][1]
 					$ExpSig = $GpsIDArray[$e][2]
+					$ExpDate = StringReplace($GpsIDArray[$e][3], '-', '')
+					$ExpTime = $GpsIDArray[$e][4]
+					$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
+					$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+					$LastTimeString = $NewTimeString
+					$NewTimeString = $ExpDate & $ExpTime
+					If $LastTimeString = '' Then $LastTimeString = $NewTimeString
 					$LastSigStrengthLevel = $SigStrengthLevel
 					$LastSigData = $SigData
 					If $ExpSig >= 0 And $ExpSig <= 16 Then
@@ -5372,11 +5388,11 @@ Func _KmlSignalMap($Filter=0)
 						$SigData = 1
 					EndIf
 					
-					If $LastSigStrengthLevel <> $SigStrengthLevel Then
+					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) >= 2 Then
 						If $LastSigData <> 0 Then
-							$file &= '</coordinates>' & @CRLF _
-									 & '</LineString>' & @CRLF _
-									 & '</Placemark>' & @CRLF
+							$file &= '				</coordinates>' & @CRLF _
+									 & '			</LineString>' & @CRLF _
+									 & '		</Placemark>' & @CRLF
 						EndIf
 						$file &= '		<Placemark>' & @CRLF _
 								 & '			<styleUrl>' & $SigCat & '</styleUrl>' & @CRLF _
@@ -5385,7 +5401,7 @@ Func _KmlSignalMap($Filter=0)
 								 & '				<tessellate>0</tessellate>' & @CRLF _
 								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
 								 & '				<coordinates>' & @CRLF
-						If $ExpString <> '' Then $file &= $ExpString
+						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2  Then $file &= $ExpString
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
@@ -5394,7 +5410,7 @@ Func _KmlSignalMap($Filter=0)
 					$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsArray[1][2]), 'S', '-'), 'N', ''), ' ', '')
 					$ExpAlt = $GpsArray[1][3]
 					If $ExpLon <> '0.0000000' And $ExpLat <> '0.0000000' Then
-						$ExpString = $ExpLon & ',' & $ExpLat & ',' & $ExpSig & @CRLF
+						$ExpString = '					' & $ExpLon & ',' & $ExpLat & ',' & $ExpSig & @CRLF
 						$file &= $ExpString
 					EndIf
 					If $e = $GpsIDMatch Then
