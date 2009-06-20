@@ -673,89 +673,89 @@ Dim $Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
 Dim $Text_FilteredAPs = IniRead($DefaultLanguagePath, 'GuiText', 'FilteredAPs', 'Filtered APs')
 
 Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
-				 & '		<IconStyle>' & @CRLF _
-				 & '			<scale>1.2</scale>' & @CRLF _
-				 & '		</IconStyle>' & @CRLF _
-				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>ff0000ff</color>' & @CRLF _
-				 & '			<width>2</width>' & @CRLF _
-				 & '		</LineStyle>' & @CRLF _
-				 & '		<PolyStyle>' & @CRLF _
-				 & '			<color>bf0000ff</color>' & @CRLF _
-				 & '			<outline>0</outline>' & @CRLF _
-				 & '			<opacity>75</opacity>' & @CRLF _
-				 & '		</PolyStyle>' & @CRLF _
-				 & '	</Style>' & @CRLF _
-				 & '	<Style id="SigCat2">' & @CRLF _
-				 & '		<IconStyle>' & @CRLF _
-				 & '			<scale>1.2</scale>' & @CRLF _
-				 & '		</IconStyle>' & @CRLF _
-				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>ff0055ff</color>' & @CRLF _
-				 & '			<width>2</width>' & @CRLF _
-				 & '		</LineStyle>' & @CRLF _
-				 & '		<PolyStyle>' & @CRLF _
-				 & '			<color>bf0055ff</color>' & @CRLF _
-				 & '			<outline>0</outline>' & @CRLF _
-				 & '			<opacity>75</opacity>' & @CRLF _
-				 & '		</PolyStyle>' & @CRLF _
-				 & '	</Style>' & @CRLF _
-				 & '	<Style id="SigCat3">' & @CRLF _
-				 & '		<IconStyle>' & @CRLF _
-				 & '			<scale>1.2</scale>' & @CRLF _
-				 & '		</IconStyle>' & @CRLF _
-				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>ff00ffff</color>' & @CRLF _
-				 & '			<width>2</width>' & @CRLF _
-				 & '		</LineStyle>' & @CRLF _
-				 & '		<PolyStyle>' & @CRLF _
-				 & '			<color>bf00ffff</color>' & @CRLF _
-				 & '			<outline>0</outline>' & @CRLF _
-				 & '			<opacity>75</opacity>' & @CRLF _
-				 & '		</PolyStyle>' & @CRLF _
-				 & '	</Style>' & @CRLF _
-				 & '	<Style id="SigCat4">' & @CRLF _
-				 & '		<IconStyle>' & @CRLF _
-				 & '			<scale>1.2</scale>' & @CRLF _
-				 & '		</IconStyle>' & @CRLF _
-				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>ff01ffc8</color>' & @CRLF _
-				 & '			<width>2</width>' & @CRLF _
-				 & '		</LineStyle>' & @CRLF _
-				 & '		<PolyStyle>' & @CRLF _
-				 & '			<color>bf01ffc8</color>' & @CRLF _
-				 & '			<outline>0</outline>' & @CRLF _
-				 & '			<opacity>75</opacity>' & @CRLF _
-				 & '		</PolyStyle>' & @CRLF _
-				 & '	</Style>' & @CRLF _
-				 & '	<Style id="SigCat5">' & @CRLF _
-				 & '		<IconStyle>' & @CRLF _
-				 & '			<scale>1.2</scale>' & @CRLF _
-				 & '		</IconStyle>' & @CRLF _
-				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>ff70ff48</color>' & @CRLF _
-				 & '			<width>2</width>' & @CRLF _
-				 & '		</LineStyle>' & @CRLF _
-				 & '		<PolyStyle>' & @CRLF _
-				 & '			<color>bf70ff48</color>' & @CRLF _
-				 & '			<outline>0</outline>' & @CRLF _
-				 & '			<opacity>75</opacity>' & @CRLF _
-				 & '		</PolyStyle>' & @CRLF _
-				 & '	</Style>' & @CRLF _
-				 & '	<Style id="SigCat6">' & @CRLF _
-				 & '		<IconStyle>' & @CRLF _
-				 & '			<scale>1.2</scale>' & @CRLF _
-				 & '		</IconStyle>' & @CRLF _
-				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>ff3d8c27</color>' & @CRLF _
-				 & '			<width>2</width>' & @CRLF _
-				 & '		</LineStyle>' & @CRLF _
-				 & '		<PolyStyle>' & @CRLF _
-				 & '			<color>bf3d8c27</color>' & @CRLF _
-				 & '			<outline>0</outline>' & @CRLF _
-				 & '			<opacity>75</opacity>' & @CRLF _
-				 & '		</PolyStyle>' & @CRLF _
-				 & '	</Style>' & @CRLF
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff0000ff</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf0000ff</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat2">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff0055ff</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf0055ff</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat3">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff00ffff</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf00ffff</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat4">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff01ffc8</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf01ffc8</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat5">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff70ff48</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf70ff48</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat6">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff3d8c27</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf3d8c27</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -951,7 +951,7 @@ $ExportToGPX = GUICtrlCreateMenuItem($Text_ExportToGPX, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
 $ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(' & $Text_Filtered & ')', $Export)
 $ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(' & $Text_Filtered & ')', $Export)
-$CreateApSignalMap = GUICtrlCreateMenuItem($Text_ExportKmlSignalMap & ' (' & $Text_SelectedAP & ')' , $Export)
+$CreateApSignalMap = GUICtrlCreateMenuItem($Text_ExportKmlSignalMap & ' (' & $Text_SelectedAP & ')', $Export)
 $CreateSignalMap = GUICtrlCreateMenuItem($Text_ExportKmlSignalMap & ' (' & $Text_AllAPs & ')', $Export)
 $CreateFiltSignalMap = GUICtrlCreateMenuItem($Text_ExportKmlSignalMap & ' (' & $Text_FilteredAPs & ')', $Export)
 
@@ -2269,7 +2269,7 @@ Func _GpsToggle();Turns GPS on or off
 		$TurnOffGPS = 1
 	Else
 		$openport = _OpenComPort($ComPort, $BAUD, $PARITY, $DATABIT, $STOPBIT);Open The GPS COM port
-		
+
 		If $openport = 1 Then
 			$UseGPS = 1
 			GUICtrlSetData($GpsButton, $Text_StopGPS)
@@ -2638,7 +2638,7 @@ Func _GetGPS(); Recieves data from gps device
 				For $gda = 1 To $dlsplit[0]
 					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
 					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-						
+
 						If StringInStr($dlsplit[$gda], "GPGGA") Then
 							_GPGGA($dlsplit[$gda]);Split GPGGA data from data string
 							$disconnected_time = -1
@@ -2647,7 +2647,7 @@ Func _GetGPS(); Recieves data from gps device
 							$disconnected_time = -1
 						EndIf
 					EndIf
-					
+
 				Next
 			EndIf
 		EndIf
@@ -5268,7 +5268,7 @@ Func _KmlSignalMapSelectedAP()
 						$SigCat = '#SigCat6'
 						$SigData = 1
 					EndIf
-					
+
 					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) >= 2 Then
 						If $LastSigData <> 0 Then
 							$file &= '				</coordinates>' & @CRLF _
@@ -5282,7 +5282,7 @@ Func _KmlSignalMapSelectedAP()
 								 & '				<tessellate>0</tessellate>' & @CRLF _
 								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
 								 & '				<coordinates>' & @CRLF
-						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2  Then $file &= $ExpString
+						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2 Then $file &= $ExpString
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
@@ -5311,13 +5311,13 @@ EndFunc   ;==>_KmlSignalMapSelectedAP
 
 Func _KmlSignalMapSelectedAll()
 	_KmlSignalMap()
-EndFunc
+EndFunc   ;==>_KmlSignalMapSelectedAll
 
 Func _KmlSignalMapSelectedFilt()
 	_KmlSignalMap(1)
-EndFunc
+EndFunc   ;==>_KmlSignalMapSelectedFilt
 
-Func _KmlSignalMap($Filter=0)
+Func _KmlSignalMap($Filter = 0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_KmlHeatmapSelected()') ;#Debug Display
 	$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
 	If Not @error Then
@@ -5349,7 +5349,7 @@ Func _KmlSignalMap($Filter=0)
 			$NewTimeString = ''
 			If $GpsIDMatch <> 0 Then
 				$file &= '	<Folder>' & @CRLF _
-						 & '		<name>' & $ExpSSID & ' - '& $ExpBSSID & '</name>' & @CRLF
+						 & '		<name>' & $ExpSSID & ' - ' & $ExpBSSID & '</name>' & @CRLF
 				For $e = 1 To $GpsIDMatch
 					$ExpGID = $GpsIDArray[$e][1]
 					$ExpSig = $GpsIDArray[$e][2]
@@ -5387,7 +5387,7 @@ Func _KmlSignalMap($Filter=0)
 						$SigCat = '#SigCat6'
 						$SigData = 1
 					EndIf
-					
+
 					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) >= 2 Then
 						If $LastSigData <> 0 Then
 							$file &= '				</coordinates>' & @CRLF _
@@ -5401,7 +5401,7 @@ Func _KmlSignalMap($Filter=0)
 								 & '				<tessellate>0</tessellate>' & @CRLF _
 								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
 								 & '				<coordinates>' & @CRLF
-						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2  Then $file &= $ExpString
+						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2 Then $file &= $ExpString
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
@@ -5425,10 +5425,10 @@ Func _KmlSignalMap($Filter=0)
 
 		$file &= '</Document>' & @CRLF _
 				 & '</kml>'
-		
+
 		FileWrite($kml, $file)
 	EndIf
-EndFunc
+EndFunc   ;==>_KmlSignalMap
 
 Func SaveToKML()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveToKML()') ;#Debug Display
@@ -7072,7 +7072,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetOnEvent($browse1, '_BrowseSave')
 		GUICtrlSetOnEvent($Browse2, '_BrowseAutoSave')
 		GUICtrlSetOnEvent($Browse3, '_BrowseKmlSave')
-		
+
 		GUICtrlSetOnEvent($cbrowse1, '_ColorBrowse1')
 		GUICtrlSetOnEvent($cbrowse2, '_ColorBrowse2')
 		GUICtrlSetOnEvent($cbrowse3, '_ColorBrowse3')
@@ -7702,7 +7702,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Filter_OTX = GUICtrlRead($Filter_OTX_GUI)
 		$Filter_Line = GUICtrlRead($Filter_Line_GUI)
 		$Filter_Active = StringReplace(StringReplace(GUICtrlRead($Filter_Active_GUI), $Text_Active, '1'), $Text_Dead, '0')
-		
+
 		If $Filter_SSID = '' Then $Filter_SSID = '*'
 		If $Filter_BSSID = '' Then $Filter_BSSID = '*'
 		If $Filter_CHAN = '' Then $Filter_CHAN = '*'
@@ -7715,7 +7715,7 @@ Func _ApplySettingsGUI();Applys settings
 		If $Filter_OTX = '' Then $Filter_OTX = '*'
 		If $Filter_Line = '' Then $Filter_Line = '*'
 		If $Filter_Active = '' Then $Filter_Active = '*'
-		
+
 		$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 		$aquery = ''
 		$aquery = _AddFilerString($aquery, 'SSID', $Filter_SSID)
@@ -8523,7 +8523,7 @@ Func _SaveGarminGPX($gpx, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsT
 				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
 				$ExpDate = $GpsMatchArray[1][4]
 				$ExpTime = $GpsMatchArray[1][5]
-				
+
 				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
 					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
 							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
@@ -8570,7 +8570,7 @@ Func _SaveGarminGPX($gpx, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsT
 				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
 				$ExpDate = $GpsMatchArray[1][4]
 				$ExpTime = $GpsMatchArray[1][5]
-				
+
 				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
 					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
 							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
@@ -8604,7 +8604,7 @@ Func _SaveGarminGPX($gpx, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsT
 				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
 				$ExpBSSID = $ApMatchArray[$exp][2]
 				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
-				
+
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -8617,7 +8617,7 @@ Func _SaveGarminGPX($gpx, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsT
 				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
 				$ExpDate = $GpsMatchArray[1][4]
 				$ExpTime = $GpsMatchArray[1][5]
-				
+
 				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
 					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
 							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
