@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.41'
+$version = '9.5 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/06/14'
+$last_modified = '2009/06/20'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -275,8 +275,7 @@ Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
 Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
 Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
 Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
-Dim $UseNetcomm = IniRead($settings, 'GpsSettings', 'UseNetcomm', 0)
-Dim $GpsType = IniRead($settings, 'GpsSettings', 'GpsType', $UseNetcomm)
+Dim $GpsType = IniRead($settings, 'GpsSettings', 'GpsType', '2')
 Dim $GPSformat = IniRead($settings, 'GpsSettings', 'GPSformat', 1)
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 
@@ -656,7 +655,8 @@ Dim $Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportV
 Dim $Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
 Dim $Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
 Dim $Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
-Dim $Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
+Dim $Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filtered', 'Filtered')
+Dim $Text_Filters = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
 Dim $Text_NoAdaptersFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', 'No Adapters Found')
 Dim $Text_RecoveringMDB = IniRead($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', 'Recovering MDB')
 Dim $Text_FixingGpsTableDates = IniRead($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', 'Fixing GPS table date(s)')
@@ -667,6 +667,95 @@ Dim $Text_GoogleEarthDoesNotExist = IniRead($DefaultLanguagePath, 'GuiText', 'Go
 Dim $Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
 Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
 Dim $Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
+Dim $Text_ExportKmlSignalMap = IniRead($DefaultLanguagePath, 'GuiText', 'ExportKmlSignalMap', 'Export KML Signal Map')
+Dim $Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
+Dim $Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
+Dim $Text_FilteredAPs = IniRead($DefaultLanguagePath, 'GuiText', 'FilteredAPs', 'Filtered APs')
+
+Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
+				 & '		<IconStyle>' & @CRLF _
+				 & '			<scale>1.2</scale>' & @CRLF _
+				 & '		</IconStyle>' & @CRLF _
+				 & '		<LineStyle>' & @CRLF _
+				 & '			<color>ff0000ff</color>' & @CRLF _
+				 & '			<width>2</width>' & @CRLF _
+				 & '		</LineStyle>' & @CRLF _
+				 & '		<PolyStyle>' & @CRLF _
+				 & '			<color>bf0000ff</color>' & @CRLF _
+				 & '			<outline>0</outline>' & @CRLF _
+				 & '			<opacity>75</opacity>' & @CRLF _
+				 & '		</PolyStyle>' & @CRLF _
+				 & '	</Style>' & @CRLF _
+				 & '	<Style id="SigCat2">' & @CRLF _
+				 & '		<IconStyle>' & @CRLF _
+				 & '			<scale>1.2</scale>' & @CRLF _
+				 & '		</IconStyle>' & @CRLF _
+				 & '		<LineStyle>' & @CRLF _
+				 & '			<color>ff0055ff</color>' & @CRLF _
+				 & '			<width>2</width>' & @CRLF _
+				 & '		</LineStyle>' & @CRLF _
+				 & '		<PolyStyle>' & @CRLF _
+				 & '			<color>bf0055ff</color>' & @CRLF _
+				 & '			<outline>0</outline>' & @CRLF _
+				 & '			<opacity>75</opacity>' & @CRLF _
+				 & '		</PolyStyle>' & @CRLF _
+				 & '	</Style>' & @CRLF _
+				 & '	<Style id="SigCat3">' & @CRLF _
+				 & '		<IconStyle>' & @CRLF _
+				 & '			<scale>1.2</scale>' & @CRLF _
+				 & '		</IconStyle>' & @CRLF _
+				 & '		<LineStyle>' & @CRLF _
+				 & '			<color>ff00ffff</color>' & @CRLF _
+				 & '			<width>2</width>' & @CRLF _
+				 & '		</LineStyle>' & @CRLF _
+				 & '		<PolyStyle>' & @CRLF _
+				 & '			<color>bf00ffff</color>' & @CRLF _
+				 & '			<outline>0</outline>' & @CRLF _
+				 & '			<opacity>75</opacity>' & @CRLF _
+				 & '		</PolyStyle>' & @CRLF _
+				 & '	</Style>' & @CRLF _
+				 & '	<Style id="SigCat4">' & @CRLF _
+				 & '		<IconStyle>' & @CRLF _
+				 & '			<scale>1.2</scale>' & @CRLF _
+				 & '		</IconStyle>' & @CRLF _
+				 & '		<LineStyle>' & @CRLF _
+				 & '			<color>ff01ffc8</color>' & @CRLF _
+				 & '			<width>2</width>' & @CRLF _
+				 & '		</LineStyle>' & @CRLF _
+				 & '		<PolyStyle>' & @CRLF _
+				 & '			<color>bf01ffc8</color>' & @CRLF _
+				 & '			<outline>0</outline>' & @CRLF _
+				 & '			<opacity>75</opacity>' & @CRLF _
+				 & '		</PolyStyle>' & @CRLF _
+				 & '	</Style>' & @CRLF _
+				 & '	<Style id="SigCat5">' & @CRLF _
+				 & '		<IconStyle>' & @CRLF _
+				 & '			<scale>1.2</scale>' & @CRLF _
+				 & '		</IconStyle>' & @CRLF _
+				 & '		<LineStyle>' & @CRLF _
+				 & '			<color>ff70ff48</color>' & @CRLF _
+				 & '			<width>2</width>' & @CRLF _
+				 & '		</LineStyle>' & @CRLF _
+				 & '		<PolyStyle>' & @CRLF _
+				 & '			<color>bf70ff48</color>' & @CRLF _
+				 & '			<outline>0</outline>' & @CRLF _
+				 & '			<opacity>75</opacity>' & @CRLF _
+				 & '		</PolyStyle>' & @CRLF _
+				 & '	</Style>' & @CRLF _
+				 & '	<Style id="SigCat6">' & @CRLF _
+				 & '		<IconStyle>' & @CRLF _
+				 & '			<scale>1.2</scale>' & @CRLF _
+				 & '		</IconStyle>' & @CRLF _
+				 & '		<LineStyle>' & @CRLF _
+				 & '			<color>ff3d8c27</color>' & @CRLF _
+				 & '			<width>2</width>' & @CRLF _
+				 & '		</LineStyle>' & @CRLF _
+				 & '		<PolyStyle>' & @CRLF _
+				 & '			<color>bf3d8c27</color>' & @CRLF _
+				 & '			<outline>0</outline>' & @CRLF _
+				 & '			<opacity>75</opacity>' & @CRLF _
+				 & '		</PolyStyle>' & @CRLF _
+				 & '	</Style>' & @CRLF
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -862,6 +951,9 @@ $ExportToGPX = GUICtrlCreateMenuItem($Text_ExportToGPX, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
 $ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(' & $Text_Filtered & ')', $Export)
 $ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(' & $Text_Filtered & ')', $Export)
+$CreateApSignalMap = GUICtrlCreateMenuItem($Text_ExportKmlSignalMap & ' (' & $Text_SelectedAP & ')' , $Export)
+$CreateSignalMap = GUICtrlCreateMenuItem($Text_ExportKmlSignalMap & ' (' & $Text_AllAPs & ')', $Export)
+$CreateFiltSignalMap = GUICtrlCreateMenuItem($Text_ExportKmlSignalMap & ' (' & $Text_FilteredAPs & ')', $Export)
 
 Dim $NetworkAdapters[1]
 Dim $DefaultApapterDesc
@@ -1026,6 +1118,9 @@ GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
 GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
 GUICtrlSetOnEvent($ExportToFilVS1, '_ExportFilteredData')
 GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
+GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
+GUICtrlSetOnEvent($CreateSignalMap, '_KmlSignalMapSelectedAll')
+GUICtrlSetOnEvent($CreateFiltSignalMap, '_KmlSignalMapSelectedFilt')
 ;Settings Menu
 GUICtrlSetOnEvent($SetAuto, '_SettingsGUI_Auto')
 GUICtrlSetOnEvent($SetAutoKML, '_SettingsGUI_AutoKML')
@@ -5086,7 +5181,8 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', $Text_UseNativeWifi)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterMsg', $Text_FilterMsg)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SetFilters', $Text_SetFilters)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Filters', $Text_Filtered)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Filtered', $Text_Filtered)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Filters', $Text_Filters)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', $Text_NoAdaptersFound)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', $Text_RecoveringMDB)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', $Text_FixingGpsTableDates)
@@ -5097,11 +5193,226 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', $Text_AutoKmlIsNotStarted)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', $Text_UnableToGuessSearchwords)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ExportKmlSignalMap', $Text_ExportKmlSignalMap)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectedAP', $Text_SelectedAP)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AllAPs', $Text_AllAPs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilteredAPs', $Text_FilteredAPs)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GOOGLE EARTH SAVE FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
+
+Func _KmlSignalMapSelectedAP()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_KmlHeatmapSelected()') ;#Debug Display
+	Local $LineCoords
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+		$query = "SELECT ApID, SSID, BSSID FROM AP WHERE ListRow = '" & $Selected & "'"
+		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpAPID = $ListRowMatchArray[1][1]
+		$ExpSSID = StringReplace(StringReplace(StringReplace($ListRowMatchArray[1][2], '&', ''), '>', ''), '<', '')
+		$ExpBSSID = $ListRowMatchArray[1][3]
+		$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '-' & $ExpSSID & '.kml')
+		If Not @error Then
+			If StringInStr($kml, '.kml') = 0 Then $kml = $kml & '.kml'
+			$query = "SELECT GpsID, Signal FROM Hist Where ApID='" & $ExpAPID & "' ORDER BY Date1, Time1 DESC"
+			$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$GpsIDMatch = UBound($GpsIDArray) - 1
+			$SigStrengthLevel = -1
+			$SigData = 0
+			$ExpString = ''
+			If $GpsIDMatch <> 0 Then
+				$file = '<?xml version="1.0" encoding="UTF-8"?>' & @CRLF _
+						 & '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">' & @CRLF _
+						 & '<Document>' & @CRLF _
+						 & '<name>' & StringTrimLeft($kml, StringInStr($kml, '\', 0, -1)) & '</name>' & @CRLF _
+						 & $KmlSignalMapStyles _
+						 & '<Folder>' & @CRLF _
+						 & '<name>' & $ExpSSID & ' - ' & $ExpBSSID & '</name>' & @CRLF
+				For $e = 1 To $GpsIDMatch
+					$ExpGID = $GpsIDArray[$e][1]
+					$ExpSig = $GpsIDArray[$e][2]
+					$LastSigStrengthLevel = $SigStrengthLevel
+					$LastSigData = $SigData
+					If $ExpSig >= 0 And $ExpSig <= 16 Then
+						$SigStrengthLevel = 1
+						$SigCat = '#SigCat1'
+						;If $ExpSig <> 0 Then $SigData = 1
+					ElseIf $ExpSig >= 17 And $ExpSig <= 32 Then
+						$SigStrengthLevel = 2
+						$SigCat = '#SigCat2'
+						$SigData = 1
+					ElseIf $ExpSig >= 33 And $ExpSig <= 48 Then
+						$SigStrengthLevel = 3
+						$SigCat = '#SigCat3'
+						$SigData = 1
+					ElseIf $ExpSig >= 49 And $ExpSig <= 64 Then
+						$SigStrengthLevel = 4
+						$SigCat = '#SigCat4'
+						$SigData = 1
+					ElseIf $ExpSig >= 65 And $ExpSig <= 80 Then
+						$SigStrengthLevel = 5
+						$SigCat = '#SigCat5'
+						$SigData = 1
+					ElseIf $ExpSig >= 80 And $ExpSig <= 100 Then
+						$SigStrengthLevel = 6
+						$SigCat = '#SigCat6'
+						$SigData = 1
+					EndIf
+					
+					If $LastSigStrengthLevel <> $SigStrengthLevel Then
+						If $LastSigData <> 0 Then
+							$file &= '</coordinates>' & @CRLF _
+									 & '</LineString>' & @CRLF _
+									 & '</Placemark>' & @CRLF
+						EndIf
+						$file &= '<Placemark>' & @CRLF _
+								 & '<styleUrl>' & $SigCat & '</styleUrl>' & @CRLF _
+								 & '<LineString>' & @CRLF _
+								 & '<extrude>1</extrude>' & @CRLF _
+								 & '<tessellate>0</tessellate>' & @CRLF _
+								 & '<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
+								 & '<coordinates>' & @CRLF
+						If $ExpString <> '' Then $file &= $ExpString & @CRLF
+					EndIf
+					;Get Latidude and logitude
+					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
+					$GpsArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsArray[1][1]), 'W', '-'), 'E', ''), ' ', '')
+					$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsArray[1][2]), 'S', '-'), 'N', ''), ' ', '')
+					$ExpAlt = $GpsArray[1][3]
+					If $ExpLon <> '0.0000000' And $ExpLat <> '0.0000000' Then
+						$ExpString = $ExpLon & ',' & $ExpLat & ',' & $ExpSig & @CRLF
+						$file &= $ExpString
+					EndIf
+					If $e = $GpsIDMatch Then
+						$file &= '				</coordinates>' & @CRLF _
+								 & '			</LineString>' & @CRLF _
+								 & '		</Placemark>' & @CRLF
+					EndIf
+				Next
+				$file &= '</Folder>' & @CRLF _
+						 & '</Document>' & @CRLF _
+						 & '</kml>		 '
+				FileWrite($kml, $file)
+			EndIf
+		EndIf
+	EndIf
+EndFunc   ;==>_KmlSignalMapSelectedAP
+
+Func _KmlSignalMapSelectedAll()
+	_KmlSignalMap()
+EndFunc
+
+Func _KmlSignalMapSelectedFilt()
+	_KmlSignalMap(1)
+EndFunc
+
+Func _KmlSignalMap($Filter=0)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_KmlHeatmapSelected()') ;#Debug Display
+	$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
+	If Not @error Then
+		If StringInStr($kml, '.kml') = 0 Then $kml = $kml & '.kml'
+		$file = '<?xml version="1.0" encoding="UTF-8"?>' & @CRLF _
+				 & '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">' & @CRLF _
+				 & '<Document>' & @CRLF _
+				 & '	<name>' & StringTrimLeft($kml, StringInStr($kml, '\', 0, -1)) & '</name>' & @CRLF _
+				 & $KmlSignalMapStyles
+		If $Filter = 1 Then
+			$query = $AddQuery & " ORDER BY SSID"
+		Else
+			$query = "SELECT ApID, SSID, BSSID FROM AP ORDER BY SSID"
+		EndIf
+		$ApIDMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ApIDMatch = UBound($ApIDMatchArray) - 1
+		For $aid = 1 To $ApIDMatch
+			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $aid & ' / ' & $ApIDMatch)
+			$ExpAPID = $ApIDMatchArray[$aid][1]
+			$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatchArray[$aid][2], '&', ''), '>', ''), '<', '')
+			$ExpBSSID = $ApIDMatchArray[$aid][3]
+			$LineCoords = ''
+			$query = "SELECT GpsID, Signal FROM Hist Where ApID='" & $ExpAPID & "' ORDER BY Date1, Time1 DESC"
+			$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$GpsIDMatch = UBound($GpsIDArray) - 1
+			$SigStrengthLevel = -1
+			$SigData = 0
+			$ExpString = ''
+			If $GpsIDMatch <> 0 Then
+				$file &= '	<Folder>' & @CRLF _
+						 & '		<name>' & $ExpSSID & ' - '& $ExpBSSID & '</name>' & @CRLF
+				For $e = 1 To $GpsIDMatch
+					$ExpGID = $GpsIDArray[$e][1]
+					$ExpSig = $GpsIDArray[$e][2]
+					$LastSigStrengthLevel = $SigStrengthLevel
+					$LastSigData = $SigData
+					If $ExpSig >= 0 And $ExpSig <= 16 Then
+						$SigStrengthLevel = 1
+						$SigCat = '#SigCat1'
+						$SigData = 1
+					ElseIf $ExpSig >= 17 And $ExpSig <= 32 Then
+						$SigStrengthLevel = 2
+						$SigCat = '#SigCat2'
+						$SigData = 1
+					ElseIf $ExpSig >= 33 And $ExpSig <= 48 Then
+						$SigStrengthLevel = 3
+						$SigCat = '#SigCat3'
+						$SigData = 1
+					ElseIf $ExpSig >= 49 And $ExpSig <= 64 Then
+						$SigStrengthLevel = 4
+						$SigCat = '#SigCat4'
+						$SigData = 1
+					ElseIf $ExpSig >= 65 And $ExpSig <= 80 Then
+						$SigStrengthLevel = 5
+						$SigCat = '#SigCat5'
+						$SigData = 1
+					ElseIf $ExpSig >= 80 And $ExpSig <= 100 Then
+						$SigStrengthLevel = 6
+						$SigCat = '#SigCat6'
+						$SigData = 1
+					EndIf
+					
+					If $LastSigStrengthLevel <> $SigStrengthLevel Then
+						If $LastSigData <> 0 Then
+							$file &= '</coordinates>' & @CRLF _
+									 & '</LineString>' & @CRLF _
+									 & '</Placemark>' & @CRLF
+						EndIf
+						$file &= '		<Placemark>' & @CRLF _
+								 & '			<styleUrl>' & $SigCat & '</styleUrl>' & @CRLF _
+								 & '			<LineString>' & @CRLF _
+								 & '				<extrude>1</extrude>' & @CRLF _
+								 & '				<tessellate>0</tessellate>' & @CRLF _
+								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
+								 & '				<coordinates>' & @CRLF
+						If $ExpString <> '' Then $file &= $ExpString
+					EndIf
+					;Get Latidude and logitude
+					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
+					$GpsArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsArray[1][1]), 'W', '-'), 'E', ''), ' ', '')
+					$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsArray[1][2]), 'S', '-'), 'N', ''), ' ', '')
+					$ExpAlt = $GpsArray[1][3]
+					If $ExpLon <> '0.0000000' And $ExpLat <> '0.0000000' Then
+						$ExpString = $ExpLon & ',' & $ExpLat & ',' & $ExpSig & @CRLF
+						$file &= $ExpString
+					EndIf
+					If $e = $GpsIDMatch Then
+						$file &= '				</coordinates>' & @CRLF _
+								 & '			</LineString>' & @CRLF _
+								 & '		</Placemark>' & @CRLF
+					EndIf
+				Next
+				$file &= '	</Folder>' & @CRLF
+			EndIf
+		Next
+
+		$file &= '</Document>' & @CRLF _
+				 & '</kml>'
+		
+		FileWrite($kml, $file)
+	EndIf
+EndFunc
 
 Func SaveToKML()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveToKML()') ;#Debug Display
@@ -6969,7 +7280,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SetMacManu = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacManu', 'Set Manufactures by Mac')
 		$Text_Export = IniRead($DefaultLanguagePath, 'GuiText', 'Export', 'Ex&port')
 		$Text_ExportToKML = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToKML', 'Export To KML')
-		$Text_ExportToGPX = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToGPX', 'Export To GSX')
+		$Text_ExportToGPX = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToGPX', 'Export To GPX')
 		$Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 'Export To TXT')
 		$Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
 		$Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
@@ -7177,6 +7488,10 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
 		$Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
 		$Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
+		$Text_ExportKmlSignalMap = IniRead($DefaultLanguagePath, 'GuiText', 'ExportKmlSignalMap', 'Export KML Signal Map')
+		$Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
+		$Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
+		$Text_FilteredAPs = IniRead($DefaultLanguagePath, 'GuiText', 'FilteredAPs', 'Filtered APs')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
