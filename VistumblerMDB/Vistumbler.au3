@@ -5358,8 +5358,8 @@ Func _KmlSignalMap($Filter = 0)
 					$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
 					$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
 					$LastTimeString = $NewTimeString
-					
-					$NewTimeString = $ExpDate & StringFormat("%05i", $ExpTime) 
+
+					$NewTimeString = $ExpDate & StringFormat("%05i", $ExpTime)
 					If $LastTimeString = '' Then $LastTimeString = $NewTimeString
 					$LastSigStrengthLevel = $SigStrengthLevel
 					$LastSigData = $SigData
@@ -5402,11 +5402,7 @@ Func _KmlSignalMap($Filter = 0)
 								 & '				<tessellate>0</tessellate>' & @CRLF _
 								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
 								 & '				<coordinates>' & @CRLF
-<<<<<<< .mine
-						If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= 4  Then $file &= $ExpString
-=======
-						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2 Then $file &= $ExpString
->>>>>>> .r356
+						If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= 4 Then $file &= $ExpString
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
