@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.5 Beta 3.1'
+$version = '9.5 Beta 4'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/06/21'
 ;Includes------------------------------------------------
@@ -5229,21 +5229,21 @@ Func _KmlSignalMapSelectedAP()
 		$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '-' & $ExpSSID & '.kml')
 		If Not @error Then
 			If StringInStr($kml, '.kml') = 0 Then $kml = $kml & '.kml'
-			
+
 			;Create KML Header
 			$file_header = '<?xml version="1.0" encoding="UTF-8"?>' & @CRLF _
-					& '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">' & @CRLF _
-					& '<Document>' & @CRLF _
-					& '<name>' & StringTrimLeft($kml, StringInStr($kml, '\', 0, -1)) & '</name>' & @CRLF _
-					& $KmlSignalMapStyles
+					 & '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">' & @CRLF _
+					 & '<Document>' & @CRLF _
+					 & '<name>' & StringTrimLeft($kml, StringInStr($kml, '\', 0, -1)) & '</name>' & @CRLF _
+					 & $KmlSignalMapStyles
 
-			;Add KML Signal Map for selected AP			 
+			;Add KML Signal Map for selected AP
 			$file_data = _KmlSignalMapAPID($ExpAPID)
-			
+
 			;Create KML Footer
 			$file_footer = '</Document>' & @CRLF _
-					& '</kml>'
-					
+					 & '</kml>'
+
 			If $file_data = '' Then
 				MsgBox(0, $Text_Error, $Text_NoApsWithGps)
 			Else
@@ -5332,7 +5332,7 @@ Func _KmlSignalMapAPID($APID)
 			If $ExpLon <> '0.0000000' And $ExpLat <> '0.0000000' Then
 				If $SigData = 0 Then
 					$file &= '	<Folder>' & @CRLF _
-							& '		<name>' & $ExpSSID & ' - ' & $ExpBSSID & '</name>' & @CRLF
+							 & '		<name>' & $ExpSSID & ' - ' & $ExpBSSID & '</name>' & @CRLF
 				EndIf
 				If $LastTimeString = '' Then $LastTimeString = $NewTimeString
 				$LastSigStrengthLevel = $SigStrengthLevel
@@ -5358,19 +5358,19 @@ Func _KmlSignalMapAPID($APID)
 					$SigCat = '#SigCat6'
 				EndIf
 				If $LastSigStrengthLevel <> $SigStrengthLevel Or ($NewTimeString - $LastTimeString) > $SigMapTimeBeforeMarkedDead Or $LastSigData = 0 Then
-						If $LastSigData = 1 Then
-							$file &= '				</coordinates>' & @CRLF _
-										& '			</LineString>' & @CRLF _
-										& '		</Placemark>' & @CRLF
-						EndIf
-						$file &= '		<Placemark>' & @CRLF _
-									& '			<styleUrl>' & $SigCat & '</styleUrl>' & @CRLF _
-									& '			<LineString>' & @CRLF _
-									& '				<extrude>1</extrude>' & @CRLF _
-									& '				<tessellate>0</tessellate>' & @CRLF _
-									& '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
-									& '				<coordinates>' & @CRLF
-						If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= $SigMapTimeBeforeMarkedDead Then $file &= $ExpString
+					If $LastSigData = 1 Then
+						$file &= '				</coordinates>' & @CRLF _
+								 & '			</LineString>' & @CRLF _
+								 & '		</Placemark>' & @CRLF
+					EndIf
+					$file &= '		<Placemark>' & @CRLF _
+							 & '			<styleUrl>' & $SigCat & '</styleUrl>' & @CRLF _
+							 & '			<LineString>' & @CRLF _
+							 & '				<extrude>1</extrude>' & @CRLF _
+							 & '				<tessellate>0</tessellate>' & @CRLF _
+							 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
+							 & '				<coordinates>' & @CRLF
+					If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= $SigMapTimeBeforeMarkedDead Then $file &= $ExpString
 				EndIf
 
 				$ExpString = '					' & $ExpLon & ',' & $ExpLat & ',' & $ExpSig & @CRLF
@@ -5378,14 +5378,14 @@ Func _KmlSignalMapAPID($APID)
 			EndIf
 			If $e = $GpsIDMatch And $SigData = 1 Then
 				$file &= '				</coordinates>' & @CRLF _
-						& '			</LineString>' & @CRLF _
-						& '		</Placemark>' & @CRLF _
-						& '	</Folder>' & @CRLF
+						 & '			</LineString>' & @CRLF _
+						 & '		</Placemark>' & @CRLF _
+						 & '	</Folder>' & @CRLF
 			EndIf
 		Next
 	EndIf
-	Return($file)
-EndFunc
+	Return ($file)
+EndFunc   ;==>_KmlSignalMapAPID
 
 Func SaveToKML()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveToKML()') ;#Debug Display
