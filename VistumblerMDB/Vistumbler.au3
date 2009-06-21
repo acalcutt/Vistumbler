@@ -17,7 +17,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
 $version = '9.5 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/06/20'
+$last_modified = '2009/06/21'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -351,9 +351,10 @@ Dim $Midi_PlayForActiveAps = IniRead($settings, 'Vistumbler', 'Midi_PlayForActiv
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 0)
 Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
+Dim $SigMapTimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'SigMapTimeBeforeMarkedDead', 2)
+
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
-
 
 Dim $ComPort = IniRead($settings, 'GpsSettings', 'ComPort', '4')
 Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
@@ -4810,6 +4811,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
 	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
+	IniWrite($settings, 'Vistumbler', 'SigMapTimeBeforeMarkedDead', $SigMapTimeBeforeMarkedDead)
 
 	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
 	IniWrite($settings, 'AutoKML', 'AutoKML_Alt', $AutoKML_Alt)
@@ -5269,7 +5271,7 @@ Func _KmlSignalMapSelectedAP()
 						$SigData = 1
 					EndIf
 
-					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) > 2 Then
+					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) > $SigMapTimeBeforeMarkedDead Then
 						If $LastSigData <> 0 Then
 							$file &= '				</coordinates>' & @CRLF _
 									 & '			</LineString>' & @CRLF _
@@ -5282,7 +5284,7 @@ Func _KmlSignalMapSelectedAP()
 								 & '				<tessellate>0</tessellate>' & @CRLF _
 								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
 								 & '				<coordinates>' & @CRLF
-						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2 Then $file &= $ExpString
+						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= $SigMapTimeBeforeMarkedDead Then $file &= $ExpString
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
@@ -5389,7 +5391,7 @@ Func _KmlSignalMap($Filter = 0)
 						$SigData = 1
 					EndIf
 
-					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($NewTimeString - $LastTimeString) > 2 Then
+					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($NewTimeString - $LastTimeString) > $SigMapTimeBeforeMarkedDead Then
 						If $LastSigData <> 0 Then
 							$file &= '				</coordinates>' & @CRLF _
 									 & '			</LineString>' & @CRLF _
@@ -5402,7 +5404,7 @@ Func _KmlSignalMap($Filter = 0)
 								 & '				<tessellate>0</tessellate>' & @CRLF _
 								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
 								 & '				<coordinates>' & @CRLF
-						If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= 2 Then $file &= $ExpString
+						If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= $SigMapTimeBeforeMarkedDead Then $file &= $ExpString
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
