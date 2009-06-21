@@ -5340,7 +5340,7 @@ Func _KmlSignalMap($Filter = 0)
 			$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatchArray[$aid][2], '&', ''), '>', ''), '<', '')
 			$ExpBSSID = $ApIDMatchArray[$aid][3]
 			$LineCoords = ''
-			$query = "SELECT GpsID, Signal, Date1, Time1 FROM Hist Where ApID='" & $ExpAPID & "' ORDER BY Date1, Time1 DESC"
+			$query = "SELECT GpsID, Signal, Date1, Time1 FROM Hist Where ApID='" & $ExpAPID & "' ORDER BY Date1, Time1 ASC"
 			$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$GpsIDMatch = UBound($GpsIDArray) - 1
 			$SigStrengthLevel = -1
@@ -5358,7 +5358,8 @@ Func _KmlSignalMap($Filter = 0)
 					$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
 					$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
 					$LastTimeString = $NewTimeString
-					$NewTimeString = $ExpDate & $ExpTime
+					
+					$NewTimeString = $ExpDate & StringFormat("%05i", $ExpTime) 
 					If $LastTimeString = '' Then $LastTimeString = $NewTimeString
 					$LastSigStrengthLevel = $SigStrengthLevel
 					$LastSigData = $SigData
@@ -5388,7 +5389,7 @@ Func _KmlSignalMap($Filter = 0)
 						$SigData = 1
 					EndIf
 
-					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) >= 2 Then
+					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($NewTimeString - $LastTimeString) > 4 Then
 						If $LastSigData <> 0 Then
 							$file &= '				</coordinates>' & @CRLF _
 									 & '			</LineString>' & @CRLF _
@@ -5401,7 +5402,11 @@ Func _KmlSignalMap($Filter = 0)
 								 & '				<tessellate>0</tessellate>' & @CRLF _
 								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
 								 & '				<coordinates>' & @CRLF
+<<<<<<< .mine
+						If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= 4  Then $file &= $ExpString
+=======
 						If $ExpString <> '' And ($LastTimeString - $NewTimeString) <= 2 Then $file &= $ExpString
+>>>>>>> .r356
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
