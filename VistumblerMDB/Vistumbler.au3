@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = '9.5 Beta 2'
+$version = '9.5 Beta 3'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/06/20'
 ;Includes------------------------------------------------
@@ -215,6 +215,91 @@ Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Fi
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
 $NewVersionFile = @ScriptDir & '\temp\versions.ini'
 $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
+
+Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff0000ff</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf0000ff</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat2">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff0055ff</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf0055ff</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat3">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff00ffff</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf00ffff</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat4">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff01ffc8</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf01ffc8</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat5">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff70ff48</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf70ff48</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF _
+		 & '	<Style id="SigCat6">' & @CRLF _
+		 & '		<IconStyle>' & @CRLF _
+		 & '			<scale>1.2</scale>' & @CRLF _
+		 & '		</IconStyle>' & @CRLF _
+		 & '		<LineStyle>' & @CRLF _
+		 & '			<color>ff3d8c27</color>' & @CRLF _
+		 & '			<width>2</width>' & @CRLF _
+		 & '		</LineStyle>' & @CRLF _
+		 & '		<PolyStyle>' & @CRLF _
+		 & '			<color>bf3d8c27</color>' & @CRLF _
+		 & '			<outline>0</outline>' & @CRLF _
+		 & '			<opacity>75</opacity>' & @CRLF _
+		 & '		</PolyStyle>' & @CRLF _
+		 & '	</Style>' & @CRLF
 
 ;Define Arrays
 Dim $Direction[23];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
@@ -671,91 +756,6 @@ Dim $Text_ExportKmlSignalMap = IniRead($DefaultLanguagePath, 'GuiText', 'ExportK
 Dim $Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 Dim $Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
 Dim $Text_FilteredAPs = IniRead($DefaultLanguagePath, 'GuiText', 'FilteredAPs', 'Filtered APs')
-
-Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
-		 & '		<IconStyle>' & @CRLF _
-		 & '			<scale>1.2</scale>' & @CRLF _
-		 & '		</IconStyle>' & @CRLF _
-		 & '		<LineStyle>' & @CRLF _
-		 & '			<color>ff0000ff</color>' & @CRLF _
-		 & '			<width>2</width>' & @CRLF _
-		 & '		</LineStyle>' & @CRLF _
-		 & '		<PolyStyle>' & @CRLF _
-		 & '			<color>bf0000ff</color>' & @CRLF _
-		 & '			<outline>0</outline>' & @CRLF _
-		 & '			<opacity>75</opacity>' & @CRLF _
-		 & '		</PolyStyle>' & @CRLF _
-		 & '	</Style>' & @CRLF _
-		 & '	<Style id="SigCat2">' & @CRLF _
-		 & '		<IconStyle>' & @CRLF _
-		 & '			<scale>1.2</scale>' & @CRLF _
-		 & '		</IconStyle>' & @CRLF _
-		 & '		<LineStyle>' & @CRLF _
-		 & '			<color>ff0055ff</color>' & @CRLF _
-		 & '			<width>2</width>' & @CRLF _
-		 & '		</LineStyle>' & @CRLF _
-		 & '		<PolyStyle>' & @CRLF _
-		 & '			<color>bf0055ff</color>' & @CRLF _
-		 & '			<outline>0</outline>' & @CRLF _
-		 & '			<opacity>75</opacity>' & @CRLF _
-		 & '		</PolyStyle>' & @CRLF _
-		 & '	</Style>' & @CRLF _
-		 & '	<Style id="SigCat3">' & @CRLF _
-		 & '		<IconStyle>' & @CRLF _
-		 & '			<scale>1.2</scale>' & @CRLF _
-		 & '		</IconStyle>' & @CRLF _
-		 & '		<LineStyle>' & @CRLF _
-		 & '			<color>ff00ffff</color>' & @CRLF _
-		 & '			<width>2</width>' & @CRLF _
-		 & '		</LineStyle>' & @CRLF _
-		 & '		<PolyStyle>' & @CRLF _
-		 & '			<color>bf00ffff</color>' & @CRLF _
-		 & '			<outline>0</outline>' & @CRLF _
-		 & '			<opacity>75</opacity>' & @CRLF _
-		 & '		</PolyStyle>' & @CRLF _
-		 & '	</Style>' & @CRLF _
-		 & '	<Style id="SigCat4">' & @CRLF _
-		 & '		<IconStyle>' & @CRLF _
-		 & '			<scale>1.2</scale>' & @CRLF _
-		 & '		</IconStyle>' & @CRLF _
-		 & '		<LineStyle>' & @CRLF _
-		 & '			<color>ff01ffc8</color>' & @CRLF _
-		 & '			<width>2</width>' & @CRLF _
-		 & '		</LineStyle>' & @CRLF _
-		 & '		<PolyStyle>' & @CRLF _
-		 & '			<color>bf01ffc8</color>' & @CRLF _
-		 & '			<outline>0</outline>' & @CRLF _
-		 & '			<opacity>75</opacity>' & @CRLF _
-		 & '		</PolyStyle>' & @CRLF _
-		 & '	</Style>' & @CRLF _
-		 & '	<Style id="SigCat5">' & @CRLF _
-		 & '		<IconStyle>' & @CRLF _
-		 & '			<scale>1.2</scale>' & @CRLF _
-		 & '		</IconStyle>' & @CRLF _
-		 & '		<LineStyle>' & @CRLF _
-		 & '			<color>ff70ff48</color>' & @CRLF _
-		 & '			<width>2</width>' & @CRLF _
-		 & '		</LineStyle>' & @CRLF _
-		 & '		<PolyStyle>' & @CRLF _
-		 & '			<color>bf70ff48</color>' & @CRLF _
-		 & '			<outline>0</outline>' & @CRLF _
-		 & '			<opacity>75</opacity>' & @CRLF _
-		 & '		</PolyStyle>' & @CRLF _
-		 & '	</Style>' & @CRLF _
-		 & '	<Style id="SigCat6">' & @CRLF _
-		 & '		<IconStyle>' & @CRLF _
-		 & '			<scale>1.2</scale>' & @CRLF _
-		 & '		</IconStyle>' & @CRLF _
-		 & '		<LineStyle>' & @CRLF _
-		 & '			<color>ff3d8c27</color>' & @CRLF _
-		 & '			<width>2</width>' & @CRLF _
-		 & '		</LineStyle>' & @CRLF _
-		 & '		<PolyStyle>' & @CRLF _
-		 & '			<color>bf3d8c27</color>' & @CRLF _
-		 & '			<outline>0</outline>' & @CRLF _
-		 & '			<opacity>75</opacity>' & @CRLF _
-		 & '		</PolyStyle>' & @CRLF _
-		 & '	</Style>' & @CRLF
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -5269,7 +5269,7 @@ Func _KmlSignalMapSelectedAP()
 						$SigData = 1
 					EndIf
 
-					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) >= 2 Then
+					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($LastTimeString - $NewTimeString) > 2 Then
 						If $LastSigData <> 0 Then
 							$file &= '				</coordinates>' & @CRLF _
 									 & '			</LineString>' & @CRLF _
@@ -5389,7 +5389,7 @@ Func _KmlSignalMap($Filter = 0)
 						$SigData = 1
 					EndIf
 
-					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($NewTimeString - $LastTimeString) > 4 Then
+					If $LastSigStrengthLevel <> $SigStrengthLevel Or ($NewTimeString - $LastTimeString) > 2 Then
 						If $LastSigData <> 0 Then
 							$file &= '				</coordinates>' & @CRLF _
 									 & '			</LineString>' & @CRLF _
@@ -5402,7 +5402,7 @@ Func _KmlSignalMap($Filter = 0)
 								 & '				<tessellate>0</tessellate>' & @CRLF _
 								 & '				<altitudeMode>relativeToGround</altitudeMode>' & @CRLF _
 								 & '				<coordinates>' & @CRLF
-						If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= 4 Then $file &= $ExpString
+						If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= 2 Then $file &= $ExpString
 					EndIf
 					;Get Latidude and logitude
 					$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID='" & $ExpGID & "'"
