@@ -50,15 +50,21 @@ function getdaemonstats()
 		{
 			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
 			$start = trim($output[1], " ");
-			preg_match_all("/\d+:\d+/", $start, $match, PREG_PATTERN_ORDER );
-			$mem = $match[1];
-			echo $mem."<BR>";
+			preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
+			$mem = $match[0][0];
+			
+			preg_match_all("/(php.*)/", $start, $matc);
+			$CMD = $matc[0][0];
+			
+			preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
+			$time = $mat[0][0];
+			
 			$patterns[1] = '/  /';
 			$patterns[2] = '/ /';
 			$ps_stats = preg_replace($patterns , "|" , $start);
-			echo $ps_stats;
+#			echo $ps_stats;
 			$ps_Sta_exp = explode("|", $ps_stats);
-			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $ps_Sta_exp[5];?></td><td><?php echo $ps_Sta_exp[11]."%";?></td><td><?php echo $ps_Sta_exp[12]." ".$ps_Sta_exp[13];?></td></tr><?php
+			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $time;?></td><td><?php echo $mem."%";?></td><td><?php echo $CMD;?></td></tr><?php
 		}
 	}elseif( $os == 'WIN')
 	{
@@ -128,7 +134,7 @@ $result = mysql_query($sql, $conn) or die(mysql_error());
 $total_rows = mysql_num_rows($result);
 if($total_rows === 0)
 {
-	?><tr><td border="1" colspan="7" align="center">There where no files waiting to be imported, Go and import a file</td></tr></table><?php
+	?><tr><td border="1" colspan="7" align="center">There are no files waiting to be imported, Go and import a file</td></tr></table><?php
 }else
 {
 	?><tr align="center"><td border="1"><br><?php
@@ -251,6 +257,6 @@ if($total_rows === 0)
 	?>
 	</tr></table><?php
 }
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+echo "<BR>";
+footer($_SERVER['SCRIPT_FILENAME']);
 ?>

@@ -28,7 +28,7 @@ if($log_level != 0)
 	verbosed($GREEN."Log Interval is: ".$GLOBALS['log_interval']." (".$de.")".$WHITE, $verbose, "CLI");
 }
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
-#error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
+error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
 
 logd("Have included the WiFiDB Tools Functions file for the 'Daemon'.", $log_interval, 0,  $GLOBALS['log_level']);
 verbosed($GREEN."Have included the WiFiDB Tools Functions file for the 'Daemon'.".$WHITE, $verbose, "CLI"); 
@@ -52,6 +52,7 @@ verbosed($GREEN."PID Writen ".$This_is_me.$WHITE, $verbose, "CLI");
 																	  //importing something it is probably going to take more then that to imort the file
 $finished = 0;
 //Main loop
+$database = new database;
 while(1) //while my pid file is still in the /var/run/ folder i will still run, this is for the init.d script or crash override
 {
 	$time  = time()+$DST;
@@ -82,7 +83,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			if(!($count <= 8))//make sure there is at least a valid file in the field
 			{
 				verbosed("Hey look! a valid file waiting to be imported.", $verbose, "CLI");
-				$check = database::check_file($source);//check to see if this file has aleady been imported into the DB
+				$check = $database->check_file($source);//check to see if this file has aleady been imported into the DB
 				if($check == 1)
 				{
 					$user = escapeshellarg($files_array['user']);//clean up Users Var
@@ -94,7 +95,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					logd("Start Import of :".$files_array['file'], 2, $details,  $GLOBALS['log_level']); //write the details array to the log if the level is 2 /this one is hard coded, beuase i wanted to show an example.
 					verbosed("Start Import of :".$files_array['file'], $verbose, "CLI"); //default verbise is 0 or none, or STFU, IE dont do shit.
 					
-					$tmp = database::import_vs1($source, $files_array['user'], $files_array['notes'], $files_array['title'], $verbose);
+					$tmp = $database->import_vs1($source, $files_array['user'], $files_array['notes'], $files_array['title'], $verbose);
 					$temp = $files_array['file']." | ".$tmp['aps']." - ".$tmp['gps'];
 					logd("Finished Import of : ".$files_array['file'] , 2 , $temp ,  $GLOBALS['log_level']); //same thing here, hard coded as log_lev 2
 					verbosed("Finished Import of :".$files_array['file'] , $verbose, "CLI");
@@ -105,7 +106,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					$user_array = mysql_fetch_array($result1);
 					$user_row = $user_array['id'];
 					echo $source."\n";
-					$inserted_new_file = database::insert_file($source, $tmp['aps'], $tmp['gps'],$files_array['user'],$files_array['notes'],$files_array['title'], $user_row );
+					$inserted_new_file = $database->insert_file($source, $tmp['aps'], $tmp['gps'],$files_array['user'],$files_array['notes'],$files_array['title'], $user_row );
 					if($inserted_new_file == 1)
 					{
 						logd("Added ".$remove_file." to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
