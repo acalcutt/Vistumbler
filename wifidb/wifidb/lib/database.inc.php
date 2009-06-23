@@ -13,6 +13,7 @@ $ver = array(
 										"user_ap_list"		=>	"1.2",
 										"all_users_ap"		=>	"1.3",
 										"exp_kml"			=>	"3.4.0",
+										"exp_signal"		=>	"1.0",
 										"exp_vs1"			=>	"1.1.0",
 										"exp_gpx"			=>	"1.0.0",
 										"convert_dm_dd"		=>	"1.3.0",
@@ -36,30 +37,30 @@ $ver = array(
 			);
 
 #---------------- Define Constants ----------------#
-define('rebuild',$rebuild);
-define('debug',$debug);
-define('loglev',$loglev);
-define('daemon',$daemon);
-define('root',$root);
-define('hosturl',$hosturl);
-define('host',$host);
-define('settings_tb',$settings_tb);
-define('users_tb',$users_tb);
-define('links',$links);
-define('wtable',$wtable);
-define('gps_ext',$gps_ext);
-define('sep',$sep);
-define('db',$db);
-define('db_st',$db_st);
-define('db_user',$db_user);
-define('db_pwd',$db_pwd);
-define('open_loc',$open_loc);
-define('WEP_loc',$WEP_loc);
-define('WPA_loc',$WPA_loc);
-define('KML_SOURCE_URL',$KML_SOURCE_URL);
-define('kml_out',$kml_out);
-define('ads',$ads);
-define('tracker',$tracker);
+define('rebuild',$rebuild, true);
+define('debug',$debug, true);
+define('loglev',$loglev, true);
+define('daemon',$daemon, true);
+define('root',$root, true);
+define('hosturl',$hosturl, true);
+define('host',$host, true);
+define('settings_tb',$settings_tb, true);
+define('users_tb',$users_tb, true);
+define('links',$links, true);
+define('wtable',$wtable, true);
+define('gps_ext',$gps_ext, true);
+define('sep',$sep, true);
+define('db',$db, true);
+define('db_st',$db_st, true);
+define('db_user',$db_user, true);
+define('db_pwd',$db_pwd, true);
+define('open_loc',$open_loc, true);
+define('WEP_loc',$WEP_loc, true);
+define('WPA_loc',$WPA_loc, true);
+define('KML_SOURCE_URL',$KML_SOURCE_URL, true);
+define('kml_out',$kml_out, true);
+define('ads',$ads, true);
+define('tracker',$tracker, true);
 
 
 #---------------- Install Folder Warning Code -----------------#
@@ -3411,6 +3412,13 @@ class database
 				break;
 		}
 	}
+	
+	#========================================================================================================================#
+	#													Export to Vistumbler VS1 File										 #
+	#========================================================================================================================#
+
+	function exp_signal($ap)
+	{}
 	
 	#========================================================================================================================#
 	#													Export to Vistumbler VS1 File										 #
