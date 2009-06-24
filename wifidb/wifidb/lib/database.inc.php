@@ -37,30 +37,31 @@ $ver = array(
 			);
 
 #---------------- Define Constants ----------------#
-define('rebuild',$rebuild, true);
-define('debug',$debug, true);
-define('loglev',$loglev, true);
-define('daemon',$daemon, true);
-define('root',$root, true);
-define('hosturl',$hosturl, true);
-define('host',$host, true);
-define('settings_tb',$settings_tb, true);
-define('users_tb',$users_tb, true);
-define('links',$links, true);
-define('wtable',$wtable, true);
-define('gps_ext',$gps_ext, true);
-define('sep',$sep, true);
-define('db',$db, true);
-define('db_st',$db_st, true);
-define('db_user',$db_user, true);
-define('db_pwd',$db_pwd, true);
-define('open_loc',$open_loc, true);
-define('WEP_loc',$WEP_loc, true);
-define('WPA_loc',$WPA_loc, true);
-define('KML_SOURCE_URL',$KML_SOURCE_URL, true);
-define('kml_out',$kml_out, true);
-define('ads',$ads, true);
-define('tracker',$tracker, true);
+define('rebuild' , $rebuild , true);
+define('debug' , $debug , true);
+define('loglev' , $loglev , true);
+define('bench' , $bench , true);
+define('daemon' , $daemon , true);
+define('root' , $root , true);
+define('hosturl' , $hosturl , true);
+define('host' , $host , true);
+define('settings_tb' , $settings_tb , true);
+define('users_tb' , $users_tb , true);
+define('links' , $links , true);
+define('wtable' , $wtable , true);
+define('GPS_ext' , $gps_ext , true);
+define('sep' , $sep , true);
+define('DB' , $db , true);
+define('DB_st' , $db_st , true);
+define('DB_user' , $db_user , true);
+define('DB_pwd' , $db_pwd , true);
+define('OPEN_loc' , $open_loc , true);
+define('WEP_loc' , $WEP_loc , true);
+define('WPA_loc' , $WPA_loc , true);
+define('KML_SOURCE_URL' , $KML_SOURCE_URL , true);
+define('kml_out' , $kml_out , true);
+define('ads' , $ads , true);
+define('tracker' , $tracker , true);
 
 
 #---------------- Install Folder Warning Code -----------------#
@@ -3400,7 +3401,6 @@ class database
 				fwrite($fileappend, $file_data);
 				fclose( $fileappend );
 				echo '<tr class="style4"><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
-				
 				mysql_close($conn);
 				$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
@@ -3417,8 +3417,213 @@ class database
 	#													Export to Vistumbler VS1 File										 #
 	#========================================================================================================================#
 
-	function exp_signal($ap)
-	{}
+	function exp_signal($id = 0)
+	{
+		$start = microtime(true);
+		$NN = 0;
+		$signal_image = ' ';
+		$file_data = "";
+		
+		$date = date('Y-m-d_H-i-s');
+		
+		$sql = "SELECT * FROM `db`.`$wtable` WHERE `ID`='$id'";
+		$result = mysql_query($sql, $conn) or die(mysql_error());
+		$aparray = mysql_fetch_array($result);
+		
+		$ssid_array = make_ssid($aparray['ssid']);
+		$ssid_t = $ssid_array[0];
+		$ssid_f = $ssid_array[1];
+		$ssid = $ssid_array[2];
+		
+		$mac = str_split($macaddress,2);
+		$MAC = $mac[0].":".$mac[1].":".$mac[2].":".$mac[3].":".$mac[4].":".$mac[5];
+		
+		$file_ext = $ssid_f."-".$aparray['mac']."-".$aparray['sectype']."-".$date.".kml";
+		$table = $ssid_t.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
+		$table_gps = $table.$gps_ext;
+		echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$ssid.'\'s Signal History</th></tr>';
+		$filename = ($kml_out.$file_ext);
+		// define initial write and appends
+		$filewrite = fopen($filename, "w");
+		if($filewrite != FALSE)
+		{
+			$file_data .= ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"".$KML_SOURCE_URL."\">\r\n<!--exp_all_signal--><Document>\r\n<name>".$table."</name>\r\n");
+			$file_data .= ("<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/open.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+			$file_data .= ("<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+			$file_data .= ("<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+			$file_data .= ('<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
+			$file_data .= ("<Folder><name>GPS Signal Map</name>");
+			$file_data .=  "<Folder><name>".$ssid." - ".$MAC."</name>";
+			echo '<tr><td style="border-style: solid; border-width: 1px">Wrote Header to KML File</td></tr>';
+			// open file and write header:
+			
+			$manuf =& database::manufactures($aparray['mac']);
+			mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
+	#			echo $table."<br>";
+			$sql = "SELECT * FROM `$table`";
+			$result = mysql_query($sql, $conn) or die(mysql_error());
+			$rows = mysql_num_rows($result);
+	#			echo $rows."<br>";
+			$sql = "SELECT * FROM `$table` WHERE `id`='$row'";
+			$result1 = mysql_query($sql, $conn) or die(mysql_error());
+	#			echo $ap['mac']."<BR>";
+			$newArray = mysql_fetch_array($result1);
+			switch($aparray['sectype'])
+			{
+				case 1:
+					$type = "#openStyleDead";
+					break;
+				case 2:
+					$type = "#wepStyleDead";
+					break;
+				case 3:
+					$type = "#secureStyleDead";
+					break;
+			}
+			
+			switch($aparray['radio'])
+			{
+				case "a":
+					$radio="802.11a";
+					break;
+				case "b":
+					$radio="802.11b";
+					break;
+				case "g":
+					$radio="802.11g";
+					break;
+				case "n":
+					$radio="802.11n";
+					break;
+				default:
+					$radio="Unknown Radio";
+					break;
+			}
+			# build array to hold ALL signal history for an AP
+			$sql_t = "SELECT * FROM `$table`";
+			$result_t = mysql_query($sql_t, $conn);
+			$signals_array = array();
+			$sig_n = 1;
+			while($table = mysql_fetch_array($result_t))
+			{
+				$sig_exp = explode("-", $table['sig']);
+				foreach($sig_exp as $sig)
+				{
+					$signal_ = explode("," , $sig);
+					$signals_array[$sig_n] = array(
+													"Signal"=>$signal_[0],
+													"gps_id"=>$signal_[1]
+													);
+					$sign_n++;
+				}
+			}
+			
+			#find out what the strongest signal is
+			$pre = "";
+			$high = "";
+			foreach($signals_array as $sig_array)
+			{
+				$sig_array['signal']
+				
+			}
+			
+			
+			
+			
+			
+			
+			
+			$otx = $newArray["otx"];
+			$btx = $newArray["btx"];
+			$nt = $newArray['nt'];
+			$label = $newArray['label'];
+			
+			$sql6 = "SELECT * FROM `$table_gps`";
+			$result6 = mysql_query($sql6, $conn);
+			$max = mysql_num_rows($result6);
+			
+			$sql_1 = "SELECT * FROM `$table_gps`";
+			$result_1 = mysql_query($sql_1, $conn);
+			while($gps_table = mysql_fetch_array($result_1))
+			{
+				$lat_exp = explode(" ", $gps_table['lat']);
+				$test = $lat_exp[1]+0;
+				if($test == "0.0000"){$zero = 1; continue;}
+				
+				$date_first = $gps_table["date"];
+				$time_first = $gps_table["time"];
+				$fa = $date_first." ".$time_first;
+				$alt = $gps_table['alt'];
+				$lat =& database::convert_dm_dd($gps_table['lat']);
+				$long =& database::convert_dm_dd($gps_table['long']);
+				
+				$zero = 0;
+				$NN++;
+				break;
+			}
+			if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; continue;}
+			
+			$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+			$result_2 = mysql_query($sql_2, $conn);
+			$gps_table_last = mysql_fetch_array($result_2);
+			$date_last = $gps_table_last["date"];
+			$time_last = $gps_table_last["time"];
+			
+			$la = $date_last." ".$time_last;
+			$file_data .= ("<Placemark id=\"".$aparray['mac']."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$aparray['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$aparray['chan']."<br /><b>Authentication: </b>".$aparray['auth']."<br /><b>Encryption: </b>".$aparray['encry']."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$aparray['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$aparray['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+			echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
+			
+			$sql_3 = "SELECT * FROM `$table` WHERE `id`='$row'";
+			$sig_result = mysql_query($sql_3, $conn) or die(mysql_error($conn));
+			$array = mysql_fetch_array($sig_result);
+			$signals = explode("-",$array['sig']);
+	#				echo $array['sig'].'<br>';
+			foreach($signals as $signal)
+			{
+				$sig_exp = explode(",",$signal);
+				$gpsid = $sig_exp[0];
+	#						echo $signal.'<br>';
+				$sig = $sig_exp[1];
+				$sql_1 = "SELECT * FROM `$table_gps` WHERE `id` = '$gpsid'";
+				$result_1 = mysql_query($sql_1, $conn);
+				$gps = mysql_fetch_array($result_1);
+				$lat_exp = explode(" ", $gps['lat']);
+				$test = $lat_exp[1]+0;
+				if($test == "0.0000"){$zero = 1; continue;}
+				
+				$alt = $gps['alt'];
+	#				echo "IN: ".$gps['lat'].'<br>';
+				$lat =& database::convert_dm_dd($gps['lat']);
+	#				echo "out: ".$lat.'<br>';
+				$long =& database::convert_dm_dd($gps['long']);
+				$file_data .= "<Placemark id=\"".$gps['id']."\">"
+				."<styleUrl>".$signal_image."</styleUrl>"
+				."<description><![CDATA[<b>Signal Strength: </b>".$sig."%<br />]]></description>"
+				."<Point id=\"".$aparray['mac']."_GPS\">"
+				."<coordinates>".$long.",".$lat.",".$alt."</coordinates>"
+				."</Point>"
+				."</Placemark>";
+				echo '<tr><td style="border-style: solid; border-width: 1px">Plotted Signal GPS Map</td></tr>';
+			}
+		}else
+		{
+			echo "Failed to write KML File, Check the permissions on the wifidb folder, and make sure that Apache (or what ever HTTP server you are using) has permissions to write";
+		}
+		$fileappend = fopen($filename, "a");
+		fwrite($fileappend, $file_data);
+		fwrite( $fileappend, "	</Document>\r\n</kml>");
+		
+		fclose( $fileappend );
+		echo '<tr class="style4"><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
+		mysql_close($conn);
+		$end = microtime(true);
+		if ($GLOBALS["bench"]  == 1)
+		{
+			echo "Time is [Unix Epoc]<BR>";
+			echo "Start Time: ".$start."<BR>";
+			echo "  End Time: ".$end."<BR>";
+		}
+	}
 	
 	#========================================================================================================================#
 	#													Export to Vistumbler VS1 File										 #
