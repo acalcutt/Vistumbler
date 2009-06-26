@@ -947,16 +947,19 @@ $SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & 
 $SetFilters = GUICtrlCreateMenuItem($Text_SetFilters, $SettingsMenu)
 
 $Export = GUICtrlCreateMenu($Text_Export)
-$ExportSelected = GUICtrlCreateMenu($Text_SelectedAP, $Export)
-$CreateApSignalMap = GUICtrlCreateMenuItem($Text_ExportToKML & ' (' & $Text_SelectedAP & ')', $ExportSelected)
-$ExportToTXT2 = GUICtrlCreateMenuItem($Text_ExportToTXT, $Export)
-$ExportToVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1, $Export)
-$ExportToKML = GUICtrlCreateMenuItem($Text_ExportToKML, $Export)
-$ExportToGPX = GUICtrlCreateMenuItem($Text_ExportToGPX, $Export)
-$ExportToNS1 = GUICtrlCreateMenuItem($Text_ExportToNS1, $Export)
-$ExportToFilVS1 = GUICtrlCreateMenuItem($Text_ExportToVS1 & '(' & $Text_Filtered & ')', $Export)
-$ExportToFilKML = GUICtrlCreateMenuItem($Text_ExportToKML & '(' & $Text_Filtered & ')', $Export)
-
+$ExportTXTMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
+$ExportToTXT2 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportTXTMenu)
+$ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
+$ExportToVS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportVS1Menu)
+$ExportToFilVS1 = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportVS1Menu)
+$ExportKmlMenu = GUICtrlCreateMenu($Text_ExportToKML, $Export)
+$ExportToKML = GUICtrlCreateMenuItem($Text_AllAPs, $ExportKmlMenu)
+$ExportToFilKML = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportKmlMenu)
+$CreateApSignalMap = GUICtrlCreateMenuItem($Text_SelectedAP, $ExportKmlMenu)
+$ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
+$ExportToGPX = GUICtrlCreateMenuItem($Text_AllAPs, $ExportGpxMenu)
+$ExportNS1Menu = GUICtrlCreateMenu($Text_ExportToNS1, $Export)
+$ExportToNS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportNS1Menu)
 
 Dim $NetworkAdapters[1]
 Dim $DefaultApapterDesc
@@ -1114,14 +1117,14 @@ GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
 GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
 GUICtrlSetOnEvent($GuiUseNativeWifi, '_NativeWifiToggle')
 ;Export Menu
-GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
-GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
 GUICtrlSetOnEvent($ExportToTXT2, '_ExportData')
-GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
 GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
 GUICtrlSetOnEvent($ExportToFilVS1, '_ExportFilteredData')
+GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
 GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
 GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
+GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
+GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
 ;Settings Menu
 GUICtrlSetOnEvent($SetAuto, '_SettingsGUI_Auto')
 GUICtrlSetOnEvent($SetAutoKML, '_SettingsGUI_AutoKML')
@@ -7244,6 +7247,8 @@ Func _ApplySettingsGUI();Applys settings
 		$rquery = _RemoveFilterString($rquery, 'ApID', $Filter_Line)
 		$rquery = _RemoveFilterString($rquery, 'Active', $Filter_Active)
 		If $rquery <> '' Then $RemoveQuery &= ' WHERE (' & $rquery & ')'
+		
+		ConsoleWrite($AddQuery & @CRLF & $RemoveQuery & @CRLF)
 	EndIf
 
 	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1
@@ -7261,7 +7266,11 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
 				If $q <> 1 Then $ret &= ","
-				$ret &= "'" & $q_splitstring[$q] & "'"
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$ret &= "'" & StringFormat("%03i", $q_splitstring[$q]) & "'"
+				Else
+					$ret &= "'" & $q_splitstring[$q] & "'"
+				EndIf
 			Next
 			$q_query &= $q_field & " IN (" & $ret & ")"
 			Return ($q_query)
@@ -7274,7 +7283,11 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			EndIf
 			Return ($q_query)
 		Else
-			$q_query &= $q_field & " = '" & $FilterValues & "'"
+			If $q_field = "CHAN" Or $q_field = "Signal" Then
+				$q_query &= $q_field & " = '" & StringFormat("%03i", $FilterValues) & "'"
+			Else
+				$q_query &= $q_field & " = '" & $FilterValues & "'"
+			EndIf
 			Return ($q_query)
 		EndIf
 	EndIf
@@ -7291,7 +7304,11 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
 				If $q <> 1 Then $ret &= ","
-				$ret &= "'" & $q_splitstring[$q] & "'"
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$ret &= "'" & StringFormat("%03i", $q_splitstring[$q]) & "'"
+				Else
+					$ret &= "'" & $q_splitstring[$q] & "'"
+				EndIf
 			Next
 			$q_query &= $q_field & " NOT IN (" & $ret & ")"
 			Return ($q_query)
@@ -7304,7 +7321,11 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			EndIf
 			Return ($q_query)
 		Else
-			$q_query &= $q_field & " <> '" & $FilterValues & "'"
+			If $q_field = "CHAN" Or $q_field = "Signal" Then
+				$q_query &= $q_field & " <> '" & StringFormat("%03i", $FilterValues) & "'"
+			Else
+				$q_query &= $q_field & " <> '" & $FilterValues & "'"
+			EndIf
 			Return ($q_query)
 		EndIf
 	EndIf
