@@ -1706,7 +1706,7 @@ Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add
 		If $Add_Signal = 0 Or $ShowEstimatedDB = 0 Then
 			$AddDb = ''
 		Else
-			$AddDb = '(' & Round(-70 + (20 * Log10($Add_Signal / (100 - $Add_Signal)))) & 'dB)'
+			$AddDb = '(' & _EstimateDbFromSignalPercent($Add_Signal) & 'dB)'
 		EndIf
 	EndIf
 
@@ -8252,3 +8252,8 @@ Func _MetersToFeet($meters)
 	$feet = $meters / 3.28
 	Return ($feet)
 EndFunc   ;==>_MetersToFeet
+
+Func _EstimateDbFromSignalPercent($InSig)
+	$EstimatedDB = Round(-70 + (20 * Log10($InSig / (105 - $InSig))))
+	Return ($EstimatedDB)
+EndFunc   ;==>_EstimateDbFromSignalPercent
