@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 2'
+$version = 'v9.6 Beta 3'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/06/27'
 ;Includes------------------------------------------------
@@ -318,18 +318,18 @@ Dim $SplitHeightPercent = IniRead($settings, 'Vistumbler', 'SplitHeightPercent',
 Dim $RefreshLoopTime = IniRead($settings, 'Vistumbler', 'Sleeptime', 1000)
 Dim $SortTime = IniRead($settings, 'Vistumbler', 'AutoSortTime', 60)
 Dim $AutoSort = IniRead($settings, 'Vistumbler', 'AutoSort', 0)
-Dim $SaveTime = IniRead($settings, 'Vistumbler', 'AutoSaveTime', 60)
-Dim $AutoSave = IniRead($settings, 'Vistumbler', 'AutoSave', 0)
+Dim $SaveTime = IniRead($settings, 'Vistumbler', 'AutoSaveTime', 300)
+Dim $AutoSave = IniRead($settings, 'Vistumbler', 'AutoSave', 1)
 Dim $AutoSaveDel = IniRead($settings, 'Vistumbler', 'AutoSaveDel', 1)
 Dim $SortBy = IniRead($settings, 'Vistumbler', 'SortCombo', 'Sort by SSID')
 Dim $SortDirection = IniRead($settings, 'Vistumbler', 'AscDecDefault', 1)
-Dim $SoundOnAP = IniRead($settings, 'Vistumbler', 'PlaySoundOnNewAP', 0)
+Dim $SoundOnAP = IniRead($settings, 'Vistumbler', 'PlaySoundOnNewAP', 1)
 Dim $new_AP_sound = IniRead($settings, 'Vistumbler', 'NewAP_Sound', 'new_ap.wav')
 Dim $ErrorFlag_sound = IniRead($settings, 'Vistumbler', 'Error_Sound', 'error.wav')
 Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
-Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
-Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
-Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4F2")
+Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
+Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
+Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4C2")
 Dim $RefreshNetworks = IniRead($settings, 'Vistumbler', 'AutoRefreshNetworks', 1)
 Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'AutoRefreshTime', 1000)
 Dim $MapPos = IniRead($settings, 'Vistumbler', 'MapPos', 1)
@@ -338,7 +338,7 @@ Dim $ShowTrack = IniRead($settings, 'Vistumbler', 'ShowTrack', 1)
 Dim $MapOpen = IniRead($settings, 'Vistumbler', 'MapOpen', 1)
 Dim $MapWEP = IniRead($settings, 'Vistumbler', 'MapWEP', 1)
 Dim $MapSec = IniRead($settings, 'Vistumbler', 'MapSec', 1)
-Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 1)
+Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 0)
 Dim $PhilsGraphURL = IniRead($settings, 'Vistumbler', 'PhilsGraphURL', 'http://www.randomintervals.com/wifi/?')
 Dim $PhilsWdbURL = IniRead($settings, 'Vistumbler', 'PhilsWdbURL', 'http://www.randomintervals.com/wifidb/import/?')
 Dim $UseLocalKmlImagesOnExport = IniRead($settings, 'Vistumbler', 'UseLocalKmlImagesOnExport', 0)
@@ -350,7 +350,7 @@ Dim $SpeakType = IniRead($settings, 'Vistumbler', 'SpeakType', 2)
 Dim $Midi_Instument = IniRead($settings, 'Vistumbler', 'Midi_Instument', 56)
 Dim $Midi_PlayTime = IniRead($settings, 'Vistumbler', 'Midi_PlayTime', 500)
 Dim $Midi_PlayForActiveAps = IniRead($settings, 'Vistumbler', 'Midi_PlayForActiveAps', 0)
-Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 0)
+Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
 Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $SigMapTimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'SigMapTimeBeforeMarkedDead', 2)
@@ -364,7 +364,7 @@ Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
 Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
 Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
 Dim $GpsType = IniRead($settings, 'GpsSettings', 'GpsType', '2')
-Dim $GPSformat = IniRead($settings, 'GpsSettings', 'GPSformat', 1)
+Dim $GPSformat = IniRead($settings, 'GpsSettings', 'GPSformat', 3)
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 
 Dim $AutoKML = IniRead($settings, 'AutoKML', 'AutoKML', 0)
@@ -401,28 +401,31 @@ Dim $Filter_MANU = IniRead($settings, 'Filters', 'FilterMANU', '*')
 Dim $Filter_LAB = IniRead($settings, 'Filters', 'FilterLAB', '*')
 Dim $AddQuery = IniRead($settings, "Filters", "AddQuery", "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP")
 Dim $RemoveQuery = IniRead($settings, "Filters", "RemoveQuery", "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP")
+
 Dim $column_Line = IniRead($settings, 'Columns', 'Column_Line', 0)
 Dim $column_Active = IniRead($settings, 'Columns', 'Column_Active', 1)
-Dim $column_SSID = IniRead($settings, 'Columns', 'Column_SSID', 2)
-Dim $column_BSSID = IniRead($settings, 'Columns', 'Column_BSSID', 3)
-Dim $column_MANUF = IniRead($settings, 'Columns', 'Column_Manufacturer', 4)
-Dim $column_Signal = IniRead($settings, 'Columns', 'Column_Signal', 5)
+Dim $column_BSSID = IniRead($settings, 'Columns', 'Column_BSSID', 2)
+Dim $column_SSID = IniRead($settings, 'Columns', 'Column_SSID', 3)
+Dim $column_Signal = IniRead($settings, 'Columns', 'Column_Signal', 4)
+Dim $column_Channel = IniRead($settings, 'Columns', 'Column_Channel', 5)
 Dim $column_Authentication = IniRead($settings, 'Columns', 'Column_Authentication', 6)
 Dim $column_Encryption = IniRead($settings, 'Columns', 'Column_Encryption', 7)
-Dim $column_RadioType = IniRead($settings, 'Columns', 'Column_RadioType', 8)
-Dim $column_Channel = IniRead($settings, 'Columns', 'Column_Channel', 9)
-Dim $column_Latitude = IniRead($settings, 'Columns', 'Column_Latitude', 10)
-Dim $column_Longitude = IniRead($settings, 'Columns', 'Column_Longitude', 11)
-Dim $column_LatitudeDMS = IniRead($settings, 'Columns', 'Column_LatitudeDMS', 12)
-Dim $column_LongitudeDMS = IniRead($settings, 'Columns', 'Column_LongitudeDMS', 13)
-Dim $column_LatitudeDMM = IniRead($settings, 'Columns', 'Column_LatitudeDMM', 14)
-Dim $column_LongitudeDMM = IniRead($settings, 'Columns', 'Column_LongitudeDMM', 15)
-Dim $column_BasicTransferRates = IniRead($settings, 'Columns', 'Column_BasicTransferRates', 16)
-Dim $column_OtherTransferRates = IniRead($settings, 'Columns', 'Column_OtherTransferRates', 17)
-Dim $column_FirstActive = IniRead($settings, 'Columns', 'Column_FirstActive', 18)
-Dim $column_LastActive = IniRead($settings, 'Columns', 'Column_LastActive', 19)
-Dim $column_NetworkType = IniRead($settings, 'Columns', 'Column_NetworkType', 20)
-Dim $column_Label = IniRead($settings, 'Columns', 'Column_Label', 21)
+Dim $column_NetworkType = IniRead($settings, 'Columns', 'Column_NetworkType', 8)
+Dim $column_Latitude = IniRead($settings, 'Columns', 'Column_Latitude', 9)
+Dim $column_Longitude = IniRead($settings, 'Columns', 'Column_Longitude', 10)
+Dim $column_MANUF = IniRead($settings, 'Columns', 'Column_Manufacturer', 11)
+Dim $column_Label = IniRead($settings, 'Columns', 'Column_Label', 12)
+Dim $column_RadioType = IniRead($settings, 'Columns', 'Column_RadioType', 13)
+Dim $column_LatitudeDMS = IniRead($settings, 'Columns', 'Column_LatitudeDMS', 14)
+Dim $column_LongitudeDMS = IniRead($settings, 'Columns', 'Column_LongitudeDMS', 15)
+Dim $column_LatitudeDMM = IniRead($settings, 'Columns', 'Column_LatitudeDMM', 16)
+Dim $column_LongitudeDMM = IniRead($settings, 'Columns', 'Column_LongitudeDMM', 17)
+Dim $column_BasicTransferRates = IniRead($settings, 'Columns', 'Column_BasicTransferRates', 18)
+Dim $column_OtherTransferRates = IniRead($settings, 'Columns', 'Column_OtherTransferRates', 19)
+Dim $column_FirstActive = IniRead($settings, 'Columns', 'Column_FirstActive', 20)
+Dim $column_LastActive = IniRead($settings, 'Columns', 'Column_LastActive', 21)
+
+
 
 Dim $column_Width_Line = IniRead($settings, 'Column_Width', 'Column_Line', 35)
 Dim $column_Width_Active = IniRead($settings, 'Column_Width', 'Column_Active', 60)
@@ -860,7 +863,7 @@ EndIf
 
 $var = IniReadSection($settings, "Columns")
 If @error Then
-	$headers = '#|Active|SSID|Mac Address|Manufacturer|Signal|Authentication|Encryption|Radio Type|Channel|Latitude|Longitude|Latitude DMS|Longitude DMS|Latitude DMM|Longitude DMM|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated|Network Type|Label'
+	$headers = '#|Active|Mac Address|SSID|Signal|Channel|Authentication|Encryption|Network Type|Latitude|Longitude|Manufacturer|Label|Radio Type|Lat (dd mm ss)|Lon (dd mm ss)|Lat (ddmm.mmmm)|Lon (ddmm.mmmm)|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated|'
 Else
 	For $a = 0 To ($var[0][0] - 1)
 		For $b = 1 To $var[0][0]
@@ -868,6 +871,8 @@ Else
 		Next
 	Next
 EndIf
+
+ConsoleWrite($headers & @CRLF)
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GUI
@@ -943,7 +948,7 @@ $SetSearchWords = GUICtrlCreateMenuItem($Text_SetSearchWords, $SettingsMenu)
 $SetMacLabel = GUICtrlCreateMenuItem($Text_SetMacLabel, $SettingsMenu)
 $SetMacManu = GUICtrlCreateMenuItem($Text_SetMacManu, $SettingsMenu)
 $SetColumnWidths = GUICtrlCreateMenuItem($Text_SetColumnWidths, $SettingsMenu)
-$SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort, $SettingsMenu)
+$SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort & ' / ' & $Text_RefreshNetworks, $SettingsMenu)
 $SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI, $SettingsMenu)
 $SetFilters = GUICtrlCreateMenuItem($Text_SetFilters, $SettingsMenu)
 
@@ -4701,16 +4706,18 @@ Func _WriteINI()
 	For $c = 1 To $currentcolumn[0]
 		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
 		If $column_Active = $currentcolumn[$c] Then $save_column_Active = $c - 1
-		If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
 		If $column_BSSID = $currentcolumn[$c] Then $save_column_BSSID = $c - 1
-		If $column_MANUF = $currentcolumn[$c] Then $save_column_MANUF = $c - 1
+		If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
 		If $column_Signal = $currentcolumn[$c] Then $save_column_Signal = $c - 1
+		If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
 		If $column_Authentication = $currentcolumn[$c] Then $save_column_Authentication = $c - 1
 		If $column_Encryption = $currentcolumn[$c] Then $save_column_Encryption = $c - 1
-		If $column_RadioType = $currentcolumn[$c] Then $save_column_RadioType = $c - 1
-		If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
+		If $column_NetworkType = $currentcolumn[$c] Then $save_column_NetworkType = $c - 1
 		If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
 		If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
+		If $column_MANUF = $currentcolumn[$c] Then $save_column_MANUF = $c - 1
+		If $column_Label = $currentcolumn[$c] Then $save_column_Label = $c - 1
+		If $column_RadioType = $currentcolumn[$c] Then $save_column_RadioType = $c - 1
 		If $column_LatitudeDMS = $currentcolumn[$c] Then $save_column_LatitudeDMS = $c - 1
 		If $column_LongitudeDMS = $currentcolumn[$c] Then $save_column_LongitudeDMS = $c - 1
 		If $column_LatitudeDMM = $currentcolumn[$c] Then $save_column_LatitudeDMM = $c - 1
@@ -4719,8 +4726,6 @@ Func _WriteINI()
 		If $column_OtherTransferRates = $currentcolumn[$c] Then $save_column_OtherTransferRates = $c - 1
 		If $column_FirstActive = $currentcolumn[$c] Then $save_column_FirstActive = $c - 1
 		If $column_LastActive = $currentcolumn[$c] Then $save_column_LastActive = $c - 1
-		If $column_NetworkType = $currentcolumn[$c] Then $save_column_NetworkType = $c - 1
-		If $column_Label = $currentcolumn[$c] Then $save_column_Label = $c - 1
 	Next
 
 	;write ini settings
@@ -4863,16 +4868,18 @@ Func _WriteINI()
 
 	IniWrite($settings, "Column_Width", "Column_Line", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0))
 	IniWrite($settings, "Column_Width", "Column_Active", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0))
-	IniWrite($settings, "Column_Width", "Column_SSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0))
 	IniWrite($settings, "Column_Width", "Column_BSSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BSSID - 0))
-	IniWrite($settings, "Column_Width", "Column_Manufacturer", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0))
+	IniWrite($settings, "Column_Width", "Column_SSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0))
 	IniWrite($settings, "Column_Width", "Column_Signal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0))
+	IniWrite($settings, "Column_Width", "Column_Channel", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0))
 	IniWrite($settings, "Column_Width", "Column_Authentication", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0))
 	IniWrite($settings, "Column_Width", "Column_Encryption", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0))
-	IniWrite($settings, "Column_Width", "Column_RadioType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0))
-	IniWrite($settings, "Column_Width", "Column_Channel", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0))
+	IniWrite($settings, "Column_Width", "Column_NetworkType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0))
 	IniWrite($settings, "Column_Width", "Column_Latitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0))
 	IniWrite($settings, "Column_Width", "Column_Longitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0))
+	IniWrite($settings, "Column_Width", "Column_Manufacturer", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0))
+	IniWrite($settings, "Column_Width", "Column_Label", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0))
+	IniWrite($settings, "Column_Width", "Column_RadioType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0))
 	IniWrite($settings, "Column_Width", "Column_LatitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0))
 	IniWrite($settings, "Column_Width", "Column_LongitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0))
 	IniWrite($settings, "Column_Width", "Column_LatitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0))
@@ -4881,11 +4888,8 @@ Func _WriteINI()
 	IniWrite($settings, "Column_Width", "Column_OtherTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0))
 	IniWrite($settings, "Column_Width", "Column_FirstActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_FirstActive - 0))
 	IniWrite($settings, "Column_Width", "Column_LastActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LastActive - 0))
-	IniWrite($settings, "Column_Width", "Column_NetworkType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0))
-	IniWrite($settings, "Column_Width", "Column_Label", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0))
 
 	;//Write Changes to Language File
-
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Line", $Column_Names_Line)
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Active", $Column_Names_Active)
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_SSID", $Column_Names_SSID)

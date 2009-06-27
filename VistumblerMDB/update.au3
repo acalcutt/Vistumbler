@@ -1,5 +1,4 @@
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=beta
 #AutoIt3Wrapper_icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
@@ -15,7 +14,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
 $version = 'v2.0'
 $origional_date = '09/01/2008'
-$last_modified = '11/15/2008'
+$last_modified = '6/27/2008'
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
@@ -28,9 +27,9 @@ Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
 Dim $VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
-Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0xFFFFFF")
-Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4D1")
-Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4F2")
+Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
+Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
+Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4C2")
 
 $data = 'Loading Versions File'
 $UpdateGUI = GUICreate("Updating Vistumbler", 350, 300)
@@ -48,7 +47,7 @@ For $loop = 1 To $CmdLine[0]
 	EndIf
 Next
 
-If $LoadVersionFile <> '' And FileExists($LoadVersionFile) Then 
+If $LoadVersionFile <> '' And FileExists($LoadVersionFile) Then
 	$NewVersionFile = $LoadVersionFile
 	$data = 'Using local file : ' & $NewVersionFile & @CRLF & $data
 	GUICtrlSetData($UpdateEdit, $data)
@@ -77,7 +76,7 @@ EndIf
 
 If FileExists($NewVersionFile) Then
 	$fv = IniReadSection($NewVersionFile, "FileVersions")
-	If Not @error Then 
+	If Not @error Then
 		For $i = 1 To $fv[0][0]
 			$filename = $fv[$i][0]
 			$filename_web = StringReplace($filename, '\', '/')
@@ -87,7 +86,7 @@ If FileExists($NewVersionFile) Then
 					If StringInStr($filename, '\') Then
 						$struct = StringSplit($filename, '\')
 						For $cp = 1 to $struct[0] - 1
-							If $cp = 1 Then 
+							If $cp = 1 Then
 								$dirstruct = $struct[$cp]
 							Else
 								$dirstruct &= '\' & $struct[$cp]
@@ -127,7 +126,7 @@ If FileExists($NewVersionFile) Then
 		For $i = 1 To $rm[0][0]
 			$filename = $rm[$i][0]
 			$filefullpath = @ScriptDir & '\' & $filename
-			If FileExists($filefullpath) Then 
+			If FileExists($filefullpath) Then
 				If FileDelete($filefullpath) = 1 Then
 					$data = 'Deleted File:' & $filename & @CRLF & $data
 					GUICtrlSetData($UpdateEdit, $data)
