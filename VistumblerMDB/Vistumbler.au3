@@ -3291,7 +3291,6 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = ($b[3] * $SplitHeightPercent) + 1
 			$ListviewAPs_height = Round(($b[3] * 0.99) - $ListviewAPs_top)
 
-			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			_WinAPI_MoveWindow($TreeviewAPs, 0, 0, 0, 0)
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top + 60, $Graphic_width, $Graphic_height)
@@ -3307,7 +3306,6 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = ($b[3] * 0.01)
 			$ListviewAPs_height = ($b[3] * 0.99) - $ListviewAPs_top
 
-			GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			_WinAPI_MoveWindow($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
