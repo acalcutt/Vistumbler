@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 1'
+$version = 'v9.6 Beta 2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/06/27'
 ;Includes------------------------------------------------
@@ -1498,9 +1498,9 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$NewApFound = 1
 			$ListRow = -1
 			;Set Security Type
-			If $AUTH = $SearchWord_Open And $ENCR = $SearchWord_None Then
+			If BitOR($AUTH = $SearchWord_Open, $AUTH = 'Open') And BitOR($ENCR = $SearchWord_None, $ENCR = 'Unencrypted') Then
 				$SecType = 1
-			ElseIf $ENCR = $SearchWord_Wep Then
+			ElseIf BitOR($ENCR = $SearchWord_Wep, $ENCR = 'WEP') Then
 				$SecType = 2
 			Else
 				$SecType = 3
@@ -4602,12 +4602,22 @@ Func _ImportOk()
 							EndIf
 							If $WEP = True Then
 								$LoadSecType = 2
-								$Encryption = $SearchWord_Wep
-								$Authentication = $SearchWord_Open
+								If $UseNativeWifi = 1 Then
+									$Encryption = 'WEP'
+									$Authentication = 'Open'
+								Else
+									$Encryption = $SearchWord_Wep
+									$Authentication = $SearchWord_Open
+								EndIf
 							Else
 								$LoadSecType = 1
-								$Encryption = $SearchWord_None
-								$Authentication = $SearchWord_Open
+								If $UseNativeWifi = 1 Then
+									$Encryption = 'Unencrypted'
+									$Authentication = 'Open'
+								Else
+									$Encryption = $SearchWord_None
+									$Authentication = $SearchWord_Open
+								EndIf
 							EndIf
 							;Set other information
 							$snrarray1 = StringSplit($array[7], " ")
