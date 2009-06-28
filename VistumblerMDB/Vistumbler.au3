@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 4'
+$version = 'v9.6 Beta 4.1'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/06/28'
 ;Includes------------------------------------------------
@@ -343,7 +343,7 @@ Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 Dim $SortTime = IniRead($settings, 'AutoSort', 'AutoSortTime', 60)
 Dim $AutoSort = IniRead($settings, 'AutoSort', 'AutoSort', 0)
 Dim $SortBy = IniRead($settings, 'AutoSort', 'SortCombo', 'Sort by SSID')
-Dim $SortDirection = IniRead($settings, 'Vistumbler', 'AscDecDefault', 1)
+Dim $SortDirection = IniRead($settings, 'AutoSort', 'AscDecDefault', 1)
 
 Dim $SaveTime = IniRead($settings, 'AutoSave', 'AutoSaveTime', 300)
 Dim $AutoSave = IniRead($settings, 'AutoSave', 'AutoSave', 1)
@@ -4786,10 +4786,10 @@ Func _WriteINI()
 	IniWrite($settings, 'GpsSettings', 'GPSformat', $GPSformat)
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
 
-	IniWrite($settings, "AutoSave", "AutoSortTime", $SortTime)
-	IniWrite($settings, "AutoSave", "AutoSort", $AutoSort)
-	IniWrite($settings, "AutoSave", "SortCombo", $SortBy)
-	IniWrite($settings, "AutoSave", "AscDecDefault", $SortDirection)
+	IniWrite($settings, "AutoSort", "AutoSortTime", $SortTime)
+	IniWrite($settings, "AutoSort", "AutoSort", $AutoSort)
+	IniWrite($settings, "AutoSort", "SortCombo", $SortBy)
+	IniWrite($settings, "AutoSort", "AscDecDefault", $SortDirection)
 
 	IniWrite($settings, "AutoSave", "AutoSave", $AutoSave)
 	IniWrite($settings, "AutoSave", "AutoSaveDel", $AutoSaveDel)
