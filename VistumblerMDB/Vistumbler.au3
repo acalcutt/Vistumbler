@@ -966,6 +966,9 @@ $ExportToFilTXT = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportTXTMenu)
 $ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
 $ExportToVS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportVS1Menu)
 $ExportToFilVS1 = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportVS1Menu)
+$ExportCsvMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
+$ExportToCsv = GUICtrlCreateMenuItem($Text_AllAPs, $ExportCsvMenu)
+$ExportToFilCsv = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportCsvMenu)
 $ExportKmlMenu = GUICtrlCreateMenu($Text_ExportToKML, $Export)
 $ExportToKML = GUICtrlCreateMenuItem($Text_AllAPs, $ExportKmlMenu)
 $ExportToFilKML = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportKmlMenu)
@@ -1136,6 +1139,8 @@ GUICtrlSetOnEvent($ExportToTXT, '_ExportData')
 GUICtrlSetOnEvent($ExportToFilTXT, '_ExportFilteredData')
 GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
 GUICtrlSetOnEvent($ExportToFilVS1, '_ExportFilteredDetailedData')
+GUICtrlSetOnEvent($ExportToCsv, '_ExportCsvData')
+GUICtrlSetOnEvent($ExportToFilCsv, '_ExportCsvFilteredData')
 GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
 GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
 GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
@@ -1434,7 +1439,7 @@ Func _ScanAccessPoints()
 						If StringInStr($TempFileArray[$loop], $SearchWord_OtherRates) Then $OtherTransferRates = StringStripWS($temp[2], 3)
 					ElseIf $temp[0] = 7 Then
 						If StringInStr($TempFileArray[$loop], $SearchWord_BSSID) Then
-							Dim $Signal = '', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
+							Dim $Signal = '0', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
 							$NewAP = 1
 							$BSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
 						EndIf
@@ -2091,6 +2096,16 @@ Func _RecoverMDB()
 		EndIf
 	EndIf
 	;End - Fix times of old mdb format (MDB backward compatibitly fix)
+	;Start - Fix Missing Signal in Hist Table (MDB backward compatibitly fix)
+	$query = "SELECT HistID FROM Hist WHERE Signal=''"
+	$LoadSigMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundSigMatch = UBound($LoadSigMatch) - 1
+	If $FoundSigMatch <> 0 Then
+		GUICtrlSetData($msgdisplay, 'Fixing Missing Hist Table Signal(s)')
+		$query = "UPDATE Hist SET Signal='0' WHERE Signal=''"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	EndIf
+	;End - Fix Missing Signal in Hist Table (MDB backward compatibitly fix)
 	;Reset all listview positions in DB
 	$query = "UPDATE AP SET ListRow = '-1'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -4233,6 +4248,108 @@ Func _ExportToTXT($savefile, $Filter = 0);writes vistumbler data to a txt file
 	Next
 EndFunc   ;==>_ExportToTXT
 
+Func _ExportCsvData();Saves data to a selected file
+	_ExportCsvDataGui(0)
+EndFunc   ;==>_ExportData
+
+Func _ExportCsvFilteredData();Saves data to a selected file
+	_ExportCsvDataGui(1)
+EndFunc   ;==>_ExportFilteredData
+
+Func _ExportCsvDataGui($Filter = 0);Saves data to a selected file
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
+	DirCreate($SaveDir)
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'CSV (*.csv)', '', $ldatetimestamp & '.csv')
+	If @error <> 1 Then
+		If StringInStr($file, '.csv') = 0 Then $file = $file & '.csv'
+		FileDelete($file)
+		_ExportToCSV($file, $Filter)
+		MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $file & '"')
+		GUICtrlSetData($msgdisplay, '')
+		$newdata = 0
+	EndIf
+EndFunc   ;==>_ExportDataGui
+
+Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToTXT()') ;#Debug Display
+	FileWriteLine($savefile, "# Vistumbler TXT - Export Version 2")
+	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
+	FileWriteLine($savefile, "# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+	FileWriteLine($savefile, "# SSID,BSSID,MANUFACTURER,Highest Signal w/GPS,Authetication,Encryption,Radio Type,Channel,Latitude,Longitude,Basic Transfer Rates,Other Transfer Rates,First Seen(UTC),Last Seen(UTC),Network Type,Label,Signal History")
+	FileWriteLine($savefile, "# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+	If $Filter = 1 Then
+		$query = $AddQuery
+	Else
+		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	EndIf
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $exp = 1 To $FoundApMatch
+		GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
+		$ExpAPID = $ApMatchArray[$exp][1]
+		$ExpSSID = $ApMatchArray[$exp][2]
+		$ExpBSSID = $ApMatchArray[$exp][3]
+		$ExpNET = $ApMatchArray[$exp][4]
+		$ExpRAD = $ApMatchArray[$exp][5]
+		$ExpCHAN = $ApMatchArray[$exp][6]
+		$ExpAUTH = $ApMatchArray[$exp][7]
+		$ExpENCR = $ApMatchArray[$exp][8]
+		$ExpBTX = $ApMatchArray[$exp][10]
+		$ExpOTX = $ApMatchArray[$exp][11]
+		$ExpMANU = $ApMatchArray[$exp][12]
+		$ExpLAB = $ApMatchArray[$exp][13]
+		$ExpHighGpsID = $ApMatchArray[$exp][14]
+		$ExpFirstID = $ApMatchArray[$exp][15]
+		$ExpLastID = $ApMatchArray[$exp][16]
+
+		;Get High GPS Signal
+		If $ExpHighGpsID = 0 Then
+			$ExpHighGpsSig = 0
+			$ExpHighGpsLat = 'N 0.0000'
+			$ExpHighGpsLon = 'E 0.0000'
+		Else
+			$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpHighGpsID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpHighGpsSig = $HistMatchArray[1][1]
+			$ExpHighGpsID = $HistMatchArray[1][2]
+			$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ExpHighGpsID & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpHighGpsLat = $GpsMatchArray[1][1]
+			$ExpHighGpsLon = $GpsMatchArray[1][2]
+		EndIf
+
+		;Get First Found Time From FirstHistID
+		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpFirstID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpFirstGpsId = $HistMatchArray[1][1]
+		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFirstGpsId & "'"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+
+		;Get Last Found Time From LastHistID
+		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpLastGpsId = $HistMatchArray[1][1]
+		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsId & "'"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+
+		;Get Signal History
+		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundHistMatch = UBound($HistMatchArray) - 1
+		For $esh = 1 To $FoundHistMatch
+			If $esh = 1 Then
+				$ExpSigHist = $HistMatchArray[$esh][1]
+			Else
+				$ExpSigHist &= '-' & $HistMatchArray[$esh][1]
+			EndIf
+		Next
+
+		FileWriteLine($savefile, StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & $ExpMANU & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace($ExpHighGpsLat, 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpHighGpsLon, 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & $ExpLAB & ',' & $ExpSigHist)
+	Next
+EndFunc   ;==>_ExportToCSV
+
 Func _ExportVSZ()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
 	DirCreate($SaveDir)
@@ -4492,6 +4609,7 @@ Func _ImportOk()
 								If $GidSigSplit[0] = 2 Then
 									$ImpGID = $GidSigSplit[1]
 									$ImpSig = $GidSigSplit[2]
+									If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
 									$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
 									$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 									$NewGID = $TempGidMatchArray[1][1]
