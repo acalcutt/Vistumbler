@@ -151,6 +151,7 @@ If FileExists($NewVersionFile) Then
 	EndIf
 	FileDelete($NewVersionFile)
 EndIf
+
 GUIDelete($UpdateGUI)
 
 If $Errors <> '' Then
