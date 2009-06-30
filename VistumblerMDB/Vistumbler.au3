@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 4.1'
+$version = 'v9.6 Beta 5'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/06/28'
+$last_modified = '2009/06/30'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -554,6 +554,7 @@ Dim $Text_ExportToGPX = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToGPX', 
 Dim $Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 'Export To TXT')
 Dim $Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
 Dim $Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
+Dim $Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
 Dim $Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'View graph (Phils PHP)')
 Dim $Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'Phils WiFiDB (Alpha)')
 
@@ -769,6 +770,7 @@ Dim $Text_ExportKmlSignalMap = IniRead($DefaultLanguagePath, 'GuiText', 'ExportK
 Dim $Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 Dim $Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
 Dim $Text_FilteredAPs = IniRead($DefaultLanguagePath, 'GuiText', 'FilteredAPs', 'Filtered APs')
+Dim $Text_ImportFolder = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFolder', 'Import Folder')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -904,7 +906,7 @@ $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
 $ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
 $ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
 $ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
-$ImportFolder = GUICtrlCreateMenuItem("Import Folder", $file)
+$ImportFolder = GUICtrlCreateMenuItem($Text_ImportFolder, $file)
 $ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 ;Edit Menu
@@ -966,7 +968,7 @@ $ExportToFilTXT = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportTXTMenu)
 $ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
 $ExportToVS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportVS1Menu)
 $ExportToFilVS1 = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportVS1Menu)
-$ExportCsvMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
+$ExportCsvMenu = GUICtrlCreateMenu($Text_ExportToCSV, $Export)
 $ExportToCsv = GUICtrlCreateMenuItem($Text_AllAPs, $ExportCsvMenu)
 $ExportToFilCsv = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportCsvMenu)
 $ExportKmlMenu = GUICtrlCreateMenu($Text_ExportToKML, $Export)
@@ -4334,19 +4336,7 @@ Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
 
-		;Get Signal History
-		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundHistMatch = UBound($HistMatchArray) - 1
-		For $esh = 1 To $FoundHistMatch
-			If $esh = 1 Then
-				$ExpSigHist = $HistMatchArray[$esh][1]
-			Else
-				$ExpSigHist &= '-' & $HistMatchArray[$esh][1]
-			EndIf
-		Next
-
-		FileWriteLine($savefile, StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & $ExpMANU & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace($ExpHighGpsLat, 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpHighGpsLon, 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & $ExpLAB & ',' & $ExpSigHist)
+		FileWriteLine($savefile, StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', ''))
 	Next
 EndFunc   ;==>_ExportToCSV
 
@@ -4406,12 +4396,14 @@ EndFunc   ;==>_ImportVszFile
 
 Func _LoadFolder()
 	$LoadFolder = FileSelectFolder("Load VS1 files from folder", "")
-	$vs1files = _FileListToArray($LoadFolder, '*.vs1', 1);Find all files in the folder that end in .ini . These are automatically assumed to a language file
-	For $b = 1 To $vs1files[0];Set Languages into proper format for the combo box
-		GUICtrlSetData($msgdisplay, "Loading VS1 - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
-		_LoadListGUI($LoadFolder & "\" & $vs1files[$b])
-		_ImportClose()
-	Next
+	If Not @error Then
+		$vs1files = _FileListToArray($LoadFolder, '*.vs1', 1);Find all files in the folder that end in .ini . These are automatically assumed to a language file
+		For $b = 1 To $vs1files[0];Set Languages into proper format for the combo box
+			GUICtrlSetData($msgdisplay, "Loading VS1 - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
+			_LoadListGUI($LoadFolder & "\" & $vs1files[$b])
+			_ImportClose()
+		Next
+	EndIf
 EndFunc   ;==>_LoadFolder
 
 Func _LoadListGUI($imfile1 = "")
@@ -5123,6 +5115,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToTXT", $Text_ExportToTXT)
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToNS1", $Text_ExportToNS1)
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToVS1", $Text_ExportToVS1)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToCSV", $Text_ExportToCSV)
 	IniWrite($DefaultLanguagePath, "GuiText", "PhilsPHPgraph", $Text_PhilsPHPgraph)
 	IniWrite($DefaultLanguagePath, "GuiText", "PhilsWDB", $Text_PhilsWDB)
 	IniWrite($DefaultLanguagePath, "GuiText", "RefreshLoopTime", $Text_RefreshLoopTime)
@@ -5334,6 +5327,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectedAP', $Text_SelectedAP)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AllAPs', $Text_AllAPs)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FilteredAPs', $Text_FilteredAPs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ImportFolder', $Text_ImportFolder)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -6929,6 +6923,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 'Export To TXT')
 		$Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
 		$Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
+		$Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
 		$Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'View graph (Phils PHP version)')
 		$Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'Phils WiFiDB (Alpha)')
 		$Text_RefreshLoopTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshLoopTime', 'Refresh loop time(ms):')
@@ -7138,6 +7133,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 		$Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
 		$Text_FilteredAPs = IniRead($DefaultLanguagePath, 'GuiText', 'FilteredAPs', 'Filtered APs')
+		$Text_ImportFolder = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFolder', 'Import Folder')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
