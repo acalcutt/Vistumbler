@@ -4259,7 +4259,7 @@ Func _ExportCsvFilteredData();Saves data to a selected file
 EndFunc   ;==>_ExportFilteredData
 
 Func _ExportCsvDataGui($Filter = 0);Saves data to a selected file
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui()') ;#Debug Display
 	DirCreate($SaveDir)
 	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'CSV (*.csv)', '', $ldatetimestamp & '.csv')
 	If @error <> 1 Then
@@ -4273,12 +4273,7 @@ Func _ExportCsvDataGui($Filter = 0);Saves data to a selected file
 EndFunc   ;==>_ExportDataGui
 
 Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToTXT()') ;#Debug Display
-	FileWriteLine($savefile, "# Vistumbler TXT - Export Version 2")
-	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
-	FileWriteLine($savefile, "# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
-	FileWriteLine($savefile, "# SSID,BSSID,MANUFACTURER,Highest Signal w/GPS,Authetication,Encryption,Radio Type,Channel,Latitude,Longitude,Basic Transfer Rates,Other Transfer Rates,First Seen(UTC),Last Seen(UTC),Network Type,Label,Signal History")
-	FileWriteLine($savefile, "# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
 	If $Filter = 1 Then
 		$query = $AddQuery
 	Else
