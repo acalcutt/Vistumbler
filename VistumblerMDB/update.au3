@@ -12,9 +12,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v2.0'
+$version = 'v3.0'
 $origional_date = '09/01/2008'
-$last_modified = '6/27/2008'
+$last_modified = '06/30/2008'
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
@@ -22,6 +22,8 @@ $last_modified = '6/27/2008'
 #Include <Array.au3>
 
 Dim $LoadVersionFile
+Dim $Errors
+Dim $NewFiles
 Dim $NewVersionFile = @ScriptDir & '\temp\versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
@@ -32,7 +34,7 @@ Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99
 Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4C2")
 
 $data = 'Loading Versions File'
-$UpdateGUI = GUICreate("Updating Vistumbler", 350, 300)
+$UpdateGUI = GUICreate("Vistumbler Updater " & $version, 350, 300, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
 $datalabel = GUICtrlCreateLabel("", 10, 10, 330, 15)
 GUICtrlSetColor(-1, $TextColor)
@@ -95,28 +97,35 @@ If FileExists($NewVersionFile) Then
 						Next
 					EndIf
 						$getfileerror = 0
-						InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename, 1, 1)
+						InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename & '.tmp', 1, 1)
 						While @InetGetActive
 							$txt = 'Updating ' & $filename & '. Downloaded ' & @InetGetBytesRead / 1000 & 'kB'
 							GUICtrlSetData($datalabel, $txt)
 							Sleep(5)
 						Wend
 						If @InetGetBytesRead = -1 Then $getfileerror = 1
-						If $getfileerror = 0 Then
+						If $getfileerror = 0 And FileGetSize ($filename & '.tmp') <> 0 Then
+							If FileExists(@ScriptDir & '\' & $filename) Then
+								FileDelete(@ScriptDir & '\' & $filename)
+								$data = 'Updated File:' & $filename & @CRLF & $data
+								$NewFiles &= 'Updated File:' & $filename & @CRLF
+							Else
+								$data = 'New File:' & $filename & @CRLF & $data
+								$NewFiles &= 'New File:' & $filename & @CRLF
+							EndIf
+							FileMove(@ScriptDir & '\' & $filename & '.tmp', @ScriptDir & '\' & $filename)
 							IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
-							$data = 'New File:' & $filename & @CRLF & $data
 							GUICtrlSetData($UpdateEdit, $data)
-							;ConsoleWrite('New File:' & $filename & @CRLF)
 						Else
+							If FileExists(@ScriptDir & '\' & $filename & '.tmp') Then FileDelete(@ScriptDir & '\' & $filename & '.tmp')
 							$data = 'Error Downloading New File:' & $filename & @CRLF & $data
+							$Errors &= 'Error Downloading New File:' & $filename  & @CRLF
 							GUICtrlSetData($UpdateEdit, $data)
-							;ConsoleWrite('Error Downloading New File:' & $filename & @CRLF)
 						EndIf
 						GUICtrlSetData($datalabel, '')
 				Else
 					$data = 'No Change In File:' & $filename & @CRLF & $data
 					GUICtrlSetData($UpdateEdit, $data)
-					;ConsoleWrite('No Change In File:' & $filename & @CRLF)
 				EndIf
 			EndIf
 		Next
@@ -140,8 +149,41 @@ If FileExists($NewVersionFile) Then
 	EndIf
 	FileDelete($NewVersionFile)
 EndIf
+GUIDelete($UpdateGUI)
 
-$updatemsg = MsgBox(4, 'Done', 'Done. Would you like to load vistumbler?')
-If $updatemsg = 6 Then Run(@ScriptDir & '\Vistumbler.exe')
+If $Errors <> '' Then
+	$errormsg = _MsgBox("Error", 'Would you like to retry the update?' & @CRLF & @CRLF & $Errors, "Retry", "Ignore")
+	If $errormsg = 1 Then
+		Run(@ScriptDir & '\update.exe')
+		Exit
+	EndIf
+EndIf
+
+$updatemsg = _MsgBox("Done", 'Would you like to load vistumbler?' & @CRLF & @CRLF & $NewFiles, "Yes", "No")
+If $updatemsg = 1 Then Run(@ScriptDir & '\Vistumbler.exe')
 
 Exit
+
+Func _MsgBox($title, $msg, $But1txt, $But2txt)
+	$MsgBoxGUI = GUICreate($title, 442, 234, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+	GUISetBkColor($BackgroundColor)
+	$MsgBox = GUICtrlCreateEdit($msg, 8, 8, 425, 185, $ES_READONLY + $WS_VSCROLL + $WS_HSCROLL)
+	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+	$But1 = GUICtrlCreateButton($But1txt, 120, 200, 81, 25)
+	$But2 = GUICtrlCreateButton($But2txt, 223, 200, 81, 25)
+	GUISetState(@SW_SHOW)
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE
+				GUIDelete($MsgBoxGUI)
+				Return(0)
+			Case $But1
+				GUIDelete($MsgBoxGUI)
+				Return(1)
+			Case $But2
+				GUIDelete($MsgBoxGUI)
+				Return(2)
+		EndSwitch
+	WEnd
+EndFunc

@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 5'
+$version = 'v9.6 Beta 6'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/06/30'
 ;Includes------------------------------------------------
@@ -4252,11 +4252,11 @@ EndFunc   ;==>_ExportToTXT
 
 Func _ExportCsvData();Saves data to a selected file
 	_ExportCsvDataGui(0)
-EndFunc   ;==>_ExportData
+EndFunc   ;==>_ExportCsvData
 
 Func _ExportCsvFilteredData();Saves data to a selected file
 	_ExportCsvDataGui(1)
-EndFunc   ;==>_ExportFilteredData
+EndFunc   ;==>_ExportCsvFilteredData
 
 Func _ExportCsvDataGui($Filter = 0);Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui()') ;#Debug Display
@@ -4270,7 +4270,7 @@ Func _ExportCsvDataGui($Filter = 0);Saves data to a selected file
 		GUICtrlSetData($msgdisplay, '')
 		$newdata = 0
 	EndIf
-EndFunc   ;==>_ExportDataGui
+EndFunc   ;==>_ExportCsvDataGui
 
 Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
@@ -7375,7 +7375,9 @@ Func _ApplySettingsGUI();Applys settings
 EndFunc   ;==>_ApplySettingsGUI
 
 Func _AddFilerString($q_query, $q_field, $FilterValues)
+	$FilterValues = StringReplace(StringReplace($FilterValues, '"', ''), "'", "")
 	Local $ret
+	Local $ret2
 	If $FilterValues = '*' Then
 		Return ($q_query)
 	Else
@@ -7386,26 +7388,55 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			For $q = 1 To $q_splitstring[0]
 				If $q <> 1 Then $ret &= ","
 				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$ret &= "'" & StringFormat("%03i", $q_splitstring[$q]) & "'"
+					If StringInStr($q_splitstring[$q], '<>') Then
+						If $ret = '' Then $ret &= ','
+						$ret &= "'" & StringFormat("%03i", StringReplace($q_splitstring[$q], '<>', '')) & "'"
+					Else
+						If $ret2 = '' Then $ret2 &= ','
+						$ret2 &= "'" & StringFormat("%03i", $q_splitstring[$q]) & "'"
+					EndIf
 				Else
-					$ret &= "'" & $q_splitstring[$q] & "'"
+					If StringInStr($q_splitstring[$q], '<>') Then
+						If $ret = '' Then $ret &= ','
+						$ret &= "'" & StringReplace($q_splitstring[$q], '<>', '') & "'"
+					Else
+						If $ret2 = '' Then $ret2 &= ','
+						$ret2 &= "'" & $q_splitstring[$q] & "'"
+					EndIf
 				EndIf
 			Next
-			$q_query &= $q_field & " IN (" & $ret & ")"
+			If $ret = '' Then $q_query &= $q_field & " NOT IN (" & $ret & ")"
+			If $ret2 = '' Then $q_query &= $q_field & " IN (" & $ret2 & ")"
 			Return ($q_query)
 		ElseIf StringInStr($FilterValues, "-") Then
 			$q_splitstring = StringSplit($FilterValues, "-")
-			If $q_field = "CHAN" Or $q_field = "Signal" Then
-				$q_query &= "(" & $q_field & " BETWEEN '" & StringFormat("%03i", $q_splitstring[1]) & "' AND '" & StringFormat("%03i", $q_splitstring[2]) & "')"
+			If StringInStr($FilterValues, '<>') Then
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringFormat("%03i", StringReplace($q_splitstring[1], '<>', '')) & "' AND '" & StringFormat("%03i", StringReplace($q_splitstring[2], '<>', '')) & "')"
+				Else
+					$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
+				EndIf
 			Else
-				$q_query &= "(" & $q_field & " BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$q_query &= "(" & $q_field & " BETWEEN '" & StringFormat("%03i", $q_splitstring[1]) & "' AND '" & StringFormat("%03i", $q_splitstring[2]) & "')"
+				Else
+					$q_query &= "(" & $q_field & " BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+				EndIf
 			EndIf
 			Return ($q_query)
 		Else
-			If $q_field = "CHAN" Or $q_field = "Signal" Then
-				$q_query &= $q_field & " = '" & StringFormat("%03i", $FilterValues) & "'"
+			If StringInStr($FilterValues, '<>') Then
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$q_query &= $q_field & " <> '" & StringFormat("%03i", StringReplace($FilterValues, '<>', '')) & "'"
+				Else
+					$q_query &= $q_field & " <> '" & StringReplace($FilterValues, '<>', '') & "'"
+				EndIf
 			Else
-				$q_query &= $q_field & " = '" & $FilterValues & "'"
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$q_query &= $q_field & " = '" & StringFormat("%03i", $FilterValues) & "'"
+				Else
+					$q_query &= $q_field & " = '" & $FilterValues & "'"
+				EndIf
 			EndIf
 			Return ($q_query)
 		EndIf
@@ -7413,7 +7444,9 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 EndFunc   ;==>_AddFilerString
 
 Func _RemoveFilterString($q_query, $q_field, $FilterValues)
+	$FilterValues = StringReplace(StringReplace($FilterValues, '"', ''), "'", "")
 	Local $ret
+	Local $ret2
 	If $FilterValues = '*' Then
 		Return ($q_query)
 	Else
@@ -7422,28 +7455,56 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 		If StringInStr($FilterValues, ",") Then
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
-				If $q <> 1 Then $ret &= ","
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$ret &= "'" & StringFormat("%03i", $q_splitstring[$q]) & "'"
+				If StringInStr($q_splitstring[$q], '<>') Then
+					If $q_field = "CHAN" Or $q_field = "Signal" Then
+						If $ret = '' Then $ret &= ','
+						$ret &= "'" & StringFormat("%03i", StringReplace($q_splitstring[$q], '<>', '')) & "'"
+					Else
+						If $ret2 = '' Then $ret2 &= ','
+						$ret2 &= "'" & StringReplace($q_splitstring[$q], '<>', '') & "'"
+					EndIf
 				Else
-					$ret &= "'" & $q_splitstring[$q] & "'"
+					If $q_field = "CHAN" Or $q_field = "Signal" Then
+						If $ret = '' Then $ret &= ','
+						$ret &= "'" & StringFormat("%03i", $q_splitstring[$q]) & "'"
+					Else
+						If $ret2 = '' Then $ret2 &= ','
+						$ret2 &= "'" & $q_splitstring[$q] & "'"
+					EndIf
 				EndIf
 			Next
-			$q_query &= $q_field & " NOT IN (" & $ret & ")"
+			If $ret = '' Then $q_query &= $q_field & " IN (" & $ret & ")"
+			If $ret2 = '' Then $q_query &= $q_field & " NOT IN (" & $ret2 & ")"
 			Return ($q_query)
 		ElseIf StringInStr($FilterValues, "-") Then
 			$q_splitstring = StringSplit($FilterValues, "-")
-			If $q_field = "CHAN" Or $q_field = "Signal" Then
-				$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringFormat("%03i", $q_splitstring[1]) & "' AND '" & StringFormat("%03i", $q_splitstring[2]) & "')"
+			If StringInStr($FilterValues, '<>') Then
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$q_query &= "(" & $q_field & " BETWEEN '" & StringFormat("%03i", StringReplace($q_splitstring[1], '<>', '')) & "' AND '" & StringFormat("%03i", StringReplace($q_splitstring[2], '<>', '')) & "')"
+				Else
+					$q_query &= "(" & $q_field & " BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
+				EndIf
 			Else
-				$q_query &= "(" & $q_field & " NOT BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringFormat("%03i", $q_splitstring[1]) & "' AND '" & StringFormat("%03i", $q_splitstring[2]) & "')"
+				Else
+					$q_query &= "(" & $q_field & " NOT BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+				EndIf
 			EndIf
 			Return ($q_query)
 		Else
-			If $q_field = "CHAN" Or $q_field = "Signal" Then
-				$q_query &= $q_field & " <> '" & StringFormat("%03i", $FilterValues) & "'"
+			If StringInStr($FilterValues, '<>') Then
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$q_query &= $q_field & " = '" & StringFormat("%03i", StringReplace($FilterValues, '<>', '')) & "'"
+				Else
+					$q_query &= $q_field & " = '" & StringReplace($FilterValues, '<>', '') & "'"
+				EndIf
 			Else
-				$q_query &= $q_field & " <> '" & $FilterValues & "'"
+				If $q_field = "CHAN" Or $q_field = "Signal" Then
+					$q_query &= $q_field & " <> '" & StringFormat("%03i", $FilterValues) & "'"
+				Else
+					$q_query &= $q_field & " <> '" & $FilterValues & "'"
+				EndIf
 			EndIf
 			Return ($q_query)
 		EndIf
