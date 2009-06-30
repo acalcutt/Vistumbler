@@ -138,10 +138,12 @@ If FileExists($NewVersionFile) Then
 			If FileExists($filefullpath) Then
 				If FileDelete($filefullpath) = 1 Then
 					$data = 'Deleted File:' & $filename & @CRLF & $data
+					$NewFiles &= 'Deleted File:' & $filename & @CRLF
 					GUICtrlSetData($UpdateEdit, $data)
 					IniDelete ($CurrentVersionFile, 'FileVersions' , $filename)
 				Else
 					$data = 'Error Deleting File:' & $filename & @CRLF & $data
+					$Errors &= 'Error Deleting File:' & $filename & @CRLF
 					GUICtrlSetData($UpdateEdit, $data)
 				EndIf
 			EndIf
