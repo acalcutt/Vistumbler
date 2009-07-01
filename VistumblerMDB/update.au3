@@ -12,9 +12,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v3.0'
+$version = 'v3.1'
 $origional_date = '09/01/2008'
-$last_modified = '06/30/2008'
+$last_modified = '07/01/2008'
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
@@ -57,21 +57,21 @@ Else
 	FileDelete($NewVersionFile)
 	DirCreate(@ScriptDir & '\temp\')
 	If $CheckForBetaUpdates = 1 Then
-		$data = 'Downloading Beta Versions File' & @CRLF & $data
+		$data = 'Downloading beta versions file' & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
 		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile)
 		If $get = 0 Then FileDelete($NewVersionFile)
 	Else
-		$data = 'Downloading Versions File' & @CRLF & $data
+		$data = 'Downloading versions file' & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
 		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
 		If $get = 0 Then FileDelete($NewVersionFile)
 	EndIf
 	If FileExists($NewVersionFile) Then
-		$data = 'Versions File Downloaded' & @CRLF & $data
+		$data = 'Versions file downloaded' & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
 	Else
-		$data = 'Error Downloading Versions File' & @CRLF & $data
+		$data = 'Error downloading versions file' & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
 	EndIf
 EndIf
@@ -105,26 +105,39 @@ If FileExists($NewVersionFile) Then
 						Wend
 						If @InetGetBytesRead = -1 Then $getfileerror = 1
 						If $getfileerror = 0 And FileGetSize ($filename & '.tmp') <> 0 Then
+							$ExistingFile = 0
 							If FileExists(@ScriptDir & '\' & $filename) Then
+								$ExistingFile = 1
 								FileDelete(@ScriptDir & '\' & $filename)
-								$data = 'Updated File:' & $filename & @CRLF & $data
-								$NewFiles &= 'Updated File:' & $filename & @CRLF
-							Else
-								$data = 'New File:' & $filename & @CRLF & $data
-								$NewFiles &= 'New File:' & $filename & @CRLF
 							EndIf
-							FileMove(@ScriptDir & '\' & $filename & '.tmp', @ScriptDir & '\' & $filename)
-							IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
+							If FileMove(@ScriptDir & '\' & $filename & '.tmp', @ScriptDir & '\' & $filename) = 1 Then 
+								If $ExistingFile = 0 Then
+									$data = 'New file:' & $filename & @CRLF & $data
+									$NewFiles &= 'New file:' & $filename & @CRLF
+								Else
+									$data = 'Updated file:' & $filename & @CRLF & $data
+									$NewFiles &= 'Updated file:' & $filename & @CRLF
+								EndIf
+								IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
+							Else
+								If $ExistingFile = 0 Then
+									$data = 'Error copying file:' & $filename & @CRLF & $data
+									$Errors &= 'Error copying file:' & $filename & @CRLF
+								Else
+									$data = 'Error replacing old file (Possibly in use):' & $filename & @CRLF & $data
+									$Errors &= 'Error replacing old file (Possibly in use):' & $filename & @CRLF
+								EndIf
+							EndIf
 							GUICtrlSetData($UpdateEdit, $data)
 						Else
-							If FileExists(@ScriptDir & '\' & $filename & '.tmp') Then FileDelete(@ScriptDir & '\' & $filename & '.tmp')
-							$data = 'Error Downloading New File:' & $filename & @CRLF & $data
-							$Errors &= 'Error Downloading New File:' & $filename  & @CRLF
+							$data = 'Error downloading new file:' & $filename & @CRLF & $data
+							$Errors &= 'Error downloading new file:' & $filename  & @CRLF
 							GUICtrlSetData($UpdateEdit, $data)
 						EndIf
+						If FileExists(@ScriptDir & '\' & $filename & '.tmp') Then FileDelete(@ScriptDir & '\' & $filename & '.tmp')
 						GUICtrlSetData($datalabel, '')
 				Else
-					$data = 'No Change In File:' & $filename & @CRLF & $data
+					$data = 'No change in file:' & $filename & @CRLF & $data
 					GUICtrlSetData($UpdateEdit, $data)
 				EndIf
 			EndIf
@@ -137,13 +150,13 @@ If FileExists($NewVersionFile) Then
 			$filefullpath = @ScriptDir & '\' & $filename
 			If FileExists($filefullpath) Then
 				If FileDelete($filefullpath) = 1 Then
-					$data = 'Deleted File:' & $filename & @CRLF & $data
-					$NewFiles &= 'Deleted File:' & $filename & @CRLF
+					$data = 'Deleted file:' & $filename & @CRLF & $data
+					$NewFiles &= 'Deleted file:' & $filename & @CRLF
 					GUICtrlSetData($UpdateEdit, $data)
 					IniDelete ($CurrentVersionFile, 'FileVersions' , $filename)
 				Else
-					$data = 'Error Deleting File:' & $filename & @CRLF & $data
-					$Errors &= 'Error Deleting File:' & $filename & @CRLF
+					$data = 'Error deleting file:' & $filename & @CRLF & $data
+					$Errors &= 'Error deleting file:' & $filename & @CRLF
 					GUICtrlSetData($UpdateEdit, $data)
 				EndIf
 			EndIf
