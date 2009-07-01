@@ -2108,6 +2108,7 @@ Func _RecoverMDB()
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	EndIf
 	;End - Fix Missing Signal in Hist Table (MDB backward compatibitly fix)
+	GUICtrlSetData($msgdisplay, $Text_RecoveringMDB)
 	;Reset all listview positions in DB
 	$query = "UPDATE AP SET ListRow = '-1'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -4274,6 +4275,7 @@ EndFunc   ;==>_ExportCsvDataGui
 
 Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
+	FileWriteLine($savefile, "SSID,BSSID,MANUFACTURER,Highest Signal w/GPS,Authetication,Encryption,Radio Type,Channel,Latitude,Longitude,Basic Transfer Rates,Other Transfer Rates,First Seen(UTC),Last Seen(UTC),Network Type,Label")
 	If $Filter = 1 Then
 		$query = $AddQuery
 	Else
@@ -5431,6 +5433,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 	Local $file_sigdata
 	Local $file_footer
 	Local $FoundApWithGps
+	Local $NewTimeString
 	If StringInStr($kml, '.kml') = 0 Then $kml = $kml & '.kml'
 	FileDelete($kml)
 
@@ -5584,7 +5587,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 	EndIf
 
 	If $GpsTrack = 1 Then
-		$query = "SELECT Latitude, Longitude FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
+		$query = "SELECT Latitude, Longitude, Date1, Time1 FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundGpsMatch = UBound($GpsMatchArray) - 1
 		If $FoundGpsMatch <> 0 Then
@@ -5602,6 +5605,25 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				GUICtrlSetData($msgdisplay, 'Saving Gps Position ' & $exp & '/' & $FoundGpsMatch)
 				$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1])
 				$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2])
+				$ExpDate = StringReplace($GpsMatchArray[$exp][3], '-', '')
+				$ExpTime = $GpsMatchArray[$exp][4]
+				$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
+				$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+				$LastTimeString = $NewTimeString
+				$NewTimeString = $ExpDate & StringFormat("%05i", $ExpTime)
+				If $LastTimeString = '' Then $LastTimeString = $NewTimeString
+				If ($NewTimeString - $LastTimeString) > 180 And $FoundApWithGps = 1 Then
+					$file_data &= '				</coordinates>' & @CRLF _
+							 & '			</LineString>' & @CRLF _
+							 & '		</Placemark>' & @CRLF _
+							 & '		<Placemark>' & @CRLF _
+							 & '			<name>GPS Track</name>' & @CRLF _
+							 & '			<styleUrl>#Location</styleUrl>' & @CRLF _
+							 & '			<LineString>' & @CRLF _
+							 & '				<extrude>1</extrude>' & @CRLF _
+							 & '				<tessellate>1</tessellate>' & @CRLF _
+							 & '				<coordinates>' & @CRLF
+				EndIf
 				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
 					$FoundApWithGps = 1
 					$file_data &= '					' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0' & @CRLF
