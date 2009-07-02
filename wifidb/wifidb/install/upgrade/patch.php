@@ -6,10 +6,11 @@ pageheader("Upgrade Page");
 <?php
 include('../../lib/config.inc.php');
 ?>
-<h3>If one of the steps shows "Duplicate column name '***'", you can ignor this error.</h3>
+<h3>If one of the steps shows "Duplicate column name '***'," you can ignore this error.</h3>
 <table border="1"><tr class="style4"><th>Status</th><th>Step of Install</th></tr>
 <tr class="style4"><TH colspan="2">Upgrade DB for 0.16 Build 1 / 2 / 2.1 <b>--></b> 0.16 Build 3</TH><tr>
 <?php
+$Local_tz=date_default_timezone_get();
 $ENG = "InnoDB";
 $date = date("Y-m-d");
 $root_sql_user	=	addslashes(strip_tags($_POST['root_sql_user']));
@@ -367,10 +368,12 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Install date</td></tr>
 if(!isset($loglev)){$loglev = 0;}
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n"
-									."$"."daemon			=	".$daemon.";\r\n"
+									."$"."daemon		=	".$daemon.";\r\n"
 									."$"."debug			=	$debug;\r\n"
 									."$"."log_level		=	$loglev;\r\n"
-									."$"."wifidb_tools	=	$tools_dir\r\n");
+									."$"."log_interval	=	0;\r\n"
+									."$"."wifidb_tools	=	'".$toolsdir."';\r\n"
+									."$"."DST			=	'".$Local_tz."';\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
@@ -380,7 +383,6 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values<
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n"
 									."$"."rebuild		=	$rebuild;\r\n"
-									."$"."log_interval	=	0;\r\n"
 									."$"."bench			=	0;\r\n");
 
 if($AD_CF_DG_Re)

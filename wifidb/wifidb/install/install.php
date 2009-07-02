@@ -29,6 +29,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 	#========================================================================================================================#
 	#													Gather the needed infomation								   	     #
 	#========================================================================================================================#
+$Local_tz=date_default_timezone_get();
 $timezn = 'GMT+0';
 date_default_timezone_set($timezn);
 $date = date("Y-m-d");
@@ -367,10 +368,12 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Install date</td></tr>
 
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n"
-									."$"."daemon	=	".$daemon.";\r\n"
+									."$"."daemon		=	".$daemon.";\r\n"
 									."$"."debug			=	0;\r\n"
 									."$"."log_level		=	0;\r\n"
-									."$"."wifidb_tools	=	'".$toolsdir."';\r\n");
+									."$"."log_interval	=	0;\r\n"
+									."$"."wifidb_tools	=	'".$toolsdir."';\r\n"
+									."$"."DST			=	'".$Local_tz."';\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
@@ -381,7 +384,6 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values<
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n"
 									."$"."rebuild		=	0;\r\n"
-									."$"."debug			=	0;\r\n"
 									."$"."bench			=	0;\r\n");
 
 if($AD_CF_DG_Re)
