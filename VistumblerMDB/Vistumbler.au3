@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 7'
+$version = 'v9.6 Beta 8'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/07/01'
+$last_modified = '2009/07/02'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -1057,9 +1057,28 @@ $SupportVistumbler = GUICtrlCreateMenu($Text_SupportVistumbler)
 $VistumblerDonate = GUICtrlCreateMenuItem($Text_VistumblerDonate, $SupportVistumbler)
 $VistumblerStore = GUICtrlCreateMenuItem($Text_VistumblerStore, $SupportVistumbler)
 
-
-$GraphicGUI = GUICreate("", 895.72, 386.19, 10, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
+$GraphicGUI = GUICreate("", 900, 400, 10, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
 GUISetBkColor($ControlBackgroundColor)
+$100 = GUICtrlCreateLabel('100%', 0, 5, 35, 38)
+$90 = GUICtrlCreateLabel('  90%', 0, 44, 35, 38)
+$80 = GUICtrlCreateLabel('  80%', 0, 83, 35, 38)
+$70 = GUICtrlCreateLabel('  70%', 0, 122, 35, 38)
+$60 = GUICtrlCreateLabel('  60%', 0, 161, 35, 38)
+$50 = GUICtrlCreateLabel('  50%', 0, 199, 35, 38)
+$40 = GUICtrlCreateLabel('  40%', 0, 238, 35, 38)
+$30 = GUICtrlCreateLabel('  30%', 0, 277, 35, 38)
+$20 = GUICtrlCreateLabel('  20%', 0, 316, 35, 38)
+$10 = GUICtrlCreateLabel('  10%', 0, 355, 35, 38)
+GUICtrlSetColor($100, $TextColor)
+GUICtrlSetColor($90, $TextColor)
+GUICtrlSetColor($80, $TextColor)
+GUICtrlSetColor($70, $TextColor)
+GUICtrlSetColor($60, $TextColor)
+GUICtrlSetColor($50, $TextColor)
+GUICtrlSetColor($40, $TextColor)
+GUICtrlSetColor($30, $TextColor)
+GUICtrlSetColor($20, $TextColor)
+GUICtrlSetColor($10, $TextColor)
 
 $DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
 GUISetBkColor($BackgroundColor)
@@ -1067,7 +1086,6 @@ $ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 $TreeviewAPs = _GUICtrlTreeView_Create($DataChild, 5, 5, 150, 585);GUICtrlCreateTreeView(5, 5, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
-;GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 GUISetState()
 
 $ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $Vistumbler) ; Create Child window for controls
@@ -1664,9 +1682,9 @@ Func _MarkDeadAPs()
 		$Found_Date = $GpsMatchArray[1][1]
 		$Found_Time = $GpsMatchArray[1][2]
 		$dts = StringSplit($GpsMatchArray[1][2], ":") ;Split time so it can be converted to seconds
-		$Found_Time = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+		$Found_Time = ($dts[1] * 3600) + ($dts[2] * 60) + Round($dts[3]) ;In seconds
 		$dts = StringSplit($timestamp, ":") ;Split time so it can be converted to seconds
-		$Current_Time = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+		$Current_Time = ($dts[1] * 3600) + ($dts[2] * 60) + Round($dts[3]) ;In seconds
 		$Found_dts = StringReplace($Found_Date & $Found_Time, '-', '')
 		$Current_dts = StringReplace($datestamp & $Current_Time, '-', '')
 		;Set APs that have been inactive for specified time dead
@@ -1690,6 +1708,7 @@ Func _MarkDeadAPs()
 EndFunc   ;==>_MarkDeadAPs
 
 Func _GraphDeadTime()
+
 	$query = "SELECT ApID, LastGpsID FROM AP WHERE Active = '0'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
@@ -2021,6 +2040,7 @@ Func _ClearAllAp()
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $NetworkType_tree)
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $SSID_tree)
 	$ClearAllAps = 0
+	$Redraw = 1
 EndFunc   ;==>_ClearAllAp
 
 Func _FixLineNumbers();Update Listview Row Numbers in DataArray
@@ -3315,7 +3335,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 		If $Graph <> 0 Then
 			$Graphic_left = ($b[2] * 0.01)
 			$Graphic_width = Round(($b[2] * 0.99) - $Graphic_left)
-			$Graphic_top = ($b[3] * 0.01)
+			$Graphic_top = ($b[3] * 0.01) + 10
 			$Graphic_height = Round(($b[3] * $SplitHeightPercent) - $Graphic_top)
 
 			$ListviewAPs_left = ($b[2] * 0.01)
@@ -3424,6 +3444,31 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphApSignal()') ;#Debug Display
 	If $Graph <> 0 And $MoveMode = False Then; If the graph tab is selected, run graph script
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+		$base_right = $Graphic_width - 1
+		$base_left = 30
+		$base_top = 10
+		$base_bottom = $Graphic_height - 1
+		$base_x = $base_right - $base_left
+		$base_y = $base_bottom - $base_top
+		If $Selected <> $LastSelected Or $Redraw = 1 Then
+			$o_old = 0
+			$Redraw = 0
+			For $r = 1 To $Graphic_height
+				_SelectColor($GraphBack)
+				_DrawLine($base_left, $r, $base_right, $r)
+			Next
+			$LastSelected = $Selected
+
+			_SelectColor($GraphGrid)
+			_DrawLine($base_left, $base_top, $base_left, $base_bottom)
+			_DrawLine($base_right, $base_top, $base_right, $base_bottom)
+			_DrawLine($base_left, $base_bottom, $base_right, $base_bottom)
+			_DrawLine($base_left, $base_top, $base_right, $base_top)
+			For $drawline = 1 To 10
+				$subtract_value = (($drawline * 10) * ($base_y / 100)) + $base_top
+				_DrawLine($base_right, $subtract_value, $base_left, $subtract_value)
+			Next
+		EndIf
 		If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 			$query = "SELECT ApID FROM AP WHERE ListRow = '" & $Selected & "'"
 			$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -3438,37 +3483,11 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 			$data = $HistMatchArray[1][2] & '-' & $HistSize
 
 			If $data <> $data_old Or $sizes <> $sizes_old Or $Redraw = 1 Then ; if graph data changed, map new data
-				$base_right = $Graphic_width - 1
-				$base_left = 0
-				$base_top = 0
-				$base_bottom = $Graphic_height - 1
-				$base_x = $base_right - $base_left
-				$base_y = $base_bottom - $base_top
+
 
 				$max_graph_points = 125
 				$data_old = $data
 				$sizes_old = $sizes
-
-
-				If $Selected <> $LastSelected Or $Redraw = 1 Then
-					$o_old = 0
-					$Redraw = 1
-					For $r = 1 To $Graphic_height
-						_SelectColor($GraphBack)
-						_DrawLine($base_left, $r, $base_right, $r)
-					Next
-					$LastSelected = $Selected
-
-					_SelectColor($GraphGrid)
-					_DrawLine($base_left, $base_top, $base_left, $base_bottom)
-					_DrawLine($base_right, $base_top, $base_right, $base_bottom)
-					_DrawLine($base_left, $base_bottom, $base_right, $base_bottom)
-					_DrawLine($base_left, $base_top, $base_right, $base_top)
-					For $drawline = 1 To 10
-						$subtract_value = ($drawline * 10) * ($base_y / 100)
-						_DrawLine($base_right, $subtract_value, $base_left, $subtract_value)
-					Next
-				EndIf
 
 				If $Graph = 1 Then
 					If $HistSize > $max_graph_points Then ; If the array is grater that the max number of ports, set array size to the max size, else use the full size of the array
@@ -3486,34 +3505,22 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 
 					;############### Start Mapping Access Point signal Data ###############
 					_SelectColor($red)
-					$base_add = $base_left
-					For $o = $start To ($arrayend - 2)
-						$x1 = $base_left + ($base_add - $base_x_add_value)
-						$x2 = $base_left + $base_add
-						$x3 = $base_left + ($base_add + $base_x_add_value)
-						$x4 = $base_left + ($base_add + ($base_x_add_value * 2))
-						$y1 = ($base_bottom - ($HistMatchArray[$o - 1][1] * $base_y_add_value))
-						$y2 = $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value)
-						$y3 = $base_bottom - ($HistMatchArray[$o + 1][1] * $base_y_add_value)
-						$y4 = $base_bottom - ($HistMatchArray[$o + 2][1] * $base_y_add_value)
-						$y_high = $y1
-						If $y2 > $y_high Then $y_high = $y2
-						If $y3 > $y_high Then $y_high = $y3
-						If $y4 > $y_high Then $y_high = $y4
-						$y_low = $y1
-						If $y2 < $y_low Then $y_low = $y2
-						If $y3 < $y_low Then $y_low = $y3
-						If $y4 < $y_low Then $y_low = $y4
+					$base_add = 0
+					For $o = $start To ($HistSize - 1)
+						$x1 = ($base_left + 1) + ($base_add * $base_x_add_value)
+						$x2 = ($base_left + 1) + (($base_add + 1) * $base_x_add_value)
+						$y1 = ($base_bottom + 1) - ($HistMatchArray[$o][1] * $base_y_add_value)
+						$y2 = ($base_bottom + 1) - ($HistMatchArray[$o + 1][1] * $base_y_add_value)
 
 						_SelectColor($GraphBack)
-						For $rl = $x1 To $x4
-							_DrawLine($rl, $y_high + 2, $rl, $y_low - 2)
+						For $rl = $x1 To $x2
+							_DrawLine($rl, $base_top, $rl, $base_bottom)
 						Next
 
 						_SelectColor($GraphGrid)
 						For $drawline = 1 To 10
-							$subtract_value = (($drawline * 10) * $base_y_add_value)
-							_DrawLine($x1, $subtract_value, $x4, $subtract_value)
+							$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
+							_DrawLine($x1, $subtract_value, $x2, $subtract_value)
 						Next
 
 						_DrawLine($base_right, $base_top, $base_right, $base_bottom)
@@ -3524,11 +3531,14 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 						_DrawDot($x1, $y1)
 						_DrawLine($x1, $y1, $x2, $y2);Draw line
 						_DrawDot($x2, $y2)
-						_DrawLine($x2, $y2, $x3, $y3);Draw line
-						_DrawDot($x3, $y3)
-						_DrawLine($x3, $y3, $x4, $y4);Draw line
-						_DrawDot($x4, $y4)
-						$base_add += $base_x_add_value
+						If $o <> $start Then
+							$x3 = ($base_left + 1) + (($base_add - 1) * $base_x_add_value)
+							$y3 = ($base_bottom + 1) - ($HistMatchArray[$o - 1][1] * $base_y_add_value)
+							$x4 = ($base_left + 1) + ($base_add * $base_x_add_value)
+							$y4 = ($base_bottom + 1) - ($HistMatchArray[$o][1] * $base_y_add_value)
+							_DrawLine($x3, $y3, $x4, $y4);Draw line
+						EndIf
+						$base_add += 1
 					Next
 					;############### End Mapping Access Point signal Data ###############
 				ElseIf $Graph = 2 Then
@@ -3541,7 +3551,7 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 					EndIf
 					$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
 
-					$base_add = $base_left + 1
+					$base_add = 1
 					$base_x_add_value = 1
 
 					For $o = $start To $arraylen
@@ -3553,7 +3563,7 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 								_DrawLine(($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value), ($base_left + $base_add), $base_top)
 								_SelectColor($GraphGrid)
 								For $drawline = 1 To 10
-									$subtract_value = ($drawline * 10) * $base_y_add_value
+									$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
 									_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
 								Next
 							ElseIf $o_old < $o And $start = 1 Then
@@ -3563,7 +3573,7 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 								_DrawLine(($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value), ($base_left + $base_add), $base_top)
 								_SelectColor($GraphGrid)
 								For $drawline = 1 To 10
-									$subtract_value = ($drawline * 10) * $base_y_add_value
+									$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
 									_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
 								Next
 								$o_old = $o
@@ -3575,7 +3585,7 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 							_DrawLine(($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value), ($base_left + $base_add), $base_top)
 							_SelectColor($GraphGrid)
 							For $drawline = 1 To 10
-								$subtract_value = ($drawline * 10) * $base_y_add_value
+								$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
 								_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
 							Next
 						EndIf
@@ -7373,7 +7383,7 @@ Func _ApplySettingsGUI();Applys settings
 		$aquery = _AddFilerString($aquery, 'ApID', $Filter_Line)
 		$aquery = _AddFilerString($aquery, 'Active', $Filter_Active)
 		If $aquery <> '' Then $AddQuery &= ' WHERE (' & $aquery & ')'
-		
+
 		ConsoleWrite($AddQuery & @CRLF)
 
 		$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
