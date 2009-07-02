@@ -1017,7 +1017,7 @@ class database
 						//setup ID number for new GPS cords
 						$DB_result = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
 						$gpstableid = mysql_num_rows($DB_result);
-						if ( $gpstableid === 0)
+						if ( $gpstableid == 0)
 						{
 							$gps_id = 1;
 						}
@@ -1079,6 +1079,9 @@ class database
 							$comp = $lat1."".$long1."".$date1."".$time1;
 							if(!isset($db_gps)){$db_gps = array();}
 							list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
+							
+							if($dbid == ($prev_dbid*2)){$dbid = $prev_dbid;}
+							
 							$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$dbid'", $conn);
 							$GPSDBArray = mysql_fetch_array($DBresult);
 							if($return_gps === 0)
@@ -1116,6 +1119,7 @@ class database
 								if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 							}
 							if($verbose == 1 && $out == "CLI"){echo ".";}
+							$prev_dbid = $dbid;
 						}
 						if($verbose == 1 && $out == "CLI"){echo "\n";}
 						$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
@@ -1455,7 +1459,7 @@ class database
 							if($verbose == 1){echo "\n";}
 						}
 						$sig = implode("-",$signals);
-						
+						$sig = str_replace("&#13;&#10;", "",$sig); 
 						$sqlit1 = "INSERT INTO `$db_st`.`$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
 						$insertsqlresult = mysql_query($sqlit1, $conn);
 		#				echo "(3)Insert into [".$db_st."].{".$table."}\n		 => Add Signal History to Table\n";
@@ -1785,6 +1789,7 @@ class database
 		$start = microtime(true);
 		include('config.inc.php');
 		$conn1 = $GLOBALS['conn'];
+		$db_st = $GLOBALS['db_st'];
 		
 		$count = count($gpsarray);
 		if($count !=0)
@@ -1815,7 +1820,7 @@ class database
 					$date_a = $gps['date'];
 					
 					$sql11 = "SELECT * FROM `$db_st`.`$table` WHERE `lat` like '$lat_a' AND `long` like '$long_a' AND `date` like '$date_a' AND `time` like '$time_a' LIMIT 1";
-					$gpresult = mysql_query($sql11, $conn);
+					$gpresult = mysql_query($sql11, $conn1);
 					$gpsdbarray = mysql_fetch_array($gpresult);
 					
 					$id_ = $gpsdbarray['id'];
