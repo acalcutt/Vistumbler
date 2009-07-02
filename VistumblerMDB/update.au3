@@ -110,7 +110,7 @@ If FileExists($NewVersionFile) Then
 								$ExistingFile = 1
 								FileDelete(@ScriptDir & '\' & $filename)
 							EndIf
-							If FileMove(@ScriptDir & '\' & $filename & '.tmp', @ScriptDir & '\' & $filename) = 1 Then 
+							If FileMove(@ScriptDir & '\' & $filename & '.tmp', @ScriptDir & '\' & $filename) = 1 Then
 								If $ExistingFile = 0 Then
 									$data = 'New file:' & $filename & @CRLF & $data
 									$NewFiles &= 'New file:' & $filename & @CRLF
@@ -168,14 +168,14 @@ EndIf
 GUIDelete($UpdateGUI)
 
 If $Errors <> '' Then
-	$errormsg = _MsgBox("Error", 'Would you like to retry the update?' & @CRLF & @CRLF & $Errors, "Retry", "Ignore")
+	$errormsg = _MsgBox("Error", 'Error. Would you like to retry the update?' & @CRLF & @CRLF & $Errors, "Retry", "Ignore")
 	If $errormsg = 1 Then
 		Run(@ScriptDir & '\update.exe')
 		Exit
 	EndIf
 EndIf
 
-$updatemsg = _MsgBox("Done", 'Would you like to load vistumbler?' & @CRLF & @CRLF & $NewFiles, "Yes", "No")
+$updatemsg = _MsgBox("Done", 'Done. Would you like to load vistumbler?' & @CRLF & @CRLF & $NewFiles, "Yes", "No")
 If $updatemsg = 1 Then Run(@ScriptDir & '\Vistumbler.exe')
 
 Exit
