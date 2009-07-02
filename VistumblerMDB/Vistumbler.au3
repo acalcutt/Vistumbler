@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 8'
+$version = 'v9.6 Beta 8.1'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/07/02'
 ;Includes------------------------------------------------
@@ -3450,9 +3450,9 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 		$base_bottom = $Graphic_height - 1
 		$base_x = $base_right - $base_left
 		$base_y = $base_bottom - $base_top
-		If $Selected <> $LastSelected Or $Redraw = 1 Then
+		If $Selected <> $LastSelected Then $Redraw = 1
+		If $Redraw = 1 Then
 			$o_old = 0
-			$Redraw = 0
 			For $r = 1 To $Graphic_height
 				_SelectColor($GraphBack)
 				_DrawLine($base_left, $r, $base_right, $r)
