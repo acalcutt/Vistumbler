@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 8.1'
+$version = 'v9.6 Beta 8.2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/07/02'
 ;Includes------------------------------------------------
@@ -5975,9 +5975,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 				$Found_GpsID = $HistMatchArray[$exns1][2]
 				$Found_Sig = $HistMatchArray[$exns1][3]
 				$Found_Date = $HistMatchArray[$exns1][4]
-				$Found_Time = $HistMatchArray[$exns1][5]
-				$datearray = StringSplit($Found_Date, "-")
-				$dateformated = $datearray[3] & "-" & $datearray[1] & "-" & $datearray[2]
+				$Found_Time = StringTrimRight($HistMatchArray[$exns1][5], 4)
 				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $Found_GpsID & "'"
 				$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$Found_Lat = _Format_GPS_DMM_to_DDD($ApMatchArray[1][1])
@@ -5994,8 +5992,8 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 				$Found_LAB = $ApMatchArray[1][8]
 				$Found_MANU = $ApMatchArray[1][9]
 
-				If $dateformated <> $Date1 Then
-					$Date1 = $dateformated
+				If $Found_Date <> $Date1 Then
+					$Date1 = $Found_Date
 					$file &= "# $DateGMT: " & $Date1 & @CRLF
 				EndIf
 
