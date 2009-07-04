@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6 Beta 8.2'
+$version = 'v9.6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/07/02'
+$last_modified = '2009/07/04' ;<-- **Happy Fourth of July** :-)
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -1682,9 +1682,9 @@ Func _MarkDeadAPs()
 		$Found_Date = $GpsMatchArray[1][1]
 		$Found_Time = $GpsMatchArray[1][2]
 		$dts = StringSplit($GpsMatchArray[1][2], ":") ;Split time so it can be converted to seconds
-		$Found_Time = ($dts[1] * 3600) + ($dts[2] * 60) + Round($dts[3]) ;In seconds
+		$Found_Time = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
 		$dts = StringSplit($timestamp, ":") ;Split time so it can be converted to seconds
-		$Current_Time = ($dts[1] * 3600) + ($dts[2] * 60) + Round($dts[3]) ;In seconds
+		$Current_Time = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
 		$Found_dts = StringReplace($Found_Date & $Found_Time, '-', '')
 		$Current_dts = StringReplace($datestamp & $Current_Time, '-', '')
 		;Set APs that have been inactive for specified time dead
