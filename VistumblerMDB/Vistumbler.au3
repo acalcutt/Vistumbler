@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.6'
+$version = 'v9.7 Beta 1'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/07/04' ;<-- **Happy Fourth of July** :-)
 ;Includes------------------------------------------------
@@ -36,6 +36,7 @@ $last_modified = '2009/07/04' ;<-- **Happy Fourth of July** :-)
 #include "UDFs\MD5.au3"
 #include "UDFs\NativeWifi.au3"
 #include "UDFs\ZIP.au3"
+#include "UDFs\FileInUse.au3"
 
 ;Set/Create Folders
 Dim $SettingsDir = @ScriptDir & '\Settings\'
@@ -76,8 +77,11 @@ GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
 ;Options-------------------------------------------------
 Opt("TrayIconHide", 1);Hide icon in system tray
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
-;Non Vista Warning---------------------------------------
-;If $OS <> "WIN_VISTA" Then MsgBox(0, "Warning", "This Program will only run in Vista. It relies on a netsh command that is not avalible in older versions of windows")
+;Get Date/Time-------------------------------------------
+$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ')
+$datestamp = $dt[1]
+$timestamp = $dt[2]
+$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
@@ -89,12 +93,13 @@ Dim $Debug
 Dim $debugdisplay
 Dim $sErr
 Dim $CompassGraphic, $compasspos_old, $compasspos, $north, $south, $east, $west, $CompassBack, $CompassHeight, $CompassBrush
-Dim $VistumblerDB = $TmpDir & 'VistumblerDB.mdb'
+
+Dim $VistumblerDB
+Dim $VistumblerDbName
 Dim $ManuDB = $SettingsDir & 'Manufacturers.mdb'
 Dim $LabDB = $SettingsDir & 'Labels.mdb'
 Dim $InstDB = $SettingsDir & 'Instruments.mdb'
 Dim $DateFormat = IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
-Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & _DateLocalFormat($last_modified)
 
 Dim $DB_OBJ
 Dim $ManuDB_OBJ
@@ -118,8 +123,8 @@ Dim $GoogleEarth_DeadFile = $TmpDir & 'autokml_dead.kml'
 Dim $GoogleEarth_GpsFile = $TmpDir & 'autokml_gps.kml'
 Dim $GoogleEarth_TrackFile = $TmpDir & 'autokml_track.kml'
 Dim $GoogleEarth_OpenFile = $TmpDir & 'autokml_networklink.kml'
-Dim $tempfile = $TmpDir & "netsh_tmp.txt"
-Dim $tempfile_showint = $TmpDir & "netsh_si_tmp.txt"
+Dim $tempfile = _TempFile($TmpDir, "netsh-tmp_", ".tmp")
+Dim $tempfile_showint = _TempFile($TmpDir, "netsh-si-tmp_", ".tmp")
 Dim $labelsini = $SettingsDir & 'mac_labels.ini'
 Dim $manufini = $SettingsDir & 'manufactures.ini'
 Dim $midiini = $SettingsDir & 'midi_instruments.ini'
@@ -779,64 +784,134 @@ If $AutoCheckForUpdates = 1 Then
 	EndIf
 EndIf
 
-$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ')
-$datestamp = $dt[1]
-$timestamp = $dt[2]
-$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+$Tmpfiles = _FileListToArray($TmpDir, '*.tmp', 1);Find all files in the folder that end in .tmp
+If IsArray($Tmpfiles) Then
+	For $FoundTmp = 1 To $Tmpfiles[0]
+		$tmpname = $TmpDir & $Tmpfiles[$FoundTmp]
+		If _FileInUse($tmpname) = 0 Then FileDelete($tmpname)
+	Next
+EndIf
+
+$MDBfiles = _FileListToArray($TmpDir, '*.MDB', 1);Find all files in the folder that end in .MDB
+If IsArray($MDBfiles) Then
+	Opt("GUIOnEventMode", 0)
+	$FoundMdbFile = 0
+	$RecoverMdbGui = GUICreate("Recover MDB?", 461, 210)
+	GUISetBkColor($BackgroundColor)
+	$Recover_Del = GUICtrlCreateButton("Delete Selected", 10, 150, 215, 25)
+	$Recover_Rec = GUICtrlCreateButton("Recover Selected", 235, 150, 215, 25)
+	$Recover_Exit = GUICtrlCreateButton("Exit", 10, 180, 215, 25)
+	$Recover_New = GUICtrlCreateButton("New Session", 235, 180, 215, 25)
+	$Recover_List = GUICtrlCreateListView("Files|Size", 10, 8, 440, 136, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	_GUICtrlListView_SetColumnWidth($Recover_List, 0, 335)
+	_GUICtrlListView_SetColumnWidth($Recover_List, 1, 100)
+	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+	For $FoundMDB = 1 To $MDBfiles[0]
+		$mdbfile = $MDBfiles[$FoundMDB]
+		If _FileInUse($TmpDir & $mdbfile) = 0 Then
+			$FoundMdbFile = 1
+			$mdbsize = (FileGetSize($TmpDir & $mdbfile) / 1024) & 'kb'
+			$ListRow = _GUICtrlListView_InsertItem($Recover_List, "", 0)
+			_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbfile, 0)
+			_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbsize, 1)
+		EndIf
+	Next
+	If $FoundMdbFile = 0 Then
+		$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
+		$VistumblerDbName = $ldatetimestamp & '.mdb'
+	Else
+		GUISetState(@SW_SHOW)
+		While 1
+			$nMsg = GUIGetMsg()
+			Switch $nMsg
+				Case $GUI_EVENT_CLOSE
+					$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
+					$VistumblerDbName = $ldatetimestamp & '.mdb'
+					ExitLoop
+				Case $Recover_New
+					$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
+					$VistumblerDbName = $ldatetimestamp & '.mdb'
+					ExitLoop
+				Case $Recover_Exit
+					Exit
+				Case $Recover_Rec
+					$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
+					If $Selected = '-1' Then
+						MsgBox(0, $Text_Error, "No MDB Selected")
+					Else
+						$mdbfilename = _GUICtrlListView_GetItemText($Recover_List, $Selected)
+						$VistumblerDB = $TmpDir & $mdbfilename
+						$VistumblerDbName = $mdbfilename
+						ExitLoop
+					EndIf
+				Case $Recover_Del
+					$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
+					If $Selected = '-1' Then
+						MsgBox(0, $Text_Error, "No MDB Selected")
+					Else
+						$fn = _GUICtrlListView_GetItemText($Recover_List, $Selected)
+						$fn_fullpath = $TmpDir & $fn
+						FileDelete($fn_fullpath)
+						ConsoleWrite($Selected & @CRLF)
+						_GUICtrlListView_DeleteItem(GUICtrlGetHandle($Recover_List), $Selected)
+					EndIf
+			EndSwitch
+		WEnd
+	EndIf
+	GUIDelete($RecoverMdbGui)
+	Opt("GUIOnEventMode", 1)
+Else
+	$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
+	$VistumblerDbName = $ldatetimestamp & '.mdb'
+EndIf
 
 If FileExists($VistumblerDB) Then
-	$recovermsg = MsgBox(4, $Text_Recover, $Text_RecoverMsg)
-	If $recovermsg = 6 Then
-		$Recover = 1
-		$APID = 0
-		_AccessConnectConn($VistumblerDB, $DB_OBJ)
-		$query = "SELECT HistID FROM Hist"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$HISTID = UBound($HistMatchArray) - 1
-		$query = "SELECT GpsID FROM GPS"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$GPS_ID = UBound($GpsMatchArray) - 1
-		$query = "DELETE * FROM TreeviewPos"
+	$Recover = 1
+	$APID = 0
+	_AccessConnectConn($VistumblerDB, $DB_OBJ)
+	$query = "SELECT HistID FROM Hist"
+	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$HISTID = UBound($HistMatchArray) - 1
+	$query = "SELECT GpsID FROM GPS"
+	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$GPS_ID = UBound($GpsMatchArray) - 1
+	$query = "DELETE * FROM TreeviewPos"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	;Fix missing GPS table fields (MDB backward compatibitly fix)
+	If _FieldExists($VistumblerDB, 'GPS', 'TrackAngle') <> 1 Then
+		;Create new fields
+		_CreateField($VistumblerDB, "GPS", "HorDilPitch", "TEXT(255)", $DB_OBJ)
+		_CreateField($VistumblerDB, "GPS", "Alt", "TEXT(255)", $DB_OBJ)
+		_CreateField($VistumblerDB, "GPS", "Geo", "TEXT(255)", $DB_OBJ)
+		_CreateField($VistumblerDB, "GPS", "SpeedInKmh", "TEXT(255)", $DB_OBJ)
+		_CreateField($VistumblerDB, "GPS", "SpeedInMPH", "TEXT(255)", $DB_OBJ)
+		_CreateField($VistumblerDB, "GPS", "TrackAngle", "TEXT(255)", $DB_OBJ)
+		$query = "UPDATE GPS SET HorDilPitch = '0', Alt = '0', Geo = '0', SpeedInKmh = '0', SpeedInMPH = '0', TrackAngle = '0'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		;Fix missing GPS table fields (MDB backward compatibitly fix)
-		If _FieldExists($VistumblerDB, 'GPS', 'TrackAngle') <> 1 Then
-			;Create new fields
-			_CreateField($VistumblerDB, "GPS", "HorDilPitch", "TEXT(255)", $DB_OBJ)
-			_CreateField($VistumblerDB, "GPS", "Alt", "TEXT(255)", $DB_OBJ)
-			_CreateField($VistumblerDB, "GPS", "Geo", "TEXT(255)", $DB_OBJ)
-			_CreateField($VistumblerDB, "GPS", "SpeedInKmh", "TEXT(255)", $DB_OBJ)
-			_CreateField($VistumblerDB, "GPS", "SpeedInMPH", "TEXT(255)", $DB_OBJ)
-			_CreateField($VistumblerDB, "GPS", "TrackAngle", "TEXT(255)", $DB_OBJ)
-			$query = "UPDATE GPS SET HorDilPitch = '0', Alt = '0', Geo = '0', SpeedInKmh = '0', SpeedInMPH = '0', TrackAngle = '0'"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-			;Move date and time to proper position in the table (the long way....since I could not get renaming of the field to work)
-			_CreateField($VistumblerDB, "GPS", "Date2", "TEXT(255)", $DB_OBJ)
-			_CreateField($VistumblerDB, "GPS", "Time2", "TEXT(255)", $DB_OBJ)
-			$query = "UPDATE GPS SET Date2 = Date1, Time2 = Time1"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-			_DropField($VistumblerDB, "GPS", "Date1", $DB_OBJ)
-			_DropField($VistumblerDB, "GPS", "Time1", $DB_OBJ)
-			_CreateField($VistumblerDB, "GPS", "Date1", "TEXT(255)", $DB_OBJ)
-			_CreateField($VistumblerDB, "GPS", "Time1", "TEXT(255)", $DB_OBJ)
-			$query = "UPDATE GPS SET Date1 = Date2, Time1 = Time2"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-			_DropField($VistumblerDB, "GPS", "Date2", $DB_OBJ)
-			_DropField($VistumblerDB, "GPS", "Time2", $DB_OBJ)
-		EndIf
-		;Fix missing Signal field in AP table (MDB backward compatibitly fix)
-		If _FieldExists($VistumblerDB, 'AP', 'Signal') <> 1 Then
-			_CreateField($VistumblerDB, "AP", "Signal", "TEXT(3)", $DB_OBJ)
-			$query = "UPDATE AP SET Signal = '0'"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		EndIf
-		;Fix missing TreeviewPos table (MDB backward compatibitly fix)
-		_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
-		_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
-		_CreatMultipleFields($VistumblerDB, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
-	Else
-		FileDelete($VistumblerDB)
-		_SetUpDbTables($VistumblerDB)
+		;Move date and time to proper position in the table (the long way....since I could not get renaming of the field to work)
+		_CreateField($VistumblerDB, "GPS", "Date2", "TEXT(255)", $DB_OBJ)
+		_CreateField($VistumblerDB, "GPS", "Time2", "TEXT(255)", $DB_OBJ)
+		$query = "UPDATE GPS SET Date2 = Date1, Time2 = Time1"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		_DropField($VistumblerDB, "GPS", "Date1", $DB_OBJ)
+		_DropField($VistumblerDB, "GPS", "Time1", $DB_OBJ)
+		_CreateField($VistumblerDB, "GPS", "Date1", "TEXT(255)", $DB_OBJ)
+		_CreateField($VistumblerDB, "GPS", "Time1", "TEXT(255)", $DB_OBJ)
+		$query = "UPDATE GPS SET Date1 = Date2, Time1 = Time2"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		_DropField($VistumblerDB, "GPS", "Date2", $DB_OBJ)
+		_DropField($VistumblerDB, "GPS", "Time2", $DB_OBJ)
 	EndIf
+	;Fix missing Signal field in AP table (MDB backward compatibitly fix)
+	If _FieldExists($VistumblerDB, 'AP', 'Signal') <> 1 Then
+		_CreateField($VistumblerDB, "AP", "Signal", "TEXT(3)", $DB_OBJ)
+		$query = "UPDATE AP SET Signal = '0'"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	EndIf
+	;Fix missing TreeviewPos table (MDB backward compatibitly fix)
+	_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
+	_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
+	_CreatMultipleFields($VistumblerDB, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 Else
 	_SetUpDbTables($VistumblerDB)
 EndIf
@@ -885,6 +960,7 @@ ConsoleWrite($headers & @CRLF)
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GUI
 ;-------------------------------------------------------------------------------------------------------------------------------
+Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & _DateLocalFormat($last_modified) & ' - (' & $VistumblerDbName & ')'
 $Vistumbler = GUICreate($title, 980, 692, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
 
@@ -901,6 +977,7 @@ Else
 EndIf
 ;File Menu
 $file = GUICtrlCreateMenu($Text_File)
+$NewSession = GUICtrlCreateMenuItem("New Session", $file)
 $SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
 $ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
@@ -1126,14 +1203,15 @@ GUICtrlSetOnEvent($GpsButton, '_GpsToggle')
 GUICtrlSetOnEvent($GraphButton1, '_GraphToggle')
 GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
 ;File Menu
-GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
-GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
+GUICtrlSetOnEvent($NewSession, '_NewSession')
 GUICtrlSetOnEvent($SaveAsTXT, '_ExportData')
 GUICtrlSetOnEvent($SaveAsDetailedTXT, '_ExportDetailedData')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
 GUICtrlSetOnEvent($ImportFromVSZ, '_ImportVSZ')
 GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
 GUICtrlSetOnEvent($ImportFolder, '_LoadFolder')
+GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
+GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
 ;Edit Menu
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 GUICtrlSetOnEvent($Copy, '_CopyAP')
@@ -8004,7 +8082,6 @@ EndFunc   ;==>_CheckForUpdates
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DateTimeUtcConvert()') ;#Debug Display
 	Local $mon, $d, $y, $h, $m, $s, $ms
 	$DateSplit = StringSplit($Date, '-')
 	$TimeSplit = StringSplit($time, ':')
@@ -8494,3 +8571,7 @@ Func _EstimateDbFromSignalPercent($InSig)
 	$EstimatedDB = Round(-70 + (20 * Log10($InSig / (105 - $InSig))))
 	Return ($EstimatedDB)
 EndFunc   ;==>_EstimateDbFromSignalPercent
+
+Func _NewSession()
+	Run(@ScriptDir & "\Vistumbler.exe")
+EndFunc   ;==>_NewSession
