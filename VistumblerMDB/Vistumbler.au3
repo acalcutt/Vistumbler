@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 2'
+$version = 'v9.7 Beta 3'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/07/05'
 ;Includes------------------------------------------------
@@ -99,7 +99,7 @@ Dim $VistumblerDbName
 Dim $ManuDB = $SettingsDir & 'Manufacturers.mdb'
 Dim $LabDB = $SettingsDir & 'Labels.mdb'
 Dim $InstDB = $SettingsDir & 'Instruments.mdb'
-Dim $DateFormat = IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate'))
+Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate')), 'MM', 'M'), 'dd', 'd')
 
 Dim $DB_OBJ
 Dim $ManuDB_OBJ
@@ -1161,7 +1161,9 @@ $DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_E
 GUISetBkColor($BackgroundColor)
 $ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
-$TreeviewAPs = _GUICtrlTreeView_Create($DataChild, 5, 5, 150, 585);GUICtrlCreateTreeView(5, 5, 150, 585)
+$TreeviewAPs = GUICtrlCreateTreeView(5, 5, 150, 585)
+
+;$TreeviewAPs = _GUICtrlTreeView_Create($DataChild, 5, 5, 150, 585);GUICtrlCreateTreeView(5, 5, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 GUISetState()
 
@@ -1963,7 +1965,7 @@ Func _RemoveTreeviewItem($Treeview, $RootTree, $ImpApID)
 		$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE ApID <> '" & $ImpApID & "' And SubTreePos = '" & $STP & "' And RootTree = '" & $RootTree & "'"
 		$TreeMatchArray2 = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundTreeMatch2 = UBound($TreeMatchArray2) - 1
-		If $FoundTreeMatch2 = 0 Then _GUICtrlTreeView_Delete($Treeview, $STP)
+		If $FoundTreeMatch2 = 0 Then _GUICtrlTreeView_Delete(GUICtrlGetHandle($Treeview), $STP)
 	EndIf
 	$query = "DELETE FROM TreeviewPos WHERE ApID = '" & $ImpApID & "' And RootTree = '" & $RootTree & "'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -3422,7 +3424,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_height = Round(($b[3] * 0.99) - $ListviewAPs_top)
 
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			_WinAPI_MoveWindow($TreeviewAPs, 0, 0, 0, 0)
+			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top + 60, $Graphic_width, $Graphic_height)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		Else
@@ -3437,7 +3439,8 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_height = ($b[3] * 0.99) - $ListviewAPs_top
 
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			_WinAPI_MoveWindow($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
+			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
+			GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		EndIf
 		$sizes_old = $sizes
@@ -3461,7 +3464,8 @@ Func _TreeviewListviewResize()
 		If $MoveMode = True Then
 			GUISetCursor(13, 1);  13 = SIZEWE
 			$TreeviewAPs_width = $cursorInfo[0] - $TreeviewAPs_left
-			_WinAPI_MoveWindow($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
+			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
+			;_WinAPI_MoveWindow($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
 			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
 			$ListviewAPs_width = ($DataChild_Width * 0.99) - $ListviewAPs_left
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
