@@ -771,11 +771,14 @@ Dim $Text_GoogleEarthDoesNotExist = IniRead($DefaultLanguagePath, 'GuiText', 'Go
 Dim $Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
 Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
 Dim $Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
-Dim $Text_ExportKmlSignalMap = IniRead($DefaultLanguagePath, 'GuiText', 'ExportKmlSignalMap', 'Export KML Signal Map')
 Dim $Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 Dim $Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
 Dim $Text_FilteredAPs = IniRead($DefaultLanguagePath, 'GuiText', 'FilteredAPs', 'Filtered APs')
 Dim $Text_ImportFolder = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFolder', 'Import Folder')
+Dim $Text_DeleteSelected = IniRead($DefaultLanguagePath, 'GuiText', 'DeleteSelected', 'Delete Selected')
+Dim $Text_RecoverSelected = IniRead($DefaultLanguagePath, 'GuiText', 'RecoverSelected', 'Recover Selected')
+Dim $Text_NewSession = IniRead($DefaultLanguagePath, 'GuiText', 'NewSession', 'New Session')
+Dim $Text_Size = IniRead($DefaultLanguagePath, 'GuiText', 'Size', 'Size')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -796,13 +799,13 @@ $MDBfiles = _FileListToArray($TmpDir, '*.MDB', 1);Find all files in the folder t
 If IsArray($MDBfiles) Then
 	Opt("GUIOnEventMode", 0)
 	$FoundMdbFile = 0
-	$RecoverMdbGui = GUICreate("Recover MDB?", 461, 210)
+	$RecoverMdbGui = GUICreate($Text_RecoverMsg, 461, 210)
 	GUISetBkColor($BackgroundColor)
-	$Recover_Del = GUICtrlCreateButton("Delete Selected", 10, 150, 215, 25)
-	$Recover_Rec = GUICtrlCreateButton("Recover Selected", 235, 150, 215, 25)
-	$Recover_Exit = GUICtrlCreateButton("Exit", 10, 180, 215, 25)
-	$Recover_New = GUICtrlCreateButton("New Session", 235, 180, 215, 25)
-	$Recover_List = GUICtrlCreateListView("Files|Size", 10, 8, 440, 136, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	$Recover_Del = GUICtrlCreateButton($Text_DeleteSelected, 10, 150, 215, 25)
+	$Recover_Rec = GUICtrlCreateButton($Text_RecoverSelected, 235, 150, 215, 25)
+	$Recover_Exit = GUICtrlCreateButton($Text_Exit, 10, 180, 215, 25)
+	$Recover_New = GUICtrlCreateButton($Text_NewSession, 235, 180, 215, 25)
+	$Recover_List = GUICtrlCreateListView($Text_File & "|" & $Text_Size, 10, 8, 440, 136, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	_GUICtrlListView_SetColumnWidth($Recover_List, 0, 335)
 	_GUICtrlListView_SetColumnWidth($Recover_List, 1, 100)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
@@ -977,7 +980,7 @@ Else
 EndIf
 ;File Menu
 $file = GUICtrlCreateMenu($Text_File)
-$NewSession = GUICtrlCreateMenuItem("New Session", $file)
+$NewSession = GUICtrlCreateMenuItem($Text_NewSession, $file)
 $SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 $SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
 $ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
@@ -5412,11 +5415,14 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', $Text_AutoKmlIsNotStarted)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', $Text_UnableToGuessSearchwords)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ExportKmlSignalMap', $Text_ExportKmlSignalMap)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectedAP', $Text_SelectedAP)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AllAPs', $Text_AllAPs)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FilteredAPs', $Text_FilteredAPs)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ImportFolder', $Text_ImportFolder)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteSelected', $Text_DeleteSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoverSelected', $Text_RecoverSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NewSession', $Text_NewSession)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Size', $Text_Size)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -7235,11 +7241,14 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
 		$Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
 		$Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
-		$Text_ExportKmlSignalMap = IniRead($DefaultLanguagePath, 'GuiText', 'ExportKmlSignalMap', 'Export KML Signal Map')
 		$Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 		$Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
 		$Text_FilteredAPs = IniRead($DefaultLanguagePath, 'GuiText', 'FilteredAPs', 'Filtered APs')
 		$Text_ImportFolder = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFolder', 'Import Folder')
+		$Text_DeleteSelected = IniRead($DefaultLanguagePath, 'GuiText', 'DeleteSelected', 'Delete Selected')
+		$Text_RecoverSelected = IniRead($DefaultLanguagePath, 'GuiText', 'RecoverSelected', 'Recover Selected')
+		$Text_NewSession = IniRead($DefaultLanguagePath, 'GuiText', 'NewSession', 'New Session')
+		$Text_Size = IniRead($DefaultLanguagePath, 'GuiText', 'Size', 'Size')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
