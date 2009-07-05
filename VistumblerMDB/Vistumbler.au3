@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 3'
+$version = 'v9.7 Beta 4'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/07/05'
 ;Includes------------------------------------------------
@@ -749,7 +749,6 @@ Dim $Text_ErrorOpeningGpsPort = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorO
 Dim $Text_SecondsSinceGpsUpdate = IniRead($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', 'Seconds Since GPS Update')
 Dim $Text_SavingGID = IniRead($DefaultLanguagePath, 'GuiText', 'SavingGID', 'Saving GID')
 Dim $Text_SavingHistID = IniRead($DefaultLanguagePath, 'GuiText', 'SavingHistID', 'Saving HistID')
-Dim $Text_UpdateFound = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateFound', 'Update Found. Would you like to update vistumbler?')
 Dim $Text_NoUpdates = IniRead($DefaultLanguagePath, 'GuiText', 'NoUpdates', 'No Updates Avalible')
 Dim $Text_NoActiveApFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoActiveApFound', 'No Active AP found')
 Dim $Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', 'Donate')
@@ -779,6 +778,8 @@ Dim $Text_DeleteSelected = IniRead($DefaultLanguagePath, 'GuiText', 'DeleteSelec
 Dim $Text_RecoverSelected = IniRead($DefaultLanguagePath, 'GuiText', 'RecoverSelected', 'Recover Selected')
 Dim $Text_NewSession = IniRead($DefaultLanguagePath, 'GuiText', 'NewSession', 'New Session')
 Dim $Text_Size = IniRead($DefaultLanguagePath, 'GuiText', 'Size', 'Size')
+Dim $Text_NoMdbSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', 'No MDB Selected')
+
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -805,7 +806,7 @@ If IsArray($MDBfiles) Then
 	$Recover_Rec = GUICtrlCreateButton($Text_RecoverSelected, 235, 150, 215, 25)
 	$Recover_Exit = GUICtrlCreateButton($Text_Exit, 10, 180, 215, 25)
 	$Recover_New = GUICtrlCreateButton($Text_NewSession, 235, 180, 215, 25)
-	$Recover_List = GUICtrlCreateListView($Text_File & "|" & $Text_Size, 10, 8, 440, 136, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	$Recover_List = GUICtrlCreateListView(StringReplace($Text_File, '&', '') & "|" & $Text_Size, 10, 8, 440, 136, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	_GUICtrlListView_SetColumnWidth($Recover_List, 0, 335)
 	_GUICtrlListView_SetColumnWidth($Recover_List, 1, 100)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
@@ -840,7 +841,7 @@ If IsArray($MDBfiles) Then
 				Case $Recover_Rec
 					$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
 					If $Selected = '-1' Then
-						MsgBox(0, $Text_Error, "No MDB Selected")
+						MsgBox(0, $Text_Error, $Text_NoMdbSelected)
 					Else
 						$mdbfilename = _GUICtrlListView_GetItemText($Recover_List, $Selected)
 						$VistumblerDB = $TmpDir & $mdbfilename
@@ -850,7 +851,7 @@ If IsArray($MDBfiles) Then
 				Case $Recover_Del
 					$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
 					If $Selected = '-1' Then
-						MsgBox(0, $Text_Error, "No MDB Selected")
+						MsgBox(0, $Text_Error, $Text_NoMdbSelected)
 					Else
 						$fn = _GUICtrlListView_GetItemText($Recover_List, $Selected)
 						$fn_fullpath = $TmpDir & $fn
@@ -5393,7 +5394,6 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', $Text_SecondsSinceGpsUpdate)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingGID', $Text_SavingGID)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingHistID', $Text_SavingHistID)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateFound', $Text_UpdateFound)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoUpdates', $Text_NoUpdates)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoActiveApFound', $Text_NoActiveApFound)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', $Text_VistumblerDonate)
@@ -5423,6 +5423,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoverSelected', $Text_RecoverSelected)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NewSession', $Text_NewSession)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Size', $Text_Size)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', $Text_NoMdbSelected)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -7220,7 +7221,6 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SecondsSinceGpsUpdate = IniRead($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', 'Seconds Since GPS Update')
 		$Text_SavingGID = IniRead($DefaultLanguagePath, 'GuiText', 'SavingGID', 'Saving GID')
 		$Text_SavingHistID = IniRead($DefaultLanguagePath, 'GuiText', 'SavingHistID', 'Saving HistID')
-		$Text_UpdateFound = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateFound', 'Update Found. Would you like to update vistumbler?')
 		$Text_NoUpdates = IniRead($DefaultLanguagePath, 'GuiText', 'NoUpdates', 'No Updates Avalible')
 		$Text_NoActiveApFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoActiveApFound', 'No Active AP found')
 		$Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', 'Donate')
@@ -7249,6 +7249,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_RecoverSelected = IniRead($DefaultLanguagePath, 'GuiText', 'RecoverSelected', 'Recover Selected')
 		$Text_NewSession = IniRead($DefaultLanguagePath, 'GuiText', 'NewSession', 'New Session')
 		$Text_Size = IniRead($DefaultLanguagePath, 'GuiText', 'Size', 'Size')
+		$Text_NoMdbSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', 'No MDB Selected')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -8048,7 +8049,7 @@ EndFunc   ;==>_PlayMidiForActiveAPs
 
 Func _MenuUpdate()
 	If _CheckForUpdates() = 1 Then
-		$updatemsg = MsgBox(4, $Text_Update & '?', $Text_UpdateFound)
+		$updatemsg = MsgBox(4, $Text_Update & '?', $Text_UpdateMsg)
 		If $updatemsg = 6 Then _StartUpdate()
 	Else
 		MsgBox(0, $Text_Information, $Text_NoUpdates)
