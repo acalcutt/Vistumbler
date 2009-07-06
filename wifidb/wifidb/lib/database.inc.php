@@ -1,37 +1,36 @@
 <?php
-#include('manufactures.inc.php');
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3",
-			"Last_Core_Edit" 		=> 	"2009-Jun-12",
+			"Last_Core_Edit" 	=> 	"2009-Jul-02",
 			"database"			=>	array(  
-										"import_vs1"		=>	"1.7.0", 
-										"apfetch"		=>	"2.6.1",
-										"gps_check_array"	=>	"1.1",
-										"all_users"		=>	"1.2",
+										"import_vs1"		=>	"1.7.1", 
+										"apfetch"			=>	"2.6.1",
+										"gps_check_array"	=>	"1.2",
+										"all_users"			=>	"1.2",
 										"users_lists"		=>	"1.2",
 										"user_ap_list"		=>	"1.2",
 										"all_users_ap"		=>	"1.3",
-										"exp_kml"		=>	"3.4.0",
-										"exp_vs1"		=>	"1.1.0",
-										"exp_gpx"		=>	"1.0.0",
+										"exp_kml"			=>	"3.4.0",
+										"exp_vs1"			=>	"1.1.0",
+										"exp_gpx"			=>	"1.0.0",
 										"convert_dm_dd"		=>	"1.3.0",
 										"convert_dd_dm"		=>	"1.3.1",
 										"manufactures"		=>	"1.0",
-										"gen_gps"		=>	"1.0"
+										"gen_gps"			=>	"1.0"
 										),
 			"Misc"				=>	array(
-										"pageheader"		=>  	"1.2",
-										"footer"		=>	"1.2",
+										"pageheader"		=>  "1.2",
+										"footer"			=>	"1.2",
 										"breadcrumbs"		=>	"1.0",
 										"smart_quotes"		=> 	"1.0",
-										"smart"			=> 	"1.0",
+										"smart"				=> 	"1.0",
 										"Manufactures-list"	=> 	"2.0",
 										"Languages-List"	=>	"1.0",
-										"make_ssid"		=>	"1.0",
-										"verbosed"		=>	"1.2",
-										"logd"			=>	"1.2",
-										"IFWC"			=>	"2.0"
+										"make_ssid"			=>	"1.0",
+										"verbosed"			=>	"1.2",
+										"logd"				=>	"1.2",
+										"IFWC"				=>	"2.0"
 										),
 			);
 
@@ -694,12 +693,10 @@ class database
 		$failed_create_sig_msg			= "FAILED to create Signal History Table";
 		$Finished_inserting_sig_msg		= "Finished Inserting Signal History into its table";
 		$Error_inserting_sig_msg		= "Error inserting signal history into its table";
+		$text_files_support_msg			= "Text Files are not longer supported, either re-export it from Vistumbler or use the converter.exe";
+		$insert_new_gps_msg				= "Error inserting new GPS point";
+		$removed_old_gps_msg			= "Error removing old GPS point";
 		
-		#COLORS FOR CLI INTERFACE#
-		$GREEN = $GLOBALS['GREEN'];
-		$RED = $GLOBALS['RED'];
-		$YELLOW = $GLOBALS['YELLOW'];
-		$WHITE = $GLOBALS['WHITE'];
 		
 		if($out == "HTML"){$verbose = 1;}
 		if ($source == NULL)
@@ -707,7 +704,7 @@ class database
 			logd($error_retrev_file_name_CLI_msg."\r\n", $log_interval, 0,  $log_level);
 			if($out=="CLI")
 			{
-				verbosed($error_retrev_file_name_CLI_msg."\r\n", $verbose, "CLI");
+				verbosed($GLOBALS['COLORS']['RED'].$error_retrev_file_name_CLI_msg."\r\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 				break;
 			}elseif($out=="HTML")
 			{
@@ -752,7 +749,7 @@ class database
 			logd($empty_file_err_msg."\r\n", $log_interval, 0,  $log_level);
 			if($out=="CLI")
 			{
-				verbosed($empty_file_err_msg."\n", $verbose, "CLI");
+				verbosed($GLOBALS['COLORS']['RED'].$empty_file_err_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 				break;
 			}elseif($out=="HTML")
 			{
@@ -772,7 +769,7 @@ class database
 			logd($error_reserv_user_row."!\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
 			if($out=="CLI")
 			{
-				verbosed($error_reserv_user_row."\n".mysql_error($conn), $verbose, "CLI");
+				verbosed($GLOBALS['COLORS']['RED'].$error_reserv_user_row."\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 			}elseif($out=="HTML")
 			{
@@ -812,7 +809,7 @@ class database
 							logd($no_aps_in_file_msg."\r\n", $log_interval, 0,  $log_level);
 							if($out=="CLI")
 							{
-								verbosed($no_aps_in_file_msg."\n", $verbose, "CLI");
+								verbosed($GLOBALS['COLORS']['RED'].$no_aps_in_file_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 								if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 							}elseif($out=="HTML")
 							{
@@ -850,22 +847,31 @@ class database
 						if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 						{
 							logd($updated_tmp_table_msg."\r\n", $log_interval, 0,  $log_level);
-							verbosed($updated_tmp_table_msg."\n", $verbose, "CLI");
+							verbosed($GLOBALS['COLORS']['GREEN'].$updated_tmp_table_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 						}
 					}
 					$mac1 = explode(':', $wifi[1]);
 					$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5]; //the APs table doesnt need :'s in its name, nor does the Pointers table, well it could I just dont want to
 					
-					$authen		=	filter_var($wifi[3], FILTER_SANITIZE_SPECIAL_CHARS);
-					$encryp		=	filter_var($wifi[4], FILTER_SANITIZE_SPECIAL_CHARS);
+					$auth		=	filter_var($wifi[3], FILTER_SANITIZE_SPECIAL_CHARS);
+					$encry		=	filter_var($wifi[4], FILTER_SANITIZE_SPECIAL_CHARS);
 					$sectype	=	filter_var($wifi[5], FILTER_SANITIZE_SPECIAL_CHARS);
 					$chan		=	filter_var($wifi[7], FILTER_SANITIZE_SPECIAL_CHARS);
-					$chan=$chan+0;
+					$chan		=	$chan+0;
 					$btx		=	filter_var($wifi[8], FILTER_SANITIZE_SPECIAL_CHARS);
 					$otx		=	filter_var($wifi[9], FILTER_SANITIZE_SPECIAL_CHARS);
 					$nt			=	filter_var($wifi[10], FILTER_SANITIZE_SPECIAL_CHARS);
 					$label		=	filter_var($wifi[11], FILTER_SANITIZE_SPECIAL_CHARS);
 					$san_sig	=	filter_var($wifi[12], FILTER_SANITIZE_SPECIAL_CHARS);
+					
+					$san_sig	=	str_replace("&#13;&#10;","",$san_sig);
+					$NUM_SIG = explode("-",$san_sig);
+					foreach($NUM_SIG as $key=>$val)
+					{
+						$num_san_sig = explode(",",$val);
+						$NUM_SIG[$key] = ($num_san_sig[0]+0).",".($num_san_sig[1]+0);
+					}
+					$san_sig = implode("-",$NUM_SIG);
 					
 					if($wifi[6] == "802.11a")
 						{$radios = "a";}
@@ -880,117 +886,24 @@ class database
 					
 					$conn1 = mysql_connect($host, $db_user, $db_pwd);
 					mysql_select_db($db,$conn1);
-					$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs'", $conn1) or die(mysql_error($conn1));
+					$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssidss' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios' LIMIT 1", $conn1) or die(mysql_error($conn1));
 					$rows = mysql_num_rows($result);
 					$newArray = mysql_fetch_array($result);
-					$result_count = count($rows);
-					if($result_count > 1)
-					{
-						$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssids'", $conn1) or die(mysql_error($conn1));
-						$rows = mysql_num_rows($result);
-						$newArray = mysql_fetch_array($result);
-						$result_count = count($rows);
-						if($result_count > 1)
-						{	
-							$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan'", $conn1) or die(mysql_error($conn1));
-							$rows = mysql_num_rows($result);
-							$newArray = mysql_fetch_array($result);
-							$result_count = count($rows);
-							if($result_count > 1)
-							{	
-								$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype'", $conn1) or die(mysql_error($conn1));
-								$rows = mysql_num_rows($result);
-								$newArray = mysql_fetch_array($result);
-								$result_count = count($rows);
-								if($result_count > 1)
-								{	
-									$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs'  AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios'", $conn1) or die(mysql_error($conn1));
-									$rows = mysql_num_rows($result);
-									$newArray = mysql_fetch_array($result);
-									$result_count = count($rows);
-									if($result_count > 1)
-									{
-										logd($too_many_unique_aps_error_msg."\r\n", $log_interval, 0,  $log_level);
-										if($out=="CLI")
-										{
-											verbosed($too_many_unique_aps_error_msg.".\n", $verbose, "CLI");
-										}elseif($out=="HTML")
-										{
-											verbosed("<p>".$too_many_unique_aps_error_msg."</p>", $verbose, "HTML");
-										}
-										$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs'  AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios'", $conn1) or die(mysql_error($conn1));
-										$rows = mysql_num_rows($result);
-										$newArray = mysql_fetch_array($result);
-										$APid = $newArray['id'];
-										$ssid_ptb_ = $newArray["ssid"];
-										$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
-										$ssid_ptb = $ssids_ptb[0];
-										$mac_ptb=$newArray['mac'];
-										$radio_ptb=$newArray['radio'];
-										$sectype_ptb=$newArray['sectype'];
-										$auth_ptb=$newArray['auth'];
-										$encry_ptb=$newArray['encry'];
-										$chan_ptb=$newArray['chan'];
-										$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
-									}
-								}else
-								{
-									$APid = $newArray['id'];
-									$ssid_ptb_ = $newArray["ssid"];
-									$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
-									$ssid_ptb = $ssids_ptb[0];
-									$mac_ptb=$newArray['mac'];
-									$radio_ptb=$newArray['radio'];
-									$sectype_ptb=$newArray['sectype'];
-									$auth_ptb=$newArray['auth'];
-									$encry_ptb=$newArray['encry'];
-									$chan_ptb=$newArray['chan'];
-									$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
-								}
-							}else
-							{
-								$APid = $newArray['id'];
-								$ssid_ptb_ = $newArray["ssid"];
-								$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
-								$ssid_ptb = $ssids_ptb[0];
-								$mac_ptb=$newArray['mac'];
-								$radio_ptb=$newArray['radio'];
-								$sectype_ptb=$newArray['sectype'];
-								$auth_ptb=$newArray['auth'];
-								$encry_ptb=$newArray['encry'];
-								$chan_ptb=$newArray['chan'];
-								$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
-							}
-						}else
-						{
-							$APid = $newArray['id'];
-							$ssid_ptb_ = $newArray["ssid"];
-							$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
-							$ssid_ptb = $ssids_ptb[0];
-							$mac_ptb=$newArray['mac'];
-							$radio_ptb=$newArray['radio'];
-							$sectype_ptb=$newArray['sectype'];
-							$auth_ptb=$newArray['auth'];
-							$encry_ptb=$newArray['encry'];
-							$chan_ptb=$newArray['chan'];
-							$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
-						}
-					}else
-					{
-						$APid = $newArray['id'];
-						$ssid_ptb_ = $newArray["ssid"];
-						$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
-						$ssid_ptb = $ssids_ptb[0];
-						$mac_ptb=$newArray['mac'];
-						$radio_ptb=$newArray['radio'];
-						$sectype_ptb=$newArray['sectype'];
-						$auth_ptb=$newArray['auth'];
-						$encry_ptb=$newArray['encry'];
-						$chan_ptb=$newArray['chan'];
-						$table_ptb = $ssid_ptb.'-'.$mac_ptb.'-'.$sectype_ptb.'-'.$radio_ptb.'-'.$chan_ptb;
-					}
-					mysql_close($conn1);
+					$APid = $newArray['id'];
+					$ssid_pt = $newArray['ssid'];
+					$ssid_pt_s = smart_quotes($ssid_pt);
+					$ssid_pt_ss = str_split($ssid_pt_s,25); //split SSID in two at is 25th char.
+					$ssid_pt_S = $ssid_pt_ss[0];
 					
+					$mac_pt = $newArray['mac'];
+					$sectype_pt = $newArray['sectype'];
+					$radio_pt = $newArray['radio'];
+					$chan_pt = $newArray['chan'];
+					$auth_pt = $newArray['auth'];
+					$encry_pt = $newArray['encry'];
+					
+					mysql_close($conn1);
+					$table_ptb = $ssid_pt_S.'-'.$mac_pt.'-'.$sectype_pt.'-'.$radio_pt.'-'.$chan_pt;
 					//create table name to select from, insert into, or create
 					$table = $ssid_S.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 					$gps_table = $table.$gps_ext;
@@ -1007,11 +920,11 @@ class database
 						logd($this_of_this."   ( ".$APid." )   ||   ".$table." - ".$being_updated_msg."\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
 						if($out=="CLI")
 						{
-							verbosed($GREEN.$this_of_this."   ( ".$APid." )   ||   ".$table." - ".$being_updated_msg.".\n", $verbose, "CLI");
+							verbosed($GLOBALS['COLORS']['GREEN'].$this_of_this."   ( ".$APid." )   ||   ".$table." - ".$being_updated_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 						}elseif($out=="HTML")
 						{
 							verbosed('<table border="1" width="90%" class="update"><tr class="style4"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
-									<tr><td>'.$APid.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
+									<tr><td>'.$APid.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$auth.'</td><td>'.$encry.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
 						}
 						mysql_select_db($db_st,$conn);
 						//setup ID number for new GPS cords
@@ -1034,31 +947,28 @@ class database
 						$sql_multi = array();
 						$signal_exp = explode("-",$san_sig);
 						$NNN = 0;
-						foreach($signal_exp as $exp)
+						$sig_counting = count($signal_exp)-1;
+						$DBresult = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
+						while ($neArray = mysql_fetch_array($DBresult))
+						{
+							$db_gps[$neArray["id"]]["id"]=$neArray["id"];
+							$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
+							$db_gps[$neArray["id"]]["long"]=$neArray["long"];
+							$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
+							$db_gps[$neArray["id"]]["date"]=$neArray["date"];
+							$db_gps[$neArray["id"]]["time"]=$neArray["time"];
+						}
+						foreach($signal_exp as $key=>$exp)
 						{
 							$NNN++;
+#							echo "Pre loop: ".$gps_id."\n".$dbid."\n";
 							//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re-grab it to test the data
-							$DBresult = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
-							while ($neArray = mysql_fetch_array($DBresult))
-							{
-								$db_gps[$neArray["id"]]["id"]=$neArray["id"];
-								$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
-								$db_gps[$neArray["id"]]["long"]=$neArray["long"];
-								$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
-								$db_gps[$neArray["id"]]["date"]=$neArray["date"];
-								$db_gps[$neArray["id"]]["time"]=$neArray["time"];
-							}
+							
 							
 							$esp = explode(",",$exp);
 							$vs1_id = $esp[0];
 							$signal = $esp[1];
 							
-							if ($prev == $vs1_id)
-							{
-								$gps_id_ = $gps_id-1;
-								$signals[$gps_id] = $gps_id_.",".$signal;
-								continue;
-							}
 							$lat = $gdata[$vs1_id]["lat"];
 							$long = $gdata[$vs1_id]["long"];
 							$sats = $gdata[$vs1_id]["sats"];
@@ -1079,39 +989,82 @@ class database
 							$comp = $lat1."".$long1."".$date1."".$time1;
 							if(!isset($db_gps)){$db_gps = array();}
 							list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
-							
-							if($dbid == ($prev_dbid*2)){$dbid = $prev_dbid;}
-							
+							if ($prev == $vs1_id)
+							{
+								$gps_id_ = $gps_id-1;
+								$signals[$N] = $gps_id_.",".$signal;
+								$gps_id++;
+								$N++;
+								continue;
+							}
 							$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$dbid'", $conn);
 							$GPSDBArray = mysql_fetch_array($DBresult);
-							if($return_gps === 0)
+							if($return_gps === 1 && $dbid != 0)
 							{
-								$sql_multi[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-								$signals[$gps_id] = $gps_id.",".$signal;
-								$gps_id++;
-								$prev = $vs1_id;
-							}elseif($return_gps === 1)
-							{
-								if($sats > $GPSDBArray['sats'])
+								if($sats > $GPSDBArray['sats'] && $GPSDBArray['id'] != 0)
 								{
-									$sql_multi[$NNN] = "DELETE FROM `$db_st`.`$gps_table` WHERE `$gps_table`.`id` = '$dbid' AND `$gps_table`.`lat` LIKE '$lat' AND `$gps_table`.`long` = '$long' LIMIT 1";
-									$NNN++;
-									$sql_multi[$NNN] = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-									$signals[$gps_id] = $dbid.",".$signal;
-									$gps_id++;
-									$prev = $vs1_id;
+									$sql_D = "DELETE FROM `$db_st`.`$gps_table` WHERE `$gps_table`.`id` = '$dbid' AND `$gps_table`.`lat` LIKE '$lat' AND `$gps_table`.`long` = '$long' LIMIT 1";
+									$DBresult1 = mysql_query($sql_D, $conn);
+									if(!$DBresult1)
+									{
+										logd($removed_old_gps_msg.".\r\n", $log_interval, 0,  $log_level);
+										if($out=="CLI")
+										{
+											verbosed($GLOBALS['COLORS']['GREEN'].$removed_old_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+										}elseif($out=="HTML")
+										{
+											verbosed("<p>".$removed_old_gps_msg."</p>", $verbose, "HTML");
+										}
+										die();
+									}
+									
+									$sql_U = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$dbid', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+									$DBresult2 = mysql_query($sql_U, $conn);
+									if(!$DBresult2)
+									{
+										logd($insert_new_gps_msg.".\r\n", $log_interval, 0,  $log_level);
+										if($out=="CLI")
+										{
+											verbosed($GLOBALS['COLORS']['GREEN'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+										}elseif($out=="HTML")
+										{
+											verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
+										}
+										die();
+									}
+									$signals[$N] = $dbid.",".$signal;
+								#	echo "Update DB: ".$dbid."\n";
 								}else
 								{
-									$signals[$gps_id] = $dbid.",".$signal;
-									$gps_id++;
-									$prev = $vs1_id;
+									$signals[$N] = $dbid.",".$signal;
+								#	echo "Already in DB: ".$dbid."\n";
 								}
+							}elseif($return_gps === 0 or $dbid == 0)
+							{
+								$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
+																		."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+								
+								$DBresult0 = mysql_query($sql_U, $conn);
+								if(!$DBresult0)
+								{
+									logd($insert_new_gps_msg.".\r\n", $log_interval, 0,  $log_level);
+									if($out=="CLI")
+									{
+										verbosed($GLOBALS['COLORS']['GREEN'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+									}elseif($out=="HTML")
+									{
+										verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
+									}
+									die();
+								}
+								$signals[$N] = $gps_id.",".$signal;
+								#echo "New GPS: ".$gps_id."\n";
 							}else
 							{
 								logd($error_running_gps_check_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
 								if($out=="CLI")
 								{
-									verbosed($error_running_gps_check_msg.".\n".mysql_error($conn), $verbose, "CLI");
+									verbosed($GLOBALS['COLORS']['RED'].$error_running_gps_check_msg.".\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 								}elseif($out=="HTML")
 								{
 									verbosed("<p>".$error_running_gps_check_msg."</p>".mysql_error($conn), $verbose, "HTML");
@@ -1119,44 +1072,46 @@ class database
 								if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 							}
 							if($verbose == 1 && $out == "CLI"){echo ".";}
-							$prev_dbid = $dbid;
+							$gps_id++;
+							$N++;
+							$prev = $vs1_id;
 						}
 						if($verbose == 1 && $out == "CLI"){echo "\n";}
-						$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
-						if (mysqli_connect_errno())
-						{
-							printf("Connect failed: %s\n", mysqli_connect_error());
-							exit();
-						}
-						$query = implode(";", $sql_multi);
-						if($query != '')
-						{
-							try {
-								$res = $mysqli->query($query);
-							}catch (mysqli_sql_exception $e)
-							{
-								$Error_inserting_sig_msg."\r\nError Code: ".$e->getCode()."\r\nError Message: ".$e->getMessage()."\r\nStrack Trace: ".nl2br($e->getTraceAsString());
-								logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
-								if($out=="CLI")
-								{
-									verbosed($RED.$Error_inserting_sig_msg, $verbose, "CLI");
-								}elseif($out=="HTML")
-								{
-									verbosed("<p>".$Error_inserting_sig_msg, $verbose, "HTML");
-								}
-								if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
-							}
-						}else
-						{
-							logd($Finished_inserting_sig_msg, $log_interval, 0,  $log_level);
-							if($out=="CLI")
-							{
-								verbosed($GREEN.$Finished_inserting_sig_msg, $verbose, "CLI");
-							}elseif($out=="HTML")
-							{
-								verbosed("<p>".$Finished_inserting_sig_msg, $verbose, "HTML");
-							}
-						}
+				#		$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
+				#		if (mysqli_connect_errno())
+				#		{
+				#			printf("Connect failed: %s\n", mysqli_connect_error());
+				#			exit();
+				#		}
+				#		$query = implode(";", $sql_multi);
+				#		if($query != '')
+				#		{
+				#			try {
+				#				$res = $mysqli->query($query);
+				#			}catch (mysqli_sql_exception $e)
+				#			{
+				#				$Error_inserting_sig_msg."\r\nError Code: ".$e->getCode()."\r\nError Message: ".$e->getMessage()."\r\nStrack Trace: ".nl2br($e->getTraceAsString());
+				#				logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
+				#				if($out=="CLI")
+				#				{
+				#					verbosed($GLOBALS['COLORS']['RED'].$Error_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+				#				}elseif($out=="HTML")
+				#				{
+				#					verbosed("<p>".$Error_inserting_sig_msg, $verbose, "HTML");
+				#				}
+				#				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+				#			}
+				#		}else
+				#		{
+				#			logd($Finished_inserting_sig_msg, $log_interval, 0,  $log_level);
+				#			if($out=="CLI")
+				#			{
+				#				verbosed($GLOBALS['COLORS']['GREEN'].$Finished_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+				#			}elseif($out=="HTML")
+				#			{
+				#				verbosed("<p>".$Finished_inserting_sig_msg, $verbose, "HTML");
+				#			}
+				#		}
 						if($out=="HTML")
 						{
 							$DB_COUNT = count($db_gps);
@@ -1167,6 +1122,9 @@ class database
 								<td colspan="8">
 							<?php
 						}
+						
+						$exp = explode(",",$signals[$N-1]);
+						if($exp[0] == 0){unset($signals[$N-1]);}
 						$sig = implode("-",$signals);
 						$sqlit = "INSERT INTO `$db_st`.`$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
 						if (!mysql_query($sqlit, $conn))
@@ -1174,7 +1132,7 @@ class database
 							logd($failed_sig_add.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
 							if($out=="CLI")
 							{
-								verbosed($RED.$failed_sig_add.".\n".mysql_error($conn), $verbose, "CLI");
+								verbosed($GLOBALS['COLORS']['RED'].$failed_sig_add.".\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 							}elseif($out=="HTML")
 							{
 								verbosed("<p>".$failed_sig_add."</p>".mysql_error($conn), $verbose, "HTML");
@@ -1191,7 +1149,7 @@ class database
 						logd($user_aps[$user_n], $log_interval, 0,  $log_level);
 						if($out=="CLI")
 						{
-							verbosed($GREEN.$user_aps[$user_n], $verbose."\n".mysql_error($conn), $verbose, "CLI");
+							verbosed($GLOBALS['COLORS']['GREEN'].$user_aps[$user_n]."\n".$GLOBALS['COLORS']['WHITE'], $verbose."\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 						}elseif($out=="HTML")
 						{
 							verbosed($user_aps[$user_n]."<br>", $verbose, "HTML");
@@ -1215,11 +1173,11 @@ class database
 						logd($this_of_this."   ( ".$size." )   ||   ".$table." - ".$being_imported_msg."\r\n", $log_interval, 0,  $log_level);
 						if($out=="CLI")
 						{
-							verbosed($GREEN.$this_of_this."   ( ".$size." )   ||   ".$table." - ".$being_imported_msg.".\n", $verbose, "CLI");
+							verbosed($GLOBALS['COLORS']['GREEN'].$this_of_this."   ( ".$size." )   ||   ".$table." - ".$being_imported_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 						}elseif($out=="HTML")
 						{
 							verbosed('<table border="1" width="90%" class="new"><tr class="style4"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
-									<tr><td>'.$size.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$authen.'</td><td>'.$encryp.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
+									<tr><td>'.$size.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$auth.'</td><td>'.$encry.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
 						}
 						mysql_select_db($db_st,$conn)or die(mysql_error($conn));
 						$sqlct = "CREATE TABLE `$db_st`.`$table` (
@@ -1238,7 +1196,7 @@ class database
 							logd($failed_create_sig_msg."\r\n\t-> ".$sqlct." - ".mysql_error($conn), $log_interval, 0,  $log_level);
 							if($out=="CLI")
 							{
-								verbosed($RED.$failed_create_sig_msg."\n\t-> ".$sqlct." - ".mysql_error($conn), $verbose, "CLI");
+								verbosed($GLOBALS['COLORS']['RED'].$failed_create_sig_msg."\n\t->".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 							}elseif($out=="HTML")
 							{
 								verbosed("<p>".$failed_create_sig_msg."\t-> ".$sqlct." - ".mysql_error($conn)."</p>", $verbose, "HTML");
@@ -1251,7 +1209,7 @@ class database
 							logd($failed_create_gps_msg."\r\n\t-> ".$sqlcgt." - ".mysql_error($conn), $log_interval, 0,  $log_level);
 							if($out=="CLI")
 							{
-								verbosed($RED.$failed_create_gps_msg."\n\t-> ".$sqlcgt." - ".mysql_error($conn), $verbose, "CLI");
+								verbosed($GLOBALS['COLORS']['RED'].$failed_create_gps_msg."\n\t-> ".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 								if($skip_pt_insert == 0){die();}
 							}elseif($out=="HTML")
 							{
@@ -1261,156 +1219,133 @@ class database
 						}
 						$signal_exp = explode("-",$san_sig);
 					#	echo $wifi[12]."\n";
-						$gps_id = 1;
-						$N=0;
-						$NNN=0;
-						$sql_multi = array();
-						$prev = '';
-						foreach($signal_exp as $exp)
+						$DB_result = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
+						$gpstableid = mysql_num_rows($DB_result);
+						if ( $gpstableid == 0)
 						{
+							$gps_id = 1;
+						}
+						else
+						{
+							//if the table is already populated set it to the last ID's number
+							$gps_id = $gpstableid;
+							$gps_id++;
+						}
+						$N=0;
+						$prev='';
+						$sql_multi = array();
+						$signal_exp = explode("-",$san_sig);
+						$NNN = 0;
+						$sig_counting = count($signal_exp)-1;
+						$DBresult = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
+						while ($neArray = mysql_fetch_array($DBresult))
+						{
+							$db_gps[$neArray["id"]]["id"]=$neArray["id"];
+							$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
+							$db_gps[$neArray["id"]]["long"]=$neArray["long"];
+							$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
+							$db_gps[$neArray["id"]]["date"]=$neArray["date"];
+							$db_gps[$neArray["id"]]["time"]=$neArray["time"];
+						}
+						foreach($signal_exp as $key=>$exp)
+						{
+							$NNN++;
+#							echo "Pre loop: ".$gps_id."\n".$dbid."\n";
+							//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re-grab it to test the data
+							
+							
+							$esp = explode(",",$exp);
+							$vs1_id = $esp[0];
+							$signal = $esp[1];
+							
+							$lat = $gdata[$vs1_id]["lat"];
+							$long = $gdata[$vs1_id]["long"];
+							$sats = $gdata[$vs1_id]["sats"];
+							$date = $gdata[$vs1_id]["date"];
+							$time = $gdata[$vs1_id]["time"];
+							$hdp = $gdata[$vs1_id]["hdp"];
+							$alt = $gdata[$vs1_id]["alt"];
+							$geo = $gdata[$vs1_id]["geo"];
+							$kmh = $gdata[$vs1_id]["kmh"];
+							$mph = $gdata[$vs1_id]["mph"];
+							$track = $gdata[$vs1_id]["track"];
+							
+							$lat1 = smart($lat);
+							$long1 = smart($long);
+							$time1 = smart($time);
+							$date1 = smart($date);
+							
+							$comp = $lat1."".$long1."".$date1."".$time1;
+							if(!isset($db_gps)){$db_gps = array();}
+							list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
+							if ($prev == $vs1_id)
+							{
+								$gps_id_ = $N;
+								$signals[$N] = $gps_id_.",".$signal;
+								$gps_id++;
+								$N++;
+								continue;
+							}
 							if($skip_pt_insert == 0)
 							{
-								if($out == "HTML")
+								$sql_ = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
+																			."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+								$DBresult = mysql_query($sql_, $conn);
+								if($DBresult)
+								{$signals[$N] = $gps_id.",".$signal;}
+								else
 								{
-									?>
-									<tr><td colspan="8">
-									<?php
-								}
-								$esp = explode(",",$exp);
-								$vs1_id = $esp[0];
-								$signal = $esp[1];
-								if ($prev == $vs1_id)
-								{
-									$gps_id_ = $gps_id-1;
-									$signals[$gps_id] = $gps_id_.",".$signal;
-				#					echo "GPS Point already in DB\n----".$gps_id_."- <- DB ID\n";
-									continue;
-								}
-								$lat = $gdata[$vs1_id]["lat"];
-								$long = $gdata[$vs1_id]["long"];
-								$sats = $gdata[$vs1_id]["sats"];
-								$date = $gdata[$vs1_id]["date"];
-								$time = $gdata[$vs1_id]["time"];
-								$hdp = $gdata[$vs1_id]["hdp"];
-								$alt = $gdata[$vs1_id]["alt"];
-								$geo = $gdata[$vs1_id]["geo"];
-								$kmh = $gdata[$vs1_id]["kmh"];
-								$mph = $gdata[$vs1_id]["mph"];
-								$track = $gdata[$vs1_id]["track"];
-								
-								$sqlitgpsgp = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
-													   ."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-								if(!mysql_query($sqlitgpsgp, $conn))
-								{
-									logd($failed_insert_gps_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
+									logd($insert_new_gps_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
 									if($out=="CLI")
 									{
-										verbosed($RED.$failed_insert_gps_msg."\n\t-> ".mysql_error($conn), $verbose, "CLI");
+										verbosed($GLOBALS['COLORS']['RED'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 									}elseif($out=="HTML")
 									{
-										verbosed("<p>".$failed_insert_gps_msg."</p>\t-> ".mysql_error($conn), $verbose, "HTML");
+										verbosed("<p>".$insert_new_gps_msg."</p>".mysql_error($conn), $verbose, "HTML");
 									}
 									if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 								}
-								$signals[$gps_id] = $gps_id.",".$signal;
-						#		echo $signals[$gps_id];
-								$gps_id++;
-								$prev = $vs1_id;
-								if($out == "HTML")
-								{
-									?>
-									<tr><td colspan="8">
-									<?php
-								}elseif($out == "CLI")
-								{
-									if($verbose == 1){echo ".";}
-								}
-							}elseif($skip_pt_insert == 1)
+							}else
 							{
-								$NNN++;
-								//Create GPS Array for each Singal, because the GPS table is growing for each signal you need to re-grab it to test the data
-								$DBresult = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
-								while ($neArray = mysql_fetch_array($DBresult))
-								{
-									$db_gps[$neArray["id"]]["id"]=$neArray["id"];
-									$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
-									$db_gps[$neArray["id"]]["long"]=$neArray["long"];
-									$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
-									$db_gps[$neArray["id"]]["date"]=$neArray["date"];
-									$db_gps[$neArray["id"]]["time"]=$neArray["time"];
-								}
-								
-								$esp = explode(",",$exp);
-								$vs1_id = $esp[0];
-								$signal = $esp[1];
-								
-								if ($prev == $vs1_id)
-								{
-									$gps_id_ = $gps_id-1;
-									$signals[$gps_id] = $gps_id_.",".$signal;
-									continue;
-								}
-								$lat = $gdata[$vs1_id]["lat"];
-								$long = $gdata[$vs1_id]["long"];
-								$sats = $gdata[$vs1_id]["sats"];
-								$date = $gdata[$vs1_id]["date"];
-								$time = $gdata[$vs1_id]["time"];
-								$hdp = $gdata[$vs1_id]["hdp"];
-								$alt = $gdata[$vs1_id]["alt"];
-								$geo = $gdata[$vs1_id]["geo"];
-								$kmh = $gdata[$vs1_id]["kmh"];
-								$mph = $gdata[$vs1_id]["mph"];
-								$track = $gdata[$vs1_id]["track"];
-								
-								$lat1 = smart($lat);
-								$long1 = smart($long);
-								$time1 = smart($time);
-								$date1 = smart($date);
-								
-								$comp = $lat1."".$long1."".$date1."".$time1;
-								if(!isset($db_gps)){$db_gps = array();}
-								list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
-								$DBresult = mysql_query("SELECT * FROM `$db_st`.`$gps_table` WHERE `id` = '$dbid'", $conn);
+								$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$dbid'", $conn);
 								$GPSDBArray = mysql_fetch_array($DBresult);
-								if($return_gps === 0)
-								{
-									$sql_multi[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-									$NNN++;
-									$signals[$gps_id] = $gps_id.",".$signal;
-									$gps_id++;
-									$prev = $vs1_id;
-								}elseif($return_gps === 1)
+								if($return_gps === 1 && $dbid != 0)
 								{
 									if($sats > $GPSDBArray['sats'])
 									{
 										$sql_multi[$NNN] = "DELETE FROM `$db_st`.`$gps_table` WHERE `$gps_table`.`id` = '$dbid' AND `$gps_table`.`lat` LIKE '$lat' AND `$gps_table`.`long` = '$long' LIMIT 1";
 										$NNN++;
-										$sql_multi[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-										$NNN++;
-										$signals[$gps_id] = $dbid.",".$signal;
-										$gps_id++;
-										$prev = $vs1_id;
+										$sql_multi[$NNN] = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$dbid', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+										$signals[$N] = $dbid.",".$signal;
+									#	echo "Update DB: ".$dbid."\n";
 									}else
 									{
-										$signals[$gps_id] = $dbid.",".$signal;
-										$gps_id++;
-										$prev = $vs1_id;
+										$signals[$N] = $dbid.",".$signal;
+									#	echo "Already in DB: ".$dbid."\n";
 									}
+								}elseif($return_gps === 0 or $dbid == 0	)
+								{
+									$sql_multi[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
+																			."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+									$signals[$N] = $gps_id.",".$signal;
+									#echo "New GPS: ".$gps_id."\n";
 								}else
 								{
 									logd($error_running_gps_check_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
 									if($out=="CLI")
 									{
-										verbosed($RED.$error_running_gps_check_msg.".\n".mysql_error($conn), $verbose, "CLI");
+										verbosed($GLOBALS['COLORS']['RED'].$error_running_gps_check_msg.".\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 									}elseif($out=="HTML")
 									{
 										verbosed("<p>".$error_running_gps_check_msg."</p>".mysql_error($conn), $verbose, "HTML");
 									}
 									if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 								}
-								if($verbose == 1 && $out == "CLI"){echo ".";}
-								
 							}
+							if($verbose == 1 && $out == "CLI"){echo ".";}
+							$gps_id++;
+							$N++;
+							$prev = $vs1_id;
 						}
 						if($verbose == 1 && $out == "CLI"){echo "\n";}
 						$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
@@ -1424,13 +1359,14 @@ class database
 						{
 							try {
 								$res = $mysqli->query($query);
+							#	echo $res."\n".$query."\n";
 							}catch (mysqli_sql_exception $e)
 							{
 								$Error_inserting_sig_msg."\r\nError Code: ".$e->getCode()."\r\nError Message: ".$e->getMessage()."\r\nStrack Trace: ".nl2br($e->getTraceAsString());
 								logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
 								if($out=="CLI")
 								{
-									verbosed($RED.$Error_inserting_sig_msg, $verbose, "CLI");
+									verbosed($GLOBALS['COLORS']['RED'].$Error_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 								}elseif($out=="HTML")
 								{
 									verbosed("<p>".$Error_inserting_sig_msg, $verbose, "HTML");
@@ -1439,10 +1375,10 @@ class database
 							}
 						}else
 						{
-							logd($Finished_inserting_sig_msg, $log_interval, 0,  $log_level);
+							logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
 							if($out=="CLI")
 							{
-								verbosed($GREEN.$Finished_inserting_sig_msg, $verbose, "CLI");
+								verbosed($GLOBALS['COLORS']['GREEN'].$Finished_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 							}elseif($out=="HTML")
 							{
 								verbosed("<p>".$Finished_inserting_sig_msg, $verbose, "HTML");
@@ -1458,9 +1394,14 @@ class database
 						{
 							if($verbose == 1){echo "\n";}
 						}
-						$sig = implode("-",$signals);
-						$sig = str_replace("&#13;&#10;", "",$sig); 
+						
+						$exp = explode(",",$signals[$N-1]);
+						if($exp[0] == 0){unset($signals[$N-1]);}
+						$sig = implode("-" , $signals);
+						$sig = str_replace("&#13;&#10;" , "" , $sig); 
+						
 						$sqlit1 = "INSERT INTO `$db_st`.`$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";
+		#				echo $sqlit1."\n";
 						$insertsqlresult = mysql_query($sqlit1, $conn);
 		#				echo "(3)Insert into [".$db_st."].{".$table."}\n		 => Add Signal History to Table\n";
 						if(!$insertsqlresult)
@@ -1468,38 +1409,49 @@ class database
 							logd($failed_insert_sig_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
 							if($out=="CLI")
 							{
-								verbosed($RED.$failed_insert_sig_msg."\n\t-> ".mysql_error($conn), $verbose, "CLI");
+								verbosed($GLOBALS['COLORS']['RED'].$failed_insert_sig_msg."\n\t-> ".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 							}elseif($out=="HTML")
 							{
 								verbosed("<p>".$failed_insert_sig_msg."</p>\t-> ".mysql_error($conn), $verbose, "HTML");
 							}
 							if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+						}else
+						{
+							logd($Finished_inserting_sig_msg."\r\n", $log_interval, 0,  $log_level);
+							if($out=="CLI")
+							{
+								verbosed($GLOBALS['COLORS']['GREEN'].$Finished_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+							}elseif($out=="HTML")
+							{
+								verbosed("<p>".$Finished_inserting_sig_msg."</p>", $verbose, "HTML");
+							}
+						
 						}
 						# pointers
 						mysql_select_db($db,$conn);
 						if($skip_pt_insert == 0)
 						{
-							$sqlp = "INSERT INTO `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '', '$ssid_S', '$macs','$chan', '$radios', '$authen', '$encryp', '$sectype')";
+							$sqlp = "INSERT INTO `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '', '$ssids', '$macs','$chan', '$radios', '$auth', '$encry', '$sectype')";
 							if (mysql_query($sqlp, $conn))
 							{
 								$user_aps[$user_n]="0,".$size.":1";
 								$sqlup = "UPDATE `$db`.`$settings_tb` SET `size` = '$size' WHERE `table` = '$wtable' LIMIT 1;";
 								if (mysql_query($sqlup, $conn))
 								{
-									logd($updating_stgs_good_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
+									logd($updating_stgs_good_msg."\r\n", $log_interval, 0,  $log_level);
 									if($out=="CLI")
 									{
-										verbosed($GREEN.$updating_stgs_good_msg."\n\t-> ".mysql_error($conn), $verbose, "CLI");
+										verbosed($GLOBALS['COLORS']['GREEN'].$updating_stgs_good_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 									}elseif($out=="HTML")
 									{
-										verbosed("<p>".$updating_stgs_good_msg."</p>\t-> ".mysql_error($conn), $verbose, "HTML");
+										verbosed("<p>".$updating_stgs_good_msg."</p>".$GLOBALS['COLORS']['WHITE'], $verbose, "HTML");
 									}
 								}else
 								{
 									logd($error_updating_stgs_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
 									if($out=="CLI")
 									{
-										verbosed($RED.$error_updating_stgs_msg.mysql_error($conn), $verbose, "CLI");
+										verbosed($GLOBALS['COLORS']['RED'].$error_updating_stgs_msg."\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 									}elseif($out=="HTML")
 									{
 										verbosed("<p>".$error_updating_stgs_msg."</p>".mysql_error($conn), $verbose, "HTML");
@@ -1509,7 +1461,7 @@ class database
 								logd($user_aps[$user_n], $log_interval, 0,  $log_level);
 								if($out=="CLI")
 								{
-									verbosed($GREEN.$user_aps[$user_n]."\n".$WHITE, $verbose, "CLI");
+									verbosed($GLOBALS['COLORS']['GREEN'].$user_aps[$user_n]."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 								}elseif($out=="HTML")
 								{
 									verbosed($user_aps[$user_n]."<br>", $verbose, "HTML");
@@ -1520,7 +1472,7 @@ class database
 								logd($error_updating_pts_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
 								if($out=="CLI")
 								{
-									verbosed($error_updating_pts_msg."\n\t-> ".mysql_error($conn), $verbose, "CLI");
+									verbosed($GLOBALS['COLORS']['RED'].$error_updating_pts_msg."\n\t-> ".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
 								}elseif($out=="HTML")
 								{
 									verbosed("<p>".$error_updating_pts_msg."</p>".mysql_error($conn), $verbose, "HTML");
@@ -1537,18 +1489,18 @@ class database
 							$result_sig = mysql_query("SELECT `id` FROM `$db_st`.`$table`", $conn) or die(mysql_error($conn));
 							$row_sig = mysql_num_rows($result_sig);
 							
-							$user_aps[$user_n]=$row_sig.",".$duplicate_id.":0";
+							$user_aps[$user_n]="1,".$duplicate_id.":".$row_sig;
 							logd($user_aps[$user_n], $log_interval, 0,  $log_level);
 							if($out=="CLI")
 							{
-								verbosed($CYAN.$user_aps[$user_n]."\n".$WHITE, $verbose, "CLI");
+								verbosed($GLOBALS['COLORS']['GREEN'].$user_aps[$user_n]."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 							}elseif($out=="HTML")
 							{
 								verbosed($user_aps[$user_n]."<br>", $verbose, "HTML");
 							}
 							$user_n++;	
 							
-							echo $RED."Skipped Creation of duplicate Pointer Row in wifi0\n".$WHITE;
+							echo $GLOBALS['COLORS']['RED']."Skipped Creation of duplicate Pointer Row in wifi0\n".$GLOBALS['COLORS']['WHITE'];
 						}
 						$skip_pt_insert = 0;
 					}
@@ -1579,34 +1531,35 @@ class database
 				logd($text_files_support_msg, $log_interval, 0,  $log_level);
 				if($out=="CLI")
 				{
-					verbosed($text_files_support_msg, $verbose, "CLI");
+					verbosed($GLOBALS['COLORS']['YELLOW'].$text_files_support_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 				}elseif($out=="HTML")
 				{
 					verbosed("<h1>".$text_files_support_msg."</h1>", $verbose, "HTML");
 				}
-				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);die();}
+				return "text";
 			}elseif($ret_len == 0)
 			{
 				logd($wrong_file_type_msg, $log_interval, 0,  $log_level);
 				if($out=="CLI")
 				{
-					verbosed($wrong_file_type_msg, $verbose, "CLI");
+					verbosed($GLOBALS['COLORS']['RED'].$wrong_file_type_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 				}elseif($out=="HTML")
 				{
 					verbosed("<h1>".$wrong_file_type_msg.".</h1>", $verbose, "HTML");
 				}
-				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);die();}
 			}else
 			{
 				logd($wrong_file_type_msg, $log_interval, 0,  $log_level);
 				if($out=="CLI")
 				{
-					verbosed($wrong_file_type_msg, $verbose, "CLI");
+					verbosed($GLOBALS['COLORS']['RED'].$wrong_file_type_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 				}elseif($out=="HTML")
 				{
 					verbosed("<h1>".$wrong_file_type_msg.".</h1>", $verbose, "HTML");
 				}
-				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);die();}
 			}
 		}
 		mysql_select_db($db,$conn);
@@ -1636,15 +1589,16 @@ class database
 					verbosed($failed_import_user_data_msg.mysql_error($conn), $verbose, "CLI");
 				}elseif($out=="HTML")
 				{
-					verbosed($failed_import_user_data_msg.mysql_error($conn), $verbose, "HTML");
+					verbosed($GLOBALS['COLORS']['RED'].$failed_import_user_data_msg."\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "HTML");
 				}
 				logd($failed_import_user_data_msg.mysql_error($conn), $log_interval, 0,  $log_level);
-				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}
+				die();
 			}else
 			{
 				if($out=="CLI")
 				{
-					verbosed($Inserted_user_data_good_msg, $verbose, "CLI");
+					verbosed($GLOBALS['COLORS']['GREEN'].$Inserted_user_data_good_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 				}elseif($out=="HTML")
 				{
 					verbosed("<p>".$Inserted_user_data_good_msg."</p>", $verbose, "HTML");
@@ -1861,6 +1815,7 @@ class database
 
 	function apfetch($id=0)
 	{
+		$apID = $id;
 		$start = microtime(true);
 		include('../lib/config.inc.php');
 		mysql_select_db($db,$conn);
@@ -1963,7 +1918,9 @@ class database
 				<?php echo $field["nt"]; ?></td><td>
 				<?php echo $field["label"]; ?></td><td>
 				<a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $field["user"]; ?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["user"]; ?></a></td><td>
-				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>&token=<?php echo $_SESSION['token'];?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">KML</a> OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">GPX</a></td></tr>
+				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>&token=<?php echo $_SESSION['token'];?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">KML</a>
+			<!--	OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php #echo $row_id;?>&token=<?php #echo $_SESSION['token'];?>">GPX</a> -->
+				</td></tr>
 				<tr><td colspan="10" align="center">
 				
 				<table WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
@@ -1976,8 +1933,11 @@ class database
 				$signals = explode('-',$field['sig']);
 				foreach($signals as $signal)
 				{
+					echo $signal."<BR>";
+					if($signal == "0,0"){continue;}
 					$sig_exp = explode(',',$signal);
 					$id = $sig_exp[0];
+					
 					$start2 = microtime(true);
 					$result1 = mysql_query("SELECT * FROM `$table_gps` WHERE `id` = '$id'", $conn) or die(mysql_error());
 					while ($field = mysql_fetch_array($result1)) 
@@ -2007,8 +1967,8 @@ class database
 		<?php
 		#END GPSFETCH FUNC
 		?>
-		<tr class="style4"><th colspan="5">Associated Lists</th></tr>
-		<tr class="style4"><th>ID</th><th>User</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
+		<tr class="style4"><th colspan="6">Associated Lists</th></tr>
+		<tr class="style4"><th>New/Update</th><th>ID</th><th>User</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
 		<?php
 		$start3 = microtime(true);
 		mysql_select_db($db, $conn);
@@ -2020,12 +1980,16 @@ class database
 				$APS = explode("-" , $field['points']);
 				foreach ($APS as $AP)
 				{
+			#		echo $AP."<BR>";
 					$access = explode(",", $AP);
+					$New_or_Update = $access[0];
+					
 					$access1 = explode(":",$access[1]);
-					if($access[0] == 1){continue;}
-					if ( $ID  ==  $access1[0] )
+					$user_list_id = $access1[0];
+					
+					if ( $apID  ==  $user_list_id )
 					{
-						$list[]=$field['id'];
+						$list[]=$field['id'].",".$New_or_Update;
 					}
 				}
 			}
@@ -2034,14 +1998,20 @@ class database
 		{
 			foreach($list as $aplist)
 			{
-				$result = mysql_query("SELECT * FROM `users` WHERE `id`='$aplist'", $conn);
+				$exp = explode(",",$aplist);
+				$apid = $exp[0];
+				$new_update = $exp[1];
+				$result = mysql_query("SELECT * FROM `users` WHERE `id`='$apid'", $conn);
 				while ($field = mysql_fetch_array($result)) 
 				{
 					if($field["title"]==''){$field["title"]="Untitled";}
 					$points = explode('-' , $field['points']);
 					$total = count($points);
 					?>
-					<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
+					<td ><?php if($new_update == 1)
+					{echo "Update";}
+					else{echo "New";} 
+					?></td><td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
 					<?php
 				}
 			}
