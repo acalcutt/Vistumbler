@@ -31,7 +31,7 @@ pageheader("Version Page");
 					<LI>Changed Individual User Stat Page to new layout.</LI>
 					<LI>Standardized SSID usage, there are three types:</LI>
 					<OL>
-						<LI>&#60;ny-paq&#62;&#124;sayz oh-my this is fun [ is the unsanatized, but still safe ssid, used to name APs, 32 char limit, no special chars.]</LI>
+						<LI>&#60;ny-paq&#62;&#124;sayz oh-my this is fun [ is the un-sanitized, but still safe SSID, used to name APs, 32 char limit, no special chars.]</LI>
 						<LI>&#60;ny-paq&#62;_sayz oh-my this is fun [safe for file names, no special chars, 32 char limit.]</LI>
 						<LI>_ny-paq__sayz oh-my this [safe for table names, max 25 char, no special chars.]</LI>
 					</OL>
@@ -41,29 +41,30 @@ pageheader("Version Page");
 					<LI>For some reason the Save Search link was missing after 0.16 Build 1, is now back, with a few enhancements.</LI>
 					<LI>Fixed the No Token error with imports directly from Vistumbler.</LI>
 					<LI>Fixed the formating of the file location that is in the URL from the import directly from Vistumbler that gets printed on the page.</LI>
-					<LI>Also made the drop down for selecting the refresh time on the scheduled imports page, so it has a default of the current selection instead fo going back to 5 sec.</LI>
+					<LI>Also made the drop down for selecting the refresh time on the scheduled imports page, so it has a default of the current selection instead of going back to 5 sec.</LI>
 					<LI>Fixed the Upgrade script in /install/upgrade/patch.php. (Was broken in Build 2 and 2.1.)</LI>
 					<LI>Fixed the Install script in /install/install.php. (Was broken in Build 2 and 2.1.)</LI>
 					<LI>Added Daemon Status to the scheduling.php page.</LI>
-					<LI>Fixed an issue where the Signal history was being corrupted by being sanatized. The 'special' characters '-' and ',' were being encoded.</LI>
-					<LI>Fixed Some Issues with the daemon, details are in the Tools Readme.</LI>
-					<LI>The WiFiDB Web log vars $log_level and $log_interval where interfearing with the Daemon vars, they are now changed to $log_level_W and $log_interval_W.</LI>
+					<LI>Fixed an issue where the Signal history was being corrupted by being sanitized. The 'special' characters '-' and ',' were being encoded.</LI>
+					<LI>Fixed Some Issues with the daemon, details are in the Tools Read-me.</LI>
+					<LI>The WiFiDB Web log vars $log_level and $log_interval where interfering with the Daemon vars, they are now changed to $log_level_W and $log_interval_W.</LI>
 					<LI>The Username in the 'Files already imported' table was pointing to the All APs for that user page, when it is supposed to point to the Users stat page.</LI>
 					<LI>Fixed an issue where if some AP Pointers are removed from the `wifi0` table, some APs will fail to import or have the same ID as another AP and not be linkable to their data.</LI>
 					<LI><b>[ Issues reported by ACalcutt ]</b>
 						<OL>
 							<LI>"Access" is spelled incorrectly multiple times on Export page.</LI>
 							<LI>(Export an Access Point to KML) "Username" should be "SSID".</LI>
-							<LI>Fix the links for Access Points on the All AP page. (Add tokens to the ssid urls in the "View all APs" page.)</LI>
+							<LI>Fix the links for Access Points on the All AP page. (Add tokens to the SSID URLs in the "View all APs" page.)</LI>
 							<LI>Refresh time on the scheduling page went to 15 seconds when I set it to 5 seconds. On the next refresh it went back to 30 seconds.</LI>
 						</OL>
 					</LI>
 					<LI>Unified the import_vs1() and importvs1d() functions, added an $out var to import_vs1() and verbose(), valid values are "CLI" and "HTML".</LI>
 					<LI>Moved the Install folder warning code to the database.inc.php file from config.inc.php.</LI>
-					<LI>All Messages in import_vs1 are in a group of variables in the begining of the function, for easy editing.</LI>
-					<LI>Added in some code to handle obsure APs that get taged as new when they are not new.</LI>
+					<LI>All Messages in import_vs1 are in a group of variables in the beginning of the function, for easy editing.</LI>
+					<LI>Added in some code to handle obscure APs that get tagged as new when they are not new.</LI>
 					<LI>There was missing Token links on the Associated Lists section of the AP Fetch page.</LI>
 					<LI>Numerous other small fixes that I have forgotten about.</LI>
+					<LI>Spell-checked the Ver.php page</LI>
 				</OL>
 			</td></tr>
 		</table>
@@ -76,15 +77,15 @@ pageheader("Version Page");
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
 					<LI>Daemon was unable to remove files from `files_tmp` table and put them into the uploaded `files` table.</LI>
-					<LI>The inportvs1 function for the daemon was not returning the AP and GPS totals, and 0 was being entered into the users table.</LI>
+					<LI>The importvs1 function for the daemon was not returning the AP and GPS totals, and 0 was being entered into the users table.</LI>
 					<LI>Added a link to the side for "Files Waiting to be imported" (/opt/scheduling.php).</LI>
 					<LI>Fixed the issue where the Import page would not switch to 'non-daemon' mode when $daemon var was set to 0.</LI>
 					<LI>Rearranged the table for scheduling.php, and added in Current AP, Importing? (Yes/No), Current AP/Total APs.</LI>
 					<LI>Added color for Files waiting to be imported, Green = Currently Importing, Yellow = Waiting.</LI>
 					<LI>Had to alter SQL statement for Total APs in the Main Stats Page. This is because I have added the next Import run as an element in the `settings` table.</LI>
 					<LI>Main Stats Page Last Import list link didn't have a row id in the URL.</LI>
-					<LI>The Corrupted dates on GPS cords was, I stupidly moved the Date conversion check outside the GPS array creation, which is dependent on the number of segements returned for the GPS in the VS1 file, so for the newer VS1 file that has 12 segements it was grabing the wrong data.</LI>
-					<LI>Fixed an issue where on windows based systems the file size wouldnt be correct.</LI>
+					<LI>The Corrupted dates on GPS cords was, I stupidly moved the Date conversion check outside the GPS array creation, which is dependent on the number of segments returned for the GPS in the VS1 file, so for the newer VS1 file that has 12 segments it was grabbing the wrong data.</LI>
+					<LI>Fixed an issue where on windows based systems the file size wouldn't be correct.</LI>
 				</OL>
 			</td></tr>
 		</table>
@@ -96,7 +97,7 @@ pageheader("Version Page");
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 		<OL>
-			<LI>Changed the Import Page Layout so that it now summerizes the GPS import into,</LI>
+			<LI>Changed the Import Page Layout so that it now summarizes the GPS import into,</LI>
 				<OL>
 					<LI>New: Good,Bad</LI>
 					<LI>Update: Good,Bad</LI>
@@ -111,13 +112,13 @@ pageheader("Version Page");
 					<LI>Chan (0)</LI>
 					<LI>Radio (u)</LI>
 				</OL>
-			<LI>Added support for Exproting to GPX files, for Garmin Devices.</LI>
+			<LI>Added support for Exporting to GPX files, for Garmin Devices.</LI>
 			<LI>Moved the code from insertnew.php into the index.php file, this is for the token that has been added for validation.</LI>
 			<LI>Added a comment tag to <i>`line 2`</i>of the KML exports to tell if it was a Full DB/Users list/Single AP/All Users APs/All Signal for AP.</LI>
-			<LI>Made the tables that hold the page one table so when there is a skeew in the page doesnt get deformed like it did before. (I'm not a GUI person).</LI>
+			<LI>Made the tables that hold the page one table so when there is a skew in the page doesn't get deformed like it did before. (I'm not a GUI person).</LI>
 			<LI>Fixed some formating issues with the install/upgrade/patching paths.</LI>
-			<LI>For Security reasons, temparaly will be using hard links for the side links, untill furtur notice.</LI>
-			<LI>Added a 'daemon' of sorts. This is optional uppon install, and changeable afterwards in the config file. <br>Notes are in the readme.txt of the tools folder.</LI>
+			<LI>For Security reasons, temporally will be using hard links for the side links, until further notice.</LI>
+			<LI>Added a 'daemon' of sorts. This is optional upon install, and changeable afterwards in the config file. <br>Notes are in the Readme.txt of the tools folder.</LI>
 		</OL>
 	</td></tr>
 </table>
@@ -137,13 +138,13 @@ pageheader("Version Page");
 			<LI>Working on changing the layout of the AP fetch page. Soon it will be:</LI>
 			<OL type="A">
 				<LI><b><i><br>---------------------------------------<br>
-				&nbsp;&nbsp;Assosiated list <br>
+				&nbsp;&nbsp;Associated list <br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_&gt; Signal history for that list <br>
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_&gt; GPS points for that Signal<br>
 				---------------------------------------<br></i></b></LI>
-				<LI>Would like to have it so the GPS history is hideable via Javascript or something.</LI>
-				<LI>So far the changes are, all the previous seperate functions (fetch gps, fetch assosiate list, and fetch signal) are all now one function (fetch ap).</LI>
-				<LI>Unfortunately this is going to require a change in the backend. Previous databases will not be compatible with this update.</LI>
+				<LI>Would like to have it so the GPS history is hide able via Java-script or something.</LI>
+				<LI>So far the changes are, all the previous separate functions (fetch GPS, fetch associate list, and fetch signal) are all now one function (fetch AP).</LI>
+				<LI>Unfortunately this is going to require a change in the back end. Previous databases will not be compatible with this update.</LI>
 				<LI>Reason being, in the previous versions (0.14 &amp; 0.15[all builds]) did not store the signal history row in the Users table.</LI> 
 					<OL>
 						<LI>Old way ex <font color="red">1</font>,<font color="Yellow">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>-<font color="red">1</font>,<font color="Yellow">10</font>-... / <font color="red">0</font>,<font color="Yellow">6</font> : <font color="red">0</font> is the update or new flag <font color="red">1</font> = Updated AP  <font color="red">0</font> = New AP, the <font color="Yellow">6</font> is the AP ID number in the Database</LI>
@@ -155,23 +156,23 @@ pageheader("Version Page");
 			<LI>Fixed an issue, where on install there would be an SQL error and fail to install.</LI>
 			<LI>Added link to Last User on Index page.</LI>
 			<LI>Cleaned up the tables on the new version page.</LI>
-			<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumblers save file.</LI>
+			<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumblers' save file.</LI>
 			<LI>Fixed up the List KML export, there is a link to the KML file now.</LI>
 			<LI>Finished KML export for entire database.</LI>
 			<LI>Added option for a black background on the Signal Graphs.</LI>
 			<LI>Empty Imports are no longer allowed (should have been like that since the beginning). Also if there were any empty imports, they will not be printed out on the All Users page.</LI>
 			<LI>Added some friendly informational links.</LI>
-			<LI>Set the default values for function varibles, incase one value is left out.</LI>
-			<LI>Initial code for Export Newest AP to KML is writen, not tested yet.</LI>
+			<LI>Set the default values for function variables, in case one value is left out.</LI>
+			<LI>Initial code for Export Newest AP to KML is written, not tested yet.</LI>
 			<LI>Added Export Page at /opt/export.php, also a link on the left hand side.</LI>
 				<OL type="A">
 					<LI>Have Export users list to KML, all APs for a user to KML, export all APs in the DB to KML, and export a single AP to KML.</LI>
 					<LI>Going to add the same for export to VS1.</LI>
 				</OL>
-			<LI>The warning for the install folder sitll being available wasnot added into the installer. It now is, and also in the upgrader too.</LI>
+			<LI>The warning for the install folder still being available was not added into the installer. It now is, and also in the upgrade too.</LI>
 			<LI>Made the Default App internal timezone, GMT+0(Zulu).</LI>
 				<OL>
-					<LI>Soon you will beable to make the viewing time as your local timezon.</LI>
+					<LI>Soon you will be able to make the viewing time as your local timezone.</LI>
 					<LI><a class="links" href="http://wwp.greenwichmeantime.com/">greenwichmeantime.com</a></LI>
 					<LI><a class="links" href="http://en.wikipedia.org/wiki/Greenwich_Mean_Time">wikipedia -> Greenwich_Mean_Time</a></LI>
 				</OL>
@@ -201,7 +202,7 @@ pageheader("Version Page");
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26" colspan="3">
 		<OL>
-			<LI>Made a rapair script to check the Storage tables for erroneous data, to replace or remove.</LI>
+			<LI>Made a repair script to check the Storage tables for erroneous data, to replace or remove.</LI>
 			<LI>Some other small typos and coding fixes.</LI>
 		</OL>
 	</td></tr>
@@ -256,8 +257,8 @@ pageheader("Version Page");
 			<LI>Added in a very basic (to start) search page, to search for Access Points.</LI>
 			<LI>(Work in progress) Changing the GPS check so that it checks the DB for the GPS point and from there, if there is a return, point to that GPS, if not add it to the table.</LI>
 			<LI>Added associated Import list for Access Points.</LI>
-			<LI>Added in Security warning incase the /install folder is not removed.</LI>
-			<LI>Added some more user input sanitization.</LI>
+			<LI>Added in Security warning in case the /install folder is not removed.</LI>
+			<LI>Added some more user input sanitation.</LI>
 		</OL>
 	</td></tr>
 </table>
@@ -283,9 +284,9 @@ pageheader("Version Page");
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Added GPS history to Access Point Fetch page.</LI>
-			<LI>Added View all AP's for a given user.</LI>
+			<LI>Added View all APs for a given user.</LI>
 			<LI>Fixed bug in the import_vs1 function where the page was not rendering right, even though it was importing correctly.</LI>
-			<LI>Fixed a bug where the AP fetch page wasnt showing more then one row of signal history even though there was more then one.</LI>
+			<LI>Fixed a bug where the AP fetch page wasn't showing more then one row of signal history even though there was more then one.</LI>
 		</OL>
 	</td></tr>
 </table>
@@ -299,7 +300,7 @@ pageheader("Version Page");
 		<OL>
 			<LI>Changed the All users list, so that it displays only the first ID for a user (which is considered the users Unique ID).</LI>
 			<LI>Fixed an issue where randomly an AP would have more signal history points then GPS history points.</LI>
-			<LI>Added installer for easy setup. Just go to /[WifiDB path]/install/.</LI>
+			<LI>Added installer for easy setup. Just go to /[WiFiDB path]/install/.</LI>
 			<LI>Fixed a few more bugs/PEBKAC errors.</LI>
 		</OL>
 	</td></tr>
@@ -325,9 +326,9 @@ pageheader("Version Page");
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
-			<LI>Added in graphing for AP's signal history, one row of history at a time for the moment.</LI>
-			<LI>Added in Users Stats page to view what users have imported / updated what AP's.</LI>
-			<LI>Added in KML exports, right now its is just a Full DB export, soon to be added is Individual AP's and groups of selected AP's.</LI>
+			<LI>Added in graphing for APs signal history, one row of history at a time for the moment.</LI>
+			<LI>Added in Users Stats page to view what users have imported / updated what APs.</LI>
+			<LI>Added in KML exports, right now its is just a Full DB export, soon to be added is Individual APs and groups of selected APs.</LI>
 		</OL>
 	</td></tr>
 </table>
@@ -340,8 +341,8 @@ pageheader("Version Page");
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
 			<LI>Fixed the issue where the signal history was getting corrupted and adding in way more signal points then there actually where for the AP. [functions.php->import_vs1()].</LI>
-			<LI>Added in a `Users` table to keep track of what users imported/updated AP's.</LI>
-			<LI>Added in `notes` for the group of AP's to be added into the `Users` table, by the user appon import.</LI>
+			<LI>Added in a `Users` table to keep track of what users imported/updated APs.</LI>
+			<LI>Added in `notes` for the group of APs to be added into the `Users` table, by the user upon import.</LI>
 			<LI>Fixed most if not all CSS issues.</LI>
 			<LI>Added `VS1` and `VSZ` folders to the `out` dir (exports soon to be added).</LI>
 		</OL>

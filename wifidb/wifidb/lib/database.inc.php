@@ -937,11 +937,13 @@ class database
 						else
 						{
 							//if the table is already populated set it to the last ID's number
-							$gps_id = $gpstableid;
+							$gps_id = $gpstableid+0;
 							$gps_id++;
 						}
 						//pull out all GPS rows to be tested against for duplicates
-							
+						
+						echo "GPS points already in table: ".$gpstableid." - GPS_ID: ".$gps_id."\n";
+						
 						$N=0;
 						$prev='';
 						$sql_multi = array();
@@ -993,8 +995,10 @@ class database
 							{
 								$gps_id_ = $gps_id-1;
 								$signals[$N] = $gps_id_.",".$signal;
-								$gps_id++;
+								echo "Same as Pre: ".$signals[$N]."\n";
+							#	$gps_id++;
 								$N++;
+								if($verbose == 1 && $out == "CLI"){echo ".";}
 								continue;
 							}
 							$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$dbid'", $conn);
@@ -1033,10 +1037,20 @@ class database
 										die();
 									}
 									$signals[$N] = $dbid.",".$signal;
+									echo "Update DB: ".$signals[$N]."\n";
+									if($verbose == 1 && $out == "CLI"){echo ".";}
+									$N++;
+									$prev = $vs1_id;
+									continue;
 								#	echo "Update DB: ".$dbid."\n";
 								}else
 								{
 									$signals[$N] = $dbid.",".$signal;
+									echo "In DB: ".$signals[$N]."\n";
+									if($verbose == 1 && $out == "CLI"){echo ".";}
+									$N++;
+									$prev = $vs1_id;
+									continue;
 								#	echo "Already in DB: ".$dbid."\n";
 								}
 							}elseif($return_gps === 0 or $dbid == 0)
@@ -1055,9 +1069,47 @@ class database
 									{
 										verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
 									}
-									die();
+									echo $gps_id."\n\n";
+									$DBresult33 = mysql_query("SELECT * FROM `$db_st`.`$gps_table` WHERE `id` like '$gps_id' LIMIT 1", $conn);
+									$testing_array = mysql_fetch_array($DBresult33);
+									echo $testing_array['id']."\n".$gps_id."\n";
+									echo $testing_array['lat']."\n".$lat."\n";
+									echo $testing_array['long']."\n".$long."\n";
+									$gps_id++;
+									
+									echo $gps_id."\n\n";
+									$DBresult33 = mysql_query("SELECT * FROM `$db_st`.`$gps_table` WHERE `id` like '$gps_id' LIMIT 1", $conn);
+									$testing_array = mysql_fetch_array($DBresult33);
+									echo $testing_array['id']."\n".$gps_id."\n";
+									echo $testing_array['lat']."\n".$lat."\n";
+									echo $testing_array['long']."\n".$long."\n";
+									$gps_id1 = $gps_id+1;
+									echo "\n-\n".$gps_id1."\n";
+									$DBresult33 = mysql_query("SELECT * FROM `$db_st`.`$gps_table` WHERE `id` like '$gps_id1' LIMIT 1", $conn);
+									$testing_array = mysql_fetch_array($DBresult33);
+									echo $testing_array['id']."\n".$gps_id."\n";
+									echo $testing_array['lat']."\n".$lat."\n";
+									echo $testing_array['long']."\n".$long."\n";
+									
+									$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
+											."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+
+									$DBresult0 = mysql_query($sql_U, $conn);
+									if(!$DBresult0)
+									{
+										logd($insert_new_gps_msg.".\r\n", $log_interval, 0,  $log_level);
+										if($out=="CLI")
+										{
+											verbosed($GLOBALS['COLORS']['GREEN'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+										}elseif($out=="HTML")
+										{
+											verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
+										}
+										die();
+									}
 								}
 								$signals[$N] = $gps_id.",".$signal;
+								echo "New GPS: ".$signals[$N]."\n";
 								#echo "New GPS: ".$gps_id."\n";
 							}else
 							{
@@ -1077,6 +1129,9 @@ class database
 							$prev = $vs1_id;
 						}
 						if($verbose == 1 && $out == "CLI"){echo "\n";}
+						
+						
+						
 				#		$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
 				#		if (mysqli_connect_errno())
 				#		{
@@ -1139,7 +1194,7 @@ class database
 							}
 							if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 						}
-						
+	#					if($table == "linksys-00226B536D81-3-g-6"){die();}
 						$sqlit_ = "SELECT * FROM `$db_st`.`$table`";
 						$sqlit_res = mysql_query($sqlit_, $conn) or die(mysql_error());
 						$sqlit_num_rows = mysql_num_rows($sqlit_res);
@@ -1203,7 +1258,7 @@ class database
 							}
 							$skip_pt_insert = 1;
 						}
-						$sqlcgt = "CREATE TABLE `$db_st`.`$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL ,`long` VARCHAR( 25 ) NOT NULL ,`sats` INT( 2 ) NOT NULL ,`hdp` FLOAT NOT NULL ,`alt` FLOAT NOT NULL ,`geo` FLOAT NOT NULL ,`kmh` FLOAT NOT NULL ,`mph` FLOAT NOT NULL ,`track` FLOAT NOT NULL ,`date` VARCHAR( 10 ) NOT NULL ,`time` VARCHAR( 8 ) NOT NULL ,INDEX ( `id` ) ) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
+						$sqlcgt = "CREATE TABLE `$db_st`.`$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL ,`long` VARCHAR( 25 ) NOT NULL ,`sats` INT( 2 ) NOT NULL ,`hdp` FLOAT NOT NULL ,`alt` FLOAT NOT NULL ,`geo` FLOAT NOT NULL ,`kmh` FLOAT NOT NULL ,`mph` FLOAT NOT NULL ,`track` FLOAT NOT NULL ,`date` VARCHAR( 10 ) NOT NULL ,`time` VARCHAR( 8 ) NOT NULL ,INDEX ( `id` ), UNIQUE( `id` )) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 						if(!mysql_query($sqlcgt, $conn))
 						{
 							logd($failed_create_gps_msg."\r\n\t-> ".$sqlcgt." - ".mysql_error($conn), $log_interval, 0,  $log_level);
@@ -1221,6 +1276,7 @@ class database
 					#	echo $wifi[12]."\n";
 						$DB_result = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
 						$gpstableid = mysql_num_rows($DB_result);
+						
 						if ( $gpstableid == 0)
 						{
 							$gps_id = 1;
@@ -1231,6 +1287,8 @@ class database
 							$gps_id = $gpstableid;
 							$gps_id++;
 						}
+						echo "GPS points already in table: ".$gpstableid." - GPS_ID: ".$gps_id."\n";
+						
 						$N=0;
 						$prev='';
 						$sql_multi = array();
@@ -1280,10 +1338,12 @@ class database
 							list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
 							if ($prev == $vs1_id)
 							{
-								$gps_id_ = $N;
+								$gps_id_ = $gps_id-1;
 								$signals[$N] = $gps_id_.",".$signal;
-								$gps_id++;
+								echo "Same as Pre: ".$signals[$N]."\n";
+						#		$gps_id++;
 								$N++;
+								if($verbose == 1 && $out == "CLI"){echo ".";}
 								continue;
 							}
 							if($skip_pt_insert == 0)
@@ -1292,7 +1352,8 @@ class database
 																			."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 								$DBresult = mysql_query($sql_, $conn);
 								if($DBresult)
-								{$signals[$N] = $gps_id.",".$signal;}
+								{$signals[$N] = $gps_id.",".$signal;
+								echo "New GPS for new: ".$signals[$N]."\n";}
 								else
 								{
 									logd($insert_new_gps_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
@@ -1317,10 +1378,20 @@ class database
 										$NNN++;
 										$sql_multi[$NNN] = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$dbid', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 										$signals[$N] = $dbid.",".$signal;
+										echo "Update GPS: ".$signals[$N]."\n";
+										if($verbose == 1 && $out == "CLI"){echo ".";}
+										$N++;
+										$prev = $vs1_id;
+										continue;
 									#	echo "Update DB: ".$dbid."\n";
 									}else
 									{
 										$signals[$N] = $dbid.",".$signal;
+										echo "Already in DB: ".$signals[$N]."\n";
+										if($verbose == 1 && $out == "CLI"){echo ".";}
+										$N++;
+										$prev = $vs1_id;
+										continue;
 									#	echo "Already in DB: ".$dbid."\n";
 									}
 								}elseif($return_gps === 0 or $dbid == 0	)
@@ -1328,6 +1399,7 @@ class database
 									$sql_multi[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
 																			."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 									$signals[$N] = $gps_id.",".$signal;
+									echo "New GPS for 'update': ".$signals[$N]."\n";
 									#echo "New GPS: ".$gps_id."\n";
 								}else
 								{
@@ -1347,6 +1419,7 @@ class database
 							$N++;
 							$prev = $vs1_id;
 						}
+
 						if($verbose == 1 && $out == "CLI"){echo "\n";}
 						$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
 						if (mysqli_connect_errno())
@@ -1427,6 +1500,7 @@ class database
 							}
 						
 						}
+	#					if($table == "linksys-00226B536D81-3-g-6"){die();}
 						# pointers
 						mysql_select_db($db,$conn);
 						if($skip_pt_insert == 0)
@@ -1891,10 +1965,20 @@ class database
 
 			$first_ID = explode(",",$sig_exp[0]);
 			$first = $first_ID[0];
-
+			if($first == 0)
+			{
+				$first_ID = explode(",",$sig_exp[1]);
+				$first = $first_ID[0];
+			}
+			
 			$last_ID = explode(",",$sig_exp[$sig_size]);
 			$last = $last_ID[0];
-
+			if($last == 0)
+			{
+				$last_ID = explode(",",$sig_exp[$sig_size-1]);
+				$last = $last_ID[0];
+			}
+			
 			$sql1 = "SELECT * FROM `$table_gps` WHERE `id`='$first'";
 			$re = mysql_query($sql1, $conn) or die(mysql_error());
 			$gps_table_first = mysql_fetch_array($re);
@@ -1902,7 +1986,7 @@ class database
 			$date_first = $gps_table_first["date"];
 			$time_first = $gps_table_first["time"];
 			$fa = $date_first." ".$time_first;
-
+			
 			$sql2 = "SELECT * FROM `$table_gps` WHERE `id`='$last'";
 			$res = mysql_query($sql2, $conn) or die(mysql_error());
 			$gps_table_last = mysql_fetch_array($res);
@@ -1933,15 +2017,15 @@ class database
 				$signals = explode('-',$field['sig']);
 				foreach($signals as $signal)
 				{
-					echo $signal."<BR>";
-					if($signal == "0,0"){continue;}
 					$sig_exp = explode(',',$signal);
-					$id = $sig_exp[0];
-					
+					$id = $sig_exp[0]+0;
+					if($id == 0){continue;}
 					$start2 = microtime(true);
 					$result1 = mysql_query("SELECT * FROM `$table_gps` WHERE `id` = '$id'", $conn) or die(mysql_error());
+				#	$rows = mysql_num_rows($result1);
 					while ($field = mysql_fetch_array($result1)) 
 					{
+				#		if($rows > 1){$rows--; continue;}
 						?>
 						<tr><td align="center">
 						<?php echo $field["id"]; ?></td><td>

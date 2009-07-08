@@ -343,7 +343,13 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files_tmp` CHANGE `file` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>";
 }
 
-
+$sql1 =  "ALTER TABLE `$wifi`.`settings` CHANGE `size` `size` VARCHAR( 255 ), CHARSET=utf8";
+$insert = mysql_query($sql1, $conn);
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>";
+}
 ####	UPDATE CONFIG.INC.PHP
 echo '<tr><TH colspan="2"></th></tr><tr class="style4"><TH colspan="2">Config.inc.php File Creation</th><tr>';
 $file_ext = 'config.inc.php';

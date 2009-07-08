@@ -24,7 +24,9 @@ CONTENTS:
 1 -> WiFiDB Daemon (daemon folder in the tools dir)
 2 -> Convert Txt to VS1 (Converter.exe | converter.php).
 3 -> Manufactures Generation script (manufmac.exe | manufmac.php).
-4 -> Wireless Database Batch Import script [command line only].
+ ***DEFUNCT*** 4 -> Wireless Database Batch Import script [command line only]. ***DEFUNCT*** replaced by #1, #5, and #6
+5 -> Filenames recovery script [filenames_create.php].
+6 -> Deamon Prep Script [daemon_prep.php].
 
 
 
@@ -61,7 +63,7 @@ Usage:
 
 		restart			-	Restart the WiFiDB Daemon.
 
-		version (NIY)		-	The Version History that is below, just CLI.
+		version (NIY)	-	The Version History that is below, just CLI.
 
 		help (NIY)		-	This just on the CLI.
 
@@ -101,6 +103,27 @@ For some reason the rund.php script sometimes would not properly execute the dae
 	popen($cmd, 'r') from 'r' to 'w' fixed this.
 
 ==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.3-1.5
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Was a very unstable time for the daemon,
+documentation wasnt kept and the only truly known changes are 
+the addition of colors for linux to the output, windows does not support color.
+==============================
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.6
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+
+==============================
+1- > The daemon was being killed off by a stray die() in the failsafe section
+	 for text based files that are no longer supported on import.
+
 
 
 --------------------------------------------------------------
@@ -283,14 +306,17 @@ Initial release, was just WiFiDB generation, no Vistumbler yet.
 
 
 
-
-
+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~
+ ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT***
+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~ 
 --------------------------------------------------------------
 --------------------------------------------------------------
 4		Wireless Database Batch Import script [command line only]
 --------------------------------------------------------------
 --------------------------------------------------------------
-
+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~
+ ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT***
+ ~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~
 Usage: 
 	import.php --wifidb="/var/www/wifidb" --user="admin" --notes="These, are the notes!" --title="Import"
 
@@ -309,6 +335,7 @@ All the options are needed, except for the notes and possibly the title if you w
 all your titles to be "Batch: ". Otherwise they will be "Batch: Import", or whatever 
 you put as the Batch Import title name that will replace 'Import' in this example.
 
+ 
 ----------------------------------------
 ----------------------------------------
 VERSION HISTORY
@@ -373,4 +400,75 @@ VERSION HISTORY
 	default storage engine (MyISAM in most cases). The Default is now
 	hard coded as InnoDB.
 2-> Minor code changes to try something new.
+
+
+******HAS BEEN REPLACED BY WIFIDB DAEMON AND DEAMON_PREP.PHP AND FILENAMES_CREATE.PHP******
+
+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~
+ ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT*** ***DEFUNCT***
+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~
+==============================
+
+
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+5		Filenames recovery script [filenames_create.php]
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+  Filenames_create.php is a script to read all the rows in the `users`
+  table and put them into a file named filenames.txt for daemon_prep.php
+  to read.
+  
+  Useage: bash:/# php filenames_create.php
+  
+  example filenames.txt:
+
+# FILE HASH						| FILENAME 				| USERNAME | TITLE | NOTES
+39b5b4dd8bd479c6cb2ec48e61d2e213|1265224490_WDB_Export.VS1|Unknown|Untitled|No Notes
+e7e6dbf36ceeee62cdeeab0faffaf93d|126243084_WDB_Export.VS1|chrono217|dbase|No Notes
+
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release.
+==============================
+
+
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+6		Deamon Prep Script [daemon_prep.php]
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+  Daemon_prep.php uses the filenames.txt file and also reads the entire
+  contents of /import/up and compaires the two to see if there are any matches.
+  if there is it inserts its data into the `file_tmp` table and if there
+  is no matching data, inserts default data from the daemon/config.inc.php file.
+  
+  Useage: bash:/# php daemon_prep.php
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release.
 ==============================

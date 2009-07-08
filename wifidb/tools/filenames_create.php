@@ -5,7 +5,7 @@ echo $dbconfig."\n";
 include($dbconfig);
 $filewrite = fopen("filenames.txt", 'w');
 $fileappend = fopen("filenames.txt", 'a');
-fwrite($fileappend, "#FILENAME | FILE HASH | USERNAME | TITLE | NOTES");
+fwrite($fileappend, "# FILE HASH						| FILENAME 				| USERNAME | TITLE | NOTES\r\n");
 $sql1 = "select * from `$db`.`files` ORDER BY `id` ASC";
 $result1 = mysql_query($sql1, $conn);
 if($result1)
@@ -13,11 +13,9 @@ if($result1)
 	while($array = mysql_fetch_array($result1))
 	{
 		$write = $array['hash']."|".$array['file']."|".$array['user']."|".$array['title']."|".$array['notes']."\r\n";
-		echo $WHITE.$array['id']." -=> ".$write.$BLUE;
+		echo $array['id']." -=> ".$write;
 		fwrite($fileappend, $write);
 	}
 }
 fclose($fileappend);
-echo "\033[41;30mblack on red\033[40;37m\r\n";
-echo $WHITE;
 ?>

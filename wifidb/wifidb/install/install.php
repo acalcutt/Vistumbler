@@ -109,11 +109,11 @@ else{
 #create Settings table
 $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`settings` ("
 		."`id` int(255) NOT NULL auto_increment,"
-		."`table` varchar(25) NOT NULL,"
-		."`size` int(254) default NULL,"
-		."UNIQUE KEY `table` (`table`),"
-		."KEY `id` (`id`)"
-		.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;";
+		."`table` varchar( 25 ) NOT NULL,"
+		."`size` varchar( 254 ) default NULL,"
+		."UNIQUE (`table`),"
+		."KEY `id` ( `id` )"
+		.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=2;";
 $CR_TB_SE_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 
@@ -123,13 +123,20 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>CREATE TABLE <b>`$wifi`</b>.`settings`</td></tr>";}
 
 #insert data into the settings table
-$sqls =	"INSERT INTO `$wifi`.`settings` (`id`, `table`, `size`) VALUES (0, 'wifi0', 0);";
+$sqls =	"INSERT INTO `$wifi`.`settings` (`id`, `table`, `size`) VALUES ('0', 'wifi0', '0');";
 $IN_TB_SE_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($IN_TB_SE_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>INSERT INTO <b>`$wifi`</b>.`settings`</td></tr>";}
 else{echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT INTO <b>`$wifi`</b>.`settings`</td></tr>";}
 
+#insert data into the settings table
+$sqls =	"INSERT INTO `$wifi`.`settings` (`id`, `table`, `size`) VALUES ('1', 'files', '2009-07-07 15:30:00');";
+$IN_TB_SE_Re = mysql_query($sqls, $conn) or die(mysql_error());
+
+if($IN_TB_SE_Re)
+{echo "<tr class=\"good\"><td>Success..........</td><td>INSERT INTO <b>`$wifi`</b>.`settings`</td></tr>";}
+else{echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT INTO <b>`$wifi`</b>.`settings`</td></tr>";}
 	#========================================================================================================================#
 	#													Create Users table											   	     #
 	#========================================================================================================================#
