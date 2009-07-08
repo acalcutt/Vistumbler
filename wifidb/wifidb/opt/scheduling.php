@@ -65,6 +65,10 @@ function getdaemonstats()
 #			echo $ps_stats;
 			$ps_Sta_exp = explode("|", $ps_stats);
 			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $time;?></td><td><?php echo $mem."%";?></td><td><?php echo $CMD;?></td></tr><?php
+		}else
+		{
+			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Linux Based WiFiDB Daemon is not running!</td><?php
 		}
 	}elseif( $os == 'WIN')
 	{

@@ -21,7 +21,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b3">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jun-12</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-08</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -64,7 +64,8 @@ pageheader("Version Page");
 					<LI>Added in some code to handle obscure APs that get tagged as new when they are not new.</LI>
 					<LI>There was missing Token links on the Associated Lists section of the AP Fetch page.</LI>
 					<LI>Numerous other small fixes that I have forgotten about.</LI>
-					<LI>Spell-checked the Ver.php page</LI>
+					<LI>Spell-checked the Ver.php page.</LI>
+					<LI>Added sorting and pages to the Search results page.</LI>
 				</OL>
 			</td></tr>
 		</table>

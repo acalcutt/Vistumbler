@@ -2,7 +2,7 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3",
-			"Last_Core_Edit" 	=> 	"2009-Jul-02",
+			"Last_Core_Edit" 	=> 	"2009-Jul-08",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.1", 
 										"apfetch"			=>	"2.6.1",
@@ -995,7 +995,7 @@ class database
 							{
 								$gps_id_ = $gps_id-1;
 								$signals[$N] = $gps_id_.",".$signal;
-								echo "Same as Pre: ".$signals[$N]."\n";
+			#					echo "Same as Pre: ".$signals[$N]."\n";
 							#	$gps_id++;
 								$N++;
 								if($verbose == 1 && $out == "CLI"){echo ".";}
@@ -1037,7 +1037,7 @@ class database
 										die();
 									}
 									$signals[$N] = $dbid.",".$signal;
-									echo "Update DB: ".$signals[$N]."\n";
+			#						echo "Update DB: ".$signals[$N]."\n";
 									if($verbose == 1 && $out == "CLI"){echo ".";}
 									$N++;
 									$prev = $vs1_id;
@@ -1046,7 +1046,7 @@ class database
 								}else
 								{
 									$signals[$N] = $dbid.",".$signal;
-									echo "In DB: ".$signals[$N]."\n";
+			#						echo "In DB: ".$signals[$N]."\n";
 									if($verbose == 1 && $out == "CLI"){echo ".";}
 									$N++;
 									$prev = $vs1_id;
@@ -1069,47 +1069,10 @@ class database
 									{
 										verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
 									}
-									echo $gps_id."\n\n";
-									$DBresult33 = mysql_query("SELECT * FROM `$db_st`.`$gps_table` WHERE `id` like '$gps_id' LIMIT 1", $conn);
-									$testing_array = mysql_fetch_array($DBresult33);
-									echo $testing_array['id']."\n".$gps_id."\n";
-									echo $testing_array['lat']."\n".$lat."\n";
-									echo $testing_array['long']."\n".$long."\n";
-									$gps_id++;
-									
-									echo $gps_id."\n\n";
-									$DBresult33 = mysql_query("SELECT * FROM `$db_st`.`$gps_table` WHERE `id` like '$gps_id' LIMIT 1", $conn);
-									$testing_array = mysql_fetch_array($DBresult33);
-									echo $testing_array['id']."\n".$gps_id."\n";
-									echo $testing_array['lat']."\n".$lat."\n";
-									echo $testing_array['long']."\n".$long."\n";
-									$gps_id1 = $gps_id+1;
-									echo "\n-\n".$gps_id1."\n";
-									$DBresult33 = mysql_query("SELECT * FROM `$db_st`.`$gps_table` WHERE `id` like '$gps_id1' LIMIT 1", $conn);
-									$testing_array = mysql_fetch_array($DBresult33);
-									echo $testing_array['id']."\n".$gps_id."\n";
-									echo $testing_array['lat']."\n".$lat."\n";
-									echo $testing_array['long']."\n".$long."\n";
-									
-									$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
-											."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-
-									$DBresult0 = mysql_query($sql_U, $conn);
-									if(!$DBresult0)
-									{
-										logd($insert_new_gps_msg.".\r\n", $log_interval, 0,  $log_level);
-										if($out=="CLI")
-										{
-											verbosed($GLOBALS['COLORS']['GREEN'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-										}elseif($out=="HTML")
-										{
-											verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
-										}
-										die();
-									}
+									die();
 								}
 								$signals[$N] = $gps_id.",".$signal;
-								echo "New GPS: ".$signals[$N]."\n";
+		#						echo "New GPS: ".$signals[$N]."\n";
 								#echo "New GPS: ".$gps_id."\n";
 							}else
 							{
@@ -1340,7 +1303,7 @@ class database
 							{
 								$gps_id_ = $gps_id-1;
 								$signals[$N] = $gps_id_.",".$signal;
-								echo "Same as Pre: ".$signals[$N]."\n";
+			#					echo "Same as Pre: ".$signals[$N]."\n";
 						#		$gps_id++;
 								$N++;
 								if($verbose == 1 && $out == "CLI"){echo ".";}
@@ -1352,8 +1315,10 @@ class database
 																			."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 								$DBresult = mysql_query($sql_, $conn);
 								if($DBresult)
-								{$signals[$N] = $gps_id.",".$signal;
-								echo "New GPS for new: ".$signals[$N]."\n";}
+								{
+									$signals[$N] = $gps_id.",".$signal;
+			#						echo "New GPS for new: ".$signals[$N]."\n";
+								}
 								else
 								{
 									logd($insert_new_gps_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
@@ -1378,7 +1343,7 @@ class database
 										$NNN++;
 										$sql_multi[$NNN] = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$dbid', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 										$signals[$N] = $dbid.",".$signal;
-										echo "Update GPS: ".$signals[$N]."\n";
+			#							echo "Update GPS: ".$signals[$N]."\n";
 										if($verbose == 1 && $out == "CLI"){echo ".";}
 										$N++;
 										$prev = $vs1_id;
@@ -1387,7 +1352,7 @@ class database
 									}else
 									{
 										$signals[$N] = $dbid.",".$signal;
-										echo "Already in DB: ".$signals[$N]."\n";
+			#							echo "Already in DB: ".$signals[$N]."\n";
 										if($verbose == 1 && $out == "CLI"){echo ".";}
 										$N++;
 										$prev = $vs1_id;
@@ -1399,7 +1364,7 @@ class database
 									$sql_multi[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
 																			."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 									$signals[$N] = $gps_id.",".$signal;
-									echo "New GPS for 'update': ".$signals[$N]."\n";
+			#						echo "New GPS for 'update': ".$signals[$N]."\n";
 									#echo "New GPS: ".$gps_id."\n";
 								}else
 								{
