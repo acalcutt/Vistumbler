@@ -162,7 +162,7 @@ Dim $data_old
 Dim $RefreshTimer
 Dim $sizes, $sizes_old
 Dim $GraphBack, $GraphGrid, $red, $black
-Dim $base_add = 0, $data, $data_old, $Graph = 0, $Graph_old, $ResetSizes = 1, $Redraw = 1
+Dim $base_add = 0, $data, $data_old, $info_old, $Graph = 0, $Graph_old, $ResetSizes = 1, $Redraw = 1, $ReGraph = 1
 Dim $LastSelected = -1
 Dim $save_timer
 Dim $AutoSaveFile
@@ -916,6 +916,12 @@ If FileExists($VistumblerDB) Then
 	_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
 	_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
 	_CreatMultipleFields($VistumblerDB, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
+	If _TableExists($DB_OBJ, $VistumblerDB, "Graph") Then _DropTable($VistumblerDB, "Graph", $DB_OBJ)
+	_CreateTable($VistumblerDB, "Graph", $DB_OBJ)
+	_CreatMultipleFields($VistumblerDB, 'Graph', $DB_OBJ, 'GraphID TEXT(255)|Signal TEXT(255)')
+	If _TableExists($DB_OBJ, $VistumblerDB, "Graph_Temp") Then _DropTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
+	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
+	_CreatMultipleFields($VistumblerDB, 'Graph_Temp', $DB_OBJ, 'GraphTempID TEXT(255)|Signal TEXT(255)')
 Else
 	_SetUpDbTables($VistumblerDB)
 EndIf
@@ -1374,6 +1380,15 @@ While 1
 		_FilterReAddMatchingNotInList()
 	EndIf
 
+	;Resize Controls / Control Resize Monitoring
+	_TreeviewListviewResize()
+
+	;Check If Vistumbler Window has moved to tell the graph to redraw
+	If WinActive($Vistumbler) And _WinMoved() = 1 Then
+		_SetControlSizes()
+		$Redraw = 1
+	EndIf
+
 	;Graph Selected AP
 	If $UpdatedGraph <> 1 Then
 		$UpdatedGraph = 1
@@ -1428,19 +1443,6 @@ While 1
 		$g = WinGetPos($GpsDetailsGUI)
 		If $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
 		$UpdatedGpsDetailsPos = 1
-	EndIf
-
-	;Resize Controls / Control Resize Monitoring
-	_TreeviewListviewResize()
-
-	;Check If Vistumbler Window has moved to tell the graph to redraw
-	If WinActive($Vistumbler) And _WinMoved() = 1 Then $Redraw = 1
-
-	;If the vistumbler window has been resized, redraw the window controls
-	If WinActive($Vistumbler) And $ResetSizes = 1 Then
-		_SetControlSizes()
-		$ResetSizes = 0
-		$Redraw = 1
 	EndIf
 
 	;Flag Actions
@@ -1775,10 +1777,6 @@ Func _MarkDeadAPs()
 		If ($Current_dts - $Found_dts) > $TimeBeforeMarkedDead Then
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
-			If $GraphDeadTime = 0 Then
-				$HISTID += 1
-				_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $datestamp & '|' & $timestamp)
-			EndIf
 			$query = "UPDATE AP SET Active = '0', Signal = '000' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
@@ -2246,11 +2244,15 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'Hist', $DB_OBJ)
 	_CreateTable($dbfile, 'TreeviewPos', $DB_OBJ)
 	_CreateTable($dbfile, 'LoadedFiles', $DB_OBJ)
+	_CreateTable($VistumblerDB, "Graph", $DB_OBJ)
+	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'Graph', $DB_OBJ, 'GraphID TEXT(255)|Signal TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'Graph_Temp', $DB_OBJ, 'GraphTempID TEXT(255)|Signal TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -2486,7 +2488,6 @@ Func _GraphToggle(); Graph1 Button
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
 		GUISwitch($Vistumbler)
-		_ResetSizes()
 	ElseIf $Graph = 0 Then
 		_DrawingStartUp($GraphicGUI)
 		_CreatePens()
@@ -2494,7 +2495,6 @@ Func _GraphToggle(); Graph1 Button
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
 		GUISwitch($Vistumbler)
 		GUISetState(@SW_SHOW, $GraphicGUI)
-		_ResetSizes()
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle
@@ -2514,7 +2514,6 @@ Func _GraphToggle2(); Graph2 Button
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
 		GUISwitch($Vistumbler)
-		_ResetSizes()
 	ElseIf $Graph = 0 Then
 		_DrawingStartUp($GraphicGUI)
 		_CreatePens()
@@ -2522,7 +2521,6 @@ Func _GraphToggle2(); Graph2 Button
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
 		GUISwitch($Vistumbler)
 		GUISetState(@SW_SHOW, $GraphicGUI)
-		_ResetSizes()
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle2
@@ -2602,7 +2600,8 @@ Func _AddApPosToggle();Sets if new aps are added to the top or bottom of the lis
 EndFunc   ;==>_AddApPosToggle
 
 Func _GraphDeadTimeToggle();Sets if new aps are added to the top or bottom of the list
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApPosToggle()') ;#Debug Display
+	ConsoleWrite(GUICtrlRead($debugdisplay) & @CRLF)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphDeadTimeToggle') ;#Debug Display
 	If $GraphDeadTime = 1 Then
 		GUICtrlSetState($GraphDeadTimeGUI, $GUI_UNCHECKED)
 		$GraphDeadTime = 0
@@ -3413,7 +3412,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 	WinMove($DataChild, "", 0, 60, $a[2] - 10, $a[3] - 115)
 	$b = WinGetPos($DataChild) ;get child window size
 	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
-	If $sizes <> $sizes_old Or $Graph <> $Graph_old Or $Redraw = 1 Then
+	If $sizes <> $sizes_old Or $Graph <> $Graph_old Then
 		$DataChild_Width = $b[2]
 		$DataChild_Height = $b[3]
 		If $Graph <> 0 Then
@@ -3526,163 +3525,221 @@ EndFunc   ;==>WM_NOTIFY
 ;                                                       GRAPH FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
+Func _RedrawGraphGrid()
+	;Set Grid Variables
+	$base_right = $Graphic_width - 1
+	$base_left = 30
+	$base_top = 10
+	$base_bottom = $Graphic_height - 1
+	$base_x = $base_right - $base_left
+	$base_y = $base_bottom - $base_top
+	;Draw Background
+	For $r = 1 To $Graphic_height
+		_SelectColor($black)
+		_DrawLine($base_left, $r, $base_right, $r)
+	Next
+	;Draw outside lines
+	_SelectColor($GraphGrid)
+	_DrawLine($base_left, $base_top, $base_left, $base_bottom)
+	_DrawLine($base_right, $base_top, $base_right, $base_bottom)
+	_DrawLine($base_left, $base_bottom, $base_right, $base_bottom)
+	_DrawLine($base_left, $base_top, $base_right, $base_top)
+	;Draw Horizontal grid lines
+	For $drawline = 1 To 10
+		$subtract_value = (($drawline * 10) * ($base_y / 100)) + $base_top
+		_DrawLine($base_right, $subtract_value, $base_left, $subtract_value)
+	Next
+	$ReGraph = 1
+	;Deleted old graph points
+	$query = "DELETE * FROM Graph"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+EndFunc   ;==>_RedrawGraphGrid
+
 Func _GraphApSignal() ;Graphs GPS History from selected ap
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphApSignal()') ;#Debug Display
+	$gt = TimerInit()
 	If $Graph <> 0 And $MoveMode = False Then; If the graph tab is selected, run graph script
-		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+		;Set Grid Variables
 		$base_right = $Graphic_width - 1
 		$base_left = 30
 		$base_top = 10
 		$base_bottom = $Graphic_height - 1
 		$base_x = $base_right - $base_left
 		$base_y = $base_bottom - $base_top
-		If $Selected <> $LastSelected Then $Redraw = 1
+		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Redraw = 1 Then
-			$o_old = 0
-			For $r = 1 To $Graphic_height
-				_SelectColor($GraphBack)
-				_DrawLine($base_left, $r, $base_right, $r)
-			Next
-			$LastSelected = $Selected
-
-			_SelectColor($GraphGrid)
-			_DrawLine($base_left, $base_top, $base_left, $base_bottom)
-			_DrawLine($base_right, $base_top, $base_right, $base_bottom)
-			_DrawLine($base_left, $base_bottom, $base_right, $base_bottom)
-			_DrawLine($base_left, $base_top, $base_right, $base_top)
-			For $drawline = 1 To 10
-				$subtract_value = (($drawline * 10) * ($base_y / 100)) + $base_top
-				_DrawLine($base_right, $subtract_value, $base_left, $subtract_value)
-			Next
+			_RedrawGraphGrid()
+			$Redraw = 0
 		EndIf
+		ConsoleWrite('1 = ' & TimerDiff($gt) & @CRLF)
+		$gt = TimerInit()
 		If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 			$query = "SELECT ApID FROM AP WHERE ListRow = '" & $Selected & "'"
 			$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-
-			;_ArrayDisplay($ListRowMatchArray)
 			$GraphApID = $ListRowMatchArray[1][1]
 
-			$query = "SELECT Signal, ApID FROM Hist WHERE ApID = '" & $GraphApID & "' ORDER BY Date1, Time1"
+			If $Graph = 1 Then
+				$max_graph_points = '125'
+			Else
+				$max_graph_points = $base_x
+			EndIf
+			ConsoleWrite('2 = ' & TimerDiff($gt) & @CRLF)
+			$gt = TimerInit()
+			$query = "SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
+			;$query = "SELECT Signal, ApID, Date1, Time1 FROM (SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 DESC) ORDER BY Date1, Time1 ASC"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
-
-			$data = $HistMatchArray[1][2] & '-' & $HistSize
-
-			If $data <> $data_old Or $sizes <> $sizes_old Or $Redraw = 1 Then ; if graph data changed, map new data
-
-
-				$max_graph_points = 125
-				$data_old = $data
-				$sizes_old = $sizes
-
-				If $Graph = 1 Then
-					If $HistSize > $max_graph_points Then ; If the array is grater that the max number of ports, set array size to the max size, else use the full size of the array
-						$start = $HistSize - $max_graph_points
-						$arrayend = $HistSize
-						$arraylen = $max_graph_points
-					Else
-						$start = 1
-						$arrayend = $HistSize
-						$arraylen = $HistSize
-					EndIf
-					$base_x_add_value = ($base_x / ($arraylen - 2)); Set disance between points
-					$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
-
-
-					;############### Start Mapping Access Point signal Data ###############
-					_SelectColor($red)
-					$base_add = 0
-					For $o = $start To ($HistSize - 1)
-						$x1 = ($base_left + 1) + ($base_add * $base_x_add_value)
-						$x2 = ($base_left + 1) + (($base_add + 1) * $base_x_add_value)
-						$y1 = ($base_bottom + 1) - ($HistMatchArray[$o][1] * $base_y_add_value)
-						$y2 = ($base_bottom + 1) - ($HistMatchArray[$o + 1][1] * $base_y_add_value)
-
-						_SelectColor($GraphBack)
-						For $rl = $x1 To $x2
-							_DrawLine($rl, $base_top, $rl, $base_bottom)
-						Next
-
-						_SelectColor($GraphGrid)
-						For $drawline = 1 To 10
-							$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
-							_DrawLine($x1, $subtract_value, $x2, $subtract_value)
-						Next
-
-						_DrawLine($base_right, $base_top, $base_right, $base_bottom)
-						_DrawLine($base_left, $base_top, $base_left, $base_bottom)
-						_DrawLine($base_left, $base_top, $base_right, $base_top)
-
-						_SelectColor($red)
-						_DrawDot($x1, $y1)
-						_DrawLine($x1, $y1, $x2, $y2);Draw line
-						_DrawDot($x2, $y2)
-						If $o <> $start Then
-							$x3 = ($base_left + 1) + (($base_add - 1) * $base_x_add_value)
-							$y3 = ($base_bottom + 1) - ($HistMatchArray[$o - 1][1] * $base_y_add_value)
-							$x4 = ($base_left + 1) + ($base_add * $base_x_add_value)
-							$y4 = ($base_bottom + 1) - ($HistMatchArray[$o][1] * $base_y_add_value)
-							_DrawLine($x3, $y3, $x4, $y4);Draw line
-						EndIf
-						$base_add += 1
-					Next
-					;############### End Mapping Access Point signal Data ###############
-				ElseIf $Graph = 2 Then
-					If $HistSize > $base_x Then
-						$start = $HistSize - $base_x
-						$arraylen = $HistSize
-					Else
-						$start = 1
-						$arraylen = $HistSize
-					EndIf
-					$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
-
-					$base_add = 1
-					$base_x_add_value = 1
-
-					For $o = $start To $arraylen
-						If $o < $arraylen And $o <> $start And $Redraw <> 1 Then
-							If $HistMatchArray[$o][1] <> $HistMatchArray[$o - 1][1] And $start <> 1 Then
-								_SelectColor($red)
-								_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value))
-								_SelectColor($GraphBack)
-								_DrawLine(($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value), ($base_left + $base_add), $base_top)
-								_SelectColor($GraphGrid)
-								For $drawline = 1 To 10
-									$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
-									_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
-								Next
-							ElseIf $o_old < $o And $start = 1 Then
-								_SelectColor($red)
-								_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value))
-								_SelectColor($GraphBack)
-								_DrawLine(($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value), ($base_left + $base_add), $base_top)
-								_SelectColor($GraphGrid)
-								For $drawline = 1 To 10
-									$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
-									_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
-								Next
-								$o_old = $o
-							EndIf
-						ElseIf $o = $start Or $o = $arraylen Or $Redraw = 1 Then
-							_SelectColor($red)
-							_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value))
-							_SelectColor($GraphBack)
-							_DrawLine(($base_left + $base_add), $base_bottom - ($HistMatchArray[$o][1] * $base_y_add_value), ($base_left + $base_add), $base_top)
-							_SelectColor($GraphGrid)
-							For $drawline = 1 To 10
-								$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
-								_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
-							Next
-						EndIf
-						$base_add += $base_x_add_value
-					Next
-					_DrawLine($base_right, $base_top, $base_right, $base_bottom)
-					_DrawLine($base_left, $base_top, $base_left, $base_bottom)
-					_DrawLine($base_left, $base_top, $base_right, $base_top)
+			ConsoleWrite('3 = ' & TimerDiff($gt) & @CRLF)
+			$gt = TimerInit()
+			If $HistSize <> 0 Then
+				$data = $HistMatchArray[$HistSize][3] & '-' & $HistMatchArray[$HistSize][4] & '-' & $HistSize
+				$info = $HistMatchArray[$HistSize][2] & '-' & $GraphDeadTime & '-' & $TimeBeforeMarkedDead & '-' & $Graph
+				If $info_old <> $info Then
+					$info_old = $info
+					_RedrawGraphGrid()
+					$ReGraph = 1
 				EndIf
+				If $data <> $data_old Or $sizes <> $sizes_old Or $ReGraph = 1 Then ; if graph data changed, map new data
+					$data_old = $data
+					$sizes_old = $sizes
 
-				$Redraw = 0
+					$Last_dts = ''
+					Local $GraphData
+					Local $MaxNumberOfZeros = 25
+					Local $GraphTempID = 0
+					$query = "DELETE * FROM Graph_Temp"
+					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+					For $gs = 1 To $HistSize ; Create Data Array
+						$ExpSig = $HistMatchArray[$gs][1]
+						$ExpApID = $HistMatchArray[$gs][2]
+						$ExpDate = $HistMatchArray[$gs][3]
+						$ExpTime = $HistMatchArray[$gs][4]
+						$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
+						$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
+						$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
+						If $Last_dts = '' Then $Last_dts = $Found_dts
+						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
+							If $GraphDeadTime = 1 Then
+								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
+								For $wz = 1 To $numofzeros
+									$GraphData = '0|' & $GraphData
+									If $wz = $MaxNumberOfZeros And $MaxNumberOfZeros <> 0 Then ExitLoop
+									If $GraphTempID = $max_graph_points Then ExitLoop
+								Next
+							Else
+								$GraphData = '0|' & $GraphData
+							EndIf
+							If $GraphTempID = $max_graph_points Then ExitLoop
+							$GraphData = $ExpSig & '|' & $GraphData
+							$Last_dts = $Found_dts
+						Else
+							$GraphData = $ExpSig & '|' & $GraphData
+							$Last_dts = $Found_dts
+						EndIf
+						If $GraphTempID = $max_graph_points Then ExitLoop
+					Next
+					$GraphDataArray = StringSplit($GraphData, '|')
+					$GraphDataMatch = $GraphDataArray[0]
+					ConsoleWrite('4 = ' & TimerDiff($gt) & @CRLF)
+					$gt = TimerInit()
+					If $GraphDataMatch <> 0 Then
+						If $GraphDataMatch > $max_graph_points Then ; If the array is grater that the max number of ports, set array size to the max size, else use the full size of the array
+							$start = $GraphDataMatch - $max_graph_points
+							$arrayend = $GraphDataMatch
+							$arraylen = $max_graph_points
+						Else
+							$start = 1
+							$arrayend = $GraphDataMatch
+							$arraylen = $GraphDataMatch
+						EndIf
+						ConsoleWrite('5 = ' & TimerDiff($gt) & @CRLF)
+						$gt = TimerInit()
+						If $Graph = 1 Then
+							$base_x_add_value = ($base_x / ($arraylen - 2)); Set disance between points
+							$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
+							;############### Start Mapping Access Point signal Data ###############
+							_SelectColor($red)
+							$base_add = 0
+							For $o = $start To ($arrayend - 1)
+								$x1 = ($base_left + 1) + ($base_add * $base_x_add_value)
+								$x2 = ($base_left + 1) + (($base_add + 1) * $base_x_add_value)
+								$y1 = ($base_bottom + 1) - ($GraphDataArray[$o] * $base_y_add_value)
+								$y2 = ($base_bottom + 1) - ($GraphDataArray[$o + 1] * $base_y_add_value)
+
+								_SelectColor($GraphBack)
+								For $rl = $x1 To $x2
+									_DrawLine($rl, $base_top, $rl, $base_bottom)
+								Next
+
+								_SelectColor($GraphGrid)
+								For $drawline = 1 To 10
+									$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
+									_DrawLine($x1, $subtract_value, $x2, $subtract_value)
+								Next
+
+								_DrawLine($base_right, $base_top, $base_right, $base_bottom)
+								_DrawLine($base_left, $base_top, $base_left, $base_bottom)
+								_DrawLine($base_left, $base_top, $base_right, $base_top)
+
+								_SelectColor($red)
+								_DrawDot($x1, $y1)
+								_DrawLine($x1, $y1, $x2, $y2);Draw line
+								_DrawDot($x2, $y2)
+								If $o <> $start Then
+									$x3 = ($base_left + 1) + (($base_add - 1) * $base_x_add_value)
+									$y3 = ($base_bottom + 1) - ($GraphDataArray[$o - 1] * $base_y_add_value)
+									_DrawLine($x3, $y3, $x1, $y1);Draw line
+								EndIf
+								$base_add += 1
+							Next
+							;############### End Mapping Access Point signal Data ###############
+						ElseIf $Graph = 2 Then
+							$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
+							$base_add = 1
+							$base_x_add_value = 1
+
+
+							$query = "SELECT GraphID, Signal FROM Graph ORDER BY GraphID ASC"
+							$OldGraphData = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+							$OldGraphDataMatch = UBound($OldGraphData) - 1
+
+							For $o = 1 To $GraphDataMatch
+								If $o <= $OldGraphDataMatch Then
+									If $GraphDataArray[$o] <> $OldGraphData[$o][2] Then
+										_SelectColor($red)
+										_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value))
+										_SelectColor($GraphBack)
+										_DrawLine(($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value), ($base_left + $base_add), $base_top)
+										_SelectColor($GraphGrid)
+										For $drawline = 1 To 10
+											$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
+											_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
+										Next
+										$query = "UPDATE Graph SET Signal='" & $GraphDataArray[$o] & "' WHERE GraphID='" & $OldGraphData[$o][1] & "'"
+										_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+									EndIf
+								Else
+									_SelectColor($red)
+									_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value))
+									_SelectColor($GraphBack)
+									_DrawLine(($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value), ($base_left + $base_add), $base_top)
+									_SelectColor($GraphGrid)
+									For $drawline = 1 To 10
+										$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
+										_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
+									Next
+									_AddRecord($VistumblerDB, "Graph", $DB_OBJ, StringFormat("%08i", $o) & '|' & $GraphDataArray[$o])
+								EndIf
+								$base_add += $base_x_add_value
+							Next
+							_DrawLine($base_right, $base_top, $base_right, $base_bottom)
+							_DrawLine($base_left, $base_top, $base_left, $base_bottom)
+							_DrawLine($base_left, $base_top, $base_right, $base_top)
+						EndIf
+						ConsoleWrite('6 = ' & TimerDiff($gt) & @CRLF)
+						$ReGraph = 0
+					EndIf
+				EndIf
 			EndIf
 		EndIf
 	EndIf
@@ -4209,7 +4266,7 @@ Func _ExportDetailedTXT($savefile, $Filter = 0);writes vistumbler detailed data 
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $exp = 1 To $FoundApMatch
 		GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
-		$ExpAPID = $ApMatchArray[$exp][1]
+		$ExpApID = $ApMatchArray[$exp][1]
 		$ExpSSID = $ApMatchArray[$exp][2]
 		$ExpBSSID = $ApMatchArray[$exp][3]
 		$ExpNET = $ApMatchArray[$exp][4]
@@ -4228,7 +4285,7 @@ Func _ExportDetailedTXT($savefile, $Filter = 0);writes vistumbler detailed data 
 		$ExpGidSid = ''
 
 		;Create GID,SIG String
-		$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
+		$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpApID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundHistMatch = UBound($HistMatchArray) - 1
 		For $epgs = 1 To $FoundHistMatch
@@ -4283,7 +4340,7 @@ Func _ExportToTXT($savefile, $Filter = 0);writes vistumbler data to a txt file
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $exp = 1 To $FoundApMatch
 		GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
-		$ExpAPID = $ApMatchArray[$exp][1]
+		$ExpApID = $ApMatchArray[$exp][1]
 		$ExpSSID = $ApMatchArray[$exp][2]
 		$ExpBSSID = $ApMatchArray[$exp][3]
 		$ExpNET = $ApMatchArray[$exp][4]
@@ -4332,7 +4389,7 @@ Func _ExportToTXT($savefile, $Filter = 0);writes vistumbler data to a txt file
 		$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
 
 		;Get Signal History
-		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
+		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpApID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundHistMatch = UBound($HistMatchArray) - 1
 		For $esh = 1 To $FoundHistMatch
@@ -4381,7 +4438,7 @@ Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $exp = 1 To $FoundApMatch
 		GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
-		$ExpAPID = $ApMatchArray[$exp][1]
+		$ExpApID = $ApMatchArray[$exp][1]
 		$ExpSSID = $ApMatchArray[$exp][2]
 		$ExpBSSID = $ApMatchArray[$exp][3]
 		$ExpNET = $ApMatchArray[$exp][4]
@@ -5615,9 +5672,9 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				If $GpsSigMap = 1 Then $file_sigdata &= '		<Folder>' & @CRLF & '			<name>Open Access Points</name>' & @CRLF
 				For $exp = 1 To $FoundApMatch
 					GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
-					$ExpAPID = $ApMatchArray[$exp][1]
-					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpAPID)
-					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpAPID)
+					$ExpApID = $ApMatchArray[$exp][1]
+					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
+					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		</Folder>' & @CRLF
@@ -5643,9 +5700,9 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				If $GpsSigMap = 1 Then $file_sigdata &= '		<Folder>' & @CRLF & '			<name>WEP Access Points</name>' & @CRLF
 				For $exp = 1 To $FoundApMatch
 					GUICtrlSetData($msgdisplay, 'Saving WEP AP ' & $exp & '/' & $FoundApMatch)
-					$ExpAPID = $ApMatchArray[$exp][1]
-					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpAPID)
-					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpAPID)
+					$ExpApID = $ApMatchArray[$exp][1]
+					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
+					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		</Folder>' & @CRLF
@@ -5671,9 +5728,9 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				If $GpsSigMap = 1 Then $file_sigdata &= '		<Folder>' & @CRLF & '			<name>Secure Access Points</name>' & @CRLF
 				For $exp = 1 To $FoundApMatch
 					GUICtrlSetData($msgdisplay, 'Saving Secure AP ' & $exp & '/' & $FoundApMatch)
-					$ExpAPID = $ApMatchArray[$exp][1]
-					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpAPID)
-					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpAPID)
+					$ExpApID = $ApMatchArray[$exp][1]
+					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
+					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		</Folder>' & @CRLF
@@ -5757,8 +5814,8 @@ Func _KmlSignalMapSelectedAP()
 	Else
 		$query = "SELECT ApID, SSID FROM AP WHERE ListRow = '" & $Selected & "'"
 		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ExpAPID = $ListRowMatchArray[1][1]
-		SaveToKmlGUI(0, $ExpAPID)
+		$ExpApID = $ListRowMatchArray[1][1]
+		SaveToKmlGUI(0, $ExpApID)
 	EndIf
 EndFunc   ;==>_KmlSignalMapSelectedAP
 
