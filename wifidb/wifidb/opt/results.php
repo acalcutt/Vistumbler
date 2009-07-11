@@ -126,12 +126,12 @@ if (isset($_GET['token']))
 		echo "</table>";
 		echo "<br>Page: ";
 	#	$sql1 = "SELECT * FROM $wtable";
-		$result = mysql_query($sql00, $conn) or die(mysql_error($conn));
-		$size = mysql_num_rows($result);
+	#	$result = mysql_query($sql00, $conn) or die(mysql_error($conn));
+	#	$size = mysql_num_rows($result);
 		$from_fwd=$from;
 		$from = 0;
 		$page = 1;
-		$pages = $size/$inc;
+		$pages = $total_rows/$inc;
 		if ($from=0)
 		{
 			$from_back=$to_back-$inc;

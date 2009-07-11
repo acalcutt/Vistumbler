@@ -9,9 +9,13 @@ if (isset($_GET['token']))
 		$ord	=	addslashes($_GET['ord']);
 		$sort	=	addslashes($_GET['sort']);
 		$from	=	addslashes($_GET['from']);
-		$from_	=	addslashes($_GET['from']);
+		$from	=	$from+0;
+		$from_	=	$from+0;
 		$inc	=	addslashes($_GET['to']);
+		$inc	=	$inc+0;
+		echo $from."<br>";
 		if ($from=="" or !is_int($from)){$from=0;}
+		if ($from_=="" or !is_int($from_)){$from_=0;}
 		if ($inc=="" or !is_int($inc)){$inc=100;}
 		if ($ord=="" or !is_string($ord)){$ord="ASC";}
 		if ($sort=="" or !is_string($sort)){$sort="id";}
@@ -23,13 +27,14 @@ if (isset($_GET['token']))
 		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
 		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td></tr>';
 
-		$x=0;
-		$n=0;
-		$to=$from+$inc;
-		mysql_select_db($db,$conn);
-		$sql0 = "SELECT * FROM $wtable ORDER BY $sort $ord  LIMIT $from , $inc";
-		$result = mysql_query($sql0, $conn);
-		$total_rows = mysql_num_rows($result);
+		$sql0 = "SELECT * FROM `$db`.`$wtable` ORDER BY `$sort` $ord LIMIT $from, $inc";
+		echo $sql0."<br>";
+		$result = mysql_query($sql0, $conn) or die(mysql_error($conn));
+		
+		$sql00 = "SELECT * FROM `$db`.`$wtable` ORDER BY `$sort` $ord";
+		$result1 = mysql_query($sql00, $conn) or die(mysql_error($conn));
+		echo $sql00."<br>";
+		$total_rows = mysql_num_rows($result1);
 		if($total_rows != 0)
 		{
 			while ($newArray = mysql_fetch_array($result))
@@ -70,17 +75,14 @@ if (isset($_GET['token']))
 		</p>
 		<?php
 		echo "<br>Page: ";
-		$sql1 = "SELECT * FROM $wtable";
-		$result = mysql_query($sql1, $conn) or die(mysql_error());
-		$size = mysql_num_rows($result);
 		$from_fwd=$from;
 		$from = 0;
 		$page = 1;
-		$pages = $size/$inc;
+		$pages = $total_rows/$inc;
 		if ($from=0)
 		{
 			$from_back=$to_back-$inc;
-			echo '<a class="links" href="?from='.$from_back.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'"><- </a> ';
+			echo '<a class="links" href="?from='.$from_back.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'"><- </a> ';
 		}
 		else
 		{
@@ -98,7 +100,7 @@ if (isset($_GET['token']))
 		}
 		else
 		{
-			echo '<a class="links" href="?from='.$from_fwd.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">></a>';
+			echo '<a class="links" href="?from='.$from_fwd.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">></a>';
 		}
 	}else
 	{

@@ -2,9 +2,9 @@
 global $ver;
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3",
-			"Last_Core_Edit" 	=> 	"2009-Jul-08",
+			"Last_Core_Edit" 	=> 	"2009-Jul-11",
 			"database"			=>	array(  
-										"import_vs1"		=>	"1.7.1", 
+										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
 										"gps_check_array"	=>	"1.2",
 										"all_users"			=>	"1.2",
@@ -480,6 +480,9 @@ class database
 				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
 				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
 				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$order   = array("\r\n", "\n", "\r");
+				$replace = '';
+				$retexp[4] = str_replace($order, $replace, $retexp[4]);
 				$date_exp = explode("-",$retexp[4]);
 				if(strlen($date_exp[0]) <= 2)
 				{
@@ -510,10 +513,14 @@ class database
 				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
 				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
 				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[6]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[7]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[8]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[9]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[6]	=	filter_var($retexp[6], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[7]	=	filter_var($retexp[7], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[8]	=	filter_var($retexp[8], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$retexp[9]	=	filter_var($retexp[9], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$order   = array("\r\n", "\n", "\r");
+				$replace = '';
+				$retexp[10] = str_replace($order, $replace, $retexp[10]);
+				
 				$date_exp = explode("-",$retexp[10]);
 				if(strlen($date_exp[0]) <= 2)
 				{
@@ -946,7 +953,7 @@ class database
 						
 						$N=0;
 						$prev='';
-						$sql_multi = array();
+						$sqlarray = array();
 						$signal_exp = explode("-",$san_sig);
 						$NNN = 0;
 						$sig_counting = count($signal_exp)-1;
@@ -971,17 +978,18 @@ class database
 							$vs1_id = $esp[0];
 							$signal = $esp[1];
 							
+							
 							$lat = $gdata[$vs1_id]["lat"];
 							$long = $gdata[$vs1_id]["long"];
 							$sats = $gdata[$vs1_id]["sats"];
-							$date = $gdata[$vs1_id]["date"];
-							$time = $gdata[$vs1_id]["time"];
 							$hdp = $gdata[$vs1_id]["hdp"];
 							$alt = $gdata[$vs1_id]["alt"];
 							$geo = $gdata[$vs1_id]["geo"];
 							$kmh = $gdata[$vs1_id]["kmh"];
 							$mph = $gdata[$vs1_id]["mph"];
 							$track = $gdata[$vs1_id]["track"];
+							$date = $gdata[$vs1_id]["date"];
+							$time = $gdata[$vs1_id]["time"];
 							
 							$lat1 = smart($lat);
 							$long1 = smart($long);
@@ -1007,35 +1015,37 @@ class database
 							{
 								if($sats > $GPSDBArray['sats'] && $GPSDBArray['id'] != 0)
 								{
-									$sql_D = "DELETE FROM `$db_st`.`$gps_table` WHERE `$gps_table`.`id` = '$dbid' AND `$gps_table`.`lat` LIKE '$lat' AND `$gps_table`.`long` = '$long' LIMIT 1";
-									$DBresult1 = mysql_query($sql_D, $conn);
-									if(!$DBresult1)
-									{
-										logd($removed_old_gps_msg.".\r\n", $log_interval, 0,  $log_level);
-										if($out=="CLI")
-										{
-											verbosed($GLOBALS['COLORS']['GREEN'].$removed_old_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-										}elseif($out=="HTML")
-										{
-											verbosed("<p>".$removed_old_gps_msg."</p>", $verbose, "HTML");
-										}
-										die();
-									}
+									$sqlarray[$NNN] = "DELETE FROM `$db_st`.`$gps_table` WHERE `$gps_table`.`id` = '$dbid' AND `$gps_table`.`lat` LIKE '$lat' AND `$gps_table`.`long` = '$long' LIMIT 1";
+									$NNN++;
+#									$DBresult1 = mysql_query($sql_D, $conn);
+#									if(!$DBresult1)
+#									{
+#										logd($removed_old_gps_msg.".\r\n", $log_interval, 0,  $log_level);
+#										if($out=="CLI")
+#										{
+#											verbosed($GLOBALS['COLORS']['GREEN'].$removed_old_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+#										}elseif($out=="HTML")
+#										{
+#											verbosed("<p>".$removed_old_gps_msg."</p>", $verbose, "HTML");
+#										}
+#										die();
+#									}
 									
-									$sql_U = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$dbid', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-									$DBresult2 = mysql_query($sql_U, $conn);
-									if(!$DBresult2)
-									{
-										logd($insert_new_gps_msg.".\r\n", $log_interval, 0,  $log_level);
-										if($out=="CLI")
-										{
-											verbosed($GLOBALS['COLORS']['GREEN'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-										}elseif($out=="HTML")
-										{
-											verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
-										}
-										die();
-									}
+									$sqlarray[$NNN] = "INSERT INTO `$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$dbid', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+									$NNN++;
+#									$DBresult2 = mysql_query($sql_U, $conn);
+#									if(!$DBresult2)
+#									{
+#										logd($insert_new_gps_msg.".\r\n", $log_interval, 0,  $log_level);
+#										if($out=="CLI")
+#										{
+#											verbosed($GLOBALS['COLORS']['GREEN'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+#										}elseif($out=="HTML")
+#										{
+#											verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
+#										}
+#										die();
+#									}
 									$signals[$N] = $dbid.",".$signal;
 			#						echo "Update DB: ".$signals[$N]."\n";
 									if($verbose == 1 && $out == "CLI"){echo ".";}
@@ -1055,22 +1065,21 @@ class database
 								}
 							}elseif($return_gps === 0 or $dbid == 0)
 							{
-								$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
-																		."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-								
-								$DBresult0 = mysql_query($sql_U, $conn);
-								if(!$DBresult0)
-								{
-									logd($insert_new_gps_msg.".\r\n", $log_interval, 0,  $log_level);
-									if($out=="CLI")
-									{
-										verbosed($GLOBALS['COLORS']['GREEN'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-									}elseif($out=="HTML")
-									{
-										verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
-									}
-									die();
-								}
+								$sqlarray[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+								$NNN++;
+#								$DBresult0 = mysql_query($sql_U, $conn);
+#								if(!$DBresult0)
+#								{
+#									logd($insert_new_gps_msg.".\r\n", $log_interval, 0,  $log_level);
+#									if($out=="CLI")
+#									{
+#										verbosed($GLOBALS['COLORS']['GREEN'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+#									}elseif($out=="HTML")
+#									{
+#										verbosed("<p>".$insert_new_gps_msg."</p>", $verbose, "HTML");
+#									}
+#									die();
+#								}
 								$signals[$N] = $gps_id.",".$signal;
 		#						echo "New GPS: ".$signals[$N]."\n";
 								#echo "New GPS: ".$gps_id."\n";
@@ -1095,46 +1104,48 @@ class database
 						
 						
 						
-				#		$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
-				#		if (mysqli_connect_errno())
-				#		{
-				#			printf("Connect failed: %s\n", mysqli_connect_error());
-				#			exit();
-				#		}
-				#		$query = implode(";", $sql_multi);
-				#		if($query != '')
-				#		{
-				#			try {
-				#				$res = $mysqli->query($query);
-				#			}catch (mysqli_sql_exception $e)
-				#			{
-				#				$Error_inserting_sig_msg."\r\nError Code: ".$e->getCode()."\r\nError Message: ".$e->getMessage()."\r\nStrack Trace: ".nl2br($e->getTraceAsString());
-				#				logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
-				#				if($out=="CLI")
-				#				{
-				#					verbosed($GLOBALS['COLORS']['RED'].$Error_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-				#				}elseif($out=="HTML")
-				#				{
-				#					verbosed("<p>".$Error_inserting_sig_msg, $verbose, "HTML");
-				#				}
-				#				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
-				#			}
-				#		}else
-				#		{
-				#			logd($Finished_inserting_sig_msg, $log_interval, 0,  $log_level);
-				#			if($out=="CLI")
-				#			{
-				#				verbosed($GLOBALS['COLORS']['GREEN'].$Finished_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-				#			}elseif($out=="HTML")
-				#			{
-				#				verbosed("<p>".$Finished_inserting_sig_msg, $verbose, "HTML");
-				#			}
-				#		}
+						$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
+						if (mysqli_connect_errno())
+						{
+							printf("Connect failed: %s\n", mysqli_connect_error());
+							exit();
+						}
+						$query = implode(";", $sqlarray);
+						echo $query."\n";
+						
+#						if($query != '')
+#						{
+							try {
+								$res = $mysqli->query($query);
+							}catch (mysqli_sql_exception $e)
+							{
+								$Error_inserting_sig_msg."\r\nError Code: ".$e->getCode()."\r\nError Message: ".$e->getMessage()."\r\nStrack Trace: ".nl2br($e->getTraceAsString());
+								logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
+								if($out=="CLI")
+								{
+									verbosed($GLOBALS['COLORS']['RED'].$Error_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+								}elseif($out=="HTML")
+								{
+									verbosed("<p>".$Error_inserting_sig_msg, $verbose, "HTML");
+								}
+								if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+							}
+#						}else
+#						{
+#							logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
+#							if($out=="CLI")
+#							{
+#								verbosed($GLOBALS['COLORS']['GREEN'].$Error_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+#							}elseif($out=="HTML")
+#							{
+#								verbosed("<p>".$Error_inserting_sig_msg, $verbose, "HTML");
+#							}
+#						}
 						if($out=="HTML")
 						{
 							$DB_COUNT = count($db_gps);
-							logd("Total GPS in DB: ".$DB_COUNT." || GPS Imports: ".$NNN." .\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							verbosed("Total GPS in DB: ".$DB_COUNT."<br>GPS Imports: ".$NNN."<br>".mysql_error($conn), $verbose, "HTML");
+							logd("Total GPS in DB: ".$DB_COUNT." || GPS Imports: ".$NNN." .\r\n", $log_interval, 0,  $log_level);
+							verbosed("Total GPS in DB: ".$DB_COUNT."<br>GPS Imports: ".$NNN."<br>", $verbose, "HTML");
 							?>
 								</td></tr>
 								<td colspan="8">
@@ -1180,6 +1191,7 @@ class database
 							</td></tr></table><br>
 							<?php
 						}
+						if($APid == 8){die();}
 					}else
 					{
 	#################################################################################################################################################################
@@ -1221,7 +1233,7 @@ class database
 							}
 							$skip_pt_insert = 1;
 						}
-						$sqlcgt = "CREATE TABLE `$db_st`.`$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL ,`long` VARCHAR( 25 ) NOT NULL ,`sats` INT( 2 ) NOT NULL ,`hdp` FLOAT NOT NULL ,`alt` FLOAT NOT NULL ,`geo` FLOAT NOT NULL ,`kmh` FLOAT NOT NULL ,`mph` FLOAT NOT NULL ,`track` FLOAT NOT NULL ,`date` VARCHAR( 10 ) NOT NULL ,`time` VARCHAR( 8 ) NOT NULL ,INDEX ( `id` ), UNIQUE( `id` )) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
+						$sqlcgt = "CREATE TABLE `$db_st`.`$gps_table` (`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,`lat` VARCHAR( 25 ) NOT NULL ,`long` VARCHAR( 25 ) NOT NULL ,`sats` INT( 2 ) NOT NULL ,`hdp` VARCHAR(255) NOT NULL ,`alt` VARCHAR(255) NOT NULL ,`geo` VARCHAR(255) NOT NULL ,`kmh` VARCHAR(255) NOT NULL ,`mph` VARCHAR(255) NOT NULL ,`track` VARCHAR(255) NOT NULL ,`date` VARCHAR( 10 ) NOT NULL ,`time` VARCHAR( 8 ) NOT NULL ,INDEX ( `id` ), UNIQUE( `id` )) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 						if(!mysql_query($sqlcgt, $conn))
 						{
 							logd($failed_create_gps_msg."\r\n\t-> ".$sqlcgt." - ".mysql_error($conn), $log_interval, 0,  $log_level);
@@ -1311,26 +1323,27 @@ class database
 							}
 							if($skip_pt_insert == 0)
 							{
-								$sql_ = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
+								$sql_multi[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
 																			."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-								$DBresult = mysql_query($sql_, $conn);
-								if($DBresult)
-								{
+								$NNN++;
+#								$DBresult = mysql_query($sql_, $conn);
+#								if($DBresult)
+#								{
 									$signals[$N] = $gps_id.",".$signal;
 			#						echo "New GPS for new: ".$signals[$N]."\n";
-								}
-								else
-								{
-									logd($insert_new_gps_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-									if($out=="CLI")
-									{
-										verbosed($GLOBALS['COLORS']['RED'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
-									}elseif($out=="HTML")
-									{
-										verbosed("<p>".$insert_new_gps_msg."</p>".mysql_error($conn), $verbose, "HTML");
-									}
-									if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
-								}
+#								}
+#								else
+#								{
+#									logd($insert_new_gps_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+#									if($out=="CLI")
+#									{
+#										verbosed($GLOBALS['COLORS']['RED'].$insert_new_gps_msg.".\n".$GLOBALS['COLORS']['WHITE'].mysql_error($conn), $verbose, "CLI");
+#									}elseif($out=="HTML")
+#									{
+#										verbosed("<p>".$insert_new_gps_msg."</p>".mysql_error($conn), $verbose, "HTML");
+#									}
+#									if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+#								}
 							}else
 							{
 								$DBresult = mysql_query("SELECT * FROM `$gps_table` WHERE `id` = '$dbid'", $conn);
@@ -1393,8 +1406,8 @@ class database
 							exit();
 						}
 						$query = implode(";", $sql_multi);
-						if($query != '')
-						{
+#						if($query != '')
+#						{
 							try {
 								$res = $mysqli->query($query);
 							#	echo $res."\n".$query."\n";
@@ -1411,17 +1424,17 @@ class database
 								}
 								if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 							}
-						}else
-						{
-							logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
-							if($out=="CLI")
-							{
-								verbosed($GLOBALS['COLORS']['GREEN'].$Finished_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-							}elseif($out=="HTML")
-							{
-								verbosed("<p>".$Finished_inserting_sig_msg, $verbose, "HTML");
-							}
-						}
+#						}else
+#						{
+#							logd($Error_inserting_sig_msg, $log_interval, 0,  $log_level);
+#							if($out=="CLI")
+#							{
+#								verbosed($GLOBALS['COLORS']['RED'].$Error_inserting_sig_msg."\n".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+#							}elseif($out=="HTML")
+#							{
+#								verbosed("<p>".$Error_inserting_sig_msg, $verbose, "HTML");
+#							}
+#						}
 						
 						if($out == "HTML")
 						{
