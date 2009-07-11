@@ -1,6 +1,6 @@
 # RanInt WifiDB SQL file
 # Ver: 0.16 Build 3
-# Last Edit: 2009-May-27
+# Last Edit: 2009-Jul-10
 # http://www.randomintervals.com/wifidb/
 #
 #	WARNING: This script Drops both the `wifi_st` (Storage Database) and `wifi` (Main Database, holds pointers and other info) DB's,
@@ -37,7 +37,7 @@ USE wifi;
 CREATE TABLE `settings` (
 		`id` int(255) NOT NULL auto_increment,
 		`table` varchar(25) NOT NULL,
-		`size` int(254) default NULL,
+		`size` varchar(255) default NULL,
 		UNIQUE KEY `table` (`table`),
 		KEY `id` (`id`)
 		) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
@@ -47,13 +47,14 @@ CREATE TABLE `settings` (
 #
 
 INSERT INTO `settings` (`id`, `table`, `size`) VALUES
-		(NULL, 'wifi0', 0);
+		('1', 'wifi0', 0),
+		('2', 'files', 0);
 
 #
 # Table structure for table `settings`
 #
 
- CREATE TABLE IF NOT EXISTS `$wifi`.`users` (
+ CREATE TABLE IF NOT EXISTS `users` (
 		`id` INT( 255 ) NOT NULL AUTO_INCREMENT,
 		`username` VARCHAR( 25 ) NOT NULL,
 		`points` TEXT NOT NULL,
@@ -107,8 +108,8 @@ INSERT INTO `links` (`ID`, `links`) VALUES
 		(4, '<a class=\"links\" href=\"/wifidb/opt/export.php?func=index\">Export</a>'),
 		(5, '<a class=\"links\" href=\"/wifidb/opt/search.php\">Search</a>'),
 		(6, '<a class=\"links\" href=\"/wifidb/opt/userstats.php?func=allusers\">View All Users</a>'),
-		(7, '<a class=\"links\" href=\"/wifidb/ver.php\">WiFiDB Version</a>'),
-		(8, '<a class=\"links\" href=\"/wifidb/announce.php?func=allusers\">Announcements</a>');
+		(7, '<a class=\"links\" href=\"/wifidb/ver.php\">WiFiDB Version</a>');
+#		(8, '<a class=\"links\" href=\"/wifidb/announce.php?func=allusers\">Announcements</a>');
 
 #
 # Table structure for table `annunc-comm`
