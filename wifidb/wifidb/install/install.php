@@ -113,7 +113,7 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`settings` ("
 		."`size` varchar( 254 ) default NULL,"
 		."UNIQUE (`table`),"
 		."KEY `id` ( `id` )"
-		.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=2;";
+		.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;";
 $CR_TB_SE_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 
@@ -191,7 +191,7 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`links` ("
 	."`ID` int(255) NOT NULL auto_increment,"
 	."`links` varchar(255) NOT NULL,"
 	."KEY `INDEX` (`ID`)"
-	.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=9 ;";
+	.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 $CR_TB_LN_Re = mysql_query($sqls, $conn) or die(mysql_error());
 
 if($CR_TB_LN_Re)

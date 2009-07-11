@@ -39,50 +39,65 @@ if (isset($_POST['token']))
 function getdaemonstats()
 {
 	$os = PHP_OS;
-	if ( PHP_OS == 'Linux')
+	if ( $os[0] == 'L')
 	{
 		#echo $os."<br>";
 		$output = array();
 		$WFDBD_PID = "/var/run/wifidbd.pid";
-		$pid_open = file($WFDBD_PID);
-		exec('ps vp '.$pid_open[0] , $output, $sta);
-		if(isset($output[1]))
+		if(file_exists($WFDBD_PID))
 		{
-			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
-			$start = trim($output[1], " ");
-			preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
-			$mem = $match[0][0];
-			
-			preg_match_all("/(php.*)/", $start, $matc);
-			$CMD = $matc[0][0];
-			
-			preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
-			$time = $mat[0][0];
-			
-			$patterns[1] = '/  /';
-			$patterns[2] = '/ /';
-			$ps_stats = preg_replace($patterns , "|" , $start);
+			$pid_open = file($WFDBD_PID);
+			exec('ps vp '.$pid_open[0] , $output, $sta);
+			if(isset($output[1]))
+			{
+				?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><tr class="style4"><th>PID</th><th>TIME</th><th>Memory</th><th>CMD</th></tr><?php
+				$start = trim($output[1], " ");
+				preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
+				$mem = $match[0][0];
+				
+				preg_match_all("/(php.*)/", $start, $matc);
+				$CMD = $matc[0][0];
+				
+				preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
+				$time = $mat[0][0];
+				
+				$patterns[1] = '/  /';
+				$patterns[2] = '/ /';
+				$ps_stats = preg_replace($patterns , "|" , $start);
 #			echo $ps_stats;
-			$ps_Sta_exp = explode("|", $ps_stats);
-			?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $time;?></td><td><?php echo $mem."%";?></td><td><?php echo $CMD;?></td></tr><?php
+				$ps_Sta_exp = explode("|", $ps_stats);
+				?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $time;?></td><td><?php echo $mem."%";?></td><td><?php echo $CMD;?></td></tr><?php
+			}
 		}else
 		{
 			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr>
 			<tr align="center" bgcolor="red"><td colspan="4">Linux Based WiFiDB Daemon is not running!</td><?php
 		}
-	}elseif( $os == 'WIN')
+	}elseif( $os[0] == 'W')
 	{
 		$output = array();
 		$WFDBD_PID = "C:\CLI\daemon\wifidbd.pid";
-		$pid_open = file($WFDBD_PID);
-		exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
-		if(isset($output[2]))
+		if(file_exists($WFDBD_PID))
 		{
-			?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
-			$ps_stats = explode("," , $output[2]);
-			?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+			$pid_open = file($WFDBD_PID);
+			exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+			if(isset($output[2]))
+			{
+				?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+				$ps_stats = explode("," , $output[2]);
+				?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+			}
+		}else
+		{
+			?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Windows Based WiFiDB Daemon is not running!</td><?php
 		}
+	}else
+	{
+		?><tr class="style4"><th colspan="4">Unkown OS Based WiFiDB Daemon</th></tr>
+		<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based WiFiDB Daemon is not running!</td><?php
 	}
+	
 }
 #####################
 

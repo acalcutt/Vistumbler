@@ -234,7 +234,7 @@ function breadcrumb($PATH_INFO)
 	
 	// Initialize variable and add link to home page
 	if(!isset($root_url)) { $root_url=""; }
-	$breadCrumbHTML = '<a class="links" href="'.$root_url.'/" title="Home Page">Home</a> &gt; ';
+	$breadCrumbHTML = '<a class="links" href="'.$root_url.'/" title="Root">[ Root ]</a> / ';
 	
 	// initialize newTrail
 	$newTrail = $root_url."/";
@@ -246,7 +246,7 @@ function breadcrumb($PATH_INFO)
 		// rebuild the navigation path
 		$newTrail .= $pathArray[$a].'/';
 		// build the HTML for the breadcrumb trail
-		$breadCrumbHTML .= '<a class="links" href="'.$newTrail.'">'.$crumbDisplayName.'</a> &gt; ';
+		$breadCrumbHTML .= '<a class="links" href="'.$newTrail.'">[ '.$crumbDisplayName.' ]</a> / ';
 	}
 	// Add the current page
 	if(!isset($page_title)) { $page_title = "Current Page"; }
@@ -1857,8 +1857,7 @@ class database
 		$apID = $id;
 		$start = microtime(true);
 		include('../lib/config.inc.php');
-		mysql_select_db($db,$conn);
-		$sqls = "SELECT * FROM `$wtable` WHERE id='$id'";
+		$sqls = "SELECT * FROM `$db`.`$wtable` WHERE id='$id'";
 		$result = mysql_query($sqls, $conn) or die(mysql_error());
 		$newArray = mysql_fetch_array($result);
 		$ID = $newArray['id'];
@@ -1919,8 +1918,7 @@ class database
 		<tr class="style4"><th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th><th>Plot</th></tr>
 		<?php
 		$start1 = microtime(true);
-		mysql_select_db($db_st, $conn);
-		$result = mysql_query("SELECT * FROM `$table` ORDER BY `id`", $conn) or die(mysql_error());
+		$result = mysql_query("SELECT * FROM `$db_st`.`$table` ORDER BY `id`", $conn) or die(mysql_error());
 		while ($field = mysql_fetch_array($result))
 		{
 			$row = $field["id"];
@@ -1944,7 +1942,7 @@ class database
 				$last = $last_ID[0];
 			}
 			
-			$sql1 = "SELECT * FROM `$table_gps` WHERE `id`='$first'";
+			$sql1 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$first'";
 			$re = mysql_query($sql1, $conn) or die(mysql_error());
 			$gps_table_first = mysql_fetch_array($re);
 
@@ -1952,7 +1950,7 @@ class database
 			$time_first = $gps_table_first["time"];
 			$fa = $date_first." ".$time_first;
 			
-			$sql2 = "SELECT * FROM `$table_gps` WHERE `id`='$last'";
+			$sql2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$last'";
 			$res = mysql_query($sql2, $conn) or die(mysql_error());
 			$gps_table_last = mysql_fetch_array($res);
 			$date_last = $gps_table_last["date"];
@@ -1986,7 +1984,7 @@ class database
 					$id = $sig_exp[0]+0;
 					if($id == 0){continue;}
 					$start2 = microtime(true);
-					$result1 = mysql_query("SELECT * FROM `$table_gps` WHERE `id` = '$id'", $conn) or die(mysql_error());
+					$result1 = mysql_query("SELECT * FROM `$db_st`.`$table_gps` WHERE `id` = '$id'", $conn) or die(mysql_error());
 				#	$rows = mysql_num_rows($result1);
 					while ($field = mysql_fetch_array($result1)) 
 					{
@@ -2021,7 +2019,7 @@ class database
 		<?php
 		$start3 = microtime(true);
 		mysql_select_db($db, $conn);
-		$result = mysql_query("SELECT * FROM `users`", $conn);
+		$result = mysql_query("SELECT * FROM `$db`.`users`", $conn);
 		while ($field = mysql_fetch_array($result)) 
 		{
 			if($field['points'] != '')
@@ -2050,7 +2048,7 @@ class database
 				$exp = explode(",",$aplist);
 				$apid = $exp[0];
 				$new_update = $exp[1];
-				$result = mysql_query("SELECT * FROM `users` WHERE `id`='$apid'", $conn);
+				$result = mysql_query("SELECT * FROM `$db`.`users` WHERE `id`='$apid'", $conn);
 				while ($field = mysql_fetch_array($result)) 
 				{
 					if($field["title"]==''){$field["title"]="Untitled";}

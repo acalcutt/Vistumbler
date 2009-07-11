@@ -21,22 +21,22 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b3">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-08</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-09</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
-					<LI>Fixed an issue where if you had sent a file from vistumber the token would not be able to be compared.</LI>
 					<LI>Added Token support on almost every page that takes user input, or input from the URL.</LI>
+					<LI>Fixed an issue where if you had sent a file from vistumber the token would not be able to be compared.</LI>
 					<LI>Added signal strength to Access Point Signal Plot KML export.</LI>
 					<LI>Changed Individual User Stat Page to new layout.</LI>
 					<LI>Standardized SSID usage, there are three types:</LI>
 					<OL>
-						<LI>&#60;ny-paq&#62;&#124;sayz oh-my this is fun [ is the un-sanitized, but still safe SSID, used to name APs, 32 char limit, no special chars.]</LI>
+						<LI>&#60;ny-paq&#62;&#124;sayz oh-my this is fun [ is the unsanitized, but still safe SSID, used to name APs, 32 char limit, no special chars.]</LI>
 						<LI>&#60;ny-paq&#62;_sayz oh-my this is fun [safe for file names, no special chars, 32 char limit.]</LI>
 						<LI>_ny-paq__sayz oh-my this [safe for table names, max 25 char, no special chars.]</LI>
 					</OL>
 					<LI>Changed the way WiFiDB looks for the install folder.</LI>
-					<LI>Daemon now has all SQL based errors being echoed out to the screen.</LI>
+					<LI>Daemon now has all SQL based errors being echoed out to the screen, even if Verbose is off.</LI>
 					<LI>Changed the table hide for GPS history, so it is now hidden by default. Has a +/- symbol to either expand or contract the table next to the GPS History Title.</LI>
 					<LI>For some reason the Save Search link was missing after 0.16 Build 1, is now back, with a few enhancements.</LI>
 					<LI>Fixed the No Token error with imports directly from Vistumbler.</LI>
@@ -48,12 +48,12 @@ pageheader("Version Page");
 					<LI>Fixed an issue where the Signal history was being corrupted by being sanitized. The 'special' characters '-' and ',' were being encoded.</LI>
 					<LI>Fixed Some Issues with the daemon, details are in the Tools Read-me.</LI>
 					<LI>The WiFiDB Web log vars $log_level and $log_interval where interfering with the Daemon vars, they are now changed to $log_level_W and $log_interval_W.</LI>
-					<LI>The Username in the 'Files already imported' table was pointing to the All APs for that user page, when it is supposed to point to the Users stat page.</LI>
+					<LI>The User-name in the 'Files already imported' table was pointing to the All APs for that user page, when it is supposed to point to the Users stat page.</LI>
 					<LI>Fixed an issue where if some AP Pointers are removed from the `wifi0` table, some APs will fail to import or have the same ID as another AP and not be linkable to their data.</LI>
 					<LI><b>[ Issues reported by ACalcutt ]</b>
 						<OL>
 							<LI>"Access" is spelled incorrectly multiple times on Export page.</LI>
-							<LI>(Export an Access Point to KML) "Username" should be "SSID".</LI>
+							<LI>(Export an Access Point to KML) "User-name" should be "SSID".</LI>
 							<LI>Fix the links for Access Points on the All AP page. (Add tokens to the SSID URLs in the "View all APs" page.)</LI>
 							<LI>Refresh time on the scheduling page went to 15 seconds when I set it to 5 seconds. On the next refresh it went back to 30 seconds.</LI>
 						</OL>
@@ -66,6 +66,9 @@ pageheader("Version Page");
 					<LI>Numerous other small fixes that I have forgotten about.</LI>
 					<LI>Spell-checked the Ver.php page.</LI>
 					<LI>Added sorting and pages to the Search results page.</LI>
+					<LI>Rearranged the exports page.</LI>
+					<LI>Added MAC , sectype , chan , and radio to Single AP export.</LI>
+					<LI>Added Date and number of APs for User list export.</LI>
 				</OL>
 			</td></tr>
 		</table>
