@@ -1,6 +1,5 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=beta
 #AutoIt3Wrapper_icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
@@ -14,8 +13,8 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Save'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports a KML based on input options'
-$version = 'v1.1'
-$last_modified = '11/15/2008'
+$version = 'v2'
+$last_modified = '2009/07/12'
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
@@ -70,16 +69,20 @@ For $loop = 1 To $CmdLine[0]
 		$MapActiveAPs = 1
 		$MapAccessPoints = 1
 	EndIf
-	If StringInStr($CmdLine[$loop], '/d') Then
-		$MapDeadAPs = 1
-		$MapAccessPoints = 1
-	EndIf
-	If StringInStr($CmdLine[$loop], '/t') Then
+	If StringInStr($CmdLine[$loop], '/p') Then
 		$MapTrack = 1
 	EndIf
 	If StringInStr($CmdLine[$loop], '/?') Then
 		MsgBox(0, '', '/k="path to save kml file"' & @CRLF & @CRLF & '/a	Map Active Access Points' & @CRLF & '/d	Map Dead Access Points' & @CRLF & '/t	Map GPS Track')
 		Exit
+	EndIf
+	If StringInStr($CmdLine[$loop], '/db') Then
+		$filesplit = StringSplit($CmdLine[$loop], "=")
+		If $filesplit[0] = 2 Then $VistumblerDB = $filesplit[2]
+	EndIf
+	If StringInStr($CmdLine[$loop], '/d') And StringInStr($CmdLine[$loop], '/db') = 0 Then
+		$MapDeadAPs = 1
+		$MapAccessPoints = 1
 	EndIf
 Next
 

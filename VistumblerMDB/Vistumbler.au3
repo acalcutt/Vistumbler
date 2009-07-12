@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 4'
+$version = 'v9.7 Beta 5'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/07/05'
+$last_modified = '2009/07/12'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -117,6 +117,7 @@ Dim $DataChild_Height
 
 Dim $datestamp
 Dim $timestamp
+Dim $GraphLastTime
 
 Dim $GoogleEarth_ActiveFile = $TmpDir & 'autokml_active.kml'
 Dim $GoogleEarth_DeadFile = $TmpDir & 'autokml_dead.kml'
@@ -312,6 +313,7 @@ Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
 Dim $Direction[23];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
 Dim $Direction2[3]
 Dim $Direction3[3]
+Dim $OldGraphData[1]
 ;Load-Settings-From-INI-File----------------------------
 Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
@@ -796,6 +798,14 @@ If IsArray($Tmpfiles) Then
 	Next
 EndIf
 
+$Tmpfiles = _FileListToArray($TmpDir, '*.ldb', 1);Find all files in the folder that end in .ldb
+If IsArray($Tmpfiles) Then
+	For $FoundTmp = 1 To $Tmpfiles[0]
+		$tmpname = $TmpDir & $Tmpfiles[$FoundTmp]
+		If _FileInUse($tmpname) = 0 Then FileDelete($tmpname)
+	Next
+EndIf
+
 $MDBfiles = _FileListToArray($TmpDir, '*.MDB', 1);Find all files in the folder that end in .MDB
 If IsArray($MDBfiles) Then
 	Opt("GUIOnEventMode", 0)
@@ -1133,6 +1143,7 @@ $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $Extra)
 $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $Extra)
 $ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_PhilsWDB, $Extra)
+$LocateInWDB = GUICtrlCreateMenuItem("Locate Position in WiFiDB", $Extra)
 
 $Help = GUICtrlCreateMenu($Text_Help)
 $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
@@ -1274,6 +1285,7 @@ GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
 GUICtrlSetOnEvent($OpenKmlNetworkLink, '_StartGoogleAutoKmlRefresh')
 GUICtrlSetOnEvent($ViewInPhilsPHP, '_ViewInPhilsPHP')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
+GUICtrlSetOnEvent($LocateInWDB, '_LocatePositionInWiFiDB')
 ;Help Menu
 GUICtrlSetOnEvent($VistumblerHome, '_OpenVistumblerHome')
 GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
@@ -1384,7 +1396,7 @@ While 1
 	_TreeviewListviewResize()
 
 	;Check If Vistumbler Window has moved to tell the graph to redraw
-	If WinActive($Vistumbler) And _WinMoved() = 1 Then
+	If _WinMoved() = 1 Then
 		_SetControlSizes()
 		$Redraw = 1
 	EndIf
@@ -1411,15 +1423,15 @@ While 1
 			$kml_gps_timer = TimerInit()
 		EndIf
 		If TimerDiff($kml_dead_timer) >= ($AutoKmlDeadTime * 1000) And $AutoKmlDeadTime <> 0 And ProcessExists($AutoKmlDeadProcess) = 0 Then
-			$AutoKmlDeadProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
+			$AutoKmlDeadProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=k /f="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
 			$kml_dead_timer = TimerInit()
 		EndIf
 		If TimerDiff($kml_active_timer) >= ($AutoKmlActiveTime * 1000) And $AutoKmlActiveTime <> 0 And ProcessExists($AutoKmlActiveProcess) = 0 Then
-			$AutoKmlActiveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
+			$AutoKmlActiveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=k /f="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
 			$kml_active_timer = TimerInit()
 		EndIf
 		If TimerDiff($kml_track_timer) >= ($AutoKmlTrackTime * 1000) And $AutoKmlTrackTime <> 0 And ProcessExists($AutoKmlTrackProcess) = 0 Then
-			$AutoKmlTrackProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_TrackFile & '" /t', '', @SW_HIDE)
+			$AutoKmlTrackProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=k /f="' & $GoogleEarth_TrackFile & '" /p', '', @SW_HIDE)
 			$kml_track_timer = TimerInit()
 		EndIf
 	EndIf
@@ -1517,7 +1529,7 @@ Func _ScanAccessPoints()
 		$NewFoundAPs = 0
 		;Dump data from netsh
 		FileDelete($tempfile);delete old temp file
-		_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+		_RunDOS($netsh & ' wlan show networks mode=bssid interface="' & $DefaultApapter & '" > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
 		$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Array
 		;Go through data and pull AP information
 		If $arrayadded = 1 Then
@@ -2497,6 +2509,7 @@ Func _GraphToggle(); Graph1 Button
 		GUISetState(@SW_SHOW, $GraphicGUI)
 	EndIf
 	_SetControlSizes()
+	$Redraw = 1
 EndFunc   ;==>_GraphToggle
 
 Func _GraphToggle2(); Graph2 Button
@@ -2523,6 +2536,7 @@ Func _GraphToggle2(); Graph2 Button
 		GUISetState(@SW_SHOW, $GraphicGUI)
 	EndIf
 	_SetControlSizes()
+	$Redraw = 1
 EndFunc   ;==>_GraphToggle2
 
 Func _DebugToggle() ;Sets if current function should be displayed in the gui
@@ -3389,7 +3403,7 @@ Func _WinMoved();Checks if window has moved. Returns 1 if it has
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WinMoved()') ;#Debug Display
 	$a = WinGetPos($Vistumbler)
 	$winpos_old = $winpos
-	$winpos = $a[0] & $a[1] & $a[2] & $a[3]
+	$winpos = $a[0] & $a[1] & $a[2] & $a[3] & WinGetState($title, "")
 
 	If $winpos_old <> $winpos Then
 		;Set window state and position
@@ -3535,7 +3549,7 @@ Func _RedrawGraphGrid()
 	$base_y = $base_bottom - $base_top
 	;Draw Background
 	For $r = 1 To $Graphic_height
-		_SelectColor($black)
+		_SelectColor($GraphBack)
 		_DrawLine($base_left, $r, $base_right, $r)
 	Next
 	;Draw outside lines
@@ -3551,8 +3565,7 @@ Func _RedrawGraphGrid()
 	Next
 	$ReGraph = 1
 	;Deleted old graph points
-	$query = "DELETE * FROM Graph"
-	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	ReDim $OldGraphData[1]
 EndFunc   ;==>_RedrawGraphGrid
 
 Func _GraphApSignal() ;Graphs GPS History from selected ap
@@ -3571,8 +3584,6 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 			_RedrawGraphGrid()
 			$Redraw = 0
 		EndIf
-		ConsoleWrite('1 = ' & TimerDiff($gt) & @CRLF)
-		$gt = TimerInit()
 		If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 			$query = "SELECT ApID FROM AP WHERE ListRow = '" & $Selected & "'"
 			$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -3583,32 +3594,26 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 			Else
 				$max_graph_points = $base_x
 			EndIf
-			ConsoleWrite('2 = ' & TimerDiff($gt) & @CRLF)
-			$gt = TimerInit()
 			$query = "SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
 			;$query = "SELECT Signal, ApID, Date1, Time1 FROM (SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 DESC) ORDER BY Date1, Time1 ASC"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
-			ConsoleWrite('3 = ' & TimerDiff($gt) & @CRLF)
-			$gt = TimerInit()
 			If $HistSize <> 0 Then
-				$data = $HistMatchArray[$HistSize][3] & '-' & $HistMatchArray[$HistSize][4] & '-' & $HistSize
+				;$data = $HistMatchArray[$HistSize][3] & '-' & $HistMatchArray[$HistSize][4] & '-' & $HistSize
 				$info = $HistMatchArray[$HistSize][2] & '-' & $GraphDeadTime & '-' & $TimeBeforeMarkedDead & '-' & $Graph
 				If $info_old <> $info Then
 					$info_old = $info
 					_RedrawGraphGrid()
 					$ReGraph = 1
 				EndIf
-				If $data <> $data_old Or $sizes <> $sizes_old Or $ReGraph = 1 Then ; if graph data changed, map new data
+				;If $data <> $data_old Or $sizes <> $sizes_old Or $ReGraph = 1 Then ; if graph data changed, map new data
 					$data_old = $data
 					$sizes_old = $sizes
 
 					$Last_dts = ''
-					Local $GraphData
-					Local $MaxNumberOfZeros = 25
 					Local $GraphTempID = 0
-					$query = "DELETE * FROM Graph_Temp"
-					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+					Local $GraphData
+					Local $MaxNumberOfZeros = 0
 					For $gs = 1 To $HistSize ; Create Data Array
 						$ExpSig = $HistMatchArray[$gs][1]
 						$ExpApID = $HistMatchArray[$gs][2]
@@ -3617,17 +3622,29 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 						$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
 						$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
 						$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
-						If $Last_dts = '' Then $Last_dts = $Found_dts
+						If $Last_dts = '' Then 
+							If $Scan = 1 Then
+							$dts = StringSplit($timestamp, ":") ;Split time so it can be converted to seconds
+							$LastTime = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
+							$Last_dts = StringReplace($datestamp & $LastTime, '-', '')
+							$GraphLastTime = $Last_dts
+							Else
+								$Last_dts = $GraphLastTime
+								If $Last_dts = '' Then $Last_dts = $Found_dts
+							EndIf
+						EndIf
 						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
 							If $GraphDeadTime = 1 Then
 								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
 								For $wz = 1 To $numofzeros
 									$GraphData = '0|' & $GraphData
 									If $wz = $MaxNumberOfZeros And $MaxNumberOfZeros <> 0 Then ExitLoop
+									$GraphTempID += 1
 									If $GraphTempID = $max_graph_points Then ExitLoop
 								Next
 							Else
 								$GraphData = '0|' & $GraphData
+								$GraphTempID += 1
 							EndIf
 							If $GraphTempID = $max_graph_points Then ExitLoop
 							$GraphData = $ExpSig & '|' & $GraphData
@@ -3636,12 +3653,11 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 							$GraphData = $ExpSig & '|' & $GraphData
 							$Last_dts = $Found_dts
 						EndIf
+						$GraphTempID += 1
 						If $GraphTempID = $max_graph_points Then ExitLoop
 					Next
 					$GraphDataArray = StringSplit($GraphData, '|')
 					$GraphDataMatch = $GraphDataArray[0]
-					ConsoleWrite('4 = ' & TimerDiff($gt) & @CRLF)
-					$gt = TimerInit()
 					If $GraphDataMatch <> 0 Then
 						If $GraphDataMatch > $max_graph_points Then ; If the array is grater that the max number of ports, set array size to the max size, else use the full size of the array
 							$start = $GraphDataMatch - $max_graph_points
@@ -3652,8 +3668,6 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 							$arrayend = $GraphDataMatch
 							$arraylen = $GraphDataMatch
 						EndIf
-						ConsoleWrite('5 = ' & TimerDiff($gt) & @CRLF)
-						$gt = TimerInit()
 						If $Graph = 1 Then
 							$base_x_add_value = ($base_x / ($arraylen - 2)); Set disance between points
 							$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
@@ -3697,15 +3711,12 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 							$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
 							$base_add = 1
 							$base_x_add_value = 1
-
-
-							$query = "SELECT GraphID, Signal FROM Graph ORDER BY GraphID ASC"
-							$OldGraphData = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-							$OldGraphDataMatch = UBound($OldGraphData) - 1
-
+							$GraphData = ""
+							$OldGraphData[0] = Ubound($OldGraphData) - 1
+							
 							For $o = 1 To $GraphDataMatch
-								If $o <= $OldGraphDataMatch Then
-									If $GraphDataArray[$o] <> $OldGraphData[$o][2] Then
+								If $o <= $OldGraphData[0] Then
+									If $GraphDataArray[$o] <> $OldGraphData[$o] Then
 										_SelectColor($red)
 										_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value))
 										_SelectColor($GraphBack)
@@ -3715,10 +3726,8 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 											$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
 											_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
 										Next
-										$query = "UPDATE Graph SET Signal='" & $GraphDataArray[$o] & "' WHERE GraphID='" & $OldGraphData[$o][1] & "'"
-										_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 									EndIf
-								Else
+								ElseIf $GraphDataArray[$o] <> 0 Then
 									_SelectColor($red)
 									_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value))
 									_SelectColor($GraphBack)
@@ -3728,18 +3737,19 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 										$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
 										_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
 									Next
-									_AddRecord($VistumblerDB, "Graph", $DB_OBJ, StringFormat("%08i", $o) & '|' & $GraphDataArray[$o])
 								EndIf
+								If $GraphData <> "" Then $GraphData &= "|"
+								$GraphData &= $GraphDataArray[$o]
 								$base_add += $base_x_add_value
 							Next
+							$OldGraphData = StringSplit($GraphData, '|')
 							_DrawLine($base_right, $base_top, $base_right, $base_bottom)
 							_DrawLine($base_left, $base_top, $base_left, $base_bottom)
 							_DrawLine($base_left, $base_top, $base_right, $base_top)
 						EndIf
-						ConsoleWrite('6 = ' & TimerDiff($gt) & @CRLF)
 						$ReGraph = 0
 					EndIf
-				EndIf
+				;EndIf
 			EndIf
 		EndIf
 	EndIf
@@ -3883,7 +3893,29 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 	EndIf
 EndFunc   ;==>_ViewInPhilsPHP
 
-Func _AddToYourWDB();Send data to phils wireless ap database
+Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
+	Local $ActiveMacs
+	$WdbFile = $SaveDir & 'WDB_Export.VS1'
+	FileDelete($WdbFile)
+	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
+	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundBssidMatch = UBound($BssidMatchArray) - 1
+	If $FoundBssidMatch <> 0 Then
+		For $exb = 1 to $FoundBssidMatch
+			If $exb <> 1 Then $ActiveMacs &= '-'
+			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
+		Next
+		_ExportDetailedTXT($WdbFile)
+		$url_root = "http://www.randomintervals.com/wifidb/opt/locate.php?";$PhilsWdbURL;"http://www.randomintervals.com/wifi/beta/db/import/?"
+		$url_data = "ActiveBSSIDs=" & $ActiveMacs & "&file=" & $WdbFile
+		Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
+	Else
+		MsgBox(0, $Text_Error, $Text_NoActiveApFound)
+	EndIf
+EndFunc   ;==>_AddToYourWDB
+
+Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
 	$WdbFile = $SaveDir & 'WDB_Export.VS1'
 	FileDelete($WdbFile)
@@ -3891,7 +3923,7 @@ Func _AddToYourWDB();Send data to phils wireless ap database
 	$url_root = $PhilsWdbURL;"http://www.randomintervals.com/wifi/beta/db/import/?"
 	$url_data = "file=" & $WdbFile
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
-EndFunc   ;==>_AddToYourWDB
+EndFunc
 
 ;------------------------------------------------------------------------------------------------------------------------------- 	 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTION
@@ -4196,7 +4228,7 @@ Func _AutoSave();Autosaves data to a file name based on current time
 	FileDelete($AutoSaveFile)
 	$AutoSaveFile = $SaveDirAuto & 'AutoSave_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
 	If ProcessExists($AutoSaveProcess) = 0 Then
-		$AutoSaveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=d /f="' & $AutoSaveFile & '"', '', @SW_HIDE)
+		$AutoSaveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=d /f="' & $AutoSaveFile & '"', '', @SW_HIDE)
 		$save_timer = TimerInit()
 	EndIf
 EndFunc   ;==>_AutoSave
@@ -6033,9 +6065,9 @@ Func _StartGoogleAutoKmlRefresh()
 			FileWrite($kml, $file)
 			If Not @error Then
 				If $AutoKmlGpsTime <> 0 Then _AutoKmlGpsFile($GoogleEarth_GpsFile)
-				If $AutoKmlDeadTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
-				If $AutoKmlActiveTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & '/t=k /f="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
-				If $AutoKmlTrackTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /t=k /f="' & $GoogleEarth_TrackFile & '" /t', '', @SW_HIDE)
+				If $AutoKmlDeadTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=k /f="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
+				If $AutoKmlActiveTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '"/t=k /f="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
+				If $AutoKmlTrackTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=k /f="' & $GoogleEarth_TrackFile & '" /p', '', @SW_HIDE)
 				Run('"' & $GoogleEarth_EXE & '" "' & $kml & '"')
 			EndIf
 		Else
@@ -8241,7 +8273,7 @@ EndFunc   ;==>_ReduceMemory
 Func _SelectConnectedAp()
 	$return = 0
 	FileDelete($tempfile_showint)
-	_RunDOS($netsh & ' wlan show interfaces > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
+	_RunDOS($netsh & ' wlan show interfaces interface="' & $DefaultApapter & '" > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
 	$showintarraysize = _FileReadToArray($tempfile_showint, $TempFileArrayShowInt);read the tempfile into the '$TempFileArrayShowInt' Araay
 	If $showintarraysize = 1 Then
 		For $strip_ws = 1 To $TempFileArrayShowInt[0]
