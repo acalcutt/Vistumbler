@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 5'
+$version = 'v9.7 Beta 5.1'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/07/12'
 ;Includes------------------------------------------------
@@ -926,12 +926,6 @@ If FileExists($VistumblerDB) Then
 	_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
 	_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
 	_CreatMultipleFields($VistumblerDB, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
-	If _TableExists($DB_OBJ, $VistumblerDB, "Graph") Then _DropTable($VistumblerDB, "Graph", $DB_OBJ)
-	_CreateTable($VistumblerDB, "Graph", $DB_OBJ)
-	_CreatMultipleFields($VistumblerDB, 'Graph', $DB_OBJ, 'GraphID TEXT(255)|Signal TEXT(255)')
-	If _TableExists($DB_OBJ, $VistumblerDB, "Graph_Temp") Then _DropTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
-	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
-	_CreatMultipleFields($VistumblerDB, 'Graph_Temp', $DB_OBJ, 'GraphTempID TEXT(255)|Signal TEXT(255)')
 Else
 	_SetUpDbTables($VistumblerDB)
 EndIf
@@ -2263,8 +2257,6 @@ Func _SetUpDbTables($dbfile)
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'Graph', $DB_OBJ, 'GraphID TEXT(255)|Signal TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'Graph_Temp', $DB_OBJ, 'GraphTempID TEXT(255)|Signal TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -3607,127 +3599,116 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 					$ReGraph = 1
 				EndIf
 				;If $data <> $data_old Or $sizes <> $sizes_old Or $ReGraph = 1 Then ; if graph data changed, map new data
-					$data_old = $data
-					$sizes_old = $sizes
+				$data_old = $data
+				$sizes_old = $sizes
 
-					$Last_dts = ''
-					Local $GraphTempID = 0
-					Local $GraphData
-					Local $MaxNumberOfZeros = 0
-					For $gs = 1 To $HistSize ; Create Data Array
-						$ExpSig = $HistMatchArray[$gs][1]
-						$ExpApID = $HistMatchArray[$gs][2]
-						$ExpDate = $HistMatchArray[$gs][3]
-						$ExpTime = $HistMatchArray[$gs][4]
-						$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
-						$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
-						$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
-						If $Last_dts = '' Then 
-							If $Scan = 1 Then
+				$Last_dts = ''
+				Local $GraphTempID = 0
+				Local $GraphData
+				Local $MaxNumberOfZeros = 0
+				For $gs = 1 To $HistSize ; Create Data Array
+					$ExpSig = $HistMatchArray[$gs][1]
+					$ExpApID = $HistMatchArray[$gs][2]
+					$ExpDate = $HistMatchArray[$gs][3]
+					$ExpTime = $HistMatchArray[$gs][4]
+					$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
+					$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
+					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
+					If $Last_dts = '' Then
+						If $Scan = 1 Then
 							$dts = StringSplit($timestamp, ":") ;Split time so it can be converted to seconds
 							$LastTime = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
 							$Last_dts = StringReplace($datestamp & $LastTime, '-', '')
 							$GraphLastTime = $Last_dts
-							Else
-								$Last_dts = $GraphLastTime
-								If $Last_dts = '' Then $Last_dts = $Found_dts
-							EndIf
+						Else
+							$Last_dts = $GraphLastTime
+							If $Last_dts = '' Then $Last_dts = $Found_dts
 						EndIf
-						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
-							If $GraphDeadTime = 1 Then
-								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
-								For $wz = 1 To $numofzeros
-									$GraphData = '0|' & $GraphData
-									If $wz = $MaxNumberOfZeros And $MaxNumberOfZeros <> 0 Then ExitLoop
-									$GraphTempID += 1
-									If $GraphTempID = $max_graph_points Then ExitLoop
-								Next
-							Else
+					EndIf
+					If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
+						If $GraphDeadTime = 1 Then
+							$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
+							For $wz = 1 To $numofzeros
 								$GraphData = '0|' & $GraphData
+								If $wz = $MaxNumberOfZeros And $MaxNumberOfZeros <> 0 Then ExitLoop
 								$GraphTempID += 1
-							EndIf
-							If $GraphTempID = $max_graph_points Then ExitLoop
-							$GraphData = $ExpSig & '|' & $GraphData
-							$Last_dts = $Found_dts
-						Else
-							$GraphData = $ExpSig & '|' & $GraphData
-							$Last_dts = $Found_dts
-						EndIf
-						$GraphTempID += 1
-						If $GraphTempID = $max_graph_points Then ExitLoop
-					Next
-					$GraphDataArray = StringSplit($GraphData, '|')
-					$GraphDataMatch = $GraphDataArray[0]
-					If $GraphDataMatch <> 0 Then
-						If $GraphDataMatch > $max_graph_points Then ; If the array is grater that the max number of ports, set array size to the max size, else use the full size of the array
-							$start = $GraphDataMatch - $max_graph_points
-							$arrayend = $GraphDataMatch
-							$arraylen = $max_graph_points
-						Else
-							$start = 1
-							$arrayend = $GraphDataMatch
-							$arraylen = $GraphDataMatch
-						EndIf
-						If $Graph = 1 Then
-							$base_x_add_value = ($base_x / ($arraylen - 2)); Set disance between points
-							$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
-							;############### Start Mapping Access Point signal Data ###############
-							_SelectColor($red)
-							$base_add = 0
-							For $o = $start To ($arrayend - 1)
-								$x1 = ($base_left + 1) + ($base_add * $base_x_add_value)
-								$x2 = ($base_left + 1) + (($base_add + 1) * $base_x_add_value)
-								$y1 = ($base_bottom + 1) - ($GraphDataArray[$o] * $base_y_add_value)
-								$y2 = ($base_bottom + 1) - ($GraphDataArray[$o + 1] * $base_y_add_value)
-
-								_SelectColor($GraphBack)
-								For $rl = $x1 To $x2
-									_DrawLine($rl, $base_top, $rl, $base_bottom)
-								Next
-
-								_SelectColor($GraphGrid)
-								For $drawline = 1 To 10
-									$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
-									_DrawLine($x1, $subtract_value, $x2, $subtract_value)
-								Next
-
-								_DrawLine($base_right, $base_top, $base_right, $base_bottom)
-								_DrawLine($base_left, $base_top, $base_left, $base_bottom)
-								_DrawLine($base_left, $base_top, $base_right, $base_top)
-
-								_SelectColor($red)
-								_DrawDot($x1, $y1)
-								_DrawLine($x1, $y1, $x2, $y2);Draw line
-								_DrawDot($x2, $y2)
-								If $o <> $start Then
-									$x3 = ($base_left + 1) + (($base_add - 1) * $base_x_add_value)
-									$y3 = ($base_bottom + 1) - ($GraphDataArray[$o - 1] * $base_y_add_value)
-									_DrawLine($x3, $y3, $x1, $y1);Draw line
-								EndIf
-								$base_add += 1
+								If $GraphTempID = $max_graph_points Then ExitLoop
 							Next
-							;############### End Mapping Access Point signal Data ###############
-						ElseIf $Graph = 2 Then
-							$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
-							$base_add = 1
-							$base_x_add_value = 1
-							$GraphData = ""
-							$OldGraphData[0] = Ubound($OldGraphData) - 1
-							
-							For $o = 1 To $GraphDataMatch
-								If $o <= $OldGraphData[0] Then
-									If $GraphDataArray[$o] <> $OldGraphData[$o] Then
-										_SelectColor($red)
-										_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value))
-										_SelectColor($GraphBack)
-										_DrawLine(($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value), ($base_left + $base_add), $base_top)
-										_SelectColor($GraphGrid)
-										For $drawline = 1 To 10
-											$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
-											_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
-										Next
-									EndIf
-								ElseIf $GraphDataArray[$o] <> 0 Then
+						Else
+							$GraphData = '0|' & $GraphData
+							$GraphTempID += 1
+						EndIf
+						If $GraphTempID = $max_graph_points Then ExitLoop
+						$GraphData = $ExpSig & '|' & $GraphData
+						$Last_dts = $Found_dts
+					Else
+						$GraphData = $ExpSig & '|' & $GraphData
+						$Last_dts = $Found_dts
+					EndIf
+					$GraphTempID += 1
+					If $GraphTempID = $max_graph_points Then ExitLoop
+				Next
+				$GraphDataArray = StringSplit($GraphData, '|')
+				$GraphDataMatch = $GraphDataArray[0]
+				If $GraphDataMatch <> 0 Then
+					If $GraphDataMatch > $max_graph_points Then ; If the array is grater that the max number of ports, set array size to the max size, else use the full size of the array
+						$start = $GraphDataMatch - $max_graph_points
+						$arrayend = $GraphDataMatch
+						$arraylen = $max_graph_points
+					Else
+						$start = 1
+						$arrayend = $GraphDataMatch
+						$arraylen = $GraphDataMatch
+					EndIf
+					If $Graph = 1 Then
+						$base_x_add_value = ($base_x / ($arraylen - 2)); Set disance between points
+						$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
+						;############### Start Mapping Access Point signal Data ###############
+						_SelectColor($red)
+						$base_add = 0
+						For $o = $start To ($arrayend - 1)
+							$x1 = ($base_left + 1) + ($base_add * $base_x_add_value)
+							$x2 = ($base_left + 1) + (($base_add + 1) * $base_x_add_value)
+							$y1 = ($base_bottom + 1) - ($GraphDataArray[$o] * $base_y_add_value)
+							$y2 = ($base_bottom + 1) - ($GraphDataArray[$o + 1] * $base_y_add_value)
+
+							_SelectColor($GraphBack)
+							For $rl = $x1 To $x2
+								_DrawLine($rl, $base_top, $rl, $base_bottom)
+							Next
+
+							_SelectColor($GraphGrid)
+							For $drawline = 1 To 10
+								$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
+								_DrawLine($x1, $subtract_value, $x2, $subtract_value)
+							Next
+
+							_DrawLine($base_right, $base_top, $base_right, $base_bottom)
+							_DrawLine($base_left, $base_top, $base_left, $base_bottom)
+							_DrawLine($base_left, $base_top, $base_right, $base_top)
+
+							_SelectColor($red)
+							_DrawDot($x1, $y1)
+							_DrawLine($x1, $y1, $x2, $y2);Draw line
+							_DrawDot($x2, $y2)
+							If $o <> $start Then
+								$x3 = ($base_left + 1) + (($base_add - 1) * $base_x_add_value)
+								$y3 = ($base_bottom + 1) - ($GraphDataArray[$o - 1] * $base_y_add_value)
+								_DrawLine($x3, $y3, $x1, $y1);Draw line
+							EndIf
+							$base_add += 1
+						Next
+						;############### End Mapping Access Point signal Data ###############
+					ElseIf $Graph = 2 Then
+						$base_y_add_value = ($base_y / 100); set distance for 1%, this will be multplied by the signal strenth later
+						$base_add = 1
+						$base_x_add_value = 1
+						$GraphData = ""
+						$OldGraphData[0] = UBound($OldGraphData) - 1
+
+						For $o = 1 To $GraphDataMatch
+							If $o <= $OldGraphData[0] Then
+								If $GraphDataArray[$o] <> $OldGraphData[$o] Then
 									_SelectColor($red)
 									_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value))
 									_SelectColor($GraphBack)
@@ -3738,17 +3719,28 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 										_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
 									Next
 								EndIf
-								If $GraphData <> "" Then $GraphData &= "|"
-								$GraphData &= $GraphDataArray[$o]
-								$base_add += $base_x_add_value
-							Next
-							$OldGraphData = StringSplit($GraphData, '|')
-							_DrawLine($base_right, $base_top, $base_right, $base_bottom)
-							_DrawLine($base_left, $base_top, $base_left, $base_bottom)
-							_DrawLine($base_left, $base_top, $base_right, $base_top)
-						EndIf
-						$ReGraph = 0
+							ElseIf $GraphDataArray[$o] <> 0 Then
+								_SelectColor($red)
+								_DrawLine(($base_left + $base_add), $base_bottom, ($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value))
+								_SelectColor($GraphBack)
+								_DrawLine(($base_left + $base_add), $base_bottom - ($GraphDataArray[$o] * $base_y_add_value), ($base_left + $base_add), $base_top)
+								_SelectColor($GraphGrid)
+								For $drawline = 1 To 10
+									$subtract_value = (($drawline * 10) * $base_y_add_value) + $base_top
+									_DrawLine(($base_left + $base_add), $subtract_value, ($base_left + $base_add) + 1, $subtract_value)
+								Next
+							EndIf
+							If $GraphData <> "" Then $GraphData &= "|"
+							$GraphData &= $GraphDataArray[$o]
+							$base_add += $base_x_add_value
+						Next
+						$OldGraphData = StringSplit($GraphData, '|')
+						_DrawLine($base_right, $base_top, $base_right, $base_bottom)
+						_DrawLine($base_left, $base_top, $base_left, $base_bottom)
+						_DrawLine($base_left, $base_top, $base_right, $base_top)
 					EndIf
+					$ReGraph = 0
+				EndIf
 				;EndIf
 			EndIf
 		EndIf
@@ -3902,7 +3894,7 @@ Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundBssidMatch = UBound($BssidMatchArray) - 1
 	If $FoundBssidMatch <> 0 Then
-		For $exb = 1 to $FoundBssidMatch
+		For $exb = 1 To $FoundBssidMatch
 			If $exb <> 1 Then $ActiveMacs &= '-'
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
@@ -3913,7 +3905,7 @@ Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 	Else
 		MsgBox(0, $Text_Error, $Text_NoActiveApFound)
 	EndIf
-EndFunc   ;==>_AddToYourWDB
+EndFunc   ;==>_LocatePositionInWiFiDB
 
 Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
@@ -3923,7 +3915,7 @@ Func _AddToYourWDB()
 	$url_root = $PhilsWdbURL;"http://www.randomintervals.com/wifi/beta/db/import/?"
 	$url_data = "file=" & $WdbFile
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
-EndFunc
+EndFunc   ;==>_AddToYourWDB
 
 ;------------------------------------------------------------------------------------------------------------------------------- 	 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTION
