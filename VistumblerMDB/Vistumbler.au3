@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 5.1'
+$version = 'v9.7 Beta 6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/07/12'
+$last_modified = '2009/07/13'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -336,6 +336,7 @@ Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
 Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
+Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
 
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
@@ -512,6 +513,7 @@ Dim $SearchWord_Open = IniRead($DefaultLanguagePath, 'SearchWords', 'Open', 'Ope
 Dim $SearchWord_Wep = IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
 Dim $SearchWord_Infrastructure = IniRead($DefaultLanguagePath, 'SearchWords', 'Infrastructure', 'Infrastructure')
 Dim $SearchWord_Adhoc = IniRead($DefaultLanguagePath, 'SearchWords', 'Adhoc', 'Adhoc')
+Dim $SearchWord_Cipher = IniRead($DefaultLanguagePath, 'SearchWords', 'Cipher', 'Cipher')
 
 Dim $Text_Ok = IniRead($DefaultLanguagePath, 'GuiText', 'Ok', '&Ok')
 Dim $Text_Cancel = IniRead($DefaultLanguagePath, 'GuiText', 'Cancel', 'C&ancel')
@@ -1019,7 +1021,9 @@ $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $Options)
 If $AutoSort = 1 Then GUICtrlSetState($AutoSortGUI, $GUI_CHECKED)
 $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $Options)
+$AutoSelectMenuButton = GUICtrlCreateMenuItem("Auto Select Connected AP", $Options)
+If $AutoSelect = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $Options) 
 If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
@@ -1137,7 +1141,7 @@ $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $Extra)
 $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $Extra)
 $ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_PhilsWDB, $Extra)
-$LocateInWDB = GUICtrlCreateMenuItem("Locate Position in WiFiDB", $Extra)
+$LocateInWDB = GUICtrlCreateMenuItem("Locate Position in WiFiDB(Work in progress)$", $Extra)
 
 $Help = GUICtrlCreateMenu($Text_Help)
 $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
@@ -1232,7 +1236,7 @@ GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
 ;Edit Menu
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 GUICtrlSetOnEvent($Copy, '_CopyAP')
-GUICtrlSetOnEvent($SelectConnected, '_SelectConnectedAp')
+GUICtrlSetOnEvent($SelectConnected, '_MenuSelectConnectedAp')
 GUICtrlSetOnEvent($SortTree, '_SortTree')
 ;Optons Menu
 GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
@@ -1244,6 +1248,7 @@ GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
+GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle') 
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
 GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
@@ -1371,6 +1376,8 @@ While 1
 		If $ScanResults > 0 Then $UpdateAutoSave = 1
 		;Refresh Networks If Enabled
 		If $RefreshNetworks = 1 Then _RefreshNetworks()
+		;Select connected AP
+		If $AutoSelect = 1 And WinActive($Vistumbler) Then _SelectConnectedAp()
 	ElseIf $Scan = 0 And $UpdatedAPs <> 1 Then
 		$UpdatedAPs = 1
 		;Add GPS ID If AP Scanning is off, UseGPS is on, and Save GPS when no AP are active is on
@@ -2405,6 +2412,17 @@ Func _AutoRefreshToggle()
 		GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
 		$RefreshNetworks = 1
 		$RefreshTimer = TimerInit()
+	EndIf
+EndFunc   ;==>_AutoRefreshToggle
+
+Func _AutoConnectToggle()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoConnectToggle()') ;#Debug Display
+	If $AutoSelect = 1 Then
+		GUICtrlSetState($AutoSelectMenuButton, $GUI_UNCHECKED)
+		$AutoSelect = 0
+	Else
+		GUICtrlSetState($AutoSelectMenuButton, $GUI_CHECKED)
+		$AutoSelect = 1
 	EndIf
 EndFunc   ;==>_AutoRefreshToggle
 
@@ -4778,10 +4796,13 @@ Func _ImportOk()
 									If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
 									$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
 									$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-									$NewGID = $TempGidMatchArray[1][1]
-									;Add AP Info to DB, Listview, and Treeview
-									$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig)
-									If $NewApAdded = 1 Then $AddAP += 1
+									$TempGidMatchArrayMatch = Ubound($TempGidMatchArray) - 1
+									If $TempGidMatchArrayMatch <> 0 Then
+										$NewGID = $TempGidMatchArray[1][1]
+										;Add AP Info to DB, Listview, and Treeview
+										$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig)
+										If $NewApAdded = 1 Then $AddAP += 1
+									EndIf
 								EndIf
 								$closebtn = _GUICtrlButton_GetState($NsCancel)
 								If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
@@ -5078,6 +5099,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
 	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
+	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
 
 	IniWrite($settings, 'WindowPositions', 'VistumblerState', $VistumblerState)
 	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
@@ -5248,6 +5270,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "SearchWords", "WEP", $SearchWord_Wep)
 	IniWrite($DefaultLanguagePath, "SearchWords", "Infrastructure", $SearchWord_Infrastructure)
 	IniWrite($DefaultLanguagePath, "SearchWords", "Adhoc", $SearchWord_Adhoc)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Cipher", $SearchWord_Cipher)
 
 	IniWrite($DefaultLanguagePath, "GuiText", "Ok", $Text_Ok)
 	IniWrite($DefaultLanguagePath, "GuiText", "Cancel", $Text_Cancel)
@@ -7011,7 +7034,6 @@ Func _LanguageChanged();Sets language information in gui if language changed
 	GUICtrlSetData($SearchWord_Wep_GUI, IniRead($languagefile, 'SearchWords', 'Wep', 'WEP'))
 	GUICtrlSetData($SearchWord_Infrastructure_GUI, IniRead($languagefile, 'SearchWords', 'Infrastructure', 'Infrastructure'))
 	GUICtrlSetData($SearchWord_Adhoc_GUI, IniRead($languagefile, 'SearchWords', 'Adhoc', 'Adhoc'))
-	GUICtrlSetData($SearchWord_Adhoc_GUI, IniRead($languagefile, 'SearchWords', 'Adhoc', 'Adhoc'))
 EndFunc   ;==>_LanguageChanged
 
 Func _CloseSettingsGUI();closes settings gui
@@ -8262,6 +8284,15 @@ Func _ReduceMemory() ;http://www.autoitscript.com/forum/index.php?showtopic=1407
 	DllCall("psapi.dll", 'int', 'EmptyWorkingSet', 'long', -1)
 EndFunc   ;==>_ReduceMemory
 
+Func _MenuSelectConnectedAp()
+	Local $SelConAP = _SelectConnectedAp()
+	If $SelConAP = -1 Then
+		;MsgBox(0, $Text_Error, $Text_NoActiveApFound & @CRLF & @CRLF & $Column_Names_BSSID & ':' & $IntBSSID & @CRLF & $Column_Names_SSID & ':' & $IntSSID & @CRLF & $Column_Names_Channel & ':' & $IntChan & @CRLF & $Column_Names_Authentication & ':' & $IntAuth)
+	ElseIF $SelConAP = 0 Then
+		MsgBox(0, $Text_Error, $Text_NoActiveApFound)
+	EndIf
+EndFunc
+
 Func _SelectConnectedAp()
 	$return = 0
 	FileDelete($tempfile_showint)
@@ -8272,7 +8303,7 @@ Func _SelectConnectedAp()
 			$TempFileArrayShowInt[$strip_ws] = StringStripWS($TempFileArrayShowInt[$strip_ws], 3)
 		Next
 
-		Dim $IntState, $IntSSID, $IntBSSID, $IntChan, $IntAuth
+		Dim $IntState, $IntSSID, $IntBSSID, $IntChan, $IntAuth, $InEncr
 		For $loop = 1 To $TempFileArrayShowInt[0]
 			$temp = StringSplit(StringStripWS($TempFileArrayShowInt[$loop], 3), ":")
 			If IsArray($temp) Then
@@ -8280,6 +8311,8 @@ Func _SelectConnectedAp()
 					If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_SSID) And StringInStr($TempFileArrayShowInt[$loop], $SearchWord_BSSID) <> 1 Then $IntSSID = StringStripWS($temp[2], 3)
 					If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_Channel) Then $IntChan = StringStripWS($temp[2], 3)
 					If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_Authentication) Then $IntAuth = StringStripWS($temp[2], 3)
+					If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_Cipher) Then $InEncr = StringStripWS($temp[2], 3)
+					$NewAP = 1
 				ElseIf $temp[0] = 7 Then
 					If StringInStr($TempFileArrayShowInt[$loop], $SearchWord_BSSID) Then
 						Dim $Signal = '', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
@@ -8289,21 +8322,28 @@ Func _SelectConnectedAp()
 				EndIf
 			EndIf
 		Next
-		If $IntBSSID <> '' Then
-			$return = 1
-			$query = "SELECT ListRow FROM AP WHERE BSSID = '" & $IntBSSID & "' And SSID ='" & StringReplace($IntSSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $IntChan) & "' And AUTH = '" & $IntAuth & "'"
-			$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundApMatch = UBound($ApMatchArray) - 1
-			If $FoundApMatch > 0 Then
-				$Found_ListRow = $ApMatchArray[1][1]
-				_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_FOCUSED, $LVIS_FOCUSED)
-				_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_SELECTED, $LVIS_SELECTED)
-				GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+		If $UseNativeWifi = 1 Then
+			If $IntAuth = $SearchWord_Open And $InEncr = $SearchWord_None Then
+				$SecType = 1
+			ElseIf $InEncr = $SearchWord_Wep Then
+				$SecType = 2
 			Else
-				MsgBox(0, $Text_Error, $Text_NoActiveApFound & @CRLF & @CRLF & $Column_Names_BSSID & ':' & $IntBSSID & @CRLF & $Column_Names_SSID & ':' & $IntSSID & @CRLF & $Column_Names_Channel & ':' & $IntChan & @CRLF & $Column_Names_Authentication & ':' & $IntAuth)
+				$SecType = 3
 			EndIf
+			$query = "SELECT ListRow FROM AP WHERE SSID ='" & StringReplace($IntSSID, "'", "''") & "' And SECTYPE = '" & $SecType & "'"
 		Else
-			MsgBox(0, $Text_Error, $Text_NoActiveApFound)
+			$query = "SELECT ListRow FROM AP WHERE BSSID = '" & $IntBSSID & "' And SSID ='" & StringReplace($IntSSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $IntChan) & "' And AUTH = '" & $IntAuth & "'"
+		EndIf
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch > 0 Then
+			$return = 1
+			$Found_ListRow = $ApMatchArray[1][1]
+			_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_FOCUSED, $LVIS_FOCUSED)
+			_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_SELECTED, $LVIS_SELECTED)
+			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+		Else
+			$return = 0
 		EndIf
 	EndIf
 	Return ($return)
