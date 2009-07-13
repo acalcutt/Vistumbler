@@ -13,7 +13,7 @@ if (isset($_GET['token']))
 		$from_	=	$from+0;
 		$inc	=	addslashes($_GET['to']);
 		$inc	=	$inc+0;
-		echo $from."<br>";
+	#	echo $from."<br>";
 		if ($from=="" or !is_int($from)){$from=0;}
 		if ($from_=="" or !is_int($from_)){$from_=0;}
 		if ($inc=="" or !is_int($inc)){$inc=100;}
@@ -28,12 +28,12 @@ if (isset($_GET['token']))
 		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td></tr>';
 
 		$sql0 = "SELECT * FROM `$db`.`$wtable` ORDER BY `$sort` $ord LIMIT $from, $inc";
-		echo $sql0."<br>";
+	#	echo $sql0."<br>";
 		$result = mysql_query($sql0, $conn) or die(mysql_error($conn));
 		
 		$sql00 = "SELECT * FROM `$db`.`$wtable` ORDER BY `$sort` $ord";
 		$result1 = mysql_query($sql00, $conn) or die(mysql_error($conn));
-		echo $sql00."<br>";
+	#	echo $sql00."<br>";
 		$total_rows = mysql_num_rows($result1);
 		if($total_rows != 0)
 		{

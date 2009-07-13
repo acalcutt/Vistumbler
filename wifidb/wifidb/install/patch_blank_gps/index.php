@@ -34,7 +34,7 @@ else
     <td>3>  Would you like to replace erroneous data with valid blank data?<h5>(eg. N 0.00000 | E 0.00000 | 1-1-1971 | 00:00:00)<h5></td><td>........................................</td>
     <td><INPUT TYPE=CHECKBOX NAME="replace"></td></tr>
   <tr>
-    <td>4>  Would you like to delete Access points altogether if they don’t have any 'valid' GPS points?</td><td>........................................</td>
+    <td>4>  Would you like to delete Access points altogether if they don't have any 'valid' GPS points?</td><td>........................................</td>
     <td><INPUT TYPE=CHECKBOX NAME="deleteap"></td>
 </TR><TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
 <INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
@@ -43,9 +43,7 @@ else
 </TABLE>
 </form>
 </p>
-
 <?php
-
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);
 ?>

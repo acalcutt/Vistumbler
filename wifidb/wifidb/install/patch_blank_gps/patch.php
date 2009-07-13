@@ -292,8 +292,6 @@ echo "</table>";
 $etime = time()*60;
 $total_run = $etime - $stime;
 echo "<h2>Total run time: ".$total_run."<br>";
-echo "<h2>Now you can remove the /install folder from the WiFiDB install root</h2>";
-
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);
 ?>

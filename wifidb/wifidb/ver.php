@@ -17,6 +17,26 @@ pageheader("Version Page");
 				<td>Project Dev(s)..............</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b><td>
 			</tr>
 		</table>
+
+		<table width="100%" border="2" id="16b3">
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3.1</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-12</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+				<OL>
+					<LI>Changed the Scheduling page, so that there are now three parts to it:</LI>
+					<OL>
+						<LI>Defualt, shows the same as the old page, just the first 10 imports waiting now.</LI>
+						<LI>Waiting, shows the remaining waiting lists, other then the first 10.</LI>
+						<LI>Done, shows all the imports that have finished.</LI>
+					</OL>
+					<LI>Changed the install index page to give a more explicit navigation and what is available for patches.</LI>
+					<LI>Added in locate.php for returning GPS points to Vistumbler based on Mac addresses that are around you. If none are found, it will ask if you want to upload a file.</LI>
+				</OL>
+			</td></tr>
+		</table>
+		<br>
 		
 		<table width="100%" border="2" id="16b3">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
@@ -69,6 +89,8 @@ pageheader("Version Page");
 					<LI>Rearranged the exports page.</LI>
 					<LI>Added MAC , sectype , chan , and radio to Single AP export.</LI>
 					<LI>Added Date and number of APs for User list export.</LI>
+					<LI>All AP page could not go to other pages to see more APs then that are on the first page.</LI>
+					<LI>GPS array creation for import had wrong matching so duplicate data was being entered.</LI>
 				</OL>
 			</td></tr>
 		</table>

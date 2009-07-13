@@ -1,8 +1,8 @@
 <?php
 global $ver;
 $ver = array(
-			"wifidb"			=>	"0.16 Build 3",
-			"Last_Core_Edit" 	=> 	"2009-Jul-11",
+			"wifidb"			=>	"0.16 Build 3.1",
+			"Last_Core_Edit" 	=> 	"2009-Jul-12",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",

@@ -21,7 +21,7 @@
 </td>
 		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 			<p align="center">
-			<h2>WifiDB [0.16 Build 1]<br> Installation / Upgrade / Patch Notes</h2>
+			<h2>WifiDB [0.16 Build 3]<br> Installation / Upgrade / Patch Notes</h2>
 <table><tr><td><ol><font size="6">Install</font>
 				<li> The install script <a class="links" href="index.php">Here</a> will install WiFiDB 0.16 Build 1 on your server.</li>
 				<li> It is <i><b>NOT</b></i> recommended to run an install over the internet, it should only be run locally, after the install is successful delete the Install folder.</li>
@@ -31,20 +31,21 @@
 			</ol>
 			<ol><font size="6">Upgrade</font>
 				<li> The Upgrade script <a class="links" href="/Install/upgrade">Here</a> will upgrade the config file, and some tables in the database.</li>
-				<li> This upgrade will only work on [0.15 build 79] and upgrade to [0.16 build 1].</li>
+				<li> Upgrade to [0.16 Alpha Build 3].</li>
 				<li> As always, backup your data, before doing any work on it.</li>
 			</ol>
 			<ol><font size="6">Patching</font>
-				<li><font size="4">/Install/patch_alter_dates</font></li>
+				<li><font size="4">/Install/patch_gps_table</font></li>
 					<ol>
-						<li>Run this script if you want your old GPS dates to be in the new standard [YYYY-MM-DD]</li>
-						<li><a class="links" href="patch_alter_dates">Click Here</a></li>
+						<li>Run this script to fix an error with the GPS tables having the wrong field type.</li>
+						<li><a class="links" href="patch_gps_table">Click Here</a></li>
 					</ol>
+					<br>
 				<li><font size="4">/Install/patch_blank_gps</font></li>
 					<ol>
 						<li>Run this script if you have blank GPS points in your database.</li>
 						<li><a class="links" href="patch_blank_gps">Click Here</a></li>
-					</ol>
+					</ol><br>
 			</ol>
 		</td></tr></table>
 </font>
