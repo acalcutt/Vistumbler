@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 6'
+$version = 'v9.7 Beta 6.1'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/07/13'
 ;Includes------------------------------------------------
@@ -1023,7 +1023,7 @@ $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AutoSelectMenuButton = GUICtrlCreateMenuItem("Auto Select Connected AP", $Options)
 If $AutoSelect = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $Options) 
+$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $Options)
 If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
@@ -1248,7 +1248,7 @@ GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
-GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle') 
+GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
 GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
@@ -1794,27 +1794,12 @@ Func _MarkDeadAPs()
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
 	Next
-	If $GraphDeadTime = 1 And $Scan = 1 Then _GraphDeadTime()
 	;Update active/total ap label
 	$query = "SELECT ApID FROM AP WHERE Active = '1'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $FoundApMatch & " / " & $APID)
 EndFunc   ;==>_MarkDeadAPs
-
-Func _GraphDeadTime()
-
-	$query = "SELECT ApID, LastGpsID FROM AP WHERE Active = '0'"
-	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundApMatch = UBound($ApMatchArray) - 1
-	;Set APs Dead in Listview
-	For $deadaps = 1 To $FoundApMatch
-		$Found_APID = $ApMatchArray[$deadaps][1]
-		$Found_LastGpsID = $ApMatchArray[$deadaps][2]
-		$HISTID += 1
-		_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $Found_LastGpsID & '|0|' & $datestamp & '|' & $timestamp)
-	Next
-EndFunc   ;==>_GraphDeadTime
 
 Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add_SSID = '', $Add_Authentication = '', $Add_Encryption = '', $Add_Signal = '', $Add_Channel = '', $Add_RadioType = '', $Add_BasicTransferRates = '', $Add_OtherTransferRates = '', $Add_NetworkType = '', $Add_FirstAcvtive = '', $Add_LastActive = '', $Add_LatitudeDMM = '', $Add_LongitudeDMM = '', $Add_MANU = '', $Add_Label = '')
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ListViewAdd()') ;#Debug Display
@@ -2424,7 +2409,7 @@ Func _AutoConnectToggle()
 		GUICtrlSetState($AutoSelectMenuButton, $GUI_CHECKED)
 		$AutoSelect = 1
 	EndIf
-EndFunc   ;==>_AutoRefreshToggle
+EndFunc   ;==>_AutoConnectToggle
 
 Func _ActiveApMidiToggle()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ActiveApMidiToggle()') ;#Debug Display
@@ -4796,7 +4781,7 @@ Func _ImportOk()
 									If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
 									$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
 									$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-									$TempGidMatchArrayMatch = Ubound($TempGidMatchArray) - 1
+									$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
 									If $TempGidMatchArrayMatch <> 0 Then
 										$NewGID = $TempGidMatchArray[1][1]
 										;Add AP Info to DB, Listview, and Treeview
@@ -8288,10 +8273,10 @@ Func _MenuSelectConnectedAp()
 	Local $SelConAP = _SelectConnectedAp()
 	If $SelConAP = -1 Then
 		;MsgBox(0, $Text_Error, $Text_NoActiveApFound & @CRLF & @CRLF & $Column_Names_BSSID & ':' & $IntBSSID & @CRLF & $Column_Names_SSID & ':' & $IntSSID & @CRLF & $Column_Names_Channel & ':' & $IntChan & @CRLF & $Column_Names_Authentication & ':' & $IntAuth)
-	ElseIF $SelConAP = 0 Then
+	ElseIf $SelConAP = 0 Then
 		MsgBox(0, $Text_Error, $Text_NoActiveApFound)
 	EndIf
-EndFunc
+EndFunc   ;==>_MenuSelectConnectedAp
 
 Func _SelectConnectedAp()
 	$return = 0
