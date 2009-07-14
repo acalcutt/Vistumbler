@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 6.1'
+$version = 'v9.7 Beta 6.2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/07/13'
+$last_modified = '2009/07/14'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -30,6 +30,7 @@ $last_modified = '2009/07/13'
 #include <Date.au3>
 #include <GuiButton.au3>
 #include <Misc.au3>
+#include <INet.au3>
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
@@ -133,6 +134,8 @@ Dim $Latitude = 'N 0.0000'
 Dim $Longitude = 'E 0.0000'
 Dim $Latitude2 = 'N 0.0000'
 Dim $Longitude2 = 'E 0.0000'
+Dim $LatitudeWifidb = 'N 0.0000'
+Dim $LongitudeWifidb = 'E 0.0000'
 Dim $NumberOfSatalites = '00'
 Dim $HorDilPitch = '0'
 Dim $Alt = '0'
@@ -196,7 +199,7 @@ Dim $Graphic_left, $Graphic_width, $Graphic_top, $Graphic_height
 
 Dim $FixTime, $FixTime2, $FixDate, $Quality
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
-Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0
+Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0, $WifidbGPS_Update
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $AutoKmlDeadHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
 Dim $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
@@ -337,6 +340,7 @@ Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
 Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
+Dim $UseWiFiDbGpsLocate = IniRead($settings, 'Vistumbler', 'UseWiFiDbGpsLocate', 0)
 
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
@@ -395,7 +399,7 @@ Dim $OpenKmlNetLink = IniRead($settings, 'AutoKML', 'OpenKmlNetLink', 1)
 Dim $GoogleEarth_EXE = IniRead($settings, 'AutoKML', 'GoogleEarth_EXE', 'C:\Program Files\Google\Google Earth\googleearth.exe')
 
 Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'PhilsGraphURL', 'http://www.randomintervals.com/wifi/?')
-Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'PhilsWdbURL', 'http://www.randomintervals.com/wifidb/import/?')
+Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'PhilsWiFiDbURL', 'http://www.randomintervals.com/wifidb/')
 
 Dim $Filter_Line = IniRead($settings, 'Filters', 'FilterLine', '*')
 Dim $Filter_Active = IniRead($settings, 'Filters', 'FilterActive', '*')
@@ -1023,6 +1027,8 @@ $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AutoSelectMenuButton = GUICtrlCreateMenuItem("Auto Select Connected AP", $Options)
 If $AutoSelect = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem("Auto WiFiDb Gps Locate(Experimental)", $Options)
+If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $Options)
 If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
@@ -1141,7 +1147,7 @@ $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $Extra)
 $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $Extra)
 $ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_PhilsWDB, $Extra)
-$LocateInWDB = GUICtrlCreateMenuItem("Locate Position in WiFiDB(Work in progress)$", $Extra)
+$LocateInWDB = GUICtrlCreateMenuItem("Locate Position in WiFiDB(Experimental)", $Extra)
 
 $Help = GUICtrlCreateMenu($Text_Help)
 $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
@@ -1243,6 +1249,7 @@ GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
 GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
 GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
+GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
 GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
@@ -1312,6 +1319,7 @@ If $Load <> '' Then AutoLoadList($Load)
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PROGRAM RUNNING LOOP
 ;-------------------------------------------------------------------------------------------------------------------------------
+$UpdatedWiFiDbGPS = 0
 $UpdatedGPS = 0
 $UpdatedAPs = 0
 $UpdatedGraph = 0
@@ -1332,6 +1340,21 @@ While 1
 	$datestamp = $dt[1]
 	$timestamp = $dt[2]
 	$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC ;Local Time
+	
+	;Get GPS position from WiFiDB
+	If $UseWiFiDbGpsLocate = 1 And $UpdatedWiFiDbGPS <> 1 Then
+		$GetWifidbGpsSuccess = _LocateGpsInWifidb()
+		If $GetWifidbGpsSuccess = 1 Then
+			ConsoleWrite('---------------------------------------->' & $LatitudeWifidb & '-' & $LongitudeWifidb & @CRLF)
+			If $LatitudeWifidb <> 'N 0.0000' And $Latitude = 'N 0.0000' And $LongitudeWifidb <> 'E 0.0000' And $Longitude = 'E 0.0000' Then
+				$Latitude = $LatitudeWifidb
+				$Longitude = $LongitudeWifidb
+				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
+				GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
+			EndIf
+			$UpdatedWiFiDbGPS = 1
+		EndIf
+	EndIf
 
 	;Get GPS Information (if enabled)
 	If $UseGPS = 1 And $UpdatedGPS <> 1 Then ; If 'Use GPS' is checked then scan gps and display information
@@ -1470,6 +1493,7 @@ While 1
 	EndIf
 
 	If TimerDiff($begin) >= $RefreshLoopTime Then
+		$UpdatedWiFiDbGPS = 0
 		$UpdatedGPS = 0
 		$UpdatedAPs = 0
 		$UpdatedGraph = 0
@@ -2642,6 +2666,21 @@ Func _AutoSortToggle();Turns auto sort on or off
 		$sort_timer = TimerInit()
 	EndIf
 EndFunc   ;==>_AutoSortToggle
+
+Func _WifiDbLocateToggle();Turns wifi gps locate on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WifiDbLocateToggle()') ;#Debug Display
+	If $UseWiFiDbGpsLocate = 1 Then
+		GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_UNCHECKED)
+		$UseWiFiDbGpsLocate = 0
+		$Latitude = 'N 0.0000'
+		$Longitude = 'E 0.0000'
+		$LatitudeWifidb = 'N 0.0000'
+		$LongitudeWifidb = 'E 0.0000'
+	Else
+		GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
+		$UseWiFiDbGpsLocate = 1
+	EndIf
+EndFunc
 
 Func _ShowDbToggle();Turns Estimated DB value on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ShowDbToggle()') ;#Debug Display
@@ -3888,8 +3927,18 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 	EndIf
 EndFunc   ;==>_ViewInPhilsPHP
 
-Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
+Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
+	$WdbFile = $SaveDir & 'WDB_Export.VS1'
+	FileDelete($WdbFile)
+	_ExportDetailedTXT($WdbFile)
+	$url_root = $PhilsWdbURL & 'import/?'
+	$url_data = "file=" & $WdbFile
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
+EndFunc   ;==>_AddToYourWDB
+
+Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs
 	$WdbFile = $SaveDir & 'WDB_Export.VS1'
 	FileDelete($WdbFile)
@@ -3902,7 +3951,7 @@ Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
 		_ExportDetailedTXT($WdbFile)
-		$url_root = "http://www.randomintervals.com/wifidb/opt/locate.php?";$PhilsWdbURL;"http://www.randomintervals.com/wifi/beta/db/import/?"
+		$url_root = $PhilsWdbURL & 'opt/locate.php?'
 		$url_data = "ActiveBSSIDs=" & $ActiveMacs & "&file=" & $WdbFile
 		Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 	Else
@@ -3910,17 +3959,51 @@ Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 	EndIf
 EndFunc   ;==>_LocatePositionInWiFiDB
 
-Func _AddToYourWDB()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
-	$WdbFile = $SaveDir & 'WDB_Export.VS1'
-	FileDelete($WdbFile)
-	_ExportDetailedTXT($WdbFile)
-	$url_root = $PhilsWdbURL;"http://www.randomintervals.com/wifi/beta/db/import/?"
-	$url_data = "file=" & $WdbFile
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
-EndFunc   ;==>_AddToYourWDB
+Func _LocateGpsInWifidb()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
+	Local $ActiveMacs
+	Local $return = 0
+	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
+	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundBssidMatch = UBound($BssidMatchArray) - 1
+	If $FoundBssidMatch <> 0 Then
+		For $exb = 1 To $FoundBssidMatch
+			If $exb <> 1 Then $ActiveMacs &= '-'
+			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
+		Next
+		$url_root = $PhilsWdbURL & 'opt/locate.php?'
+		$url_data = $url_root & "ActiveBSSIDs=" & $ActiveMacs
+		$webpagesource = _INetGetSource($url_data)
+		ConsoleWrite($webpagesource & @CRLF)
+		If StringInStr($webpagesource, '|') Then
+			$wifigpsdata = StringSplit($webpagesource, "|")
+			If $wifigpsdata[1] <> '' And $wifigpsdata[1] <> ''Then 
+				$LatitudeWifidb = $wifigpsdata[1]
+				$LongitudeWifidb = $wifigpsdata[2]
+				$WifidbGPS_Update = TimerInit()
+				$return = 1
+			EndIf
+		EndIf
+	EndIf
+	_ClearWifiGpsDetails()
+	Return($return)
+EndFunc
 
-;------------------------------------------------------------------------------------------------------------------------------- 	 ;-------------------------------------------------------------------------------------------------------------------------------
+Func _ClearWifiGpsDetails();Clears all GPS Details information
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearWifiGpsDetails()') ;#Debug Display
+	GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": WifiDb:" & Round(TimerDiff($WifidbGPS_Update) / 1000) & " / " & ($GpsTimeout / 1000))
+	If Round(TimerDiff($WifidbGPS_Update)) > $GpsTimeout Then
+		$Latitude = 'N 0.0000'
+		$Longitude = 'E 0.0000'
+		$LatitudeWifidb = 'N 0.0000'
+		$LongitudeWifidb = 'E 0.0000'
+		GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
+		GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
+		$WifidbGPS_Update = TimerInit()
+	EndIf
+EndFunc   ;==>_ClearGpsDetailsGUI
+
+;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTION
 ;-------------------------------------------------------------------------------------------------------------------------------
 
@@ -5085,6 +5168,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
 	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
+	IniWrite($settings, "Vistumbler", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
 
 	IniWrite($settings, 'WindowPositions', 'VistumblerState', $VistumblerState)
 	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
@@ -5147,7 +5231,7 @@ Func _WriteINI()
 	IniWrite($settings, 'KmlSettings', 'SigMapTimeBeforeMarkedDead', $SigMapTimeBeforeMarkedDead)
 
 	IniWrite($settings, 'PhilsWifiTools', 'PhilsGraphURL', $PhilsGraphURL)
-	IniWrite($settings, 'PhilsWifiTools', 'PhilsWdbURL', $PhilsWdbURL)
+	IniWrite($settings, 'PhilsWifiTools', 'PhilsWiFiDbURL', $PhilsWdbURL)
 
 	IniWrite($settings, 'Filters', 'FilterLine', $Filter_Line)
 	IniWrite($settings, 'Filters', 'FilterActive', $Filter_Active)
