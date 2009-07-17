@@ -3938,8 +3938,6 @@ EndFunc   ;==>_AddToYourWDB
 Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs
-	$WdbFile = $SaveDir & 'WDB_Export.VS1'
-	FileDelete($WdbFile)
 	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundBssidMatch = UBound($BssidMatchArray) - 1
@@ -3948,9 +3946,8 @@ Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 			If $exb <> 1 Then $ActiveMacs &= '-'
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
-		_ExportDetailedTXT($WdbFile)
 		$url_root = $PhilsWdbURL & 'opt/locate.php?'
-		$url_data = "ActiveBSSIDs=" & $ActiveMacs & "&file=" & $WdbFile
+		$url_data = "ActiveBSSIDs=" & $ActiveMacs
 		Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 	Else
 		MsgBox(0, $Text_Error, $Text_NoActiveApFound)
