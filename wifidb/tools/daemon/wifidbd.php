@@ -84,7 +84,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	$RUNresult = mysql_query("SELECT `id` FROM `$db`.`$settings_tb` WHERE `table` LIKE 'files'", $conn);
 	$next_run_id = mysql_fetch_array($RUNresult);
 	$IDDD = $next_run_id['id'];
-	if($IDDD != 0)
+	if($IDDD != '')
 	{
 		$sqlup = "UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$IDDD'";
 		if (mysql_query($sqlup, $conn))
@@ -205,6 +205,16 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	logd($message, $log_interval, 0,  $GLOBALS['log_level']);
 	verbosed($GLOBALS['COLORS']['YELLOW'].$message.$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 	$finished = 0;
+	$sqlup2 = "UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$IDDD'";
+	if (mysql_query($sqlup2, $conn))
+	{
+		logd("Updated settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
+		verbosed($GLOBALS['COLORS']['GREEN']."Updated settings table with next run time: ".$nextrun.$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+	}else
+	{
+		logd("ERROR!! COULD NOT Update settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
+		verbosed($GLOBALS['COLORS']['RED']."ERROR!! COULD NOT Update settings table with next run time: ".$nextrun.$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+	}
 	sleep($time_interval_to_check);
 }
 ?>
