@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2008 Andrew Calcutt
+;Copyright (C) 2009 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 6.2'
+$version = 'v9.7 Beta 7'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/07/14'
+$last_modified = '2009/07/16'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -30,7 +30,7 @@ $last_modified = '2009/07/14'
 #include <Date.au3>
 #include <GuiButton.au3>
 #include <Misc.au3>
-#include <INet.au3>
+#include <String.au3>
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
@@ -127,6 +127,7 @@ Dim $GoogleEarth_TrackFile = $TmpDir & 'autokml_track.kml'
 Dim $GoogleEarth_OpenFile = $TmpDir & 'autokml_networklink.kml'
 Dim $tempfile = _TempFile($TmpDir, "netsh-tmp_", ".tmp")
 Dim $tempfile_showint = _TempFile($TmpDir, "netsh-si-tmp_", ".tmp")
+Dim $wifidbgpstmp = _TempFile($TmpDir, "wifidb-gps-tmp_", ".tmp")
 Dim $labelsini = $SettingsDir & 'mac_labels.ini'
 Dim $manufini = $SettingsDir & 'manufactures.ini'
 Dim $midiini = $SettingsDir & 'midi_instruments.ini'
@@ -872,7 +873,6 @@ If IsArray($MDBfiles) Then
 						$fn = _GUICtrlListView_GetItemText($Recover_List, $Selected)
 						$fn_fullpath = $TmpDir & $fn
 						FileDelete($fn_fullpath)
-						ConsoleWrite($Selected & @CRLF)
 						_GUICtrlListView_DeleteItem(GUICtrlGetHandle($Recover_List), $Selected)
 					EndIf
 			EndSwitch
@@ -974,9 +974,6 @@ Else
 		Next
 	Next
 EndIf
-
-ConsoleWrite($headers & @CRLF)
-
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GUI
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -1340,13 +1337,12 @@ While 1
 	$datestamp = $dt[1]
 	$timestamp = $dt[2]
 	$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC ;Local Time
-	
+
 	;Get GPS position from WiFiDB
 	If $UseWiFiDbGpsLocate = 1 And $UpdatedWiFiDbGPS <> 1 Then
 		$GetWifidbGpsSuccess = _LocateGpsInWifidb()
 		If $GetWifidbGpsSuccess = 1 Then
-			ConsoleWrite('---------------------------------------->' & $LatitudeWifidb & '-' & $LongitudeWifidb & @CRLF)
-			If $LatitudeWifidb <> 'N 0.0000' And $Latitude = 'N 0.0000' And $LongitudeWifidb <> 'E 0.0000' And $Longitude = 'E 0.0000' Then
+			If $LatitudeWifidb <> 'N 0.0000' And $LongitudeWifidb <> 'E 0.0000' Then
 				$Latitude = $LatitudeWifidb
 				$Longitude = $LongitudeWifidb
 				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
@@ -1369,7 +1365,7 @@ While 1
 			Sleep(1000)
 		EndIf
 	EndIf
-
+	$TimerInit = TimerInit()
 	;Get AP Information (if enabled)
 	If $Scan = 1 And $UpdatedAPs <> 1 Then
 		;Scan For New Aps
@@ -1415,7 +1411,6 @@ While 1
 		;Add APs back into the listview that match but are not there
 		_FilterReAddMatchingNotInList()
 	EndIf
-
 	;Resize Controls / Control Resize Monitoring
 	_TreeviewListviewResize()
 
@@ -1792,6 +1787,7 @@ EndFunc   ;==>_AddApData
 Func _MarkDeadAPs()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_MarkDeadAPs()') ;#Debug Display
 	$query = "SELECT ApID, ListRow, LastGpsID FROM AP WHERE Active = '1'"
+	;$query = "SELECT ApID.AP, ListRow.AP, LastGpsID.AP Date1.GPS Time1.GPS FROM AP, GPS WHERE Active.AP = '1' And (LastGpsID.AP = GpsID.GPS)"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	;Set APs Dead in Listview
@@ -1803,11 +1799,8 @@ Func _MarkDeadAPs()
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $Found_LastGpsID & "'"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$Found_Date = $GpsMatchArray[1][1]
-		$Found_Time = $GpsMatchArray[1][2]
-		$dts = StringSplit($GpsMatchArray[1][2], ":") ;Split time so it can be converted to seconds
-		$Found_Time = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
-		$dts = StringSplit($timestamp, ":") ;Split time so it can be converted to seconds
-		$Current_Time = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
+		$Found_Time = _TimeToSeconds($GpsMatchArray[1][2])
+		$Current_Time = _TimeToSeconds($timestamp)
 		$Found_dts = StringReplace($Found_Date & $Found_Time, '-', '')
 		$Current_dts = StringReplace($datestamp & $Current_Time, '-', '')
 		;Set APs that have been inactive for specified time dead
@@ -1819,11 +1812,18 @@ Func _MarkDeadAPs()
 		EndIf
 	Next
 	;Update active/total ap label
-	$query = "SELECT ApID FROM AP WHERE Active = '1'"
-	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundApMatch = UBound($ApMatchArray) - 1
-	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $FoundApMatch & " / " & $APID)
+	$query = "Select COUNT(ApID) FROM AP WHERE Active = '1'"
+	$ActiveCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ActiveCount = $ActiveCountArray[1][1]
+	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveCount & " / " & $APID)
 EndFunc   ;==>_MarkDeadAPs
+
+Func _TimeToSeconds($iTime)
+	$dts = StringSplit($iTime, ":") ;Split time so it can be converted to seconds
+	$rTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+	Return ($rTime)
+EndFunc   ;==>_TimeToSeconds
+
 
 Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add_SSID = '', $Add_Authentication = '', $Add_Encryption = '', $Add_Signal = '', $Add_Channel = '', $Add_RadioType = '', $Add_BasicTransferRates = '', $Add_OtherTransferRates = '', $Add_NetworkType = '', $Add_FirstAcvtive = '', $Add_LastActive = '', $Add_LatitudeDMM = '', $Add_LongitudeDMM = '', $Add_MANU = '', $Add_Label = '')
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ListViewAdd()') ;#Debug Display
@@ -1999,8 +1999,7 @@ Func _FilterRemoveNonMatchingInList()
 	If StringInStr($RemoveQuery, 'WHERE') Then
 		$query = $RemoveQuery & " And (Listrow <> '-1')"
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundApMatch = UBound($ApMatchArray) - 1
-		If $FoundApMatch <> 0 Then
+		If $ApMatchArray[0][0] <> 0 Then
 			For $frnm = 1 To $ApMatchArray[0][0]
 				$fApID = $ApMatchArray[$frnm][1]
 				;Get ListRow of AP
@@ -2013,7 +2012,7 @@ Func _FilterRemoveNonMatchingInList()
 				;Set AP ListRow to -1
 				$query = "UPDATE AP SET ListRow='-1' WHERE ApID='" & $fApID & "'"
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-				;Get all old listrows from db
+				;Subtract 1 from all listsrows higher that the one being deleted
 				$query = "Select ApID, ListRow FROM AP WHERE ListRow<>'-1'"
 				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$ListRowMatch = UBound($ListRowArray) - 1
@@ -2234,7 +2233,7 @@ Func _RecoverMDB()
 	;End - Fix Missing Signal in Hist Table (MDB backward compatibitly fix)
 	GUICtrlSetData($msgdisplay, $Text_RecoveringMDB)
 	;Reset all listview positions in DB
-	$query = "UPDATE AP SET ListRow = '-1'"
+	$query = "UPDATE AP SET ListRow = '-1', Active = '0', Signal = '000'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	;Get total APIDs
 	$query = "SELECT ApID FROM AP"
@@ -2633,7 +2632,6 @@ Func _AddApPosToggle();Sets if new aps are added to the top or bottom of the lis
 EndFunc   ;==>_AddApPosToggle
 
 Func _GraphDeadTimeToggle();Sets if new aps are added to the top or bottom of the list
-	ConsoleWrite(GUICtrlRead($debugdisplay) & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphDeadTimeToggle') ;#Debug Display
 	If $GraphDeadTime = 1 Then
 		GUICtrlSetState($GraphDeadTimeGUI, $GUI_UNCHECKED)
@@ -2680,7 +2678,7 @@ Func _WifiDbLocateToggle();Turns wifi gps locate on or off
 		GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
 		$UseWiFiDbGpsLocate = 1
 	EndIf
-EndFunc
+EndFunc   ;==>_WifiDbLocateToggle
 
 Func _ShowDbToggle();Turns Estimated DB value on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ShowDbToggle()') ;#Debug Display
@@ -3963,6 +3961,8 @@ Func _LocateGpsInWifidb()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs
 	Local $return = 0
+	Local $maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
+	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
 	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundBssidMatch = UBound($BssidMatchArray) - 1
@@ -3972,12 +3972,11 @@ Func _LocateGpsInWifidb()
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
 		$url_root = $PhilsWdbURL & 'opt/locate.php?'
-		$url_data = $url_root & "ActiveBSSIDs=" & $ActiveMacs
-		$webpagesource = _INetGetSource($url_data)
-		ConsoleWrite($webpagesource & @CRLF)
+		$url_data = $url_root & "out=raw&ActiveBSSIDs=" & $ActiveMacs
+		$webpagesource = _InetGetSourceWithTimeout($url_data, $maxtime, $wifidbgpstmp)
 		If StringInStr($webpagesource, '|') Then
 			$wifigpsdata = StringSplit($webpagesource, "|")
-			If $wifigpsdata[1] <> '' And $wifigpsdata[1] <> ''Then 
+			If $wifigpsdata[1] <> '' And $wifigpsdata[1] <> '' Then
 				$LatitudeWifidb = $wifigpsdata[1]
 				$LongitudeWifidb = $wifigpsdata[2]
 				$WifidbGPS_Update = TimerInit()
@@ -3986,8 +3985,32 @@ Func _LocateGpsInWifidb()
 		EndIf
 	EndIf
 	_ClearWifiGpsDetails()
-	Return($return)
-EndFunc
+	Return ($return)
+EndFunc   ;==>_LocateGpsInWifidb
+
+Func _InetGetSourceWithTimeout($iurl, $itimeout, $itmpfile)
+	$wgp = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\' & 'GetWiFiDbGPS.exe') & ' /u=' & _StringEncrypt(1, $iurl, '0', 1) & ' /f="' & $itmpfile & '"', '', @SW_HIDE)
+	Local $itimediff = TimerInit()
+	Local $ipsa
+	Local $iout
+	While 1
+		If FileExists($itmpfile) Then
+			If _FileReadToArray($itmpfile, $ipsa) Then
+				For $w = 1 To $ipsa[0]
+					If $w <> 1 Then $iout &= @CRLF
+					$iout &= $ipsa[$w]
+				Next
+			EndIf
+			FileDelete($itmpfile)
+			ExitLoop
+		EndIf
+		If TimerDiff($itimediff) >= $itimeout Then
+			ProcessClose('GetWiFiDbGPS.exe')
+			ExitLoop
+		EndIf
+	WEnd
+	Return ($iout)
+EndFunc   ;==>_InetGetSourceWithTimeout
 
 Func _ClearWifiGpsDetails();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearWifiGpsDetails()') ;#Debug Display
@@ -4001,7 +4024,7 @@ Func _ClearWifiGpsDetails();Clears all GPS Details information
 		GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
 		$WifidbGPS_Update = TimerInit()
 	EndIf
-EndFunc   ;==>_ClearGpsDetailsGUI
+EndFunc   ;==>_ClearWifiGpsDetails
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTION
@@ -4032,7 +4055,7 @@ EndFunc   ;==>_OpenVistumblerForum
 
 Func _OpenVistumblerWiki();Opens Vistumbler Wiki
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerWiki() ') ;#Debug Display
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'https://apps.sourceforge.net/mediawiki/vistumbler/')
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://sourceforge.net/apps/mediawiki/vistumbler/')
 EndFunc   ;==>_OpenVistumblerWiki
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -7646,8 +7669,6 @@ Func _ApplySettingsGUI();Applys settings
 		$aquery = _AddFilerString($aquery, 'Active', $Filter_Active)
 		If $aquery <> '' Then $AddQuery &= ' WHERE (' & $aquery & ')'
 
-		ConsoleWrite($AddQuery & @CRLF)
-
 		$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 		$rquery = ''
 		$rquery = _RemoveFilterString($rquery, 'SSID', $Filter_SSID)
@@ -8282,11 +8303,11 @@ Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
 		EndIf
 		$tSystem = _Date_Time_EncodeSystemTime($DateSplit[2], $DateSplit[3], $DateSplit[1], $TimeSplit[1], $TimeSplit[2], $s)
 		If $ConvertToUTC = 1 Then
-			$rtime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
+			$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
 		Else
-			$rtime = _Date_Time_SystemTimeToTzSpecificLocalTime(DllStructGetPtr($tSystem))
+			$rTime = _Date_Time_SystemTimeToTzSpecificLocalTime(DllStructGetPtr($tSystem))
 		EndIf
-		$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rtime), ' ')
+		$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
 		$dts2 = StringSplit($dts1[1], '/')
 		$dts3 = StringSplit($dts1[2], ':')
 		$mon = $dts2[1]
