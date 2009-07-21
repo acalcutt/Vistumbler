@@ -3,7 +3,6 @@ include('daemon/config.inc.php');
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
 
-
 $start	= '225';
 $end	= '225';
 echo "$start $end\n";
@@ -22,7 +21,6 @@ for($I = $start; $I <= $end; $I++)
 	$points_exp	= explode('-', $points['points']);
 	foreach($points_exp as $pts)
 	{
-
 		$pts_exp	= explode(',',$pts);
 		$id_row		= explode(':',$pts_exp[1]);
 		$row		= $id_row[1];
@@ -71,6 +69,7 @@ for($I = $start; $I <= $end; $I++)
 			}
 		}
 	}
+	
 	$remove_user	= mysql_query("DELETE FROM `$db`.`users` WHERE `id` = '$id'", $conn);
 	if($remove_user){echo "Removed User Import List: $id\n";}else{echo "Could not remove user import list: $id\n";}
 

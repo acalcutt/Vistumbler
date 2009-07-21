@@ -51,6 +51,7 @@ if($log_level != 0)
 	verbosed($GLOBALS['COLORS']['GREEN']."Log Interval is: ".$GLOBALS['log_interval']." (".$de.")".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 }
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
+
 error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
 
 logd("Have included the WiFiDB Tools Functions file for the 'Daemon'.", $log_interval, 0,  $GLOBALS['log_level']);
@@ -111,7 +112,22 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			if(!($count <= 8))//make sure there is at least a valid file in the field
 			{
 				verbosed("Hey look! a valid file waiting to be imported.", $verbose, "CLI");
-				$check = $database->check_file($source);//check to see if this file has aleady been imported into the DB
+		#		$check = $database->check_file($source);//check to see if this file has aleady been imported into the DB
+				$hash_Ce = hash_file('md5', $source);
+				$file_exp = explode($GLOBALS['dim'], $source);
+				$file_exp_seg = count($file_exp);
+				$file1 = $file_exp[$file_exp_seg-1];
+				$file2 = trim(strstr($file1, '_'), "_");
+				$sql_check = "SELECT * FROM `$db`.`files` WHERE `hash` LIKE '$hash_Ce'";
+				$fileq = mysql_query($sql_check, $GLOBALS['conn']);
+				$fileqq = mysql_fetch_array($fileq);
+				if( strcmp($hash ,$fileqq['hash']) == 0 )
+				{
+					$check = 0;
+				}else
+				{
+					$check = 1;
+				}
 				if($check == 1)
 				{
 					$user = escapeshellarg($files_array['user']);//clean up Users Var
@@ -134,12 +150,28 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					$user_array = mysql_fetch_array($result1);
 					$user_row = $user_array['id'];
 					echo "\n";
-					$inserted_new_file = $database->insert_file($source, $tmp['aps'], $tmp['gps'],$files_array['user'],$files_array['notes'],$files_array['title'], $user_row );
-					if($inserted_new_file == 1)
+					
+					$file = $source;
+					$totalaps = $tmp['aps'];
+					$totalgps = $tmp['gps'];
+					$user = $files_array['user'];
+					$notes = $files_array['notes'];
+					$title = $files_array['title'];
+					$size = (filesize($file)/1024);
+					$hash = hash_file('md5', $file);
+					$date = date("y-m-d H:i:s");
+					
+					$file_exp = explode("/", $file);
+					$file_exp_seg = count($file_exp);
+					$file1 = $file_exp[$file_exp_seg-1];
+					
+					$sql = "INSERT INTO `$db`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash` , `user` , `notes` , `title`, `user_row`	)
+											VALUES ( '' , '$file1', '$size', '$date' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title', '$user_row' )";
+					if(mysql_query($sql, $conn))
 					{
 						logd("Added ".$remove_file." to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
 						verbosed($GLOBALS['COLORS']['GREEN']."Added ".$remove_file." to the Files table".$GLOBALS['COLORS']['WHITE'], 1, "CLI");
-						
+						echo $remove_files."\n";
 						$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 						if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 						{

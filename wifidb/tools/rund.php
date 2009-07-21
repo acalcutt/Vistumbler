@@ -1,14 +1,18 @@
 <?php
 require('daemon/config.inc.php');
+require($GLOBALS['wifidb_install'].'/lib/config.inc.php');
 global $pid_file;
-echo $GLOBALS['wifidb_tools']."\n";
-if ($_SERVER['OS'] == "Windows_NT")
+#echo $GLOBALS['wifidb_tools']."\n";
+if (PHP_OS == "WINNT")
 {$pid_file = $GLOBALS['wifidb_tools'].'/daemon/wifidbd.pid';}
 else{$pid_file = '/var/run/wifidbd.pid';}
-$argv[1] = strtolower($argv[1]);
-if(isset($argv[1])) //parse WiFiDB argument to get value
+if(isset($argv[1]))
+{$command = $argv[1];}
+else{$command = "none";}
+$command = strtolower($command);
+if($command != "none") //parse WiFiDB argument to get value
 {
-	switch ($argv[1])
+	switch ($command)
 	{
 		case "restart" :
 			if(file_exists($pid_file))
