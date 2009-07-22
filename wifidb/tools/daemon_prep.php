@@ -36,7 +36,7 @@ if($log >= 1)
 if (!file_exists($vs1dir))
 {
 	echo "You need to put some files in a folder named 'vs1' first.\nPlease do this first then run this again.\nDir:".$vs1dir;
-	mkdir($vs1dir);
+    die();
 }
 // self aware of Script location and where to search for Txt files
 

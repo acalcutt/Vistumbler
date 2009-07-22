@@ -32,9 +32,9 @@ global $COLORS;
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 
-$daemon_ver	=	"1.6";
-$start_date = "2009-04-23";
-$last_edit = "2009-July-04";
+$daemon_ver	=	"1.6.1";
+$start_date = "2009-April-23";
+$last_edit = "2009-July-21";
 
 date_default_timezone_set($timezn);
 
@@ -85,30 +85,17 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	$RUNresult = mysql_query("SELECT `id` FROM `$db`.`$settings_tb` WHERE `table` LIKE 'files'", $conn);
 	$next_run_id = mysql_fetch_array($RUNresult);
 	$IDDD = $next_run_id['id'];
-	if($IDDD != '')
-	{
-		$sqlup = "UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$IDDD'";
-		if (mysql_query($sqlup, $conn))
-		{
-			logd("Updated settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
-			verbosed($GLOBALS['COLORS']['GREEN']."Updated settings table with next run time: ".$nextrun.$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-		}else
-		{
-			logd("ERROR!! COULD NOT Update settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
-			verbosed($GLOBALS['COLORS']['RED']."ERROR!! COULD NOT Update settings table with next run time: ".$nextrun.$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-		}
-	}else
-	{
-		$NEXTRUNresult = mysql_query("INSERT INTO `$db`.`$settings_tb` (`id`, `table`, `size`) VALUES ( '1', 'files', '$nextrun') ", $conn);
-	}
+
 	$result = mysql_query("SELECT * FROM `$db`.`files_tmp` ORDER BY `id` ASC", $conn);
 	if($result)//check to see if i can successfully look at the file_tmp folder
 	{
-		while ($files_array = mysql_fetch_array($result))//got through every row in the table that is returned
+		while ($files_array = mysql_fetch_array($result))//go through every row in the table that is returned
 		{
 			$source = $wifidb_install.'/import/up/'.$files_array['file'];
 			$return  = file($source);
 			$count = count($return);
+			$testing_return = explode("|",$return[0]);
+			$txt_or_vs1_count = count($testing_return);
 			if(!($count <= 8))//make sure there is at least a valid file in the field
 			{
 				verbosed("Hey look! a valid file waiting to be imported.", $verbose, "CLI");
@@ -230,13 +217,11 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		logd("There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn), $log_interval, 0,  $GLOBALS['log_level']);
 		verbosed($GLOBALS['COLORS']['RED']."There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn).$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 	}
-	if($finished == 0)
-	{$message = "File tmp table is empty, go and import something. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minuets.\n";}
-	else{$message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minuets.\n";}
 	
-	logd($message, $log_interval, 0,  $GLOBALS['log_level']);
-	verbosed($GLOBALS['COLORS']['YELLOW'].$message.$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
-	$finished = 0;
+	if($finished == 0)
+	{$message = "File tmp table is empty, go and import something. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minuets.";}
+	else{$message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minuets.";}
+	
 	$sqlup2 = "UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$IDDD'";
 	if (mysql_query($sqlup2, $conn))
 	{
@@ -247,6 +232,10 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		logd("ERROR!! COULD NOT Update settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
 		verbosed($GLOBALS['COLORS']['RED']."ERROR!! COULD NOT Update settings table with next run time: ".$nextrun.$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 	}
+	
+	$finished = 0;
+	logd($message, $log_interval, 0,  $GLOBALS['log_level']);
+	verbosed($GLOBALS['COLORS']['YELLOW'].$message.$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 	sleep($time_interval_to_check);
 }
 ?>

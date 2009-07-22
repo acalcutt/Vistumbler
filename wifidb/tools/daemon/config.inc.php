@@ -1,5 +1,5 @@
 <?php
-global $wifidb_install, $log_level, $verbose, $log_interval, $time_interval_to_check, $colors_setting, $default_user, $default_title, $default_notes;
+global $wifidb_install, $log_level, $verbose, $log_interval, $time_interval_to_check, $colors_setting, $default_user, $default_title, $default_notes, $dim;
 if(PHP_OS == "WINNT"){$dim = "\\";}
 if(PHP_OS == "Linux"){$dim = "/";}
 $COLORS = array(
@@ -32,7 +32,7 @@ $default_notes = "No Notes";
 $wifidb_install		=	'/var/www/wifidb';
 
 //In seconds 1800 = 30 min interval
-$time_interval_to_check		=	"800";
+$time_interval_to_check		=	"300";
 
 //The level that you want the log file to write, off (0), Errors only (1), Detailed Errors [when available] (2). That is all for now.
 $log_level		=	0;
