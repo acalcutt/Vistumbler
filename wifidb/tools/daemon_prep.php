@@ -1,5 +1,5 @@
 <?php
-$TOTAL_START = date("Y-m-d H:i:s");
+
 require 'daemon/config.inc.php';
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
@@ -13,8 +13,11 @@ global $log, $debug;
 date_default_timezone_set('GMT+0'); //setting the time zone to GMT(Zulu) for internal keeping, displays will soon be customizable for the users time zone
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
+
+$TOTAL_START = date("Y-m-d H:i:s");
 $log = 1;
 $debug = 0;
+
 echo "\n==-=-=-=-=-=- WiFiDB VS1 Daemoin Prep Script -=-=-=-=-=-==\nVersion: ".$ver."\nLast Edit: ".$lastedit."\n";
 
 $default_user = $GLOBALS['default_user'];

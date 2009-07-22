@@ -91,7 +91,8 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	{
 		while ($files_array = mysql_fetch_array($result))//go through every row in the table that is returned
 		{
-			$source = $wifidb_install.'/import/up/'.$files_array['file'];
+			$source = $GLOBALS['wifidb_install'].'/import/up/'.$files_array['file'];
+			echo $source."\n";
 			$return  = file($source);
 			$count = count($return);
 			$testing_return = explode("|",$return[0]);
@@ -101,20 +102,25 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 				verbosed("Hey look! a valid file waiting to be imported.", $verbose, "CLI");
 		#		$check = $database->check_file($source);//check to see if this file has aleady been imported into the DB
 				$hash_Ce = hash_file('md5', $source);
+				echo $hash_Ce."\n";
 				$file_exp = explode($GLOBALS['dim'], $source);
 				$file_exp_seg = count($file_exp);
 				$file1 = $file_exp[$file_exp_seg-1];
 				$file2 = trim(strstr($file1, '_'), "_");
+				
 				$sql_check = "SELECT * FROM `$db`.`files` WHERE `hash` LIKE '$hash_Ce'";
 				$fileq = mysql_query($sql_check, $GLOBALS['conn']);
 				$fileqq = mysql_fetch_array($fileq);
-				if( strcmp($hash ,$fileqq['hash']) == 0 )
+				echo $fileqq['hash']."\n";
+				if( $hash_Ce == $fileqq['hash'])
 				{
 					$check = 0;
 				}else
 				{
 					$check = 1;
 				}
+				echo $check."\n";
+
 				if($check == 1)
 				{
 					$user = escapeshellarg($files_array['user']);//clean up Users Var
@@ -133,7 +139,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					$remove_file = $files_array['id'];
 					
 					$hash = hash_file('md5', $source);
-					$result1 = mysql_query("SELECT * FROM `$db`.`users` WHERE `hash` LIKE '$hash' LIMIT 1", $conn);
+					$result1 = mysql_query("SELECT * FROM `$db`.`users` WHERE `hash`='$hash' LIMIT 1", $conn);
 					$user_array = mysql_fetch_array($result1);
 					$user_row = $user_array['id'];
 					echo "\n";
@@ -151,10 +157,8 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					$file_exp = explode("/", $file);
 					$file_exp_seg = count($file_exp);
 					$file1 = $file_exp[$file_exp_seg-1];
-					
-					$sql = "INSERT INTO `$db`.`files` ( `id` , `file` , `size` , `date` , `aps` , `gps` , `hash` , `user` , `notes` , `title`, `user_row`	)
-											VALUES ( '' , '$file1', '$size', '$date' , '$totalaps', '$totalgps', '$hash' , '$user' , '$notes' , '$title', '$user_row' )";
-					if(mysql_query($sql, $conn))
+					$sql_insert_file = "INSERT INTO `$db`.`files` (`id`, `file`, `date`, `size`, `aps`, `gps`, `hash`, `user_row`, `user`, `notes`, `title`) VALUES (NULL, '$file1', '$date', '$size', '$totalaps', '$totalgps', '$hash', '$user_row', '$user', '$notes', '$title')";
+					if(mysql_query($sql_insert_file, $conn))
 					{
 						logd("Added ".$remove_file." to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
 						verbosed($GLOBALS['COLORS']['GREEN']."Added ".$remove_file." to the Files table".$GLOBALS['COLORS']['WHITE'], 1, "CLI");

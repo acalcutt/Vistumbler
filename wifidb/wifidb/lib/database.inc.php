@@ -1,8 +1,10 @@
 <?php
 global $ver;
+include('footer.inc.php');
+include('pageheader.inc.php');
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3.1",
-			"Last_Core_Edit" 	=> 	"2009-Jul-12",
+			"Last_Core_Edit" 	=> 	"2009-Jul-22",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
@@ -20,8 +22,6 @@ $ver = array(
 										"gen_gps"			=>	"1.0"
 										),
 			"Misc"				=>	array(
-										"pageheader"		=>  "1.2",
-										"footer"			=>	"1.2",
 										"breadcrumbs"		=>	"1.0",
 										"smart_quotes"		=> 	"1.0",
 										"smart"				=> 	"1.0",
@@ -31,6 +31,10 @@ $ver = array(
 										"verbosed"			=>	"1.2",
 										"logd"				=>	"1.2",
 										"IFWC"				=>	"2.0"
+										),
+			"Themes"			=>	array(
+										"pageheader"		=>  "1.2",
+										"footer"			=>	"1.2"
 										),
 			);
 
@@ -258,93 +262,6 @@ function breadcrumb($PATH_INFO)
 	// return success (not necessary, but maybe the 
 	// user wants to test its success?
 	return true;
-}
-
-#========================================================================================================================#
-#											Header (writes the Headers for all pages)									 #
-#========================================================================================================================#
-
-function pageheader($title)
-{
-	session_start();
-	if(!isset($_SESSION['token']) or !isset($_GET['token']))
-	{
-		$token = md5(uniqid(rand(), true));
-		$_SESSION['token'] = $token;
-	}else
-	{
-		$token = $_SESSION['token'];
-	}
-
-#	$token = regenerateSession();
-#	checkSession();
-	include('config.inc.php');
-	echo '<title>Wireless DataBase *Alpha*'.$GLOBALS['ver']["wifidb"].' --> '.$title.'</title>';
-	$sql = "SELECT `id` FROM `$db`.`files`";
-	$result1 = mysql_query($sql, $conn);
-	check_install_folder();	
-	if(!$result1){echo "<font color=\"red\"><h2>You need to <a class=\"upgrade\" href=\"install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB Build 3.</h3></font>";}
-	?>
-	<link rel="stylesheet" href="<?php if($root != ''){echo '/'.$root;}?>/css/site4.0.css">
-	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
-	<div align="center">
-	<table border="0" width="85%" cellspacing="5" cellpadding="2">
-		<tr style="background-color: #315573;">
-			<td colspan="2">
-			<p align="center"><b>
-			<font style="size: 5;font-family: Arial;color: #FFFFFF;">
-			Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']['wifidb'].'<br />'; ?>
-			<font size="2">
-				<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
-			</font></font></b>
-			</td>
-		</tr>
-		<tr>
-			<td style="background-color: #304D80;width: 15%;vertical-align: top;">
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a></p>
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a></p>
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></p>
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></p>
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a></p>
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></p>
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
-			<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></p>
-		</td>
-		<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center"><br>
-		<?php
-}
-
-#========================================================================================================================#
-#											Footer (writes the footer for all pages)									 #
-#========================================================================================================================#
-
-function footer($filename = '')
-{
-	include('config.inc.php');
-	$file_ex = explode("/", $filename);
-	$count = count($file_ex);
-	$file = $file_ex[($count)-1];
-	?>
-	</td>
-	</tr>
-	<tr>
-	<td bgcolor="#315573" height="23"><a href="/<?php echo $root; ?>/img/moon.png"><img border="0" src="/<?php echo $root; ?>/img/moon_tn.png"></a></td>
-	<td bgcolor="#315573" width="0" align="center">
-	<?php
-	if (file_exists($filename)) {?>
-		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
-	<?php
-	}
-	echo $tracker;
-	echo $ads;
-	?>
-	</td>
-	</tr>
-	</table>
-	</body>
-	</html>
-	<?php
 }
 
 #========================================================================================================================#
@@ -692,7 +609,7 @@ class database
 		$gpdata  = array();
 		$signals = array();
 		$sats_id = array();
-		
+		$db_gps	 = array();
 		$return  = file($source);
 		$count = count($return);
 		
@@ -1214,15 +1131,22 @@ class database
 						$signal_exp = explode("-",$san_sig);
 						$NNN = 0;
 						$sig_counting = count($signal_exp)-1;
-						$DBresult = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
-						while ($neArray = mysql_fetch_array($DBresult))
+						if($skip_pt_insert == 1)
 						{
-							$db_gps[$neArray["id"]]["id"]=$neArray["id"];
-							$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
-							$db_gps[$neArray["id"]]["long"]=$neArray["long"];
-							$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
-							$db_gps[$neArray["id"]]["date"]=$neArray["date"];
-							$db_gps[$neArray["id"]]["time"]=$neArray["time"];
+							$DBresult = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
+							while ($neArray = mysql_fetch_array($DBresult))
+							{
+								$db_gps[$neArray["id"]]["id"]=$neArray["id"];
+								$db_gps[$neArray["id"]]["lat"]=$neArray["lat"];
+								$db_gps[$neArray["id"]]["long"]=$neArray["long"];
+								$db_gps[$neArray["id"]]["sats"]=$neArray["sats"];
+								$db_gps[$neArray["id"]]["date"]=$neArray["date"];
+								$db_gps[$neArray["id"]]["time"]=$neArray["time"];
+							}
+						}else
+						{
+							
+						
 						}
 						foreach($signal_exp as $key=>$exp)
 						{
