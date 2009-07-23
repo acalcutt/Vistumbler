@@ -1,7 +1,30 @@
 <?php
 global $ver;
-include('footer.inc.php');
-include('pageheader.inc.php');
+include('config.inc.php');
+
+$theme = "vistumbler";
+
+	if(PHP_OS == 'Linux'){ $div = '/';}
+	if(PHP_OS == 'WINNT'){ $div = '\\';}
+	$path = getcwd();
+	$path_exp = explode($div, $path);
+	$path_count = count($path_exp);
+	foreach($path_exp as $key=>$val)
+	{
+		if($val == $root){ $path_key = $key;}
+	}
+	$full_path = '';
+	$I = 0;
+	if(isset($path_key))
+	{
+		while($I!=($path_key+1))
+		{
+			$full_path = $full_path.$path_exp[$I].$div;
+			$I++;
+		}
+		$full_path = $full_path.'themes';
+	}
+include("$full_path/$theme/header_footer.inc.php");
 $ver = array(
 			"wifidb"			=>	"0.16 Build 3.1",
 			"Last_Core_Edit" 	=> 	"2009-Jul-22",
@@ -61,7 +84,7 @@ function check_install_folder()
 			$I++;
 		}
 		$full_path = $full_path.'install';
-		if(is_dir($full_path)){echo '<h2><font color="red">The install Folder is still there, remove it!</font></h2>';}
+		if(is_dir($full_path)){echo '<p align="center"><font color="red" size="6">The install Folder is still there, remove it!</font></p>';}
 	}
 }
 
@@ -1779,8 +1802,8 @@ class database
 				}
 				</SCRIPT>
 		<h1><?php echo $newArray['ssid'];?></h1>
-		<TABLE align="center" WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
-		<TABLE  align="center" WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+		<TABLE align=center WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+		<TABLE align=center WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<COL WIDTH=112><COL WIDTH=439>
 		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>MAC Address</P></TD><TD WIDTH=439><P><?php echo $mac_full;?></P></TD></TR>
 		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Manufacture</P></TD><TD WIDTH=439><P><?php echo $manuf;?></P></TD></TR>
@@ -1793,7 +1816,7 @@ class database
 		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>&token=<?php echo $_SESSION['token'];?>">Export this AP to KML</a></td></tr>
 		</table>
 		<br>
-		<TABLE align="center" WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0 id="gps">
+		<TABLE align=center  WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0 id="gps">
 		<tr class="style4"><th colspan="10">Signal History</th></tr>
 		<tr class="style4"><th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th><th>Plot</th></tr>
 		<?php
@@ -1850,7 +1873,7 @@ class database
 				</td></tr>
 				<tr><td colspan="10" align="center">
 				
-				<table align="center" WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+				<table  align=center WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 				<tr><td class="style4" onclick="expandcontract('Row<?php echo $tablerowid;?>','ClickIcon<?php echo $tablerowid;?>')" id="ClickIcon<?php echo $tablerowid;?>" style="cursor: pointer; cursor: hand;">+</td>
 				<th colspan="6" class="style4">GPS History</th></tr>
 				<tbody id="Row<?php echo $tablerowid;?>" style="display:none">
@@ -1890,7 +1913,7 @@ class database
 		?>
 		</table>
 		<br>
-		<TABLE align="center" WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+		<TABLE align=center WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<?php
 		#END GPSFETCH FUNC
 		?>
@@ -1982,7 +2005,7 @@ class database
 		$userarray = array();
 		?>
 			<h1>Stats For: All Users</h1>
-			<table border="1"><tr class="style4">
+			<table border="1" align="center"><tr class="style4">
 			<th>ID</th><th>UserName</th><th>Title</th><th>Number of APs</th><th>Imported On</th></tr><tr>
 		<?php
 		
