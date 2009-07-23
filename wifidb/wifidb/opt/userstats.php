@@ -3,7 +3,7 @@ include('../lib/database.inc.php');
 
 if(isset($_GET['user'])){pageheader("Stats for User: ".$_GET['user']);}
 else{pageheader("Users Stats Page");}
-
+echo '<p align="center">';
 include('../lib/config.inc.php');
 
 $database = new database();
@@ -56,7 +56,7 @@ if (isset($_GET['token']))
 					$total += $totals;
 				}
 				?>
-				<table width="90%" border="1">
+				<table width="90%" border="1" align="center">
 				<tr bgcolor="#477DA9"><th colspan="4">Stats for : <?php echo $username;?></th></tr>
 				<tr bgcolor="#508FAE"><th>ID</th><th>Total APs</th><th>First Import</th><th>Last Import</th></tr>
 				
@@ -117,6 +117,7 @@ if (isset($_GET['token']))
 				<h1>Hey you can do that!, Go back and do it right</h1>
 				<?php
 		}
+		echo "</p>";
 	}else
 	{
 		echo "<h2>Could not Compare Tokens, try again.</h2>";

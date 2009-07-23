@@ -1,8 +1,10 @@
 <?php
-$ver = "1.2.0";
-$script_start = "24.Jan.09";
-$last_edit = "1.Mar.09";
+$ver = "1.2.1";
+ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
+$script_start = "2009-Jan-24";
+$last_edit = "2009-July-22";
 $author = "pferland";
+$stime = time();
 echo "-----------------------------------------------------------------------\n";
 echo "| Starting creation of Vistumbler compatible Wireless Router Manuf List.\n| By: $author\n| http:\\www.randomintervals.com\n| Version: $ver\n";
 $debug = 0;
@@ -10,19 +12,17 @@ $cwd = getcwd();
 
 $source="http://standards.ieee.org/regauth/oui/oui.txt";
 $manuf_list = array();
-$phpfile = $cwd."\manufactures.inc.php";
+$phpfile = "manufactures.inc.php";
 $phpfilewrite = fopen($phpfile, "w");
 $phpfileappend = fopen($phpfile, "a");
 
-$vs1file = $cwd."\manufactures.ini";
+$vs1file = "manufactures.ini";
 $vs1filewrite = fopen($vs1file, "w");
 $vs1fileappend = fopen($vs1file, "a");
 
 	echo "Downloading and Opening the Source File from: \n----->".$source."\n|\n|";
 $return = file($source);
 
-#Start time is here because the File needs to be downloaded first, this messes with the real run time of the conversion.
-$stime = time();
 $total_lines = count($return);
 	echo "Source File opened and Destination file placed, starting convertion.\n|\n|";
 foreach($return as $ret)
@@ -37,7 +37,7 @@ foreach($return as $ret)
 	if($Manuf == "PRIVATE"){echo "Non Needed Manuf found...\n| ";continue;}
 	$manuf_list[] = array(
 						"mac" 	=> $Man_mac,
-						"manuf"	=> $Manuf
+						"manuf"	=> addslashes($Manuf)
 						);
 			
 }

@@ -1,10 +1,8 @@
 <?php
 include('daemon/config.inc.php');
+require('rbrconfig.php');
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
-
-$start	= '225';
-$end	= '225';
 echo "$start $end\n";
 for($I = $start; $I <= $end; $I++)
 {	

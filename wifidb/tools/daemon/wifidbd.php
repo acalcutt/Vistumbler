@@ -193,7 +193,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					}else
 					{
 						logd("Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.", $log_interval, 0,  $GLOBALS['log_level']);
-						verbosed($GLOBALS['COLORS']['RED']."Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
+						verbosed($GLOBALS['COLORS']['YELLOW']."Removed ".$remove_file." from the Temp files table and added it to the Imported Files table.".$GLOBALS['COLORS']['WHITE'], $verbose, "CLI");
 					}
 				}
 			}else

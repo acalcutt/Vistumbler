@@ -21,7 +21,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b3">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3.1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-12</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-22</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -33,6 +33,10 @@ pageheader("Version Page");
 					</OL>
 					<LI>Changed the install index page to give a more explicit navigation and what is available for patches.</LI>
 					<LI>Added in locate.php for returning GPS points to Vistumbler based on Mac addresses that are around you. If none are found, it will ask if you want to upload a file.</LI>
+					<LI>Changed the search.php, export.php, usersats.php pages' and apfetch() html so that when you customize your theme it keeps the page centered.</LI>
+					<LI>Fixed some errors in the way the daemon compaires the files that are being prepaired to import.</LI>
+					<LI>Re-generated manufatures.inc.php to get new manufactures.</LI>
+					<LI>Removed Export Single AP to KML from the exports page, since there is more detailed exports on the APs fetch page, where you can choose what singal history row, or all the history rows. was also casung the page to take forever to load with lots of APs.</LI>
 				</OL>
 			</td></tr>
 		</table>

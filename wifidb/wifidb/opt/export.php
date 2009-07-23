@@ -16,26 +16,6 @@ switch($func)
 {
 	case "index":
 		?>
-		<form action="export.php?func=exp_single_ap" method="post" enctype="multipart/form-data">
-		<table border="1" cellspacing="0" cellpadding="3">
-		<tr class="style4"><th colspan="2">Export Single AP to KML</th></tr>
-		<tr><td>Access Point: </td><td>
-			<select name="row">
-			<?php
-			mysql_select_db($db,$conn);
-			$sql = "SELECT * FROM `$wtable`";
-			$re = mysql_query($sql, $conn) or die(mysql_error());
-			while($user_array = mysql_fetch_array($re))
-			{
-				echo '<option value="'.$user_array["id"].'"> ID: '.$user_array["id"].' - SSID: '.$user_array["ssid"].' - MAC: '.$user_array["mac"].' - SECTYPE: '.$user_array["sectype"].' - RADIO: '.$user_array["radio"].' - CHAN: '.$user_array["chan"]."\r\n";
-			}
-			?>
-			</select>
-			</td></tr>
-			<tr><td colspan="2" align="right"><input type="submit" value="Export This Access Point"></td>
-		</table>
-		</form>
-
 		<form action="export.php?func=exp_user_list" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3">
 		<tr class="style4"><th colspan="2">Export a Users Import List to KML</th></tr>
@@ -99,11 +79,6 @@ switch($func)
 	case "exp_all_db_kml": 
 
 		$database->exp_kml($export="exp_all_db_kml");
-		break;
-	#--------------------------
-	case "exp_single_ap":
-		$user="";
-		$database->exp_kml($export="exp_single_ap",$user,$row);
 		break;
 	#--------------------------
 	case "exp_user_list": 

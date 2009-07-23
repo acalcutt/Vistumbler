@@ -27,7 +27,7 @@ CONTENTS:
  ***DEFUNCT*** 4 -> Wireless Database Batch Import script [command line only]. ***DEFUNCT*** replaced by #1, #5, and #6
 5 -> Filenames recovery script [filenames_create.php].
 6 -> Deamon Prep Script [daemon_prep.php].
-
+7 -> Clean up duplicate files in the upload folder [cleanup.php].
 
 
 
@@ -121,9 +121,23 @@ the addition of colors for linux to the output, windows does not support color.
 ~~~~~~~~~~~~
 
 ==============================
-1- > The daemon was being killed off by a stray die() in the failsafe section
+1 -> The daemon was being killed off by a stray die() in the failsafe section
 	 for text based files that are no longer supported on import.
 
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.6.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+
+==============================
+1 -> Replaced the insert_file() and check_file() functions with their code, 
+     was causing random errors with not inserting the file into its table 
+	 after an import was finished.
+2 -> Check_file was useing the file name to check to see if a file existed 
+     in the files table, this was stupid because the file name may not be 
+	 even close to the other file and have the same contents. Changed it 
+	 so that it looks for the hash of the file.
 
 
 --------------------------------------------------------------
@@ -143,7 +157,7 @@ To run the exe just put the properly formated Txt file from Vistumbler in the TX
 Or go to a command propmt and run it via that.
 
 
-To run this scrip stand-alone all you need to do is download the PHP package from [http://us2.php.net/get/php-5.2.6-Win32.zip/from/a/mirror]
+To run the script version all you need to do is download the PHP package from [http://us2.php.net/get/php-5.2.6-Win32.zip/from/a/mirror]
 
 Browse to Y:\[Path to PHP]\bin\ 
                -  Where Y is the drive you have PHP installed in and [Path to PHP] is where PHP is stored on the drive.
@@ -300,10 +314,18 @@ Initial release, was just WiFiDB generation, no Vistumbler yet.
 1.2.0
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
-1-> Fixed a bug where I forgot to replace the value of $cwd with getcwd().
-2-> Changed the creation of the files so that they are both created at the same time.
+1 -> Fixed a bug where I forgot to replace the value of $cwd with getcwd().
+2 -> Changed the creation of the files so that they are both created at the same time.
 ==============================
 
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.2.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1 -> Fixed a bug where the manufactures file from IEEE was to large, set the max mem to 3GB, should be enough.
+2 -> Fixed a problem where there where double quotes showing up in the manuf name and was messing with the file output.
+==============================
 
 
 ~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~_~+~
@@ -421,7 +443,8 @@ VERSION HISTORY
   table and put them into a file named filenames.txt for daemon_prep.php
   to read.
   
-  Useage: bash:/# php filenames_create.php
+  Useage: 
+  bash:/# php filenames_create.php
   
   example filenames.txt:
 
@@ -457,7 +480,8 @@ Initial release.
   if there is it inserts its data into the `file_tmp` table and if there
   is no matching data, inserts default data from the daemon/config.inc.php file.
   
-  Useage: bash:/# php daemon_prep.php
+  Useage: 
+  bash:/# php daemon_prep.php
 
 ----------------------------------------
 ----------------------------------------
@@ -468,6 +492,63 @@ VERSION HISTORY
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 1.1
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release.
+==============================
+
+
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+7		Clean up duplicate files in the upload folder [cleanup.php]
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+  Cleanup.php looks thought the /import/up folder to see if there is any
+  hash similar files in there and moves them to the /tools/backups/duplicates/ 
+  folder.
+  
+  Useage: 
+  bash:/# php cleanup.php
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release.
+==============================
+
+
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+8		Clean up erronious files that where imported [rbr.php / rbrconfig.php]
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+  In the rbrconfig.php file define the start ID and end ID for the files 
+  in the `wifi`.`files` table that you want removed from the database.
+  
+  Useage:
+  bash:/# php rbr.php
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.0
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 Initial release.

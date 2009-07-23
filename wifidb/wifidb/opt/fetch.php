@@ -3,7 +3,6 @@ include('../lib/database.inc.php');
 pageheader("Access Point Info Page");
 include('../lib/config.inc.php');
 $database = new database();
-if ($debug === 1 ){echo '<p align="right"><a class="links" href="../opt/debug/fetch.php">Debug</a></p>';}
 $id = $_GET['id'];
 $id = $id + 0;
 if(is_int($id)){

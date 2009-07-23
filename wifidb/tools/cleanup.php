@@ -90,9 +90,8 @@ function &check_hash($hash, $array)
 		}else
 		{
 			$return = 0;
-			return $return;
-			break;
 		}
 	}
+	return $return;
 }
 ?>
