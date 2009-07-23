@@ -468,8 +468,9 @@ if($AD_CF_KM_Re){echo "<tr class=\"good\"><td>Success..........</td><td>Add KML 
 else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
 
-$AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
-								."$"."ads 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
+$AD_CF_FI_Re = fwrite($fileappend,"#---------------- Header and Footer Additional Info -----------------#\r\n"
+								."$"."ads			= '';"
+								."$"."header 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
 <meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
 								."$"."tracker 	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
 if($AD_CF_FI_Re)

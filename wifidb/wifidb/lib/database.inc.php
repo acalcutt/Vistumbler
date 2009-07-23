@@ -254,7 +254,7 @@ function breadcrumb($PATH_INFO)
 	}
 	// Add the current page
 	if(!isset($page_title)) { $page_title = "Current Page"; }
-	$breadCrumbHTML .= '<strong>'.$page_title.'</strong>';
+	$breadCrumbHTML .= '<font size="2" style="font-family: Arial;color: #FFFFFF;"><strong>'.$page_title.'</strong><font>';
 	
 	// print the generated HTML
 	print($breadCrumbHTML);

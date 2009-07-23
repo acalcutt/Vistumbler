@@ -29,16 +29,21 @@ function pageheader($title, $output="detailed")
 		<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 		<div align="center">
 		<table border="0" width="85%" cellspacing="5" cellpadding="2">
-			<tr style="background-color: #315573;">
-				<td colspan="2">
-				<p align="center"><b>
-				<font style="size: 5;font-family: Arial;color: #FFFFFF;">
-				Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']['wifidb'].'<br />'; ?>
-				<font size="2">
-					<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
-				</font></font></b>
-				</td>
-			</tr>
+			<tr style="background-color: #315573;"><td colspan="2">
+			<table width="100%"><tr>
+					<td style="width: 215px">
+						&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.randomintervals.com"><img border="0" src="/<?php echo $root; ?>/img/logo.png"></a>
+					</td>
+					<td>
+						<p align="center"><b>
+						<font style="size: 5;font-family: Arial;color: #FFFFFF;">
+						Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']['wifidb'].'<br /><br />'; ?>
+						</font>
+							<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
+						</b></p>
+					</td>
+			</tr></table>
+			</td></tr>
 			<tr>
 				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a></p>

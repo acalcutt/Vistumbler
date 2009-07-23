@@ -465,11 +465,19 @@ $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info --------------
 if($AD_CF_KM_Re){echo "<tr class=\"good\"><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
-
+if($ads !="")
+{
 $AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
-								."$"."ads 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
+								."$"."headers 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
 <meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
 								."$"."tracker 	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
+}else
+{
+$AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
+								."$"."headers 	= '$headers'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+								."$"."ads 		= '$ads';"
+								."$"."tracker 	= '$tracker'; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
+}
 if($AD_CF_FI_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{

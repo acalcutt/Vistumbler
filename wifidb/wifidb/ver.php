@@ -37,6 +37,8 @@ pageheader("Version Page");
 					<LI>Fixed some errors in the way the daemon compaires the files that are being prepaired to import.</LI>
 					<LI>Re-generated manufatures.inc.php to get new manufactures.</LI>
 					<LI>Removed Export Single AP to KML from the exports page, since there is more detailed exports on the APs fetch page, where you can choose what singal history row, or all the history rows. was also casung the page to take forever to load with lots of APs.</LI>
+					<LI>Added $header variable for < meta > tags and the such</LI>
+					<LI>Added the Random Intervals Logo to the header</LI>
 				</OL>
 			</td></tr>
 		</table>
