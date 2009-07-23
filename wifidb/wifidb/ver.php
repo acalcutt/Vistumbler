@@ -18,7 +18,7 @@ pageheader("Version Page");
 			</tr>
 		</table>
 
-		<table width="100%" border="2" id="16b3">
+		<table width="100%" border="2" id="16b3.1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3.1</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-22</td></tr>

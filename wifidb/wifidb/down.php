@@ -26,7 +26,7 @@ include('lib/config.inc.php');
 <h2><---Downloads---></h2>
 	<table width="100%" border="2" id="16pb1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
-	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b3">Version: 0.16 Build 3.1</a></td></tr>
+	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b3.1">Version: 0.16 Build 3.1</a></td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-23</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Archives:</td><td><a class="links" href="https://sourceforge.net/projects/vistumbler/files/WiFiDB/wifidb-alpha-016-b3.1.tar.gz/download">Tar Gz</a><br><a class="links" href="https://sourceforge.net/projects/vistumbler/files/WiFiDB/wifidb-alpha-016-b3.1.zip/download">Zip</a></td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td><a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifidb/?pathrev=431">SourceForge SVN</a></td></tr>
