@@ -8,7 +8,7 @@ if (isset($_GET['token']))
 	{
 		?><h2>Search for Access Points</h2>
 						<form action="results.php?ord=ASC&sort=ssid&from=0&to=25&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
-								<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0>
+								<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0 align="center">
 									<COL WIDTH=40*>
 									<COL WIDTH=216*>
 									<TR>

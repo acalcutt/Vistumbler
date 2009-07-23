@@ -17,7 +17,7 @@ switch($func)
 	case "index":
 		?>
 		<form action="export.php?func=exp_user_list" method="post" enctype="multipart/form-data">
-		<table border="1" cellspacing="0" cellpadding="3">
+		<table border="1" cellspacing="0" cellpadding="3" align="center">
 		<tr class="style4"><th colspan="2">Export a Users Import List to KML</th></tr>
 		<tr><td>User Import List: </td><td>
 			<select name="row">
@@ -37,7 +37,7 @@ switch($func)
 		</form>
 		
 		<form action="export.php?func=exp_user_all_kml" method="post" enctype="multipart/form-data">
-		<table border="1" cellspacing="0" cellpadding="3">
+		<table border="1" cellspacing="0" cellpadding="3" align="center">
 		<tr class="style4"><th colspan="2">Export All Access Points for a User</th></tr>
 		<tr><td>Username: </td><td>
 			<select name="user">
@@ -62,7 +62,7 @@ switch($func)
 		</table>
 		</form>
 		
-		<table border="1" cellspacing="0" cellpadding="3">
+		<table border="1" cellspacing="0" cellpadding="3" align="center">
 		<tr class="style4"><th colspan="2">Export All Access Points in the Database to KML</th></tr>
 		<tr><td colspan="2" align="center"><a class="links" href="export.php?func=exp_all_db_kml">Export All Access Points</a></td></tr>
 		</table>

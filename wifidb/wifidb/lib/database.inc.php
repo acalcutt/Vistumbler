@@ -1793,7 +1793,7 @@ class database
 		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>&token=<?php echo $_SESSION['token'];?>">Export this AP to KML</a></td></tr>
 		</table>
 		<br>
-		<TABLE WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0 id="gps">
+		<TABLE align="center" WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0 id="gps">
 		<tr class="style4"><th colspan="10">Signal History</th></tr>
 		<tr class="style4"><th>Row</th><th>Btx</th><th>Otx</th><th>First Active</th><th>Last Update</th><th>Network Type</th><th>Label</th><th>User</th><th>Signal</th><th>Plot</th></tr>
 		<?php
@@ -1850,7 +1850,7 @@ class database
 				</td></tr>
 				<tr><td colspan="10" align="center">
 				
-				<table WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+				<table align="center" WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 				<tr><td class="style4" onclick="expandcontract('Row<?php echo $tablerowid;?>','ClickIcon<?php echo $tablerowid;?>')" id="ClickIcon<?php echo $tablerowid;?>" style="cursor: pointer; cursor: hand;">+</td>
 				<th colspan="6" class="style4">GPS History</th></tr>
 				<tbody id="Row<?php echo $tablerowid;?>" style="display:none">
@@ -1890,7 +1890,7 @@ class database
 		?>
 		</table>
 		<br>
-		<TABLE WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
+		<TABLE align="center" WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<?php
 		#END GPSFETCH FUNC
 		?>
