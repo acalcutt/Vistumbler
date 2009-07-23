@@ -1,42 +1,42 @@
-.cell_top_mid {
+﻿.cell_top_mid {
 	border-width: 0px;
-	background-image: url('/wifidb/themes/vistumbler/img/cell_top_middle.png');
+	background-image: url('img/cell_top_middle.png');
 	background-repeat: repeat-x;
 }
 .cell_top_right {
 	border-width: 0;
-	background-image: url('/wifidb/themes/vistumbler/img/cell_top_right.png');
+	background-image: url('img/cell_top_right.png');
 	background-repeat: no-repeat;
 	white-space: nowrap;
 }
 .cell_top_left {
-	background-image: url('/wifidb/themes/vistumbler/img/cell_top_left.png');
+	background-image: url('img/cell_top_left.png');
 	background-repeat: no-repeat;
 	border-width: 0px;
 	white-space: nowrap;
 }
 .cell_side_left {
-	background-image: url('/wifidb/themes/vistumbler/img/cell_side_left.png');
+	background-image: url('img/cell_side_left.png');
 	background-repeat: repeat-y;
 	white-space: nowrap;
 }
 .cell_bot_left {
-	background-image: url('/wifidb/themes/vistumbler/img/cell_bot_left.png');
+	background-image: url('img/cell_bot_left.png');
 	background-repeat: no-repeat;
 	white-space: nowrap;
 }
 .cell_bot_mid {
-	background-image: url('/wifidb/themes/vistumbler/img/cell_bot_middle.png');
+	background-image: url('img/cell_bot_middle.png');
 	background-repeat: repeat-x;
 	white-space: nowrap;
 }
 .cell_bot_right {
-	background-image: url('/wifidb/themes/vistumbler/img/cell_bot_right.png');
+	background-image: url('img/cell_bot_right.png');
 	background-repeat: no-repeat;
 	white-space: nowrap;
 }
 .cell_side_right {
-	background-image: url('/wifidb/themes/vistumbler/img/cell_side_right.png');
+	background-image: url('img/cell_side_right.png');
 	background-repeat: repeat-y;
 	white-space: nowrap;
 }
