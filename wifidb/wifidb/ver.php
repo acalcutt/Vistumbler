@@ -21,25 +21,30 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b3.1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3.1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-22</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-23</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
 					<LI>Changed the Scheduling page, so that there are now three parts to it:</LI>
 					<OL>
-						<LI>Defualt, shows the same as the old page, just the first 10 imports waiting now.</LI>
+						<LI>Default, shows the same as the old page, just the first 10 imports waiting now.</LI>
 						<LI>Waiting, shows the remaining waiting lists, other then the first 10.</LI>
 						<LI>Done, shows all the imports that have finished.</LI>
 					</OL>
 					<LI>Changed the install index page to give a more explicit navigation and what is available for patches.</LI>
 					<LI>Added in locate.php for returning GPS points to Vistumbler based on Mac addresses that are around you. If none are found, it will ask if you want to upload a file.</LI>
-					<LI>Changed the search.php, export.php, usersats.php pages' and apfetch() html so that when you customize your theme it keeps the page centered.</LI>
-					<LI>Fixed some errors in the way the daemon compaires the files that are being prepaired to import.</LI>
+					<LI>Changed the search.php, export.php, usersats.php pages' and apfetch() HTML so that when you customize your theme it keeps the page centered.</LI>
+					<LI>Fixed some errors in the way the daemon compares the files that are being prepared to import.</LI>
 					<LI>Re-generated manufatures.inc.php to get new manufactures.</LI>
-					<LI>Removed Export Single AP to KML from the exports page, since there is more detailed exports on the APs fetch page, where you can choose what singal history row, or all the history rows. was also casung the page to take forever to load with lots of APs.</LI>
+					<LI>Removed Export Single AP to KML from the exports page, since there is more detailed exports on the APs fetch page, where you can choose what signal history row, or all the history rows, was also causing the page to take forever to load with lots of APs.</LI>
 					<LI>Added $header variable for < meta > tags and the such</LI>
 					<LI>Added the Random Intervals Logo to the header</LI>
+					<LI>Added support for Themes, please read this thread on how to use it/ make your own.</LI>
+					<OL>
+						<LI>Themes support is very rudimentary and basic, it is only storing the theme value in a field in the database, so if one person sets it, then another person sets it to another theme, the theme for all users are set to the theme of the second user.</LI>
+					</OL>
 				</OL>
+
 			</td></tr>
 		</table>
 		<br>
@@ -188,7 +193,7 @@ pageheader("Version Page");
 			<LI>Fixed an issue, where on install there would be an SQL error and fail to install.</LI>
 			<LI>Added link to Last User on Index page.</LI>
 			<LI>Cleaned up the tables on the new version page.</LI>
-			<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumblers' save file.</LI>
+			<LI>Dates are now standardized as YYYY-MM-DD, to coincide with Vistumbler's save file.</LI>
 			<LI>Fixed up the List KML export, there is a link to the KML file now.</LI>
 			<LI>Finished KML export for entire database.</LI>
 			<LI>Added option for a black background on the Signal Graphs.</LI>

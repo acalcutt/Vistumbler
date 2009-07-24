@@ -350,6 +350,30 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>";
 }
+
+$sql1 =  "ALTER TABLE `$wifi`.`settings` CHANGE `size` `size` VARCHAR( 255 ), CHARSET=utf8";
+$insert = mysql_query($sql1, $conn);
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>";
+}
+
+$sql1 =  "INSERT INTO `$wifi`.`settings` ( `id`, `table`, `size`) VALUES ( '1', 'files', '')";
+$insert = mysql_query($sql1, $conn);
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>INSERT wifidb time holder INTO <b>`$wifi`</b>.`settings`<br></td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT wifidb time holder INTO <b>`$wifi`</b>.`settings`<br>".mysql_error($conn)."</td></tr>";
+}
+
+$sql1 =  "INSERT INTO `$wifi`.`settings` ( `id`, `table`, `size`) VALUES ( '2', 'theme', 'wifidb')";
+$insert = mysql_query($sql1, $conn);
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>INSERT Theme setting INTO <b>`$wifi`</b>.`settings`</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT Theme setting INTO <b>`$wifi`</b>.`settings`<br>".mysql_error($conn)."</td></tr>";
+}
 ####	UPDATE CONFIG.INC.PHP
 echo '<tr><TH colspan="2"></th></tr><tr class="style4"><TH colspan="2">Config.inc.php File Creation</th><tr>';
 $file_ext = 'config.inc.php';

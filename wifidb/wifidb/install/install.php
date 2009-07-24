@@ -137,6 +137,15 @@ $IN_TB_SE_Re = mysql_query($sqls, $conn) or die(mysql_error());
 if($IN_TB_SE_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>INSERT INTO <b>`$wifi`</b>.`settings`</td></tr>";}
 else{echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT INTO <b>`$wifi`</b>.`settings`</td></tr>";}
+
+#insert data into the settings table
+$sqls =	"INSERT INTO `$wifi`.`settings` (`id`, `table`, `size`) VALUES ('2', 'theme', 'wifidb');";
+$IN_TB_SE_Re = mysql_query($sqls, $conn) or die(mysql_error());
+
+if($IN_TB_SE_Re)
+{echo "<tr class=\"good\"><td>Success..........</td><td>INSERT Theme setting INTO <b>`$wifi`</b>.`settings`</td></tr>";}
+else{echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT Theme setting INTO <b>`$wifi`</b>.`settings`</td></tr>";}
+
 	#========================================================================================================================#
 	#													Create Users table											   	     #
 	#========================================================================================================================#

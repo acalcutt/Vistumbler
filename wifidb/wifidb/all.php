@@ -2,6 +2,7 @@
 include('lib/database.inc.php');
 pageheader("Show all APs");
 include('lib/config.inc.php');
+$theme = $GLOBALS['theme'];
 if (isset($_GET['token']))
 {
 	if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])
@@ -20,12 +21,12 @@ if (isset($_GET['token']))
 		if ($ord=="" or !is_string($ord)){$ord="ASC";}
 		if ($sort=="" or !is_string($sort)){$sort="id";}
 		echo '<table border="1" width="100%" cellspacing="0">'
-		.'<tr class="style4"><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"border="0" src="img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Radio Type<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"&token='.$_SESSION["token"].'><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td>'
-		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="img/up.png"></a></td></tr>';
+		.'<tr class="style4"><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"border="0" src="themes/'.$theme.'/img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/up.png"></a></td>'
+		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/up.png"></a></td>'
+		.'<td>Chan<a href="?sort=chan&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/down.png"></a><a href="?sort=chan&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/up.png"></a></td>'
+		.'<td>Radio Type<a href="?sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"&token='.$_SESSION["token"].'><img height="15" width="15" border="0" src="themes/'.$theme.'/img/down.png"></a><a href="?sort=radio&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/up.png"></a></td>'
+		.'<td>Authentication<a href="?sort=auth&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="themes/'.$theme.'/img/down.png"></a><a href="?sort=auth&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/up.png"></a></td>'
+		.'<td>Encryption<a href="?sort=encry&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="themes/'.$theme.'/img/down.png"></a><a href="?sort=encry&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/up.png"></a></td></tr>';
 
 		$sql0 = "SELECT * FROM `$db`.`$wtable` ORDER BY `$sort` $ord LIMIT $from, $inc";
 	#	echo $sql0."<br>";

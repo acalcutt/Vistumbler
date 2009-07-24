@@ -67,11 +67,11 @@ function getdaemonstats()
 #			echo $ps_stats;
 				$ps_Sta_exp = explode("|", $ps_stats);
 				?><tr align="center" bgcolor="green"><td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td><td><?php echo $time;?></td><td><?php echo $mem."%";?></td><td><?php echo $CMD;?></td></tr><?php
+			}else
+			{
+				?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr>
+				<tr align="center" bgcolor="red"><td colspan="4">Linux Based WiFiDB Daemon is not running!</td><?php
 			}
-		}else
-		{
-			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Linux Based WiFiDB Daemon is not running!</td><?php
 		}
 	}elseif( $os[0] == 'W')
 	{
@@ -86,11 +86,11 @@ function getdaemonstats()
 				?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
 				$ps_stats = explode("," , $output[2]);
 				?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+			}else
+			{
+				?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr>
+				<tr align="center" bgcolor="red"><td colspan="4">Windows Based WiFiDB Daemon is not running!</td><?php
 			}
-		}else
-		{
-			?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Windows Based WiFiDB Daemon is not running!</td><?php
 		}
 	}else
 	{

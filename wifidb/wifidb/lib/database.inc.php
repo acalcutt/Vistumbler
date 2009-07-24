@@ -1,8 +1,9 @@
 <?php
-global $ver;
+global $ver, $full_path, $theme;
 include('config.inc.php');
 
-$theme = "vistumbler";
+#		$theme = "vistumbler";
+#		
 
 	if(PHP_OS == 'Linux'){ $div = '/';}
 	if(PHP_OS == 'WINNT'){ $div = '\\';}
@@ -24,10 +25,23 @@ $theme = "vistumbler";
 		}
 		$full_path = $full_path.'themes';
 	}
-include("$full_path/$theme/header_footer.inc.php");
+	
+	$sql = "select `size` from `$db`.`$settings_tb` WHERE `table` = 'theme'";
+	$result = mysql_query($sql, $conn);
+	$theme_array = mysql_fetch_array($result);
+	$theme = $theme_array['size'];
+	if($theme == '')
+	{
+		$theme = "wifidb";
+	}
+
+$full_path = $full_path."/".$theme."/";
+
+include("$full_path/header_footer.inc.php");
+
 $ver = array(
-			"wifidb"			=>	"0.16 Build 3.1",
-			"Last_Core_Edit" 	=> 	"2009-Jul-22",
+			"wifidb"			=>	" *Alpha* 0.16 Build 3.1",
+			"Last_Core_Edit" 	=> 	"2009-Jul-23",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
@@ -2083,7 +2097,7 @@ class database
 		<h3>View All Users <a class="links" href="userstats.php?func=allusers&token=<?php echo $_SESSION['token'];?>">Here</a></h3>
 		<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $user;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user;?></a></h1>
 		<h3><a class="links" href="../opt/export.php?func=exp_user_all_kml&user=<?php echo $user;?>&token=<?php echo $_SESSION['token'];?>">Export To KML File</a></h3>
-		<table border="1"><tr class="style4"><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr>
+		<table border="1" align="center"><tr class="style4"><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr>
 		<?php
 		include('config.inc.php');
 		mysql_select_db($db,$conn);
@@ -2210,12 +2224,12 @@ class database
 		$result = mysql_query($sql, $conn) or die(mysql_error());
 		$user_array = mysql_fetch_array($result);
 		$aps=explode("-",$user_array["points"]);
-		echo '<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user='.$user_array["username"].'&token='.$_SESSION['token'].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
+		echo '<p align="center"><h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user='.$user_array["username"].'&token='.$_SESSION['token'].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$user_array["title"].'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
 		?>
 		<h3>View All Users <a class="links" href="userstats.php?func=allusers&token=<?php echo $_SESSION['token'];?>">Here</a></h3>
 		<?php
 		echo '<a class="links" href=../opt/export.php?func=exp_user_list&row='.$user_array["id"].'&token='.$_SESSION['token'].'">Export To KML File</a>';
-		echo '<table border="1"><tr class="style4"><th>New/Update</th><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
+		echo '<table border="1" align="center"><tr class="style4"><th>New/Update</th><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
 		foreach($aps as $ap)
 		{
 			#$pagerow++;
@@ -2254,7 +2268,7 @@ class database
 				echo '<td align="center">'.$chan.'</td></tr>';
 			}
 		}
-		echo "</table><br>";
+		echo "</table><br></p>";
 		$end = microtime(true);
 				if ($GLOBALS["bench"]  == 1)
 				{

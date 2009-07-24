@@ -14,7 +14,9 @@ function pageheader($title, $output="detailed")
 	{
 		$token = $_SESSION['token'];
 	}
-
+	
+#	echo 'Hello '.($_COOKIE['first_name']!='' ? $_COOKIE['first_name'] : 'Guest');
+	
 	$root = $GLOBALS['root'];
 	
 	$conn	= $GLOBALS['conn'];
@@ -50,12 +52,14 @@ function pageheader($title, $output="detailed")
 			</td></tr>
 			<tr>
 				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
+				<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" />
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a></p>
+				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></p>
 				<p><a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></p>
@@ -78,10 +82,11 @@ function pageheader($title, $output="detailed")
 
 function footer($filename = '', $output = "detailed")
 {
-	include('config.inc.php');
+	$tracker = $GLOBALS['tracker'];
+	$ads = $GLOBALS['ads'];
 	$file_ex = explode("/", $filename);
 	$count = count($file_ex);
-	$file = $file_ex[($count)-1];
+	$filename = $file_ex[($count)-1];
 	if($output == "detailed")
 	{
 		?>

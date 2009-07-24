@@ -37,11 +37,8 @@ function pageheader($title, $output="detailed")
 					<table>
 						<tr>
 							<td style="width: 228px">
-							<a href="http://www.vistumbler.net">
-							<img alt="Vistumbler Logo" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/logo.png" class="no_border" /></a></td>
-							<td style="width: 228px">
 							<a href="http://www.randomintervals.com">
-							<img alt="Vistumbler Logo" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/rilogo_small.png" class="no_border" /></a></td>
+							<img alt="Random Intervals Logo" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/rilogo.png" class="no_border" /></a></td>
 						</tr>
 					</table>
 
@@ -57,7 +54,7 @@ function pageheader($title, $output="detailed")
 									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
 								</td>
 								<td class="cell_top_mid" style="height: 20px">
-									<img alt="" src="/wifidb/img/1x1_transparent.gif" width="165" height="1" />
+									<img alt="" src="/wifidb/themes/vistumbler/img/1x1_transparent.gif" width="185" height="1" />
 								</td>
 								<td style="width: 10px" class="cell_top_right">
 									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
@@ -79,6 +76,8 @@ function pageheader($title, $output="detailed")
 										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></strong></div>
 									<div class="inside_text_bold"><strong>
 										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a></strong></div>
 									<div class="inside_text_bold"><strong>
 										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></strong></div>
 									<div class="inside_text_bold"><strong>
@@ -125,9 +124,6 @@ function pageheader($title, $output="detailed")
 
 function footer($filename = '')
 {
-	$file_ex = explode("/", $filename);
-	$count = count($file_ex);
-	$file = $file_ex[($count)-1];
 	?>
 							</p>
 							<br>
