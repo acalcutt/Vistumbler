@@ -20,6 +20,7 @@ $sqlu			=	addslashes(strip_tags($_POST['sqlu']));
 $sqlp			=	addslashes(strip_tags($_POST['sqlp']));
 $wifi			=	addslashes(strip_tags($_POST['wifi']));
 $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
+$theme			=	addslashes(strip_tags($_POST['theme']));
 
 if(isset($_POST['daemon']))
 {
@@ -429,6 +430,17 @@ if($AD_CF_UR_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add PHP Host URL</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding PHP Host URL</td></tr>";}
+
+
+#add sql host info
+$AD_CF_SH_Re = fwrite($fileappend, "#---------------- Themes Settings ----------------#\r\n"
+									."$"."default_theme	=	'$theme';\r\n\r\n");
+
+if($AD_CF_SH_Re)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add Themes Settings</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Themes Settings</td></tr>";}
+
 
 #add sql host info
 $AD_CF_SH_Re = fwrite($fileappend, "#---------------- SQL Host ----------------#\r\n"

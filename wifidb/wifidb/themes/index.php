@@ -3,7 +3,7 @@ include('../lib/config.inc.php');
 global $theme;
 
 $func = '';
-$theme = '';
+$theme_post = '';
 
 if( !isset($_GET['func']) ) { $_GET['func'] = ""; }
 $func = strip_tags(addslashes($_GET['func']));
@@ -11,24 +11,22 @@ $func = strip_tags(addslashes($_GET['func']));
 if($func == 'change')
 {
 	if( !isset($_POST['theme']) ) { $_POST['theme'] = ""; }
-	$theme = strip_tags(addslashes($_POST['theme']));
-	$sql = "UPDATE `$db`.`$settings_tb` SET `size` = '$theme' WHERE `table` = 'theme'";
+	$theme_post = strip_tags(addslashes($_POST['theme']));
+	$sql = "UPDATE `$db`.`$settings_tb` SET `size` = '$theme_post' WHERE `table` = 'theme'";
 	$result = mysql_query($sql, $conn);
 	if(!$result)
 	{
 		echo "Could not update the field with the new theme value.";
 	}else
 	{
-		setcookie( 'theme' , $theme , (time()+(86400 * 7)) ); // 86400 = 1 day
 	}
-}else
-{
-	$sql = "select `size` from `$db`.`$settings_tb` WHERE `table` = 'theme'";
-	$result = mysql_query($sql, $conn);
-	$theme_array = mysql_fetch_array($result);
-	$theme = $theme_array['size'];
+	setcookie( 'wifidb_theme' , $theme_post , (time()+(86400 * 7)), "/".$root."/" ); // 86400 = 1 day
+	header('Location: index.php?token='.$_SESSION['token']);
 }
+$theme = ($_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $default_theme);
+#echo $theme."1<BR>";
 include('../lib/database.inc.php');
+
 pageheader("Themes Switchboard");
 ?>
 <h2>Themes Switchboard</h2>

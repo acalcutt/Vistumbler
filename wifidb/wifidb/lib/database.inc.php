@@ -1,43 +1,10 @@
 <?php
-global $ver, $full_path, $theme;
+global $ver, $full_path;
+if($GLOBALS['theme'] == '')
+{
+	global $theme;
+}
 include('config.inc.php');
-
-#		$theme = "vistumbler";
-#		
-
-	if(PHP_OS == 'Linux'){ $div = '/';}
-	if(PHP_OS == 'WINNT'){ $div = '\\';}
-	$path = getcwd();
-	$path_exp = explode($div, $path);
-	$path_count = count($path_exp);
-	foreach($path_exp as $key=>$val)
-	{
-		if($val == $root){ $path_key = $key;}
-	}
-	$full_path = '';
-	$I = 0;
-	if(isset($path_key))
-	{
-		while($I!=($path_key+1))
-		{
-			$full_path = $full_path.$path_exp[$I].$div;
-			$I++;
-		}
-		$full_path = $full_path.'themes';
-	}
-	
-	$sql = "select `size` from `$db`.`$settings_tb` WHERE `table` = 'theme'";
-	$result = mysql_query($sql, $conn);
-	$theme_array = mysql_fetch_array($result);
-	$theme = $theme_array['size'];
-	if($theme == '')
-	{
-		$theme = "wifidb";
-	}
-
-$full_path = $full_path."/".$theme."/";
-
-include("$full_path/header_footer.inc.php");
 
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.16 Build 3.1",
@@ -74,6 +41,43 @@ $ver = array(
 										"footer"			=>	"1.2"
 										),
 			);
+
+
+if(PHP_OS == 'Linux'){ $div = '/';}
+if(PHP_OS == 'WINNT'){ $div = '\\';}
+$path = getcwd();
+$path_exp = explode($div, $path);
+$path_count = count($path_exp);
+foreach($path_exp as $key=>$val)
+{
+	if($val == $root){ $path_key = $key;}
+}
+$full_path = '';
+$I = 0;
+if(isset($path_key))
+{
+	while($I!=($path_key+1))
+	{
+		$full_path = $full_path.$path_exp[$I].$div;
+		$I++;
+	}
+	$full_path = $full_path.'themes';
+}
+	
+#	$sql = "select `size` from `$db`.`$settings_tb` WHERE `table` = 'theme'";
+#	$result = mysql_query($sql, $conn);
+#	$theme_array = mysql_fetch_array($result);
+#	$theme = $theme_array['size'];
+#	if($theme == '')
+#	{
+#		$theme = "wifidb";
+#	}
+
+$theme = ($_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $default_theme);
+#echo $theme;
+$full_path = $full_path."/".$theme."/";
+
+include("$full_path/header_footer.inc.php");
 
 #---------------- Install Folder Warning Code -----------------#
 function check_install_folder()

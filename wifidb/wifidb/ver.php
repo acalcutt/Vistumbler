@@ -40,9 +40,6 @@ pageheader("Version Page");
 					<LI>Added $header variable for < meta > tags and the such</LI>
 					<LI>Added the Random Intervals Logo to the header</LI>
 					<LI>Added support for Themes, please read this thread on how to use it/ make your own.</LI>
-					<OL>
-						<LI>Themes support is very rudimentary and basic, it is only storing the theme value in a field in the database, so if one person sets it, then another person sets it to another theme, the theme for all users are set to the theme of the second user.</LI>
-					</OL>
 				</OL>
 
 			</td></tr>

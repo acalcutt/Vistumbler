@@ -15,8 +15,6 @@ function pageheader($title, $output="detailed")
 		$token = $_SESSION['token'];
 	}
 	
-#	echo 'Hello '.($_COOKIE['first_name']!='' ? $_COOKIE['first_name'] : 'Guest');
-	
 	$root = $GLOBALS['root'];
 	
 	$conn	= $GLOBALS['conn'];

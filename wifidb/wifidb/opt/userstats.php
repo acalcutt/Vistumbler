@@ -1,4 +1,6 @@
 <?php
+global $theme;
+$theme = ($_COOKIE['wifidb_theme']=='' ? $_COOKIE['wifidb_theme'] : 'wifidb');
 include('../lib/database.inc.php');
 
 if(isset($_GET['user'])){pageheader("Stats for User: ".$_GET['user']);}
