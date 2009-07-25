@@ -50,7 +50,7 @@ function pageheader($title, $output="detailed")
 			</td></tr>
 			<tr>
 				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
-				<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" />
+				<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="165" height="1" />
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></p>
 				<p><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a></p>

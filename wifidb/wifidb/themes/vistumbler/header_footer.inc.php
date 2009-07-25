@@ -47,7 +47,7 @@ function pageheader($title, $output="detailed")
 			</table>
 			<table style="width: 90%" align="center">
 				<tr>
-					<td style="width: 185px; height: 114px" valign="top">
+					<td style="width: 165px; height: 114px" valign="top">
 						<table style="width: 100%" cellpadding="0" cellspacing="0">
 							<tr>
 								<td style="width: 10px; height: 20px" class="cell_top_left">
