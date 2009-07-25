@@ -64,7 +64,7 @@ function pageheader($title, $output="detailed")
 					<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" />
 			</td>
 			
-			<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
+			<td style="background-color: #A9C6FA;vertical-align: top;" align="center">
 			<p align="center">
 			<br>
 		<!-- KEEP BELOW HERE -->
