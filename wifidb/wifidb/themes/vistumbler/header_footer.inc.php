@@ -38,7 +38,7 @@ function pageheader($title, $output="detailed")
 						<tr>
 							<td style="width: 228px">
 							<a href="http://www.randomintervals.com">
-							<img alt="Random Intervals Logo" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/rilogo.png" class="no_border" /></a></td>
+							<img alt="Random Intervals Logo" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/logo.png" class="no_border" /></a></td>
 						</tr>
 					</table>
 

@@ -2,6 +2,16 @@
 include('../lib/config.inc.php');
 global $theme;
 
+session_start();
+if(!isset($_SESSION['token']) or !isset($_GET['token']))
+{
+	$token = md5(uniqid(rand(), true));
+	$_SESSION['token'] = $token;
+}else
+{
+	$token = $_SESSION['token'];
+}
+
 $func = '';
 $theme_post = '';
 
@@ -21,7 +31,7 @@ if($func == 'change')
 	{
 	}
 	setcookie( 'wifidb_theme' , $theme_post , (time()+(86400 * 7)), "/".$root."/" ); // 86400 = 1 day
-	header('Location: index.php?token='.$_SESSION['token']);
+	header('Location: ?token='.$_SESSION['token']);
 }
 $theme = ($_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $default_theme);
 #echo $theme."1<BR>";

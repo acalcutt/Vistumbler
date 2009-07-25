@@ -29,7 +29,7 @@ function pageheader($title, $output="detailed")
 	{
 		# START YOUR HTML EDITS HERE #
 		?>
-		<link rel="stylesheet" href="<?php if($root != ''){echo '/'.$root;}?>/css/site4.0.css">
+		<link rel="stylesheet" href="<?php if($root != ''){echo '/'.$root;}?>/themes/wifidb/styles.css">
 		<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 		<div align="center">
 		<table border="0" width="85%" cellspacing="5" cellpadding="2">
@@ -93,7 +93,7 @@ function footer($filename = '', $output = "detailed")
 		</td>
 		</tr>
 		<tr>
-		<td bgcolor="#315573" height="23"><a href="/<?php echo $root; ?>/img/moon.png"><img border="0" src="/<?php echo $root; ?>/img/moon_tn.png"></a></td>
+		<td bgcolor="#315573" height="23"><a href="/<?php echo $GLOBALS['root']; ?>/themes/wifidb/img/moon.png"><img border="0" src="/<?php echo $GLOBALS['root']; ?>/themes/wifidb/img/moon_tn.png"></a></td>
 		<td bgcolor="#315573" width="0" align="center">
 		<?php
 		if (file_exists($filename)) {?>
