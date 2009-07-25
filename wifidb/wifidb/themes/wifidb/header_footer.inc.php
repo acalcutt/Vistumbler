@@ -20,7 +20,7 @@ function pageheader($title, $output="detailed")
 	$conn	= $GLOBALS['conn'];
 	$db		= $GLOBALS['db'];
 	$head = $GLOBALS['headers'];
-	echo "<html>\r\n<head>\r\n<title>Wireless DataBase *Alpha*".$GLOBALS['ver']['wifidb']." --> ".$title."</title>".$head."\r\n</head>\r\n";
+	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>".$head."\r\n</head>\r\n";
 	$sql = "SELECT `id` FROM `$db`.`files`";
 	$result1 = mysql_query($sql, $conn);
 	check_install_folder();	
@@ -41,7 +41,7 @@ function pageheader($title, $output="detailed")
 					<td>
 						<p align="center"><b>
 						<font style="size: 5;font-family: Arial;color: #FFFFFF;">
-						Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']['wifidb'].'<br /><br />'; ?>
+						Wireless DataBase<?php echo $GLOBALS['ver']['wifidb'].'<br /><br />'; ?>
 						</font>
 							<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
 						</b></p>

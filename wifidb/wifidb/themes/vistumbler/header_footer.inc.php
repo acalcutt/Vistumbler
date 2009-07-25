@@ -20,7 +20,7 @@ function pageheader($title, $output="detailed")
 	$conn	= $GLOBALS['conn'];
 	$db		= $GLOBALS['db'];
 	$head = $GLOBALS['headers'];
-	echo "<html>\r\n<head>\r\n<title>Wireless DataBase *Alpha*".$GLOBALS['ver']['wifidb']." --> ".$title."</title>".$head."\r\n</head>\r\n";
+	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>".$head."\r\n</head>\r\n";
 	$sql = "SELECT `id` FROM `$db`.`files`";
 	$result1 = mysql_query($sql, $conn);
 	check_install_folder();
@@ -137,7 +137,7 @@ function footer($filename = '')
 						</tr>
 					</table>
 				<div class="inside_text_center" align=center><strong>
-				Random Intervals Wireless DataBase *Alpha* <?php echo $GLOBALS['ver']['wifidb'].'<br />'; ?></strong></div>
+				Random Intervals Wireless DataBase<?php echo $GLOBALS['ver']['wifidb'].'<br />'; ?></strong></div>
 				<br />
 				<?php
 				echo $GLOBALS['tracker'];
