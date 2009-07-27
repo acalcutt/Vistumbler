@@ -1,5 +1,6 @@
 #RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
@@ -10,14 +11,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.0.0
+;AutoIt Version: v3.3.1.1
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 7'
+$version = 'v9.7 Beta 8'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/07/16'
+$last_modified = '2009/07/27'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -38,8 +39,7 @@ $last_modified = '2009/07/16'
 #include "UDFs\NativeWifi.au3"
 #include "UDFs\ZIP.au3"
 #include "UDFs\FileInUse.au3"
-
-;Set/Create Folders
+;Set/Create Folders--------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
 Dim $DefaultSaveDir = @ScriptDir & '\Save\'
 Dim $LanguageDir = @ScriptDir & '\Languages\'
@@ -53,6 +53,11 @@ DirCreate($LanguageDir)
 DirCreate($SoundDir)
 DirCreate($ImageDir)
 DirCreate($TmpDir)
+;Cleanup Old Temp Files----------------------------------
+_CleanupFiles($TmpDir, '*.tmp')
+_CleanupFiles($TmpDir, '*.ldb')
+_CleanupFiles($TmpDir, '*.ini')
+_CleanupFiles($TmpDir, '*.kml')
 ;Set Settings file
 Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
 ;Associate VS1 with Vistumbler
@@ -399,8 +404,8 @@ Dim $KmlFlyTo = IniRead($settings, 'AutoKML', 'KmlFlyTo', 1)
 Dim $OpenKmlNetLink = IniRead($settings, 'AutoKML', 'OpenKmlNetLink', 1)
 Dim $GoogleEarth_EXE = IniRead($settings, 'AutoKML', 'GoogleEarth_EXE', 'C:\Program Files\Google\Google Earth\googleearth.exe')
 
-Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'PhilsGraphURL', 'http://www.randomintervals.com/wifi/?')
-Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'PhilsWiFiDbURL', 'http://www.randomintervals.com/wifidb/')
+Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_URL', 'http://www.randomintervals.com/wifi/')
+Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_URL', 'http://www.vistumbler.net/wifidb/')
 
 Dim $Filter_Line = IniRead($settings, 'Filters', 'FilterLine', '*')
 Dim $Filter_Active = IniRead($settings, 'Filters', 'FilterActive', '*')
@@ -788,7 +793,10 @@ Dim $Text_RecoverSelected = IniRead($DefaultLanguagePath, 'GuiText', 'RecoverSel
 Dim $Text_NewSession = IniRead($DefaultLanguagePath, 'GuiText', 'NewSession', 'New Session')
 Dim $Text_Size = IniRead($DefaultLanguagePath, 'GuiText', 'Size', 'Size')
 Dim $Text_NoMdbSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', 'No MDB Selected')
-
+Dim $Text_LocateInWiFiDB = IniRead($DefaultLanguagePath, 'GuiText', 'LocateInWiFiDB', 'Locate Position in WiFiDB')
+Dim $Text_AutoWiFiDbGpsLocate = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', 'Auto WiFiDB Gps Locate')
+Dim $Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', 'Auto Select Connected AP')
+Dim $Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -797,27 +805,11 @@ If $AutoCheckForUpdates = 1 Then
 	EndIf
 EndIf
 
-$Tmpfiles = _FileListToArray($TmpDir, '*.tmp', 1);Find all files in the folder that end in .tmp
-If IsArray($Tmpfiles) Then
-	For $FoundTmp = 1 To $Tmpfiles[0]
-		$tmpname = $TmpDir & $Tmpfiles[$FoundTmp]
-		If _FileInUse($tmpname) = 0 Then FileDelete($tmpname)
-	Next
-EndIf
-
-$Tmpfiles = _FileListToArray($TmpDir, '*.ldb', 1);Find all files in the folder that end in .ldb
-If IsArray($Tmpfiles) Then
-	For $FoundTmp = 1 To $Tmpfiles[0]
-		$tmpname = $TmpDir & $Tmpfiles[$FoundTmp]
-		If _FileInUse($tmpname) = 0 Then FileDelete($tmpname)
-	Next
-EndIf
-
 $MDBfiles = _FileListToArray($TmpDir, '*.MDB', 1);Find all files in the folder that end in .MDB
 If IsArray($MDBfiles) Then
 	Opt("GUIOnEventMode", 0)
 	$FoundMdbFile = 0
-	$RecoverMdbGui = GUICreate($Text_RecoverMsg, 461, 210)
+	$RecoverMdbGui = GUICreate($Text_RecoverMsg, 461, 210, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 	GUISetBkColor($BackgroundColor)
 	$Recover_Del = GUICtrlCreateButton($Text_DeleteSelected, 10, 150, 215, 25)
 	$Recover_Rec = GUICtrlCreateButton($Text_RecoverSelected, 235, 150, 215, 25)
@@ -1022,9 +1014,9 @@ $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $Options)
 If $AutoSort = 1 Then GUICtrlSetState($AutoSortGUI, $GUI_CHECKED)
 $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$AutoSelectMenuButton = GUICtrlCreateMenuItem("Auto Select Connected AP", $Options)
+$AutoSelectMenuButton = GUICtrlCreateMenuItem($Text_AutoSelectConnectedAP, $Options)
 If $AutoSelect = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem("Auto WiFiDb Gps Locate(Experimental)", $Options)
+$UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & '(' & $Text_Experimental & ')', $Options)
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $Options)
 If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
@@ -1144,7 +1136,7 @@ $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $Extra)
 $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $Extra)
 $ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_PhilsWDB, $Extra)
-$LocateInWDB = GUICtrlCreateMenuItem("Locate Position in WiFiDB(Experimental)", $Extra)
+$LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & '(' & $Text_Experimental & ')', $Extra)
 
 $Help = GUICtrlCreateMenu($Text_Help)
 $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
@@ -1184,8 +1176,6 @@ GUISetBkColor($BackgroundColor)
 $ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 $TreeviewAPs = GUICtrlCreateTreeView(5, 5, 150, 585)
-
-;$TreeviewAPs = _GUICtrlTreeView_Create($DataChild, 5, 5, 150, 585);GUICtrlCreateTreeView(5, 5, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 GUISetState()
 
@@ -1365,7 +1355,7 @@ While 1
 			Sleep(1000)
 		EndIf
 	EndIf
-	$TimerInit = TimerInit()
+
 	;Get AP Information (if enabled)
 	If $Scan = 1 And $UpdatedAPs <> 1 Then
 		;Scan For New Aps
@@ -3913,7 +3903,7 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 					If $pg = $FoundSignalMatch Then $Found_FirstSeen = $SignalMatchArray[$pg][2] & ' ' & $SignalMatchArray[$pg][3]
 				Next
 				$url_root = $PhilsGraphURL
-				$url_data = "SSID=" & $Found_SSID & "&Mac=" & $Found_BSSID & "&Manuf=" & $Found_MANU & "&Auth=" & $Found_AUTH & "&Encry=" & $Found_ENCR & "&radio=" & $Found_RADTYPE & "&Chn=" & $Found_CHAN & "&Lat=" & $Found_Lat & "&Long=" & $Found_Lon & "&BTx=" & $Found_BTX & "&OTx=" & $Found_OTX & "&FA=" & $Found_FirstSeen & "&LU=" & $Found_LastSeen & "&NT=" & $Found_NETTYPE & "&Label=" & $Found_LAB & "&Sig=" & $pgsigdata
+				$url_data = "?SSID=" & $Found_SSID & "&Mac=" & $Found_BSSID & "&Manuf=" & $Found_MANU & "&Auth=" & $Found_AUTH & "&Encry=" & $Found_ENCR & "&radio=" & $Found_RADTYPE & "&Chn=" & $Found_CHAN & "&Lat=" & $Found_Lat & "&Long=" & $Found_Lon & "&BTx=" & $Found_BTX & "&OTx=" & $Found_OTX & "&FA=" & $Found_FirstSeen & "&LU=" & $Found_LastSeen & "&NT=" & $Found_NETTYPE & "&Label=" & $Found_LAB & "&Sig=" & $pgsigdata
 				$url_full = $url_root & $url_data
 				$url_trimmed = StringTrimRight($url_full, (StringLen($url_full) - 2048)) ;trim sting to internet explorer max url lenth
 				$url_trimmed2 = StringTrimRight($url_trimmed, (StringLen($url_trimmed) - StringInStr($url_trimmed, "-", 1, -1)) + 1);find - that marks the last full data and get rid of the rest
@@ -5250,8 +5240,8 @@ Func _WriteINI()
 	IniWrite($settings, 'KmlSettings', 'UseLocalKmlImagesOnExport', $UseLocalKmlImagesOnExport)
 	IniWrite($settings, 'KmlSettings', 'SigMapTimeBeforeMarkedDead', $SigMapTimeBeforeMarkedDead)
 
-	IniWrite($settings, 'PhilsWifiTools', 'PhilsGraphURL', $PhilsGraphURL)
-	IniWrite($settings, 'PhilsWifiTools', 'PhilsWiFiDbURL', $PhilsWdbURL)
+	IniWrite($settings, 'PhilsWifiTools', 'Graph_URL', $PhilsGraphURL)
+	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_URL', $PhilsWdbURL)
 
 	IniWrite($settings, 'Filters', 'FilterLine', $Filter_Line)
 	IniWrite($settings, 'Filters', 'FilterActive', $Filter_Active)
@@ -5617,6 +5607,10 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NewSession', $Text_NewSession)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Size', $Text_Size)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', $Text_NoMdbSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LocateInWiFiDB', $Text_LocateInWiFiDB)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', $Text_AutoWiFiDbGpsLocate)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', $Text_AutoSelectConnectedAP)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Experimental', $Text_Experimental)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -7442,6 +7436,10 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_NewSession = IniRead($DefaultLanguagePath, 'GuiText', 'NewSession', 'New Session')
 		$Text_Size = IniRead($DefaultLanguagePath, 'GuiText', 'Size', 'Size')
 		$Text_NoMdbSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', 'No MDB Selected')
+		$Text_LocateInWiFiDB = IniRead($DefaultLanguagePath, 'GuiText', 'LocateInWiFiDB', 'Locate Position in WiFiDB')
+		$Text_AutoWiFiDbGpsLocate = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', 'Auto WiFiDB Gps Locate')
+		$Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', 'Auto Select Connected AP')
+		$Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -8797,3 +8795,13 @@ EndFunc   ;==>_EstimateDbFromSignalPercent
 Func _NewSession()
 	Run(@ScriptDir & "\Vistumbler.exe")
 EndFunc   ;==>_NewSession
+
+Func _CleanupFiles($cDIR, $cTYPE)
+	$Tmpfiles = _FileListToArray($cDIR, $cTYPE, 1);Find all files in the folder that end in .tmp
+	If IsArray($Tmpfiles) Then
+		For $FoundTmp = 1 To $Tmpfiles[0]
+			$tmpname = $TmpDir & $Tmpfiles[$FoundTmp]
+			If _FileInUse($tmpname) = 0 Then FileDelete($tmpname)
+		Next
+	EndIf
+EndFunc   ;==>_CleanupFiles
