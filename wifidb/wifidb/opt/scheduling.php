@@ -1,40 +1,24 @@
 <?php
+include('../lib/config.inc.php');
+$func = '';
+$refresh_post = '';
+
+if( !isset($_GET['func']) ) { $_GET['func'] = ""; }
+$func = strip_tags(addslashes($_GET['func']));
+
+if($func == 'change')
+{
+	if( (!isset($_POST['refresh'])) or $_POST['refresh']=='' ) { $_POST['refresh'] = "wifidb"; }
+	$refresh_post = strip_tags(addslashes($_POST['refresh']));
+	setcookie( 'wifidb_refresh' , $refresh_post , (time()+(86400 * 7)), "/".$root."/opt/scheduling.php" ); // 86400 = 1 day
+	header('Location: scheduling.php?token='.$_SESSION['token']);
+}
+$refresh = ($_COOKIE['wifidb_refresh']!='' ? $_COOKIE['wifidb_refresh'] : $default_refresh);
+
 include('../lib/database.inc.php');
 pageheader("Scheduling Page");
-include('../lib/config.inc.php');
-$refresh_file = "refresh.txt";
-if (isset($_POST['token']))
-{
-	if (isset($_SESSION['token']) && $_POST['token'] == $_SESSION['token'])
-	{
-		$refresh = $_POST['refresh'];
-		$refresh = filter_var($refresh , FILTER_VALIDATE_INT, array('min_range'=>5, 'max_range'=>30720));
-		if(!$refresh)
-		{
-			echo '<font color="white">You must choose between 5 seconds and 512 Minutes, I have set it to 15 for you, you dumbass.</font>';
-			$refresh = "15";
-		}
-		#echo $refresh;
-		fopen($refresh_file, "w");
-		$fileappend = fopen($refresh_file, "a");
-		fwrite($fileappend, $refresh);
-	}else
-	{
-		$refresh = "15";
-		#echo $refresh;
-	}
-}else
-{
-	if($refresh_fopen = file($refresh_file))
-	{
-		$refresh = $refresh_fopen[0];
-		#echo $refresh;
-	}else
-	{
-		$refresh = "15";
-		#echo $refresh;
-	}
-}
+
+
 ####################
 function getdaemonstats()
 {
@@ -266,7 +250,7 @@ if(is_string($func))
 			?>
 				<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> GMT</td><td><?php $nextrun = date("Y-m-d H:i:s", (strtotime($file_array['size'])-18000)); echo $nextrun; ?> EST</td></tr>
 				<tr><td colspan="1">Select Refresh Rate:</td><td colspan="2">
-					<form action="scheduling.php?token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+					<form action="scheduling.php?func=change&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 					<input type="hidden" name="token" value="<?php echo $token; ?>" />
 					<SELECT NAME="refresh">  
 					<OPTION <?php if($refresh == 5){ echo "selected ";}?> VALUE="5"> 5 Seconds

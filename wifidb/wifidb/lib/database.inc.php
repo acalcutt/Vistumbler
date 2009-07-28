@@ -2024,7 +2024,7 @@ class database
 		?>
 			<h1>Stats For: All Users</h1>
 			<table border="1" align="center"><tr class="style4">
-			<th>ID</th><th>UserName</th><th>Title</th><th>Number of APs</th><th>Imported On</th></tr><tr>
+			<th>ID</th><th>UserName</th><th>Title</th><th>Import Notes</th><th>Number of APs</th><th>Imported On</th></tr><tr>
 		<?php
 		
 		mysql_select_db($db,$conn);
@@ -2056,18 +2056,21 @@ class database
 				if($pre_user === $username or $pre_user === ""){$n++;}else{$n=0;}
 				if ($user_array['title'] === "" or $user_array['title'] === " "){ $user_array['title']="UNTITLED";}
 				if ($user_array['date'] === ""){ $user_array['date']="No date, hmm..";}
-				if ($user_array['notes'] === " " or $user_array['notes'] === ""){ $user_array['notes']="No Notes, hmm..";}
+				$search = array('\n','\r','\n\r');
+				$user_array['notes'] = str_replace($search,"", $user_array['notes']);
+				if ($user_array['notes'] == ""){ $user_array['notes']="No Notes, hmm..";}
+				$notes = $user_array['notes'];
 				$points = explode("-",$user_array['points']);
 				$pc = count($points);
 				if($user_array['points'] === ""){continue;}
 				if($pre_user !== $username)
 				{
-					echo '<tr><td>'.$user_array['id'].'</td><td><a class="links" href="userstats.php?func=alluserlists&user='.$username.'&token='.$_SESSION['token'].'">'.$username.'</a></td><td><a class="links" href="userstats.php?func=useraplist&row='.$user_array["id"].'&token='.$_SESSION['token'].'">'.$user_array['title'].'</a></td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
+					echo '<tr><td>'.$user_array['id'].'</td><td><a class="links" href="userstats.php?func=alluserlists&user='.$username.'&token='.$_SESSION['token'].'">'.$username.'</a></td><td><a class="links" href="userstats.php?func=useraplist&row='.$user_array["id"].'&token='.$_SESSION['token'].'">'.$user_array['title'].'</a></td><td>'.wordwrap($notes, 56, "<br />\n").'</td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
 				}
 				else
 				{
 					?>
-					<tr><td></td><td></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user_array['title'];?></a></td><td><?php echo $pc;?></td><td><?php echo $user_array['date'];?></td></tr>
+					<tr><td></td><td></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user_array['title'];?></a></td><td><?php echo wordwrap($notes, 56, "<br />\n"); ?></td><td><?php echo $pc;?></td><td><?php echo $user_array['date'];?></td></tr>
 					<?php
 				}
 				$pre_user = $username;

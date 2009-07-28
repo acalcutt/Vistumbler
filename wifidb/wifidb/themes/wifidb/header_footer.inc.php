@@ -20,7 +20,7 @@ function pageheader($title, $output="detailed")
 	$conn	= $GLOBALS['conn'];
 	$db		= $GLOBALS['db'];
 	$head = $GLOBALS['headers'];
-	echo "<html>\r\n<head>\r\n<title>Random Intervals Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>".$head."\r\n</head>\r\n";
+	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>".$head."\r\n</head>\r\n";
 	$sql = "SELECT `id` FROM `$db`.`files`";
 	$result1 = mysql_query($sql, $conn);
 	check_install_folder();	
@@ -35,36 +35,36 @@ function pageheader($title, $output="detailed")
 		<table border="0" width="85%" cellspacing="5" cellpadding="2">
 			<tr style="background-color: #315573;"><td colspan="2">
 			<table width="100%"><tr>
-					<td style="width: 230px">
-						<a href="/"><img border="0" src="<?php if($root != ''){echo '/'.$root;}?>/themes/wifidb/img/logo.png"></a>
+					<td style="width: 215px">
+						&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.randomintervals.com"><img border="0" src="/<?php echo $root; ?>/img/logo.png"></a>
 					</td>
 					<td>
-						<div align="center"><b><font style="size: 5;font-family: Arial;color: #FFFFFF;">Random Intervals Wireless DataBase<?php echo $GLOBALS['ver']['wifidb'].'<br /><br />'; ?></font></b>
-						<div align="center"><b><font style="size: 5;font-family: Arial;color: #FFFFFF;"><?php breadcrumb($_SERVER["REQUEST_URI"]); ?></font></b>
-					</td>
-					<td style="width: 45px">
-						<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/wifidb/img/1x1_transparent.gif" width="45" height="1" />
+						<p align="center"><b>
+						<font style="size: 5;font-family: Arial;color: #FFFFFF;">
+						Wireless DataBase<?php echo $GLOBALS['ver']['wifidb'].'<br /><br />'; ?>
+						</font>
+							<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
+						</b></p>
 					</td>
 			</tr></table>
 			</td></tr>
 			<tr>
-				<td style="background-color: #304D80;width: 185px;vertical-align: top;">
-					<div class="style1">WiFiDB Links</div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></div>
-					<div><a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></div>
-					<div><a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></div>
-					<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" />
+				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
+				<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" /><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a><br>
+				<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a><br>
 			</td>
 			
-			<td style="background-color: #A9C6FA;vertical-align: top;" align="center">
+			<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
 			<p align="center">
 			<br>
 		<!-- KEEP BELOW HERE -->

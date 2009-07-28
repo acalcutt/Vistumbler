@@ -40,6 +40,7 @@ pageheader("Version Page");
 					<LI>Added $header variable for < meta > tags and the such</LI>
 					<LI>Added the Random Intervals Logo to the header</LI>
 					<LI>Added support for Themes, please read this thread on how to use it/ make your own.</LI>
+					<LI>Changed scheduling.php so it has cookies support, now it is per-browser not per-server.</LI>
 				</OL>
 
 			</td></tr>

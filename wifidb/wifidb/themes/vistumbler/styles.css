@@ -1,4 +1,26 @@
-﻿.cell_top_mid {
+﻿#leftcolumn{
+float:left;
+width:90%;
+border: 3px solid black;
+padding: 5px;
+padding-left: 8px;
+
+}
+
+#rightcolumn{
+float:left;
+width:90%;
+min-height: 400px;
+border: 3px solid black;
+padding: 5px;
+padding-bottom: 8px;
+}
+
+* html #rightcolumn{ /*IE only style*/
+height: 400px;
+}
+
+.cell_top_mid {
 	border-width: 0px;
 	background-image: url('img/cell_top_middle.png');
 	background-repeat: repeat-x;

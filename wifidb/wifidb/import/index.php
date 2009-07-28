@@ -185,7 +185,7 @@ switch($func)
 		{
 			$get_exp = explode('\\\\',$_GET['file']);
 			$file_imp = implode('\\', $get_exp);
-			echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <br><b><u>".$file_imp."</u></b><br>Copy and Paste the bolded text into the file location field to import it.<br></h2>";
+			echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <br><b><u>".$file_imp."</u></b><br>Copy and Paste the underlined text into the file location field to import it.<br></h2>";
 		}
 		echo "<br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br>";
 		?>
