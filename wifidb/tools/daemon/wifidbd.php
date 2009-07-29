@@ -6,6 +6,11 @@
 //intended to be used. I am hoping to get a C++ version working 
 //sometime soon, untill then I am using php.
 require 'config.inc.php';
+
+$daemon_ver	=	"1.6.1";
+$start_date = "2009-April-23";
+$last_edit = "2009-July-28";
+
 $PHP_OS = PHP_OS;
 if($GLOBALS['colors_setting'] == 0 or $PHP_OS[0] == "W")
 {
@@ -31,10 +36,6 @@ if($GLOBALS['colors_setting'] == 0 or $PHP_OS[0] == "W")
 global $COLORS;
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
-
-$daemon_ver	=	"1.6.1";
-$start_date = "2009-April-23";
-$last_edit = "2009-July-21";
 
 date_default_timezone_set($timezn);
 
@@ -162,7 +163,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					{
 						logd("Added ".$remove_file." to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
 						verbosed($GLOBALS['COLORS']['GREEN']."Added ".$remove_file." to the Files table".$GLOBALS['COLORS']['WHITE'], 1, "CLI");
-						echo $remove_files."\n";
+#						echo $remove_files."\n";
 						$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 						if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 						{
