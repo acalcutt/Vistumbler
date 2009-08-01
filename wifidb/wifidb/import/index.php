@@ -29,7 +29,9 @@ switch($func)
 				
 				$tmp	=	$_FILES['file']['tmp_name'];
 				$filename	=	$_FILES['file']['name'];
-				
+				$file_ext = explode('.', $filename);
+				$ext = strtolower($file_ext[1]);
+				if($ext != 'vs1'){echo '<h2>You can only upload VS1 files<br><A class="links" HREF="javascript:history.go(-1)">Go back</a> and do it right!</h2>'; footer($_SERVER['SCRIPT_FILENAME']); die();}
 				$rand	=	rand(); //generate a random number to be added to the new filename so there isnot a chance of being a duplicate name.
 				
 				$user = filter_var($user, FILTER_SANITIZE_SPECIAL_CHARS);
@@ -53,7 +55,7 @@ switch($func)
 					footer($filename);
 					die();
 				}
-				
+				chmod($uploadfile, 0600);
 				$hash = hash_file('md5', $uploadfile);
 
 				$size1 = format_size(dos_filesize($uploadfile));
