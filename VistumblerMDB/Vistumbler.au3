@@ -11,14 +11,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.1.1
+;AutoIt Version: v3.3.1.1 Beta
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7 Beta 8'
+$version = 'v9.7'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/07/27'
+$last_modified = '2009/08/02'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -133,9 +133,6 @@ Dim $GoogleEarth_OpenFile = $TmpDir & 'autokml_networklink.kml'
 Dim $tempfile = _TempFile($TmpDir, "netsh-tmp_", ".tmp")
 Dim $tempfile_showint = _TempFile($TmpDir, "netsh-si-tmp_", ".tmp")
 Dim $wifidbgpstmp = _TempFile($TmpDir, "wifidb-gps-tmp_", ".tmp")
-Dim $labelsini = $SettingsDir & 'mac_labels.ini'
-Dim $manufini = $SettingsDir & 'manufactures.ini'
-Dim $midiini = $SettingsDir & 'midi_instruments.ini'
 Dim $Latitude = 'N 0.0000'
 Dim $Longitude = 'E 0.0000'
 Dim $Latitude2 = 'N 0.0000'
