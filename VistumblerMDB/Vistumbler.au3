@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.7'
+$version = 'v9.8 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/08/02'
+$last_modified = '2009/08/04'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -315,6 +315,7 @@ Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
 		 & '		</PolyStyle>' & @CRLF _
 		 & '	</Style>' & @CRLF
 
+
 ;Define Arrays
 Dim $Direction[23];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
 Dim $Direction2[3]
@@ -380,6 +381,8 @@ Dim $Midi_PlayForActiveAps = IniRead($settings, 'MIDI', 'Midi_PlayForActiveAps',
 
 Dim $MapPos = IniRead($settings, 'KmlSettings', 'MapPos', 1)
 Dim $MapSig = IniRead($settings, 'KmlSettings', 'MapSig', 1)
+Dim $MapSigType = IniRead($settings, 'KmlSettings', 'MapSigType', 0)
+Dim $MapRange = IniRead($settings, 'KmlSettings', 'MapRange', 1)
 Dim $ShowTrack = IniRead($settings, 'KmlSettings', 'ShowTrack', 1)
 Dim $MapOpen = IniRead($settings, 'KmlSettings', 'MapOpen', 1)
 Dim $MapWEP = IniRead($settings, 'KmlSettings', 'MapWEP', 1)
@@ -5228,9 +5231,10 @@ Func _WriteINI()
 	IniWrite($settings, 'AutoKML', 'KmlFlyTo', $KmlFlyTo)
 	IniWrite($settings, 'AutoKML', 'OpenKmlNetLink', $OpenKmlNetLink)
 	IniWrite($settings, 'AutoKML', 'GoogleEarth_EXE', $GoogleEarth_EXE)
-
 	IniWrite($settings, 'KmlSettings', 'MapPos', $MapPos)
 	IniWrite($settings, 'KmlSettings', 'MapSig', $MapSig)
+	IniWrite($settings, 'KmlSettings', 'MapSigType', $MapSigType)
+	IniWrite($settings, 'KmlSettings', 'MapRange', $MapRange)
 	IniWrite($settings, 'KmlSettings', 'ShowTrack', $ShowTrack)
 	IniWrite($settings, "KmlSettings", 'MapOpen', $MapOpen)
 	IniWrite($settings, 'KmlSettings', 'MapWEP', $MapWEP)
@@ -5627,25 +5631,29 @@ EndFunc   ;==>_ExportFilteredKML
 Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveToKML()') ;#Debug Display
 	Opt("GUIOnEventMode", 0)
-	$ExportKMLGUI = GUICreate($Text_ExportToKML, 263, 185)
+	$ExportKMLGUI = GUICreate($Text_ExportToKML, 263, 225)
 	GUISetBkColor($BackgroundColor)
 	$GUI_ExportKML_PosMap = GUICtrlCreateCheckbox("Show GPS Position Map", 15, 15, 240, 15)
 	If $MapPos = 1 Then GUICtrlSetState($GUI_ExportKML_PosMap, $GUI_CHECKED)
 	$GUI_ExportKML_SigMap = GUICtrlCreateCheckbox("Show GPS Signal Map", 15, 35, 240, 15)
 	If $MapSig = 1 Then GUICtrlSetState($GUI_ExportKML_SigMap, $GUI_CHECKED)
-	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox("Show GPS Track", 15, 55, 240, 15)
+	$GUI_ExportKML_SigCir = GUICtrlCreateCheckbox("Use circle to show signal strength", 30, 55, 240, 15)
+	If $MapSigType = 1 Then GUICtrlSetState($GUI_ExportKML_SigCir, $GUI_CHECKED)
+	$GUI_ExportKML_RangeMap = GUICtrlCreateCheckbox("Show GPS Range Map", 15, 75, 240, 15)
+	If $MapRange = 1 Then GUICtrlSetState($GUI_ExportKML_RangeMap, $GUI_CHECKED)
+	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox("Show GPS Track", 15, 95, 240, 15)
 	If $ShowTrack = 1 Then GUICtrlSetState($GUI_ExportKML_DrawTrack, $GUI_CHECKED)
-	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 75, 240, 15)
+	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 115, 240, 15)
 	If $MapOpen = 1 Then GUICtrlSetState($GUI_ExportKML_MapOpen, $GUI_CHECKED)
-	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 95, 240, 15)
+	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 135, 240, 15)
 	If $MapWEP = 1 Then GUICtrlSetState($GUI_ExportKML_MapWEP, $GUI_CHECKED)
-	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 115, 240, 15)
+	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 155, 240, 15)
 	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportKML_MapSec, $GUI_CHECKED)
 
-	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 135, 240, 15)
+	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 175, 240, 15)
 	If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
-	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 155, 81, 25, 0)
-	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 155, 81, 25, 0)
+	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 195, 81, 25, 0)
+	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 195, 81, 25, 0)
 	GUISetState(@SW_SHOW)
 
 	While 1
@@ -5668,10 +5676,20 @@ Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 				Else
 					$MapSig = 0
 				EndIf
+				If GUICtrlRead($GUI_ExportKML_RangeMap) = 1 Then
+					$MapRange = 1
+				Else
+					$MapRange = 0
+				EndIf
 				If GUICtrlRead($GUI_ExportKML_DrawTrack) = 1 Then
 					$ShowTrack = 1
 				Else
 					$ShowTrack = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportKML_SigCir) = 1 Then
+					$MapSigType = 1
+				Else
+					$MapSigType = 0
 				EndIf
 				If GUICtrlRead($GUI_ExportKML_MapOpen) = 1 Then
 					$MapOpen = 1
@@ -5697,7 +5715,7 @@ Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 				DirCreate($SaveDirKml)
 				$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
 				If Not @error Then
-					$savekml = SaveKML($kml, $UseLocalKmlImagesOnExport, $MapPos, $ShowTrack, $MapSig, $SelectedApID, $Filter, $MapOpen, $MapWEP, $MapSec)
+					$savekml = SaveKML($kml, $UseLocalKmlImagesOnExport, $MapPos, $ShowTrack, $MapSig, $MapRange, $SelectedApID, $Filter, $MapSigType, $MapOpen, $MapWEP, $MapSec)
 					If $savekml = 1 Then
 						MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $kml & '"')
 					Else
@@ -5710,12 +5728,13 @@ Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 	Opt("GUIOnEventMode", 1)
 EndFunc   ;==>SaveToKmlGUI
 
-Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSigMap = 0, $SelectedApID = 0, $Filter = 0, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1)
+Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSigMap = 0, $GpsRangeMap = 0, $SelectedApID = 0, $Filter = 0, $SigMapType = 0, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveKML()') ;#Debug Display
 	Local $file_header
 	Local $file_data
 	Local $file_posdata
 	Local $file_sigdata
+	Local $file_rangedata
 	Local $file_footer
 	Local $FoundApWithGps
 	Local $NewTimeString
@@ -5777,10 +5796,33 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				 & '		</LineStyle>' & @CRLF _
 				 & '	</Style>' & @CRLF
 	EndIf
+	If $SigMapType = 1 Then
+		$file_header &= '	<Style id="SigCircleColor">' & @CRLF _
+				 & '		<LineStyle>' & @CRLF _
+				 & '			<color>ff0055ff</color>' & @CRLF _
+				 & '		</LineStyle>' & @CRLF _
+				 & '		<PolyStyle>' & @CRLF _
+				 & '			<color>ff00ff00</color>' & @CRLF _
+				 & '			<outline>0</outline>' & @CRLF _
+				 & '		</PolyStyle>' & @CRLF _
+				 & '	</Style>' & @CRLF
+	EndIf
+	If $GpsRangeMap = 1 Then
+		$file_header &= '	<Style id="RangeCircleColor">' & @CRLF _
+				 & '		<LineStyle>' & @CRLF _
+				 & '			<color>ff00aa00</color>' & @CRLF _
+				 & '		</LineStyle>' & @CRLF _
+				 & '		<PolyStyle>' & @CRLF _
+				 & '			<color>ff00ff00</color>' & @CRLF _
+				 & '			<outline>0</outline>' & @CRLF _
+				 & '		</PolyStyle>' & @CRLF _
+				 & '	</Style>' & @CRLF
+	EndIf
 
-	If $GpsPosMap = 1 Or $GpsSigMap = 1 Then
+	If $GpsPosMap = 1 Or $GpsSigMap = 1 Or $GpsRangeMap = 1 Then
 		If $GpsPosMap = 1 Then $file_posdata &= '	<Folder>' & @CRLF & '		<name>GPS Position Map</name>' & @CRLF
 		If $GpsSigMap = 1 Then $file_sigdata &= '	<Folder>' & @CRLF & '		<name>GPS Signal Map</name>' & @CRLF
+		If $GpsRangeMap = 1 Then $file_rangedata &= '	<Folder>' & @CRLF & '		<name>GPS Range Map</name>' & @CRLF
 		If $MapOpenAPs = 1 Then
 			If $Filter = 1 Then
 				If StringInStr($AddQuery, "WHERE") Then
@@ -5799,14 +5841,18 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				$FoundApWithGps = 1
 				If $GpsPosMap = 1 Then $file_posdata &= '		<Folder>' & @CRLF & '			<name>Open Access Points</name>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		<Folder>' & @CRLF & '			<name>Open Access Points</name>' & @CRLF
+				If $GpsRangeMap = 1 Then $file_rangedata &= '		<Folder>' & @CRLF & '			<name>Open Access Points</name>' & @CRLF
 				For $exp = 1 To $FoundApMatch
 					GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
 					$ExpApID = $ApMatchArray[$exp][1]
 					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
-					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID)
+					If $GpsRangeMap = 1 Then $file_rangedata &= _KmlCircleDistanceMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		</Folder>' & @CRLF
+				If $GpsRangeMap = 1 Then $file_rangedata &= '		</Folder>' & @CRLF
 			EndIf
 		EndIf
 		If $MapWepAps = 1 Then
@@ -5827,14 +5873,18 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				$FoundApWithGps = 1
 				If $GpsPosMap = 1 Then $file_posdata &= '		<Folder>' & @CRLF & '			<name>WEP Access Points</name>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		<Folder>' & @CRLF & '			<name>WEP Access Points</name>' & @CRLF
+				If $GpsRangeMap = 1 Then $file_rangedata &= '		<Folder>' & @CRLF & '			<name>WEP Access Points</name>' & @CRLF
 				For $exp = 1 To $FoundApMatch
 					GUICtrlSetData($msgdisplay, 'Saving WEP AP ' & $exp & '/' & $FoundApMatch)
 					$ExpApID = $ApMatchArray[$exp][1]
 					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
-					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID)
+					If $GpsRangeMap = 1 Then $file_rangedata &= _KmlCircleDistanceMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		</Folder>' & @CRLF
+				If $GpsRangeMap = 1 Then $file_rangedata &= '		</Folder>' & @CRLF
 			EndIf
 		EndIf
 		If $MapSecAps = 1 Then
@@ -5855,20 +5905,26 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				$FoundApWithGps = 1
 				If $GpsPosMap = 1 Then $file_posdata &= '		<Folder>' & @CRLF & '			<name>Secure Access Points</name>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		<Folder>' & @CRLF & '			<name>Secure Access Points</name>' & @CRLF
+				If $GpsRangeMap = 1 Then $file_rangedata &= '		<Folder>' & @CRLF & '			<name>Secure Access Points</name>' & @CRLF
 				For $exp = 1 To $FoundApMatch
 					GUICtrlSetData($msgdisplay, 'Saving Secure AP ' & $exp & '/' & $FoundApMatch)
 					$ExpApID = $ApMatchArray[$exp][1]
 					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
-					If $GpsSigMap = 1 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID)
+					If $GpsRangeMap = 1 Then $file_rangedata &= _KmlCircleDistanceMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
 				If $GpsSigMap = 1 Then $file_sigdata &= '		</Folder>' & @CRLF
+				If $GpsRangeMap = 1 Then $file_rangedata &= '		</Folder>' & @CRLF
 			EndIf
 		EndIf
 		If $GpsPosMap = 1 Then $file_posdata &= '	</Folder>' & @CRLF
 		If $GpsSigMap = 1 Then $file_sigdata &= '	</Folder>' & @CRLF
+		If $GpsRangeMap = 1 Then $file_rangedata &= '	</Folder>' & @CRLF
 		If $GpsPosMap = 1 Then $file_data &= $file_posdata
 		If $GpsSigMap = 1 Then $file_data &= $file_sigdata
+		If $GpsRangeMap = 1 Then $file_data &= $file_rangedata
 	EndIf
 
 	If $GpsTrack = 1 Then
@@ -6098,6 +6154,112 @@ Func _KmlSignalMapAPID($APID)
 	EndIf
 	Return ($file)
 EndFunc   ;==>_KmlSignalMapAPID
+
+Func _KmlCircleSignalMapAPID($APID)
+	Local $file
+	$query = "SELECT SSID, BSSID, HighGpsHistID FROM AP WHERE ApID='" & $APID & "'"
+	$ApIDMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatch[1][1], '&', ''), '>', ''), '<', '')
+	$ExpBSSID = $ApIDMatch[1][2]
+	$ExpHighGpsHistID = $ApIDMatch[1][3]
+	If $ExpHighGpsHistID <> '0' Then
+		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID='" & $ExpHighGpsHistID & "'"
+		$HistIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpSig = $HistIDArray[1][1]
+		$ExpHighGpsID = $HistIDArray[1][2]
+		$query = "SELECT Longitude, Latitude FROM GPS Where GpsID='" & $ExpHighGpsID & "'"
+		$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpLon = $GpsIDArray[1][1]
+		$ExpLat = $GpsIDArray[1][2]
+		$file &= '	<Folder>' & @CRLF _
+				 & '		<name>' & $ExpSSID & ' - ' & $ExpBSSID & '</name>' & @CRLF
+		$file &= _KmlDrawCircle($ExpLat, $ExpLon, $ExpSig, 'SigCircleColor')
+		$file &= '	</Folder>' & @CRLF
+	EndIf
+	Return ($file)
+EndFunc   ;==>_KmlCircleSignalMapAPID
+
+Func _KmlCircleDistanceMapAPID($APID)
+	Local $file
+	Local $ExpDist = 10
+	$query = "SELECT SSID, BSSID, HighGpsHistID FROM AP WHERE ApID='" & $APID & "'"
+	$ApIDMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatch[1][1], '&', ''), '>', ''), '<', '')
+	$ExpBSSID = $ApIDMatch[1][2]
+	$ExpHighGpsHistID = $ApIDMatch[1][3]
+	If $ExpHighGpsHistID <> '0' Then
+		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID='" & $ExpHighGpsHistID & "'"
+		$HistIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpSig = $HistIDArray[1][1]
+		$ExpHighGpsID = $HistIDArray[1][2]
+		$query = "SELECT Longitude, Latitude FROM GPS Where GpsID='" & $ExpHighGpsID & "'"
+		$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpLon = $GpsIDArray[1][1]
+		$ExpLat = $GpsIDArray[1][2]
+		;Find Outside Gps Point
+		$query = "SELECT GpsID FROM Hist WHERE ApID='" & $APID & "'"
+		$HistIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$HistIDMatch = UBound($HistIDArray) - 1
+		If $HistIDMatch <> 0 Then
+			For $gid = 1 To $HistIDMatch
+				$ExpGpsID = $HistIDArray[$gid][1]
+				$query = "SELECT Longitude, Latitude FROM GPS Where GpsID='" & $ExpGpsID & "'"
+				$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLon2 = $GpsIDArray[1][1]
+				$ExpLat2 = $GpsIDArray[1][2]
+				If $ExpLat2 <> 'N 0.0000' And $ExpLon2 <> 'E 0.0000' Then
+					$Dist = _KmlDistanceBetweenPoints($ExpLat, $ExpLon, $ExpLat2, $ExpLon2)
+					If $Dist > $ExpDist Then $ExpDist = $Dist
+				EndIf
+			Next
+		EndIf
+		$file &= '	<Folder>' & @CRLF _
+				 & '		<name>' & $ExpSSID & ' - ' & $ExpBSSID & '</name>' & @CRLF
+		$file &= _KmlDrawCircle($ExpLat, $ExpLon, $ExpDist, 'RangeCircleColor')
+		$file &= '	</Folder>' & @CRLF
+	EndIf
+	Return ($file)
+EndFunc   ;==>_KmlCircleDistanceMapAPID
+
+Func _KmlDistanceBetweenPoints($Lat1, $Lon1, $Lat2, $Lon2)
+	$Lat1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat1), 'S', '-'), 'N', ''), ' ', ''))
+	$Lon1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lon1), 'W', '-'), 'E', ''), ' ', ''))
+	$Lat2 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat2), 'S', '-'), 'N', ''), ' ', ''))
+	$Lon2 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lon2), 'W', '-'), 'E', ''), ' ', ''))
+	$d = ACos(Sin($Lat1) * Sin($Lat2) + Cos($Lat1) * Cos($Lat2) * Cos($Lon2 - $Lon1)) * 6378137
+	Return ($d)
+EndFunc   ;==>_KmlDistanceBetweenPoints
+
+Func _KmlDrawCircle($CenterLat, $CenterLon, $Radius, $CirStyle)
+	Local $PI = 3.14159265358979
+	Local $viewdistance = 10000
+	; convert coordinates to radians
+	$Lat1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($CenterLat), 'S', '-'), 'N', ''), ' ', ''))
+	$long1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($CenterLon), 'W', '-'), 'E', ''), ' ', ''))
+	$d = $Radius
+	$d_rad = $d / 6378137
+	;create header
+	$file = '<Placemark>' & @CRLF _
+			 & '<name>Location</name>' & @CRLF _
+			 & '<styleUrl>#' & $CirStyle & '</styleUrl>' & @CRLF _
+			 & '<LineString>' & @CRLF _
+			 & '<extrude>1</extrude>' & @CRLF _
+			 & '<tessellate>1</tessellate>' & @CRLF _
+			 & '<coordinates>' & @CRLF
+	; loop through the array and write path linestrings
+	For $i = 0 To 360
+		$radial = _deg2rad($i)
+		$lat_rad = ASin(Sin($Lat1) * Cos($d_rad) + Cos($Lat1) * Sin($d_rad) * Cos($radial))
+		$dlon_rad = ATan(Sin($radial) * Sin($d_rad) * Cos($Lat1)) / (Cos($d_rad) - Sin($Lat1) * Sin($lat_rad))
+		$lon_rad = Mod(($long1 + $dlon_rad + $PI), 2 * $PI) - $PI ; origionally fmod(($long1 + $dlon_rad + $PI), 2 * $PI) - $PI
+		$file &= _rad2deg($lon_rad) & ',' & _rad2deg($lat_rad) & ',' & $viewdistance & @CRLF
+	Next
+	; create footer
+	$file &= '</coordinates>' & @CRLF _
+			 & '</LineString>' & @CRLF _
+			 & '</Placemark>' & @CRLF
+	Return ($file)
+EndFunc   ;==>_KmlDrawCircle
 
 Func _StartGoogleAutoKmlRefresh()
 	$kml = $GoogleEarth_OpenFile
@@ -8805,3 +8967,14 @@ Func _CleanupFiles($cDIR, $cTYPE)
 		Next
 	EndIf
 EndFunc   ;==>_CleanupFiles
+
+Func _deg2rad($Degree) ;convert degrees to radians
+	Local $PI = 3.14159265358979
+	Return ($Degree * ($PI / 180))
+EndFunc   ;==>_deg2rad
+
+Func _rad2deg($radian) ;convert radians to degrees
+	Local $PI = 3.14159265358979
+	Return ($radian * (180 / $PI))
+EndFunc   ;==>_rad2deg
+
