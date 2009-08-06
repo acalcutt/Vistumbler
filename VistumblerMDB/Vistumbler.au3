@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.8 Beta 1'
+$version = 'v9.8 Beta 2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/08/04'
+$last_modified = '2009/08/05'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -1714,19 +1714,19 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$query = "SELECT GpsID, Signal FROM HIST WHERE HistID = '" & $Found_HighGpsHistId & "'"
 					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$Found_GpsID = $HistMatchArray[1][1]
-					$Found_Sig = $HistMatchArray[1][2]
+					$Found_Sig = $HistMatchArray[1][2] - 0 ;For some reason a " - 0' was needed here or the signals would not compair properly
 					;Get Old Latititude, Logitude and Number of Satalites from Old GPS ID
 					$query = "SELECT Latitude, Longitude, NumOfSats FROM GPS WHERE GpsID = '" & $Found_GpsID & "'"
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$Found_Lat = $GpsMatchArray[1][1]
 					$Found_Lon = $GpsMatchArray[1][2]
 					$Found_NumSat = $GpsMatchArray[1][3]
-					If $New_NumSat > $Found_NumSat Then ;If the New Number of satalites is greater or eqaul to the old number of satalites
+					If $SIG > $Found_Sig Then ;If the new signal is greater or eqaul to the old signal
 						$DBHighGpsHistId = $HISTID
 						$DBLat = $New_Lat
 						$DBLon = $New_Lon
-					ElseIf $New_NumSat = $Found_NumSat Then ;If the number of satalites are equal, use the position with the higher signal
-						If $SIG > $Found_Sig Then
+					ElseIf $SIG = $Found_Sig Then ;If the number of satalites are equal, use the position with the higher signal
+						If $New_NumSat > $Found_NumSat Then
 							$DBHighGpsHistId = $HISTID
 							$DBLat = $New_Lat
 							$DBLon = $New_Lon
@@ -8977,4 +8977,3 @@ Func _rad2deg($radian) ;convert radians to degrees
 	Local $PI = 3.14159265358979
 	Return ($radian * (180 / $PI))
 EndFunc   ;==>_rad2deg
-
