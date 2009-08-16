@@ -2858,7 +2858,6 @@ Func _GetGPS(); Recieves data from gps device
 		EndIf
 		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
 		If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
-
 	WEnd
 	If $FoundData = 1 Then
 		$disconnected_time = -1
