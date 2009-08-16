@@ -1,6 +1,5 @@
 #RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
@@ -11,14 +10,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.1.1 Beta
+;AutoIt Version: v3.3.0.0
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.8 Beta 2'
+$version = 'v9.8 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/08/05'
+$last_modified = '2009/08/16'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -125,11 +124,11 @@ Dim $datestamp
 Dim $timestamp
 Dim $GraphLastTime
 
-Dim $GoogleEarth_ActiveFile = $TmpDir & 'autokml_active.kml'
-Dim $GoogleEarth_DeadFile = $TmpDir & 'autokml_dead.kml'
-Dim $GoogleEarth_GpsFile = $TmpDir & 'autokml_gps.kml'
-Dim $GoogleEarth_TrackFile = $TmpDir & 'autokml_track.kml'
-Dim $GoogleEarth_OpenFile = $TmpDir & 'autokml_networklink.kml'
+Dim $GoogleEarth_ActiveFile = _TempFile($TmpDir, "autokml_active_", ".kml")
+Dim $GoogleEarth_DeadFile = _TempFile($TmpDir, "autokml_dead_", ".kml")
+Dim $GoogleEarth_GpsFile = _TempFile($TmpDir, "autokml_gps_", ".kml")
+Dim $GoogleEarth_TrackFile = _TempFile($TmpDir, "autokml_track_", ".kml")
+Dim $GoogleEarth_OpenFile = _TempFile($TmpDir, "autokml_networklink_", ".kml")
 Dim $tempfile = _TempFile($TmpDir, "netsh-tmp_", ".tmp")
 Dim $tempfile_showint = _TempFile($TmpDir, "netsh-si-tmp_", ".tmp")
 Dim $wifidbgpstmp = _TempFile($TmpDir, "wifidb-gps-tmp_", ".tmp")
@@ -208,6 +207,7 @@ Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTi
 Dim $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadNs
+Dim $ExportKMLGUI, $GUI_TrackColor
 
 Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1
 Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
@@ -228,7 +228,7 @@ Dim $GUI_COPY, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy
 Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
 $NewVersionFile = @ScriptDir & '\temp\versions.ini'
-$VIEWSVN_ROOT = 'http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/VistumblerMDB/'
+$VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
 
 Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
 		 & '		<IconStyle>' & @CRLF _
@@ -389,6 +389,9 @@ Dim $MapWEP = IniRead($settings, 'KmlSettings', 'MapWEP', 1)
 Dim $MapSec = IniRead($settings, 'KmlSettings', 'MapSec', 1)
 Dim $UseLocalKmlImagesOnExport = IniRead($settings, 'KmlSettings', 'UseLocalKmlImagesOnExport', 0)
 Dim $SigMapTimeBeforeMarkedDead = IniRead($settings, 'KmlSettings', 'SigMapTimeBeforeMarkedDead', 2)
+Dim $TrackColor = IniRead($settings, 'KmlSettings', 'TrackColor', '7F0000FF')
+Dim $CirSigMapColor = IniRead($settings, 'KmlSettings', 'CirSigMapColor', 'FF0055FF')
+Dim $CirRangeMapColor = IniRead($settings, 'KmlSettings', 'CirRangeMapColor', 'FF00AA00')
 
 Dim $AutoKML = IniRead($settings, 'AutoKML', 'AutoKML', 0)
 Dim $AutoKML_Alt = IniRead($settings, 'AutoKML', 'AutoKML_Alt', '4000')
@@ -798,6 +801,7 @@ Dim $Text_LocateInWiFiDB = IniRead($DefaultLanguagePath, 'GuiText', 'LocateInWiF
 Dim $Text_AutoWiFiDbGpsLocate = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', 'Auto WiFiDB Gps Locate')
 Dim $Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', 'Auto Select Connected AP')
 Dim $Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
+Dim $Text_Color = IniRead($DefaultLanguagePath, 'GuiText', 'Color', 'Color')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -5231,6 +5235,7 @@ Func _WriteINI()
 	IniWrite($settings, 'AutoKML', 'KmlFlyTo', $KmlFlyTo)
 	IniWrite($settings, 'AutoKML', 'OpenKmlNetLink', $OpenKmlNetLink)
 	IniWrite($settings, 'AutoKML', 'GoogleEarth_EXE', $GoogleEarth_EXE)
+
 	IniWrite($settings, 'KmlSettings', 'MapPos', $MapPos)
 	IniWrite($settings, 'KmlSettings', 'MapSig', $MapSig)
 	IniWrite($settings, 'KmlSettings', 'MapSigType', $MapSigType)
@@ -5241,6 +5246,9 @@ Func _WriteINI()
 	IniWrite($settings, 'KmlSettings', 'MapSec', $MapSec)
 	IniWrite($settings, 'KmlSettings', 'UseLocalKmlImagesOnExport', $UseLocalKmlImagesOnExport)
 	IniWrite($settings, 'KmlSettings', 'SigMapTimeBeforeMarkedDead', $SigMapTimeBeforeMarkedDead)
+	IniWrite($settings, 'KmlSettings', 'TrackColor', $TrackColor)
+	IniWrite($settings, 'KmlSettings', 'CirSigMapColor', $CirSigMapColor)
+	IniWrite($settings, 'KmlSettings', 'CirRangeMapColor', $CirRangeMapColor)
 
 	IniWrite($settings, 'PhilsWifiTools', 'Graph_URL', $PhilsGraphURL)
 	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_URL', $PhilsWdbURL)
@@ -5447,6 +5455,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Unknown', $Text_Unknown)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Restart', $Text_Restart)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'RestartMsg', $Text_RestartMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Error', $Text_Error)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', $Text_NoSignalHistory)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoApSelected', $Text_NoApSelected)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNetcomm', $Text_UseNetcomm)
@@ -5614,6 +5623,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', $Text_AutoWiFiDbGpsLocate)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', $Text_AutoSelectConnectedAP)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Experimental', $Text_Experimental)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Color', $Text_Color)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5631,34 +5641,94 @@ EndFunc   ;==>_ExportFilteredKML
 Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveToKML()') ;#Debug Display
 	Opt("GUIOnEventMode", 0)
-	$ExportKMLGUI = GUICreate($Text_ExportToKML, 263, 225)
+	$ExportKMLGUI = GUICreate($Text_ExportToKML, 250, 285)
 	GUISetBkColor($BackgroundColor)
 	$GUI_ExportKML_PosMap = GUICtrlCreateCheckbox("Show GPS Position Map", 15, 15, 240, 15)
 	If $MapPos = 1 Then GUICtrlSetState($GUI_ExportKML_PosMap, $GUI_CHECKED)
 	$GUI_ExportKML_SigMap = GUICtrlCreateCheckbox("Show GPS Signal Map", 15, 35, 240, 15)
 	If $MapSig = 1 Then GUICtrlSetState($GUI_ExportKML_SigMap, $GUI_CHECKED)
-	$GUI_ExportKML_SigCir = GUICtrlCreateCheckbox("Use circle to show signal strength", 30, 55, 240, 15)
-	If $MapSigType = 1 Then GUICtrlSetState($GUI_ExportKML_SigCir, $GUI_CHECKED)
-	$GUI_ExportKML_RangeMap = GUICtrlCreateCheckbox("Show GPS Range Map", 15, 75, 240, 15)
-	If $MapRange = 1 Then GUICtrlSetState($GUI_ExportKML_RangeMap, $GUI_CHECKED)
-	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox("Show GPS Track", 15, 95, 240, 15)
-	If $ShowTrack = 1 Then GUICtrlSetState($GUI_ExportKML_DrawTrack, $GUI_CHECKED)
-	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 115, 240, 15)
+	$GUI_ExportKML_SigCir = GUICtrlCreateCheckbox("Use circle to show signal strength", 30, 55, 200, 15)
+	GUICtrlCreateLabel($Text_Color & ":", 30, 75, 45, 15)
+	$GUI_CirSigMapColor = GUICtrlCreateInput($CirSigMapColor, 75, 75, 75, 15)
+	$GUI_CirSigMapColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 72, 75, 20)
+	If $MapSigType = 1 Then
+		GUICtrlSetState($GUI_ExportKML_SigCir, $GUI_CHECKED)
+	Else
+		GUICtrlSetState($GUI_CirSigMapColor, $GUI_DISABLE)
+		GUICtrlSetState($GUI_CirSigMapColorBrowse, $GUI_DISABLE)
+	EndIf
+	$GUI_ExportKML_RangeMap = GUICtrlCreateCheckbox("Show GPS Range Map", 15, 95, 240, 15)
+	GUICtrlCreateLabel($Text_Color & ":", 30, 115, 45, 15)
+	$GUI_CirRangeMapColor = GUICtrlCreateInput($CirRangeMapColor, 75, 115, 75, 15)
+	$GUI_CirRangeMapColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 112, 75, 20)
+	If $MapRange = 1 Then
+		GUICtrlSetState($GUI_ExportKML_RangeMap, $GUI_CHECKED)
+	Else
+		GUICtrlSetState($GUI_CirRangeMapColor, $GUI_DISABLE)
+		GUICtrlSetState($GUI_CirRangeMapColorBrowse, $GUI_DISABLE)
+	EndIf
+	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox("Show GPS Track", 15, 135, 240, 15)
+	GUICtrlCreateLabel($Text_Color & ":", 30, 155, 45, 15)
+	$GUI_TrackColor = GUICtrlCreateInput($TrackColor, 75, 155, 75, 15)
+	$GUI_TrackColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 152, 75, 20)
+	If $ShowTrack = 1 Then
+		GUICtrlSetState($GUI_ExportKML_DrawTrack, $GUI_CHECKED)
+	Else
+		GUICtrlSetState($GUI_TrackColor, $GUI_DISABLE)
+		GUICtrlSetState($GUI_TrackColorBrowse, $GUI_DISABLE)
+	EndIf
+	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 175, 240, 15)
 	If $MapOpen = 1 Then GUICtrlSetState($GUI_ExportKML_MapOpen, $GUI_CHECKED)
-	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 135, 240, 15)
+	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 195, 240, 15)
 	If $MapWEP = 1 Then GUICtrlSetState($GUI_ExportKML_MapWEP, $GUI_CHECKED)
-	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 155, 240, 15)
+	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 215, 240, 15)
 	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportKML_MapSec, $GUI_CHECKED)
 
-	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 175, 240, 15)
+	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 235, 240, 15)
 	If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
-	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 195, 81, 25, 0)
-	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 195, 81, 25, 0)
+	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 255, 81, 25, 0)
+	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 255, 81, 25, 0)
 	GUISetState(@SW_SHOW)
 
 	While 1
 		$nMsg = GUIGetMsg()
 		Switch $nMsg
+			Case $GUI_ExportKML_SigCir
+				If GUICtrlRead($GUI_ExportKML_SigCir) = 1 Then
+					GUICtrlSetState($GUI_CirSigMapColor, $GUI_ENABLE)
+					GUICtrlSetState($GUI_CirSigMapColorBrowse, $GUI_ENABLE)
+				Else
+					GUICtrlSetState($GUI_CirSigMapColor, $GUI_DISABLE)
+					GUICtrlSetState($GUI_CirSigMapColorBrowse, $GUI_DISABLE)
+				EndIf
+			Case $GUI_ExportKML_RangeMap
+				If GUICtrlRead($GUI_ExportKML_RangeMap) = 1 Then
+					GUICtrlSetState($GUI_CirRangeMapColor, $GUI_ENABLE)
+					GUICtrlSetState($GUI_CirRangeMapColorBrowse, $GUI_ENABLE)
+				Else
+					GUICtrlSetState($GUI_CirRangeMapColor, $GUI_DISABLE)
+					GUICtrlSetState($GUI_CirRangeMapColorBrowse, $GUI_DISABLE)
+				EndIf
+			Case $GUI_ExportKML_DrawTrack
+				If GUICtrlRead($GUI_ExportKML_DrawTrack) = 1 Then
+					GUICtrlSetState($GUI_TrackColor, $GUI_ENABLE)
+					GUICtrlSetState($GUI_TrackColorBrowse, $GUI_ENABLE)
+				Else
+					GUICtrlSetState($GUI_TrackColor, $GUI_DISABLE)
+					GUICtrlSetState($GUI_TrackColorBrowse, $GUI_DISABLE)
+				EndIf
+			Case $GUI_CirSigMapColorBrowse
+				$transparency = StringTrimRight(GUICtrlRead($GUI_CirSigMapColor), 6)
+				$color = _ChooseColor(1, '0x' & StringTrimLeft(GUICtrlRead($GUI_CirSigMapColor), 2), 1, $ExportKMLGUI)
+				If $color <> -1 Then GUICtrlSetData($GUI_CirSigMapColor, $transparency & StringReplace($color, "0x", ""))
+			Case $GUI_CirRangeMapColorBrowse
+				$transparency = StringTrimRight(GUICtrlRead($GUI_CirRangeMapColor), 6)
+				$color = _ChooseColor(1, '0x' & StringTrimLeft(GUICtrlRead($GUI_CirRangeMapColor), 2), 1, $ExportKMLGUI)
+				If $color <> -1 Then GUICtrlSetData($GUI_CirRangeMapColor, $transparency & StringReplace($color, "0x", ""))
+			Case $GUI_TrackColorBrowse
+				$transparency = StringTrimRight(GUICtrlRead($GUI_TrackColor), 6)
+				$color = _ChooseColor(1, '0x' & StringTrimLeft(GUICtrlRead($GUI_TrackColor), 2), 1, $ExportKMLGUI)
+				If $color <> -1 Then GUICtrlSetData($GUI_TrackColor, $transparency & StringReplace($color, "0x", ""))
 			Case $GUI_EVENT_CLOSE
 				GUIDelete($ExportKMLGUI)
 				ExitLoop
@@ -5711,6 +5781,9 @@ Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 				Else
 					$UseLocalKmlImagesOnExport = 0
 				EndIf
+				$TrackColor = GUICtrlRead($GUI_TrackColor)
+				$CirSigMapColor = GUICtrlRead($GUI_CirSigMapColor)
+				$CirRangeMapColor = GUICtrlRead($GUI_CirRangeMapColor)
 				GUIDelete($ExportKMLGUI)
 				DirCreate($SaveDirKml)
 				$kml = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
@@ -5791,7 +5864,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 	If $GpsTrack = 1 Then ; Add GPS Track Line Style
 		$file_header &= '	<Style id="Location">' & @CRLF _
 				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>7f0000ff</color>' & @CRLF _
+				 & '			<color>' & $TrackColor & '</color>' & @CRLF _
 				 & '			<width>4</width>' & @CRLF _
 				 & '		</LineStyle>' & @CRLF _
 				 & '	</Style>' & @CRLF
@@ -5799,7 +5872,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 	If $SigMapType = 1 Then
 		$file_header &= '	<Style id="SigCircleColor">' & @CRLF _
 				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>ff0055ff</color>' & @CRLF _
+				 & '			<color>' & $CirSigMapColor & '</color>' & @CRLF _
 				 & '		</LineStyle>' & @CRLF _
 				 & '		<PolyStyle>' & @CRLF _
 				 & '			<color>ff00ff00</color>' & @CRLF _
@@ -5810,7 +5883,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 	If $GpsRangeMap = 1 Then
 		$file_header &= '	<Style id="RangeCircleColor">' & @CRLF _
 				 & '		<LineStyle>' & @CRLF _
-				 & '			<color>ff00aa00</color>' & @CRLF _
+				 & '			<color>' & $CirRangeMapColor & '</color>' & @CRLF _
 				 & '		</LineStyle>' & @CRLF _
 				 & '		<PolyStyle>' & @CRLF _
 				 & '			<color>ff00ff00</color>' & @CRLF _
@@ -7602,6 +7675,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AutoWiFiDbGpsLocate = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', 'Auto WiFiDB Gps Locate')
 		$Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', 'Auto Select Connected AP')
 		$Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
+		$Text_Color = IniRead($DefaultLanguagePath, 'GuiText', 'Color', 'Color')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
