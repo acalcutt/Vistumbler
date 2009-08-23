@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.8 Beta 3'
+$version = 'v9.8 Beta 4'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/08/16'
+$last_modified = '2009/08/23'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -31,6 +31,7 @@ $last_modified = '2009/08/16'
 #include <GuiButton.au3>
 #include <Misc.au3>
 #include <String.au3>
+#include <INet.au3>
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
@@ -3952,8 +3953,6 @@ Func _LocateGpsInWifidb()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs
 	Local $return = 0
-	Local $maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
-	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
 	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundBssidMatch = UBound($BssidMatchArray) - 1
@@ -3963,8 +3962,9 @@ Func _LocateGpsInWifidb()
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
 		$url_root = $PhilsWdbURL & 'opt/locate.php?'
-		$url_data = $url_root & "out=raw&ActiveBSSIDs=" & $ActiveMacs
-		$webpagesource = _InetGetSourceWithTimeout($url_data, $maxtime, $wifidbgpstmp)
+		$url_data = $url_root & "ActiveBSSIDs=" & $ActiveMacs
+		$webpagesource = _INetGetSource($url_data)
+		ConsoleWrite($webpagesource & @CRLF)
 		If StringInStr($webpagesource, '|') Then
 			$wifigpsdata = StringSplit($webpagesource, "|")
 			If $wifigpsdata[1] <> '' And $wifigpsdata[1] <> '' Then
@@ -3978,30 +3978,6 @@ Func _LocateGpsInWifidb()
 	_ClearWifiGpsDetails()
 	Return ($return)
 EndFunc   ;==>_LocateGpsInWifidb
-
-Func _InetGetSourceWithTimeout($iurl, $itimeout, $itmpfile)
-	$wgp = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\' & 'GetWiFiDbGPS.exe') & ' /u=' & _StringEncrypt(1, $iurl, '0', 1) & ' /f="' & $itmpfile & '"', '', @SW_HIDE)
-	Local $itimediff = TimerInit()
-	Local $ipsa
-	Local $iout
-	While 1
-		If FileExists($itmpfile) Then
-			If _FileReadToArray($itmpfile, $ipsa) Then
-				For $w = 1 To $ipsa[0]
-					If $w <> 1 Then $iout &= @CRLF
-					$iout &= $ipsa[$w]
-				Next
-			EndIf
-			FileDelete($itmpfile)
-			ExitLoop
-		EndIf
-		If TimerDiff($itimediff) >= $itimeout Then
-			ProcessClose('GetWiFiDbGPS.exe')
-			ExitLoop
-		EndIf
-	WEnd
-	Return ($iout)
-EndFunc   ;==>_InetGetSourceWithTimeout
 
 Func _ClearWifiGpsDetails();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearWifiGpsDetails()') ;#Debug Display
