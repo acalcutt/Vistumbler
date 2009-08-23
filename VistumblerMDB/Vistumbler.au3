@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.8 Beta 4'
+$version = 'v9.8 Beta 5'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/08/23'
 ;Includes------------------------------------------------
@@ -218,7 +218,7 @@ Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
-Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
+Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal
@@ -339,6 +339,7 @@ Dim $RefreshLoopTime = IniRead($settings, 'Vistumbler', 'Sleeptime', 1000)
 Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
 Dim $RefreshNetworks = IniRead($settings, 'Vistumbler', 'AutoRefreshNetworks', 1)
 Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'AutoRefreshTime', 1000)
+Dim $WiFiDbLocateRefreshTime = IniRead($settings, 'Vistumbler', 'WiFiDbLocateRefreshTime', 5000)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 0)
 Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
@@ -803,6 +804,7 @@ Dim $Text_AutoWiFiDbGpsLocate = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWi
 Dim $Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', 'Auto Select Connected AP')
 Dim $Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
 Dim $Text_Color = IniRead($DefaultLanguagePath, 'GuiText', 'Color', 'Color')
+Dim $Text_PhilsWifiTools = IniRead($DefaultLanguagePath, "GuiText", "PhilsWifiTools", "Phil's WiFi Tools")
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1053,7 +1055,7 @@ $SetSearchWords = GUICtrlCreateMenuItem($Text_SetSearchWords, $SettingsMenu)
 $SetMacLabel = GUICtrlCreateMenuItem($Text_SetMacLabel, $SettingsMenu)
 $SetMacManu = GUICtrlCreateMenuItem($Text_SetMacManu, $SettingsMenu)
 $SetColumnWidths = GUICtrlCreateMenuItem($Text_SetColumnWidths, $SettingsMenu)
-$SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort & ' / ' & $Text_RefreshNetworks, $SettingsMenu)
+$SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort & ' / ' & $Text_RefreshNetworks & ' / ' & $Text_AutoWiFiDbGpsLocate, $SettingsMenu)
 $SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI, $SettingsMenu)
 $SetFilters = GUICtrlCreateMenuItem($Text_SetFilters, $SettingsMenu)
 
@@ -1327,6 +1329,7 @@ $kml_gps_timer = TimerInit()
 $kml_track_timer = TimerInit()
 $ReleaseMemory_Timer = TimerInit()
 $Speech_Timer = TimerInit()
+$WiFiDbLocate_Timer = TimerInit()
 While 1
 	;Set TimeStamps (UTC Values)
 	$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ') ;UTC Time
@@ -1335,7 +1338,7 @@ While 1
 	$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC ;Local Time
 
 	;Get GPS position from WiFiDB
-	If $UseWiFiDbGpsLocate = 1 And $UpdatedWiFiDbGPS <> 1 Then
+	If $UseWiFiDbGpsLocate = 1 And $UpdatedWiFiDbGPS <> 1 And $Scan = 1 And TimerDiff($WiFiDbLocate_Timer) >= $WiFiDbLocateRefreshTime Then
 		$GetWifidbGpsSuccess = _LocateGpsInWifidb()
 		If $GetWifidbGpsSuccess = 1 Then
 			If $LatitudeWifidb <> 'N 0.0000' And $LongitudeWifidb <> 'E 0.0000' Then
@@ -1344,6 +1347,7 @@ While 1
 				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
 				GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
 			EndIf
+			$WiFiDbLocate_Timer = TimerInit()
 			$UpdatedWiFiDbGPS = 1
 		EndIf
 	EndIf
@@ -5152,6 +5156,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "LanguageFile", $DefaultLanguageFile)
 	IniWrite($settings, "Vistumbler", "AutoRefreshNetworks", $RefreshNetworks)
 	IniWrite($settings, "Vistumbler", "AutoRefreshTime", $RefreshTime)
+	IniWrite($settings, "Vistumbler", "WiFiDbLocateRefreshTime", $WiFiDbLocateRefreshTime)
 	IniWrite($settings, 'Vistumbler', 'Debug', $Debug)
 	IniWrite($settings, 'Vistumbler', 'GraphDeadTime', $GraphDeadTime)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
@@ -5599,6 +5604,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', $Text_AutoSelectConnectedAP)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Experimental', $Text_Experimental)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Color', $Text_Color)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'PhilsWifiTools', $Text_PhilsWifiTools)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -6656,9 +6662,9 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 297, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
-		$GroupMiscPHP = GUICtrlCreateGroup($Text_PHPgraphing, 16, 328, 649, 121)
+		$GroupMiscPHP = GUICtrlCreateGroup($Text_PhilsWifiTools, 16, 328, 649, 121)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_PhilsPHPgraph, 31, 349, 620, 15)
+		GUICtrlCreateLabel($Text_PHPgraphing, 31, 349, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_PhilsGraphURL = GUICtrlCreateInput($PhilsGraphURL, 31, 369, 620, 21)
 		GUICtrlCreateLabel($Text_PhilsWDB, 32, 396, 620, 15)
@@ -7019,13 +7025,23 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_AutoSortEvery & '(s)', 30, 290, 625, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_SortTime = GUICtrlCreateInput($SortTime, 30, 305, 115, 20)
-		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 340, 650, 125);Auto Refresh Group
-		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 360, 625, 15)
+		;Auto Refresh Group
+		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 340, 320, 125)
+		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 360, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
 		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 30, 380, 615, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 395, 115, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		;Auto Refresh Group
+		GUICtrlCreateGroup($Text_AutoWiFiDbGpsLocate, 346, 340, 320, 125)
+		$GUI_WifidbLocate = GUICtrlCreateCheckbox($Text_AutoWiFiDbGpsLocate, 360, 360, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState($GUI_WifidbLocate, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 360, 380, 615, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_WiFiDbLocateRefreshTime = GUICtrlCreateInput(($WiFiDbLocateRefreshTime / 1000), 360, 395, 115, 20)
 		GUICtrlSetColor(-1, $TextColor)
 
 		;AutoKML Tab
@@ -7651,6 +7667,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', 'Auto Select Connected AP')
 		$Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
 		$Text_Color = IniRead($DefaultLanguagePath, 'GuiText', 'Color', 'Color')
+		$Text_PhilsWifiTools = IniRead($DefaultLanguagePath, "GuiText", "PhilsWifiTools", "Phil's WiFi Tools")
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -7783,6 +7800,10 @@ Func _ApplySettingsGUI();Applys settings
 		If GUICtrlRead($GUI_RefreshNetworks) = 4 And $RefreshNetworks = 1 Then _AutoRefreshToggle()
 		If GUICtrlRead($GUI_RefreshNetworks) = 1 And $RefreshNetworks = 0 Then _AutoRefreshToggle()
 		$RefreshTime = (GUICtrlRead($GUI_RefreshTime) * 1000)
+		;Auto WiFiDB
+		If GUICtrlRead($GUI_WifidbLocate) = 4 And $UseWiFiDbGpsLocate = 1 Then _WifiDbLocateToggle()
+		If GUICtrlRead($GUI_WifidbLocate) = 1 And $UseWiFiDbGpsLocate = 0 Then _WifiDbLocateToggle()
+		$WiFiDbLocateRefreshTime = (GUICtrlRead($GUI_WiFiDbLocateRefreshTime) * 1000)
 	EndIf
 	If $Apply_AutoKML = 1 Then
 		If GUICtrlRead($AutoSaveKML) = 4 And $AutoKML = 1 Then _AutoKmlToggle()
