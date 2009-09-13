@@ -499,7 +499,7 @@ $timezone_numbers = array(
 				<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> UTC</td><td>
 				<?php
 				$str_time = strtotime($file_array['size']);
-				$alter_by = (($TZone*60)*60);
+				$alter_by = (($TZone*60)*60)-$DST;
 				$altered = $str_time+$alter_by;
 				$next_run = date("Y-m-d H:i:s", $altered);
 				$Zone = " [".$TZone."] ";
