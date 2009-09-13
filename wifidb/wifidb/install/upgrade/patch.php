@@ -32,6 +32,7 @@ if(isset($_POST['daemon']))
 	$toolsdir	= addslashes(strip_tags($_POST['toolsdir']));
 	$httpduser	= addslashes(strip_tags($_POST['httpduser']));
 	$httpdgrp	= addslashes(strip_tags($_POST['httpdgrp']));
+	$
 }else
 {
 	$daemon 	= FALSE;
@@ -456,7 +457,8 @@ $AD_CF_DG_Re = fwrite($fileappend, "#-------------Console Viewer Settings-------
 $"."console_refresh = 15;
 $"."console_scroll  = 1;
 $"."console_last5   = 1;
-$"."console_lines   = 10;\r\n\r\n");
+$"."console_lines   = 10;
+$"."console_log		= '/var/log/wifidb';\r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default Console values</td></tr>";}

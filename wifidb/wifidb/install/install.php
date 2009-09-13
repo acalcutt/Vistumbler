@@ -448,7 +448,8 @@ $AD_CF_DG_Re = fwrite($fileappend, "#-------------Console Viewer Settings-------
 $"."console_refresh = 15;
 $"."console_scroll  = 1;
 $"."console_last5   = 1;
-$"."console_lines   = 10;\r\n\r\n");
+$"."console_lines   = 10;
+$"."console_log		= '/var/log/wifidb';\r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default Console values</td></tr>";}
