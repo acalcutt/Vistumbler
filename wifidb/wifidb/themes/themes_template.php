@@ -1,3 +1,4 @@
+
 <?php
 include('../lib/config.inc.php');
 $theme_page = $GLOBALS['theme'];
