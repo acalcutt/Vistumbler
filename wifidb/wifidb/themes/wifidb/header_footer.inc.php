@@ -6,7 +6,7 @@
 function pageheader($title, $output="detailed")
 {
 	session_start();
-	if(!isset($_SESSION['token']) or !isset($_GET['token']))
+	if(!$_SESSION['token'] or !$_GET['token'])
 	{
 		$token = md5(uniqid(rand(), true));
 		$_SESSION['token'] = $token;
@@ -15,16 +15,18 @@ function pageheader($title, $output="detailed")
 		$token = $_SESSION['token'];
 	}
 	
-	$root = $GLOBALS['root'];
+	$root	= 	$GLOBALS['root'];
+	$conn	=	$GLOBALS['conn'];
+	$db		=	$GLOBALS['db'];
+	$head	= 	$GLOBALS['headers'];
 	
-	$conn	= $GLOBALS['conn'];
-	$db		= $GLOBALS['db'];
-	$head = $GLOBALS['headers'];
-	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>".$head."\r\n</head>\r\n";
+	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>\r\n".$head."\r\n</head>\r\n";
+	check_install_folder();
+	if(!$GLOBALS['default_theme']){echo '<p align="center"><font color="red" size="6">You need to upgrade to Build 4!</font><font color="red" size="3"><br> Please go <a href="http://'.$_SERVER["SERVER_NAME"].'/wifidb/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</font></font></p>';}
 	$sql = "SELECT `id` FROM `$db`.`files`";
 	$result1 = mysql_query($sql, $conn);
-	check_install_folder();	
 	if(!$result1){echo "<p align=\"center\"><font color=\"red\">You need to <a class=\"upgrade\" href=\"install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB Build 3.</p></font>";}
+
 	if($output == "detailed")
 	{
 		# START YOUR HTML EDITS HERE #
@@ -55,15 +57,17 @@ function pageheader($title, $output="detailed")
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a><br>
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a><br>
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated KML</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/console/?token=<?php echo $token;?>">Daemon Console</a><br>
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a><br>
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a><br>
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a><br>
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a><br>
 				<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a><br>
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a><br>
-				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a><br>
+				<a class="links" href="http://www.randomintervals.com/wifidb/details.php">Download WiFiDB</a><br>
 			</td>
-			
 			<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
 			<p align="center">
 			<br>
@@ -98,6 +102,11 @@ function footer($filename = '', $output = "detailed")
 		<?php
 		if (file_exists($filename)) {?>
 			<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
+		</td>
+		</tr>
+		<tr>
+		<td></td>
+		<td align="center">
 		<?php
 		}
 		echo $tracker;
@@ -105,10 +114,12 @@ function footer($filename = '', $output = "detailed")
 		?>
 		</td>
 		</tr>
+
 		</table>
 		</body>
 		</html>
 		<?php
 	}
 }
+
 ?>

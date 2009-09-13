@@ -98,7 +98,7 @@ switch($func)
 						}
 					}else
 					{
-						$database->import_vs1($uploadfile, $user, $notes, $title );
+						$database->import_vs1($uploadfile, $user, $notes, $title, $verbose = 1, $out = "CLI" );
 					}
 				}else
 				{

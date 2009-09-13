@@ -13,13 +13,13 @@ body {
 	left: 120px;
 	top: 60px;
 }
+
 #leftcolumn{
 float:left;
 width:90%;
 border: 3px solid black;
 padding: 5px;
 padding-left: 8px;
-
 }
 
 #rightcolumn{
@@ -33,6 +33,10 @@ padding-bottom: 8px;
 
 * html #rightcolumn{ /*IE only style*/
 height: 400px;
+}
+
+.daemon_kml {
+	text-align: center;
 }
 
 .active-box-resize {
@@ -89,7 +93,6 @@ a.upgrade {
 	font-weight: bold; 
 	color: #0F0;
 }
-
 
 
 table.importconvert

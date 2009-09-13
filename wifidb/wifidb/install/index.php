@@ -26,17 +26,16 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title
 <td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
 <!--BODY-->
 <h2>WiFiDB Install / Upgrade / Or Patch</h2>
-  <h4>Please Read <a target="_blank" href="notes.html">these notes</a> before doing anything.</h4>
+  <h4>Please Read <a class="links" target="_blank" href="notes.html">these notes</a> before doing anything.</h4>
 <?php
-$gd = gd_info(); 
-if(is_null($gd["GD Version"]))
-{
-	echo "<h4><font color=#ff0000>You Do Not Have GD or GD2 installed, please install this or you will not beable to use the graphing feature!</font></h4>";
-}
-else
-{ 
-	echo "<h4><font color=#00ff00>GD Version: ".$gd['GD Version'].", is installed</font></h4>";
-}
+
+if(function_exists('gd_info'))
+{$gd = gd_info();	echo '<table><tr class="style4"><td><b><font color=#00ff00>GD Version: '.$gd['GD Version'].', is installed</font></b></td></tr></table>';}
+else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have GD or GD2 installed, please install this or you will not beable to use the graphing feature!</font></b></td></tr></table>';}
+
+if(class_exists(ZipArchive))
+{echo '<table><tr class="style4"><td><b><font color=#00ff00>ZipArchive class is installed</font></b></td></tr></table>';}
+else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have the ZipArchive class installed, please install this or you will not beable to use the Export Feature or the Daemon Generated KML.</font></b></td></tr></table>';}
 ?>
 <table border="0"cellspacing="0" cellpadding="3">
 
@@ -52,29 +51,25 @@ else
     <td>....</td><td><a class="links" href="patch_blank_gps/">Patch Blank GPS</a> and Alter Dates in GPS tables from MM/DD/YYYY to YYYY/MM/DD</td></tr>
 </TABLE>
 <?php
-$timezn = 'Etc/GMT+5';
-date_default_timezone_set($timezn);
-
-
-	$filename = $_SERVER['SCRIPT_FILENAME'];
-	$file_ex = explode("/", $filename);
-	$count = count($file_ex);
-	$file = $file_ex[($count)-1];
-	?>
-	</p>
-	</td>
-	</tr>
-	<tr>
-	<td bgcolor="#315573" height="23"><a href="../img/moon.png"><img border="0" src="../img/moon_tn.png"></a></td>
-	<td bgcolor="#315573" width="0" align="center">
-	<?php
-	if (file_exists($filename)) {?>
-		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
-	<?php
-	}
-	?>
-	</td
-	</tr>
-	</table>
-	</body>
-	</html>
+$filename = $_SERVER['SCRIPT_FILENAME'];
+$file_ex = explode("/", $filename);
+$count = count($file_ex);
+$file = $file_ex[($count)-1];
+?>
+</p>
+</td>
+</tr>
+<tr>
+<td bgcolor="#315573" height="23"><a href="../img/moon.png"><img border="0" src="../img/moon_tn.png"></a></td>
+<td bgcolor="#315573" width="0" align="center">
+<?php
+if (file_exists($filename)) {?>
+	<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
+<?php
+}
+?>
+</td
+</tr>
+</table>
+</body>
+</html>

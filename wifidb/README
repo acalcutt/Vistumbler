@@ -33,7 +33,7 @@ RanInt -> WiFiDB -> Readme
 		Wireless Access points found with the Vistumber Wireless scanning software  
 		
   Installation:
-		NOTE: If you are using Linux, you must chown the wifidb folder, to the user 
+		NOTE: If you are using Linux, you must chown & chgrp the wifidb folder, to the user 
 		that you have apache or what ever HTTP server you are using (This is so that 
 		the installer can create the config file, and to generate the graph images 
 		and export KML files)

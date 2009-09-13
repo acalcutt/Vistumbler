@@ -21,13 +21,20 @@ GNU Header:
 
 CONTENTS:
 
-1 -> WiFiDB Daemon (daemon folder in the tools dir)
-2 -> Convert Txt to VS1 (Converter.exe | converter.php).
-3 -> Manufactures Generation script (manufmac.exe | manufmac.php).
- ***DEFUNCT*** 4 -> Wireless Database Batch Import script [command line only]. ***DEFUNCT*** replaced by #1, #5, and #6
-5 -> Filenames recovery script [filenames_create.php].
-6 -> Deamon Prep Script [daemon_prep.php].
-7 -> Clean up duplicate files in the upload folder [cleanup.php].
+1  -> WiFiDB Daemon (daemon folder in the tools dir)
+2  -> Convert Txt to VS1 (Converter.exe[win only] | converter.php).
+3  -> Manufactures Generation script (manufmac.exe[win only] | manufmac.php).
+
+***DEFUNCT***
+4 -> Wireless Database Batch Import script [command line only]. 
+***DEFUNCT*** replaced by #1, #5, and #6
+
+5  -> Filenames recovery script [filenames_create.php].
+6  -> Deamon Prep Script [daemon_prep.php].
+7  -> Clean up duplicate files in the upload folder [cleanup.php].
+8  -> Clean up erronious files that where imported [rbr.php].
+9  -> Repair Channel number in Pointers table [chan_poitners.php].
+10 -> Repair German Language sectype in pointers table and storage tables. [german_repair.php]. 
 
 
 
@@ -120,17 +127,16 @@ the addition of colors for linux to the output, windows does not support color.
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 
-==============================
 1 -> The daemon was being killed off by a stray die() in the failsafe section
 	 for text based files that are no longer supported on import.
-
+ ==============================
+ 
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 1.6.1
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 
-==============================
 1 -> Replaced the insert_file() and check_file() functions with their code, 
      was causing random errors with not inserting the file into its table 
 	 after an import was finished.
@@ -138,7 +144,19 @@ the addition of colors for linux to the output, windows does not support color.
      in the files table, this was stupid because the file name may not be 
 	 even close to the other file and have the same contents. Changed it 
 	 so that it looks for the hash of the file.
+==============================
 
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.7.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+
+1 -> Fixed a bug where the daemon would have to wait till after a sleep
+	 in order to find a file that was inserted into the files_tmp table
+	 while it was in the middle of an import.
+2 -> Added in Daemon Generated KML exports.
+==============================
 
 --------------------------------------------------------------
 --------------------------------------------------------------
@@ -242,6 +260,7 @@ VERSION HISTORY
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 1-> Replaced old GPS conversion function with newer better code.
+==============================
 
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
@@ -388,6 +407,7 @@ VERSION HISTORY
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
 1-> Skipped, was an experimental version
+==============================
 
 ~~~~~~~~~~~~
 ~~~~~~~~~~~~
@@ -527,10 +547,9 @@ Initial release.
 ==============================
 
 
-
 --------------------------------------------------------------
 --------------------------------------------------------------
-8		Clean up erronious files that where imported [rbr.php / rbrconfig.php]
+8		Clean up erronious files that where imported [rbr.php]
 --------------------------------------------------------------
 --------------------------------------------------------------
 
@@ -539,6 +558,66 @@ Initial release.
   
   Useage:
   bash:/# php rbr.php
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release.
+==============================
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+9		Repair Channel number in Pointers table [chan_poitners.php]
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+  Some people may have experienced an issue where the channel field in the 
+  pointers table is only accepting 2 characters instead of 3 which it is 
+  supposed to support for 82.11a and n networks that have channels in the 
+  100's.
+  
+  Useage:
+  bash:/# php chan_poitners.php
+
+----------------------------------------
+----------------------------------------
+VERSION HISTORY
+----------------------------------------
+----------------------------------------
+
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+1.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+Initial release.
+==============================
+
+--------------------------------------------------------------
+--------------------------------------------------------------
+10		Repair German Language sectype in pointers table and storage tables. [german_repair.php]
+--------------------------------------------------------------
+--------------------------------------------------------------
+
+  In early versions of vistumbler, German language Access points, that
+  are Open/None {Offen/Keine} where set to sectype 2 instead of the proper
+  sectype of 1. this script goes through the entire database looking for 
+  any german language AP (APs that have Offen/Keine in them.) Checks to see
+  if they have the proper sectype for their auth and encry settings. if so, 
+  it leaves it alone, if not, it alters the pointers table to reflect the 
+  correct setting, and renames the APs storage table, so ou will beable to 
+  see it after the change.
+  
+  Useage:
+  bash:/# php german_repair.php
 
 ----------------------------------------
 ----------------------------------------

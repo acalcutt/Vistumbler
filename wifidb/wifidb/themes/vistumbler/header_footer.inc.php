@@ -6,7 +6,7 @@
 function pageheader($title, $output="detailed")
 {
 	session_start();
-	if(!isset($_SESSION['token']) or !isset($_GET['token']))
+	if(!$_SESSION['token'] or !$_GET['token'])
 	{
 		$token = md5(uniqid(rand(), true));
 		$_SESSION['token'] = $token;
@@ -14,17 +14,19 @@ function pageheader($title, $output="detailed")
 	{
 		$token = $_SESSION['token'];
 	}
-
-	$root = $GLOBALS['root'];
 	
-	$conn	= $GLOBALS['conn'];
-	$db		= $GLOBALS['db'];
-	$head = $GLOBALS['headers'];
-	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>".$head."\r\n</head>\r\n";
+	$root	= $GLOBALS['root'];
+	$conn	=	$GLOBALS['conn'];
+	$db		=	$GLOBALS['db'];
+	$head	= 	$GLOBALS['headers'];
+	
+	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>\r\n".$head."\r\n</head>\r\n";
+	check_install_folder();
+	if(!$GLOBALS['default_theme']){echo '<p align="center"><font color="red" size="6">You need to upgrade to Build 4!</font><font color="red" size="3"><br> Please go <a href="http://'.$_SERVER["SERVER_NAME"].'/wifidb/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</font></font></p>';}
 	$sql = "SELECT `id` FROM `$db`.`files`";
 	$result1 = mysql_query($sql, $conn);
-	check_install_folder();
 	if(!$result1){echo "<p align=\"center\"><font color=\"red\">You need to <a class=\"upgrade\" href=\"install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB Build 3.</p></font>";}
+
 	if($output == "detailed")
 	{
 		# START YOUR HTML EDITS HERE #
@@ -54,7 +56,7 @@ function pageheader($title, $output="detailed")
 									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
 								</td>
 								<td class="cell_top_mid" style="height: 20px">
-									<img alt="" src="/wifidb/themes/vistumbler/img/1x1_transparent.gif" width="185" height="1" />
+									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="185" height="1" />
 								</td>
 								<td style="width: 10px" class="cell_top_right">
 									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
@@ -72,6 +74,12 @@ function pageheader($title, $output="detailed")
 										<a href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a></strong></div>
 									<div class="inside_text_bold"><strong>
 										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated kml</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/console/?token=<?php echo $token;?>">Daemon Console</a></strong></div>
 									<div class="inside_text_bold"><strong>
 										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></strong></div>
 									<div class="inside_text_bold"><strong>
@@ -112,7 +120,7 @@ function pageheader($title, $output="detailed")
 							<tr>
 								<td class="cell_side_left">&nbsp;</td>
 								<td class="cell_color_centered" align="center">
-								<p align="center">
+								<div align="center">
 		<?php
 	}
 }
@@ -125,7 +133,7 @@ function pageheader($title, $output="detailed")
 function footer($filename = '')
 {
 	?>
-							</p>
+							</div>
 							<br>
 							</td>
 							<td class="cell_side_right">&nbsp;</td>

@@ -69,7 +69,11 @@ if (isset($_GET['token']))
 			}
 		}else
 		{
-			?><tr><td align="center" colspan="6"><b>There are no Access Points imported as of yet, go grab some with Vistumbler and import them.<br />Come on... you know you want too.</b></td></tr><?php
+			?><tr><td align="center" colspan="6"><b>There are no Access Points imported as of yet, go grab some with Vistumbler and import them.<br />
+			Come on... you know you want too.</b></td></tr></table><?php
+			$filename = $_SERVER['SCRIPT_FILENAME'];
+			footer($filename);
+			die();
 		}
 		?>
 		</table>

@@ -16,27 +16,45 @@ switch($func)
 {
 	case "index":
 		?>
-		<form action="export.php?func=exp_user_list" method="post" enctype="multipart/form-data">
+		<form action="export.php?func=exp_user_list&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3" align="center">
 		<tr class="style4"><th colspan="2">Export a Users Import List to KML</th></tr>
 		<tr><td>User Import List: </td><td>
 			<select name="row">
 			<?php
+			$rows = 0;
 			mysql_select_db($db,$conn);
 			$sql = "SELECT `id`,`title`, `username`, `aps`, `date` FROM `users`";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
-			while($user_array = mysql_fetch_array($re))
+			$rowsl = mysql_num_rows($re);
+			if($rowsl < 1)
 			{
-				echo '<option value="'.$user_array["id"].'">User: '.$user_array["username"].' - Title: '.$user_array["title"]." - # APs: ".$user_array["aps"]." - # Date: ".$user_array["date"]."\r\n";
+				echo '<option selected value""> No Imports to export.';
+			}else
+			{
+				while($user_array = mysql_fetch_array($re))
+				{
+					echo '<option value="'.$user_array["id"].'">User: '.$user_array["username"].' - Title: '.$user_array["title"]." - # APs: ".$user_array["aps"]." - # Date: ".$user_array["date"]."\r\n";
+					$rows++;
+				}
 			}
 			?>
 			</select>
 			</td></tr>
-			<tr><td colspan="2" align="right"><input type="submit" value="Export This Users List"></td>
+			<tr><td colspan="2" align="right">
+			<?php
+			if($rowsl)
+			{
+			?>
+				<input type="submit" value="Export This Users List">
+			<?php
+			}
+			?>
+			</td>
 		</table>
 		</form>
 		
-		<form action="export.php?func=exp_user_all_kml" method="post" enctype="multipart/form-data">
+		<form action="export.php?func=exp_user_all_kml&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3" align="center">
 		<tr class="style4"><th colspan="2">Export All Access Points for a User</th></tr>
 		<tr><td>Username: </td><td>
@@ -45,9 +63,16 @@ switch($func)
 			mysql_select_db($db,$conn);
 			$sql = "SELECT `username` FROM `users`";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
-			while($user_array = mysql_fetch_array($re))
+			$rowsu = mysql_num_rows($re);
+			if($rowsu < 1)
 			{
-				$USERNAMES[]=$user_array["username"];
+				$USERNAMES[]="No Users";
+			}else
+			{
+				while($user_array = mysql_fetch_array($re))
+				{
+					$USERNAMES[]=$user_array["username"];
+				}
 			}
 			$USERNAMES = array_unique($USERNAMES);
 			
@@ -58,13 +83,32 @@ switch($func)
 			?>
 			</select>
 			</td></tr>
-			<tr><td colspan="2" align="right"><input type="submit" value="Export This Users Access points"></td>
+			<tr><td colspan="2" align="right">
+			<?php
+			if($rowsu)
+			{
+			?>
+				<input type="submit" value="Export This Users Access points">
+			<?php
+			}
+			?>
+			</td>
 		</table>
 		</form>
 		
 		<table border="1" cellspacing="0" cellpadding="3" align="center">
 		<tr class="style4"><th colspan="2">Export All Access Points in the Database to KML</th></tr>
-		<tr><td colspan="2" align="center"><a class="links" href="export.php?func=exp_all_db_kml">Export All Access Points</a></td></tr>
+		<tr><td colspan="2" align="center">
+		<?php
+		if($rowsu && $rowsl)
+		{
+		?>
+			<a class="links" href="export.php?func=exp_all_db_kml&token=<?php echo $_SESSION['token'];?>">Export All Access Points</a>
+		<?php
+		}else
+		{ echo "Nothing in the database, so you dont get to do a Full DB export.<br>"; }
+		?>
+		</td></tr>
 		</table>
 		<br>
 		<?php
@@ -94,6 +138,11 @@ switch($func)
 	case "exp_all_signal": 
 		$user ="";
 		$database->exp_kml($export="exp_all_signal",$user,$row);
+		break;
+	#--------------------------
+	case "exp_single_ap": 
+		$user ="";
+		$database->exp_kml($export="exp_single_ap",$user,$row);
 		break;
 	#--------------------------
 	case NULL:

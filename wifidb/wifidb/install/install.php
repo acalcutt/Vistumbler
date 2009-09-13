@@ -1,6 +1,6 @@
 <?php
-include('../lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title>';
+#include('../lib/database.inc.php');
+#echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
 ?>
 <link rel="stylesheet" href="../css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
@@ -24,46 +24,72 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 <td width="17%" bgcolor="#304D80" valign="top">
 <td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center"><br>
 
-<table border="1"><tr class="style4"><th>Status</th><th>Step of Install</th></tr>
+<table border="1">
+<tr class="style4"><TH colspan="2">Install WiFiDB 0.16 Build 4</TH></tr>
+<tr class="style4"><th>Status</th><th>Step of Install</th></tr>
 <?php
+
+
+if($_POST['daemon'] == TRUE && $_POST['toolsdir'] == "")
+{
+	echo "<h2>You cannot enable the daemon and not declare a folder for the tools directory. now go back and do it right.</h2>";
+	$filename = $_SERVER['SCRIPT_FILENAME'];
+	$file_ex = explode("/", $filename);
+	$count = count($file_ex);
+	$file = $file_ex[($count)-1];
+	?>
+	</p>
+	</td>
+	</tr>
+	<tr>
+	<td bgcolor="#315573" height="23"><a href="../img/moon.png"><img border="0" src="../img/moon_tn.png"></a></td>
+	<td bgcolor="#315573" width="0" align="center">
+	<?php
+	if (file_exists($filename)) {?>
+		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
+	<?php
+	}
+	?>
+	</td>
+	</tr>
+	</table>
+	</body>
+	</html>
+	<?php
+	die();
+}
 	#========================================================================================================================#
 	#													Gather the needed infomation								   	     #
 	#========================================================================================================================#
 $Local_tz=date_default_timezone_get();
-$timezn = 'GMT+0';
-date_default_timezone_set($timezn);
+$ENG = "InnoDB";
 $date = date("Y-m-d");
+
 $root_sql_user	=	addslashes(strip_tags($_POST['root_sql_user']));
-
 $root_sql_pwd	=	addslashes(strip_tags($_POST['root_sql_pwd']));
-
-$root			=	addslashes(strip_tags($_POST['root']));
-
-$hosturl		=	addslashes(strip_tags($_POST['hosturl']));
-
 $sqlhost		=	addslashes(strip_tags($_POST['sqlhost']));
-
 $sqlu			=	addslashes(strip_tags($_POST['sqlu']));
-
 $sqlp			=	addslashes(strip_tags($_POST['sqlp']));
-
 $wifi			=	addslashes(strip_tags($_POST['wifidb']));
-
-$wifi_st		=	addslashes(strip_tags($_POST['wifistdb']));
-
+$wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
+$timeout		=   "(86400 * 365)";
 
 if(isset($_POST['daemon']))
 {
 	$daemon		= addslashes(strip_tags($_POST['daemon']));
 	$toolsdir	= addslashes(strip_tags($_POST['toolsdir']));
+	$httpduser	= addslashes(strip_tags($_POST['httpduser']));
+	$httpdgrp	= addslashes(strip_tags($_POST['httpdgrp']));
 }else
 {
-	$daemon = "off";
-	$toolsdir		=	"NO PATH";
+	$daemon 	= FALSE;
+	$toolsdir	= "NO PATH";
+	$httpduser	= "NOT SET";
+	$httpdgrp	= "NOT SET";
 }
 
-if($daemon == "on")
+if($daemon == TRUE)
 {
 	$daemon = 1;
 }else
@@ -71,7 +97,7 @@ if($daemon == "on")
 	$daemon = 0;
 }
 
-echo '<tr class="style4"><TH colspan="2">Database Install</TH><tr>';
+echo '<tr class="style4"><TH colspan="2">Database Install</TH></tr>';
 	#========================================================================================================================#
 	#													Connect to MySQL with Root											 #
 	#									and remove any existing databases and replace with empty ones						 #
@@ -155,10 +181,10 @@ else{echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT Theme setting 
 #create users table (History for imports)
 $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users` (
 		`id` INT( 255 ) NOT NULL AUTO_INCREMENT,
-		`username` VARCHAR( 25 ) NOT NULL,
+		`username` VARCHAR( 32 ) NOT NULL,
 		`points` TEXT NOT NULL,
 		`notes` TEXT NOT NULL,
-		`title` VARCHAR ( 32 ) NOT NULL,
+		`title` VARCHAR ( 255 ) NOT NULL,
 		`date` VARCHAR ( 25 ) NOT NULL, 
 		`aps` INT NOT NULL, 
 		`gps` INT NOT NULL,
@@ -179,7 +205,7 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`wifi0` ("
   ."  id int(255) NOT NULL AUTO_INCREMENT PRIMARY KEY, "
   ."  ssid varchar(32) NOT NULL,"
   ."  mac varchar(25) NOT NULL,"
-  ."  chan varchar(2) NOT NULL,"
+  ."  chan varchar(3) NOT NULL,"
   ."  sectype varchar(1) NOT NULL,"
   ."  radio varchar(1) NOT NULL,"
   ."  auth varchar(25) NOT NULL,"
@@ -256,7 +282,7 @@ else{echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT INTO <b>`$wifi
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc-comm` (
 		`id` INT NOT NULL AUTO_INCREMENT ,
 		`author` VARCHAR( 32 ) NOT NULL ,
-		`title` VARCHAR( 120 ) NOT NULL ,
+		`title` VARCHAR( 255 ) NOT NULL ,
 		`body` TEXT NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		PRIMARY KEY ( `id` ) ,
@@ -275,7 +301,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Announcement Commen
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc` (
 		`id` INT NOT NULL AUTO_INCREMENT ,
 		`auth` VARCHAR( 32 ) NOT NULL DEFAULT 'Annon Coward',
-		`title` VARCHAR( 120 ) NOT NULL DEFAULT 'Blank',
+		`title` VARCHAR( 255 ) NOT NULL DEFAULT 'Blank',
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		`body` TEXT NOT NULL ,
 		`comments` TEXT NOT NULL ,
@@ -301,7 +327,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`user_row` INT NOT NULL ,
 		`user` VARCHAR ( 32 ) NOT NULL,
 		`notes` TEXT NOT NULL,
-		`title` VARCHAR ( 128 ) NOT NULL,
+		`title` VARCHAR ( 255 ) NOT NULL,
 		UNIQUE ( `file` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn) or die(mysql_error());
@@ -364,7 +390,10 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Created user: $sqlu @ $php
 	#											Create the Config.inc.php file										   	     #
 	#========================================================================================================================#
 #create config.inc.php file in /lib folder
-echo '<tr><TH colspan="2"></th></tr><tr class="style4"><TH colspan="2">Config.inc.php File Creation</th><tr>';
+?>
+<tr class="style4"><TH colspan="2">Config.inc.php File Creation</th></tr>
+<tr class="style4"><th>Status</th><th>Step of Install</th></tr>
+<?php
 $file_ext = 'config.inc.php';
 $filename = '../lib/'.$file_ext;
 $filewrite = fopen($filename, "w");
@@ -376,8 +405,8 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td></tr>";}
 
 
-#Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon;\r\ndate_default_timezone_set('$timezn');\r\n$"."lastedit	=	'$date';\r\n\r\n");
+#Add last edit date and globals
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon, $"."root, $"."header, $"."ads, $"."tracker, $"."hosturl, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."default_theme, $"."default_refresh, $"."default_timezone;\r\ndate_default_timezone_set('$Local_tz');\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -385,25 +414,51 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Install date</td></tr>";}
 
 
-#add default debug values
+#add default daemon values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n"
 									."$"."daemon		=	".$daemon.";\r\n"
 									."$"."debug			=	0;\r\n"
 									."$"."log_level		=	0;\r\n"
 									."$"."log_interval	=	0;\r\n"
 									."$"."wifidb_tools	=	'".$toolsdir."';\r\n"
-									."$"."DST			=	'".$Local_tz."';\r\n");
-
+									."$"."timezn		=	'".$Local_tz."';\r\n"
+									."$"."DST			=	0;\r\n"
+									."$"."WiFiDB_LNZ_User 	=	'$httpduser';\r\n"
+									."$"."apache_grp			=	'$httpdgrp';\r\n\r\n");
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values</td></tr>";}
 
 
+#add default theme values
+$AD_CF_DG_Re = fwrite($fileappend, "#-------------Themes Settings--------------#
+$"."default_theme		= '$theme';
+$"."default_refresh 	= 15;
+$"."default_timezone	= 0;
+$"."timeout			= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
+
+if($AD_CF_DG_Re)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add default theme values</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default theme values</td></tr>";}
+
+
+$AD_CF_DG_Re = fwrite($fileappend, "#-------------Console Viewer Settings--------------#
+$"."console_refresh = 15;
+$"."console_scroll  = 1;
+$"."console_last5   = 1;
+$"."console_lines   = 10;\r\n\r\n");
+
+if($AD_CF_DG_Re)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add default Console values</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default Console values</td></tr>";}
+
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n"
 									."$"."rebuild		=	0;\r\n"
-									."$"."bench			=	0;\r\n");
+									."$"."bench			=	0;\r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default debug values</td></tr>";}
@@ -420,14 +475,6 @@ if($AD_CF_UR_Re)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding PHP Host URL</td></tr>";}
 
-#add sql host info
-$AD_CF_SH_Re = fwrite($fileappend, "#---------------- Themes Settings ----------------#\r\n"
-									."$"."default_theme	=	'$theme';\r\n\r\n");
-
-if($AD_CF_SH_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add Themes Settings</td></tr>";}
-else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Themes Settings</td></tr>";}
 
 #add sql host info
 $AD_CF_SH_Re = fwrite($fileappend, "#---------------- SQL Host ----------------#\r\n"
@@ -481,9 +528,10 @@ $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info --------------
 							."$"."open_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
 							."$"."WEP_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
 							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
-							."$"."KML_SOURCE_URL			=	'http://www.opengis.net/kml/2.2';\r\n"
+							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
 							."$"."kml_out				=	'../out/kml/';\r\n"
 							."$"."vs1_out				=	'../out/vs1/';\r\n"
+							."$"."daemon_out			=	'out/daemon/';\r\n"
 							."$"."gpx_out				=	'../out/gpx/';\r\n\r\n");
 if($AD_CF_KM_Re){echo "<tr class=\"good\"><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td></tr>";}

@@ -16,8 +16,9 @@ $start="2009.July.22";
 $ver="1.0";
 
 $localtimezone = date("T");
-$debug = 0;
-$deleted = 0;
+$debug		= 0;
+$deleted	= 0;
+$text		= 0;
 #echo $localtimezone."\n";
 
 $TOTAL_START = date("Y-m-d H:i:s");
@@ -55,6 +56,18 @@ while (!(($file = readdir($dh)) == false))
 		$check_file = check_hash($hash, $file_a);
 		if($check_file == 0)
 		{
+			#check for txt file, if so, move to 'tools/backups/text/'
+			$check_text = file($source);
+			$file_text_check = str_split($check_text[0],16);
+			echo $file_text_check[0]."\n";
+			if($file_text_check[0] == '# Vistumbler TXT')
+			{
+				$dest  = $GLOBALS['wifidb_tools']."/backups/text/".$file;
+				rename($source, $dest);
+				echo "!!! MOVED A TEXT FILE TO: $dest !!!\n";
+				$text++;
+				continue;
+			}
 			#add file to array
 			$file_a[] = array( 'file'=>$file, 'hash'=> $hash); //if Filename is valid, throw it into an array for later use
 			echo $n." ".$file."\n";
@@ -62,10 +75,10 @@ while (!(($file = readdir($dh)) == false))
 			$n++;
 		}else
 		{
-			#delete file
+			#move file
 			$dest  = $GLOBALS['wifidb_tools']."/backups/duplicates/".$file;
 			rename($source, $dest);
-			echo "DELETED FILE\n";
+			echo "!!! MOVED A FILE TO: $dest !!!\n";
 			$deleted++;
 		
 		}
@@ -73,7 +86,8 @@ while (!(($file = readdir($dh)) == false))
 	echo "\n";
 }
 $TOTAL_END = date("Y-m-d H:i:s");
-echo "Files deleted: ".$deleted."\n";
+echo "Duplicate files moved: ".$deleted."\n";
+echo "Text files moved:      ".$text."\n";
 echo "Start: ".$TOTAL_START."\nEnd: ".$TOTAL_END."\n";
 
 

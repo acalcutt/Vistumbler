@@ -17,11 +17,36 @@ pageheader("Version Page");
 				<td>Project Dev(s)..............</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b><td>
 			</tr>
 		</table>
-
+		
+		<table width="100%" border="2" id="16b4">
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 4</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-12</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+				<OL>
+					<LI>Added Daemon Generated KML exports. Details <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=388">here.</a></LI>
+					<LI>Fixed some HTML mode issues. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=47&t=385">KB385</a></LI>
+					<LI>Fixed some issues that relate to WiFiDB running on a shared server host.<a href="http://forum.techidiots.net/forum/viewtopic.php?f=47&t=385">KB385</a></LI>
+					<LI>Forgot to remove a mysql_error() function from a verbose statement, in the update portion of the import_vs1() function</LI>
+					<LI>Added Daemon Console Viewer.</LI>
+					<LI>Fixed the issue with some tables in the 'vistumbler' theme where not centered.</LI>
+					<LI>Fixed an issue with the user stat page, where the second AP import list was not showing up.</LI>
+					<LI>Fixed an issue with the daemon where it would not start import a file if said file was uploaded when the daemon was in the middle of an import.</LI>
+					<LI>Added Daemon Generated KML History page, along with a link to it in the main menu.</LI>
+					<LI>Made the output log and pid file for the daemon vars in the config file for the daemon.</LI>
+					<LI>Disabled fields in the daemon section of the install page, if the daemon is not going to be used.</LI>
+					<LI>Disabled the submit buttons on the Exports page if there is no imports/APs in the database.</LI>
+				</OL>
+			</td></tr>
+		</table>
+		<br>
+		
+		
 		<table width="100%" border="2" id="16b3.1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3.1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-23</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Aug-12</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -39,8 +64,15 @@ pageheader("Version Page");
 					<LI>Removed Export Single AP to KML from the exports page, since there is more detailed exports on the APs fetch page, where you can choose what signal history row, or all the history rows, was also causing the page to take forever to load with lots of APs.</LI>
 					<LI>Added $header variable for < meta > tags and the such</LI>
 					<LI>Added the Random Intervals Logo to the header</LI>
-					<LI>Added support for Themes, please read this thread on how to use it/ make your own.</LI>
+					<LI>Added support for Themes, please read this thread on how to use it / make your own.</LI>
 					<LI>Changed scheduling.php so it has cookies support, now it is per-browser not per-server.</LI>
+					<LI>Import upload script now only accepts .VS1 files, which it is how it should have been since I dropped .txt support.</LI>
+					<LI>Fixed a Timezone issue conversion in the daemon and general core of wifidb.</LI>
+					<LI>Added cookie based Timezone settings on the schedualing page.</LI>
+					<LI>Fixed a bug in the individual User stats page, where it was not showing the first import for any user.</LI>
+					<LI>Fixed an error where I didnt have the 'exp_single_ap' on the exports page.</LI>
+					<LI>Fixed an error in the Export all DB to KML, where if the last AP had no valid GPS cords, the link for the final file would not be shown.</LI>
+					<LI>Changed the Full DB KML so that it is now a KMZ file not a KML, to save on bandwith.</LI>
 				</OL>
 
 			</td></tr>

@@ -1,8 +1,118 @@
 <?php
-include('lib/database.inc.php');
-pageheader("Show all Downloads APs");
 include('lib/config.inc.php');
-?>
+
+	session_start();
+	if(!$_SESSION['token'] or !$_GET['token'])
+	{
+		$token = md5(uniqid(rand(), true));
+		$_SESSION['token'] = $token;
+	}else
+	{
+		$token = $_SESSION['token'];
+	}
+	
+	$root	= $GLOBALS['root'];
+	$conn	=	$GLOBALS['conn'];
+	$db		=	$GLOBALS['db'];
+	$head	= 	$GLOBALS['headers'];
+	
+	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>\r\n".$head."\r\n</head>\r\n";
+	if(!$GLOBALS['default_theme']){echo '<p align="center"><font color="red" size="6">You need to upgrade to Build 4!</font><font color="red" size="3"><br> Please go <a href="http://'.$_SERVER["SERVER_NAME"].'/wifidb/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</font></font></p>';}
+	$sql = "SELECT `id` FROM `$db`.`files`";
+	$result1 = mysql_query($sql, $conn);
+	if(!$result1){echo "<p align=\"center\"><font color=\"red\">You need to <a class=\"upgrade\" href=\"install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB Build 3.</p></font>";}
+
+		?>
+		<link rel="stylesheet" href="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/styles.css">
+			<body style="background-color: #145285">
+			<table style="width: 90%; " class="no_border" align="center">
+				<tr>
+					<td>
+					<table>
+						<tr>
+							<td style="width: 228px">
+							<a href="http://www.randomintervals.com">
+							<img alt="Random Intervals Logo" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/logo.png" class="no_border" /></a></td>
+						</tr>
+					</table>
+
+					</td>
+				</tr>
+			</table>
+			<table style="width: 90%" align="center">
+				<tr>
+					<td style="width: 165px; height: 114px" valign="top">
+						<table style="width: 100%" cellpadding="0" cellspacing="0">
+							<tr>
+								<td style="width: 10px; height: 20px" class="cell_top_left">
+									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
+								</td>
+								<td class="cell_top_mid" style="height: 20px">
+									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="185" height="1" />
+								</td>
+								<td style="width: 10px" class="cell_top_right">
+									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
+								</td>
+							</tr>
+							<tr>
+								<td class="cell_side_left">&nbsp;</td>
+								<td class="cell_color">
+									<div class="inside_dark_header">WiFiDB Links</div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated kml</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/console/?token=<?php echo $token;?>">Daemon Console</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></strong></div>
+									<div class="inside_text_bold"><strong>
+										<a href="<?php if($root != ''){echo '/'.$root;}?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></strong></div>
+								</td>
+								<td class="cell_side_right">&nbsp;</td>
+							</tr>
+							<tr>
+								<td class="cell_bot_left">&nbsp;</td>
+								<td class="cell_bot_mid">&nbsp;</td>
+								<td class="cell_bot_right">&nbsp;</td>
+							</tr>
+						</table>
+					</td>
+					<td style="height: 114px" valign="top" class="center">
+						<table style="width: 100%" cellpadding="0" cellspacing="0">
+							<tr>
+								<td style="width: 10px; height: 20px" class="cell_top_left">
+									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
+								</td>
+								<td class="cell_top_mid" style="height: 20px">
+									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="120" height="1" />
+								</td>
+								<td style="width: 10px" class="cell_top_right">
+									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
+								</td>
+							</tr>
+							<tr>
+								<td class="cell_side_left">&nbsp;</td>
+								<td class="cell_color_centered" align="center">
+								<div align="center">
 <div align="left">
 <font face="Courier New">
 <p align="center"><font size="7"><b>WiFiDB Downloads</b></font></p>
@@ -24,15 +134,23 @@ include('lib/config.inc.php');
 <br>
 <br>
 <h2><---Downloads---></h2>
-	<table width="100%" border="2" id="16pb1">
+<table width="100%" border="2" id="16b3r2">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
-	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b3.1">Version: 0.16 Build 3.1</a></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-23</td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">Archives:</td><td><a class="links" href="https://sourceforge.net/projects/vistumbler/files/WiFiDB/wifidb-alpha-016-b3.1.tar.gz/download">Tar Gz</a><br><a class="links" href="https://sourceforge.net/projects/vistumbler/files/WiFiDB/wifidb-alpha-016-b3.1.zip/download">Zip</a></td></tr>
-	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td><a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifidb/?pathrev=431">SourceForge SVN</a></td></tr>
+	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b3r2">Version: 0.16 Build 4</a></td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-**</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Archives:</td><td><a class="links" href="https://sourceforge.net/projects/vistumbler/files/WiFiDB/wifidb-alpha-016-b4.tar.gz/download">Tar.Gz</a><br><a class="links" href="https://sourceforge.net/projects/vistumbler/files/WiFiDB/wifidb-alpha-016-b4.zip/download">Zip</a></td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td>SourceForge SVN</td></tr>
 </table>
 <br>
-	<table width="100%" border="2" id="16pb1">
+<table width="100%" border="2" id="16b3r2">
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b3r2">Version: 0.16 Build 3 R2</a></td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-23</td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">Archives:</td><td><a class="links" href="https://sourceforge.net/projects/vistumbler/files/WiFiDB/wifidb-alpha-016-b3-R2.zip/download">Zip</a></td></tr>
+	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td>SourceForge SVN</td></tr>
+</table>
+<br>
+<table width="100%" border="2" id="16b3">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b3">Version: 0.16 Build 3</a></td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-10</td></tr>
@@ -40,7 +158,7 @@ include('lib/config.inc.php');
 	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td><a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifidb/?pathrev=414">SourceForge SVN</a></td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="16pb1">
+<table width="100%" border="2" id="16b2.l">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b3">Version: 0.16 Build 2.1</a></td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-05</td></tr>
@@ -48,7 +166,7 @@ include('lib/config.inc.php');
 	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td><a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifidb/?pathrev=312">SourceForge SVN</a></td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="16pb1">
+<table width="100%" border="2" id="16b2">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b21">Version: 0.16 Build 2</a></td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-29</td></tr>
@@ -56,7 +174,7 @@ include('lib/config.inc.php');
 	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td><a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifidb/?pathrev=310">SourceForge SVN</a></td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="16pb1">
+<table width="100%" border="2" id="16b1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26"><a class="links" href="http://www.randomintervals.com/wifidb/ver.php#16b2">Version: 0.16 Build 1</a></td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-05</td></tr>
@@ -64,8 +182,26 @@ include('lib/config.inc.php');
 	<tr><td style="border-style: solid; border-width: 1px" height="26">SVN:</td><td><a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifidb/?pathrev=263">SourceForge SVN</a></td></tr>
 </table>
 <br>
-<?php
-
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
-?>
+							</div>
+							<br>
+							</td>
+							<td class="cell_side_right">&nbsp;</td>
+						</tr>
+						<tr>
+							<td class="cell_bot_left">&nbsp;</td>
+							<td class="cell_bot_mid">&nbsp;</td>
+							<td class="cell_bot_right">&nbsp;</td>
+						</tr>
+					</table>
+				<div class="inside_text_center" align=center><strong>
+				Random Intervals Wireless DataBase<?php echo $GLOBALS['ver']['wifidb'].'<br />'; ?></strong></div>
+				<br />
+				<?php
+				echo $GLOBALS['tracker'];
+				echo $GLOBALS['ads']; 
+				?>
+				</td>
+			</tr>
+		</table>
+	</body>
+	</html>

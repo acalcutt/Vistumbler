@@ -7,12 +7,15 @@ pageheader("Upgrade Page");
 include('../../lib/config.inc.php');
 ?>
 <h3>If one of the steps shows "Duplicate column name '***'," you can ignore this error.</h3>
-<table border="1"><tr class="style4"><th>Status</th><th>Step of Install</th></tr>
-<tr class="style4"><TH colspan="2">Upgrade DB for 0.16 Build 1 / 2 / 2.1 <b>--></b> 0.16 Build 3</TH><tr>
+<table border="1">
+<tr class="style4"><TH colspan="2">Upgrade DB for 0.16 Build 1 / 2 - 2.1 / 3 - 3.1 R2 <b>--></b> 0.16 Build 4</TH>
+<tr class="style4"><th colspan="2">Upgrade Database Tables</th></tr>
+<tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
 <?php
 $Local_tz=date_default_timezone_get();
 $ENG = "InnoDB";
 $date = date("Y-m-d");
+
 $root_sql_user	=	addslashes(strip_tags($_POST['root_sql_user']));
 $root_sql_pwd	=	addslashes(strip_tags($_POST['root_sql_pwd']));
 $sqlhost		=	addslashes(strip_tags($_POST['sqlhost']));
@@ -21,18 +24,23 @@ $sqlp			=	addslashes(strip_tags($_POST['sqlp']));
 $wifi			=	addslashes(strip_tags($_POST['wifi']));
 $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
+$timeout		=   "(86400 * 365)";
 
 if(isset($_POST['daemon']))
 {
 	$daemon		= addslashes(strip_tags($_POST['daemon']));
 	$toolsdir	= addslashes(strip_tags($_POST['toolsdir']));
+	$httpduser	= addslashes(strip_tags($_POST['httpduser']));
+	$httpdgrp	= addslashes(strip_tags($_POST['httpdgrp']));
 }else
 {
-	$daemon = "off";
-	$toolsdir		=	"NO PATH";
+	$daemon 	= FALSE;
+	$toolsdir	= "NO PATH";
+	$httpduser	= "NOT SET";
+	$httpdgrp	= "NOT SET";
 }
 
-if($daemon == "on")
+if($daemon == TRUE)
 {
 	$daemon = 1;
 }else
@@ -45,7 +53,7 @@ if ($sqlhost !== 'localhost' or $sqlhost !== "127.0.0.1")
 else{$phphost	=	$_POST['phphost'];}
 
 #Connect with Root priv
-$conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
+$conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd) or die("</table>Could not create MySQL Connection".footer($_SERVER['SCRIPT_FILENAME']));
 
 
 $sqls =	"REVOKE GRANT OPTION ON  `$wifi` . * FROM  '$sqlu'@'$phphost'";
@@ -229,13 +237,15 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Create tmp Files table `$wifi`.`files_tmp`;<br>".mysql_error($conn)."</td></tr>";
 }
 
-$sql1 = "ALTER TABLE `$wifi`.`wifi0` CHANGE `ssid` `ssid` VARCHAR( 32 ), CHANGE `id` `id` INT( 255 ) NOT NULL AUTO_INCREMENT";
+$sql1 = "ALTER TABLE `$wifi`.`$wtable` CHANGE `ssid` `ssid` VARCHAR( 32 ), CHANGE `chan` `chan` VARCHAR( 3 ), CHANGE `id` `id` INT( 255 ) NOT NULL AUTO_INCREMENT";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` to add aps, gps, username, notes, and title fields;</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to add aps, gps, username, notes, and title fields;<br>".mysql_error($conn)."</td></tr>";
 }
+
+
 
 ####	ALTER USERS TABLE
 $sql1 = "ALTER TABLE `$wifi`.`users` ADD `hash` VARCHAR ( 255 ) NOT NULL";
@@ -246,7 +256,9 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to add file hash field;<br>".mysql_error($conn)."</td></tr>";
 }
 
-$sql1 = "ALTER TABLE `$wifi`.`users` ADD `aps` INT NOT NULL";
+$sql1 = "ALTER TABLE `$wifi`.`users` ADD `aps` INT NOT NULL, 
+CHANGE `username` `username` VARCHAR( 32 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+CHANGE `title` `title` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` to add aps field;</td></tr>";}
@@ -328,6 +340,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Added field (notes) to `$w
 }
 
 
+
+
+
 ####	ALTER FILES_TMP TABLE WITH NEW FIELDS
 $sql1 = "ALTER TABLE `$wifi`.`files_tmp` CHANGE `size` `size` VARCHAR( 12 ), CHARSET=utf8";
 $insert = mysql_query($sql1, $conn);
@@ -375,8 +390,18 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT Theme setting INTO <b>`$wifi`</b>.`settings`<br>".mysql_error($conn)."</td></tr>";
 }
+
+
+
+
+
+
 ####	UPDATE CONFIG.INC.PHP
-echo '<tr><TH colspan="2"></th></tr><tr class="style4"><TH colspan="2">Config.inc.php File Creation</th><tr>';
+?>
+<tr class="style4"><TH colspan="2">Config.inc.php File Creation</th></tr>
+<tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
+<?php
+
 $file_ext = 'config.inc.php';
 $filename = '../../lib/'.$file_ext;
 $filewrite = fopen($filename, "w");
@@ -388,39 +413,66 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td></tr>";}
 
 
-#Add last edit date
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon;\r\ndate_default_timezone_set('GMT+0');\r\n$"."lastedit	=	'$date';\r\n\r\n");
+#Add last edit date and globals
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon, $"."root, $"."header, $"."ads, $"."tracker, $"."hosturl, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."default_theme, $"."default_refresh, $"."default_timezone;\r\ndate_default_timezone_set('$Local_tz');\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Install date</td></tr>";}
 
-if(!isset($loglev)){$loglev = 0;}
-#add default debug values
+
+#add default daemon values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n"
 									."$"."daemon		=	".$daemon.";\r\n"
-									."$"."debug			=	$debug;\r\n"
-									."$"."log_level		=	$loglev;\r\n"
+									."$"."debug			=	0;\r\n"
+									."$"."log_level		=	0;\r\n"
 									."$"."log_interval	=	0;\r\n"
 									."$"."wifidb_tools	=	'".$toolsdir."';\r\n"
-									."$"."DST			=	'".$Local_tz."';\r\n");
-
+									."$"."timezn		=	'".$Local_tz."';\r\n"
+									."$"."DST			=	0;\r\n"
+									."$"."WiFiDB_LNZ_User 	=	'$httpduser';\r\n"
+									."$"."apache_grp			=	'$httpdgrp';\r\n\r\n");
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values</td></tr>";}
 
+if($theme == ''){$theme = "wifidb";}
+#add default theme values
+$AD_CF_DG_Re = fwrite($fileappend, "#-------------Themes Settings--------------#
+$"."default_theme		= '$theme';
+$"."default_refresh 	= 15;
+$"."default_timezone	= 0;
+$"."timeout			= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
+
+if($AD_CF_DG_Re)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add default theme values</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default theme values</td></tr>";}
+
+
+$AD_CF_DG_Re = fwrite($fileappend, "#-------------Console Viewer Settings--------------#
+$"."console_refresh = 15;
+$"."console_scroll  = 1;
+$"."console_last5   = 1;
+$"."console_lines   = 10;\r\n\r\n");
+
+if($AD_CF_DG_Re)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add default Console values</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default Console values</td></tr>";}
+
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n"
-									."$"."rebuild		=	$rebuild;\r\n"
-									."$"."bench			=	0;\r\n");
+									."$"."rebuild		=	0;\r\n"
+									."$"."bench			=	0;\r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default debug values</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default debug values</td></tr>";}
-if($root[0] == "/"){$root = preg_replace("/", "", $root);}
+
 #add url info
 $AD_CF_UR_Re = fwrite($fileappend, "#---------------- URL Info ----------------#\r\n"
 									."$"."root		=	'$root';\r\n"
@@ -430,16 +482,6 @@ if($AD_CF_UR_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add PHP Host URL</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding PHP Host URL</td></tr>";}
-
-
-#add sql host info
-$AD_CF_SH_Re = fwrite($fileappend, "#---------------- Themes Settings ----------------#\r\n"
-									."$"."default_theme	=	'$theme';\r\n\r\n");
-
-if($AD_CF_SH_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add Themes Settings</td></tr>";}
-else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Themes Settings</td></tr>";}
 
 
 #add sql host info
@@ -453,12 +495,12 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Host info</td><
 
 #add Table names
 $AD_CF_WT_Re = fwrite($fileappend, "#---------------- Tables ----------------#\r\n"
-									."$"."settings_tb 	=	'$settings_tb';\r\n"
-									."$"."users_tb 		=	'$users_tb';\r\n"
-									."$"."links 			=	'$links';\r\n"
-									."$"."wtable 		=	'$wtable';\r\n"
-									."$"."gps_ext 		=	'$gps_ext';\r\n"
-									."$"."sep 			=	'$sep';\r\n\r\n");
+									."$"."settings_tb 	=	'settings';\r\n"
+									."$"."users_tb 		=	'users';\r\n"
+									."$"."links 			=	'links';\r\n"
+									."$"."wtable 		=	'wifi0';\r\n"
+									."$"."gps_ext 		=	'_GPS';\r\n"
+									."$"."sep 			=	'-';\r\n\r\n");
 if($AD_CF_WT_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Table names</td></tr>";}
 else{
@@ -494,26 +536,20 @@ $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info --------------
 							."$"."open_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
 							."$"."WEP_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
 							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
-							."$"."KML_SOURCE_URL			=	'http://www.opengis.net/kml/2.2';\r\n"
+							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
 							."$"."kml_out				=	'../out/kml/';\r\n"
 							."$"."vs1_out				=	'../out/vs1/';\r\n"
+							."$"."daemon_out			=	'out/daemon/';\r\n"
 							."$"."gpx_out				=	'../out/gpx/';\r\n\r\n");
 if($AD_CF_KM_Re){echo "<tr class=\"good\"><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
-if($ads !="")
-{
-$AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
-								."$"."headers 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
+
+$AD_CF_FI_Re = fwrite($fileappend,"#---------------- Header and Footer Additional Info -----------------#\r\n"
+								."$"."ads			= '';"
+								."$"."header 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
 <meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
 								."$"."tracker 	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
-}else
-{
-$AD_CF_FI_Re = fwrite($fileappend,"#---------------- Footer Additional Info -----------------#\r\n"
-								."$"."headers 	= '$headers'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
-								."$"."ads 		= '$ads';"
-								."$"."tracker 	= '$tracker'; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
-}
 if($AD_CF_FI_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
@@ -521,6 +557,5 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Footer Information 
 
 ?></table><h2>Now you can remove the /install folder from the WiFiDB install root</h2><?php
 
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+
 ?>

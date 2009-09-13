@@ -62,7 +62,7 @@ if (isset($_GET['token']))
 									</TR>
 									<TR>
 										<TD class="style3" WIDTH=16%>
-											<P>Encryption <font size="2"><i>(None/WEP/TKIP)</i></font>: 
+											<P>Encryption <font size="2"><i>(None/WEP/TKIP/PSK)</i></font>: 
 											</P>
 										</TD>
 										<TD WIDTH=84%>
