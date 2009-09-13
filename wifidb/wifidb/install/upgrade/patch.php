@@ -431,7 +431,6 @@ $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info --------------
 									."$"."log_interval	=	0;\r\n"
 									."$"."wifidb_tools	=	'".$toolsdir."';\r\n"
 									."$"."timezn		=	'".$Local_tz."';\r\n"
-									."$"."DST			=	0;\r\n"
 									."$"."WiFiDB_LNZ_User 	=	'$httpduser';\r\n"
 									."$"."apache_grp			=	'$httpdgrp';\r\n\r\n");
 if($AD_CF_DG_Re)

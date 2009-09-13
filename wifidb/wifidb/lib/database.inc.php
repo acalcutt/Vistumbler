@@ -57,10 +57,6 @@ $path = getcwd();
 $path_exp = explode($div, $path);
 $path_count = count($path_exp);
 
-
-
-
-
 foreach($path_exp as $key=>$val)
 {
 	if($val == $GLOBALS['root']){ $path_key = $key;}
@@ -847,7 +843,33 @@ class database
 						$NUM_SIG[$key] = ($num_san_sig[0]+0).",".($num_san_sig[1]+0);
 					}
 					$san_sig = implode("-",$NUM_SIG);
-					
+					$signal_exp = explode("-",$san_sig);
+					foreach($signal_exp as $key=>$exp)
+						{
+							$esp = explode(",",$exp);
+							$vs1_id = $esp[0];
+							
+							$lat = $gdata[$vs1_id]["lat"];
+							$lat_exp = explode(" ", $lat);
+							if(isset($lat_exp[1]))
+							{
+								$test = $lat_exp[1]+0;
+							}else
+							{
+								$test = $lat_exp[0]+0;
+							}
+			#				echo $test."\n";
+							if($test != TRUE)
+							{
+								$zero = 1;
+							}else
+							{$zero=0;break;}
+						}
+						if($zero == true)
+						{
+							verbosed("SKIPPING AP, NO GPS COORDS.", $verbose, "CLI");
+						#	continue;
+						}
 					if($wifi[6] == "802.11a")
 						{$radios = "a";}
 					elseif($wifi[6] == "802.11b")
@@ -912,34 +934,6 @@ class database
 						{
 							verbosed('<table border="1" width="90%" class="update"><tr class="style4"><th>ID</th><th>New/Update</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radion Type</th><th>Channel</th></tr>
 									<tr><td>'.$APid.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$auth.'</td><td>'.$encry.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
-						}
-						$signal_exp = explode("-",$san_sig);
-						#check for any GPS, if none, frop AP, we dont want no sticking zeros
-						foreach($signal_exp as $key=>$exp)
-						{
-							$esp = explode(",",$exp);
-							$vs1_id = $esp[0];
-							
-							$lat = $gdata[$vs1_id]["lat"];
-							$lat_exp = explode(" ", $lat);
-							if(isset($lat_exp[1]))
-							{
-								$test = $lat_exp[1]+0;
-							}else
-							{
-								$test = $lat_exp[0]+0;
-							}
-			#				echo $test."\n";
-							if($test != TRUE)
-							{
-								$zero = 1;
-							}else
-							{$zero=0;break;}
-						}
-						if($zero == true)
-						{
-							verbosed("SKIPPING AP, NO GPS COORDS.", $verbose, "CLI");
-							continue;
 						}
 						//setup ID number for new GPS cords
 						$DB_result = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
@@ -1211,32 +1205,6 @@ class database
 									<tr><td>'.$size.'</td><td><b>U</b></td><td>'.$ssids.'</td><td>'.$macs.'</td><td>'.$auth.'</td><td>'.$encry.'</td><td>'.$radios.'</td><td>'.$chan.'</td></tr><tr><td colspan="8">', $verbose, "HTML");
 						}
 						$signal_exp = explode("-",$san_sig);
-						#check for any GPS, if none, frop AP, we dont want no sticking zeros
-						foreach($signal_exp as $key=>$exp)
-						{
-							$esp = explode(",",$exp);
-							$vs1_id = $esp[0];
-							
-							$lat = $gdata[$vs1_id]["lat"];
-							$lat_exp = explode(" ", $lat);
-							if(isset($lat_exp[1]))
-							{
-								$test = $lat_exp[1]+0;
-							}else
-							{
-								$test = $lat_exp[0]+0;
-							}
-							if($test != TRUE)
-							{
-								$zero = 1;
-							}else
-							{$zero=0;break;}
-						}
-						if($zero == true)
-						{
-							verbosed("SKIPPING AP, NO GPS COORDS.", $verbose, "CLI");
-							continue;
-						}
 						$sqlct = "CREATE TABLE `$db_st`.`$table` (
 									`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
 									`btx` VARCHAR( 10 ) NOT NULL ,
@@ -2678,7 +2646,7 @@ class database
 				
 				$date=date('Y-m-d_H-i-s');
 				
-				$filename = '/tmp/'.$date.'_'.$user.'_'.$title.'.kmz';
+				$filename = $date.'_'.$user.'_'.$title.'.kmz';
 				// open file and write header:
 				fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"$KML_SOURCE_URL\">\r\n<!--exp_user_list-->		<Document>\r\n			<name>User: ".$user." - Title: ".$title."</name>\r\n");
 				fwrite($fileappend, "			<Style id=\"openStyleDead\">\r\n		<IconStyle>\r\n				<scale>0.5</scale>\r\n				<Icon>\r\n			<href>".$open_loc."</href>\r\n			</Icon>\r\n			</IconStyle>\r\n			</Style>\r\n");
@@ -2814,26 +2782,44 @@ class database
 				fclose( $fileappend );
 				if($no_gps < $total)
 				{
+					if(PHP_OS == 'Linux'){ $div = '/';}
+					elseif(PHP_OS == 'WINNT'){ $div = '\\';}
+
+					$path = getcwd();
+					#echo "Path: ".$path."<br>";
+					$path_exp = explode($div, $path);
+					$path_count = count($path_exp);
+
+					foreach($path_exp as $key=>$val)
+					{
+						if($val == $GLOBALS['root']){ $path_key = $key;}
+					#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
+					}
+
+					$half_path = '';
+					$I = 0;
+					if(isset($path_key))
+					{
+						while($I!=($path_key+1))
+						{
+					#		echo "I: ".$I."<br>";
+							$half_path = $half_path.$path_exp[$I].$div;
+					#		echo "Half Path: ".$half_path."<br>";
+							$I++;
+						}
+					}
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Zipping up the files into a KMZ file.</td></tr>';
 					$zip = new ZipArchive;
-					if ($zip->open($filename, ZipArchive::CREATE) === TRUE)
+					$filepath = $half_path.'out/kmz/lists/'.$filename;
+					if ($zip->open($filepath, ZipArchive::CREATE) === TRUE)
 					{
 						$zip->addFile($temp_kml, 'doc.kml');
 				#		$zip->addFromString('doc.kml', $fdata);
 						$zip->close();
 				#		echo 'Zipped up<br>';
 						unlink($temp_kml);
-						$moved ='../out/kmz/list/'.$filename;
-						if(copy($filename, $moved))
-						{
-							unlink($filename);
 							echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
-							echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$moved.'">Here</a></td></tr></table>';
-						}else
-						{
-							echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Failed to create Archive.</td></tr>';
-						}
-						
+							echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="../out/kmz/lists/'.$filename.'">Here</a></td></tr></table>';
 					} else {
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Failed to create Archive.</td></tr>';
 					}
@@ -2858,7 +2844,7 @@ class database
 				$total = 0;
 				$no_gps = 0;
 				$date=date('Y-m-d_H-i-s');
-				$sql = "SELECT * FROM `$wtable` WHERE `ID`='$row'";
+				$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$row'";
 				$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$aparray = mysql_fetch_array($result);
 				
@@ -2871,7 +2857,7 @@ class database
 				
 				$date=date('Y-m-d_H-i-s');
 				
-				$filename = $aparray['ssid'].rand().'.kmz';
+				$filename = $aparray['ssid'].'-'.$aparray['mac'].'-'.rand().'-single.kmz';
 				
 				if($filewrite != FALSE)
 				{
@@ -2891,11 +2877,11 @@ class database
 					$table_gps = $table.$gps_ext;
 					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 		#			echo $table."<br>";
-					$sql = "SELECT * FROM `$table`";
+					$sql = "SELECT * FROM `$db_st`.`$table`";
 					$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 					$rows = mysql_num_rows($result);
 		#			echo $rows."<br>";
-					$sql = "SELECT * FROM `$table` WHERE `id`='1'";
+					$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='1'";
 					$result1 = mysql_query($sql, $conn) or die(mysql_error($conn));
 		#			echo $ap['mac']."<BR>";
 					while ($newArray = mysql_fetch_array($result1))
@@ -2937,11 +2923,11 @@ class database
 						$nt = $newArray['nt'];
 						$label = $newArray['label'];
 						
-						$sql6 = "SELECT * FROM `$table_gps`";
+						$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
 						$result6 = mysql_query($sql6, $conn);
 						$max = mysql_num_rows($result6);
 						
-						$sql_1 = "SELECT * FROM `$table_gps`";
+						$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
 						$result_1 = mysql_query($sql_1, $conn);
 						while($gps_table_first = mysql_fetch_array($result_1))
 						{
@@ -2964,7 +2950,7 @@ class database
 						$total++;
 						if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0;$no_gps++; continue;}
 						
-						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+						$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$max'";
 						$result_2 = mysql_query($sql_2, $conn);
 						$gps_table_last = mysql_fetch_array($result_2);
 						$date_last = $gps_table_last["date"];
@@ -2979,28 +2965,55 @@ class database
 				{
 					echo "Failed to write KML File, Check the permissions on the wifidb folder, and make sure that Apache (or what ever HTTP server you are using) has permissions to write";
 				}
-				$fileappend = fopen($filename, "a");
 				fwrite($fileappend, $file_data);
 				fwrite( $fileappend, "	</Document>\r\n</kml>");
 				
 				fclose( $fileappend );
 				if($no_gps < $total)
 				{
+					if(PHP_OS == 'Linux'){ $div = '/';}
+					elseif(PHP_OS == 'WINNT'){ $div = '\\';}
+
+					$path = getcwd();
+					#echo "Path: ".$path."<br>";
+					$path_exp = explode($div, $path);
+					$path_count = count($path_exp);
+
+					foreach($path_exp as $key=>$val)
+					{
+						if($val == $GLOBALS['root']){ $path_key = $key;}
+					#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
+					}
+
+					$half_path = '';
+					$I = 0;
+					if(isset($path_key))
+					{
+						while($I!=($path_key+1))
+						{
+					#		echo "I: ".$I."<br>";
+							$half_path = $half_path.$path_exp[$I].$div;
+					#		echo "Half Path: ".$half_path."<br>";
+							$I++;
+						}
+					}
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Zipping up the files into a KMZ file.</td></tr>';
 					$zip = new ZipArchive;
-					if ($zip->open($filename, ZipArchive::CREATE) === TRUE) {
+				#	echo $half_path.'out/kmz/single/'.$filename."<br>";
+					if ($zip->open($half_path.'out/kmz/single/'.$filename, ZipArchive::CREATE) === TRUE) 
+					{
 					   $zip->addFile($temp_kml, 'doc.kml');
 					 #  $zip->addFromString('doc.kml', $fdata);
 					    $zip->close();
 				#	    echo 'Zipped up<br>';
 						unlink($temp_kml);
-						copy($filename, $moved);
-						unlink($filename);
-						$moved ='../out/kmz/single/'.$filename;
+						$moved  = '../out/kmz/single/'.$filename;
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$moved.'">Here</a></td></tr></table>';
+						echo $zip->getStatusString();
 					} else {
-					    echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Could not create KMZ archive.</td></tr>';
+						echo $zip->getStatusString();
+						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Could not create KMZ archive.</td></tr>';
 					}
 				}else
 				{
@@ -3243,8 +3256,9 @@ class database
 				$temp_kml = $ssid_f."-".$aparray['mac']."-".$aparray['sectype']."-".rand().'tmp.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$date=date('Y-m-d_H-i-s');
-				
-				$filename = $user.'.kmz';
+				$ssid = preg_replace("/%/","",$ssid);
+				$ssid = preg_replace("/ /","_",$ssid);
+				$filename = $ssid.'-'.$aparray['mac'].'-'.rand().'.kmz';
 				
 				if($filewrite != FALSE)
 				{
@@ -3381,24 +3395,53 @@ class database
 				fclose( $fileappend );
 				if($no_gps < $total)
 				{
+					if(PHP_OS == 'Linux'){ $div = '/';}
+					elseif(PHP_OS == 'WINNT'){ $div = '\\';}
+
+					$path = getcwd();
+					#echo "Path: ".$path."<br>";
+					$path_exp = explode($div, $path);
+					$path_count = count($path_exp);
+
+					foreach($path_exp as $key=>$val)
+					{
+						if($val == $GLOBALS['root']){ $path_key = $key;}
+					#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
+					}
+
+					$half_path = '';
+					$I = 0;
+					if(isset($path_key))
+					{
+						while($I!=($path_key+1))
+						{
+					#		echo "I: ".$I."<br>";
+							$half_path = $half_path.$path_exp[$I].$div;
+					#		echo "Half Path: ".$half_path."<br>";
+							$I++;
+						}
+					}
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Zipping up the files into a KMZ file.</td></tr>';
 					$zip = new ZipArchive;
-					if ($zip->open($filename, ZipArchive::CREATE) === TRUE) {
+			#		echo $half_path.'out/kmz/single/'.$filename."<br>";
+					if ($zip->open($half_path.'out/kmz/single/'.$filename, ZipArchive::CREATE) === TRUE) 
+					{
 					   $zip->addFile($temp_kml, 'doc.kml');
 					 #  $zip->addFromString('doc.kml', $fdata);
 					    $zip->close();
 				#	    echo 'Zipped up<br>';
 						unlink($temp_kml);
-						$moved ='../out/kmz/single/'.$filename;
-						copy($filename, $moved);
-						unlink($filename);
+						$moved  = '../out/kmz/single/'.$filename;
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$moved.'">Here</a></td></tr></table>';
+						echo $zip->getStatusString();
 					} else {
-					    echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Could not create KMZ archive.</td></tr>';
+						echo $zip->getStatusString();
+						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Could not create KMZ archive.</td></tr>';
 					}
 				}else
 				{
+					
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No APs with GPS found.</td></tr>';
 				}
 				$end = microtime(true);
