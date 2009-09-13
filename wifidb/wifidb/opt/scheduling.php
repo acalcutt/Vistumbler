@@ -32,7 +32,7 @@ pageheader("Scheduling Page");
 ####################
 function getdaemonstats()
 {
-	$WFDBD_PID = $GLOBALS['wifidb_tools'].'/daemon/wifidbd.pid';
+	$WFDBD_PID = $GLOBALS['pid_file_loc'];
 	$os = PHP_OS;
 	if ( $os[0] == 'L')
 	{
