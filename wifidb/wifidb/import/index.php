@@ -38,7 +38,8 @@ switch($func)
 				$notes = filter_var($notes, FILTER_SANITIZE_SPECIAL_CHARS);
 				$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
 				
-				$uploadfile = getcwd().'/up/'.$rand.'_'.$filename;
+				$uploadfolder = getcwd().'/up/';
+				$uploadfile = $uploadfolder.$rand.'_'.$filename;
 				$return  = file($tmp);
 				$count = count($return);
 				if($count <= 8) 
@@ -50,7 +51,7 @@ switch($func)
 				}
 				if (!copy($tmp, $uploadfile))
 				{
-					echo 'Failure to Move file to Upload Dir (/import/up/), check the folder permisions if you are using Linux.<BR>';
+					echo 'Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.<BR>';
 					$filename = $_SERVER['SCRIPT_FILENAME'];
 					footer($filename);
 					die();
