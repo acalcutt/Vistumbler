@@ -10,7 +10,7 @@ document.forms['WiFiDB_patch'].elements['httpdgrp'].disabled =! document.forms['
 include('../../lib/database.inc.php');
 echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title>';
 ?>
-<link rel="stylesheet" href="../../css/site4.0.css">
+<link rel="stylesheet" href="../../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" marginwidth="10" marginheight="10" onload="document.forms['WiFiDB_patch'].elements['toolsdir'].disabled=true; document.forms['WiFiDB_patch'].elements['httpduser'].disabled=true; document.forms['WiFiDB_patch'].elements['httpdgrp'].disabled=true;">
 <div align="center">
 <table border="0" width="75%" cellspacing="10" cellpadding="2">

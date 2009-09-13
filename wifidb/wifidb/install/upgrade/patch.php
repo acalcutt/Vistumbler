@@ -2,7 +2,7 @@
 include('../../lib/database.inc.php');
 pageheader("Upgrade Page");
 ?>
-<link rel="stylesheet" href="../../css/site4.0.css">
+<link rel="stylesheet" href="../../themes/wifidb/styles.css">
 <?php
 include('../../lib/config.inc.php');
 ?>

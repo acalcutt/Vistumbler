@@ -429,7 +429,6 @@ $timezone_names = array(
 							13	=>		"Burma",
 							14	=>		"Central Standard Time",
 							15	=>		"Almaty (Alma ATA), Russia",
-							
 							16	=>		"Atlantic Time",
 							17	=>		"Afghanistan",
 							18	=>		"NW Caspian Sea",
@@ -437,11 +436,9 @@ $timezone_names = array(
 							20	=>		"Greenland Time",
 							21	=>		"Iran",
 							22	=>		"Moscow, Mid-East, E Africa",
-							
 							23	=>		"Eastern Standard Time",
 							24	=>		"India",
 							25	=>		"Ural Mountains, Russia",
-							
 							26	=>		"Atlantic Ocean",
 							27	=>		"E Europe, E Central Africa",
 							28	=>		"SE Greenland",
@@ -466,7 +463,6 @@ $timezone_numbers = array(
 							13	=>	"/6.5/",#	 Burma
 							14	=>	"/-6/",#	 Central Standard Time
 							15	=>	"/6/"	,# Almaty (Alma ATA), Russia
-
 							16	=>	"/-4/",#	 Atlantic Time
 							17	=>	"/4.5/",#	 Afghanistan
 							18	=>	"/4/",#	 NW Caspian Sea
@@ -474,11 +470,9 @@ $timezone_numbers = array(
 							20	=>	"/-3/"	,# Greenland Time
 							21	=>	"/3.5/",#	 Iran
 							22	=>	"/3/"	,# Moscow, Mid-East, E Africa
-							
 							23	=>	"/-5/",#	 Eastern Standard Time
 							24	=>	"/5.5/",#	 India
 							25	=>	"/5/"	,# Ural Mountains, Russia
-							
 							26	=>	"/-2/",#	 Atlantic Ocean
 							27	=>	"/2/"	, #E Europe, E Central Africa
 							28	=>	"/-1/",#	 SE Greenland
