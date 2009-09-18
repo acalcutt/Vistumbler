@@ -1,6 +1,6 @@
 Author: Andrew Calcutt
-Website: vitumbler.net
-Version: 1.0.0
+Website: vistumbler.net
+Version: 1.0.1
 Date Created: 2009-07-25
 Details:
 This is a theme based off of Andrews website.

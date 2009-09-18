@@ -1,11 +1,12 @@
 <?php
 #		error_reporting(E_ALL|E_STRICT);
-		
 #		error_reporting(E_ALL);
+#		error_reporting(E_WARNING);
+#		error_reporting(E_ERROR);
 global $ver, $full_path, $half_path, $dim;
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.16 Build 4 ",
-			"Last_Core_Edit" 	=> 	"2009-Sept-12",
+			"Last_Core_Edit" 	=> 	"2009-Sept-17",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
@@ -44,50 +45,51 @@ $ver = array(
 			);
 if($GLOBALS['screen_output'] != "CLI")
 {
-	global $theme;
-	if(!include_once('config.inc.php'))
+	global $theme, $full_path, $half_path;
+	if(!@include_once('config.inc.php'))
 	{die('<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="http://'.$_SERVER["SERVER_NAME"].'/wifidb/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>');}
-}
 
-if(PHP_OS == 'Linux'){ $div = '/';}
-elseif(PHP_OS == 'WINNT'){ $div = '\\';}
 
-$path = getcwd();
-#echo "Path: ".$path."<br>";
-$path_exp = explode($div, $path);
-$path_count = count($path_exp);
+	if(PHP_OS == 'Linux'){ $div = '/';}
+	elseif(PHP_OS == 'WINNT'){ $div = '\\';}
 
-foreach($path_exp as $key=>$val)
-{
-	if($val == $GLOBALS['root']){ $path_key = $key;}
-#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
-}
+	$path = getcwd();
+	
+	$path_exp = explode($div, $path);
+	$path_count = count($path_exp);
 
-$half_path = '';
-$I = 0;
-if(isset($path_key))
-{
-	while($I!=($path_key+1))
+	
+#	echo "Path: ".$path."<br>".$div."<br>".$path_count;
+	
+	foreach($path_exp as $key=>$val)
 	{
-#		echo "I: ".$I."<br>";
-		$half_path = $half_path.$path_exp[$I].$div;
-#		echo "Half Path: ".$half_path."<br>";
-		$I++;
+	#	echo $root."<br>";
+		if($val == $root){ $path_key = $key;}
+	#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
 	}
 
-}
+	$half_path = '';
+	$I = 0;
+	if(isset($path_key))
+	{
+		while($I!=($path_key+1))
+		{
+	#		echo "I: ".$I."<br>".$path_key;
+			$half_path = $half_path.$path_exp[$I].$div;
+	#		echo "Half Path: ".$half_path."<br>";
+			$I++;
+		}
 
+	}
 
-if($GLOBALS['screen_output'] != "CLI")
-{
 	include($wifidb_tools.'/daemon/config.inc.php');
-	$GLOBALS['full_path'] = $GLOBALS['half_path'].'themes';
+	$full_path = $half_path.'themes';
 #	echo "Default theme: ".$GLOBALS['default_theme']."<br>";
 	$theme = ($_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $GLOBALS['default_theme']);
 	if($theme == ''){$theme = 'wifidb';}
-	$GLOBALS['full_path'] = $GLOBALS['full_path']."/".$theme."/";
+	$full_path = $full_path."/".$theme."/";
 	if(!function_exists('pageheader'))
-	{require($GLOBALS['full_path']."header_footer.inc.php");}
+	{require($full_path."header_footer.inc.php");}
 }
 
 
@@ -217,7 +219,7 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 function verbosed($message = "", $level = 0, $out="CLI", $header = 0)
 {
 	require('config.inc.php');
-	$time = time()+$DST;
+	$time = time();
 	$datetime = date("Y-m-d H:i:s",$time);
 	if($out == "CLI")
 	{
@@ -1212,7 +1214,7 @@ class database
 									`nt` VARCHAR( 15 ) NOT NULL ,
 									`label` VARCHAR( 25 ) NOT NULL ,
 									`sig` TEXT NOT NULL ,
-									`user` VARCHAR(25) NOT NULL ,
+									`user` VARCHAR(255) NOT NULL ,
 									PRIMARY KEY (`id`) 
 									) ENGINE = 'InnoDB' DEFAULT CHARSET='utf8'";
 				#		echo "(1)Create Table [".$db_st."].{".$table."}\n		 => Added new Table for ".$ssids."\n";
@@ -1740,7 +1742,7 @@ class database
 		{
 			$geocord_deg = substr($geocord_exp[0], 0,3);
 #			echo $geocord_deg.'<br>';
-		}elseif($len == 2)
+		}elseif($len <= 2)
 		{
 			$geocord_deg = $geocord_exp[0][0];
 #			echo $geocord_deg.'<br>';
@@ -2344,7 +2346,6 @@ class database
 		$user_array = mysql_fetch_array($result);
 		$aps=explode("-",$user_array["points"]);
 		$title = $user_array["title"];
-		echo $user_array["title"];
 		echo '<p align="center"><h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user='.$user_array["username"].'&token='.$_SESSION['token'].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$title.'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
 		?>
 		<h3>View All Users <a class="links" href="userstats.php?func=allusers&token=<?php echo $_SESSION['token'];?>">Here</a></h3>
@@ -3793,154 +3794,159 @@ class database
 		
 		$daemon_KMZ_folder = $GLOBALS['hosturl'].$GLOBALS['root']."/out/daemon/";
 		$KML_folder = $GLOBALS['wifidb_install']."/out/daemon/";
-		
 		$filename = $KML_folder."newestAP.kml";
 		$filename_label = $KML_folder."newestAP_label.kml";
-		
-		$filewrite	=	fopen($filename, "w");
-		$fileappend	=	fopen($filename, "a");
-		
+
 		verbosed('Start export of Newest AP: '.$ap_array["ssid"]>"\n".$filename."\n".$filename_label, $verbose, "CLI");
 		$NN = 0;
 		
 		// define initial write and appends
 		verbosed('Wrote placer file.', $verbose, "CLI");
-		if($filewrite != FALSE)
+
+		$man 		= database::manufactures($ap_array['mac']);
+		$id			= $ap_array['id'];
+		$ssid_ptb_	= $ap_array['ssid'];
+		$ssids_ptb	= str_split($ssid_ptb_,25);
+		$ssid		= smart_quotes($ssids_ptb[0]);
+		$mac		= $ap_array['mac'];
+		$sectype	= $ap_array['sectype'];
+		$radio		= $ap_array['radio'];
+		$chan		= $ap_array['chan'];
+		$table=$ssid.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
+		$table_gps = $table.$gps_ext;
+		$sql = "SELECT * FROM `$db_st`.`$table`";
+		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
+		$rows = mysql_num_rows($result);
+		$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='1'";
+		$result1 = mysql_query($sql, $conn) or die(mysql_error($conn));
+		$newArray = mysql_fetch_array($result1);
+
+		switch($ap_array['sectype'])
 		{
-			$man 		= database::manufactures($ap_array['mac']);
-			$id			= $ap_array['id'];
-			$ssid_ptb_	= $ap_array['ssid'];
-			$ssids_ptb	= str_split($ssid_ptb_,25);
-			$ssid		= smart_quotes($ssids_ptb[0]);
-			$mac		= $ap_array['mac'];
-			$sectype	= $ap_array['sectype'];
-			$radio		= $ap_array['radio'];
-			$chan		= $ap_array['chan'];
-			$table=$ssid.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
-			$table_gps = $table.$gps_ext;
-			$sql = "SELECT * FROM `$db_st`.`$table`";
-			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
-			$rows = mysql_num_rows($result);
-			$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='1'";
-			$result1 = mysql_query($sql, $conn) or die(mysql_error($conn));
-			$newArray = mysql_fetch_array($result1);
-
-			switch($ap_array['sectype'])
-			{
-				case 1:
-					$type = "#openStyleDead";
-					$auth = "Open";
-					$encry = "None";
-					break;
-				case 2:
-					$type = "#wepStyleDead";
-					$auth = "Open";
-					$encry = "WEP";
-					break;
-				case 3:
-					$type = "#secureStyleDead";
-					$auth = "WPA-Personal";
-					$encry = "TKIP-PSK";
-					break;
-			}
-			switch($ap_array['radio'])
-			{
-				case "a":
-					$radio="802.11a";
-					break;
-				case "b":
-					$radio="802.11b";
-					break;
-				case "g":
-					$radio="802.11g";
-					break;
-				case "n":
-					$radio="802.11n";
-					break;
-				default:
-					$radio="Unknown Radio";
-					break;
-			}
-			$otx = $newArray["otx"];
-			$btx = $newArray["btx"];
-			$nt = $newArray['nt'];
-			$label = $newArray['label'];
-			
-			$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
-			$result6 = mysql_query($sql6, $conn);
-			$max = mysql_num_rows($result6);
-			
-			$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
-			$result_1 = mysql_query($sql_1, $conn);
-			verbosed('Looking for Valid GPS cords.', $verbose, "CLI");
-			while($gps_table_first = mysql_fetch_array($result_1))
-			{
-				$lat_exp = explode(" ", $gps_table_first['lat']);
-				
-				$test = $lat_exp[1]+0;
-				
-				if($test == "0.0000"){$zero = 1; continue;}
-				
-				$date_first = $gps_table_first["date"];
-				$time_first = $gps_table_first["time"];
-				$fa = $date_first." ".$time_first;
-				$alt = $gps_table_first['alt'];
-				$lat =& database::convert_dm_dd($gps_table_first['lat']);
-				$long =& database::convert_dm_dd($gps_table_first['long']);
-				$zero = 0;
+			case 1:
+				$type = "#openStyleDead";
+				$auth = "Open";
+				$encry = "None";
 				break;
-			}
-			if($zero == 1)
-			{
-				verbosed('Didnt Find any, not writing AP to file.', $verbose, "CLI");
-				$zero == 0;
-			}else
-			{
-				verbosed('Found some, writing KML File.', $verbose, "CLI");
-				$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$max'";
-				$result_2 = mysql_query($sql_2, $conn);
-				$gps_table_last = mysql_fetch_array($result_2);
-				$date_last = $gps_table_last["date"];
-				$time_last = $gps_table_last["time"];
-				$la = $date_last." ".$time_last;
-				
-				$Odata = "<Placemark id=\"".$mac."\">\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-				
-				$Ddata  =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"$KML_SOURCE_URL\"><!--exp_all_db_kml-->\r\n<Document>\r\n<name>RanInt WifiDB KML Newset AP</name>\r\n";
-				$Ddata .= "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$open_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n	</Style>\r\n";
-				$Ddata .= "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-				$Ddata .= "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-				$Ddata .= '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>';
-				$Ddata .= "\r\n".$Odata."\r\n";
-				$Ddata = $Ddata."</Document>\r\n</kml>";
+			case 2:
+				$type = "#wepStyleDead";
+				$auth = "Open";
+				$encry = "WEP";
+				break;
+			case 3:
+				$type = "#secureStyleDead";
+				$auth = "WPA-Personal";
+				$encry = "TKIP-PSK";
+				break;
+		}
+		switch($ap_array['radio'])
+		{
+			case "a":
+				$radio="802.11a";
+				break;
+			case "b":
+				$radio="802.11b";
+				break;
+			case "g":
+				$radio="802.11g";
+				break;
+			case "n":
+				$radio="802.11n";
+				break;
+			default:
+				$radio="Unknown Radio";
+				break;
+		}
+		$otx = $newArray["otx"];
+		$btx = $newArray["btx"];
+		$nt = $newArray['nt'];
+		$label = $newArray['label'];
+		
+		$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
+		$result6 = mysql_query($sql6, $conn);
+		$max = mysql_num_rows($result6);
+		
+		$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
+		$result_1 = mysql_query($sql_1, $conn);
+		verbosed('Looking for Valid GPS cords.', $verbose, "CLI");
+		while($gps_table_first = mysql_fetch_array($result_1))
+		{
+			$lat_exp = explode(" ", $gps_table_first['lat']);
+			
+			$test = $lat_exp[1]+0;
+			
+			if($test == "0.0000"){$zero = 1; continue;}
+			
+			$date_first = $gps_table_first["date"];
+			$time_first = $gps_table_first["time"];
+			$fa = $date_first." ".$time_first;
+			$alt = $gps_table_first['alt'];
+			$lat =& database::convert_dm_dd($gps_table_first['lat']);
+			$long =& database::convert_dm_dd($gps_table_first['long']);
+			$zero = 0;
+			break;
+		}
+		if($zero == 1)
+		{
+			verbosed('Didnt Find any, not writing AP to file.', $verbose, "CLI");
+			$zero == 0;
+		}else
+		{
+			verbosed('Found some, writing KML File.', $verbose, "CLI");
+			$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$max'";
+			$result_2 = mysql_query($sql_2, $conn);
+			$gps_table_last = mysql_fetch_array($result_2);
+			$date_last = $gps_table_last["date"];
+			$time_last = $gps_table_last["time"];
+			$la = $date_last." ".$time_last;
+			
+			$Odata = "<Placemark id=\"".$mac."\">\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
+			
+			$Ddata  =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"$KML_SOURCE_URL\"><!--exp_all_db_kml-->\r\n<Document>\r\n<name>RanInt WifiDB KML Newset AP</name>\r\n";
+			$Ddata .= "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$open_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n	</Style>\r\n";
+			$Ddata .= "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
+			$Ddata .= "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
+			$Ddata .= '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>';
+			$Ddata .= "\r\n".$Odata."\r\n";
+			$Ddata = $Ddata."</Document>\r\n</kml>";
 
+			
+			$filewrite	=	fopen($filename, "w");
+			if($filewrite_1 != FALSE)
+			{
+				$fileappend	=	fopen($filename, "a");		
 				fwrite($fileappend, $Ddata);
 				fclose($fileappend);
-				
-				#####################################
-				$Odata = "<Placemark id=\"".$mac."_Label\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-				
-				$Ddata  =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"$KML_SOURCE_URL\"><!--exp_all_db_kml-->\r\n<Document>\r\n<name>RanInt WifiDB KML Newset AP</name>\r\n";
-				$Ddata .= "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$open_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n	</Style>\r\n";
-				$Ddata .= "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-				$Ddata .= "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-				$Ddata .= '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>';
-				$Ddata .= "\r\n".$Odata."\r\n";
-				$Ddata = $Ddata."</Document>\r\n</kml>";
-				
-				$filewrite_l = fopen($filename_label, "w");
+			}else
+			{
+				verbosed('Could not write Placer file ('.$filename.'), check permissions.', $verbose, "CLI");
+			}
+			#####################################
+			$Odata = "<Placemark id=\"".$mac."_Label\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
+			
+			$Ddata  =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"$KML_SOURCE_URL\"><!--exp_all_db_kml-->\r\n<Document>\r\n<name>RanInt WifiDB KML Newset AP</name>\r\n";
+			$Ddata .= "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$open_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n	</Style>\r\n";
+			$Ddata .= "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
+			$Ddata .= "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
+			$Ddata .= '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>';
+			$Ddata .= "\r\n".$Odata."\r\n";
+			$Ddata = $Ddata."</Document>\r\n</kml>";
+			
+			$filewrite_l = fopen($filename_label, "w");
+			if($filewrite_1 != FALSE)
+			{
 				$fileappend_label = fopen($filename_label, "a");
 				fwrite($fileappend_label, $Ddata);
 				fclose($fileappend_label);
-				
-				recurse_chown_chgrp($KML_folder, $GLOBALS['WiFiDB_LNZ_User'], $GLOBALS['apache_grp']);
-				recurse_chmod($KML_folder, 0755);
-				verbosed('File has been writen and is ready.', $verbose, "CLI");
-			}	
-		}else
-		{
-			verbosed('Could not write Placer file, check permissions.', $verbose, "CLI");
+			}else
+			{
+				verbosed('Could not write Placer file ('.$filename_label.'), check permissions.', $verbose, "CLI");
+			}
+			recurse_chown_chgrp($KML_folder, $GLOBALS['WiFiDB_LNZ_User'], $GLOBALS['apache_grp']);
+			recurse_chmod($KML_folder, 0755);
+			verbosed('File has been writen and is ready.', $verbose, "CLI");
 		}
+		
 		$end = microtime(true);
 	#	if ($GLOBALS["bench"]  == 1)
 	#	{
@@ -4541,7 +4547,7 @@ class daemon
 					while($gps_table_first = mysql_fetch_array($result_1))
 					{
 						$lat_exp = explode(" ", $gps_table_first['lat']);
-						if(isset($lat_exp[1]))
+						if($lat_exp[1])
 						{
 							$test = $lat_exp[1]+0;
 						}else
@@ -4558,6 +4564,7 @@ class daemon
 						$time_first = $gps_table_first["time"];
 						$fa   = $date_first." ".$time_first;
 						$alt  = $gps_table_first['alt'];
+						
 						$lat  =& database::convert_dm_dd($gps_table_first['lat']);
 						$long =& database::convert_dm_dd($gps_table_first['long']);
 						$zero = 0;

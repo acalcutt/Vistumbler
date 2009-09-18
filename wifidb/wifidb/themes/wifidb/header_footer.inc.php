@@ -65,8 +65,7 @@ function pageheader($title, $output="detailed")
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a><br>
 				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a><br>
 				<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a><br>
-				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a><br>
-				<a class="links" href="http://www.randomintervals.com/wifidb/details.php">Download WiFiDB</a><br>
+				<a class="links" href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Versions</a><br>
 			</td>
 			<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
 			<p align="center">

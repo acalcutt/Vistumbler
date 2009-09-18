@@ -92,7 +92,7 @@ switch($func)
 						$result = mysql_query( $sql , $conn);
 						if($result)
 						{
-							echo "<h2>File has been inserted for Importing at a later time at a schedualed time.<br>This is a trial to see how well it will work.</h2>";
+							echo "<h2>File has been inserted for Importing at a later time at a schedualed time.</h2>";
 						}else
 						{
 							echo "<h2>There was an error inserting file for schedualed import.</h2>".mysql_error($conn);

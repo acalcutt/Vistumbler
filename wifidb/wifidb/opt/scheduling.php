@@ -614,7 +614,7 @@ $timezone_numbers = array(
 					}
 						?>
 					<table <?php echo $color;?> border="1"  width="100%">
-					<tr class="style4"><th>ID</th><th>Filename</th><th>Date</th><th>title</th><th>size</th></tr>
+					<tr class="style4"><th>ID</th><th>Filename</th><th>Title</th><th>Date</th><th>size</th></tr>
 					<tr <?php echo $color;?>>
 					<td align="center">
 					<?php
@@ -626,11 +626,11 @@ $timezone_numbers = array(
 					?>
 					</td><td align="center">
 					<?php
-					echo $newArray['date'];
+					echo $newArray['title'];
 					?>
 					</td><td align="center">
 					<?php
-					echo $newArray['title'];
+					echo $newArray['date'];
 					?>
 					</td><td align="center">
 					<?php

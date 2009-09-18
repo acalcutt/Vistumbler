@@ -2,7 +2,7 @@
 #include('../lib/database.inc.php');
 #echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
 ?>
-<link rel="stylesheet" href="../../themes/wifidb/styles.css">
+<link rel="stylesheet" href="../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
 <table border="0" width="75%" cellspacing="10" cellpadding="2">
@@ -67,10 +67,12 @@ $date = date("Y-m-d");
 
 $root_sql_user	=	addslashes(strip_tags($_POST['root_sql_user']));
 $root_sql_pwd	=	addslashes(strip_tags($_POST['root_sql_pwd']));
+$root			=	addslashes(strip_tags($_POST['root']));
+$hosturl		=	addslashes(strip_tags($_POST['hosturl']));
 $sqlhost		=	addslashes(strip_tags($_POST['sqlhost']));
 $sqlu			=	addslashes(strip_tags($_POST['sqlu']));
 $sqlp			=	addslashes(strip_tags($_POST['sqlp']));
-$wifi			=	addslashes(strip_tags($_POST['wifidb']));
+$wifi			=	addslashes(strip_tags($_POST['wifi']));
 $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
 $timeout		=   "(86400 * 365)";
@@ -105,8 +107,8 @@ echo '<tr class="style4"><TH colspan="2">Database Install</TH></tr>';
 $conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
 $ENG = "InnoDB";
 #drop exisiting db if it is there and create a new one [this is the install after all / not the upgrade]
-$sqls0 =	"DROP DATABASE `$wifi_st`";
-$sqls1 =	"CREATE DATABASE `$wifi_st`";
+$sqls0 =	"DROP DATABASE`$wifi_st`";
+$sqls1 =	"CREATE DATABASE IF NOT EXISTS `$wifi_st`";
 $RE_DB_ST_Re = mysql_query($sqls0, $conn);
 $RE_DB_ST_Re = mysql_query($sqls1, $conn) or die(mysql_error());
 
@@ -118,8 +120,8 @@ else{
 		."CREATE DATABASE IF NOT EXISTS <b>`$wifi_st`.</b></td></tr>";}
 
 #same thing for the ST db
-$sqls0 =	"DROP DATABASE `$wifi`";
-$sqls1 =	"CREATE DATABASE `$wifi`";
+$sqls0 =	"DROP DATABASE IF EXISTS `$wifi`";
+$sqls1 =	"CREATE DATABASE IF NOT EXISTS `$wifi`";
 $sqls2 =	"USE $wifi";
 $wifi_WF_Re = mysql_query($sqls0, $conn);
 $wifi_WF_Re = mysql_query($sqls1, $conn) or die(mysql_error());
@@ -286,8 +288,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc-comm` (
 		`body` TEXT NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		PRIMARY KEY ( `id` ) ,
-		INDEX ( `id` ) ,
-		UNIQUE (`title` )
+		INDEX ( `id` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 
 $insert = mysql_query($sql1, $conn) or die(mysql_error());
@@ -325,7 +326,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`gps` INT NOT NULL ,
 		`hash` VARCHAR( 255 ) NOT NULL,
 		`user_row` INT NOT NULL ,
-		`user` VARCHAR ( 32 ) NOT NULL,
+		`user` VARCHAR ( 255 ) NOT NULL,
 		`notes` TEXT NOT NULL,
 		`title` VARCHAR ( 255 ) NOT NULL,
 		UNIQUE ( `file` )
@@ -341,9 +342,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Files table <b>`$wi
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files_tmp` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`file` VARCHAR( 255 ) NOT NULL ,
-		`user` VARCHAR ( 32 ) NOT NULL,
+		`user` VARCHAR ( 255 ) NOT NULL,
 		`notes` TEXT NOT NULL,
-		`title` VARCHAR ( 128 ) NOT NULL,
+		`title` VARCHAR ( 255 ) NOT NULL,
 		`size` VARCHAR( 12 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		`hash` VARCHAR ( 255 ) NOT NULL,
@@ -406,7 +407,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 
 #Add last edit date and globals
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon, $"."root, $"."header, $"."ads, $"."tracker, $"."hosturl, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."default_theme, $"."default_refresh, $"."default_timezone;\r\ndate_default_timezone_set('$Local_tz');\r\n$"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon, $"."root, $"."header, $"."ads, $"."tracker, $"."hosturl, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."default_theme, $"."default_refresh, $"."default_timezone;\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}

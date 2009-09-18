@@ -1,8 +1,6 @@
-
 <?php
 include('../lib/config.inc.php');
 global $theme;
-
 session_start();
 if(!isset($_SESSION['token']) or !isset($_GET['token']))
 {

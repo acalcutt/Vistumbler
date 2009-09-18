@@ -92,8 +92,6 @@ function pageheader($title, $output="detailed")
 										<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a></strong></div>
 									<div class="inside_text_bold"><strong>
 										<a href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></strong></div>
-									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/down.php?token=<?php echo $token;?>">Download WiFiDB</a></strong></div>
 								</td>
 								<td class="cell_side_right">&nbsp;</td>
 							</tr>

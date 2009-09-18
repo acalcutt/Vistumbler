@@ -37,9 +37,6 @@ $timezn		=	'America/New_York';
 //0; no out put, STUF, 1; let me see the world.
 $verbose	=	1;
 
-//in seconds how much off the Dayligh savings time is (3600 is 1 hour forward, -3600 is 1 hour backwards)
-$DST		=	3600;
-
 //if you want the CLI output to be color coded 1 = ON, 0 = OFF
 //if you ware running windows, this is disabled for you, so even if you turn it on, its not going to work :-p
 $colors_setting = 1;

@@ -16,12 +16,15 @@ pageheader("Version Page");
 			<tr>
 				<td>Project Dev(s)..............</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b><td>
 			</tr>
+			<tr>
+				<td><b><a class="links" href="http://www.randomintervals.com/wifidb/details.php">Download WiFiDB</a></b></td>
+			</tr>
 		</table>
 		
 		<table width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 4</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-12</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-18</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -32,11 +35,14 @@ pageheader("Version Page");
 					<LI>Added Daemon Console Viewer.</LI>
 					<LI>Fixed the issue with some tables in the 'vistumbler' theme where not centered.</LI>
 					<LI>Fixed an issue with the user stat page, where the second AP import list was not showing up.</LI>
-					<LI>Fixed an issue with the daemon where it would not start import a file if said file was uploaded when the daemon was in the middle of an import.</LI>
+					<LI>Fixed an issue with the daemon where it would not start to import a file if said file was uploaded when the daemon was in the middle of an import.</LI>
 					<LI>Added Daemon Generated KML History page, along with a link to it in the main menu.</LI>
 					<LI>Made the output log and pid file for the daemon vars in the config file for the daemon.</LI>
 					<LI>Disabled fields in the daemon section of the install page, if the daemon is not going to be used.</LI>
 					<LI>Disabled the submit buttons on the Exports page if there is no imports/APs in the database.</LI>
+					<LI>Extended `title` and `user` fields to 255 chars.</LI>
+					<LI>Fixed a bug where the time was severly off in some cases, in Andrews instance, UTC said it was 01:11 (real UTC was 00:56), also local [-5] was reported as 21:11 (real time 20:40)</LI>
+					<LI>Removed the "This is just a test" line on the import page after an import with the daemon enabled.</LI>
 				</OL>
 			</td></tr>
 		</table>

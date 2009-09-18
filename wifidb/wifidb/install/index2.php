@@ -5,12 +5,11 @@ document.forms['WiFiDB_Install'].elements['httpduser'].disabled =! document.form
 document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms['WiFiDB_Install'].elements['daemon'].checked;
 }
 </script>
-
 <?php
 #include('../lib/database.inc.php');
 #echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
 ?>
-<link rel="stylesheet" href="../../themes/wifidb/styles.css">
+<link rel="stylesheet" href="../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" marginwidth="10" marginheight="10" onload="document.forms['WiFiDB_Install'].elements['toolsdir'].disabled=true; document.forms['WiFiDB_Install'].elements['httpduser'].disabled=true; document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled=true;">
 <div align="center">
 <table border="0" width="75%" cellspacing="10" cellpadding="2">
@@ -74,10 +73,10 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
     <td><input name="sqlp"></td></tr>
   <tr>
     <td>WiFi DB name <font size="1">(Default `wifi` )</font></td><td>........................................</td>
-    <td><input name="wifidb"></td></tr>
+    <td><input name="wifi"></td></tr>
   <tr>
     <td>WiFi Storage DB name <font size="1">(Default `wifi_st` )</font></td><td>........................................</td>
-    <td><input name="wifistdb"></td>
+    <td><input name="wifist"></td>
 </TR>
 </TR>
   <tr>

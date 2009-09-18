@@ -12,7 +12,6 @@ include('../../lib/config.inc.php');
 <tr class="style4"><th colspan="2">Upgrade Database Tables</th></tr>
 <tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
 <?php
-$Local_tz=date_default_timezone_get();
 $ENG = "InnoDB";
 $date = date("Y-m-d");
 
@@ -24,7 +23,7 @@ $sqlp			=	addslashes(strip_tags($_POST['sqlp']));
 $wifi			=	addslashes(strip_tags($_POST['wifi']));
 $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
-$timeout		=   "(86400 * 365)";
+if(!@isset($timeout)){$timeout		=   "(86400 * 365)";}
 
 if(isset($_POST['daemon']))
 {
@@ -155,45 +154,6 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Insert new links into `$wifi`.`links`<br>".mysql_error($conn)."</td></tr>";
 }
 
-
-$sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc-comm` (
-		`id` INT NOT NULL AUTO_INCREMENT ,
-		`author` VARCHAR( 32 ) NOT NULL DEFAULT 'Annon Coward' ,
-		`title` VARCHAR( 120 ) NOT NULL DEFAULT 'Blank',
-		`body` TEXT NOT NULL ,
-		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		PRIMARY KEY ( `id` ) ,
-		INDEX ( `id` ) ,
-		UNIQUE ( `title` )
-		) ENGINE = InnoDB DEFAULT CHARSET = utf8 AUTO_INCREMENT = 1";
-
-$insert = mysql_query($sql, $conn);
-if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Create Announcement Comments table `$wifi`.`annunc-comm`;</td></tr> ";}
-else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Announcement Comments table `$wifi`.`annunc-comm`;<br>".mysql_error($conn)."</td></tr> ";
-}
-
-
-$sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc` (
-		`id` INT NOT NULL AUTO_INCREMENT ,
-		`auth` VARCHAR( 32 ) NOT NULL DEFAULT 'Annon Coward',
-		`title` VARCHAR( 120 ) NOT NULL DEFAULT 'Blank',
-		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-		`body` TEXT NOT NULL ,
-		`comments` TEXT NOT NULL ,
-		PRIMARY KEY ( `id` ) ,
-		INDEX ( `id` ) ,
-		UNIQUE ( `title` )
-		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-$insert = mysql_query($sql1, $conn);
-if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Create Announcements table `$wifi`.`annunc`;</td></tr>";}
-else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Announcements table `$wifi`.`annunc`;<br>".mysql_error($conn)."</td></tr> ";
-}
-
-
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`file` varchar(255) NOT NULL ,
@@ -202,8 +162,8 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`aps` INT NOT NULL ,
 		`gps` INT NOT NULL ,
 		`hash` VARCHAR( 255 ) NOT NULL,
-		`user` VARCHAR( 64 ) NOT NULL,
-		`title` VARCHAR( 128 ) NOT NULL,
+		`user` VARCHAR( 255 ) NOT NULL,
+		`title` VARCHAR( 255 ) NOT NULL,
 		`notes` TEXT NOT NULL,
 		`user_row` INT NOT NULL ,
 		UNIQUE ( `file` )
@@ -219,9 +179,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Files table `$wifi`
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files_tmp` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`file` VARCHAR( 255 ) NOT NULL ,
-		`user` VARCHAR ( 32 ) NOT NULL,
+		`user` VARCHAR ( 255 ) NOT NULL,
 		`notes` TEXT NOT NULL,
-		`title` VARCHAR ( 128 ) NOT NULL,
+		`title` VARCHAR ( 255 ) NOT NULL,
 		`size` VARCHAR( 12 ) NOT NULL ,
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		`hash` VARCHAR( 255 ) NOT NULL,
@@ -258,7 +218,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to a
 }
 
 $sql1 = "ALTER TABLE `$wifi`.`users` ADD `aps` INT NOT NULL, 
-CHANGE `username` `username` VARCHAR( 32 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
+CHANGE `username` `username` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
 CHANGE `title` `title` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
 $insert = mysql_query($sql1, $conn);
 if($insert)
@@ -275,7 +235,7 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to add gps field;<br>".mysql_error($conn)."</td></tr>";
 }
 
-$sql1 = "ALTER TABLE `$wifi`.`users` ADD `title` VARCHAR ( 128 ) NOT NULL";
+$sql1 = "ALTER TABLE `$wifi`.`users` CHANGE `title` `title` VARCHAR ( 255 ) NOT NULL";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` to add title field;</td></tr>";}
@@ -291,7 +251,7 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to add notes field;<br>".mysql_error($conn)."</td></tr>";
 }
 
-$sql1 = "ALTER TABLE `$wifi`.`users` CHANGE `username` `username` VARCHAR ( 64 ) NOT NULL";
+$sql1 = "ALTER TABLE `$wifi`.`users` CHANGE `username` `username` VARCHAR ( 255 ) NOT NULL";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` `username` field to VARCHAR( 64 );</td></tr>";}
@@ -307,39 +267,46 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` `use
 $sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `size` `size` VARCHAR( 14 )";
 $insert = mysql_query($sql1, $conn);
 if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`files` `size` field, from float to varchar(14);</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Changed `$wifi`.`files` `size` field, from float to varchar(14);</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files` `size` field, from float to varchar(14);<br>".mysql_error($conn)."</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change `$wifi`.`files` `size` field, from float to varchar(14);<br>".mysql_error($conn)."</td></tr>";
 }
 $sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `file` `file` VARCHAR( 255 )";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Changed `$wifi`.`files` `file` VARCHAR( 255 );</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Changed `$wifi`.`files` `file` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change `$wifi`.`files` `file` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>";
 }
-$sql1 = "ALTER TABLE `$wifi`.`files` ADD `title` VARCHAR ( 128 ) NOT NULL, CHARSET=utf8";
+$sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `title` `title` VARCHAR ( 255 ) NOT NULL, CHARSET=utf8";
 $insert = mysql_query($sql1, $conn);
 if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Added field (Title) to `$wifi`.`files`;</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Changed field (Title) to `$wifi`.`files`;</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Added field (Title) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (Title) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>";
 }
-$sql1 = "ALTER TABLE `$wifi`.`files` ADD `user` VARCHAR ( 32 ) NOT NULL, CHARSET=utf8";
+$sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `user` `user` VARCHAR ( 255 ) NOT NULL, CHARSET=utf8";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Added field (user) to `$wifi`.`files`;</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Added field (user) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>";
 }
-$sql1 = "ALTER TABLE `$wifi`.`files` ADD `notes` TEXT NOT NULL, CHARSET=utf8";
+$sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `notes` `notes` TEXT NOT NULL, CHARSET=utf8";
 $insert = mysql_query($sql1, $conn);
 if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Added field (notes) to `$wifi`.`files`;</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Changed field (notes) to `$wifi`.`files`;</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Added field (notes) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (notes) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>";
 }
 
+$sql1 = "ALTER TABLE `$wifi`.`files_tmp` CHANGE `title` `title` VARCHAR ( 255 ) NOT NULL, CHARSET=utf8";
+$insert = mysql_query($sql1, $conn);
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Changed field (Title) to `$wifi`.`files_tmp`;</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (Title) to `$wifi`.`files_tmp`;<br>".mysql_error($conn)."</td></tr>";
+}
 
 
 
@@ -415,7 +382,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 
 #Add last edit date and globals
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon, $"."root, $"."header, $"."ads, $"."tracker, $"."hosturl, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."default_theme, $"."default_refresh, $"."default_timezone;\r\ndate_default_timezone_set('$Local_tz');\r\n$"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."header, $"."ads, $"."tracker, $"."hosturl;
+global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."wifidb_tools, $"."daemon, $"."root;
+global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."default_theme, $"."default_refresh, $"."default_timezone;\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -466,8 +435,8 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default Console values
 
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n"
-									."$"."rebuild		=	0;\r\n"
-									."$"."bench			=	0;\r\n\r\n");
+									."$"."rebuild		=	$rebuild;\r\n"
+									."$"."bench			=	$bench;\r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default debug values</td></tr>";}
@@ -496,12 +465,12 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Host info</td><
 
 #add Table names
 $AD_CF_WT_Re = fwrite($fileappend, "#---------------- Tables ----------------#\r\n"
-									."$"."settings_tb 	=	'settings';\r\n"
-									."$"."users_tb 		=	'users';\r\n"
-									."$"."links 			=	'links';\r\n"
-									."$"."wtable 		=	'wifi0';\r\n"
-									."$"."gps_ext 		=	'_GPS';\r\n"
-									."$"."sep 			=	'-';\r\n\r\n");
+									."$"."settings_tb 	=	'$settings';\r\n"
+									."$"."users_tb 		=	'$users_tb';\r\n"
+									."$"."links 			=	'$links';\r\n"
+									."$"."wtable 		=	'$wtable';\r\n"
+									."$"."gps_ext 		=	'$gps_ext';\r\n"
+									."$"."sep 			=	'$sep';\r\n\r\n");
 if($AD_CF_WT_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Table names</td></tr>";}
 else{
@@ -534,23 +503,22 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Connection Info</td></tr>";}
 
 $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info ----------------#\r\n"
-							."$"."open_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
-							."$"."WEP_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
-							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
-							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
-							."$"."kml_out				=	'../out/kml/';\r\n"
-							."$"."vs1_out				=	'../out/vs1/';\r\n"
-							."$"."daemon_out			=	'out/daemon/';\r\n"
-							."$"."gpx_out				=	'../out/gpx/';\r\n\r\n");
+							."$"."open_loc 				=	'$open_loc';\r\n"
+							."$"."WEP_loc 				=	'$WEP_loc';\r\n"
+							."$"."WPA_loc 				=	'$WPA_loc';\r\n"
+							."$"."KML_SOURCE_URL		=	'$KML_SOURCE_URL';\r\n"
+							."$"."kml_out				=	'$kml_out';\r\n"
+							."$"."vs1_out				=	'$vs1_out';\r\n"
+							."$"."daemon_out			=	'$daemon_out';\r\n"
+							."$"."gpx_out				=	'$gpx_out';\r\n\r\n");
 if($AD_CF_KM_Re){echo "<tr class=\"good\"><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
 
 $AD_CF_FI_Re = fwrite($fileappend,"#---------------- Header and Footer Additional Info -----------------#\r\n"
-								."$"."ads			= '';"
-								."$"."header 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
-<meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
-								."$"."tracker 	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
+								."$"."ads			= '$ads';"
+								."$"."header 		= '$header'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+								."$"."tracker 	= '$tracker'; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
 if($AD_CF_FI_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
