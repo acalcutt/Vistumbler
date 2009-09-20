@@ -407,7 +407,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 
 #Add last edit date and globals
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."conn, $"."wifidb_tools, $"."daemon, $"."root, $"."header, $"."ads, $"."tracker, $"."hosturl, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."default_theme, $"."default_refresh, $"."default_timezone;\r\n$"."lastedit	=	'$date';\r\n\r\n");
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\n<?php\r\nglobal $"."header, $"."ads, $"."tracker, $"."hosturl;
+global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."wifidb_tools, $"."daemon, $"."root;
+global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone;\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -436,6 +438,7 @@ $AD_CF_DG_Re = fwrite($fileappend, "#-------------Themes Settings--------------#
 $"."default_theme		= '$theme';
 $"."default_refresh 	= 15;
 $"."default_timezone	= 0;
+$"."default_dst			= 0;
 $"."timeout			= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
 
 if($AD_CF_DG_Re)

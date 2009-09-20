@@ -1,4 +1,9 @@
 <?php
+global $screen_output;
+$screen_output = "CLI";
+require 'daemon/config.inc.php';
+require $GLOBALS['wifidb_install']."/lib/database.inc.php";
+
 $TOTAL_START=date("H:i:s");
 error_reporting(E_ALL);
 ini_set("memory_limit","3072M");
@@ -57,94 +62,6 @@ foreach($file_a as $file)
 
 $TOTAL_END = date("H:i:s");
 echo "\nTOTAL Running time::\n\nStart: ".$TOTAL_START."\nStop : ".$TOTAL_END."\n";
-
-
-
-function &check_gps_array($gpsarray, $test)
-{
-foreach($gpsarray as $gps)
-{
-	$gps_t =  $gps["date"].$gps["time"].$gps["lat"].$gps["long"];
-	$test_t = $test["date"].$test["time"].$test["lat"].$test["long"];
-#	echo $gps_t."\n".$test_t."\n";
-	if (strcmp($gps_t, $test_t)==0)
-	{
-		// Duplicate GPS
-		if ($GLOBALS["debug"] == TRUE ) {
-			echo  "  Array data: ".$gps_t."\n";
-			echo  "Testing data: ".$test_t."\n.-.-.-.-.=.-.-.-.-.\n";
-			echo "-----=-----=-----\n|\n|\n"; 
-		}
-		$return = 1;
-		return $return;
-	}else
-	{
-		// unique GPS
-		if ($GLOBALS["debug"] == TRUE ){
-			echo  "  Array data: ".$gps_t."\n";
-			echo  "Testing data: ".$test_t."\n----\n";
-			echo "-----=-----\n";
-		}
-		$return = 0;
-#		return $return;
-	}
-}
-return $return;
-}
-
-	#========================================================================================================================#
-	#													Convert GeoCord DD to DM									   	     #
-	#========================================================================================================================#
-	
-	function &convert_dd_dm($geocord_in="")
-	{
-		$start = microtime(true);
-		//	GPS Convertion :
-#		echo $geocord_in.'<BR>';
-		$neg=FALSE;
-		$geocord_exp = explode(".", $geocord_in);
-		$geocord_front = explode(" ", $geocord_exp[0]);
-		
-		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
-		$pattern[0] = '/N /';
-		$pattern[1] = '/E /';
-		$pattern[2] = '/S /';
-		$pattern[3] = '/W /';
-		$replacements = "";
-		$geocord_exp[0] = preg_replace($pattern, $replacements, $geocord_exp[0]);
-		
-		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
-		// 4.146255 ---- 4 - 146255
-#		echo $geocord_exp[1].'<br>';
-		$geocord_dec = "0.".$geocord_exp[1];
-		// 4.146255 ---- 4 - 0.146255
-#		echo $geocord_dec.'<br>';
-		$geocord_mult = $geocord_dec*60;
-		// 4.146255 ---- 4 - (0.146255)*60 = 8.7753
-#		echo $geocord_mult.'<br>';
-		$mult = explode(".",$geocord_mult);
-#		echo $len.'<br>';
-		if( strlen($mult[0]) < 2 )
-		{
-			$geocord_mult = "0".$geocord_mult;
-		}
-		// 4.146255 ---- 4 - 08.7753
-		$geocord_out = $geocord_exp[0].$geocord_mult;
-		// 4.146255 ---- 408.7753
-		echo $geocord_out."\n";
-		$geocord_o = explode(".", $geocord_out);
-		if( strlen($geocord_o[1]) > 4 ){ $geocord_o[1] = substr($geocord_o[1], 0 , 4); $geocord_out = implode('.', $geocord_o); }
-		
-		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
-		$end = microtime(true);
-		if ($GLOBALS["bench"]  == 1)
-		{
-			echo "Time is [Unix Epoc]<BR>";
-			echo "Start Time: ".$start."<BR>";
-			echo "  End Time: ".$end."<BR>";
-		}
-		return $geocord_out;
-	}
 
 function convert_vs1($source, $out)
 {

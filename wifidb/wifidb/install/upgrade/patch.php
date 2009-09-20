@@ -4,7 +4,7 @@ pageheader("Upgrade Page");
 ?>
 <link rel="stylesheet" href="../../themes/wifidb/styles.css">
 <?php
-include('../../lib/config.inc.php');
+include($half_path.'lib/config.inc.php');
 ?>
 <h3>If one of the steps shows "Duplicate column name '***'," you can ignore this error.</h3>
 <table border="1">
@@ -31,7 +31,6 @@ if(isset($_POST['daemon']))
 	$toolsdir	= addslashes(strip_tags($_POST['toolsdir']));
 	$httpduser	= addslashes(strip_tags($_POST['httpduser']));
 	$httpdgrp	= addslashes(strip_tags($_POST['httpdgrp']));
-	$
 }else
 {
 	$daemon 	= FALSE;
@@ -371,7 +370,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT Theme setting INTO 
 <?php
 
 $file_ext = 'config.inc.php';
-$filename = '../../lib/'.$file_ext;
+$filename = $half_path.'lib/'.$file_ext;
 $filewrite = fopen($filename, "w");
 $fileappend = fopen($filename, "a");
 
@@ -384,7 +383,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 #Add last edit date and globals
 $CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."header, $"."ads, $"."tracker, $"."hosturl;
 global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."wifidb_tools, $"."daemon, $"."root;
-global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."default_theme, $"."default_refresh, $"."default_timezone;\r\n$"."lastedit	=	'$date';\r\n\r\n");
+global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone;\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -400,8 +399,8 @@ $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info --------------
 									."$"."log_interval	=	0;\r\n"
 									."$"."wifidb_tools	=	'".$toolsdir."';\r\n"
 									."$"."timezn		=	'".$Local_tz."';\r\n"
-									."$"."WiFiDB_LNZ_User 	=	'$httpduser';\r\n"
-									."$"."apache_grp			=	'$httpdgrp';\r\n\r\n");
+									."$"."WiFiDB_LNZ_User 	=	'".$httpduser."';\r\n"
+									."$"."apache_grp			=	'".$httpdgrp."';\r\n\r\n");
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
 else{
@@ -410,10 +409,11 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values<
 if($theme == ''){$theme = "wifidb";}
 #add default theme values
 $AD_CF_DG_Re = fwrite($fileappend, "#-------------Themes Settings--------------#
-$"."default_theme		= '$theme';
+$"."default_theme		= '".$theme."';
 $"."default_refresh 	= 15;
 $"."default_timezone	= 0;
-$"."timeout			= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
+$"."default_dst			= 0;
+$"."timeout			= ".$timeout."; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default theme values</td></tr>";}

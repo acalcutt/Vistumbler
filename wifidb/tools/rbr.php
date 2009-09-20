@@ -1,4 +1,7 @@
 <?php
+global $screen_output;
+$screen_output = "CLI";
+
 include('daemon/config.inc.php');
 require('rbrconfig.php');
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";

@@ -49,7 +49,6 @@ if($GLOBALS['screen_output'] != "CLI")
 	if(!@include_once('config.inc.php'))
 	{die('<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="http://'.$_SERVER["SERVER_NAME"].'/wifidb/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>');}
 
-
 	if(PHP_OS == 'Linux'){ $div = '/';}
 	elseif(PHP_OS == 'WINNT'){ $div = '\\';}
 

@@ -17,7 +17,7 @@ pageheader("Version Page");
 				<td>Project Dev(s)..............</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b><td>
 			</tr>
 			<tr>
-				<td><b><a class="links" href="http://www.randomintervals.com/wifidb/details.php">Download WiFiDB</a></b></td>
+				<td><b><a class="links" href="http://www.randomintervals.com/wifidb/">Download WiFiDB</a></b></td>
 			</tr>
 		</table>
 		
@@ -35,10 +35,10 @@ pageheader("Version Page");
 					<LI>Added Daemon Console Viewer.</LI>
 					<LI>Fixed the issue with some tables in the 'vistumbler' theme where not centered.</LI>
 					<LI>Fixed an issue with the user stat page, where the second AP import list was not showing up.</LI>
-					<LI>Fixed an issue with the daemon where it would not start to import a file if said file was uploaded when the daemon was in the middle of an import.</LI>
+					<LI>Fixed an issue with the daemon where it would not start to import a file if said file was uploaded when the daemon was in the middle of an import. You would have to wait till the next import.</LI>
 					<LI>Added Daemon Generated KML History page, along with a link to it in the main menu.</LI>
 					<LI>Made the output log and pid file for the daemon vars in the config file for the daemon.</LI>
-					<LI>Disabled fields in the daemon section of the install page, if the daemon is not going to be used.</LI>
+					<LI>Disabled fields in the daemon section of the install page, via checkbox, if the daemon is not going to be used.</LI>
 					<LI>Disabled the submit buttons on the Exports page if there is no imports/APs in the database.</LI>
 					<LI>Extended `title` and `user` fields to 255 chars.</LI>
 					<LI>Fixed a bug where the time was severly off in some cases, in Andrews instance, UTC said it was 01:11 (real UTC was 00:56), also local [-5] was reported as 21:11 (real time 20:40)</LI>

@@ -23,10 +23,41 @@ switch($func)
 		setcookie( 'wifidb_client_timezone' , $tz_post , (time()+(86400 * 365)), "/".$root."/opt/scheduling.php" ); // 86400 = 1 day
 		header('Location: scheduling.php?token='.$_SESSION['token']);
 	break;
+	
+	case 'set_dst':
+		if( (!isset($_POST['set_dst'])) or $_POST['set_dst']=='' ) { $_POST['set_dst'] = "-5"; }
+		$set_dst = strip_tags(addslashes($_POST['set_dst']));
+		setcookie( 'wifidb_dst' , $set_dst , (time()+(86400 * 365)), "/".$root."/" ); // 86400 = 1 day
+		header('Location: scheduling.php?token='.$_SESSION['token']);
+	break;
+	
+	case 'set_dst':
+		?>
+		<script type="text/javascript" language="javascript">
+		function setCookie(c_name,value,expiredays)
+		{
+			var exdate=new Date();
+			exdate.setDate(exdate.getDate()+expiredays);
+			document.cookie=c_name+ "=" +escape(value)+
+			((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+		}
+		var tzo=(new Date().gettimezoneOffset()/60)*(-1); 
+		
+		</script>
+		<body onload="setCookie('wififdb_dst',tzo,<?php echo $timeout;?>);">
+		</body>
+		<?php
+		echo $_SERVER['PHP_SELF']."<BR>";
+		sleep(500);
+		header('Location: '.$_SERVER['PHP_SELF']);
+	break;
 }
 $TZone = ($_COOKIE['wifidb_client_timezone']!='' ? $_COOKIE['wifidb_client_timezone'] : $default_timezone);
 $refresh = ($_COOKIE['wifidb_refresh']!='' ? $_COOKIE['wifidb_refresh'] : $default_refresh);
-#echo $TZone;
+$dst = ($_COOKIE['wifidb_dst']!='' ? $_COOKIE['wifidb_dst'] : $default_dst);
+echo $TZone."<br>";
+echo $dst."<br>";
+
 pageheader("Scheduling Page");
 
 ####################
@@ -41,7 +72,7 @@ function getdaemonstats()
 		if(file_exists($WFDBD_PID))
 		{
 			$pid_open = file($WFDBD_PID);
-			echo $pid_open;
+#			echo $pid_open;
 			exec('ps vp '.$pid_open[0] , $output, $sta);
 			if(isset($output[1]))
 			{
@@ -499,10 +530,14 @@ $timezone_numbers = array(
 				<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> UTC</td><td>
 				<?php
 				$str_time = strtotime($file_array['size']);
-				$alter_by = (($TZone*60)*60);
+	#		echo "str_time ".$str_time."<br>";
+				$alter_by = (($dst*60)*60);
+	#		echo "alter_by ".$alter_by."<br>";
 				$altered = $str_time+$alter_by;
+	#		echo "altered ".$altered."<br>";
 				$next_run = date("Y-m-d H:i:s", $altered);
-				$Zone = " [".$TZone."] ";
+	#		echo "next_run ".$next_run."<br>";
+				$Zone = " [".$dst."] ";
 				$time_zone_string = preg_replace($timezone_numbers, $timezone_names, $Zone);
 				
 				echo $next_run.$time_zone_string;
@@ -529,45 +564,12 @@ $timezone_numbers = array(
 					<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit">
 					</form>
 				</td></tr>
-				<tr><td colspan="1">Set Your Timezone:</td><td colspan="2">
-					<form action="scheduling.php?func=set_tzone&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+				<tr><td colspan="1">Detect DST:</td><td colspan="2">
+					<form action="scheduling.php?func=dst_detect&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 					<input type="hidden" name="token" value="<?php echo $token; ?>" />
-					<SELECT NAME="TZone">  
-					<OPTION <?php if($TZone == -12){ echo "selected ";}?> VALUE="-12"> -12 hrs
-					<OPTION <?php if($TZone == -11){ echo "selected ";}?> VALUE="-11"> -11 hrs
-					<OPTION <?php if($TZone == -10){ echo "selected ";}?> VALUE="-10"> -10 hrs
-					<OPTION <?php if($TZone == -9){ echo "selected ";}?> VALUE="-9"> -9 hrs
-					<OPTION <?php if($TZone == -8){ echo "selected ";}?> VALUE="-8"> -8 hrs
-					<OPTION <?php if($TZone == -7){ echo "selected ";}?> VALUE="-7"> -7 hrs
-					<OPTION <?php if($TZone == -6){ echo "selected ";}?> VALUE="-6"> -6 hrs
-					<OPTION <?php if($TZone == -5){ echo "selected ";}?> VALUE="-5"> -5 hrs
-					<OPTION <?php if($TZone == -4){ echo "selected ";}?> VALUE="-4"> -4 hrs
-					<OPTION <?php if($TZone == -3.5){ echo "selected ";}?> VALUE="-3.5"> -3.5 hrs
-					<OPTION <?php if($TZone == -3){ echo "selected ";}?> VALUE="-3"> -3 hrs
-					<OPTION <?php if($TZone == -2){ echo "selected ";}?> VALUE="-2"> -2 hrs
-					<OPTION <?php if($TZone == -1){ echo "selected ";}?> VALUE="-1"> -1 hrs
-					<OPTION <?php if($TZone == 0){ echo "selected ";}?> VALUE="0"> 0 hrs
-					<OPTION <?php if($TZone == 1){ echo "selected ";}?> VALUE="1"> 1 hrs
-					<OPTION <?php if($TZone == 2){ echo "selected ";}?> VALUE="2"> 2 hrs
-					<OPTION <?php if($TZone == 3){ echo "selected ";}?> VALUE="3"> 3 hrs
-					<OPTION <?php if($TZone == 3.5){ echo "selected ";}?> VALUE="3.5"> 3.5 hrs
-					<OPTION <?php if($TZone == 4){ echo "selected ";}?> VALUE="4"> 4 hrs
-					<OPTION <?php if($TZone == 4.5){ echo "selected ";}?> VALUE="4.5"> 4.5 hrs
-					<OPTION <?php if($TZone == 5){ echo "selected ";}?> VALUE="5"> 5 hrs
-					<OPTION <?php if($TZone == 6){ echo "selected ";}?> VALUE="6"> 6 hrs
-					<OPTION <?php if($TZone == 6.5){ echo "selected ";}?> VALUE="6.5"> 6.5 hrs
-					<OPTION <?php if($TZone == 7){ echo "selected ";}?> VALUE="7"> 7 hrs
-					<OPTION <?php if($TZone == 8){ echo "selected ";}?> VALUE="8"> 8 hrs
-					<OPTION <?php if($TZone == 9){ echo "selected ";}?> VALUE="9"> 9 hrs
-					<OPTION <?php if($TZone == -9.5){ echo "selected ";}?> VALUE="9.5"> 9.5 hrs
-					<OPTION <?php if($TZone == 10){ echo "selected ";}?> VALUE="10"> 10 hrs
-					<OPTION <?php if($TZone == 11){ echo "selected ";}?> VALUE="11"> 11 hrs
-					<OPTION <?php if($TZone == 12){ echo "selected ";}?> VALUE="12"> 12 hrs
-					</SELECT>
-					<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit">
+					<INPUT TYPE=SUBMIT NAME="Submit" VALUE="Detect!">
 					</form>
 				</td></tr>
-				
 			</table><br />
 			<table border="1" width="90%">
 			<tr class="style4"><th colspan="4">Daemon Status:</TH></tr>

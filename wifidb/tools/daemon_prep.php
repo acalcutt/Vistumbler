@@ -1,5 +1,6 @@
 <?php
-
+global $log, $debug, $screen_output;
+$screen_output = "CLI";
 require 'daemon/config.inc.php';
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
@@ -8,9 +9,8 @@ $start="2008.05.23";
 $ver="1.1";
 $localtimezone = date("T");
 echo $localtimezone."\n";
-global $log, $debug;
 
-date_default_timezone_set('GMT+0'); //setting the time zone to GMT(Zulu) for internal keeping, displays will soon be customizable for the users time zone
+date_default_timezone_set('UTC'); //setting the time zone to GMT(Zulu) for internal keeping, displays will soon be customizable for the users time zone
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 error_reporting(E_STRICT|E_ALL); //show all erorrs with strict santex
 
