@@ -3,17 +3,21 @@ global $screen_output;
 $screen_output = "CLI";
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
+include($GLOBALS['wifidb_tools'].'/daemon/config.inc.php');
 
 $scroll = ($_COOKIE['console_scroll']!='' ? $_COOKIE['console_scroll'] : $GLOBALS['console_scroll']);
 $refresh = ($_COOKIE['console_refresh']!='' ? $_COOKIE['console_refresh'] : $GLOBALS['console_refresh']);
 $last5 = ($_COOKIE['console_last5']!='' ? $_COOKIE['console_last5'] : $GLOBALS['console_last5']);
 $lines = ($_COOKIE['console_lines']!='' ? $_COOKIE['console_lines'] : $GLOBALS['console_lines']);
+
 $N=1;
 $NN=1;
 $sig_num=0;
 $sig_line=0;
 $exp_num=0;
 $line_num=0;
+$console_log = $GLOBALS['wifidb_tools'].$GLOBALS['console_log'];
+
 $COLORS = array(
 				0	=>"/\033\[0;37m/",
 				1	=>"/\033\[0;34m/",
@@ -35,9 +39,7 @@ if($refresh < 1){$refresh = 15;}
 if($lines < 2){$lines = 2;}
 if($lines > 60){$lines = 60;}
 
-if(!file_exists("/var/log/wifidb"))
-{die("<link rel='stylesheet' href='style.css'><body bgcolor='BLACK'><span class='console_red'>You need to start the daemon and have a sym-link at /wifidb/log that points to /var/log/wifidb or what ever you set as the daemon output log.</span></body>");}
-$console = file("/var/log/wifidb");
+$console = file($console_log);
 $count = count($console);
 $text = "";
 ?>
@@ -66,7 +68,7 @@ setTimeout(window.location='#end', 20000);
 <span class="console_lightgray">
 
 <?php
-$handle = fopen("/var/log/wifidb", "r");
+$handle = fopen($console_log, "r");
 
 	while($console_line = fgets($handle))
 	{

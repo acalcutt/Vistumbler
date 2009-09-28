@@ -183,7 +183,7 @@ else{echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT Theme setting 
 #create users table (History for imports)
 $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users` (
 		`id` INT( 255 ) NOT NULL AUTO_INCREMENT,
-		`username` VARCHAR( 32 ) NOT NULL,
+		`username` VARCHAR( 255 ) NOT NULL,
 		`points` TEXT NOT NULL,
 		`notes` TEXT NOT NULL,
 		`title` VARCHAR ( 255 ) NOT NULL,
@@ -407,9 +407,10 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 
 #Add last edit date and globals
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\n<?php\r\nglobal $"."header, $"."ads, $"."tracker, $"."hosturl;
+$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."header, $"."ads, $"."tracker, $"."hosturl;
 global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."wifidb_tools, $"."daemon, $"."root;
-global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone;\r\n$"."lastedit	=	'$date';\r\n\r\n");
+global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."console_log;
+global $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone;\r\n\r\n$"."lastedit	=	'$date';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
@@ -422,11 +423,11 @@ $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info --------------
 									."$"."daemon		=	".$daemon.";\r\n"
 									."$"."debug			=	0;\r\n"
 									."$"."log_level		=	0;\r\n"
-									."$"."log_interval	=	0;\r\n"
-									."$"."wifidb_tools	=	'".$toolsdir."';\r\n"
+									."$"."log_interval		=	0;\r\n"
+									."$"."wifidb_tools		=	'".$toolsdir."';\r\n"
 									."$"."timezn		=	'".$Local_tz."';\r\n"
 									."$"."WiFiDB_LNZ_User 	=	'$httpduser';\r\n"
-									."$"."apache_grp			=	'$httpdgrp';\r\n\r\n");
+									."$"."apache_grp		=	'$httpdgrp';\r\n\r\n");
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
 else{
@@ -435,11 +436,11 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values<
 
 #add default theme values
 $AD_CF_DG_Re = fwrite($fileappend, "#-------------Themes Settings--------------#
-$"."default_theme		= '$theme';
+$"."default_theme	= '$theme';
 $"."default_refresh 	= 15;
 $"."default_timezone	= 0;
-$"."default_dst			= 0;
-$"."timeout			= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
+$"."default_dst		= 0;
+$"."timeout		= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default theme values</td></tr>";}
@@ -448,10 +449,10 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default theme values</
 
 
 $AD_CF_DG_Re = fwrite($fileappend, "#-------------Console Viewer Settings--------------#
-$"."console_refresh = 15;
-$"."console_scroll  = 1;
-$"."console_last5   = 1;
-$"."console_lines   = 10;
+$"."console_refresh	= 15;
+$"."console_scroll	= 1;
+$"."console_last5	= 1;
+$"."console_lines	= 10;
 $"."console_log		= '/var/log/wifidb';\r\n\r\n");
 
 if($AD_CF_DG_Re)
@@ -461,8 +462,8 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default Console values
 
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n"
-									."$"."rebuild		=	0;\r\n"
-									."$"."bench			=	0;\r\n\r\n");
+									."$"."rebuild	=	0;\r\n"
+									."$"."bench		=	0;\r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default debug values</td></tr>";}
@@ -491,12 +492,12 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Host info</td><
 
 #add Table names
 $AD_CF_WT_Re = fwrite($fileappend, "#---------------- Tables ----------------#\r\n"
-									."$"."settings_tb 	=	'settings';\r\n"
-									."$"."users_tb 		=	'users';\r\n"
-									."$"."links 			=	'links';\r\n"
-									."$"."wtable 		=	'wifi0';\r\n"
-									."$"."gps_ext 		=	'_GPS';\r\n"
-									."$"."sep 			=	'-';\r\n\r\n");
+									."$"."settings_tb	=	'settings';\r\n"
+									."$"."users_t	=	'users';\r\n"
+									."$"."links		=	'links';\r\n"
+									."$"."wtable	=	'wifi0';\r\n"
+									."$"."gps_ext	=	'_GPS';\r\n"
+									."$"."sep		=	'-';\r\n\r\n");
 if($AD_CF_WT_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Table names</td></tr>";}
 else{
@@ -504,8 +505,8 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Table names</td></t
 
 #add sql host info
 $AD_CF_DB_Re = fwrite($fileappend, "#---------------- DataBases ----------------#\r\n"
-									."$"."db			=	'$wifi';\r\n"
-									."$"."db_st 		=	'$wifi_st';\r\n\r\n");
+									."$"."db		=	'$wifi';\r\n"
+									."$"."db_st		=	'$wifi_st';\r\n\r\n");
 if($AD_CF_DB_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add DataBase names</td></tr>";}
 else{
@@ -513,8 +514,8 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding DataBase names</td>
 
 #add sql host info
 $AD_CF_SU_Re = fwrite($fileappend, "#---------------- SQL User Info ----------------#\r\n"
-									."$"."db_user		=	'$sqlu';\r\n"
-									."$"."db_pwd			=	'$sqlp';\r\n\r\n");
+									."$"."db_user	=	'$sqlu';\r\n"
+									."$"."db_pwd	=	'$sqlp';\r\n\r\n");
 if($AD_CF_SU_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add DataBase names</td></tr>";}
 else{
@@ -522,30 +523,29 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding DataBase names</td>
 
 #add sql Connection info
 $AD_CF_SC_Re = fwrite($fileappend, "#---------------- SQL Connection Info ----------------#\r\n"
-							."$"."conn 				=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
+							."$"."conn	=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
 if($AD_CF_SU_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add SQL Connection Info</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Connection Info</td></tr>";}
 
 $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info ----------------#\r\n"
-							."$"."open_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
-							."$"."WEP_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
-							."$"."WPA_loc 				=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
-							."$"."KML_SOURCE_URL		=	'http://www.opengis.net/kml/2.2';\r\n"
-							."$"."kml_out				=	'../out/kml/';\r\n"
-							."$"."vs1_out				=	'../out/vs1/';\r\n"
-							."$"."daemon_out			=	'out/daemon/';\r\n"
-							."$"."gpx_out				=	'../out/gpx/';\r\n\r\n");
+							."$"."open_loc		=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"
+							."$"."WEP_loc		=	'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png';\r\n"
+							."$"."WPA_loc		=	'http://vistumbler.sourceforge.net/images/program-images/secure.png';\r\n"
+							."$"."KML_SOURCE_URL	=	'http://www.opengis.net/kml/2.2';\r\n"
+							."$"."kml_out		=	'../out/kml/';\r\n"
+							."$"."vs1_out		=	'../out/vs1/';\r\n"
+							."$"."daemon_out		=	'out/daemon/';\r\n"
+							."$"."gpx_out		=	'../out/gpx/';\r\n\r\n");
 if($AD_CF_KM_Re){echo "<tr class=\"good\"><td>Success..........</td><td>Add KML Info</td></tr>";}
 else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
 
 $AD_CF_FI_Re = fwrite($fileappend,"#---------------- Header and Footer Additional Info -----------------#\r\n"
-								."$"."ads			= '';"
-								."$"."header 		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" />
-<meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />'; # <-- put the code for your ads in here www.google.com/adsense\r\n"
-								."$"."tracker 	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
+								."$"."ads		= ''; # <-- put the code for your ads in here www.google.com/adsense\r\n"
+								."$"."header	= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" /><meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />';\r\n"
+								."$"."tracker	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
 if($AD_CF_FI_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{

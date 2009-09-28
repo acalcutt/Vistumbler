@@ -1,11 +1,13 @@
 <?php
 include('../lib/database.inc.php');
-
 include('../lib/config.inc.php');
+
 $func			= '';
 $refresh_post	= '';
 $tz_post		= '';
-if( !isset($_GET['func']) ) { $_GET['func'] = ""; }
+
+if(!isset($_GET['func'])){$_GET['func'] = "";}
+
 $func = strip_tags(addslashes($_GET['func']));
 
 switch($func)
@@ -23,41 +25,12 @@ switch($func)
 		setcookie( 'wifidb_client_timezone' , $tz_post , (time()+(86400 * 365)), "/".$root."/opt/scheduling.php" ); // 86400 = 1 day
 		header('Location: scheduling.php?token='.$_SESSION['token']);
 	break;
-	
-	case 'set_dst':
-		if( (!isset($_POST['set_dst'])) or $_POST['set_dst']=='' ) { $_POST['set_dst'] = "-5"; }
-		$set_dst = strip_tags(addslashes($_POST['set_dst']));
-		setcookie( 'wifidb_dst' , $set_dst , (time()+(86400 * 365)), "/".$root."/" ); // 86400 = 1 day
-		header('Location: scheduling.php?token='.$_SESSION['token']);
-	break;
-	
-	case 'set_dst':
-		?>
-		<script type="text/javascript" language="javascript">
-		function setCookie(c_name,value,expiredays)
-		{
-			var exdate=new Date();
-			exdate.setDate(exdate.getDate()+expiredays);
-			document.cookie=c_name+ "=" +escape(value)+
-			((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
-		}
-		var tzo=(new Date().gettimezoneOffset()/60)*(-1); 
-		
-		</script>
-		<body onload="setCookie('wififdb_dst',tzo,<?php echo $timeout;?>);">
-		</body>
-		<?php
-		echo $_SERVER['PHP_SELF']."<BR>";
-		sleep(500);
-		header('Location: '.$_SERVER['PHP_SELF']);
-	break;
 }
+
 $TZone = ($_COOKIE['wifidb_client_timezone']!='' ? $_COOKIE['wifidb_client_timezone'] : $default_timezone);
 $refresh = ($_COOKIE['wifidb_refresh']!='' ? $_COOKIE['wifidb_refresh'] : $default_refresh);
-$dst = ($_COOKIE['wifidb_dst']!='' ? $_COOKIE['wifidb_dst'] : $default_dst);
-echo $TZone."<br>";
-echo $dst."<br>";
 
+#echo $TZone;
 pageheader("Scheduling Page");
 
 ####################
@@ -72,7 +45,7 @@ function getdaemonstats()
 		if(file_exists($WFDBD_PID))
 		{
 			$pid_open = file($WFDBD_PID);
-#			echo $pid_open;
+			echo $pid_open;
 			exec('ps vp '.$pid_open[0] , $output, $sta);
 			if(isset($output[1]))
 			{
@@ -292,17 +265,19 @@ if(is_string($func))
 		break;
 		
 		case 'daemon_kml':
+			$date = date("y-m-d");
 			?>
-			<table width="50%" border="1" cellspacing="0" cellpadding="0" align="center">
+			<table width="700px" border="1" cellspacing="0" cellpadding="0" align="center">
 			<tr>
 				<td>
 				<table border="1" cellspacing="0" cellpadding="0" style="width: 100%">
 					<tr>
-						<td class="style4">Daemon Generated KML</td>
+						<td class="style4">Daemon Generated KML<br><font size="2">All times are local system time.</font></td>
 					</tr>
 				</table>
 				<table border="1" cellspacing="0" cellpadding="0" style="width: 100%">
-					<tr><td class="daemon_kml" colspan="2">
+					<tr>
+						<td class="daemon_kml" colspan="2">
 					<?php
 					if(file_exists("../out/daemon/update.kml"))
 					{
@@ -316,7 +291,21 @@ if(is_string($func))
 					<?php
 					}
 					?>
-					</td>
+						</td>
+					</tr>
+					<tr>
+						<td class="daemon_kml">
+							<?php
+							$files = '../out/daemon/newestAP.kml';
+							if(file_exists($files))
+							{
+								echo "Newset AP Last Edit: </td><td>".date ("Y-m-d H:i:s", filemtime($files));
+							}else
+							{
+								echo "Not created yet";
+							}
+							?>
+						</td>
 					</tr>
 					<tr>
 						<td colspan="2" class="style4">History</td>
@@ -325,8 +314,15 @@ if(is_string($func))
 				<table style="width: 50%" align="center">
 					<tr>
 						<td class="daemon_kml">
+						<table border="1" cellspacing="0" cellpadding="0" width="100%"><tr><td>
+						<table border="1" cellspacing="0" cellpadding="0" width="100%">
+							<tr>
+								<td width="33%">Date Created</td><td width="33%">Last Edit Time</td>
+								<td width="33%">Download Link</td>
+							</tr>
+						</table>
 						<?php
-						$download = '';
+						$DGK_folder = array();
 						$file_count = 0;
 						$dh = opendir("../out/daemon") or die("couldn't open directory");
 						while ($file = readdir($dh))
@@ -338,19 +334,22 @@ if(is_string($func))
 							if($file == "update.kml"){continue;}
 							if($file == "newestAP.kml"){continue;}
 							if($file == "newestAP_label.kml"){continue;}
+							$download ='';
 							$kmz_file = '../out/daemon/'.$file.'/fulldb.kmz';
 							if(file_exists($kmz_file))
 							{
-								$download = $download.'<table border="1" cellspacing="0" cellpadding="0"  width="100%">
+								$download = $download.'<br><table border="1" cellspacing="0" cellpadding="0" width="100%">
 									<tr>
-										<td style="width: 50%">'.$file.'</td>
-										<td><a class="links" href="../out/daemon/'.$file.'/fulldb.kmz">Download</a></td>
+										<td width="33%">'.$file.'</td><td width="33%">'.date ("H:i:s", filemtime($kmz_file)).'</td>
+										<td width="33%"><a class="links" href="'.$kmz_file.'">Download</a></td>
 									</tr>
 								</table>
-								<br>';
+								';
+								$DGK_folder[] = $download;
 								$file_count++;
 							}
 						}
+						#var_dump($DGK_folder);
 						if($file_count == 0)
 						{
 							?>
@@ -362,9 +361,14 @@ if(is_string($func))
 							<?php
 						}else
 						{
-							echo $download;
+							rsort($DGK_folder, SORT_STRING);
+							foreach($DGK_folder as $Day)
+							{
+								echo $Day;
+							};
 						}
 						?>
+						</td></tr></table>
 						</td>
 						</tr>
 					</table>
@@ -372,66 +376,6 @@ if(is_string($func))
 				</tr>
 			</table>
 			<?php
-		break;
-		
-		case "create_kml":
-		
-		$daemon_KMZ_folder = $GLOBALS['hosturl'].$GLOBALS['root']."/out/daemon/";
-		
-		$Network_link_KML = $daemon_KMZ_folder."update.kml";
-		
-		$daemon_daily_KML = $GLOBALS['wifidb_install']."/out/daemon/update.kml";
-		
-		$filewrite = fopen($daemon_daily_KML, "w");
-		$fileappend_update = fopen($daemon_daily_KML, "a");
-		
-		fwrite($fileappend_update, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<kml xmlns=\"http://earth.google.com/kml/2.2\">
-	<Document>
-		<name>WiFiDB *ALPHA* Auto KMZ Generation</name>
-		<Folder>
-		<name> Newest Access Point</name>
-		<open>1</open>
-		<Style>
-			<ListStyle>
-				<listItemType>radioFolder</listItemType>
-				<bgColor>00ffffff</bgColor>
-				<maxSnippetLines>2</maxSnippetLines>
-			</ListStyle>
-		</Style>
-		<NetworkLink>
-			<name>Newest AP</name>
-			<flyToView>1</flyToView>
-			<Url>
-				<href>".$daemon_KMZ_folder."newestAP.kml</href>
-				<refreshMode>onInterval</refreshMode>
-				<refreshInterval>1</refreshInterval>
-			</Url>
-		</NetworkLink>
-		<NetworkLink>
-			<name>Newest AP Label</name>
-			<flyToView>1</flyToView>
-			<Url>
-				<href>".$daemon_KMZ_folder."newestAP_label.kml</href>
-				<visibility>0</visibility>
-				<refreshMode>onInterval</refreshMode>
-				<refreshInterval>1</refreshInterval>
-			</Url>
-		</NetworkLink>
-		</Folder>
-		<name>Daemon Generated KMZ</name>
-		<open>1</open>
-		<NetworkLink>
-			<name>Daily KMZ</name>
-			<Url>
-				<href>".$daemon_KMZ_folder."fulldb.kmz</href>
-				<refreshMode>onInterval</refreshMode>
-				<refreshInterval>3600</refreshInterval>
-			</Url>
-		</NetworkLink>
-	</Document>
-</kml>");
-		
 		break;
 		
 		case "no_daemon":
@@ -530,17 +474,13 @@ $timezone_numbers = array(
 				<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> UTC</td><td>
 				<?php
 				$str_time = strtotime($file_array['size']);
-	#		echo "str_time ".$str_time."<br>";
-				$alter_by = (($dst*60)*60);
-	#		echo "alter_by ".$alter_by."<br>";
+				$alter_by = (($TZone*60)*60);
 				$altered = $str_time+$alter_by;
-	#		echo "altered ".$altered."<br>";
 				$next_run = date("Y-m-d H:i:s", $altered);
-	#		echo "next_run ".$next_run."<br>";
-				$Zone = " [".$dst."] ";
-				$time_zone_string = preg_replace($timezone_numbers, $timezone_names, $Zone);
+				$Zone = " [".$TZone."] ";
+	#			$time_zone_string = preg_replace($timezone_numbers, $timezone_names, $Zone);
 				
-				echo $next_run.$time_zone_string;
+				echo $next_run.$Zone;
 				?></td></tr>
 				<tr><td colspan="1">Select Refresh Rate:</td><td colspan="2">
 					<form action="scheduling.php?func=refresh&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
@@ -564,12 +504,45 @@ $timezone_numbers = array(
 					<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit">
 					</form>
 				</td></tr>
-				<tr><td colspan="1">Detect DST:</td><td colspan="2">
-					<form action="scheduling.php?func=dst_detect&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+				<tr><td colspan="1">Set Your Timezone:</td><td colspan="2">
+					<form action="scheduling.php?func=set_tzone&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 					<input type="hidden" name="token" value="<?php echo $token; ?>" />
-					<INPUT TYPE=SUBMIT NAME="Submit" VALUE="Detect!">
+					<SELECT NAME="TZone">  
+					<OPTION <?php if($TZone == -12){ echo "selected ";}?> VALUE="-12"> -12 hrs
+					<OPTION <?php if($TZone == -11){ echo "selected ";}?> VALUE="-11"> -11 hrs
+					<OPTION <?php if($TZone == -10){ echo "selected ";}?> VALUE="-10"> -10 hrs
+					<OPTION <?php if($TZone == -9){ echo "selected ";}?> VALUE="-9"> -9 hrs
+					<OPTION <?php if($TZone == -8){ echo "selected ";}?> VALUE="-8"> -8 hrs
+					<OPTION <?php if($TZone == -7){ echo "selected ";}?> VALUE="-7"> -7 hrs
+					<OPTION <?php if($TZone == -6){ echo "selected ";}?> VALUE="-6"> -6 hrs
+					<OPTION <?php if($TZone == -5){ echo "selected ";}?> VALUE="-5"> -5 hrs
+					<OPTION <?php if($TZone == -4){ echo "selected ";}?> VALUE="-4"> -4 hrs
+					<OPTION <?php if($TZone == -3.5){ echo "selected ";}?> VALUE="-3.5"> -3.5 hrs
+					<OPTION <?php if($TZone == -3){ echo "selected ";}?> VALUE="-3"> -3 hrs
+					<OPTION <?php if($TZone == -2){ echo "selected ";}?> VALUE="-2"> -2 hrs
+					<OPTION <?php if($TZone == -1){ echo "selected ";}?> VALUE="-1"> -1 hrs
+					<OPTION <?php if($TZone == 0){ echo "selected ";}?> VALUE="0"> 0 hrs
+					<OPTION <?php if($TZone == 1){ echo "selected ";}?> VALUE="1"> 1 hrs
+					<OPTION <?php if($TZone == 2){ echo "selected ";}?> VALUE="2"> 2 hrs
+					<OPTION <?php if($TZone == 3){ echo "selected ";}?> VALUE="3"> 3 hrs
+					<OPTION <?php if($TZone == 3.5){ echo "selected ";}?> VALUE="3.5"> 3.5 hrs
+					<OPTION <?php if($TZone == 4){ echo "selected ";}?> VALUE="4"> 4 hrs
+					<OPTION <?php if($TZone == 4.5){ echo "selected ";}?> VALUE="4.5"> 4.5 hrs
+					<OPTION <?php if($TZone == 5){ echo "selected ";}?> VALUE="5"> 5 hrs
+					<OPTION <?php if($TZone == 6){ echo "selected ";}?> VALUE="6"> 6 hrs
+					<OPTION <?php if($TZone == 6.5){ echo "selected ";}?> VALUE="6.5"> 6.5 hrs
+					<OPTION <?php if($TZone == 7){ echo "selected ";}?> VALUE="7"> 7 hrs
+					<OPTION <?php if($TZone == 8){ echo "selected ";}?> VALUE="8"> 8 hrs
+					<OPTION <?php if($TZone == 9){ echo "selected ";}?> VALUE="9"> 9 hrs
+					<OPTION <?php if($TZone == -9.5){ echo "selected ";}?> VALUE="9.5"> 9.5 hrs
+					<OPTION <?php if($TZone == 10){ echo "selected ";}?> VALUE="10"> 10 hrs
+					<OPTION <?php if($TZone == 11){ echo "selected ";}?> VALUE="11"> 11 hrs
+					<OPTION <?php if($TZone == 12){ echo "selected ";}?> VALUE="12"> 12 hrs
+					</SELECT>
+					<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit">
 					</form>
 				</td></tr>
+				
 			</table><br />
 			<table border="1" width="90%">
 			<tr class="style4"><th colspan="4">Daemon Status:</TH></tr>

@@ -24,7 +24,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 4</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-18</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-27</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -43,6 +43,8 @@ pageheader("Version Page");
 					<LI>Extended `title` and `user` fields to 255 chars.</LI>
 					<LI>Fixed a bug where the time was severly off in some cases, in Andrews instance, UTC said it was 01:11 (real UTC was 00:56), also local [-5] was reported as 21:11 (real time 20:40)</LI>
 					<LI>Removed the "This is just a test" line on the import page after an import with the daemon enabled.</LI>
+					<LI>Daemon now checks if the log file is longer then 500 lines, if so the file is moved to [tools_dir]/backups/logs/console_wifidbd_[date-time].log</LI>
+					<LI>Added a bash script writen by Andrew, was adpated from the plone startup bash script. Use either wifidbd or wifidbd.sh</LI>
 				</OL>
 			</td></tr>
 		</table>

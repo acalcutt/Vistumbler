@@ -69,14 +69,18 @@ if (isset($_GET['token']))
 											<P><A NAME="encry"></A><INPUT TYPE=TEXT NAME="encry" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
 										</TD>
 									</TR>
-										<TD WIDTH=16%>.</TD><TD WIDTH=84%>
+									<TR>
+										<TD class="style3"  WIDTH=16%>
+											<font size="3"><i>Use % as a wildcard</i></font>
+										</TD>
+										<TD WIDTH=84%>
 											<P>
 										<?php	
 											if($rebuild === 0)
 											{
 											echo '<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in"></P>';
 											}else{echo "The database is in  rebuild mode, please wait...";}
-										?>
+										?></p>
 										</TD>
 									</TR>
 								</TABLE>

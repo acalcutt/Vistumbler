@@ -15,17 +15,36 @@ if (isset($_GET['token']))
 		if ($_POST['ssid'] == "%" or $_POST['mac'] == "%" or $_POST['radio'] == "%" or $_POST['chan'] == "%" or $_POST['auth'] == "%" or $_POST['encry'] == "%" )
 		{
 			echo '<table><tr><td colspan="6" align="center">Come on man, you cant search or all of something, thats what <a class="links" href="../all.php?token='.$_SESSION["token"].'">this page</a> is for!</td></tr></table>'; 
-			$filename = $_SERVER['SCRIPT_FILENAME'];
-			footer($filename);
-			die();
-
+			die(footer($_SERVER['SCRIPT_FILENAME']));
 		}
-		if (isset($_POST['ssid']))	{$ssid = $_POST['ssid'];  }else{$ssid = $_GET['ssid'];}
-		if (isset($_POST['mac']))	{$mac = $_POST['mac'];}else{$mac = $_GET['mac'];}
-		if (isset($_POST['radio']))	{$radio = $_POST['radio']; }else{$radio = $_GET['radio'];}
-		if (isset($_POST['chan']))	{$chan = $_POST['chan']; }else{$chan = $_GET['chan'];}
-		if (isset($_POST['auth']))	{$auth = $_POST['auth']; }else{$auth = $_GET['auth'];}
-		if (isset($_POST['encry']))	{$encry = $_POST['encry'];  }else{$encry = $_GET['encry'];}
+		
+		if(isset($_GET['func']))
+		{$func = $_GET['func'];}
+		else{$func = "";}
+		
+		if(isset($_POST['ssid']))
+		{$ssid = $_POST['ssid'];}
+		else{$ssid = $_GET['ssid'];}
+		
+		if(isset($_POST['mac']))
+		{$mac = $_POST['mac'];}
+		else{$mac = $_GET['mac'];}
+		
+		if(isset($_POST['radio']))
+		{$radio = $_POST['radio'];}
+		else{$radio = $_GET['radio'];}
+		
+		if(isset($_POST['chan']))
+		{$chan = $_POST['chan'];}
+		else{$chan = $_GET['chan'];}
+		
+		if(isset($_POST['auth']))
+		{$auth = $_POST['auth'];}
+		else{$auth = $_GET['auth'];}
+		
+		if(isset($_POST['encry']))
+		{$encry = $_POST['encry'];}
+		else{$encry = $_GET['encry'];}
 		
 		$ord   =	addslashes(strip_tags($_GET['ord']));
 		$sort  =	addslashes(strip_tags($_GET['sort']));
@@ -52,48 +71,81 @@ if (isset($_GET['token']))
 		$n=0;
 		$to=$from+$inc;
 		
-		$sql_a[0]	=	" `ssid` like '".$ssid."%' ";
-		$sql_a[1]	=	" `mac` like '".$mac."%' ";
-		$sql_a[2]	=	" `radio` like '".$radio."%' ";
-		$sql_a[3]	=	" `chan` like '".$chan."%' ";
-		$sql_a[4]	=	" `auth` like '".$auth."%' ";
-		$sql_a[5]	=	" `encry` like '".$encry."%' ";
+		$save_url = '<a title="(right click - save bookmark)" class="links" href="results.php?ord='.$ord.'&sort='.$sort.'&from='.$from.'&to='.$inc.'&';
+		$export_url = '<a class="links" href="results.php?func=export&';
+		$II = 0;
+		
+		if($ssid!='')
+		{
+			$save_url .= 'ssid='.$ssid.'&';
+			$export_url .= 'ssid='.$ssid.'&';
+			$sql_a[$II]	=	" `ssid` like '".$ssid."%' ";
+			
+		}
+		
+		if($mac!='')
+		{
+			$save_url .= 'mac='.$mac.'&';
+			$export_url .=  'mac='.$mac.'&';
+			$sql_a[$II]	=	" `mac` like '".$mac."%' ";
+			$II++;
+		}
+		
+		if($radio!='')
+		{
+			$save_url .= 'radio='.$radio.'&';
+			$export_url .=  'radio='.$radio.'&';
+			$sql_a[$II]	=	" `radio` like '".$radio."%' ";
+			$II++;
+		}
+		
+		if($chan!='')
+		{
+			$save_url .= 'chan='.$chan.'&';
+			$export_url .=  'chan='.$chan.'&';
+			$sql_a[$II]	=	" `chan` like '".$chan."%' ";
+			$II++;
+		}
+		
+		if($auth!='')
+		{
+			$save_url .= 'auth='.$auth.'&';
+			$export_url .=  'auth='.$auth.'&';
+			$sql_a[$II]	=	" `auth` like '".$auth."%' ";
+			$II++;
+		}
+		
+		if($encry!='')
+		{
+			$save_url .= 'encry='.$encry.'&';
+			$export_url .=  'encry='.$encry.'&';
+			$sql_a[$II]	=	" `encry` like '".$encry."%' ";
+			$II++;
+		}
+		$save_url .= 'token='.$_SESSION['token'].'">Save for later</a>';		
+		$export_url .=  'token='.$_SESSION['token'].'">Export to KML</a>';
 
 		if(!$sql_a)
 		{
-			echo '<tr><td colspan="6" align="center">There where no results, please try again</td></tr></table>'; 
-			$filename = $_SERVER['SCRIPT_FILENAME'];
-			footer($filename);
-			die();
+			echo '<h2>There where no results, please try again<br><A class="links" HREF="javascript:history.go(-1)">Go back</a> and do it right!</h2>'; 
+			die(footer($_SERVER['SCRIPT_FILENAME']));
 		}
-		mysql_select_db($db,$conn);
+		if($func == "export")
+		{
+			database::exp_search($sql_a);
+			die(footer($_SERVER['SCRIPT_FILENAME']));
+		}
 		
-		$sql0 = "SELECT * FROM $wtable WHERE " . implode(' AND ', $sql_a) ." ORDER BY $sort $ord LIMIT $from, $inc";
+		$sql0 = "SELECT * FROM `$db`.`$wtable` WHERE " . implode(' AND ', $sql_a) ." ORDER BY $sort $ord LIMIT $from, $inc";
 		$result = mysql_query($sql0, $conn) or die(mysql_error($conn));
 		
-		$sql00 = "SELECT * FROM $wtable WHERE " . implode(' AND ', $sql_a) ." ORDER BY $sort $ord";
+		$sql00 = "SELECT * FROM `$db`.`$wtable` WHERE " . implode(' AND ', $sql_a) ." ORDER BY $sort $ord";
 		$result1 = mysql_query($sql00, $conn) or die(mysql_error($conn));
 		
 		$total_rows = mysql_num_rows($result1);
 		echo '<p align="center">Total APs found: '.$total_rows.'</p><table border="1" width="100%" cellspacing="0"><tr><td align="center" colspan="7">';
 		
-		
-		echo '<a class="links" href="results.php?ord='.$ord.'&sort='.$sort.'&from='.$from.'&to='.$inc.'&';
-			
-			if($ssid!=''){echo 'ssid='.$ssid.'&';}
-			
-			if($mac!=''){echo 'mac='.$mac.'&';}
-			
-			if($radio!=''){echo 'radio='.$radio.'&';}
-			
-			if($chan!=''){echo 'chan='.$chan.'&';}
-			
-			if($auth!=''){echo 'auth='.$auth.'&';}
-			
-			if($encry!=''){echo 'encry='.$encry.'&';}
-			
-			echo 'token='.$_SESSION['token'].'">Save this search</a></td></tr>';
-		
+		echo $save_url.'<br>'.$export_url.'</td></tr>';
 		
 		echo '<tr class="style4"><td>ID</td><td>SSID<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
 			.'<td>MAC<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=mac&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=mac&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
@@ -105,11 +157,9 @@ if (isset($_GET['token']))
 		if($total_rows === 0)
 		{
 			echo '<tr><td colspan="6" align="center">There where no results, please try again</td></tr></table>'; 
-			$filename = $_SERVER['SCRIPT_FILENAME'];
-			footer($filename);
-			die();
+			die(footer($_SERVER['SCRIPT_FILENAME']));
 		}
-
+		
 		while ($newArray = mysql_fetch_array($result))
 		{
 			$id_s = $newArray['id'];
@@ -165,7 +215,7 @@ if (isset($_GET['token']))
 				$from=$from+$inc;
 				$page++;
 		}
-		if ($from_<=$size)
+		if ($from_<=$pages)
 		{
 			echo">";
 		}
@@ -181,6 +231,5 @@ if (isset($_GET['token']))
 {
 	echo "<h2>You dont have a token, try again</h2>";
 }
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+footer($_SERVER['SCRIPT_FILENAME']);
 ?>

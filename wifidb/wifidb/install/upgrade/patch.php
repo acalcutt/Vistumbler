@@ -200,9 +200,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Create tmp Files table `$w
 $sql1 = "ALTER TABLE `$wifi`.`$wtable` CHANGE `ssid` `ssid` VARCHAR( 32 ), CHANGE `chan` `chan` VARCHAR( 3 ), CHANGE `id` `id` INT( 255 ) NOT NULL AUTO_INCREMENT";
 $insert = mysql_query($sql1, $conn);
 if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` to add aps, gps, username, notes, and title fields;</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` to change aps, gps, username, notes, and title fields;</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to add aps, gps, username, notes, and title fields;<br>".mysql_error($conn)."</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to change SSID (32 char max), Chan(3 char max), ID (numeric 255 not null, auto increment) fields;<br>".mysql_error($conn)."</td></tr>";
 }
 
 
@@ -237,9 +237,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to a
 $sql1 = "ALTER TABLE `$wifi`.`users` CHANGE `title` `title` VARCHAR ( 255 ) NOT NULL";
 $insert = mysql_query($sql1, $conn);
 if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` to add title field;</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` to change title field to 255 chars;</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to add aps title field;<br>".mysql_error($conn)."</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to change title field to 255 chars;<br>".mysql_error($conn)."</td></tr>";
 }
 
 $sql1 = "ALTER TABLE `$wifi`.`users` ADD `notes` TEXT NOT NULL";
@@ -253,9 +253,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` to a
 $sql1 = "ALTER TABLE `$wifi`.`users` CHANGE `username` `username` VARCHAR ( 255 ) NOT NULL";
 $insert = mysql_query($sql1, $conn);
 if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` `username` field to VARCHAR( 64 );</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` `username` field to VARCHAR( 255 );</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` `username` field to VARCHAR( 64 );<br>".mysql_error($conn)."</td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`users` `username` field to VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>";
 }
 
 
@@ -465,7 +465,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Host info</td><
 
 #add Table names
 $AD_CF_WT_Re = fwrite($fileappend, "#---------------- Tables ----------------#\r\n"
-									."$"."settings_tb 	=	'$settings';\r\n"
+									."$"."settings_tb 	=	'$settings_tb';\r\n"
 									."$"."users_tb 		=	'$users_tb';\r\n"
 									."$"."links 			=	'$links';\r\n"
 									."$"."wtable 		=	'$wtable';\r\n"

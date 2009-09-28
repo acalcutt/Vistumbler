@@ -12,23 +12,25 @@ require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config
 require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'database.inc.php');
 
 #echo $GLOBALS['wifidb_tools']."\n";
-
+$console_log = $GLOBALS['wifidb_tools'].$GLOBALS['console_log'];
 if(isset($argv[1]))
 {$command = $argv[1];}
 else{$command = "none";}
 $command = strtolower($command);
+$command = $command[0].$command[1].$command[2].$command[3];
 if($command != "none") //parse WiFiDB argument to get value
 {
 	switch ($command)
 	{
-		case "restart" :
-			if(file_exists($pid_file))
+		case "rest" :
+			if(file_exists($GLOBALS['pid_file_loc']))
 			{
 				stop();
 				start();
 			}else
 			{
-				echo "WiFiDB Daemon was not running..\n";
+				
+				echo "WiFiDB Daemon was not running..\n".$GLOBALS['pid_file_loc']."\n";
 				start();
 			}
 			break;
@@ -37,11 +39,11 @@ if($command != "none") //parse WiFiDB argument to get value
 			stop();
 			break;
 			
-		case "start" :
+		case "star" :
 			start();
 			break;
 			
-		case "ver" :
+		case "vers" :
 			ver();
 			break;
 			
@@ -49,29 +51,30 @@ if($command != "none") //parse WiFiDB argument to get value
 			help();
 			break;
 			
-		case "status" :
+		case "star" :
 			status();
 			break;
 	}
 }else
 {
-	echo "You need to specify whether you want to start/restart/stop the WiFiDB Daemon\n";
+	echo "You need to specify whether you want to start/restart/stop/help/ver the WiFiDB Daemon\n";
 }
+
 # Start and Stop functions for the daemon
 
 function start()
 {
-
+	require('daemon/config.inc.php');
 	echo "Starting WiFiDB Daemon..\n";
+	$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."wifidbd.php";
 	if (PHP_OS == "WINNT")
-	{$cmd = "start ".$GLOBALS['php_install']."\php ".$GLOBALS['wifidb_tools']."\daemon\wifidbd.php";}
-	else{$cmd = "nohup php ".$GLOBALS['wifidb_tools']."/daemon/wifidbd.php > ".$GLOBALS['console_log']." &";}
+	{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
+	else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
 	
 	echo $cmd."\n";
-	if(file_exists($GLOBALS['wifidb_tools'].$GLOBALS['dim'].'daemon'.$GLOBALS['dim']."wifidbd.php"))
+	if(file_exists($daemon_script))
 	{
 		$start = popen($cmd, 'w');
-		#exec($cmd, $screen_output , $start);
 		if($start)
 		{
 			echo "WiFiDB Daemon Started..\n";
@@ -88,8 +91,10 @@ function start()
 		echo "Could not find the WiFiDB Daemon file. [wifidbd.php].\n";
 	}
 }
+
 function stop()
 {
+	require('daemon/config.inc.php');
 	if(file_exists($GLOBALS['pid_file_loc']))
 	{
 		echo $GLOBALS['pid_file_loc']."\n";
@@ -108,6 +113,53 @@ function stop()
 	}else
 	{
 		echo "WiFiDB Daemon was not running..\n";
+	}
+}
+
+function status()
+{
+	$WFDBD_PID = $GLOBALS['wifidb_tools'].'/daemon/wifidbd.pid';
+	$os = PHP_OS;
+	if ( $os[0] == 'L')
+	{
+		#echo $os."<br>";
+		$output = array();
+		if(file_exists($WFDBD_PID))
+		{
+			$pid_open = file($WFDBD_PID);
+			exec('ps vp '.$pid_open[0] , $output, $sta);
+			if(isset($output[1]))
+			{
+				echo "Linux WiFiDB Daemon is running!\n";
+			}else
+			{
+				echo "Linux WiFiDB Daemon is not running!\n";
+			}
+		}else
+		{
+			echo "Linux WiFiDB Daemon is not running!\n";
+		}
+	}elseif( $os[0] == 'W')
+	{
+		$output = array();
+		if(file_exists($WFDBD_PID))
+		{
+			$pid_open = file($WFDBD_PID);
+			exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+			if(isset($output[2]))
+			{
+				echo "Windows WiFiDB Daemon is running!\n";
+			}else
+			{
+				echo "Windows WiFiDB Daemon is not running!\n";
+			}
+		}else
+		{
+			echo "Windows WiFiDB Daemon is not running!\n";
+		}
+	}else
+	{
+		echo "Unkown OS WiFiDB Daemon is not running!\n";
 	}
 }
 
@@ -199,10 +251,13 @@ VERSION HISTORY
 	 in order to find a file that was inserted into the files_tmp table
 	 while it was in the middle of an import.
 2 -> Added in Daemon Generated KML exports.
+3 -> Daemon now checks if the log file is longer then 500 lines, if so
+	 the file is moved to [tools_dir]/backups/logs/console_wifidbd_[date-time].log
+4 -> Added a bash script writen by Andrew, was adpated from the 
+	 plone startup bash script. Use either wifidbd or wifidbd.sh
 ==============================\n\n";
 
 }
-
 
 function help()
 {
@@ -235,52 +290,5 @@ function help()
 		version (NIY)		-	The Version History.
 
 		help (NIY)		-	This dialog.\n\n";
-}
-
-function status()
-{
-	$WFDBD_PID = $GLOBALS['wifidb_tools'].'/daemon/wifidbd.pid';
-	$os = PHP_OS;
-	if ( $os[0] == 'L')
-	{
-		#echo $os."<br>";
-		$output = array();
-		if(file_exists($WFDBD_PID))
-		{
-			$pid_open = file($WFDBD_PID);
-			exec('ps vp '.$pid_open[0] , $output, $sta);
-			if(isset($output[1]))
-			{
-				echo "Linux WiFiDB Daemon is running!\n";
-			}else
-			{
-				echo "Linux WiFiDB Daemon is not running!\n";
-			}
-		}else
-		{
-			echo "Linux WiFiDB Daemon is not running!\n";
-		}
-	}elseif( $os[0] == 'W')
-	{
-		$output = array();
-		if(file_exists($WFDBD_PID))
-		{
-			$pid_open = file($WFDBD_PID);
-			exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
-			if(isset($output[2]))
-			{
-				echo "Windows WiFiDB Daemon is running!\n";
-			}else
-			{
-				echo "Windows WiFiDB Daemon is not running!\n";
-			}
-		}else
-		{
-			echo "Windows WiFiDB Daemon is not running!\n";
-		}
-	}else
-	{
-		echo "Unkown OS WiFiDB Daemon is not running!\n";
-	}
 }
 ?>

@@ -17,10 +17,9 @@ $This_is_me = getmypid();
 $PHP_OS = PHP_OS;
 $OS = $PHP_OS[0];
 
+date_default_timezone_set("UTC");
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
-
-#error_reporting(E_ALL|E_STRICT); //show all erorrs with strict santex
-
+#error_reporting(E_ALL); //show all erorrs with strict santex, come on now, we want to know whats going on
 
 //Now we need to write the PID file so that the init.d file can control it.
 $pid_file = $GLOBALS['pid_file_loc'];
@@ -34,6 +33,9 @@ verbosed($GLOBALS['COLORS']['GREEN']."Have writen the PID file at ".$pid_file." 
 $daemon_ver	= $GLOBALS['daemon_ver'];
 $start_date = $GLOBALS['start_date'];
 $last_edit = $GLOBALS['last_edit'];
+$settings_tb = $GLOBALS['settings_tb'];
+$console_log = $GLOBALS['wifidb_tools'].$GLOBALS['console_log'];
+$console_line_limit = $GLOBALS['console_line_limit'];
 
 if($OS == "WINNT"){$dim = "\\";}
 if($OS == "Linux"){$dim = "/";}
@@ -70,16 +72,29 @@ if($log_level != 0)
 	elseif($GLOBALS['log_interval'] == 1){$de = "one file a day 'log/wifidbd_log_[yyyy-mm-dd].log'";}
 	verbosed($GLOBALS['COLORS']['GREEN']."Log Interval is: ".$GLOBALS['log_interval']." (".$de.")".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output);
 }
-	if($time_interval_to_check < '30'){$time_interval_to_check = '30';} //its really pointless to check more then 5 min at a time, becuse if it is 
-																		//importing something it is probably going to take more then that to imort the file
+#if($time_interval_to_check < '30'){$time_interval_to_check = '30';} //its really pointless to check more then 5 min at a time, becuse if it is 
+																	//importing something it is probably going to take more then that to imort the file
+																	
 $finished = 0;
 //Main loop
-date_default_timezone_set("UTC");
 $database = new database;
 $daemon	=	new daemon;
 while(1) //while my pid file is still in the /var/run/ folder i will still run, this is for the init.d script or crash override
 {
-	$RUNresult = mysql_query("SELECT `id` FROM `$db`.`$settings_tb` WHERE `table` = 'files'", $conn);
+	$console_log_moved = $GLOBALS['wifidb_tools']."/backups/logs/console_wifidbd_".date('Y-m-d H:i:s').".log";
+	$console_log_array = file($console_log);
+	$console_lines = count($console_log_array);
+#	echo "File: ".$console_log." ".$console_lines."\n";
+	if($console_lines > $console_line_limit)
+	{
+		if(copy($console_log, $console_log_moved))
+		{
+			popen("php rund.php restart", "w");
+		}
+	}
+	
+	$RUN_SQL = "SELECT `id` FROM `$db`.`$settings_tb` WHERE `table` = 'files'";
+	$RUNresult = mysql_query($RUN_SQL, $conn);
 	$next_run_id = mysql_fetch_array($RUNresult);
 	$NR_ID = $next_run_id['id'];
 	$nextrun = date("Y-m-d H:i:s", (time()+$time_interval_to_check));
@@ -193,9 +208,8 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 				}
 			}else
 			{
-				
 				$finished = 0;
-				logd("File is empty, go and import something.\n", $log_interval, 0,  $GLOBALS['log_level']);
+				logd("File is empty or not valid, go and import something.\n", $log_interval, 0,  $GLOBALS['log_level']);
 				verbosed($GLOBALS['COLORS']['YELLOW']."File is empty, go and import something.\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose);
 				$remove_file = $files_array['id'];
 				$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";

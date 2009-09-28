@@ -6,7 +6,7 @@
 global $ver, $full_path, $half_path, $dim;
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.16 Build 4 ",
-			"Last_Core_Edit" 	=> 	"2009-Sept-17",
+			"Last_Core_Edit" 	=> 	"2009-Sept-27",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
@@ -171,7 +171,7 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 	{
 		if($message == ''){echo "Logd was told to write a blank string.\nThis has NOT been logged.\nThis will NOT be allowed!\n"; continue;}
 		$date = date("y-m-d");
-		$time = time()+$DST;
+		$time = time();
 		$datetime = date("Y-m-d H:i:s",$time);
 		$message = $datetime."   ->    ".$message."\r\n";
 		include('config.inc.php');
@@ -1014,9 +1014,11 @@ class database
 								$gps_SQL = "SELECT * FROM `$db_st`.`$gps_table` WHERE `id` = '$dbid'";
 								$DBresult = mysql_query($gps_SQL, $conn);
 								$GPSDBArray = mysql_fetch_array($DBresult);
-								if($sats > $GPSDBArray['sats'] && $GPSDBArray['id'] != 0)
+								$id_db = $GPSDBArray['id'];
+								$sats_db = $GPSDBArray['sats'];
+								if($sats > $sats_db && $id_db != 0)
 								{
-									$sql_D = "DELETE FROM `$db_st`.`$gps_table` WHERE `id` = '$dbid' LIMIT 1";
+									$sql_D = "DELETE FROM `$db_st`.`$gps_table` WHERE `id` = '$id_db' LIMIT 1";
 									$DBresult1 = mysql_query($sql_D, $conn);
 									if(!$DBresult1)
 									{
@@ -1030,7 +1032,7 @@ class database
 										}
 										die();
 									}
-									$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$dbid', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+									$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$id_db', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 									$DBresult2 = mysql_query($sql_U, $conn);
 									if(!$DBresult2)
 									{
@@ -2424,13 +2426,13 @@ class database
 				$sql = "SELECT * FROM `$wtable`";
 				$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$total = mysql_num_rows($result);
-				$temp_kml = 'full_db_export.kml';
+				$temp_kml = '../tmp/full_db_export.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$fileappend = fopen($temp_kml, "a");
 				
 				$date=date('Y-m-d_H-i-s');
-				
-				$filename = $date.'_fulldb.kmz';
+				$filename = '../tmp/'.$date.'_fulldb.kmz';
+				$moved ='../out/kmz/full/'.$date.'_fulldb.kmz';
 				echo '<tr><td style="border-style: solid; border-width: 1px" colspan="2">Wrote Header to KML Buffer</td><td></td></tr>';
 				$x=0;
 				$n=0;
@@ -2593,7 +2595,6 @@ class database
 					    $zip->close();
 				#	    echo 'Zipped up<br>';
 						unlink($temp_kml);
-						$moved ='../out/kmz/full/'.$filename;
 						copy($filename, $moved);
 						unlink($filename);
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
@@ -2640,13 +2641,13 @@ class database
 				if ($user_array["title"]==""){$title = "UNTITLED";}else{$title=$user_array["title"];}
 				if ($user_array["username"]==""){$user = "Uknnown";}else{$user=$user_array["username"];}
 				echo '<tr class="style4"><td colspan="2" align="center" style="border-style: solid; border-width: 1px">Username: '.$user.'</td></tr>';
-				$temp_kml = $user.$title.rand().'tmp.kml';
+				$temp_kml = '../tmp/'.$user.$title.rand().'tmp.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$fileappend = fopen($temp_kml, "a");
 				
 				$date=date('Y-m-d_H-i-s');
 				
-				$filename = $date.'_'.$user.'_'.$title.'.kmz';
+				$filename = '../tmp/'.$date.'_'.$user.'_'.$title.'.kmz';
 				// open file and write header:
 				fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"$KML_SOURCE_URL\">\r\n<!--exp_user_list-->		<Document>\r\n			<name>User: ".$user." - Title: ".$title."</name>\r\n");
 				fwrite($fileappend, "			<Style id=\"openStyleDead\">\r\n		<IconStyle>\r\n				<scale>0.5</scale>\r\n				<Icon>\r\n			<href>".$open_loc."</href>\r\n			</Icon>\r\n			</IconStyle>\r\n			</Style>\r\n");
@@ -2851,14 +2852,14 @@ class database
 				
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$aparray["ssid"].'</th></tr>';
 				
-				$temp_kml = $aparray['ssid'].'-'.$aparray['mac']."-".$aparray['sectype']."-".rand().'tmp.kml';
+				$temp_kml = '../tmp/'.$aparray['ssid'].'-'.$aparray['mac']."-".$aparray['sectype']."-".rand().'tmp.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$fileappend = fopen($temp_kml, "a");
 				
 				$date=date('Y-m-d_H-i-s');
 				
-				$filename = $aparray['ssid'].'-'.$aparray['mac'].'-'.rand().'-single.kmz';
-				
+				$filename = '../tmp/'.$aparray['ssid'].'-'.$aparray['mac'].'-'.rand().'-single.kmz';
+				$moved  = '../out/kmz/single/'.$aparray['ssid'].'-'.$aparray['mac'].'-'.rand().'-single.kmz';
 				if($filewrite != FALSE)
 				{
 					$file_data  = ("");
@@ -3000,19 +3001,17 @@ class database
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Zipping up the files into a KMZ file.</td></tr>';
 					$zip = new ZipArchive;
 				#	echo $half_path.'out/kmz/single/'.$filename."<br>";
-					if ($zip->open($half_path.'out/kmz/single/'.$filename, ZipArchive::CREATE) === TRUE) 
+					if ($zip->open($filename, ZipArchive::CREATE) === TRUE) 
 					{
 					   $zip->addFile($temp_kml, 'doc.kml');
 					 #  $zip->addFromString('doc.kml', $fdata);
 					    $zip->close();
 				#	    echo 'Zipped up<br>';
 						unlink($temp_kml);
-						$moved  = '../out/kmz/single/'.$filename;
+						copy($filename, $moved);
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$moved.'">Here</a></td></tr></table>';
-						echo $zip->getStatusString();
 					} else {
-						echo $zip->getStatusString();
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Could not create KMZ archive.</td></tr>';
 					}
 				}else
@@ -3055,14 +3054,14 @@ class database
 					}
 				}
 				#var_dump($ap_id);
-				$temp_kml = $user.rand().'tmp.kml';
+				$temp_kml = '../tmp/'.$user.rand().'tmp.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$fileappend = fopen($temp_kml, "a");
 				
 				$date=date('Y-m-d_H-i-s');
 				
-				$filename = $user.'.kmz';
-				
+				$filename = '../tmp/'.$user.'.kmz';
+				$moved ='../out/kmz/user/'.$user.'.kmz';
 				// open file and write header:
 				$total = count($ap_id);
 				fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"".$KML_SOURCE_URL."\">\r\n<!--exp_user_all_kml--><Document>\r\n<name>RanInt WifiDB KML</name>\r\n");
@@ -3214,7 +3213,6 @@ class database
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is not ready.</td></tr></table>';
 						continue;
 					}
-					$moved ='../out/kmz/user/'.$filename;
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$moved.'">Here</a></td></tr></table>';
 					copy($filename, $moved);
@@ -3252,18 +3250,21 @@ class database
 				$ssid_t = $ssid_array[0];
 				$ssid_f = $ssid_array[1];
 				$ssid = $ssid_array[2];
+				
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$ssid.'\'s Signal History</th></tr>';
-				$temp_kml = $ssid_f."-".$aparray['mac']."-".$aparray['sectype']."-".rand().'tmp.kml';
+				$ssid_f = preg_replace("/%/","",$ssid_f);
+				$ssid_f = preg_replace("/ /","_",$ssid_f);
+				$temp_kml = '../tmp/'.$ssid_f."-".$aparray['mac']."-".$aparray['sectype']."-".rand().'tmp.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$date=date('Y-m-d_H-i-s');
-				$ssid = preg_replace("/%/","",$ssid);
-				$ssid = preg_replace("/ /","_",$ssid);
-				$filename = $ssid.'-'.$aparray['mac'].'-'.rand().'.kmz';
+
+				$filename = '../tmp/'.$ssid_f.'-'.$aparray['mac'].'-'.$aparray['sectype']."-".rand().'.kmz';
+				$moved  = '../out/kmz/single/'.$ssid_f.'-'.$aparray['mac'].'-'.$aparray['sectype']."-".rand().'.kmz';
 				
 				if($filewrite != FALSE)
 				{
 					$fileappend = fopen($temp_kml, "a");
-					$table=$ssid_t.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
+					$table = $ssid_t.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
 					$table_gps = $table.$gps_ext;
 					
 					$file_data  = ("");
@@ -3424,19 +3425,17 @@ class database
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Zipping up the files into a KMZ file.</td></tr>';
 					$zip = new ZipArchive;
 			#		echo $half_path.'out/kmz/single/'.$filename."<br>";
-					if ($zip->open($half_path.'out/kmz/single/'.$filename, ZipArchive::CREATE) === TRUE) 
+					if ($zip->open($filename, ZipArchive::CREATE) === TRUE) 
 					{
 					   $zip->addFile($temp_kml, 'doc.kml');
 					 #  $zip->addFromString('doc.kml', $fdata);
 					    $zip->close();
 				#	    echo 'Zipped up<br>';
 						unlink($temp_kml);
-						$moved  = '../out/kmz/single/'.$filename;
+						copy($filename, $moved);
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$moved.'">Here</a></td></tr></table>';
-						echo $zip->getStatusString();
 					} else {
-						echo $zip->getStatusString();
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Could not create KMZ archive.</td></tr>';
 					}
 				}else
@@ -3457,6 +3456,196 @@ class database
 			#--------------------#
 		}
 	}
+	
+	
+	
+	function exp_search($values)
+	{
+		
+		include('config.inc.php');
+		$start = microtime(true);
+		$total=0;
+		$no_gps = 0;
+		mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
+		echo '<table align="center" style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start export of all APs for User: '.$user.', to KML</th></tr>';
+		
+		$date=date('Y-m-d_H-i-s');
+	#	var_dump($values);
+		
+		$temp_kml = "../tmp/save_".$date."_".rand()."_tmp.kml";
+		$filewrite = fopen($temp_kml, "w");
+		$fileappend = fopen($temp_kml, "a");
+		
+		$filename = "save".$date.rand().'.kmz';
+		$moved ='../out/kmz/lists/'.$filename;
+		// open file and write header:
+		$total = count($ap_id);
+		fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"".$KML_SOURCE_URL."\">\r\n<!--exp_user_all_kml--><Document>\r\n<name>RanInt WifiDB KML</name>\r\n");
+		fwrite($fileappend, "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$open_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+		fwrite($fileappend, "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+		fwrite($fileappend, "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
+		fwrite($fileappend, '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>');
+		fwrite( $fileappend, "<Folder>\r\n<name>WiFiDB Access Points</name>\r\n<description>Total Number of APs: ".$total."</description>\r\n");
+		fwrite( $fileappend, "<Folder>\r\n<name>Access Points for User: ".$user."</name>\r\n");
+		echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Wrote Header to KML File</td></tr>';
+		$NN = 0;
+		$sql = "SELECT * FROM `$wtable` WHERE " . implode(' AND ', $values);
+		$result = mysql_query($sql, $conn);
+		while($aps = mysql_fetch_array($result))
+		{
+			$ssids_ptb = str_split(smart_quotes($aps['ssid']),25);
+			$ssid = $ssids_ptb[0];
+			$mac = $aps['mac'];
+			$sectype = $aps['sectype'];
+			$r = $aps['radio'];
+			$chan = $aps['chan'];
+			$manuf =& database::manufactures($mac);
+			
+			$table = $ssid.$sep.$mac.$sep.$sectype.$sep.$r.$sep.$chan;
+			$table_gps = $table.$gps_ext;
+#			echo $table."<BR>".$table_gps."<BR>";
+			switch($r)
+			{
+				case "a":
+					$radio="802.11a";
+					break;
+				case "b":
+					$radio="802.11b";
+					break;
+				case "g":
+					$radio="802.11g";
+					break;
+				case "n":
+					$radio="802.11n";
+					break;
+				case "u":
+					$radio="802.11u";
+					break;
+				default:
+					$radio="Unknown Radio";
+					break;
+			}
+			switch($sectype)
+			{
+				case 1:
+					$type = "#openStyleDead";
+					$auth = "Open";
+					$encry = "None";
+					break;
+				case 2:
+					$type = "#wepStyleDead";
+					$auth = "Open";
+					$encry = "WEP";
+					break;
+				case 3:
+					$type = "#secureStyleDead";
+					$auth = "WPA-Personal";
+					$encry = "TKIP-PSK";
+					break;
+			}
+			$sql = "SELECT id FROM `$db_st`.`$table`";
+		#	echo $sql."<BR>";
+			$result1 = mysql_query($sql, $conn) or die(mysql_error($conn));
+			$rows = mysql_num_rows($result1);
+		#	echo $rows."<BR>";
+			$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$rows'";
+			$result1 = mysql_query($sql, $conn) or die(mysql_error($conn));
+		#	echo $sql."<BR>";
+			while ($newArray = mysql_fetch_array($result1))
+			{
+				$otx = $newArray["otx"];
+				$btx = $newArray["btx"];
+				$nt = $newArray['nt'];
+				$label = $newArray['label'];
+				
+				$signal_exp = explode("-", $newArray['sig']);
+				$sig_count = count($signal_exp);
+				
+				$exp_first = explode("," , $signal_exp[0]);
+				$first_sig_gps_id = $exp_first[1];
+				
+				$exp_last = explode("," , $signal_exp[$sig_count-1]);
+				$last_sig_gps_id = $exp_last[1];
+				
+				$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
+				$result6 = mysql_query($sql6, $conn);
+				$max = mysql_num_rows($result6);
+				
+				$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
+				$result_1 = mysql_query($sql_1, $conn);
+				$zero = 0;
+				while($gps_table_first = mysql_fetch_array($result_1))
+				{
+					$lat_exp = explode(" ", $gps_table_first['lat']);
+					$date_first = $gps_table_first["date"];
+					$time_first = $gps_table_first["time"];
+					$fa = $date_first." ".$time_first;
+					$test = $lat_exp[1]+0;
+					
+					if($test == "0.0000"){$zero = 1; continue;}
+					
+					
+					$alt = $gps_table_first['alt'];
+					$lat =& database::convert_dm_dd($gps_table_first['lat']);
+					$long =& database::convert_dm_dd($gps_table_first['long']);
+					$zero = 0;
+					$NN++;
+					break;
+				}
+				if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$aps['ssid'].'</td></tr>'; $zero == 0; $no_gps++; $total++;continue;}
+				$total++;
+				$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$last_sig_gps_id'";
+				$result_2 = mysql_query($sql_2, $conn);
+				$gps_table_last = mysql_fetch_array($result_2);
+				$date_last = $gps_table_last["date"];
+				$time_last = $gps_table_last["time"];
+				$la = $date_last." ".$time_last;
+				$ssid_name = '';
+				if ($named == 1){$ssid_name = $aps['ssid'];}
+				fwrite( $fileappend, "<Placemark id=\"".$mac."\">\r\n	<name>".$ssid_name."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$aps['ssid']."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$chan."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
+				echo '<tr><td style="border-style: solid; border-width: 1px">'.$NN.'</td><td style="border-style: solid; border-width: 1px">Wrote AP: '.$aps['ssid'].'</td></tr>';
+				
+				unset($gps_table_first["lat"]);
+				unset($gps_table_first["long"]);
+			}
+		}
+		fwrite( $fileappend, "	</Folder>\r\n");
+		fwrite( $fileappend, "	</Folder>\r\n	</Document>\r\n</kml>");
+		fclose( $fileappend );
+		if($no_gps < $total)
+		{
+			echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Zipping up the files into a KMZ file.</td></tr>';
+			$zip = new ZipArchive;
+			if ($zip->open($filename, ZipArchive::CREATE) === TRUE) {
+			   $zip->addFile($temp_kml, 'doc.kml');
+			 #  $zip->addFromString('doc.kml', $fdata);
+				$zip->close();
+		#	    echo 'Zipped up<br>';
+				unlink($temp_kml);
+			} else {
+				echo 'Blown up';
+				echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is not ready.</td></tr></table>';
+				continue;
+			}
+
+			echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
+			echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$moved.'">Here</a></td></tr></table>';
+			copy($filename, $moved);
+			unlink($filename);
+		}else
+		{
+			echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is not ready.</td></tr></table>';
+		
+		}
+		$end = microtime(true);
+		if ($GLOBALS["bench"]  == 1)
+		{
+			echo "Time is [Unix Epoc]<BR>";
+			echo "Start Time: ".$start."<BR>";
+			echo "  End Time: ".$end."<BR>";
+		}
+	}
+	
 	
 	#========================================================================================================================#
 	#													Export to Garmin GPX File											 #
@@ -3911,7 +4100,7 @@ class database
 
 			
 			$filewrite	=	fopen($filename, "w");
-			if($filewrite_1 != FALSE)
+			if($filewrite)
 			{
 				$fileappend	=	fopen($filename, "a");		
 				fwrite($fileappend, $Ddata);
@@ -3932,7 +4121,7 @@ class database
 			$Ddata = $Ddata."</Document>\r\n</kml>";
 			
 			$filewrite_l = fopen($filename_label, "w");
-			if($filewrite_1 != FALSE)
+			if($filewrite_l)
 			{
 				$fileappend_label = fopen($filename_label, "a");
 				fwrite($fileappend_label, $Ddata);

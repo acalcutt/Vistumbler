@@ -78,7 +78,7 @@ document.getElementById(containerid).innerHTML=page_request.responseText
 $dh = opendir(".") or die("couldn't open directory");
 while (($file = readdir($dh)) == true)
 {
-	if (!is_file($textdir."/".$file)) 
+	if (!is_file($file)) 
 	{
 		if($file == '.'){continue;}
 		if($file == '..'){continue;}

@@ -156,6 +156,10 @@ the addition of colors for linux to the output, windows does not support color.
 	 in order to find a file that was inserted into the files_tmp table
 	 while it was in the middle of an import.
 2 -> Added in Daemon Generated KML exports.
+3 -> Daemon now checks if the log file is longer then 500 lines, if so
+	 the file is moved to [tools_dir]/backups/logs/console_wifidbd_[date-time].log
+4 -> Added a bash script writen by Andrew, was adpated from the 
+	 plone startup bash script. Use either wifidbd or wifidbd.sh
 ==============================
 
 --------------------------------------------------------------

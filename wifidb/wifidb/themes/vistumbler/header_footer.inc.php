@@ -18,7 +18,7 @@ function pageheader($title, $output="detailed")
 	$root	= $GLOBALS['root'];
 	$conn	=	$GLOBALS['conn'];
 	$db		=	$GLOBALS['db'];
-	$head	= 	$GLOBALS['headers'];
+	$head	= 	$GLOBALS['header'];
 	
 	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>\r\n".$head."\r\n</head>\r\n";
 	check_install_folder();
