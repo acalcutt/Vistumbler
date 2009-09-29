@@ -24,7 +24,7 @@ pageheader("Version Page");
 		<table width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 4</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-27</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-28</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -45,6 +45,8 @@ pageheader("Version Page");
 					<LI>Removed the "This is just a test" line on the import page after an import with the daemon enabled.</LI>
 					<LI>Daemon now checks if the log file is longer then 500 lines, if so the file is moved to [tools_dir]/backups/logs/console_wifidbd_[date-time].log</LI>
 					<LI>Added a bash script writen by Andrew, was adpated from the plone startup bash script. Use either wifidbd or wifidbd.sh</LI>
+					<LI>Fixed some bugs with the KMZ exports being generated in the opt folder, and not the out/kmz folder.</LI>\
+					<LI>Some others that I cant remember, but were done.</LI>
 				</OL>
 			</td></tr>
 		</table>
