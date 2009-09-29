@@ -481,15 +481,6 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding PHP Host URL</td></tr>";}
 
 
-#add sql host info
-$AD_CF_SH_Re = fwrite($fileappend, "#---------------- SQL Host ----------------#\r\n"
-									."$"."host	=	'$sqlhost';\r\n\r\n");
-
-if($AD_CF_SH_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add SQL Host info</td></tr>";}
-else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Host info</td></tr>";}
-
 #add Table names
 $AD_CF_WT_Re = fwrite($fileappend, "#---------------- Tables ----------------#\r\n"
 									."$"."settings_tb	=	'settings';\r\n"
@@ -512,22 +503,18 @@ if($AD_CF_DB_Re)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding DataBase names</td></tr>";}
 
-#add sql host info
-$AD_CF_SU_Re = fwrite($fileappend, "#---------------- SQL User Info ----------------#\r\n"
+#add sql info
+$AD_CF_SH_Re = fwrite($fileappend, "#---------------- SQL Info ----------------#\r\n"
+									."$"."host		=	'$sqlhost';\r\n"
 									."$"."db_user	=	'$sqlu';\r\n"
-									."$"."db_pwd	=	'$sqlp';\r\n\r\n");
-if($AD_CF_SU_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add DataBase names</td></tr>";}
-else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding DataBase names</td></tr>";}
+									."$"."db_pwd	=	'$sqlp';\r\n"
+									."$"."conn		=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
 
-#add sql Connection info
-$AD_CF_SC_Re = fwrite($fileappend, "#---------------- SQL Connection Info ----------------#\r\n"
-							."$"."conn	=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");\r\n\r\n");
-if($AD_CF_SU_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add SQL Connection Info</td></tr>";}
+if($AD_CF_SH_Re)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add SQL Info</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Connection Info</td></tr>";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Info</td></tr>";}
+
 
 $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info ----------------#\r\n"
 							."$"."open_loc		=	'http://vistumbler.sourceforge.net/images/program-images/open.png';\r\n"

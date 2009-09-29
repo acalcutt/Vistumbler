@@ -12,7 +12,6 @@ require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config
 require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'database.inc.php');
 
 #echo $GLOBALS['wifidb_tools']."\n";
-$console_log = $GLOBALS['wifidb_tools'].$GLOBALS['console_log'];
 if(isset($argv[1]))
 {$command = $argv[1];}
 else{$command = "none";}
@@ -65,6 +64,8 @@ if($command != "none") //parse WiFiDB argument to get value
 function start()
 {
 	require('daemon/config.inc.php');
+	require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
+	$console_log = $GLOBALS['console_log'];
 	echo "Starting WiFiDB Daemon..\n";
 	$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."wifidbd.php";
 	if (PHP_OS == "WINNT")

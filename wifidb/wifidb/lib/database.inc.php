@@ -6,7 +6,7 @@
 global $ver, $full_path, $half_path, $dim;
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.16 Build 4 ",
-			"Last_Core_Edit" 	=> 	"2009-Sept-27",
+			"Last_Core_Edit" 	=> 	"2009-Sept-28",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
@@ -156,8 +156,26 @@ function check_install_folder()
 			$I++;
 		}
 		$full_path = $full_path.'install';
-		if(is_dir($full_path)){echo '<p align="center"><font color="red" size="6">The install Folder is still there, remove it!</font></p>';}
+		if(is_dir($full_path)){$install_folder_remove = '<p align="center"><font color="red" size="6">The install Folder is still there, remove it!</font></p>';}
 	}
+	$sql = "DESCRIBE `$db`.`files`";
+	$result1 = mysql_query($sql, $conn);
+	while ($test = mysql_fetch_array($result1))
+	{
+		if(($TEST['Field'] == "user" AND $TEST['Type'] != "varchar(255)") OR !$GLOBALS['default_theme'])
+		{
+			$upgrade_wdb = "<p align=\"center\"><font color=\"red\" size=\"4\">You need to <a class=\"upgrade\" href=\"".$GLOBALS['hosturl'].$GLOBALS['root']."/install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB ".$GLOBALS['ver']['wifidb'].".</p></font>";
+		}
+	}
+	
+	if(!$upgrade_wdb)
+	{
+		echo $install_folder_remove;
+	}else
+	{
+		echo $upgrade_wdb;
+	}
+
 }
 
 #========================================================================================================================#
@@ -1171,7 +1189,6 @@ class database
 						$sqlit_ = "SELECT * FROM `$db_st`.`$table`";
 						$sqlit_res = mysql_query($sqlit_, $conn) or die(mysql_error($conn));
 						$sqlit_num_rows = mysql_num_rows($sqlit_res);
-						$sqlit_num_rows++;
 						$user_aps[$user_n]="1,".$APid.":".$sqlit_num_rows; //User import tracking //UPDATE AP
 						
 						logd($user_aps[$user_n], $log_interval, 0,  $log_level);

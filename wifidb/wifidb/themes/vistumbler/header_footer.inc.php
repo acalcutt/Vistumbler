@@ -22,11 +22,6 @@ function pageheader($title, $output="detailed")
 	
 	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>\r\n".$head."\r\n</head>\r\n";
 	check_install_folder();
-	if(!$GLOBALS['default_theme']){echo '<p align="center"><font color="red" size="6">You need to upgrade to Build 4!</font><font color="red" size="3"><br> Please go <a href="http://'.$_SERVER["SERVER_NAME"].'/wifidb/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</font></font></p>';}
-	$sql = "SELECT `id` FROM `$db`.`files`";
-	$result1 = mysql_query($sql, $conn);
-	if(!$result1){echo "<p align=\"center\"><font color=\"red\">You need to <a class=\"upgrade\" href=\"install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB Build 3.</p></font>";}
-
 	if($output == "detailed")
 	{
 		# START YOUR HTML EDITS HERE #

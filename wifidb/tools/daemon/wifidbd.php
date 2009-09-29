@@ -85,11 +85,14 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	$console_log_array = file($console_log);
 	$console_lines = count($console_log_array);
 #	echo "File: ".$console_log." ".$console_lines."\n";
-	if($console_lines > $console_line_limit)
+	if($console_trim_log)
 	{
-		if(copy($console_log, $console_log_moved))
+		if($console_lines > $console_line_limit)
 		{
-			popen("php rund.php restart", "w");
+			if(copy($console_log, $console_log_moved))
+			{
+				popen("php ".$GLOBALS['wifidb_tools']."/rund.php restart", "w");
+			}
 		}
 	}
 	

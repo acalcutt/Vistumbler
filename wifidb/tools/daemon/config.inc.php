@@ -18,6 +18,7 @@ $default_notes = 'No Notes';
 //path to the folder that wifidb is installed in default is /var/www/wifidb/ , because I use Debian. fuck windows 
 $wifidb_install		=	'/var/www/wifidb';
 $console_line_limit	=	500;
+$console_trim_log	=	0;
 $pid_file_loc		=	'/var/run/wifidbd.pid';
 
 # IF you are running windows you need to define the install path to the PHP binary
