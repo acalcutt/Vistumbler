@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.8 Beta 5'
+$version = 'v9.8 Beta 6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/08/23'
+$last_modified = '2009/09/28'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -4649,14 +4649,32 @@ Func _ImportVszFile($vsz_file = '')
 EndFunc   ;==>_ImportVszFile
 
 Func _LoadFolder()
+	$FoundFiles = 0
 	$LoadFolder = FileSelectFolder("Load VS1 files from folder", "")
 	If Not @error Then
-		$vs1files = _FileListToArray($LoadFolder, '*.vs1', 1);Find all files in the folder that end in .ini . These are automatically assumed to a language file
-		For $b = 1 To $vs1files[0];Set Languages into proper format for the combo box
-			GUICtrlSetData($msgdisplay, "Loading VS1 - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
-			_LoadListGUI($LoadFolder & "\" & $vs1files[$b])
-			_ImportClose()
-		Next
+		$vs1files = _FileListToArray($LoadFolder, '*.vs1', 1);Find all files in the folder that end in .vs1
+		If IsArray($vs1files) Then
+			For $b = 1 To $vs1files[0];Set Languages into proper format for the combo box
+				GUICtrlSetData($msgdisplay, "Loading VS1 - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
+				_LoadListGUI($LoadFolder & "\" & $vs1files[$b])
+				_ImportClose()
+			Next
+			$FoundFiles = 1
+		EndIf
+		$vs1files = _FileListToArray($LoadFolder, '*.vsz', 1);Find all files in the folder that end in .vsz
+		If IsArray($vs1files) Then
+			For $b = 1 To $vs1files[0];Set Languages into proper format for the combo box
+				GUICtrlSetData($msgdisplay, "Loading VS1 - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
+				_ImportVszFile($LoadFolder & "\" & $vs1files[$b])
+				_ImportClose()
+			Next
+			$FoundFiles = 1
+		EndIf
+	EndIf
+	If $FoundFiles = 0 Then
+		MsgBox(0, $Text_Error, "No VS1 or VSZ files found")
+	Else
+		MsgBox(0, $Text_Information, $Text_Done)
 	EndIf
 EndFunc   ;==>_LoadFolder
 
@@ -4956,14 +4974,13 @@ Func _ImportOk()
 					If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 				Next
 			EndIf
+			FileClose($vistumblerfile)
 			$query = "DELETE * FROM TempGpsIDMatchTabel"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			_DropTable($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ)
 		ElseIf GUICtrlRead($RadNs) = 1 Then
 			Dim $BSSID_Array[1], $SSID_Array[1], $FirstSeen_Array[1], $LastSeen_Array[1], $SignalHist_Array[1], $Lat_Array[1], $Lon_Array[1], $Auth_Array[1], $Encr_Array[1], $Type_Array[1]
-
 			$netstumblerfile = FileOpen($loadfile, 0)
-
 			If $netstumblerfile <> -1 Then
 				;Get Total number of lines
 				$totallines = 0
@@ -5072,6 +5089,7 @@ Func _ImportOk()
 					If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 				Next
 			EndIf
+			FileClose($netstumblerfile)
 		EndIf
 		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
