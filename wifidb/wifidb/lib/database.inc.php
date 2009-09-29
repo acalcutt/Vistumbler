@@ -2664,7 +2664,7 @@ class database
 				
 				$date=date('Y-m-d_H-i-s');
 				
-				$filename = '../tmp/'.$date.'_'.$user.'_'.$title.'.kmz';
+				$filename = $date.'_'.$user.'_'.$title.'.kmz';
 				// open file and write header:
 				fwrite($fileappend, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"$KML_SOURCE_URL\">\r\n<!--exp_user_list-->		<Document>\r\n			<name>User: ".$user." - Title: ".$title."</name>\r\n");
 				fwrite($fileappend, "			<Style id=\"openStyleDead\">\r\n		<IconStyle>\r\n				<scale>0.5</scale>\r\n				<Icon>\r\n			<href>".$open_loc."</href>\r\n			</Icon>\r\n			</IconStyle>\r\n			</Style>\r\n");
@@ -2828,7 +2828,7 @@ class database
 					}
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Zipping up the files into a KMZ file.</td></tr>';
 					$zip = new ZipArchive;
-					$filepath = $half_path.'out/kmz/lists/'.$filename;
+					$filepath = '../out/kmz/lists/'.$filename;
 					if ($zip->open($filepath, ZipArchive::CREATE) === TRUE)
 					{
 						$zip->addFile($temp_kml, 'doc.kml');
@@ -3442,14 +3442,14 @@ class database
 					echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Zipping up the files into a KMZ file.</td></tr>';
 					$zip = new ZipArchive;
 			#		echo $half_path.'out/kmz/single/'.$filename."<br>";
-					if ($zip->open($filename, ZipArchive::CREATE) === TRUE) 
+					if ($zip->open($moved, ZipArchive::CREATE) === TRUE) 
 					{
 					   $zip->addFile($temp_kml, 'doc.kml');
 					 #  $zip->addFromString('doc.kml', $fdata);
 					    $zip->close();
 				#	    echo 'Zipped up<br>';
 						unlink($temp_kml);
-						copy($filename, $moved);
+				#		copy($filename, $moved);
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Move KMZ file from its tmp home to its permanent residence</td></tr>';
 						echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$moved.'">Here</a></td></tr></table>';
 					} else {

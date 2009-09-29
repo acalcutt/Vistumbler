@@ -72,7 +72,7 @@ if($log_level != 0)
 	elseif($GLOBALS['log_interval'] == 1){$de = "one file a day 'log/wifidbd_log_[yyyy-mm-dd].log'";}
 	verbosed($GLOBALS['COLORS']['GREEN']."Log Interval is: ".$GLOBALS['log_interval']." (".$de.")".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output);
 }
-#if($time_interval_to_check < '30'){$time_interval_to_check = '30';} //its really pointless to check more then 5 min at a time, becuse if it is 
+if($time_interval_to_check < '30'){$time_interval_to_check = '30';} //its really pointless to check more then 5 min at a time, becuse if it is 
 																	//importing something it is probably going to take more then that to imort the file
 																	
 $finished = 0;
@@ -230,7 +230,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		if($finished == 0)
 		{
 			
-			$message = "File tmp table is empty, go and import something. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minuets.";
+			$message = "File tmp table is empty, go and import something. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
 		}
 		else
 		{
@@ -238,7 +238,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			$files_arra = mysql_fetch_array($result1);
 			if($files_arra['id'] != ''){continue;}
 			
-			$message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minuets.";
+			$message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
 			logd("Starting Automated KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
 			verbosed($GLOBALS['COLORS']['GREEN']."Starting Automated KML Export.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output);
 			daemon::daemon_kml($named = 0, $verbose);
