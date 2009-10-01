@@ -45,7 +45,7 @@ function getdaemonstats()
 		if(file_exists($WFDBD_PID))
 		{
 			$pid_open = file($WFDBD_PID);
-			echo $pid_open;
+		#	echo $pid_open;
 			exec('ps vp '.$pid_open[0] , $output, $sta);
 			if(isset($output[1]))
 			{
@@ -277,7 +277,7 @@ if(is_string($func))
 				</table>
 				<table border="1" cellspacing="0" cellpadding="0" style="width: 100%">
 					<tr>
-						<td class="daemon_kml" colspan="2">
+						<td class="daemon_kml" colspan="3">
 					<?php
 					if(file_exists("../out/daemon/update.kml"))
 					{
@@ -294,33 +294,62 @@ if(is_string($func))
 						</td>
 					</tr>
 					<tr>
-						<td class="daemon_kml">
+						<td class='daemon_kml'>Newest AP KML Last Edit: </td>
 							<?php
-							$files = '../out/daemon/newestAP.kml';
-							if(file_exists($files))
+							$newest = '../out/daemon/newestAP.kml';
+							if(file_exists($newest))
 							{
-								echo "Newset AP Last Edit: </td><td>".date ("Y-m-d H:i:s", filemtime($files));
+								echo "<td>".date ("Y-m-d H:i:s", filemtime($newest))."</td><td>".format_size(dos_filesize($newest), 2);
 							}else
 							{
-								echo "Not created yet";
+								echo "<td>None generated yet</td><td> 0.00 kb";
 							}
 							?>
 						</td>
 					</tr>
 					<tr>
-						<td colspan="2" class="style4">History</td>
+						<td class='daemon_kml'>Full KML Last Edit: </td>
+							<?php
+							$full = '../out/daemon/'.date("Y-m-d").'/full_db.kml';
+							if(file_exists($full))
+							{
+								echo "<td>".date ("Y-m-d H:i:s", filemtime($full))."</td><td>".format_size(dos_filesize($full), 2);
+							}else
+							{
+								echo "<td>None generated for ".date("Y-m-d")." yet</td><td> 0.00 kb";
+							}
+							?>
+							</td>
+					</tr>
+					<tr>
+						<td class='daemon_kml'>Daily KML Last Edit: </td>
+							<?php
+							$daily = '../out/daemon/'.date("Y-m-d").'/daily_db.kml';
+							if(file_exists($daily))
+							{
+								echo "<td>".date ("Y-m-d H:i:s", filemtime($daily))."</td><td>".format_size(dos_filesize($daily), 2);
+							}else
+							{
+								echo "<td>None generated for ".date("Y-m-d")." yet</td><td> 0.00 kb";
+							}
+							?>
+							</td>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3" class="style4">History</td>
 					</tr>
 				</table>
-				<table style="width: 50%" align="center">
+				<table style="width: 65%" align="center">
 					<tr>
 						<td class="daemon_kml">
 						<table border="1" cellspacing="0" cellpadding="0" width="100%"><tr><td>
 						<table border="1" cellspacing="0" cellpadding="0" width="100%">
-							<tr>
-								<td width="33%">Date Created</td><td width="33%">Last Edit Time</td>
-								<td width="33%">Download Link</td>
+							<tr class="style4">
+								<td width="33%">Date Created</td>
+								<td width="33%">Last Edit Time</td>
+								<td width="33%">Size</td>
 							</tr>
-						</table>
 						<?php
 						$DGK_folder = array();
 						$file_count = 0;
@@ -338,12 +367,12 @@ if(is_string($func))
 							$kmz_file = '../out/daemon/'.$file.'/fulldb.kmz';
 							if(file_exists($kmz_file))
 							{
-								$download = $download.'<br><table border="1" cellspacing="0" cellpadding="0" width="100%">
+								$download = $download.'
 									<tr>
-										<td width="33%">'.$file.'</td><td width="33%">'.date ("H:i:s", filemtime($kmz_file)).'</td>
-										<td width="33%"><a class="links" href="'.$kmz_file.'">Download</a></td>
+										<td width="33%"><a class="links" href="'.$kmz_file.'">'.$file.'</a></td>
+										<td width="33%">'.date ("H:i:s", filemtime($kmz_file)).'</td>
+										<td width="33%">'.format_size(dos_filesize("../out/daemon/".$file."/fulldb.kmz"), 2).'</td>
 									</tr>
-								</table>
 								';
 								$DGK_folder[] = $download;
 								$file_count++;
@@ -368,6 +397,7 @@ if(is_string($func))
 							};
 						}
 						?>
+						</table>
 						</td></tr></table>
 						</td>
 						</tr>
