@@ -122,7 +122,7 @@ if (isset($_GET['token']))
 			$sql_a[$II]	=	" `encry` like '".$encry."%' ";
 			$II++;
 		}
-		$save_url .= 'token='.$_SESSION['token'].'">Save for later</a>';		
+		$save_url .= '">Save for later</a>';		
 		$export_url .=  'token='.$_SESSION['token'].'">Export to KML</a>';
 
 		if(!$sql_a)
