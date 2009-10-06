@@ -5,8 +5,7 @@ include('../lib/config.inc.php');
 $func			= '';
 $refresh_post	= '';
 $tz_post		= '';
-
-if(!isset($_GET['func'])){$_GET['func'] = "";}
+if( !isset($_GET['func']) ) { $_GET['func'] = ""; }
 
 $func = strip_tags(addslashes($_GET['func']));
 
@@ -15,22 +14,15 @@ switch($func)
 	case 'refresh':
 		if( (!isset($_POST['refresh'])) or $_POST['refresh']=='' ) { $_POST['refresh'] = "wifidb"; }
 		$refresh_post = strip_tags(addslashes($_POST['refresh']));
-		setcookie( 'wifidb_refresh' , $refresh_post , (time()+(86400 * 7)), "/".$root."/opt/scheduling.php" ); // 86400 = 1 day
+		setcookie( 'wifidb_refresh' , $refresh_post , (time()+($timeout)), "/".$root."/opt/scheduling.php" );
 		header('Location: scheduling.php?token='.$_SESSION['token']);
 	break;
 
-	case 'set_tzone':
-		if( (!isset($_POST['TZone'])) or $_POST['TZone']=='' ) { $_POST['TZone'] = "-5"; }
-		$tz_post = strip_tags(addslashes($_POST['TZone']));
-		setcookie( 'wifidb_client_timezone' , $tz_post , (time()+(86400 * 365)), "/".$root."/opt/scheduling.php" ); // 86400 = 1 day
-		header('Location: scheduling.php?token='.$_SESSION['token']);
-	break;
 }
-
-$TZone = ($_COOKIE['wifidb_client_timezone']!='' ? $_COOKIE['wifidb_client_timezone'] : $default_timezone);
+$TZone = ($_COOKIE['wifidb_client_timezone'] ? $_COOKIE['wifidb_client_timezone'] : $default_timezone);
+$dst = ($_COOKIE['wifidb_client_dst']!='' ? $_COOKIE['wifidb_client_dst'] : -1);
 $refresh = ($_COOKIE['wifidb_refresh']!='' ? $_COOKIE['wifidb_refresh'] : $default_refresh);
 
-#echo $TZone;
 pageheader("Scheduling Page");
 
 ####################
@@ -45,7 +37,6 @@ function getdaemonstats()
 		if(file_exists($WFDBD_PID))
 		{
 			$pid_open = file($WFDBD_PID);
-		#	echo $pid_open;
 			exec('ps vp '.$pid_open[0] , $output, $sta);
 			if(isset($output[1]))
 			{
@@ -266,6 +257,37 @@ if(is_string($func))
 		
 		case 'daemon_kml':
 			$date = date("y-m-d");
+			$DATES = array();
+			$DGK_folder = array();
+			$file_count = 0;
+			$dh = opendir("../out/daemon") or die("couldn't open directory");
+			while ($file = readdir($dh))
+			{
+				$download ='';
+				if($file == "."){continue;}
+				if($file == ".."){continue;}
+				if($file == ".svn"){continue;}
+				if($file == "fulldb.kmz"){continue;}
+				if($file == "update.kml"){continue;}
+				if($file == "newestAP.kml"){continue;}
+				if($file == "newestAP_label.kml"){continue;}
+				$kmz_file = '../out/daemon/'.$file.'/fulldb.kmz';
+				if(file_exists($kmz_file))
+				{
+					$DATES[] = $file;
+					$download = $download.'
+						<tr>
+							<td width="33%"><a class="links" href="'.$kmz_file.'">'.$file.'</a></td>
+							<td width="33%">'.date ("H:i:s", filemtime($kmz_file)).'</td>
+							<td width="33%">'.format_size(dos_filesize("../out/daemon/".$file."/fulldb.kmz"), 2).'</td>
+						</tr>
+					';
+					$DGK_folder[] = $download;
+					$file_count++;
+				}
+			}
+			rsort($DGK_folder, SORT_STRING);
+			rsort($DATES);
 			?>
 			<table width="700px" border="1" cellspacing="0" cellpadding="0" align="center">
 			<tr>
@@ -310,13 +332,13 @@ if(is_string($func))
 					<tr>
 						<td class='daemon_kml'>Full KML Last Edit: </td>
 							<?php
-							$full = '../out/daemon/'.date("Y-m-d").'/full_db.kml';
+							$full = '../out/daemon/'.$DATES[0].'/full_db.kml';
 							if(file_exists($full))
 							{
 								echo "<td>".date ("Y-m-d H:i:s", filemtime($full))."</td><td>".format_size(dos_filesize($full), 2);
 							}else
 							{
-								echo "<td>None generated for ".date("Y-m-d")." yet</td><td> 0.00 kb";
+								echo "<td>None generated for ".$DATES[0]." yet, be patient young grasshopper.</td><td> 0.00 kb";
 							}
 							?>
 							</td>
@@ -324,13 +346,13 @@ if(is_string($func))
 					<tr>
 						<td class='daemon_kml'>Daily KML Last Edit: </td>
 							<?php
-							$daily = '../out/daemon/'.date("Y-m-d").'/daily_db.kml';
+							$daily = '../out/daemon/'.$DATES[0].'/daily_db.kml';
 							if(file_exists($daily))
 							{
 								echo "<td>".date ("Y-m-d H:i:s", filemtime($daily))."</td><td>".format_size(dos_filesize($daily), 2);
 							}else
 							{
-								echo "<td>None generated for ".date("Y-m-d")." yet</td><td> 0.00 kb";
+								echo "<td>None generated for ".$DATES[0]." yet, be patient young grasshopper.</td><td> 0.00 kb";
 							}
 							?>
 							</td>
@@ -351,33 +373,6 @@ if(is_string($func))
 								<td width="33%">Size</td>
 							</tr>
 						<?php
-						$DGK_folder = array();
-						$file_count = 0;
-						$dh = opendir("../out/daemon") or die("couldn't open directory");
-						while ($file = readdir($dh))
-						{
-							if($file == "."){continue;}
-							if($file == ".."){continue;}
-							if($file == ".svn"){continue;}
-							if($file == "fulldb.kmz"){continue;}
-							if($file == "update.kml"){continue;}
-							if($file == "newestAP.kml"){continue;}
-							if($file == "newestAP_label.kml"){continue;}
-							$download ='';
-							$kmz_file = '../out/daemon/'.$file.'/fulldb.kmz';
-							if(file_exists($kmz_file))
-							{
-								$download = $download.'
-									<tr>
-										<td width="33%"><a class="links" href="'.$kmz_file.'">'.$file.'</a></td>
-										<td width="33%">'.date ("H:i:s", filemtime($kmz_file)).'</td>
-										<td width="33%">'.format_size(dos_filesize("../out/daemon/".$file."/fulldb.kmz"), 2).'</td>
-									</tr>
-								';
-								$DGK_folder[] = $download;
-								$file_count++;
-							}
-						}
 						#var_dump($DGK_folder);
 						if($file_count == 0)
 						{
@@ -390,11 +385,10 @@ if(is_string($func))
 							<?php
 						}else
 						{
-							rsort($DGK_folder, SORT_STRING);
 							foreach($DGK_folder as $Day)
 							{
 								echo $Day;
-							};
+							}
 						}
 						?>
 						</table>
@@ -407,17 +401,16 @@ if(is_string($func))
 			</table>
 			<?php
 		break;
-		
+
 		case "no_daemon":
 			?>
 			<h2>You do not have the Daemon Option enabled, you will not be able to use this page until you enable it.</h2>
 			<?php
 		break;
 		
-		
 		default:
 		
-$timezone_names = array(
+			$timezone_names = array(
 							0	=>		"International Date Line",
 							1	=>		"International Date Line",
 							2	=>		"Pacific Ocean",
@@ -450,8 +443,8 @@ $timezone_names = array(
 							29	=>		"Mid Europe - Africa",
 							30	=>		"Greenwich, England"
 						);
-
-$timezone_numbers = array(
+			
+			$timezone_numbers = array(
 							0	=>	"/-12/"	,# International Date Line
 							1	=>	"/12/"	,# International Date Line
 							2	=>	"/-11/"	,# Pacific Ocean
@@ -502,7 +495,7 @@ $timezone_numbers = array(
 			}			
 			?>
 				<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> UTC</td><td>
-				<?php
+			<?php
 				$str_time = strtotime($file_array['size']);
 				$alter_by = (($TZone*60)*60);
 				$altered = $str_time+$alter_by;
@@ -511,7 +504,8 @@ $timezone_numbers = array(
 	#			$time_zone_string = preg_replace($timezone_numbers, $timezone_names, $Zone);
 				
 				echo $next_run.$Zone;
-				?></td></tr>
+			?>
+				</td></tr>
 				<tr><td colspan="1">Select Refresh Rate:</td><td colspan="2">
 					<form action="scheduling.php?func=refresh&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 					<input type="hidden" name="token" value="<?php echo $token; ?>" />
@@ -534,45 +528,6 @@ $timezone_numbers = array(
 					<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit">
 					</form>
 				</td></tr>
-				<tr><td colspan="1">Set Your Timezone:</td><td colspan="2">
-					<form action="scheduling.php?func=set_tzone&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
-					<input type="hidden" name="token" value="<?php echo $token; ?>" />
-					<SELECT NAME="TZone">  
-					<OPTION <?php if($TZone == -12){ echo "selected ";}?> VALUE="-12"> -12 hrs
-					<OPTION <?php if($TZone == -11){ echo "selected ";}?> VALUE="-11"> -11 hrs
-					<OPTION <?php if($TZone == -10){ echo "selected ";}?> VALUE="-10"> -10 hrs
-					<OPTION <?php if($TZone == -9){ echo "selected ";}?> VALUE="-9"> -9 hrs
-					<OPTION <?php if($TZone == -8){ echo "selected ";}?> VALUE="-8"> -8 hrs
-					<OPTION <?php if($TZone == -7){ echo "selected ";}?> VALUE="-7"> -7 hrs
-					<OPTION <?php if($TZone == -6){ echo "selected ";}?> VALUE="-6"> -6 hrs
-					<OPTION <?php if($TZone == -5){ echo "selected ";}?> VALUE="-5"> -5 hrs
-					<OPTION <?php if($TZone == -4){ echo "selected ";}?> VALUE="-4"> -4 hrs
-					<OPTION <?php if($TZone == -3.5){ echo "selected ";}?> VALUE="-3.5"> -3.5 hrs
-					<OPTION <?php if($TZone == -3){ echo "selected ";}?> VALUE="-3"> -3 hrs
-					<OPTION <?php if($TZone == -2){ echo "selected ";}?> VALUE="-2"> -2 hrs
-					<OPTION <?php if($TZone == -1){ echo "selected ";}?> VALUE="-1"> -1 hrs
-					<OPTION <?php if($TZone == 0){ echo "selected ";}?> VALUE="0"> 0 hrs
-					<OPTION <?php if($TZone == 1){ echo "selected ";}?> VALUE="1"> 1 hrs
-					<OPTION <?php if($TZone == 2){ echo "selected ";}?> VALUE="2"> 2 hrs
-					<OPTION <?php if($TZone == 3){ echo "selected ";}?> VALUE="3"> 3 hrs
-					<OPTION <?php if($TZone == 3.5){ echo "selected ";}?> VALUE="3.5"> 3.5 hrs
-					<OPTION <?php if($TZone == 4){ echo "selected ";}?> VALUE="4"> 4 hrs
-					<OPTION <?php if($TZone == 4.5){ echo "selected ";}?> VALUE="4.5"> 4.5 hrs
-					<OPTION <?php if($TZone == 5){ echo "selected ";}?> VALUE="5"> 5 hrs
-					<OPTION <?php if($TZone == 6){ echo "selected ";}?> VALUE="6"> 6 hrs
-					<OPTION <?php if($TZone == 6.5){ echo "selected ";}?> VALUE="6.5"> 6.5 hrs
-					<OPTION <?php if($TZone == 7){ echo "selected ";}?> VALUE="7"> 7 hrs
-					<OPTION <?php if($TZone == 8){ echo "selected ";}?> VALUE="8"> 8 hrs
-					<OPTION <?php if($TZone == 9){ echo "selected ";}?> VALUE="9"> 9 hrs
-					<OPTION <?php if($TZone == -9.5){ echo "selected ";}?> VALUE="9.5"> 9.5 hrs
-					<OPTION <?php if($TZone == 10){ echo "selected ";}?> VALUE="10"> 10 hrs
-					<OPTION <?php if($TZone == 11){ echo "selected ";}?> VALUE="11"> 11 hrs
-					<OPTION <?php if($TZone == 12){ echo "selected ";}?> VALUE="12"> 12 hrs
-					</SELECT>
-					<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit">
-					</form>
-				</td></tr>
-				
 			</table><br />
 			<table border="1" width="90%">
 			<tr class="style4"><th colspan="4">Daemon Status:</TH></tr>
