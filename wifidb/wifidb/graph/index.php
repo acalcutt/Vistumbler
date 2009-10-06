@@ -23,7 +23,7 @@ $id = $_GET['id'];
 $row = $_GET['row'];
 
 mysql_select_db($db,$conn);
-$sql = "SELECT*FROM`$wtable`WHERE`id`=$id";
+$sql = "SELECT * FROM `$wtable` WHERE `id` = $id";
 $result = mysql_query($sql, $conn) or die(mysql_error());
 $pointer = mysql_fetch_array($result);
 
@@ -35,8 +35,9 @@ elseif($radio == "g"){$radio = "802.11g";}
 elseif($radio == "n"){$radio = "802.11n";}
 else				 {$radio = "802.11u";}
 
+list($SSID, $ssid_full, $ssid_s) = make_ssid($pointer["ssid"]);
 
-$table=$pointer["ssid"].'-'.$pointer["mac"].'-'.$pointer["sectype"].'-'.$pointer["radio"].'-'.$pointer["chan"];
+$table=$SSID.'-'.$pointer["mac"].'-'.$pointer["sectype"].'-'.$pointer["radio"].'-'.$pointer["chan"];
 $table_gps = $table.$gps_ext;
 $name = $table."_".$row;
 
@@ -83,7 +84,7 @@ foreach($sig as $sigs)
 $sig = implode("-",$signal);
 
 	echo '<table style="width: 500px" cellspacing="3" cellpadding="0" class="style3"><tr><td class="style2">'
-		.'<input name="ssid" type="hidden" value="'.$pointer["ssid"].'"/>'."\r\n"
+		.'<input name="ssid" type="hidden" value="'.$SSID.'"/>'."\r\n"
 		.'<input name="mac" type="hidden" value="'.$pointer["mac"].'"/>'."\r\n"
 		.'<input name="man" type="hidden" value="'.$man.'"/>'."\r\n"
 		.'<input name="auth" type="hidden" value="'.$pointer["auth"].'"/>'."\r\n"
