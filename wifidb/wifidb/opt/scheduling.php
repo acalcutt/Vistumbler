@@ -452,30 +452,30 @@ if(is_string($func))
 							4	=>	"/-10/"	,# Hawaii
 							5	=>	"/10/"	,# Eastern Russia - Sydney, Australia
 							6	=>	"/-9/"	,# Alaska Time
-							7	=>	"/9.5/",#	 Mid Australia
+							7	=>	"/9.5/" ,# Mid Australia
 							8	=>	"/9/"	,# Japan
 							9	=>	"/-8/"	,# Pacific Standard Time
-							10	=>	"/8/"	 ,#China
-							11	=>	"/-7/",#	 Mountain Standard Time
-							12	=>	"/7/"	, #W Mongolia
-							13	=>	"/6.5/",#	 Burma
-							14	=>	"/-6/",#	 Central Standard Time
+							10	=>	"/8/"	,# China
+							11	=>	"/-7/"  ,# Mountain Standard Time
+							12	=>	"/7/"	,# W Mongolia
+							13	=>	"/6.5/" ,# Burma
+							14	=>	"/-6/"  ,# Central Standard Time
 							15	=>	"/6/"	,# Almaty (Alma ATA), Russia
-							16	=>	"/-4/",#	 Atlantic Time
-							17	=>	"/4.5/",#	 Afghanistan
-							18	=>	"/4/",#	 NW Caspian Sea
-							19	=>	"/-3.5/"	,# Newfoundland Time
+							16	=>	"/-4/"  ,# Atlantic Time
+							17	=>	"/4.5/" ,# Afghanistan
+							18	=>	"/4/"   ,# NW Caspian Sea
+							19	=>	"/-3.5/",# Newfoundland Time
 							20	=>	"/-3/"	,# Greenland Time
-							21	=>	"/3.5/",#	 Iran
+							21	=>	"/3.5/" ,# Iran
 							22	=>	"/3/"	,# Moscow, Mid-East, E Africa
-							23	=>	"/-5/",#	 Eastern Standard Time
-							24	=>	"/5.5/",#	 India
+							23	=>	"/-5/"  ,# Eastern Standard Time
+							24	=>	"/5.5/" ,# India
 							25	=>	"/5/"	,# Ural Mountains, Russia
-							26	=>	"/-2/",#	 Atlantic Ocean
-							27	=>	"/2/"	, #E Europe, E Central Africa
-							28	=>	"/-1/",#	 SE Greenland
-							29	=>	"/1/",#	 Mid Europe - Africa
-							30	=>	"/0/"	 #Greenwich, England
+							26	=>	"/-2/"  ,# Atlantic Ocean
+							27	=>	"/2/"	,# E Europe, E Central Africa
+							28	=>	"/-1/"  ,# SE Greenland
+							29	=>	"/1/"   ,# Mid Europe - Africa
+							30	=>	"/0/"	 # Greenwich, England
 						);
  
 			include $GLOBALS['wifidb_tools']."/daemon/config.inc.php";
@@ -496,12 +496,13 @@ if(is_string($func))
 			?>
 				<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> UTC</td><td>
 			<?php
+				if($dst == 1){$dst = -1;}
 				$str_time = strtotime($file_array['size']);
-				$alter_by = (($TZone*60)*60);
+				$alter_by = ((($TZone+$dst)*60)*60);
 				$altered = $str_time+$alter_by;
 				$next_run = date("Y-m-d H:i:s", $altered);
 				$Zone = " [".$TZone."] ";
-	#			$time_zone_string = preg_replace($timezone_numbers, $timezone_names, $Zone);
+				$Zone = preg_replace($timezone_numbers, $timezone_names, $Zone);
 				
 				echo $next_run.$Zone;
 			?>
