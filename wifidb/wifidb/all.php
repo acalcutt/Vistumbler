@@ -1,6 +1,6 @@
 <?php
 include('lib/database.inc.php');
-pageheader("Show all APs");
+	pageheader("Show all APs");
 include('lib/config.inc.php');
 $theme = $GLOBALS['theme'];
 if (isset($_GET['token']))
@@ -20,6 +20,7 @@ if (isset($_GET['token']))
 		if ($inc=="" or !is_int($inc)){$inc=100;}
 		if ($ord=="" or !is_string($ord)){$ord="ASC";}
 		if ($sort=="" or !is_string($sort)){$sort="id";}
+
 		echo '<table border="1" width="100%" cellspacing="0">'
 		.'<tr class="style4"><td>SSID<a href="?sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"border="0" src="themes/'.$theme.'/img/down.png"></a><a href="?sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/up.png"></a></td>'
 		.'<td>MAC<a href="?sort=mac&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/down.png"></a><a href="?sort=mac&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="themes/'.$theme.'/img/up.png"></a></td>'
@@ -77,43 +78,46 @@ if (isset($_GET['token']))
 		}
 		?>
 		</table>
-		</p>
+		</p> 
 		<?php
-		echo "<br>Page: ";
 		$from_fwd=$from;
 		$from = 0;
 		$page = 1;
 		$pages = $total_rows/$inc;
-		if ($from=0)
-		{
-			$from_back=$to_back-$inc;
-			echo '<a class="links" href="?from='.$from_back.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'"><- </a> ';
-		}
-		else
-		{
-			echo"< -";
-		}
+		$pages_exp = explode(".",$pages);
+#		echo $pages.' --- '.$pages_exp[1].'<BR>';
+		$pages_end = "0.".$pages_exp[1];
+		$pages_end = $pages_end+0;
+		$pages = $pages-$pages_end;
+#		echo $pages.' --- '.$pages_end.'<BR>';
+		$mid_page = ($from_/$inc)+1;
+		$pages_together = ' [<a class="links" href="?from=0&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">First</a>] - ';
 		for($I=0; $I<=$pages; $I++)
 		{
-				echo ' <a class="links" href="?from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">'.$page.'</a> - ';
-				$from=$from+$inc;
-				$page++;
+			if($I >= ($mid_page - 6) AND $I <= ($mid_page + 4))
+			{
+#				echo $mid_page." --- ".$I." --- ".$page."<BR>";
+				
+				if($mid_page == $page)
+				{
+					$pages_together .= ' <i><u>'.$page.'</u></i> - ';
+				}else
+				{
+					$pages_together .= ' <a class="links" href="?from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">'.$page.'</a> - ';
+				}
+			}
+			$from=$from+$inc;
+			$page++;
 		}
-		if ($from_<=$size)
-		{
-			echo">";
-		}
-		else
-		{
-			echo '<a class="links" href="?from='.$from_fwd.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">></a>';
-		}
+		$pages_together .= ' [<a class="links" href="?from='.(($pages)*$inc).'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">Last</a>]  ';
+		echo "<br>Page: < - ".$pages_together." >";
 	}else
 	{
-		echo "Token could not be compared";
+		echo "Token Could not be comapired";
 	}
 }else
 {
 	echo "Token Could not be found";
 }
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);?>
+footer($_SERVER['SCRIPT_FILENAME']);
+?>
