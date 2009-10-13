@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.8 Beta 6'
+$version = 'v9.8'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/09/28'
+$last_modified = '2009/10/13'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -4650,12 +4650,12 @@ EndFunc   ;==>_ImportVszFile
 
 Func _LoadFolder()
 	$FoundFiles = 0
-	$LoadFolder = FileSelectFolder("Load VS1 files from folder", "")
+	$LoadFolder = FileSelectFolder($Text_ImportFolder & "(VS1/VSZ)", "")
 	If Not @error Then
 		$vs1files = _FileListToArray($LoadFolder, '*.vs1', 1);Find all files in the folder that end in .vs1
 		If IsArray($vs1files) Then
-			For $b = 1 To $vs1files[0];Set Languages into proper format for the combo box
-				GUICtrlSetData($msgdisplay, "Loading VS1 - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
+			For $b = 1 To $vs1files[0]
+				GUICtrlSetData($msgdisplay, $Text_Loading & " - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
 				_LoadListGUI($LoadFolder & "\" & $vs1files[$b])
 				_ImportClose()
 			Next
@@ -4663,8 +4663,8 @@ Func _LoadFolder()
 		EndIf
 		$vs1files = _FileListToArray($LoadFolder, '*.vsz', 1);Find all files in the folder that end in .vsz
 		If IsArray($vs1files) Then
-			For $b = 1 To $vs1files[0];Set Languages into proper format for the combo box
-				GUICtrlSetData($msgdisplay, "Loading VS1 - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
+			For $b = 1 To $vs1files[0]
+				GUICtrlSetData($msgdisplay, $Text_Loading & " - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
 				_ImportVszFile($LoadFolder & "\" & $vs1files[$b])
 				_ImportClose()
 			Next
