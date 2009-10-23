@@ -1,11 +1,16 @@
+;--------------------------------------------------------
+;AutoIt Version: v3.3.0.0
+$Script_Author = 'Andrew Calcutt'
+$Script_Name = 'GpsCalc'
+$Script_Website = 'http://www.techidiots.net'
+$version = 'v2'
+$Script_Start_Date = '2009/10/22'
+$last_modified = '2009/10/23'
+$title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
+;Includes------------------------------------------------
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
-#include <ButtonConstants.au3>
-#include <ComboConstants.au3>
-#include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
-#include <StaticConstants.au3>
 #include <WindowsConstants.au3>
-
 #include <GDIPlus.au3>
 #include "UDFs\cfxUDF.au3"
 Dim $OpenedPort
@@ -31,12 +36,16 @@ Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
 Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 
-Dim $Latitude = 'N 0.0000'
-Dim $Longitude = 'E 0.0000'
-Dim $Latitude2 = 'N 0.0000'
-Dim $Longitude2 = 'E 0.0000'
-Dim $LatitudeWifidb = 'N 0.0000'
-Dim $LongitudeWifidb = 'E 0.0000'
+Dim $StartLat = '0.0000000'
+Dim $StartLon = '0.0000000'
+Dim $DestLat = '0.0000000'
+Dim $DestLon = '0.0000000'
+Dim $Latitude = '0.0000000'
+Dim $Longitude = '0.0000000'
+Dim $Latitude2 = '0.0000000'
+Dim $Longitude2 = '0.0000000'
+Dim $LatitudeWifidb = '0.0000000'
+Dim $LongitudeWifidb = '0.0000000'
 Dim $NumberOfSatalites = '00'
 Dim $HorDilPitch = '0'
 Dim $Alt = '0'
@@ -53,7 +62,8 @@ Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_La
 
 
 
-$GpsCalcGUI = GUICreate("GpsCalc", 414, 448, 192, 120)
+$GpsCalcGUI = GUICreate($title, 414, 448, 192, 120)
+GUISetBkColor($BackgroundColor)
 ;GPS Settings
 $But_UseGPS = GUICtrlCreateButton("Use GPS", 16, 15, 97, 20, $WS_GROUP)
 GUICtrlCreateLabel("Com Port:", 136, 20, 50, 17)
@@ -85,7 +95,7 @@ GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
 ;Start GPS Settings
 $Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 16, 80, 385, 89)
 $Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("Current GPS Position", 31, 105, 120, 17)
-$Rad_StartGPS_LatLon = GUICtrlCreateRadio("Radio1", 31, 135, 17, 17)
+$Rad_StartGPS_LatLon = GUICtrlCreateRadio("", 31, 135, 17, 17)
 $cLat = GUICtrlCreateInput("", 92, 135, 100, 21)
 GUICtrlCreateLabel("Latitude:", 48, 139, 45, 17)
 $cLon = GUICtrlCreateInput("", 258, 136, 100, 21)
@@ -104,10 +114,10 @@ GUICtrlCreateLabel("Bearing:", 48, 247, 43, 17)
 $dBear = GUICtrlCreateInput("", 95, 245, 100, 21)
 $But_SetDestination = GUICtrlCreateButton("Set Desination", 104, 272, 201, 25, $WS_GROUP)
 ;Route Info
-$Lab_StartGPS = GUICtrlCreateLabel("Start GPS", 15, 320, 388, 15)
-$Lab_DestGPS = GUICtrlCreateLabel("Dest GPS", 15, 340, 388, 17)
-$Lab_BrngDist = GUICtrlCreateLabel("Bearing/Distance", 15, 366, 388, 15)
-$Lab_GpsInfo = GUICtrlCreateLabel("GPS INFORMATION", 15, 386, 388, 17)
+$Lab_StartGPS = GUICtrlCreateLabel("", 15, 320, 388, 15)
+$Lab_DestGPS = GUICtrlCreateLabel("Dest GPS:     Not Set Yet", 15, 340, 388, 15)
+$Lab_BrngDist = GUICtrlCreateLabel("", 15, 360, 388, 15)
+$Lab_GpsInfo = GUICtrlCreateLabel("", 15, 380, 388, 15)
 $But_OpenCompass = GUICtrlCreateButton("Open Compass", 64, 415, 113, 25, $WS_GROUP)
 $But_Exit = GUICtrlCreateButton("Exit", 235, 415, 113, 25, $WS_GROUP)
 
@@ -120,6 +130,19 @@ GUISetState(@SW_SHOW)
 
 
 While 1
+
+If GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
+	$StartLat = $Latitude
+	$StartLon = $Longitude
+	;$StartBrng = $TrackAngle
+ElseIf GUICtrlRead($Rad_StartGPS_LatLon) = 1 Then
+	$StartLat = GUICtrlRead($cLat)
+	$StartLon = GUICtrlRead($cLon)
+	;$StartBrng = $cBear
+EndIf
+GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & StringFormat('%0.7f', $StartLat) & '     Longitude: ' & StringFormat('%0.7f', $StartLon))
+GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)) & ' degrees     Distance: ' & StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)) & ' meters')
+Sleep(1000)
 
 
 WEnd
@@ -139,7 +162,7 @@ Func _SetDestination()
 		$DestLat = '0.0000000'
 		$DestLon = '0.0000000'
 	EndIF
-	GUICtrlSetData($Lab_DestGPS, 'Latitude: ' & $DestLat & '     Longitude: ' & $DestLon)
+	GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & $DestLat & '     Longitude: ' & $DestLon)
 EndFunc
 
 Func _GpsToggle();Turns GPS on or off
@@ -564,7 +587,6 @@ Func _ATan2($x, $y) ;ATan2 function, since autoit only has ATan
 	ElseIf $y <> 0 Then
 		Return $Pi / 2
 	Else
-		MsgBox( 16, "Error - Division by zero", "Domain Error in Function: ATan2()" & @LF & "$x and $y cannot both equal zero" )
 		SetError( 1 )
 	EndIf
 EndFunc
