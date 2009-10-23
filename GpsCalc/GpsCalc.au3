@@ -17,6 +17,7 @@ Dim $OpenedPort
 Dim $UseGPS = 0
 Dim $TurnOffGPS = 0
 Dim $CompassOpen = 0
+Dim $DestSet = 0
 Dim $RefreshLoopTime = 1000
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ErrorFlag_sound = 'error.wav'
@@ -35,6 +36,18 @@ Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
 Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
 Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
+
+Dim $RadStartGpsCurPos = IniRead($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', '4')
+Dim $RadStartGpsLatLon = IniRead($settings, 'StartGPS', 'Rad_StartGPS_LatLon', '1')
+Dim $DcLat = IniRead($settings, 'StartGPS', 'cLat', '')
+Dim $DcLon = IniRead($settings, 'StartGPS', 'cLon', '')
+
+Dim $RadDestGPSLatLon = IniRead($settings, 'DestGPS', 'Rad_DestGPS_LatLon', '1')
+Dim $RadDestGPSBrngDist = IniRead($settings, 'DestGPS', 'Rad_DestGPS_BrngDist', '4')
+Dim $DdLat = IniRead($settings, 'DestGPS', 'dLat', '')
+Dim $DdLon = IniRead($settings, 'DestGPS', 'dLon', '')
+Dim $DdBrng = IniRead($settings, 'DestGPS', 'dBrng', '')
+Dim $DdDist = IniRead($settings, 'DestGPS', 'dDist', '')
 
 Dim $StartLat = '0.0000000'
 Dim $StartLon = '0.0000000'
@@ -96,23 +109,27 @@ GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
 ;Start GPS Settings
 $Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 16, 80, 385, 89)
 $Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("Current GPS Position", 31, 105, 120, 17)
+If $RadStartGpsCurPos = 1 Then GUICtrlSetState($Rad_StartGPS_CurrentPos, $GUI_CHECKED)
 $Rad_StartGPS_LatLon = GUICtrlCreateRadio("", 31, 135, 17, 17)
-$cLat = GUICtrlCreateInput("", 92, 135, 100, 21)
+If $RadStartGpsLatLon = 1 Then GUICtrlSetState($Rad_StartGPS_LatLon, $GUI_CHECKED)
+$cLat = GUICtrlCreateInput($DcLat, 95, 135, 100, 21)
 GUICtrlCreateLabel("Latitude:", 48, 139, 45, 17)
-$cLon = GUICtrlCreateInput("", 258, 136, 100, 21)
-GUICtrlCreateLabel("Longitude:", 202, 138, 54, 17)
+$cLon = GUICtrlCreateInput($DcLon, 258, 136, 100, 21)
+GUICtrlCreateLabel("Longitude:", 205, 138, 54, 17)
 ;Dest GPS Settings
 $Grp_DestGPS = GUICtrlCreateGroup("Destination GPS Position", 16, 184, 385, 125)
 $Rad_DestGPS_LatLon = GUICtrlCreateRadio("Rad_DestGPS_LatLon", 31, 211, 17, 17)
-GUICtrlCreateLabel("Longitude:", 205, 214, 54, 17)
-$dLon = GUICtrlCreateInput("", 261, 209, 100, 21)
+If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
 GUICtrlCreateLabel("Latitude:", 48, 214, 45, 17)
-$dLat = GUICtrlCreateInput("", 95, 209, 100, 21)
+$dLat = GUICtrlCreateInput($DdLat, 95, 209, 100, 21)
+GUICtrlCreateLabel("Longitude:", 205, 214, 54, 17)
+$dLon = GUICtrlCreateInput($DdLon, 261, 209, 100, 21)
 $Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 31, 244, 17, 17)
-GUICtrlCreateLabel("Distance:", 205, 247, 49, 17)
-$dDist = GUICtrlCreateInput("", 261, 242, 100, 21)
+If $RadDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
 GUICtrlCreateLabel("Bearing:", 48, 247, 43, 17)
-$dBear = GUICtrlCreateInput("", 95, 245, 100, 21)
+$dBrng = GUICtrlCreateInput($DdBrng, 95, 242, 100, 21)
+GUICtrlCreateLabel("Distance:", 205, 247, 49, 17)
+$dDist = GUICtrlCreateInput($DdDist, 261, 242, 100, 21)
 $But_SetDestination = GUICtrlCreateButton("Set Desination", 104, 272, 201, 25, $WS_GROUP)
 ;Route Info
 $Lab_StartGPS = GUICtrlCreateLabel("", 15, 320, 388, 15)
@@ -144,14 +161,15 @@ While 1
 	$DestBrng = _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
 	$DestDist = _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
 	GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & StringFormat('%0.7f', $StartLat) & '     Longitude: ' & StringFormat('%0.7f', $StartLon))
-	GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', $DestBrng) & ' degrees     Distance: ' & StringFormat('%0.1f', $DestDist) & ' meters')
+	If $DestSet = 1 Then GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', $DestBrng) & ' degrees     Distance: ' & StringFormat('%0.1f', $DestDist) & ' meters')
 	_DrawCompassLine($DestBrng)
-	Sleep(1000)
+	Sleep(500)
 
 
 WEnd
 
 Func _Exit()
+	_SaveSettings()
 	Exit
 EndFunc   ;==>_Exit
 
@@ -160,13 +178,14 @@ Func _SetDestination()
 		$DestLat = GUICtrlRead($dLat)
 		$DestLon = GUICtrlRead($dLon)
 	ElseIf GUICtrlRead($Rad_DestGPS_BrngDist) = 1 Then
-		$DestLat = _DestLat(GUICtrlRead($cLat), GUICtrlRead($dBear), GUICtrlRead($dDist))
-		$DestLon = _DestLon(GUICtrlRead($cLat), GUICtrlRead($cLon), $DestLat, GUICtrlRead($dBear), GUICtrlRead($dDist))
+		$DestLat = _DestLat(GUICtrlRead($cLat), GUICtrlRead($dBrng), GUICtrlRead($dDist))
+		$DestLon = _DestLon(GUICtrlRead($cLat), GUICtrlRead($cLon), $DestLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
 	Else
 		$DestLat = '0.0000000'
 		$DestLon = '0.0000000'
 	EndIf
 	GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & $DestLat & '     Longitude: ' & $DestLon)
+	$DestSet = 1
 EndFunc   ;==>_SetDestination
 
 Func _GpsToggle();Turns GPS on or off
@@ -419,7 +438,9 @@ Func _BearingBetweenPoints($Lat1, $Lon1, $Lat2, $Lon2)
 	$Lon1 = _deg2rad($Lon1)
 	$Lat2 = _deg2rad($Lat2)
 	$Lon2 = _deg2rad($Lon2)
-	Return (_rad2deg(_ATan2(Cos($Lat1) * Sin($Lat2) - Sin($Lat1) * Cos($Lat2) * Cos($Lon2 - $Lon1), Sin($Lon2 - $Lon1) * Cos($Lat2))));Return bearing in degrees
+	$bDegrees = _rad2deg(_ATan2(Cos($Lat1) * Sin($Lat2) - Sin($Lat1) * Cos($Lat2) * Cos($Lon2 - $Lon1), Sin($Lon2 - $Lon1) * Cos($Lat2)))
+	If $bDegrees < 0 Then $bDegrees += 360
+	Return ($bDegrees);Return bearing in degrees
 EndFunc   ;==>_BearingBetweenPoints
 
 Func _DestLat($Lat1, $Brng1, $Dist1)
@@ -437,6 +458,27 @@ Func _DestLon($Lat1, $Lon1, $Lat2, $Brng1, $Dist1)
 	$Brng1 = _deg2rad($Brng1)
 	Return (StringFormat('%0.7f', _rad2deg($Lon1 + _ATan2(Cos($Dist1 / $EarthRadius) - Sin($Lat1) * Sin($Lat2), Sin($Brng1) * Sin($Dist1 / $EarthRadius) * Cos($Lat1)))));Return destination decimal longitude
 EndFunc   ;==>_DestLon
+
+Func _SaveSettings()
+	IniWrite($settings, 'GpsSettings', 'ComPort', $ComPort)
+	IniWrite($settings, 'GpsSettings', 'Baud', $BAUD)
+	IniWrite($settings, 'GpsSettings', 'Parity', $PARITY)
+	IniWrite($settings, 'GpsSettings', 'DataBit', $DATABIT)
+	IniWrite($settings, 'GpsSettings', 'StopBit', $STOPBIT)
+	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
+
+	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', GUICtrlRead($Rad_StartGPS_CurrentPos))
+	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_LatLon', GUICtrlRead($Rad_StartGPS_LatLon))
+	IniWrite($settings, 'StartGPS', 'cLat', GUICtrlRead($cLat))
+	IniWrite($settings, 'StartGPS', 'cLon', GUICtrlRead($cLon))
+
+	IniWrite($settings, 'DestGPS', 'Rad_DestGPS_LatLon', GUICtrlRead($Rad_DestGPS_LatLon))
+	IniWrite($settings, 'DestGPS', 'Rad_DestGPS_BrngDist', GUICtrlRead($Rad_DestGPS_BrngDist))
+	IniWrite($settings, 'DestGPS', 'dLat', GUICtrlRead($dLat))
+	IniWrite($settings, 'DestGPS', 'dLon', GUICtrlRead($dLon))
+	IniWrite($settings, 'DestGPS', 'dBrng', GUICtrlRead($dBrng))
+	IniWrite($settings, 'DestGPS', 'dDist', GUICtrlRead($dDist))
+EndFunc
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS COMPASS GUI FUNCTIONS
@@ -479,7 +521,9 @@ Func _CompassGUI()
 		_SetCompassSizes()
 
 		$CompassOpen = 1
-	EndIf ;==>_CompassGUI
+	Else
+		WinActivate($CompassGUI)
+	EndIf
 EndFunc   ;==>_CompassGUI
 
 Func _CloseCompassGui();closes the compass window
