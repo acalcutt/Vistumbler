@@ -1,9 +1,9 @@
 ;--------------------------------------------------------
 ;AutoIt Version: v3.3.0.0
 $Script_Author = 'Andrew Calcutt'
-$Script_Name = 'GpsCalc'
+$Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v2'
+$version = 'v0.5'
 $Script_Start_Date = '2009/10/22'
 $last_modified = '2009/10/23'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
