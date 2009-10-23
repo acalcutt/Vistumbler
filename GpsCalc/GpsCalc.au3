@@ -57,6 +57,7 @@ Dim $SpeedInMPH = '0'
 Dim $SpeedInKmH = '0'
 Dim $TrackAngle = '0'
 
+Dim $CircleX, $CircleY
 Dim $FixTime, $FixTime2, $FixDate, $Quality
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
 
@@ -76,17 +77,17 @@ GUICtrlCreateLabel("Stop Bit:", 16, 52, 44, 17)
 $CommBit = GUICtrlCreateCombo("1", 64, 47, 80, 25)
 GUICtrlSetData(-1, "1.5|2", $STOPBIT)
 GUICtrlCreateLabel("Parity:", 148, 52, 33, 17)
-		If $PARITY = 'E' Then
-			$l_PARITY = 'Even'
-		ElseIf $PARITY = 'M' Then
-			$l_PARITY = 'Mark'
-		ElseIf $PARITY = 'O' Then
-			$l_PARITY = 'Odd'
-		ElseIf $PARITY = 'S' Then
-			$l_PARITY = 'Space'
-		Else
-			$l_PARITY = 'None'
-		EndIf
+If $PARITY = 'E' Then
+	$l_PARITY = 'Even'
+ElseIf $PARITY = 'M' Then
+	$l_PARITY = 'Mark'
+ElseIf $PARITY = 'O' Then
+	$l_PARITY = 'Odd'
+ElseIf $PARITY = 'S' Then
+	$l_PARITY = 'Space'
+Else
+	$l_PARITY = 'None'
+EndIf
 $CommParity = GUICtrlCreateCombo("None", 185, 47, 80, 25)
 GUICtrlSetData(-1, 'Even|Mark|Odd|Space', $l_PARITY)
 GUICtrlCreateLabel("Data Bit:", 275, 52, 45, 17)
@@ -131,25 +132,28 @@ GUISetState(@SW_SHOW)
 
 While 1
 
-If GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
-	$StartLat = $Latitude
-	$StartLon = $Longitude
-	;$StartBrng = $TrackAngle
-ElseIf GUICtrlRead($Rad_StartGPS_LatLon) = 1 Then
-	$StartLat = GUICtrlRead($cLat)
-	$StartLon = GUICtrlRead($cLon)
-	;$StartBrng = $cBear
-EndIf
-GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & StringFormat('%0.7f', $StartLat) & '     Longitude: ' & StringFormat('%0.7f', $StartLon))
-GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)) & ' degrees     Distance: ' & StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)) & ' meters')
-Sleep(1000)
+	If GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
+		$StartLat = $Latitude
+		$StartLon = $Longitude
+		;$StartBrng = $TrackAngle
+	ElseIf GUICtrlRead($Rad_StartGPS_LatLon) = 1 Then
+		$StartLat = GUICtrlRead($cLat)
+		$StartLon = GUICtrlRead($cLon)
+		;$StartBrng = $cBear
+	EndIf
+	$DestBrng = _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
+	$DestDist = _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
+	GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & StringFormat('%0.7f', $StartLat) & '     Longitude: ' & StringFormat('%0.7f', $StartLon))
+	GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', $DestBrng) & ' degrees     Distance: ' & StringFormat('%0.1f', $DestDist) & ' meters')
+	_DrawCompassLine($DestBrng)
+	Sleep(1000)
 
 
 WEnd
 
 Func _Exit()
 	Exit
-EndFunc
+EndFunc   ;==>_Exit
 
 Func _SetDestination()
 	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
@@ -161,15 +165,15 @@ Func _SetDestination()
 	Else
 		$DestLat = '0.0000000'
 		$DestLon = '0.0000000'
-	EndIF
+	EndIf
 	GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & $DestLat & '     Longitude: ' & $DestLon)
-EndFunc
+EndFunc   ;==>_SetDestination
 
 Func _GpsToggle();Turns GPS on or off
 	If $UseGPS = 1 Then
 		$TurnOffGPS = 1
 	Else
-		$openport = _OpenComPort(GuiCtrlRead($CommPort), GuiCtrlRead($CommBaud), GuiCtrlRead($CommParity), GuiCtrlRead($CommDataBit), GuiCtrlRead($CommBit));Open The GPS COM port
+		$openport = _OpenComPort(GUICtrlRead($CommPort), GUICtrlRead($CommBaud), GUICtrlRead($CommParity), GUICtrlRead($CommDataBit), GUICtrlRead($CommBit));Open The GPS COM port
 		If $openport = 1 Then
 			$UseGPS = 1
 			GUICtrlSetData($But_UseGPS, "Stop GPS")
@@ -182,56 +186,56 @@ Func _GpsToggle();Turns GPS on or off
 EndFunc   ;==>_GpsToggle
 
 Func _TurnOffGPS();Turns off GPS, resets variable\
-		$UseGPS = 0
-		$TurnOffGPS = 0
-		$disconnected_time = -1
-		$Latitude = 'N 0.0000'
-		$Longitude = 'E 0.0000'
-		$Latitude2 = 'N 0.0000'
-		$Longitude2 = 'E 0.0000'
-		$NumberOfSatalites = '00'
-		$HorDilPitch = '0'
-		$Alt = '0'
-		$AltS = 'M'
-		$Geo = '0'
-		$GeoS = 'M'
-		$SpeedInKnots = '0'
-		$SpeedInMPH = '0'
-		$SpeedInKmH = '0'
-		$TrackAngle = '0'
-		_CloseComPort(GuiCtrlRead($CommPort)) ;Close The GPS COM port
-		GUICtrlSetData($But_UseGPS, "Use GPS")
+	$UseGPS = 0
+	$TurnOffGPS = 0
+	$disconnected_time = -1
+	$Latitude = 'N 0.0000'
+	$Longitude = 'E 0.0000'
+	$Latitude2 = 'N 0.0000'
+	$Longitude2 = 'E 0.0000'
+	$NumberOfSatalites = '00'
+	$HorDilPitch = '0'
+	$Alt = '0'
+	$AltS = 'M'
+	$Geo = '0'
+	$GeoS = 'M'
+	$SpeedInKnots = '0'
+	$SpeedInMPH = '0'
+	$SpeedInKmH = '0'
+	$TrackAngle = '0'
+	_CloseComPort(GUICtrlRead($CommPort)) ;Close The GPS COM port
+	GUICtrlSetData($But_UseGPS, "Use GPS")
 EndFunc   ;==>_TurnOffGPS
 
 Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = '8', $sStopBit = '1', $sFlow = '0');Open specified COM port
-		If $sPARITY = 'O' Then ;Odd
-			$iPar = '1'
-		ElseIf $sPARITY = 'E' Then ;Even
-			$iPar = '2'
-		ElseIf $sPARITY = 'M' Then ;Mark
-			$iPar = '3'
-		ElseIf $sPARITY = 'S' Then ;Space
-			$iPar = '4'
-		Else
-			$iPar = '0';None
-		EndIf
-		If $sStopBit = '1' Then
-			$iStop = '0'
-		ElseIf $sStopBit = '1.5' Then
-			$iStop = '1'
-		ElseIf $sStopBit = '2' Then
-			$iStop = '2'
-		EndIf
-		$OpenedPort = _OpenComm($CommPort, $sBAUD, $sDataBit, $iPar, $iStop)
-		If $OpenedPort = '-1' Then
-			Return (0)
-		Else
-			Return (1)
-		EndIf
+	If $sPARITY = 'O' Then ;Odd
+		$iPar = '1'
+	ElseIf $sPARITY = 'E' Then ;Even
+		$iPar = '2'
+	ElseIf $sPARITY = 'M' Then ;Mark
+		$iPar = '3'
+	ElseIf $sPARITY = 'S' Then ;Space
+		$iPar = '4'
+	Else
+		$iPar = '0';None
+	EndIf
+	If $sStopBit = '1' Then
+		$iStop = '0'
+	ElseIf $sStopBit = '1.5' Then
+		$iStop = '1'
+	ElseIf $sStopBit = '2' Then
+		$iStop = '2'
+	EndIf
+	$OpenedPort = _OpenComm($CommPort, $sBAUD, $sDataBit, $iPar, $iStop)
+	If $OpenedPort = '-1' Then
+		Return (0)
+	Else
+		Return (1)
+	EndIf
 EndFunc   ;==>_OpenComPort
 
 Func _CloseComPort($CommPort = '8');Closes specified COM port
-		_CloseComm($OpenedPort)
+	_CloseComm($OpenedPort)
 EndFunc   ;==>_CloseComPort
 
 Func _FormatGpsTime($time)
@@ -335,27 +339,27 @@ Func _GetGPS(); Recieves data from gps device
 
 	While 1 ;Loop to extract gps data untill location is found or timout time is reached
 		If $UseGPS = 0 Then ExitLoop
-			$gstring = StringStripWS(_rxwait($OpenedPort, '1000', $maxtime), 8);Read data line from GPS
-			$dataline = $gstring; & $LastGpsString
-			$LastGpsString = $gstring
-			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
-				$FoundData = 1
-				$dlsplit = StringSplit($dataline, '$')
-				For $gda = 1 To $dlsplit[0]
-					;If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
-					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+		$gstring = StringStripWS(_rxwait($OpenedPort, '1000', $maxtime), 8);Read data line from GPS
+		$dataline = $gstring; & $LastGpsString
+		$LastGpsString = $gstring
+		If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
+			$FoundData = 1
+			$dlsplit = StringSplit($dataline, '$')
+			For $gda = 1 To $dlsplit[0]
+				;If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
+				If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 
-						If StringInStr($dlsplit[$gda], "GPGGA") Then
-							_GPGGA($dlsplit[$gda]);Split GPGGA data from data string
-							$disconnected_time = -1
-						ElseIf StringInStr($dlsplit[$gda], "GPRMC") Then
-							_GPRMC($dlsplit[$gda]);Split GPRMC data from data string
-							$disconnected_time = -1
-						EndIf
+					If StringInStr($dlsplit[$gda], "GPGGA") Then
+						_GPGGA($dlsplit[$gda]);Split GPGGA data from data string
+						$disconnected_time = -1
+					ElseIf StringInStr($dlsplit[$gda], "GPRMC") Then
+						_GPRMC($dlsplit[$gda]);Split GPRMC data from data string
+						$disconnected_time = -1
 					EndIf
+				EndIf
 
-				Next
-			EndIf
+			Next
+		EndIf
 		;If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
 		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And $Temp_Status = "A" Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
 		If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
@@ -407,7 +411,7 @@ Func _DistanceBetweenPoints($Lat1, $Lon1, $Lat2, $Lon2)
 	$Lon1 = _deg2rad($Lon1)
 	$Lat2 = _deg2rad($Lat2)
 	$Lon2 = _deg2rad($Lon2)
-	Return (ACos(Sin($Lat1)*Sin($Lat2)+Cos($Lat1)*Cos($Lat2)*Cos($Lon2-$Lon1))*$EarthRadius);Return distance in meters
+	Return (ACos(Sin($Lat1) * Sin($Lat2) + Cos($Lat1) * Cos($Lat2) * Cos($Lon2 - $Lon1)) * $EarthRadius);Return distance in meters
 EndFunc   ;==>_DistanceBetweenPoints
 
 Func _BearingBetweenPoints($Lat1, $Lon1, $Lat2, $Lon2)
@@ -415,15 +419,15 @@ Func _BearingBetweenPoints($Lat1, $Lon1, $Lat2, $Lon2)
 	$Lon1 = _deg2rad($Lon1)
 	$Lat2 = _deg2rad($Lat2)
 	$Lon2 = _deg2rad($Lon2)
-	Return (_rad2deg(_ATAN2(COS($Lat1)*SIN($Lat2)-SIN($Lat1)*COS($Lat2)*COS($Lon2-$Lon1), SIN($Lon2-$Lon1)*COS($Lat2))));Return bearing in degrees
-EndFunc   ;==>_DistanceBetweenPoints
+	Return (_rad2deg(_ATan2(Cos($Lat1) * Sin($Lat2) - Sin($Lat1) * Cos($Lat2) * Cos($Lon2 - $Lon1), Sin($Lon2 - $Lon1) * Cos($Lat2))));Return bearing in degrees
+EndFunc   ;==>_BearingBetweenPoints
 
 Func _DestLat($Lat1, $Brng1, $Dist1)
 	Local $EarthRadius = 6378137 ;meters
 	$Lat1 = _deg2rad($Lat1)
 	$Brng1 = _deg2rad($Brng1)
-	Return(StringFormat('%0.7f', _rad2deg(ASIN(SIN($Lat1)*COS($Dist1/$EarthRadius) + COS($Lat1)*SIN($Dist1/$EarthRadius)*COS($Brng1)))));Return destination decimal latitude
-EndFunc
+	Return (StringFormat('%0.7f', _rad2deg(ASin(Sin($Lat1) * Cos($Dist1 / $EarthRadius) + Cos($Lat1) * Sin($Dist1 / $EarthRadius) * Cos($Brng1)))));Return destination decimal latitude
+EndFunc   ;==>_DestLat
 
 Func _DestLon($Lat1, $Lon1, $Lat2, $Brng1, $Dist1)
 	Local $EarthRadius = 6378137 ;meters
@@ -431,8 +435,8 @@ Func _DestLon($Lat1, $Lon1, $Lat2, $Brng1, $Dist1)
 	$Lon1 = _deg2rad($Lon1)
 	$Lat2 = _deg2rad($Lat2)
 	$Brng1 = _deg2rad($Brng1)
-	Return(StringFormat('%0.7f', _rad2deg($Lon1+_ATAN2(COS($Dist1/$EarthRadius)-SIN($Lat1)*SIN($Lat2), SIN($Brng1)*SIN($Dist1/$EarthRadius)*COS($Lat1)))));Return destination decimal longitude
-EndFunc
+	Return (StringFormat('%0.7f', _rad2deg($Lon1 + _ATan2(Cos($Dist1 / $EarthRadius) - Sin($Lat1) * Sin($Lat2), Sin($Brng1) * Sin($Dist1 / $EarthRadius) * Cos($Lat1)))));Return destination decimal longitude
+EndFunc   ;==>_DestLon
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS COMPASS GUI FUNCTIONS
@@ -581,14 +585,13 @@ Func _ATan2($x, $y) ;ATan2 function, since autoit only has ATan
 	If $y < 0 Then
 		Return -_ATan2($x, -$y)
 	ElseIf $x < 0 Then
-		Return $Pi - ATan(-$y / $x)
+		Return $PI - ATan(-$y / $x)
 	ElseIf $x > 0 Then
 		Return ATan($y / $x)
 	ElseIf $y <> 0 Then
-		Return $Pi / 2
+		Return $PI / 2
 	Else
-		SetError( 1 )
+		SetError(1)
 	EndIf
-EndFunc
-
+EndFunc   ;==>_ATan2
 
