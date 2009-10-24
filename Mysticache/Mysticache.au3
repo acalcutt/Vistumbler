@@ -3,9 +3,9 @@
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v0.6'
+$version = 'v0.7'
 $Script_Start_Date = '2009/10/22'
-$last_modified = '2009/10/23'
+$last_modified = '2009/10/24'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
@@ -17,17 +17,21 @@ Dim $OpenedPort
 Dim $UseGPS = 0
 Dim $TurnOffGPS = 0
 Dim $CompassOpen = 0
+Dim $GpsDetailsOpen = 0
 Dim $DestSet = 0
 Dim $RefreshLoopTime = 1000
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ErrorFlag_sound = 'error.wav'
+Dim $GpsDetailsGUI
+Dim $GPGGA_Update
+Dim $GPRMC_Update
 
 Dim $BackgroundColor = "0x99B4A1"
 Dim $ControlBackgroundColor = "0xD7E4C2"
 Dim $TextColor = "0x000000"
 
 Dim $CompassGraphic, $CompassGUI, $CompassBack, $CompassHeight, $north, $south, $east, $west
-Dim $CompassPosition = ''
+Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
 
 Dim $settings = @ScriptDir & '\Settings.ini'
 Dim $ComPort = IniRead($settings, 'GpsSettings', 'ComPort', '4')
@@ -48,6 +52,9 @@ Dim $DdLat = IniRead($settings, 'DestGPS', 'dLat', '')
 Dim $DdLon = IniRead($settings, 'DestGPS', 'dLon', '')
 Dim $DdBrng = IniRead($settings, 'DestGPS', 'dBrng', '')
 Dim $DdDist = IniRead($settings, 'DestGPS', 'dDist', '')
+
+Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
+Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
 
 Dim $StartLat = '0.0000000'
 Dim $StartLon = '0.0000000'
@@ -76,8 +83,19 @@ Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_La
 
 
 
-$GpsCalcGUI = GUICreate($title, 414, 448, 192, 120)
+$GpsCalcGUI = GUICreate($title, 414, 448, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
+;Set Window Position
+$a = WinGetPos($GpsCalcGUI);Get window current position
+Dim $State = IniRead($settings, 'WindowPositions', 'State', "Window");Get last window position from the ini file
+Dim $Position = IniRead($settings, 'WindowPositions', 'Position', $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3])
+Dim $winpos_old, $winpos
+$b = StringSplit($Position, ",")
+If $State = "Maximized" Then
+	WinSetState($title, "", @SW_MAXIMIZE)
+Else
+	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]);Resize window to ini value
+EndIf
 ;GPS Settings
 $But_UseGPS = GUICtrlCreateButton("Use GPS", 16, 15, 97, 20, $WS_GROUP)
 GUICtrlCreateLabel("Com Port:", 136, 20, 50, 17)
@@ -118,7 +136,7 @@ $cLon = GUICtrlCreateInput($DcLon, 258, 136, 100, 21)
 GUICtrlCreateLabel("Longitude:", 205, 138, 54, 17)
 ;Dest GPS Settings
 $Grp_DestGPS = GUICtrlCreateGroup("Destination GPS Position", 16, 184, 385, 125)
-$Rad_DestGPS_LatLon = GUICtrlCreateRadio("Rad_DestGPS_LatLon", 31, 211, 17, 17)
+$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 31, 211, 17, 17)
 If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
 GUICtrlCreateLabel("Latitude:", 48, 214, 45, 17)
 $dLat = GUICtrlCreateInput($DdLat, 95, 209, 100, 21)
@@ -136,12 +154,14 @@ $Lab_StartGPS = GUICtrlCreateLabel("", 15, 320, 388, 15)
 $Lab_DestGPS = GUICtrlCreateLabel("Dest GPS:     Not Set Yet", 15, 340, 388, 15)
 $Lab_BrngDist = GUICtrlCreateLabel("", 15, 360, 388, 15)
 $Lab_GpsInfo = GUICtrlCreateLabel("", 15, 380, 388, 15)
-$But_OpenCompass = GUICtrlCreateButton("Open Compass", 64, 415, 113, 25, $WS_GROUP)
-$But_Exit = GUICtrlCreateButton("Exit", 235, 415, 113, 25, $WS_GROUP)
+$But_OpenCompass = GUICtrlCreateButton("Open Compass", 40, 415, 100, 25, $WS_GROUP)
+$But_OpenGpsDetails = GUICtrlCreateButton("Open GPS Details", 150, 415, 100, 25, $WS_GROUP)
+$But_Exit = GUICtrlCreateButton("Exit", 260, 415, 110, 25, $WS_GROUP)
 
 GUICtrlSetOnEvent($But_UseGPS, '_GpsToggle')
 GUICtrlSetOnEvent($But_SetDestination, '_SetDestination')
 GUICtrlSetOnEvent($But_OpenCompass, '_CompassGUI')
+GUICtrlSetOnEvent($But_OpenGpsDetails, '_OpenGpsDetailsGUI')
 GUICtrlSetOnEvent($But_Exit, '_Exit')
 
 GUISetState(@SW_SHOW)
@@ -163,7 +183,27 @@ While 1
 	$DestDist = _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
 	GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & StringFormat('%0.7f', $StartLat) & '     Longitude: ' & StringFormat('%0.7f', $StartLon))
 	If $DestSet = 1 Then GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', $DestBrng) & ' degrees     Distance: ' & StringFormat('%0.1f', $DestDist) & ' meters')
-	_DrawCompassLine($DestBrng)
+
+	If $UseGPS = 1 And GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
+		_DrawCompassLine($DestBrng, $TrackAngle)
+	Else
+		_DrawCompassLine($DestBrng)
+	EndIf
+
+	;Check Mysticache Window Position
+	_WinMoved()
+
+	;Check Compass Window Position
+	If WinActive($CompassGUI) And $CompassOpen = 1  Then
+		$c = WinGetPos($CompassGUI)
+		If $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] <> $CompassPosition Then $CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] ;If the $CompassGUI has moved or resized, set $CompassPosition to current window size
+	EndIf
+
+	;Check GPS Details Windows Position
+	If WinActive($GpsDetailsGUI) And $GpsDetailsOpen = 1 Then
+		$g = WinGetPos($GpsDetailsGUI)
+		If $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
+	EndIf
 
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
 	Sleep(500)
@@ -174,6 +214,26 @@ Func _Exit()
 	_SaveSettings()
 	Exit
 EndFunc   ;==>_Exit
+
+Func _WinMoved();Checks if window has moved. Returns 1 if it has
+	$a = WinGetPos($GpsCalcGUI)
+	$winpos_old = $winpos
+	$winpos = $a[0] & $a[1] & $a[2] & $a[3] & WinGetState($title, "")
+
+	If $winpos_old <> $winpos Then
+		;Set window state and position
+		$winstate = WinGetState($title, "")
+		If BitAND($winstate, 32) Then;Set
+			$State = "Maximized"
+		Else
+			$State = "Window"
+			$Position = $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3]
+		EndIf
+		Return 1 ;Set Flag that window moved
+	Else
+		Return 0 ;Set Flag that window did not move
+	EndIf
+EndFunc   ;==>_WinMoved
 
 Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
 	$return = '0.0000000'
@@ -435,8 +495,8 @@ Func _GetGPS(); Recieves data from gps device
 		EndIf
 	EndIf
 
-	;_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
-	;_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
+	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
+	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
 	;_DrawCompassLine($TrackAngle)
 	Return ($return)
 EndFunc   ;==>_GetGPS
@@ -477,6 +537,11 @@ Func _DestLon($Lat1, $Lon1, $Lat2, $Brng1, $Dist1)
 EndFunc   ;==>_DestLon
 
 Func _SaveSettings()
+	IniWrite($settings, 'WindowPositions', 'State', $State)
+	IniWrite($settings, 'WindowPositions', 'Position', $Position)
+	IniWrite($settings, 'WindowPositions', 'CompassPosition', $CompassPosition)
+	IniWrite($settings, 'WindowPositions', 'GpsDetailsPosition', $GpsDetailsPosition)
+
 	IniWrite($settings, 'GpsSettings', 'ComPort', GUICtrlRead($CommPort))
 	IniWrite($settings, 'GpsSettings', 'Baud', GUICtrlRead($CommBaud))
 	IniWrite($settings, 'GpsSettings', 'Parity', GUICtrlRead($CommParity))
@@ -496,6 +561,126 @@ Func _SaveSettings()
 	IniWrite($settings, 'DestGPS', 'dBrng', GUICtrlRead($dBrng))
 	IniWrite($settings, 'DestGPS', 'dDist', GUICtrlRead($dDist))
 EndFunc
+
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       GPS DETAILS GUI FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
+
+Func _OpenGpsDetailsGUI();Opens GPS Details GUI
+	If $GpsDetailsOpen = 0 Then
+		$GpsDetailsGUI = GUICreate("Gps Details", 565, 190, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+		GUISetBkColor($BackgroundColor)
+		$GpsCurrentDataGUI = GUICtrlCreateLabel('', 8, 5, 550, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPGGA_Quality = GUICtrlCreateLabel("Quality" & ":", 310, 22, 180, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_Status = GUICtrlCreateLabel("Status" & ":", 32, 22, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateGroup("GPRMC", 8, 40, 273, 145)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_Time = GUICtrlCreateLabel("Time" & ":", 25, 55, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_Date = GUICtrlCreateLabel("Date" & ":", 25, 70, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_Lat = GUICtrlCreateLabel("Latitude" & ":", 25, 85, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_Lon = GUICtrlCreateLabel("Longitude" & ":", 25, 100, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_SpeedKnots = GUICtrlCreateLabel("Speed(knots)" & ":", 25, 115, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_SpeedMPH = GUICtrlCreateLabel("Speed(MPH)" & ":", 25, 130, 243, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_SpeedKmh = GUICtrlCreateLabel("Speed(kmh)" & ":", 25, 145, 243, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPRMC_TrackAngle = GUICtrlCreateLabel("Track Angle" & ":", 25, 160, 243, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateGroup("GPGGA", 287, 40, 273, 125)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPGGA_Time = GUICtrlCreateLabel("Time" & ":", 304, 55, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPGGA_Satalites = GUICtrlCreateLabel("Number of sats" & ":", 304, 70, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPGGA_Lat = GUICtrlCreateLabel("Latitude" & ":", 304, 85, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPGGA_Lon = GUICtrlCreateLabel("Longitude" & ":", 304, 100, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPGGA_HorDilPitch = GUICtrlCreateLabel("H.D.P." & ":", 304, 115, 235, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPGGA_Alt = GUICtrlCreateLabel("Altitude" & ":", 304, 130, 243, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GPGGA_Geo = GUICtrlCreateLabel("Height of Geoid" & ":", 304, 145, 243, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$CloseGpsDetailsGUI = GUICtrlCreateButton("Close", 375, 165, 97, 25, 0)
+		GUICtrlSetOnEvent($CloseGpsDetailsGUI, '_CloseGpsDetailsGUI')
+		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseGpsDetailsGUI')
+
+		GUISetState(@SW_SHOW)
+
+		$gpsplit = StringSplit($GpsDetailsPosition, ',')
+		If $gpsplit[0] = 4 Then ;If $CompassPosition is a proper position, move and resize window
+			WinMove($GpsDetailsGUI, '', $gpsplit[1], $gpsplit[2], $gpsplit[3], $gpsplit[4])
+		Else ;Set $CompassPosition to the current window position
+			$g = WinGetPos($GpsDetailsGUI)
+			$GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3]
+		EndIf
+
+		$GpsDetailsOpen = 1
+	EndIf
+EndFunc   ;==>_OpenGpsDetailsGUI
+
+Func _UpdateGpsDetailsGUI();Updates information on GPS Details GUI
+	If $GpsDetailsOpen = 1 Then
+		GUICtrlSetData($GPGGA_Time, "Time" & ": " & $FixTime)
+		GUICtrlSetData($GPGGA_Lat, "Latitude" & ": " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', ''))
+		GUICtrlSetData($GPGGA_Lon, "Longitude" & ": " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', ''))
+		GUICtrlSetData($GPGGA_Quality, "Quality" & ": " & $Temp_Quality)
+		GUICtrlSetData($GPGGA_Satalites, "Number of sats" & ": " & $NumberOfSatalites)
+		GUICtrlSetData($GPGGA_HorDilPitch, "H.D.P." & ": " & $HorDilPitch)
+		GUICtrlSetData($GPGGA_Alt, "Altitude" & ": " & $Alt & $AltS)
+		GUICtrlSetData($GPGGA_Geo, "Height of Geoid" & ": " & $Geo & $GeoS)
+
+		GUICtrlSetData($GPRMC_Time, "Time" & ": " & $FixTime2)
+		GUICtrlSetData($GPRMC_Date, "Date" & ": " & $FixDate)
+		GUICtrlSetData($GPRMC_Lat, "Latitude" & ": " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude2), 'S', '-'), 'N', ''), ' ', ''))
+		GUICtrlSetData($GPRMC_Lon, "Longitude" & ": " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude2), 'W', '-'), 'E', ''), ' ', ''))
+		GUICtrlSetData($GPRMC_Status, "Status" & ": " & $Temp_Status)
+		GUICtrlSetData($GPRMC_SpeedKnots, "Speed(knots)" & ": " & $SpeedInKnots & " Kn")
+		GUICtrlSetData($GPRMC_SpeedMPH, "Speed(MPH)" & ": " & $SpeedInMPH & " Km/H")
+		GUICtrlSetData($GPRMC_SpeedKmh, "Speed(kmh)" & ": " & $SpeedInKmH & " MPH")
+		GUICtrlSetData($GPRMC_TrackAngle, "Track Angle" & ": " & $TrackAngle)
+	EndIf
+EndFunc   ;==>_UpdateGpsDetailsGUI
+
+Func _ClearGpsDetailsGUI();Clears all GPS Details information
+	If Round(TimerDiff($GPGGA_Update)) > $GpsTimeout Then
+		$FixTime = ''
+		$Latitude = '0.0000000'
+		$Longitude = '0.0000000'
+		$NumberOfSatalites = '00'
+		$HorDilPitch = '0'
+		$Alt = '0'
+		$AltS = 'M'
+		$Geo = '0'
+		$GeoS = 'M'
+		$GPGGA_Update = TimerInit()
+	EndIf
+	If Round(TimerDiff($GPRMC_Update)) > $GpsTimeout Then
+		$FixTime2 = ''
+		$Latitude2 = '0.0000000'
+		$Longitude2 = '0.0000000'
+		$SpeedInKnots = '0'
+		$SpeedInMPH = '0'
+		$SpeedInKmH = '0'
+		$TrackAngle = '0'
+		$FixDate = ''
+		$GPRMC_Update = TimerInit()
+	EndIf
+EndFunc   ;==>_ClearGpsDetailsGUI
+
+Func _CloseGpsDetailsGUI(); Closes GPS Details GUI
+	GUIDelete($GpsDetailsGUI)
+	$GpsDetailsOpen = 0
+EndFunc   ;==>_CloseGpsDetailsGUI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS COMPASS GUI FUNCTIONS
@@ -577,14 +762,14 @@ Func _SetCompassSizes();Takes the size of a hidden label in the compass window a
 	_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, $CompassHeight, $CompassHeight, $hBrush)
 EndFunc   ;==>_SetCompassSizes
 
-Func _DrawCompassLine($Degree);Draws compass in GPS Details GUI
+Func _DrawCompassLine($Degree,$Degree2='-1');, $Degree2);Draws compass in GPS Details GUI
 	If $CompassOpen = 1 Then
 		_SetCompassSizes()
 		$Radius = ($CompassHeight / 2) - 1
 		$CenterX = ($CompassHeight / 2) + 15
 		$CenterY = ($CompassHeight / 2) + 15
 
-		;Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y)
+		;Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y) for $Degree
 		If $Degree = 0 Or $Degree = 360 Then
 			$CircleX = $CenterX
 			$CircleY = $CenterY - $Radius
@@ -617,13 +802,51 @@ Func _DrawCompassLine($Degree);Draws compass in GPS Details GUI
 			$CircleX = $CenterX - (Cos($Radians) * $Radius)
 			$CircleY = $CenterY - (Sin($Radians) * $Radius)
 		EndIf
-		_GDIPlus_GraphicsDrawLine($CompassGraphic, $CenterX, $CenterY, $CircleX, $CircleY)
-		;Draw Compass
-		;GUICtrlSetGraphic($CompassGraphic, $GUI_GR_ELLIPSE, 1, 1, $CompassHeight - 2, $CompassHeight - 2);Draw compass cicle
-		GUICtrlSetGraphic($CompassGraphic, $GUI_GR_MOVE, $CenterX, $CenterY);Move to center of the circle
-		GUICtrlSetGraphic($CompassGraphic, $GUI_GR_LINE, $CircleX, $CircleY);Draw line from center to calculated point
-		GUICtrlSetGraphic($CompassGraphic, $GUI_GR_REFRESH);Show changes
-		;GUISwitch($Vistumbler)
+		;Draw $Degree Line
+		$pen = _GDIPlus_PenCreate("0xFFFF3333")
+		_GDIPlus_GraphicsDrawLine($CompassGraphic, $CenterX, $CenterY, $CircleX, $CircleY, $pen)
+		_GDIPlus_PenDispose($pen)
+
+		If $Degree2 <> '-1' Then
+			;Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y) for $Degree2
+			If $Degree2 = 0 Or $Degree2 = 360 Then
+				$CircleX = $CenterX
+				$CircleY = $CenterY - $Radius
+			ElseIf $Degree2 > 0 And $Degree2 < 90 Then
+				$Radians = $Degree2 * 0.0174532925
+				$CircleX = $CenterX + (Sin($Radians) * $Radius)
+				$CircleY = $CenterY - (Cos($Radians) * $Radius)
+			ElseIf $Degree2 = 90 Then
+				$CircleX = $CenterX + $Radius
+				$CircleY = $CenterY
+			ElseIf $Degree2 > 90 And $Degree2 < 180 Then
+				$TmpDegree = $Degree2 - 90
+				$Radians = $TmpDegree * 0.0174532925
+				$CircleX = $CenterX + (Cos($Radians) * $Radius)
+				$CircleY = $CenterY + (Sin($Radians) * $Radius)
+			ElseIf $Degree2 = 180 Then
+				$CircleX = $CenterX
+				$CircleY = $CenterY + $Radius
+			ElseIf $Degree2 > 180 And $Degree2 < 270 Then
+				$TmpDegree = $Degree2 - 180
+				$Radians = $TmpDegree * 0.0174532925
+				$CircleX = $CenterX - (Sin($Radians) * $Radius)
+				$CircleY = $CenterY + (Cos($Radians) * $Radius)
+			ElseIf $Degree2 = 270 Then
+				$CircleX = $CenterX - $Radius
+				$CircleY = $CenterY
+			ElseIf $Degree2 > 270 And $Degree2 < 360 Then
+				$TmpDegree = $Degree2 - 270
+				$Radians = $TmpDegree * 0.0174532925
+				$CircleX = $CenterX - (Cos($Radians) * $Radius)
+				$CircleY = $CenterY - (Sin($Radians) * $Radius)
+			EndIf
+			;Draw $Degree Line
+			$pen = _GDIPlus_PenCreate("0xFF000000")
+			_GDIPlus_GraphicsDrawLine($CompassGraphic, $CenterX, $CenterY, $CircleX, $CircleY, $pen)
+			_GDIPlus_PenDispose($pen)
+		EndIf
+
 	EndIf
 EndFunc   ;==>_DrawCompassLine
 
