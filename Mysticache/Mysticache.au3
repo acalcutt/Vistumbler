@@ -1,3 +1,4 @@
+Opt("GUIOnEventMode", 1);Change to OnEvent mode
 ;--------------------------------------------------------
 ;AutoIt Version: v3.3.0.0
 $Script_Author = 'Andrew Calcutt'
@@ -8,53 +9,24 @@ $Script_Start_Date = '2009/10/22'
 $last_modified = '2009/10/24'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
-Opt("GUIOnEventMode", 1);Change to OnEvent mode
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #include <GDIPlus.au3>
 #include "UDFs\cfxUDF.au3"
+;Variables-----------------------------------------------
 Dim $OpenedPort
 Dim $UseGPS = 0
 Dim $TurnOffGPS = 0
 Dim $CompassOpen = 0
 Dim $GpsDetailsOpen = 0
 Dim $DestSet = 0
-Dim $RefreshLoopTime = 1000
+Dim $RefreshLoopTime = 500
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ErrorFlag_sound = 'error.wav'
 Dim $GpsDetailsGUI
 Dim $GPGGA_Update
 Dim $GPRMC_Update
-
-Dim $BackgroundColor = "0x99B4A1"
-Dim $ControlBackgroundColor = "0xD7E4C2"
-Dim $TextColor = "0x000000"
-
-Dim $CompassGraphic, $CompassGUI, $CompassBack, $CompassHeight, $north, $south, $east, $west
-Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
-
-Dim $settings = @ScriptDir & '\Settings.ini'
-Dim $ComPort = IniRead($settings, 'GpsSettings', 'ComPort', '4')
-Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
-Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
-Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
-Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
-Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
-
-Dim $RadStartGpsCurPos = IniRead($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', '4')
-Dim $RadStartGpsLatLon = IniRead($settings, 'StartGPS', 'Rad_StartGPS_LatLon', '1')
-Dim $DcLat = IniRead($settings, 'StartGPS', 'cLat', '')
-Dim $DcLon = IniRead($settings, 'StartGPS', 'cLon', '')
-
-Dim $RadDestGPSLatLon = IniRead($settings, 'DestGPS', 'Rad_DestGPS_LatLon', '1')
-Dim $RadDestGPSBrngDist = IniRead($settings, 'DestGPS', 'Rad_DestGPS_BrngDist', '4')
-Dim $DdLat = IniRead($settings, 'DestGPS', 'dLat', '')
-Dim $DdLon = IniRead($settings, 'DestGPS', 'dLon', '')
-Dim $DdBrng = IniRead($settings, 'DestGPS', 'dBrng', '')
-Dim $DdDist = IniRead($settings, 'DestGPS', 'dDist', '')
-
-Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
-Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
+Dim $disconnected_time
 
 Dim $StartLat = '0.0000000'
 Dim $StartLon = '0.0000000'
@@ -77,16 +49,46 @@ Dim $SpeedInMPH = '0'
 Dim $SpeedInKmH = '0'
 Dim $TrackAngle = '0'
 
-Dim $CircleX, $CircleY
 Dim $FixTime, $FixTime2, $FixDate, $Quality
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
+Dim $CompassGraphic, $CompassGUI, $CompassBack, $CompassHeight, $CircleX, $CircleY, $north, $south, $east, $west
+Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
 
+Dim $settings = @ScriptDir & '\Settings.ini'
+Dim $ComPort = IniRead($settings, 'GpsSettings', 'ComPort', '4')
+Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
+Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
+Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
+Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
+Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 
+Dim $BackgroundColor = IniRead($settings, 'Colors', 'BackgroundColor', '0x99B4A1')
+Dim $ControlBackgroundColor = IniRead($settings, 'Colors', 'ControlBackgroundColor', '0xD7E4C2')
+Dim $TextColor = IniRead($settings, 'Colors', 'TextColor', '0x000000')
 
-$GpsCalcGUI = GUICreate($title, 414, 448, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+Dim $RadStartGpsCurPos = IniRead($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', '4')
+Dim $RadStartGpsLatLon = IniRead($settings, 'StartGPS', 'Rad_StartGPS_LatLon', '1')
+Dim $DcLat = IniRead($settings, 'StartGPS', 'cLat', '')
+Dim $DcLon = IniRead($settings, 'StartGPS', 'cLon', '')
+
+Dim $RadDestGPSLatLon = IniRead($settings, 'DestGPS', 'Rad_DestGPS_LatLon', '1')
+Dim $RadDestGPSBrngDist = IniRead($settings, 'DestGPS', 'Rad_DestGPS_BrngDist', '4')
+Dim $DdLat = IniRead($settings, 'DestGPS', 'dLat', '')
+Dim $DdLon = IniRead($settings, 'DestGPS', 'dLon', '')
+Dim $DdBrng = IniRead($settings, 'DestGPS', 'dBrng', '')
+Dim $DdDist = IniRead($settings, 'DestGPS', 'dDist', '')
+
+Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
+Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
+
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       Program GUI
+;-------------------------------------------------------------------------------------------------------------------------------
+
+$MysticacheGUI = GUICreate($title, 414, 448, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
 ;Set Window Position
-$a = WinGetPos($GpsCalcGUI);Get window current position
+$a = WinGetPos($MysticacheGUI);Get window current position
 Dim $State = IniRead($settings, 'WindowPositions', 'State', "Window");Get last window position from the ini file
 Dim $Position = IniRead($settings, 'WindowPositions', 'Position', $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3])
 Dim $winpos_old, $winpos
@@ -158,6 +160,7 @@ $But_OpenCompass = GUICtrlCreateButton("Open Compass", 40, 415, 100, 25, $WS_GRO
 $But_OpenGpsDetails = GUICtrlCreateButton("Open GPS Details", 150, 415, 100, 25, $WS_GROUP)
 $But_Exit = GUICtrlCreateButton("Exit", 260, 415, 110, 25, $WS_GROUP)
 
+GUISetOnEvent($GUI_EVENT_CLOSE, '_Exit')
 GUICtrlSetOnEvent($But_UseGPS, '_GpsToggle')
 GUICtrlSetOnEvent($But_SetDestination, '_SetDestination')
 GUICtrlSetOnEvent($But_OpenCompass, '_CompassGUI')
@@ -166,6 +169,9 @@ GUICtrlSetOnEvent($But_Exit, '_Exit')
 
 GUISetState(@SW_SHOW)
 
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       Program Running Loop
+;-------------------------------------------------------------------------------------------------------------------------------
 
 While 1
 	If $UseGPS =  1 Then _GetGPS()
@@ -206,17 +212,36 @@ While 1
 	EndIf
 
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
-	Sleep(500)
+	Sleep($RefreshLoopTime)
 
 WEnd
+
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       PROGRAM FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _Exit()
 	_SaveSettings()
 	Exit
 EndFunc   ;==>_Exit
 
+Func _SetDestination()
+	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
+		$DestLat = GUICtrlRead($dLat)
+		$DestLon = GUICtrlRead($dLon)
+	ElseIf GUICtrlRead($Rad_DestGPS_BrngDist) = 1 Then
+		$DestLat = _DestLat($StartLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
+		$DestLon = _DestLon($StartLat, $StartLon, $DestLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
+	Else
+		$DestLat = '0.0000000'
+		$DestLon = '0.0000000'
+	EndIf
+	GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & StringFormat('%0.7f', $DestLat) & '     Longitude: ' & StringFormat('%0.7f',$DestLon))
+	$DestSet = 1
+EndFunc   ;==>_SetDestination
+
 Func _WinMoved();Checks if window has moved. Returns 1 if it has
-	$a = WinGetPos($GpsCalcGUI)
+	$a = WinGetPos($MysticacheGUI)
 	$winpos_old = $winpos
 	$winpos = $a[0] & $a[1] & $a[2] & $a[3] & WinGetState($title, "")
 
@@ -235,32 +260,39 @@ Func _WinMoved();Checks if window has moved. Returns 1 if it has
 	EndIf
 EndFunc   ;==>_WinMoved
 
-Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
-	$return = '0.0000000'
-	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
-	If $splitlatlon1[0] = 2 Then
-		$splitlatlon2 = StringSplit($splitlatlon1[2], ".");Split dd from data
-		$latlonleft = StringTrimRight($splitlatlon2[1], 2)
-		$latlonright = (StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2) & '.' & $splitlatlon2[2]) / 60
-		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.7f', $latlonleft + $latlonright);set return
-	EndIf
-	Return ($return)
-EndFunc   ;==>_Format_GPS_DMM_to_DDD
+Func _SaveSettings()
+	IniWrite($settings, 'WindowPositions', 'State', $State)
+	IniWrite($settings, 'WindowPositions', 'Position', $Position)
+	IniWrite($settings, 'WindowPositions', 'CompassPosition', $CompassPosition)
+	IniWrite($settings, 'WindowPositions', 'GpsDetailsPosition', $GpsDetailsPosition)
 
-Func _SetDestination()
-	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
-		$DestLat = GUICtrlRead($dLat)
-		$DestLon = GUICtrlRead($dLon)
-	ElseIf GUICtrlRead($Rad_DestGPS_BrngDist) = 1 Then
-		$DestLat = _DestLat($StartLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
-		$DestLon = _DestLon($StartLat, $StartLon, $DestLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
-	Else
-		$DestLat = '0.0000000'
-		$DestLon = '0.0000000'
-	EndIf
-	GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & StringFormat('%0.7f', $DestLat) & '     Longitude: ' & StringFormat('%0.7f',$DestLon))
-	$DestSet = 1
-EndFunc   ;==>_SetDestination
+	IniWrite($settings, 'Colors', 'BackgroundColor', $BackgroundColor)
+	IniWrite($settings, 'Colors', 'ControlBackgroundColor', $ControlBackgroundColor)
+	IniWrite($settings, 'Colors', 'TextColor', $TextColor)
+
+	IniWrite($settings, 'GpsSettings', 'ComPort', GUICtrlRead($CommPort))
+	IniWrite($settings, 'GpsSettings', 'Baud', GUICtrlRead($CommBaud))
+	IniWrite($settings, 'GpsSettings', 'Parity', GUICtrlRead($CommParity))
+	IniWrite($settings, 'GpsSettings', 'DataBit', GUICtrlRead($CommDataBit))
+	IniWrite($settings, 'GpsSettings', 'StopBit', GUICtrlRead($CommBit))
+	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
+
+	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', GUICtrlRead($Rad_StartGPS_CurrentPos))
+	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_LatLon', GUICtrlRead($Rad_StartGPS_LatLon))
+	IniWrite($settings, 'StartGPS', 'cLat', GUICtrlRead($cLat))
+	IniWrite($settings, 'StartGPS', 'cLon', GUICtrlRead($cLon))
+
+	IniWrite($settings, 'DestGPS', 'Rad_DestGPS_LatLon', GUICtrlRead($Rad_DestGPS_LatLon))
+	IniWrite($settings, 'DestGPS', 'Rad_DestGPS_BrngDist', GUICtrlRead($Rad_DestGPS_BrngDist))
+	IniWrite($settings, 'DestGPS', 'dLat', GUICtrlRead($dLat))
+	IniWrite($settings, 'DestGPS', 'dLon', GUICtrlRead($dLon))
+	IniWrite($settings, 'DestGPS', 'dBrng', GUICtrlRead($dBrng))
+	IniWrite($settings, 'DestGPS', 'dDist', GUICtrlRead($dDist))
+EndFunc
+
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       GPS FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _GpsToggle();Turns GPS on or off
 	If $UseGPS = 1 Then
@@ -331,27 +363,6 @@ EndFunc   ;==>_OpenComPort
 Func _CloseComPort($CommPort = '8');Closes specified COM port
 	_CloseComm($OpenedPort)
 EndFunc   ;==>_CloseComPort
-
-Func _FormatGpsTime($time)
-	$time = StringTrimRight($time, 4)
-	$h = StringTrimRight($time, 4)
-	$m = StringTrimLeft(StringTrimRight($time, 2), 2)
-	$s = StringTrimLeft($time, 4)
-	If $h > 12 Then
-		$h = $h - 12
-		$l = "PM"
-	Else
-		$l = "AM"
-	EndIf
-	Return ($h & ":" & $m & ":" & $s & $l & ' (UTC)')
-EndFunc   ;==>_FormatGpsTime
-
-Func _FormatGpsDate($Date)
-	$d = StringTrimRight($Date, 4)
-	$m = StringTrimLeft(StringTrimRight($Date, 2), 2)
-	$y = StringTrimLeft($Date, 4)
-	Return ($y & '-' & $m & '-' & $d)
-EndFunc   ;==>_FormatGpsDate
 
 Func _CheckGpsChecksum($checkdata);Checks if GPS Data Checksum is correct. Returns 1 if it is correct, else Returns 0
 	$end = 0
@@ -501,6 +512,39 @@ Func _GetGPS(); Recieves data from gps device
 	Return ($return)
 EndFunc   ;==>_GetGPS
 
+Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
+	$return = '0.0000000'
+	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	If $splitlatlon1[0] = 2 Then
+		$splitlatlon2 = StringSplit($splitlatlon1[2], ".");Split dd from data
+		$latlonleft = StringTrimRight($splitlatlon2[1], 2)
+		$latlonright = (StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2) & '.' & $splitlatlon2[2]) / 60
+		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.7f', $latlonleft + $latlonright);set return
+	EndIf
+	Return ($return)
+EndFunc   ;==>_Format_GPS_DMM_to_DDD
+
+Func _FormatGpsTime($time)
+	$time = StringTrimRight($time, 4)
+	$h = StringTrimRight($time, 4)
+	$m = StringTrimLeft(StringTrimRight($time, 2), 2)
+	$s = StringTrimLeft($time, 4)
+	If $h > 12 Then
+		$h = $h - 12
+		$l = "PM"
+	Else
+		$l = "AM"
+	EndIf
+	Return ($h & ":" & $m & ":" & $s & $l & ' (UTC)')
+EndFunc   ;==>_FormatGpsTime
+
+Func _FormatGpsDate($Date)
+	$d = StringTrimRight($Date, 4)
+	$m = StringTrimLeft(StringTrimRight($Date, 2), 2)
+	$y = StringTrimLeft($Date, 4)
+	Return ($y & '-' & $m & '-' & $d)
+EndFunc   ;==>_FormatGpsDate
+
 Func _DistanceBetweenPoints($Lat1, $Lon1, $Lat2, $Lon2)
 	Local $EarthRadius = 6378137 ;meters
 	$Lat1 = _deg2rad($Lat1)
@@ -535,32 +579,6 @@ Func _DestLon($Lat1, $Lon1, $Lat2, $Brng1, $Dist1)
 	$Brng1 = _deg2rad($Brng1)
 	Return (StringFormat('%0.7f', _rad2deg($Lon1 + _ATan2(Cos($Dist1 / $EarthRadius) - Sin($Lat1) * Sin($Lat2), Sin($Brng1) * Sin($Dist1 / $EarthRadius) * Cos($Lat1)))));Return destination decimal longitude
 EndFunc   ;==>_DestLon
-
-Func _SaveSettings()
-	IniWrite($settings, 'WindowPositions', 'State', $State)
-	IniWrite($settings, 'WindowPositions', 'Position', $Position)
-	IniWrite($settings, 'WindowPositions', 'CompassPosition', $CompassPosition)
-	IniWrite($settings, 'WindowPositions', 'GpsDetailsPosition', $GpsDetailsPosition)
-
-	IniWrite($settings, 'GpsSettings', 'ComPort', GUICtrlRead($CommPort))
-	IniWrite($settings, 'GpsSettings', 'Baud', GUICtrlRead($CommBaud))
-	IniWrite($settings, 'GpsSettings', 'Parity', GUICtrlRead($CommParity))
-	IniWrite($settings, 'GpsSettings', 'DataBit', GUICtrlRead($CommDataBit))
-	IniWrite($settings, 'GpsSettings', 'StopBit', GUICtrlRead($CommBit))
-	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
-
-	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', GUICtrlRead($Rad_StartGPS_CurrentPos))
-	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_LatLon', GUICtrlRead($Rad_StartGPS_LatLon))
-	IniWrite($settings, 'StartGPS', 'cLat', GUICtrlRead($cLat))
-	IniWrite($settings, 'StartGPS', 'cLon', GUICtrlRead($cLon))
-
-	IniWrite($settings, 'DestGPS', 'Rad_DestGPS_LatLon', GUICtrlRead($Rad_DestGPS_LatLon))
-	IniWrite($settings, 'DestGPS', 'Rad_DestGPS_BrngDist', GUICtrlRead($Rad_DestGPS_BrngDist))
-	IniWrite($settings, 'DestGPS', 'dLat', GUICtrlRead($dLat))
-	IniWrite($settings, 'DestGPS', 'dLon', GUICtrlRead($dLon))
-	IniWrite($settings, 'DestGPS', 'dBrng', GUICtrlRead($dBrng))
-	IniWrite($settings, 'DestGPS', 'dDist', GUICtrlRead($dDist))
-EndFunc
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS DETAILS GUI FUNCTIONS
@@ -645,8 +663,8 @@ Func _UpdateGpsDetailsGUI();Updates information on GPS Details GUI
 		GUICtrlSetData($GPRMC_Lon, "Longitude" & ": " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude2), 'W', '-'), 'E', ''), ' ', ''))
 		GUICtrlSetData($GPRMC_Status, "Status" & ": " & $Temp_Status)
 		GUICtrlSetData($GPRMC_SpeedKnots, "Speed(knots)" & ": " & $SpeedInKnots & " Kn")
-		GUICtrlSetData($GPRMC_SpeedMPH, "Speed(MPH)" & ": " & $SpeedInMPH & " Km/H")
-		GUICtrlSetData($GPRMC_SpeedKmh, "Speed(kmh)" & ": " & $SpeedInKmH & " MPH")
+		GUICtrlSetData($GPRMC_SpeedMPH, "Speed(MPH)" & ": " & $SpeedInMPH & " MPH")
+		GUICtrlSetData($GPRMC_SpeedKmh, "Speed(kmh)" & ": " & $SpeedInKmH & " Km/H")
 		GUICtrlSetData($GPRMC_TrackAngle, "Track Angle" & ": " & $TrackAngle)
 	EndIf
 EndFunc   ;==>_UpdateGpsDetailsGUI
@@ -878,4 +896,3 @@ Func _ATan2($x, $y) ;ATan2 function, since autoit only has ATan
 		SetError(1)
 	EndIf
 EndFunc   ;==>_ATan2
-
