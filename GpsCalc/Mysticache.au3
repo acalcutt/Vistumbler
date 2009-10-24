@@ -3,7 +3,7 @@
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v0.5'
+$version = 'v0.6'
 $Script_Start_Date = '2009/10/22'
 $last_modified = '2009/10/23'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -148,10 +148,11 @@ GUISetState(@SW_SHOW)
 
 
 While 1
-
+	If $UseGPS =  1 Then _GetGPS()
 	If GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
-		$StartLat = $Latitude
-		$StartLon = $Longitude
+		$StartLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', '')
+		$StartLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', '')
+		ConsoleWrite($Latitude & '-' & $Longitude & @CRLF)
 		;$StartBrng = $TrackAngle
 	ElseIf GUICtrlRead($Rad_StartGPS_LatLon) = 1 Then
 		$StartLat = GUICtrlRead($cLat)
@@ -163,8 +164,9 @@ While 1
 	GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & StringFormat('%0.7f', $StartLat) & '     Longitude: ' & StringFormat('%0.7f', $StartLon))
 	If $DestSet = 1 Then GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', $DestBrng) & ' degrees     Distance: ' & StringFormat('%0.1f', $DestDist) & ' meters')
 	_DrawCompassLine($DestBrng)
-	Sleep(500)
 
+	If $TurnOffGPS = 1 Then _TurnOffGPS()
+	Sleep(500)
 
 WEnd
 
@@ -173,18 +175,30 @@ Func _Exit()
 	Exit
 EndFunc   ;==>_Exit
 
+Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
+	$return = '0.0000000'
+	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	If $splitlatlon1[0] = 2 Then
+		$splitlatlon2 = StringSplit($splitlatlon1[2], ".");Split dd from data
+		$latlonleft = StringTrimRight($splitlatlon2[1], 2)
+		$latlonright = (StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2) & '.' & $splitlatlon2[2]) / 60
+		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.7f', $latlonleft + $latlonright);set return
+	EndIf
+	Return ($return)
+EndFunc   ;==>_Format_GPS_DMM_to_DDD
+
 Func _SetDestination()
 	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
 		$DestLat = GUICtrlRead($dLat)
 		$DestLon = GUICtrlRead($dLon)
 	ElseIf GUICtrlRead($Rad_DestGPS_BrngDist) = 1 Then
-		$DestLat = _DestLat(GUICtrlRead($cLat), GUICtrlRead($dBrng), GUICtrlRead($dDist))
-		$DestLon = _DestLon(GUICtrlRead($cLat), GUICtrlRead($cLon), $DestLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
+		$DestLat = _DestLat($StartLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
+		$DestLon = _DestLon($StartLat, $StartLon, $DestLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
 	Else
 		$DestLat = '0.0000000'
 		$DestLon = '0.0000000'
 	EndIf
-	GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & $DestLat & '     Longitude: ' & $DestLon)
+	GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & StringFormat('%0.7f', $DestLat) & '     Longitude: ' & StringFormat('%0.7f',$DestLon))
 	$DestSet = 1
 EndFunc   ;==>_SetDestination
 
@@ -224,6 +238,7 @@ Func _TurnOffGPS();Turns off GPS, resets variable\
 	$TrackAngle = '0'
 	_CloseComPort(GUICtrlRead($CommPort)) ;Close The GPS COM port
 	GUICtrlSetData($But_UseGPS, "Use GPS")
+	GUICtrlSetData($Lab_GpsInfo, "")
 EndFunc   ;==>_TurnOffGPS
 
 Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = '8', $sStopBit = '1', $sFlow = '0');Open specified COM port
@@ -383,6 +398,8 @@ Func _GetGPS(); Recieves data from gps device
 		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And $Temp_Status = "A" Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
 		If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
 	WEnd
+	ConsoleWrite($Temp_Lat & '-' & $Temp_Lon & @CRLF)
+	ConsoleWrite($FoundData & '-' & $Temp_Quality & @CRLF)
 	If $FoundData = 1 Then
 		$disconnected_time = -1
 		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then ;If the GPGGA data has a fix(1) then write data to perminant variables
@@ -460,11 +477,11 @@ Func _DestLon($Lat1, $Lon1, $Lat2, $Brng1, $Dist1)
 EndFunc   ;==>_DestLon
 
 Func _SaveSettings()
-	IniWrite($settings, 'GpsSettings', 'ComPort', $ComPort)
-	IniWrite($settings, 'GpsSettings', 'Baud', $BAUD)
-	IniWrite($settings, 'GpsSettings', 'Parity', $PARITY)
-	IniWrite($settings, 'GpsSettings', 'DataBit', $DATABIT)
-	IniWrite($settings, 'GpsSettings', 'StopBit', $STOPBIT)
+	IniWrite($settings, 'GpsSettings', 'ComPort', GUICtrlRead($CommPort))
+	IniWrite($settings, 'GpsSettings', 'Baud', GUICtrlRead($CommBaud))
+	IniWrite($settings, 'GpsSettings', 'Parity', GUICtrlRead($CommParity))
+	IniWrite($settings, 'GpsSettings', 'DataBit', GUICtrlRead($CommDataBit))
+	IniWrite($settings, 'GpsSettings', 'StopBit', GUICtrlRead($CommBit))
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
 
 	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', GUICtrlRead($Rad_StartGPS_CurrentPos))
