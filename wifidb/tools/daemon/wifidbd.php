@@ -84,7 +84,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	$console_log_moved = $GLOBALS['wifidb_tools']."/backups/logs/console_wifidbd_".date('Y-m-d H:i:s').".log";
 	$console_log_array = file($console_log);
 	$console_lines = count($console_log_array);
-#	echo "File: ".$console_log." ".$console_lines."\n";
+	echo "File: ".$console_log." ".$console_lines."\n";
 	if($console_trim_log)
 	{
 		if($console_lines > $console_line_limit)

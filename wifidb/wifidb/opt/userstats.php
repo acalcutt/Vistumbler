@@ -8,12 +8,13 @@ else{pageheader("Users Stats Page");}
 echo '<p align="center">';
 include('../lib/config.inc.php');
 
+$func = strip_tags(addslashes($_GET['func']));
+
 $database = new database();
 if (isset($_GET['token']))
 {
 	if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])
 	{
-		$func=$_GET['func'];
 		switch($func)
 		{
 			case "alluserlists":
@@ -142,7 +143,5 @@ if (isset($_GET['token']))
 {
 	echo "<h2>You dont have a token, try again</h2>";
 }
-
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+footer($_SERVER['SCRIPT_FILENAME']);
 ?>

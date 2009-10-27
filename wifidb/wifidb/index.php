@@ -55,8 +55,10 @@ if(!$result0 OR !$result1 OR !$result2 OR !$result3 OR !$result4 OR !$result5 or
 ?>
 			To View all AP's click <a class="links" href="all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $_SESSION['token'];?>">Here</a><br><br>
 			<?php
-			if ($_SERVER['HTTP_HOST'] == "rihq.randomintervals.com")
-			{echo '<h2>This is my Development server </h2><H4>(which is unstable because I am always working in it)</H4><H2>Go on over to my <i><a href="http://www.randomintervals.com/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
+			if ($_SERVER['HTTP_HOST'] == "rihq.randomintervals.com" or $_SERVER['HTTP_HOST'] == "www.randomintervals.com" or $_SERVER['HTTP_HOST'] == "192.168.1.26" or $_SERVER['HTTP_HOST'] == "randomintervals.com")
+			{echo '<h2>This is one of my Development servers </h2>
+			<h4>(which is unstable because I am always working in it)</h4>
+			<h2>Go on over to the <i>Vistumbler <a target="_blank" href="http://www.vistumbler.net/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
 			?>
 <table WIDTH=85% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 	<tr>

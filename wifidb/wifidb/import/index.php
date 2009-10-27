@@ -2,10 +2,11 @@
 include('../lib/database.inc.php');
 pageheader("Import Page");
 include('../lib/config.inc.php');
+if ($_SERVER['HTTP_HOST'] == "rihq.randomintervals.com" or $_SERVER['HTTP_HOST'] == "www.randomintervals.com" or $_SERVER['HTTP_HOST'] == "192.168.1.26" or $_SERVER['HTTP_HOST'] == "randomintervals.com")
+{echo '<h2>This is one of my Development servers </h2>
+<h4>(which is unstable because I am always working in it)</h4>
+<h2>Go on over to the <i>Vistumbler <a target="_blank" href="http://www.vistumbler.net/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
 
-$domain = $_SERVER['HTTP_HOST'];
-if ($domain === "rihq.randomintervals.com" or $domain === "lanncafe.dynu.com" or $domain === "192.168.3.25")
-{echo '<h2>This is my Development server </h2><H4>(which is unstable because I am always working in it)</H4><H2>Go on over to my <i><a href="http://www.randomintervals.com/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
 if(isset($_GET['func']))
 {
 	if($_GET['func'] == 'import')

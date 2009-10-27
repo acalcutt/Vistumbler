@@ -83,7 +83,7 @@ function footer($filename = '', $output = "detailed")
 	$ads = $GLOBALS['ads'];
 	$file_ex = explode("/", $filename);
 	$count = count($file_ex);
-	$filename = $file_ex[($count)-1];
+	$filename_1 = $file_ex[($count)-1];
 	if($output == "detailed")
 	{
 		?>
@@ -92,18 +92,22 @@ function footer($filename = '', $output = "detailed")
 		</td>
 		</tr>
 		<tr>
-		<td bgcolor="#315573" height="23"><a href="/<?php echo $GLOBALS['root']; ?>/themes/wifidb/img/moon.png"><img border="0" src="/<?php echo $GLOBALS['root']; ?>/themes/wifidb/img/moon_tn.png"></a></td>
+		<td bgcolor="#315573" height="23"></td>
 		<td bgcolor="#315573" width="0" align="center">
 		<?php
-		if (file_exists($filename)) {?>
-			<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
+		if (file_exists($filename_1)) 
+		{
+		?>
+			<h6><i><u><?php echo $filename_1;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename_1));?></h6>
+			<?php
+		}
+		?>
 		</td>
 		</tr>
 		<tr>
 		<td></td>
 		<td align="center">
 		<?php
-		}
 		echo $tracker;
 		echo $ads;
 		?>

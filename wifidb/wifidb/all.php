@@ -110,7 +110,7 @@ if (isset($_GET['token']))
 			$page++;
 		}
 		$pages_together .= ' [<a class="links" href="?from='.(($pages)*$inc).'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">Last</a>]  ';
-		echo "<br>Page: < - ".$pages_together." >";
+		echo "<br>Page: < ".$pages_together." >";
 	}else
 	{
 		echo "Token Could not be comapired";

@@ -5,7 +5,8 @@
 #		error_reporting(E_ERROR);
 global $ver, $full_path, $half_path, $dim;
 $ver = array(
-			"wifidb"			=>	" *Alpha* 0.16 Build 4 ",
+			"wifidb"			=>	" *Alpha* 0.16 Build 5 {pre-release} ",
+			"codename"			=>	"Hyannis",
 			"Last_Core_Edit" 	=> 	"2009-Sept-28",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
@@ -36,19 +37,108 @@ $ver = array(
 										"make_ssid"			=>	"1.0",
 										"verbosed"			=>	"1.2",
 										"logd"				=>	"1.2",
-										"IFWC"				=>	"2.0"
+										"IFWC"				=>	"2.0",
+										"dump"				=>	"1.0"
 										),
 			"Themes"			=>	array(
 										"pageheader"		=>  "1.2",
 										"footer"			=>	"1.2"
 										),
 			);
-if($GLOBALS['screen_output'] != "CLI")
+if(@$GLOBALS['screen_output'] != "CLI")
 {
 	global $theme, $full_path, $half_path;
 	if(!@include_once('config.inc.php'))
 	{die('<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="http://'.$_SERVER["SERVER_NAME"].'/wifidb/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>');}
-
+	
+	if(!@isset($_COOKIE['wifidb_client_check']))
+	{
+	?>
+		<script type="text/javascript">
+		function checkTimeZone()
+		{
+			var expiredays = <?php echo $GLOBALS['timeout'];?>;
+			var rightNow = new Date();
+			var date1 = new Date(rightNow.getFullYear(), 0, 1, 0, 0, 0, 0);
+			var date2 = new Date(rightNow.getFullYear(), 6, 1, 0, 0, 0, 0);
+			var temp = date1.toGMTString();
+			var date3 = new Date(temp.substring(0, temp.lastIndexOf(" ")-1));
+			var temp = date2.toGMTString();
+			var date4 = new Date(temp.substring(0, temp.lastIndexOf(" ")-1));
+			var hoursDiffStdTime = (date1 - date3) / (1000 * 60 * 60);
+			var hoursDiffDaylightTime = (date2 - date4) / (1000 * 60 * 60);
+			if (hoursDiffDaylightTime == hoursDiffStdTime) 
+			{ 
+				var exdate=new Date();
+				exdate.setDate(exdate.getDate()+expiredays);
+				document.cookie="wifidb_client_dst" + "=" +escape("0")+
+				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+				
+				var expiredays = 3600;
+				exdate.setDate(exdate.getDate()+expiredays);
+				document.cookie="wifidb_client_check" + "=" +escape("1")+
+				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+			}
+			else
+			{
+				var exdate=new Date();
+				exdate.setDate(exdate.getDate()+expiredays);
+				document.cookie="wifidb_client_dst" + "=" +escape("1")+
+				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+				
+				var expiredays = 3600;
+				exdate.setDate(exdate.getDate()+expiredays);
+				document.cookie="wifidb_client_check" + "=" +escape("1")+
+				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+		   }
+		   location.href = '<?php echo $_SERVER['PHP_SELF'];?>';
+		}
+		</script>
+		<body onload = "checkTimeZone();" ></body>
+		<?php
+		die();
+	}
+	if(!@isset($_COOKIE['wifidb_client_timezone']))
+	{
+		?>
+		<script type="text/javascript">
+		function checkTimeZone()
+		{
+			var expiredays = <?php echo $GLOBALS['timeout'];?>;
+			var rightNow = new Date();
+			var date1 = new Date(rightNow.getFullYear(), 0, 1, 0, 0, 0, 0);
+			var date2 = new Date(rightNow.getFullYear(), 6, 1, 0, 0, 0, 0);
+			var temp = date1.toGMTString();
+			var date3 = new Date(temp.substring(0, temp.lastIndexOf(" ")-1));
+			var temp = date2.toGMTString();
+			var date4 = new Date(temp.substring(0, temp.lastIndexOf(" ")-1));
+			var hoursDiffStdTime = (date1 - date3) / (1000 * 60 * 60);
+			var hoursDiffDaylightTime = (date2 - date4) / (1000 * 60 * 60);
+			if (hoursDiffDaylightTime == hoursDiffStdTime) 
+			{ 
+				var exdate=new Date();
+				exdate.setDate(exdate.getDate()+expiredays);
+				document.cookie="wifidb_client_timezone" + "=" +escape(hoursDiffStdTime)+
+				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+			}
+			else
+			{
+				var exdate=new Date();
+				exdate.setDate(exdate.getDate()+expiredays);
+				document.cookie="wifidb_client_timezone" + "=" +escape(hoursDiffStdTime)+
+				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+		   }
+		   location.href = '<?php echo $_SERVER['PHP_SELF'];?>';
+		}
+		</script>
+		<body onload = "checkTimeZone();" ></body>
+		<?php
+		die();
+	}
+	
+	
+	
+	
 	if(PHP_OS == 'Linux'){ $div = '/';}
 	elseif(PHP_OS == 'WINNT'){ $div = '\\';}
 
@@ -84,7 +174,7 @@ if($GLOBALS['screen_output'] != "CLI")
 	include($wifidb_tools.'/daemon/config.inc.php');
 	$full_path = $half_path.'themes';
 #	echo "Default theme: ".$GLOBALS['default_theme']."<br>";
-	$theme = ($_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $GLOBALS['default_theme']);
+	$theme = (@$_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $GLOBALS['default_theme']);
 	if($theme == ''){$theme = 'wifidb';}
 	$full_path = $full_path."/".$theme."/";
 	if(!function_exists('pageheader'))
@@ -92,6 +182,53 @@ if($GLOBALS['screen_output'] != "CLI")
 }
 
 
+#-------------------------------------------------------------------------------------#
+#--------------------------------DUMP VAR TO HTML -----------------------------#
+#-------------------------------------------------------------------------------------#
+function dump($value,$level=0)
+{
+  if ($level==-1)
+  {
+    $trans[' ']='&there4;';
+    $trans["\t"]='&rArr;';
+    $trans["\n"]='&para;;';
+    $trans["\r"]='&lArr;';
+    $trans["\0"]='&oplus;';
+    return strtr(htmlspecialchars($value),$trans);
+  }
+  if ($level==0) echo '<pre>';
+  $type= gettype($value);
+  echo $type;
+  if ($type=='string')
+  {
+    echo '('.strlen($value).')';
+    $value= dump($value,-1);
+  }
+  elseif ($type=='boolean') $value= ($value?'true':'false');
+  elseif ($type=='object')
+  {
+    $props= get_class_vars(get_class($value));
+    echo '('.count($props).') <u>'.get_class($value).'</u>';
+    foreach($props as $key=>$val)
+    {
+      echo "\n".str_repeat("\t",$level+1).$key.' => ';
+      dump($value->$key,$level+1);
+    }
+    $value= '';
+  }
+  elseif ($type=='array')
+  {
+    echo '('.count($value).')';
+    foreach($value as $key=>$val)
+    {
+      echo "\n".str_repeat("\t",$level+1).dump($key,-1).' => ';
+      dump($val,$level+1);
+    }
+    $value= '';
+  }
+  echo " <b>$value</b>";
+  if ($level==0) echo '</pre>';
+}
 
 #-------- recurse_chown_chgrp[Recureivly chown and chgrp a folder ----------#
 function recurse_chown_chgrp($mypath, $uid, $gid)
@@ -162,13 +299,13 @@ function check_install_folder()
 	$result1 = mysql_query($sql, $conn);
 	while ($test = mysql_fetch_array($result1))
 	{
-		if(($TEST['Field'] == "user" AND $TEST['Type'] != "varchar(255)") OR !$GLOBALS['default_theme'])
+		if(($test['Field'] == "user" AND $test['Type'] != "varchar(255)") OR !$GLOBALS['default_theme'])
 		{
 			$upgrade_wdb = "<p align=\"center\"><font color=\"red\" size=\"4\">You need to <a class=\"upgrade\" href=\"".$GLOBALS['hosturl'].$GLOBALS['root']."/install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB ".$GLOBALS['ver']['wifidb'].".</p></font>";
 		}
 	}
 	
-	if(!$upgrade_wdb)
+	if(@!$upgrade_wdb)
 	{
 		echo $install_folder_remove;
 	}else
@@ -2368,7 +2505,7 @@ class database
 		?>
 		<h3>View All Users <a class="links" href="userstats.php?func=allusers&token=<?php echo $_SESSION['token'];?>">Here</a></h3>
 		<?php
-		echo '<a class="links" href=../opt/export.php?func=exp_user_list&row='.$user_array["id"].'&token='.$_SESSION['token'].'">Export To KML File</a>';
+		echo '<a class="links" href="../opt/export.php?func=exp_user_list&row='.$user_array["id"].'&token='.$_SESSION['token'].'">Export To KML File</a>';
 		echo '<table border="1" align="center"><tr class="style4"><th>New/Update</th><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
 		foreach($aps as $ap)
 		{

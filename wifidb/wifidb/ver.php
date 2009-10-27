@@ -8,7 +8,7 @@ pageheader("Version Page");
 		<p align="center"><font size="7"><b>WiFiDB Version History</b></font></p>
 		<table border="0" cellpadding="4">
 			<tr>
-				<td>Project Name(pseudo-name)...</td><td><b>WiFiDB</b> </td>
+				<td>Project Name(Codename)...</td><td><b>WiFiDB <?php echo $ver['wifidb'];?>(<?php echo $ver['codename'];?>)</b></td>
 			</tr>
 			<tr>
 				<td>Project State...............</td><td><b>Alpha (planning and early dev)</b><td>
@@ -21,6 +21,22 @@ pageheader("Version Page");
 			</tr>
 		</table>
 		
+		<table width="100%" border="2" id="16b4">
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 5</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Oct-8</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+				<OL>
+					<LI>Added Autodetect of Timezone and DST to the core. Now when it is the first time you visit the site, it will load a javascript to detect it and write a cookie. (wifidb_client_timezone, wifidb_client_dst, and wifidb_client_check)</LI>
+					<LI>Fixed a bug in the graphing index page where it was not using the new SSID make function to generate the proper SSIDs for SQL tables, File names, and General useage. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=409">KB409</a></LI>
+					<LI>Fixed a bug in the scheduling page where it would not calculate the correct Timezone stamp, but the time was correct. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=411">KB411</a></LI>
+					<LI>Fixed a bug in teh default theme where the page name was not being called correctly and was outputing an error or no text.</LI>
+					<LI>Altered the All APs page to only show a few pages before and after the current page number.</LI>
+				</OL>
+			</td></tr>
+		</table>
+		<br>
 		<table width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 4</td></tr>
@@ -253,7 +269,6 @@ pageheader("Version Page");
 					<LI><a class="links" href="http://wwp.greenwichmeantime.com/">greenwichmeantime.com</a></LI>
 					<LI><a class="links" href="http://en.wikipedia.org/wiki/Greenwich_Mean_Time">wikipedia -> Greenwich_Mean_Time</a></LI>
 				</OL>
-			<LI></LI>
 		</OL>
 	</td></tr>
 </table>
