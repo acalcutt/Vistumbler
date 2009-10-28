@@ -4,15 +4,16 @@ Opt("GUIOnEventMode", 1);Change to OnEvent mode
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v0.7'
+$version = 'v0.8'
 $Script_Start_Date = '2009/10/22'
-$last_modified = '2009/10/24'
+$last_modified = '2009/10/27'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #include <GDIPlus.au3>
 #include "UDFs\cfxUDF.au3"
+#include "UDFs\CommMG.au3"
 ;Variables-----------------------------------------------
 Dim $OpenedPort
 Dim $UseGPS = 0
@@ -27,6 +28,8 @@ Dim $GpsDetailsGUI
 Dim $GPGGA_Update
 Dim $GPRMC_Update
 Dim $disconnected_time
+Dim $sErr
+Dim $NetComm
 
 Dim $StartLat = '0.0000000'
 Dim $StartLon = '0.0000000'
@@ -60,7 +63,16 @@ Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
 Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
 Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
 Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
+Dim $GpsType = IniRead($settings, 'GpsSettings', 'GpsType', '2')
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
+
+If $GpsType = 0 Then
+	$DefGpsInt = "CommMG"
+ElseIf $GpsType = 1 Then
+	$DefGpsInt = "Netcomm OCX"
+ElseIf $GpsType = 2 Then
+	$DefGpsInt = "Kernel32"
+EndIf
 
 Dim $BackgroundColor = IniRead($settings, 'Colors', 'BackgroundColor', '0x99B4A1')
 Dim $ControlBackgroundColor = IniRead($settings, 'Colors', 'ControlBackgroundColor', '0xD7E4C2')
@@ -99,13 +111,16 @@ Else
 	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]);Resize window to ini value
 EndIf
 ;GPS Settings
-$But_UseGPS = GUICtrlCreateButton("Use GPS", 16, 15, 97, 20, $WS_GROUP)
-GUICtrlCreateLabel("Com Port:", 136, 20, 50, 17)
-$CommPort = GUICtrlCreateCombo("1", 185, 15, 80, 25)
+$But_UseGPS = GUICtrlCreateButton("Use GPS", 15, 15, 60, 20, $WS_GROUP)
+GUICtrlCreateLabel("Com Port:", 80, 20, 0, 17)
+$CommPort = GUICtrlCreateCombo("1", 130, 15, 35, 25)
 GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20", $ComPort)
-GUICtrlCreateLabel("Baud:", 275, 20, 32, 17)
-$CommBaud = GUICtrlCreateCombo("4800", 320, 15, 80, 25)
+GUICtrlCreateLabel("Baud:", 170, 20, 30, 17)
+$CommBaud = GUICtrlCreateCombo("4800", 200, 15, 50, 25)
 GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
+GUICtrlCreateLabel("Interface:", 255, 20, 50, 17)
+$Interface = GUICtrlCreateCombo("Kernel32", 305, 15, 95, 25)
+GUICtrlSetData(-1, "CommMG|Netcomm OCX", $DefGpsInt)
 GUICtrlCreateLabel("Stop Bit:", 16, 52, 44, 17)
 $CommBit = GUICtrlCreateCombo("1", 64, 47, 80, 25)
 GUICtrlSetData(-1, "1.5|2", $STOPBIT)
@@ -127,29 +142,31 @@ GUICtrlCreateLabel("Data Bit:", 275, 52, 45, 17)
 $CommDataBit = GUICtrlCreateCombo("4", 320, 47, 80, 25)
 GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
 ;Start GPS Settings
-$Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 16, 80, 385, 89)
-$Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("Current GPS Position", 31, 105, 120, 17)
+$Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 5, 80, 405, 89)
+$Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("", 20, 105, 17, 17)
+$Lab_Rad_CurrentPos = GUICtrlCreateLabel("Current GPS Position", 40, 108, 340, 17)
 If $RadStartGpsCurPos = 1 Then GUICtrlSetState($Rad_StartGPS_CurrentPos, $GUI_CHECKED)
-$Rad_StartGPS_LatLon = GUICtrlCreateRadio("", 31, 135, 17, 17)
+$Rad_StartGPS_LatLon = GUICtrlCreateRadio("", 20, 135, 17, 17)
 If $RadStartGpsLatLon = 1 Then GUICtrlSetState($Rad_StartGPS_LatLon, $GUI_CHECKED)
-$cLat = GUICtrlCreateInput($DcLat, 95, 135, 100, 21)
-GUICtrlCreateLabel("Latitude:", 48, 139, 45, 17)
-$cLon = GUICtrlCreateInput($DcLon, 258, 136, 100, 21)
-GUICtrlCreateLabel("Longitude:", 205, 138, 54, 17)
+GUICtrlCreateLabel("Latitude:", 40, 137, 45, 17)
+$cLat = GUICtrlCreateInput($DcLat, 85, 135, 75, 21)
+GUICtrlCreateLabel("Longitude:", 170, 137, 50, 17)
+$cLon = GUICtrlCreateInput($DcLon, 225, 136, 75, 21)
+$But_GetCurrentGps = GUICtrlCreateButton("Get Current GPS", 310, 135, 90, 24, $WS_GROUP)
 ;Dest GPS Settings
-$Grp_DestGPS = GUICtrlCreateGroup("Destination GPS Position", 16, 184, 385, 125)
-$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 31, 211, 17, 17)
+$Grp_DestGPS = GUICtrlCreateGroup("Destination GPS Position", 5, 184, 405, 125)
+$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 20, 211, 17, 17)
 If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
-GUICtrlCreateLabel("Latitude:", 48, 214, 45, 17)
-$dLat = GUICtrlCreateInput($DdLat, 95, 209, 100, 21)
-GUICtrlCreateLabel("Longitude:", 205, 214, 54, 17)
-$dLon = GUICtrlCreateInput($DdLon, 261, 209, 100, 21)
-$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 31, 244, 17, 17)
+GUICtrlCreateLabel("Latitude:", 40, 214, 45, 17)
+$dLat = GUICtrlCreateInput($DdLat, 85, 209, 120, 21)
+GUICtrlCreateLabel("Longitude:", 210, 214, 54, 17)
+$dLon = GUICtrlCreateInput($DdLon, 265, 209, 120, 21)
+$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 20, 244, 17, 17)
 If $RadDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
-GUICtrlCreateLabel("Bearing:", 48, 247, 43, 17)
-$dBrng = GUICtrlCreateInput($DdBrng, 95, 242, 100, 21)
-GUICtrlCreateLabel("Distance:", 205, 247, 49, 17)
-$dDist = GUICtrlCreateInput($DdDist, 261, 242, 100, 21)
+GUICtrlCreateLabel("Bearing:", 40, 247, 43, 17)
+$dBrng = GUICtrlCreateInput($DdBrng, 85, 242, 120, 21)
+GUICtrlCreateLabel("Distance:", 210, 247, 49, 17)
+$dDist = GUICtrlCreateInput($DdDist, 265, 242, 120, 21)
 $But_SetDestination = GUICtrlCreateButton("Set Desination", 104, 272, 201, 25, $WS_GROUP)
 ;Route Info
 $Lab_StartGPS = GUICtrlCreateLabel("", 15, 320, 388, 15)
@@ -166,6 +183,8 @@ GUICtrlSetOnEvent($But_SetDestination, '_SetDestination')
 GUICtrlSetOnEvent($But_OpenCompass, '_CompassGUI')
 GUICtrlSetOnEvent($But_OpenGpsDetails, '_OpenGpsDetailsGUI')
 GUICtrlSetOnEvent($But_Exit, '_Exit')
+GUICtrlSetOnEvent($But_GetCurrentGps, '_GetCurrentGps')
+
 
 GUISetState(@SW_SHOW)
 
@@ -178,13 +197,13 @@ While 1
 	If GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
 		$StartLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', '')
 		$StartLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', '')
-		ConsoleWrite($Latitude & '-' & $Longitude & @CRLF)
 		;$StartBrng = $TrackAngle
 	ElseIf GUICtrlRead($Rad_StartGPS_LatLon) = 1 Then
 		$StartLat = GUICtrlRead($cLat)
 		$StartLon = GUICtrlRead($cLon)
 		;$StartBrng = $cBear
 	EndIf
+	GUICtrlSetData($Lab_Rad_CurrentPos, "Current GPS Position: Lat: " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', '') & " Lon: " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', ''))
 	$DestBrng = _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
 	$DestDist = _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
 	GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & StringFormat('%0.7f', $StartLat) & '     Longitude: ' & StringFormat('%0.7f', $StartLon))
@@ -225,6 +244,11 @@ Func _Exit()
 	Exit
 EndFunc   ;==>_Exit
 
+Func _GetCurrentGps()
+	GUICtrlSetData($cLat, StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', ''))
+	GUICtrlSetData($cLon, StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', ''))
+EndFunc
+
 Func _SetDestination()
 	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
 		$DestLat = GUICtrlRead($dLat)
@@ -261,6 +285,8 @@ Func _WinMoved();Checks if window has moved. Returns 1 if it has
 EndFunc   ;==>_WinMoved
 
 Func _SaveSettings()
+	_SetGpsType()
+
 	IniWrite($settings, 'WindowPositions', 'State', $State)
 	IniWrite($settings, 'WindowPositions', 'Position', $Position)
 	IniWrite($settings, 'WindowPositions', 'CompassPosition', $CompassPosition)
@@ -276,6 +302,7 @@ Func _SaveSettings()
 	IniWrite($settings, 'GpsSettings', 'DataBit', GUICtrlRead($CommDataBit))
 	IniWrite($settings, 'GpsSettings', 'StopBit', GUICtrlRead($CommBit))
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
+	IniWrite($settings, 'GpsSettings', 'GpsType', $GpsType)
 
 	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', GUICtrlRead($Rad_StartGPS_CurrentPos))
 	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_LatLon', GUICtrlRead($Rad_StartGPS_LatLon))
@@ -290,6 +317,16 @@ Func _SaveSettings()
 	IniWrite($settings, 'DestGPS', 'dDist', GUICtrlRead($dDist))
 EndFunc
 
+Func _SetGpsType()
+	If GUICtrlRead($Interface) = "CommMG" Then
+		$GpsType = 0
+	ElseIf GUICtrlRead($Interface) = "Netcomm OCX" Then
+		$GpsType = 1
+	Else
+		$GpsType = 2
+	EndIf
+EndFunc
+
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -298,14 +335,19 @@ Func _GpsToggle();Turns GPS on or off
 	If $UseGPS = 1 Then
 		$TurnOffGPS = 1
 	Else
+		_SetGpsType()
+
 		$openport = _OpenComPort(GUICtrlRead($CommPort), GUICtrlRead($CommBaud), GUICtrlRead($CommParity), GUICtrlRead($CommDataBit), GUICtrlRead($CommBit));Open The GPS COM port
 		If $openport = 1 Then
 			$UseGPS = 1
 			GUICtrlSetData($But_UseGPS, "Stop GPS")
 			$GPGGA_Update = TimerInit()
 			$GPRMC_Update = TimerInit()
+			GUICtrlSetData($Lab_GpsInfo, "Succesfully Opened GPS")
 		Else
 			$UseGPS = 0
+			GUICtrlSetData($Lab_GpsInfo, "Error Opening GPS")
+			SoundPlay($SoundDir & $ErrorFlag_sound, 0)
 		EndIf
 	EndIf
 EndFunc   ;==>_GpsToggle
@@ -334,61 +376,204 @@ Func _TurnOffGPS();Turns off GPS, resets variable\
 EndFunc   ;==>_TurnOffGPS
 
 Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = '8', $sStopBit = '1', $sFlow = '0');Open specified COM port
-	If $sPARITY = 'O' Then ;Odd
-		$iPar = '1'
-	ElseIf $sPARITY = 'E' Then ;Even
-		$iPar = '2'
-	ElseIf $sPARITY = 'M' Then ;Mark
-		$iPar = '3'
-	ElseIf $sPARITY = 'S' Then ;Space
-		$iPar = '4'
-	Else
-		$iPar = '0';None
-	EndIf
-	If $sStopBit = '1' Then
-		$iStop = '0'
-	ElseIf $sStopBit = '1.5' Then
-		$iStop = '1'
-	ElseIf $sStopBit = '2' Then
-		$iStop = '2'
-	EndIf
-	$OpenedPort = _OpenComm($CommPort, $sBAUD, $sDataBit, $iPar, $iStop)
-	If $OpenedPort = '-1' Then
-		Return (0)
-	Else
-		Return (1)
+	If $GpsType = 0 Then
+		If $sPARITY = 'O' Then ;Odd
+			$iPar = '1'
+		ElseIf $sPARITY = 'E' Then ;Even
+			$iPar = '2'
+		ElseIf $sPARITY = 'M' Then ;Mark
+			$iPar = '3'
+		ElseIf $sPARITY = 'S' Then ;Space
+			$iPar = '4'
+		Else
+			$iPar = '0';None
+		EndIf
+		$OpenedPort = _CommSetPort($CommPort, $sErr, $sBAUD, $sDataBit, $iPar, $sStopBit, $sFlow)
+		If $OpenedPort = 1 Then
+			Return (1)
+		Else
+			Return (0)
+		EndIf
+	ElseIf $GpsType = 1 Then
+		$return = 0
+		$ComError = 0
+		$CommSettings = $sBAUD & ',' & $sPARITY & ',' & $sDataBit & ',' & $sStopBit
+		;	Create NETComm.ocx object
+		$NetComm = ObjCreate("NETCommOCX.NETComm")
+		If IsObj($NetComm) = 0 Then ;If $NetComm is not an object then netcomm ocx is probrably not installed
+			MsgBox(0, "Error", "Install Netcomm OCX (http://home.comcast.net/~hardandsoftware/NETCommOCX.htm)")
+		Else
+			$NetComm.CommPort = $CommPort ;Set port number
+			$NetComm.Settings = $CommSettings ;Set port settings
+			$NetComm.InputLen = 0 ;reads entire buffer
+			If $ComError <> 1 Then
+				$NetComm.InputMode = 0 ;reads in text mode
+				$NetComm.HandShaking = 3 ;uses both RTS and Xon/Xoff handshaking
+				$NetComm.PortOpen = "True"
+				$return = 1
+			EndIf
+		EndIf
+		Return ($return)
+	ElseIf $GpsType = 2 Then
+		If $sPARITY = 'O' Then ;Odd
+			$iPar = '1'
+		ElseIf $sPARITY = 'E' Then ;Even
+			$iPar = '2'
+		ElseIf $sPARITY = 'M' Then ;Mark
+			$iPar = '3'
+		ElseIf $sPARITY = 'S' Then ;Space
+			$iPar = '4'
+		Else
+			$iPar = '0';None
+		EndIf
+		If $sStopBit = '1' Then
+			$iStop = '0'
+		ElseIf $sStopBit = '1.5' Then
+			$iStop = '1'
+		ElseIf $sStopBit = '2' Then
+			$iStop = '2'
+		EndIf
+		$OpenedPort = _OpenComm($CommPort, $sBAUD, $sDataBit, $iPar, $iStop)
+		If $OpenedPort = '-1' Then
+			Return (0)
+		Else
+			Return (1)
+		EndIf
 	EndIf
 EndFunc   ;==>_OpenComPort
 
 Func _CloseComPort($CommPort = '8');Closes specified COM port
-	_CloseComm($OpenedPort)
+	;Close the COM Port
+	If $GpsType = 0 Then
+		_CommClosePort()
+	ElseIf $GpsType = 1 Then
+		With $NetComm
+			.CommPort = $CommPort ;Set port number
+			.PortOpen = "False"
+		EndWith
+	ElseIf $GpsType = 2 Then
+		_CloseComm($OpenedPort)
+	EndIf
 EndFunc   ;==>_CloseComPort
 
-Func _CheckGpsChecksum($checkdata);Checks if GPS Data Checksum is correct. Returns 1 if it is correct, else Returns 0
-	$end = 0
-	$calc_checksum = 0
-	$checkdata_checksum = ''
-	$gps_data_split = StringSplit($checkdata, '');Seperate all characters of data and put them into an array
-	For $gds = 1 To $gps_data_split[0]
-		If $gps_data_split[$gds] <> '$' And $gps_data_split[$gds] <> '*' And $end = 0 Then
-			If $calc_checksum = 0 Then ;If $calc_checksum is equal 0, set $calc_checksum to the ascii value of this character
-				$calc_checksum = Asc($gps_data_split[$gds])
-			Else;If $calc_checksum is not equal 0 then XOR the new character ascii value with the $calc_checksum value
-				$calc_checksum = BitXOR($calc_checksum, Asc($gps_data_split[$gds]))
+Func _GetGPS(); Recieves data from gps device
+	$timeout = TimerInit()
+	$return = 1
+	$FoundData = 0
+
+	$maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
+	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
+
+	Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
+	Dim $Temp_Quality = 0, $Temp_Status = "V"
+
+	While 1 ;Loop to extract gps data untill location is found or timout time is reached
+		If $UseGPS = 0 Then ExitLoop
+		If $GpsType = 0 Then ;Use CommMG
+			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
+			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
+			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+				$FoundData = 1
+				If StringInStr($dataline, "$GPGGA") Then
+					_GPGGA($dataline);Split GPGGA data from data string
+					$disconnected_time = -1
+				ElseIf StringInStr($dataline, "$GPRMC") Then
+					_GPRMC($dataline);Split GPRMC data from data string
+					$disconnected_time = -1
+				EndIf
 			EndIf
-		ElseIf $gps_data_split[$gds] = '*' Then ;If the checksum has been reached, set the $end flag
-			$end = 1
-		ElseIf $end = 1 And StringIsAlNum($gps_data_split[$gds]) Then ;if the end flag is equal 1 and the character is alpha-numeric then add the character to the end of $checkdata_checksum
-			$checkdata_checksum &= $gps_data_split[$gds]
+		ElseIf $GpsType = 1 Then ;Use Netcomm ocx to get data (more stable right now)
+			If $NetComm.InBufferCount Then
+				$Buffer = $NetComm.InBufferCount
+				If $Buffer > 85 And TimerDiff($timeout) < $maxtime Then
+					$inputdata = $NetComm.inputdata
+					If StringInStr($inputdata, '$') And StringInStr($inputdata, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+						$FoundData = 1
+						$gps = StringSplit($inputdata, @CR);Split data string by CR and put data into the $gps array
+						For $readloop = 1 To $gps[0];go through array
+							$gpsline = StringStripWS($gps[$readloop], 3)
+							If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline);Show data line in "GPS Details" GUI if it is open
+							If StringInStr($gpsline, '$') And StringInStr($gpsline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+								If StringInStr($gpsline, "$GPGGA") Then
+									_GPGGA($gpsline);Split GPGGA data from data string
+								ElseIf StringInStr($gpsline, "$GPRMC") Then
+									_GPRMC($gpsline);Split GPRMC data from data string
+								EndIf
+							EndIf
+							If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
+							If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
+						Next
+					EndIf
+				EndIf
+			EndIf
+		ElseIf $GpsType = 2 Then ;Use Kernel32
+			$gstring = StringStripWS(_rxwait($OpenedPort, '1000', $maxtime), 8);Read data line from GPS
+			$dataline = $gstring; & $LastGpsString
+			$LastGpsString = $gstring
+			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
+				$FoundData = 1
+				$dlsplit = StringSplit($dataline, '$')
+				For $gda = 1 To $dlsplit[0]
+					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
+					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
+
+						If StringInStr($dlsplit[$gda], "GPGGA") Then
+							_GPGGA($dlsplit[$gda]);Split GPGGA data from data string
+							$disconnected_time = -1
+						ElseIf StringInStr($dlsplit[$gda], "GPRMC") Then
+							_GPRMC($dlsplit[$gda]);Split GPRMC data from data string
+							$disconnected_time = -1
+						EndIf
+					EndIf
+
+				Next
+			EndIf
 		EndIf
-	Next
-	$calc_checksum = Hex($calc_checksum, 2)
-	If $calc_checksum = $checkdata_checksum Then ;If the calculated checksum matches the given checksum then Return 1, Else Return 0
-		Return (1)
+		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
+		If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
+	WEnd
+	If $FoundData = 1 Then
+		$disconnected_time = -1
+		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then ;If the GPGGA data has a fix(1) then write data to perminant variables
+			If $FixTime <> $Temp_FixTime Then $GPGGA_Update = TimerInit()
+			$FixTime = $Temp_FixTime
+			$Latitude = $Temp_Lat
+			$Longitude = $Temp_Lon
+			$NumberOfSatalites = $Temp_NumberOfSatalites
+			$HorDilPitch = $Temp_HorDilPitch
+			$Alt = $Temp_Alt
+			$AltS = $Temp_AltS
+			$Geo = $Temp_Geo
+			$GeoS = $Temp_GeoS
+		EndIf
+		If $Temp_Status = "A" Then ;If the GPRMC data is Active(A) then write data to perminant variables
+			If $FixTime2 <> $Temp_FixTime2 Then $GPRMC_Update = TimerInit()
+			$FixTime2 = $Temp_FixTime2
+			$Latitude2 = $Temp_Lat2
+			$Longitude2 = $Temp_Lon2
+			$SpeedInKnots = $Temp_SpeedInKnots
+			$SpeedInMPH = $Temp_SpeedInMPH
+			$SpeedInKmH = $Temp_SpeedInKmH
+			$TrackAngle = $Temp_TrackAngle
+			$FixDate = $Temp_FixDate
+		EndIf
 	Else
-		Return (0)
+		If $disconnected_time = -1 Then $disconnected_time = TimerInit()
+		If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
+			$disconnected_time = -1
+			$return = 0
+			_TurnOffGPS()
+			SoundPlay($SoundDir & $ErrorFlag_sound, 0)
+		EndIf
 	EndIf
-EndFunc   ;==>_CheckGpsChecksum
+
+	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
+	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
+
+	If $TurnOffGPS = 1 Then _TurnOffGPS()
+
+	Return ($return)
+EndFunc   ;==>_GetGPS
 
 Func _GPGGA($data);Strips data from a gps $GPGGA data string
 	GUICtrlSetData($Lab_GpsInfo, $data)
@@ -431,86 +616,31 @@ Func _GPRMC($data);Strips data from a gps $GPRMC data string
 	EndIf
 EndFunc   ;==>_GPRMC
 
-Func _GetGPS(); Recieves data from gps device
-	$timeout = TimerInit()
-	$return = 1
-	$FoundData = 0
-
-	$maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
-	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
-
-	Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
-	Dim $Temp_Quality = 0, $Temp_Status = "V"
-
-	While 1 ;Loop to extract gps data untill location is found or timout time is reached
-		If $UseGPS = 0 Then ExitLoop
-		$gstring = StringStripWS(_rxwait($OpenedPort, '1000', $maxtime), 8);Read data line from GPS
-		$dataline = $gstring; & $LastGpsString
-		$LastGpsString = $gstring
-		If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
-			$FoundData = 1
-			$dlsplit = StringSplit($dataline, '$')
-			For $gda = 1 To $dlsplit[0]
-				;If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
-				If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-
-					If StringInStr($dlsplit[$gda], "GPGGA") Then
-						_GPGGA($dlsplit[$gda]);Split GPGGA data from data string
-						$disconnected_time = -1
-					ElseIf StringInStr($dlsplit[$gda], "GPRMC") Then
-						_GPRMC($dlsplit[$gda]);Split GPRMC data from data string
-						$disconnected_time = -1
-					EndIf
-				EndIf
-
-			Next
+Func _CheckGpsChecksum($checkdata);Checks if GPS Data Checksum is correct. Returns 1 if it is correct, else Returns 0
+	$end = 0
+	$calc_checksum = 0
+	$checkdata_checksum = ''
+	$gps_data_split = StringSplit($checkdata, '');Seperate all characters of data and put them into an array
+	For $gds = 1 To $gps_data_split[0]
+		If $gps_data_split[$gds] <> '$' And $gps_data_split[$gds] <> '*' And $end = 0 Then
+			If $calc_checksum = 0 Then ;If $calc_checksum is equal 0, set $calc_checksum to the ascii value of this character
+				$calc_checksum = Asc($gps_data_split[$gds])
+			Else;If $calc_checksum is not equal 0 then XOR the new character ascii value with the $calc_checksum value
+				$calc_checksum = BitXOR($calc_checksum, Asc($gps_data_split[$gds]))
+			EndIf
+		ElseIf $gps_data_split[$gds] = '*' Then ;If the checksum has been reached, set the $end flag
+			$end = 1
+		ElseIf $end = 1 And StringIsAlNum($gps_data_split[$gds]) Then ;if the end flag is equal 1 and the character is alpha-numeric then add the character to the end of $checkdata_checksum
+			$checkdata_checksum &= $gps_data_split[$gds]
 		EndIf
-		;If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
-		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And $Temp_Status = "A" Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
-		If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
-	WEnd
-	ConsoleWrite($Temp_Lat & '-' & $Temp_Lon & @CRLF)
-	ConsoleWrite($FoundData & '-' & $Temp_Quality & @CRLF)
-	If $FoundData = 1 Then
-		$disconnected_time = -1
-		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then ;If the GPGGA data has a fix(1) then write data to perminant variables
-			If $FixTime <> $Temp_FixTime Then $GPGGA_Update = TimerInit()
-			$FixTime = $Temp_FixTime
-			$Latitude = $Temp_Lat
-			$Longitude = $Temp_Lon
-			$NumberOfSatalites = $Temp_NumberOfSatalites
-			$HorDilPitch = $Temp_HorDilPitch
-			$Alt = $Temp_Alt
-			$AltS = $Temp_AltS
-			$Geo = $Temp_Geo
-			$GeoS = $Temp_GeoS
-		EndIf
-		If $Temp_Status = "A" Then ;If the GPRMC data is Active(A) then write data to perminant variables
-			If $FixTime2 <> $Temp_FixTime2 Then $GPRMC_Update = TimerInit()
-			$FixTime2 = $Temp_FixTime2
-			$Latitude2 = $Temp_Lat2
-			$Longitude2 = $Temp_Lon2
-			$SpeedInKnots = $Temp_SpeedInKnots
-			$SpeedInMPH = $Temp_SpeedInMPH
-			$SpeedInKmH = $Temp_SpeedInKmH
-			$TrackAngle = $Temp_TrackAngle
-			$FixDate = $Temp_FixDate
-		EndIf
+	Next
+	$calc_checksum = Hex($calc_checksum, 2)
+	If $calc_checksum = $checkdata_checksum Then ;If the calculated checksum matches the given checksum then Return 1, Else Return 0
+		Return (1)
 	Else
-		If $disconnected_time = -1 Then $disconnected_time = TimerInit()
-		If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
-			$disconnected_time = -1
-			$return = 0
-			_TurnOffGPS()
-			SoundPlay($SoundDir & $ErrorFlag_sound, 0)
-		EndIf
+		Return (0)
 	EndIf
-
-	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
-	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
-	;_DrawCompassLine($TrackAngle)
-	Return ($return)
-EndFunc   ;==>_GetGPS
+EndFunc   ;==>_CheckGpsChecksum
 
 Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
 	$return = '0.0000000'
