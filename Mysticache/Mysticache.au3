@@ -4,25 +4,42 @@ Opt("GUIOnEventMode", 1);Change to OnEvent mode
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v0.8'
+$version = 'v2.0 Alpha 1'
 $Script_Start_Date = '2009/10/22'
-$last_modified = '2009/10/27'
+$last_modified = '2009/10/30'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
+#include <Date.au3>
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #include <GDIPlus.au3>
+#include <GuiListView.au3>
+#include <File.au3>
+#include "UDFs\AccessCom.au3"
 #include "UDFs\cfxUDF.au3"
 #include "UDFs\CommMG.au3"
+#include "UDFs\FileInUse.au3"
+;Get Date/Time-------------------------------------------
+$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ')
+$datestamp = $dt[1]
+$timestamp = $dt[2]
+$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+;If file is secified, set load file
+Dim $Load = ''
+For $loop = 1 To $CmdLine[0]
+	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vs1' Then $Load = $CmdLine[$loop]
+	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vsz' Then $Load = $CmdLine[$loop]
+Next
 ;Variables-----------------------------------------------
 Dim $OpenedPort
+Dim $WPID = 0
 Dim $UseGPS = 0
 Dim $TurnOffGPS = 0
 Dim $CompassOpen = 0
 Dim $GpsDetailsOpen = 0
 Dim $DestSet = 0
+Dim $Debug = 0
 Dim $RefreshLoopTime = 500
-Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ErrorFlag_sound = 'error.wav'
 Dim $GpsDetailsGUI
 Dim $GPGGA_Update
@@ -30,17 +47,16 @@ Dim $GPRMC_Update
 Dim $disconnected_time
 Dim $sErr
 Dim $NetComm
+Dim $DB_OBJ
 
-Dim $StartLat = '0.0000000'
-Dim $StartLon = '0.0000000'
-Dim $DestLat = '0.0000000'
-Dim $DestLon = '0.0000000'
-Dim $Latitude = '0.0000000'
-Dim $Longitude = '0.0000000'
-Dim $Latitude2 = '0.0000000'
-Dim $Longitude2 = '0.0000000'
-Dim $LatitudeWifidb = '0.0000000'
-Dim $LongitudeWifidb = '0.0000000'
+Dim $StartLat = 'N 0.0000'
+Dim $StartLon = 'E 0.0000'
+Dim $DestLat = 'N 0.0000'
+Dim $DestLon = 'E 0.0000'
+Dim $Latitude = 'N 0.0000'
+Dim $Longitude = 'E 0.0000'
+Dim $Latitude2 = 'N 0.0000'
+Dim $Longitude2 = 'E 0.0000'
 Dim $NumberOfSatalites = '00'
 Dim $HorDilPitch = '0'
 Dim $Alt = '0'
@@ -52,18 +68,25 @@ Dim $SpeedInMPH = '0'
 Dim $SpeedInKmH = '0'
 Dim $TrackAngle = '0'
 
+Dim $AddWaypoingGuiOpen = 0
+Dim $AddWaypoingGui, $Rad_DestGPS_LatLon, $Rad_DestGPS_BrngDist, $GUI_AddName, $GUI_AddNotes, $dLat, $dLon, $dBrng, $dDist, $dWPID, $dListRow
+Dim $EditWaypoingGui, $EditWaypoingGuiOpen
+
+Dim $winpos_old, $winpos, $sizes, $sizes_old
 Dim $FixTime, $FixTime2, $FixDate, $Quality
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
 Dim $CompassGraphic, $CompassGUI, $CompassBack, $CompassHeight, $CircleX, $CircleY, $north, $south, $east, $west
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
 
 Dim $settings = @ScriptDir & '\Settings.ini'
+Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate')), 'MM', 'M'), 'dd', 'd')
 Dim $ComPort = IniRead($settings, 'GpsSettings', 'ComPort', '4')
 Dim $BAUD = IniRead($settings, 'GpsSettings', 'Baud', '4800')
 Dim $PARITY = IniRead($settings, 'GpsSettings', 'Parity', 'N')
 Dim $DATABIT = IniRead($settings, 'GpsSettings', 'DataBit', '8')
 Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
 Dim $GpsType = IniRead($settings, 'GpsSettings', 'GpsType', '2')
+Dim $GpsFormat = IniRead($settings, 'GpsSettings', 'GpsFormat', '3')
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 
 If $GpsType = 0 Then
@@ -77,6 +100,7 @@ EndIf
 Dim $BackgroundColor = IniRead($settings, 'Colors', 'BackgroundColor', '0x99B4A1')
 Dim $ControlBackgroundColor = IniRead($settings, 'Colors', 'ControlBackgroundColor', '0xD7E4C2')
 Dim $TextColor = IniRead($settings, 'Colors', 'TextColor', '0x000000')
+
 
 Dim $RadStartGpsCurPos = IniRead($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', '4')
 Dim $RadStartGpsLatLon = IniRead($settings, 'StartGPS', 'Rad_StartGPS_LatLon', '1')
@@ -92,134 +116,378 @@ Dim $DdDist = IniRead($settings, 'DestGPS', 'dDist', '')
 
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
+Dim $SoundDir = @ScriptDir & '\Sounds\'
+Dim $ImageDir = @ScriptDir & '\Images\'
+Dim $TmpDir = @ScriptDir & '\temp\'
+Dim $LanguageDir = @ScriptDir & '\Languages\'
+DirCreate($SoundDir)
+DirCreate($ImageDir)
+DirCreate($TmpDir)
+DirCreate($LanguageDir)
+
+Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
+Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
+Dim $DefaultLanguageFile = IniRead($settings, 'Vistumbler', 'LanguageFile', $DefaultLanguage & '.ini')
+Dim $DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
+If FileExists($DefaultLanguagePath) = 0 Then
+	$DefaultLanguage = 'English'
+	$DefaultLanguageFile = 'English.ini'
+	$DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
+EndIf
+
+Dim $Text_File = IniRead($DefaultLanguagePath, 'GuiText', 'File', '&File')
+Dim $Text_SaveAsTXT = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsTXT', 'Save As TXT')
+Dim $Text_SaveAsVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsVS1', 'Save As VS1')
+Dim $Text_SaveAsVSZ = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsVSZ', 'Save As VSZ')
+Dim $Text_ImportFromTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
+Dim $Text_ImportFromVSZ = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
+Dim $Text_Exit = IniRead($DefaultLanguagePath, 'GuiText', 'Exit', 'E&xit')
+Dim $Text_ExitSaveDb = IniRead($DefaultLanguagePath, 'GuiText', 'ExitSaveDb', 'Exit (Save DB)')
+
+Dim $Text_Edit = IniRead($DefaultLanguagePath, 'GuiText', 'Edit', 'E&dit')
+Dim $Text_ClearAll = IniRead($DefaultLanguagePath, 'GuiText', 'ClearAll', 'Clear All')
+Dim $Text_Cut = IniRead($DefaultLanguagePath, 'GuiText', 'Cut', 'Cut')
+Dim $Text_Copy = IniRead($DefaultLanguagePath, 'GuiText', 'Copy', 'Copy')
+Dim $Text_Paste = IniRead($DefaultLanguagePath, 'GuiText', 'Paste', 'Paste')
+Dim $Text_Delete = IniRead($DefaultLanguagePath, 'GuiText', 'Delete', 'Delete')
+Dim $Text_Select = IniRead($DefaultLanguagePath, 'GuiText', 'Select', 'Select')
+Dim $Text_SelectAll = IniRead($DefaultLanguagePath, 'GuiText', 'SelectAll', 'Select All')
+
+Dim $Text_RecoverMsg = IniRead($DefaultLanguagePath, 'GuiText', 'RecoverMsg', 'Old DB Found. Would you like to recover it?')
+Dim $Text_DeleteSelected = IniRead($DefaultLanguagePath, 'GuiText', 'DeleteSelected', 'Delete Selected')
+Dim $Text_RecoverSelected = IniRead($DefaultLanguagePath, 'GuiText', 'RecoverSelected', 'Recover Selected')
+Dim $Text_Exit = IniRead($DefaultLanguagePath, 'GuiText', 'Exit', 'E&xit')
+Dim $Text_NewSession = IniRead($DefaultLanguagePath, 'GuiText', 'NewSession', 'New Session')
+Dim $Text_Size = IniRead($DefaultLanguagePath, 'GuiText', 'Size', 'Size')
+Dim $Text_Error = IniRead($DefaultLanguagePath, 'GuiText', 'Error', 'Error')
+Dim $Text_NoMdbSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', 'No MDB Selected')
+Dim $Text_ImportFolder = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFolder', 'Import Folder')
+
+Dim $Text_Options = IniRead($DefaultLanguagePath, 'GuiText', 'Options', '&Options')
+
+Dim $Text_Settings = IniRead($DefaultLanguagePath, 'GuiText', 'Settings', 'S&ettings')
+
+Dim $Text_Export = IniRead($DefaultLanguagePath, 'GuiText', 'Export', 'Ex&port')
+Dim $Text_ExportToKML = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToKML', 'Export To KML')
+Dim $Text_ExportToGPX = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToGPX', 'Export To GPX')
+Dim $Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 'Export To TXT')
+Dim $Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
+Dim $Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
+Dim $Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
+
+Dim $Text_UseGPS = IniRead($DefaultLanguagePath, 'GuiText', 'UseGPS', 'Use &GPS')
+Dim $Text_StopGPS = IniRead($DefaultLanguagePath, 'GuiText', 'StopGPS', 'Stop &GPS')
+
+Dim $Text_ActualLoopTime = IniRead($DefaultLanguagePath, 'GuiText', 'ActualLoopTime', 'Loop time')
+Dim $Text_Longitude = IniRead($DefaultLanguagePath, 'GuiText', 'Longitude', 'Longitude')
+Dim $Text_Latitude = IniRead($DefaultLanguagePath, 'GuiText', 'Latitude', 'Latitude')
+
+
+
+$MDBfiles = _FileListToArray($TmpDir, '*.MDB', 1);Find all files in the folder that end in .MDB
+If IsArray($MDBfiles) Then
+	Opt("GUIOnEventMode", 0)
+	$FoundMdbFile = 0
+	$RecoverMdbGui = GUICreate($Text_RecoverMsg, 461, 210, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+	GUISetBkColor($BackgroundColor)
+	$Recover_Del = GUICtrlCreateButton($Text_DeleteSelected, 10, 150, 215, 25)
+	$Recover_Rec = GUICtrlCreateButton($Text_RecoverSelected, 235, 150, 215, 25)
+	$Recover_Exit = GUICtrlCreateButton($Text_Exit, 10, 180, 215, 25)
+	$Recover_New = GUICtrlCreateButton($Text_NewSession, 235, 180, 215, 25)
+	$Recover_List = GUICtrlCreateListView(StringReplace($Text_File, '&', '') & "|" & $Text_Size, 10, 8, 440, 136, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	_GUICtrlListView_SetColumnWidth($Recover_List, 0, 335)
+	_GUICtrlListView_SetColumnWidth($Recover_List, 1, 100)
+	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+	For $FoundMDB = 1 To $MDBfiles[0]
+		$mdbfile = $MDBfiles[$FoundMDB]
+		If _FileInUse($TmpDir & $mdbfile) = 0 Then
+			$FoundMdbFile = 1
+			$mdbsize = (FileGetSize($TmpDir & $mdbfile) / 1024) & 'kb'
+			$ListRow = _GUICtrlListView_InsertItem($Recover_List, "", 0)
+			_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbfile, 0)
+			_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbsize, 1)
+		EndIf
+	Next
+	If $FoundMdbFile = 0 Then
+		$MysticacheDB = $TmpDir & $ldatetimestamp & '.mdb'
+		$MysticacheDBName = $ldatetimestamp & '.mdb'
+	Else
+		GUISetState(@SW_SHOW)
+		While 1
+			$nMsg = GUIGetMsg()
+			Switch $nMsg
+				Case $GUI_EVENT_CLOSE
+					$MysticacheDB = $TmpDir & $ldatetimestamp & '.mdb'
+					$MysticacheDBName = $ldatetimestamp & '.mdb'
+					ExitLoop
+				Case $Recover_New
+					$MysticacheDB = $TmpDir & $ldatetimestamp & '.mdb'
+					$MysticacheDBName = $ldatetimestamp & '.mdb'
+					ExitLoop
+				Case $Recover_Exit
+					Exit
+				Case $Recover_Rec
+					$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
+					If $Selected = '-1' Then
+						MsgBox(0, $Text_Error, $Text_NoMdbSelected)
+					Else
+						$mdbfilename = _GUICtrlListView_GetItemText($Recover_List, $Selected)
+						$MysticacheDB = $TmpDir & $mdbfilename
+						$MysticacheDBName = $mdbfilename
+						ExitLoop
+					EndIf
+				Case $Recover_Del
+					$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
+					If $Selected = '-1' Then
+						MsgBox(0, $Text_Error, $Text_NoMdbSelected)
+					Else
+						$fn = _GUICtrlListView_GetItemText($Recover_List, $Selected)
+						$fn_fullpath = $TmpDir & $fn
+						FileDelete($fn_fullpath)
+						_GUICtrlListView_DeleteItem(GUICtrlGetHandle($Recover_List), $Selected)
+					EndIf
+			EndSwitch
+		WEnd
+	EndIf
+	GUIDelete($RecoverMdbGui)
+	Opt("GUIOnEventMode", 1)
+Else
+	$MysticacheDB = $TmpDir & $ldatetimestamp & '.mdb'
+	$MysticacheDBName = $ldatetimestamp & '.mdb'
+EndIf
+
+If FileExists($MysticacheDB) Then
+	$Recover = 1
+	$WPID = 0
+	_AccessConnectConn($MysticacheDB, $DB_OBJ)
+	$query = "SELECT GpsID FROM GPS"
+	$GpsMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+	$GPS_ID = UBound($GpsMatchArray) - 1
+Else
+	ConsoleWrite($MysticacheDB & @CRLF)
+	_SetUpDbTables($MysticacheDB)
+EndIf
+
+Dim $column_Line = 0
+Dim $column_Name = 1
+Dim $column_Notes = 2
+Dim $column_Latitude = 3
+Dim $column_Longitude = 4
+Dim $column_Bearing = 5
+Dim $column_Distance = 6
+
+$var = IniReadSection($settings, "Columns")
+If @error Then
+	$headers = '#|Name|Notes|Latitude|Longitude|Bearing|Distance'
+Else
+	For $a = 0 To ($var[0][0] - 1)
+		For $b = 1 To $var[0][0]
+			If $a = $var[$b][1] Then $headers &= IniRead($DefaultLanguagePath, 'Column_Names', $var[$b][0], IniRead($settings, 'Column_Names', $var[$b][0], '')) & '|'
+		Next
+	Next
+EndIf
 
 ;-------------------------------------------------------------------------------------------------------------------------------
-;                                                       Program GUI
+;                                                       GUI
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-$MysticacheGUI = GUICreate($title, 414, 448, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & _DateLocalFormat($last_modified) & ' - (' & $MysticacheDBName & ')'
+$MysticacheGUI = GUICreate($title, 980, 692, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
-;Set Window Position
+
 $a = WinGetPos($MysticacheGUI);Get window current position
-Dim $State = IniRead($settings, 'WindowPositions', 'State', "Window");Get last window position from the ini file
-Dim $Position = IniRead($settings, 'WindowPositions', 'Position', $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3])
-Dim $winpos_old, $winpos
-$b = StringSplit($Position, ",")
+Dim $State = IniRead($settings, 'WindowPositions', 'MysticacheState', "Window");Get last window position from the ini file
+Dim $Position = IniRead($settings, 'WindowPositions', 'MysticachePosition', $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3])
+$b = StringSplit($Position, ",") ;Split ini posion string
+
 If $State = "Maximized" Then
 	WinSetState($title, "", @SW_MAXIMIZE)
 Else
 	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]);Resize window to ini value
 EndIf
-;GPS Settings
-$But_UseGPS = GUICtrlCreateButton("Use GPS", 15, 15, 60, 20, $WS_GROUP)
-GUICtrlCreateLabel("Com Port:", 80, 20, 0, 17)
-$CommPort = GUICtrlCreateCombo("1", 130, 15, 35, 25)
-GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20", $ComPort)
-GUICtrlCreateLabel("Baud:", 170, 20, 30, 17)
-$CommBaud = GUICtrlCreateCombo("4800", 200, 15, 50, 25)
-GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
-GUICtrlCreateLabel("Interface:", 255, 20, 50, 17)
-$Interface = GUICtrlCreateCombo("Kernel32", 305, 15, 95, 25)
-GUICtrlSetData(-1, "CommMG|Netcomm OCX", $DefGpsInt)
-GUICtrlCreateLabel("Stop Bit:", 16, 52, 44, 17)
-$CommBit = GUICtrlCreateCombo("1", 64, 47, 80, 25)
-GUICtrlSetData(-1, "1.5|2", $STOPBIT)
-GUICtrlCreateLabel("Parity:", 148, 52, 33, 17)
-If $PARITY = 'E' Then
-	$l_PARITY = 'Even'
-ElseIf $PARITY = 'M' Then
-	$l_PARITY = 'Mark'
-ElseIf $PARITY = 'O' Then
-	$l_PARITY = 'Odd'
-ElseIf $PARITY = 'S' Then
-	$l_PARITY = 'Space'
-Else
-	$l_PARITY = 'None'
-EndIf
-$CommParity = GUICtrlCreateCombo("None", 185, 47, 80, 25)
-GUICtrlSetData(-1, 'Even|Mark|Odd|Space', $l_PARITY)
-GUICtrlCreateLabel("Data Bit:", 275, 52, 45, 17)
-$CommDataBit = GUICtrlCreateCombo("4", 320, 47, 80, 25)
-GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
-;Start GPS Settings
-$Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 5, 80, 405, 89)
-$Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("", 20, 105, 17, 17)
-$Lab_Rad_CurrentPos = GUICtrlCreateLabel("Current GPS Position", 40, 108, 340, 17)
+;File Menu
+$file = GUICtrlCreateMenu($Text_File)
+;$NewSession = GUICtrlCreateMenuItem($Text_NewSession, $file)
+;$SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
+;$SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
+;$ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
+;$ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
+;$ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
+;$ImportFolder = GUICtrlCreateMenuItem($Text_ImportFolder, $file)
+$ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
+$ExitMysticache = GUICtrlCreateMenuItem($Text_Exit, $file)
+;Edit Menu
+$Edit = GUICtrlCreateMenu($Text_Edit)
+;$Cut = GUICtrlCreateMenuitem("Cut", $Edit)
+;$Copy = GUICtrlCreateMenuItem($Text_Copy, $Edit)
+;$Delete = GUICtrlCreateMenuItem("Delete", $Edit)
+;$SelectAll = GUICtrlCreateMenuItem("Select All", $Edit)
+;$ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
+$Options = GUICtrlCreateMenu($Text_Options)
+
+
+$SettingsMenu = GUICtrlCreateMenu($Text_Settings)
+$SetGPS = GUICtrlCreateMenuItem("GPS Settings", $SettingsMenu)
+
+
+$Export = GUICtrlCreateMenu($Text_Export)
+;$ExportTXTMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
+;$ExportToTXT = GUICtrlCreateMenuItem("All Waypoints", $ExportTXTMenu)
+;$ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
+;$ExportToVS1 = GUICtrlCreateMenuItem("All Waypoints", $ExportVS1Menu)
+;$ExportCsvMenu = GUICtrlCreateMenu($Text_ExportToCSV, $Export)
+;$ExportToCsv = GUICtrlCreateMenuItem("All Waypoints", $ExportCsvMenu)
+;$ExportKmlMenu = GUICtrlCreateMenu($Text_ExportToKML, $Export)
+;$ExportToKML = GUICtrlCreateMenuItem("All Waypoints", $ExportKmlMenu)
+;$CreateApSignalMap = GUICtrlCreateMenuItem("Selected Waypoint", $ExportKmlMenu)
+;$ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
+;$ExportToGPX = GUICtrlCreateMenuItem("All Waypoints", $ExportGpxMenu)
+
+$Extra = GUICtrlCreateMenu("Extra")
+$GpsDetails = GUICtrlCreateMenuItem("Gps Details", $Extra)
+$GpsCompass = GUICtrlCreateMenuItem("Compass", $Extra)
+
+$DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $MysticacheGUI)
+GUISetBkColor($BackgroundColor)
+$ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+GUISetState()
+
+$ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $MysticacheGUI) ; Create Child window for controls
+GUISetBkColor($BackgroundColor)
+$But_UseGPS = GUICtrlCreateButton($Text_UseGPS, 15, 8, 100, 20, 0)
+$AddWpButton = GUICtrlCreateButton("Add Waypoint", 15, 35, 100, 20, 0)
+$EditWpButton = GUICtrlCreateButton("Edit Waypoint", 120, 35, 100, 20, 0)
+$DelWpButton = GUICtrlCreateButton("Delete Waypoint", 230, 35, 100, 20, 0)
+$SetDestButton = GUICtrlCreateButton("Use as Destination", 340, 35, 100, 20, 0)
+
+$Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 450, 0, 405, 60)
+$Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("", 465, 15, 17, 17)
+$Lab_Rad_CurrentPos = GUICtrlCreateLabel("Current GPS Position", 485, 17, 350, 17)
 If $RadStartGpsCurPos = 1 Then GUICtrlSetState($Rad_StartGPS_CurrentPos, $GUI_CHECKED)
-$Rad_StartGPS_LatLon = GUICtrlCreateRadio("", 20, 135, 17, 17)
+$Rad_StartGPS_LatLon = GUICtrlCreateRadio("", 465, 35, 17, 17)
 If $RadStartGpsLatLon = 1 Then GUICtrlSetState($Rad_StartGPS_LatLon, $GUI_CHECKED)
-GUICtrlCreateLabel("Latitude:", 40, 137, 45, 17)
-$cLat = GUICtrlCreateInput($DcLat, 85, 135, 75, 21)
-GUICtrlCreateLabel("Longitude:", 170, 137, 50, 17)
-$cLon = GUICtrlCreateInput($DcLon, 225, 136, 75, 21)
-$But_GetCurrentGps = GUICtrlCreateButton("Get Current GPS", 310, 135, 90, 24, $WS_GROUP)
-;Dest GPS Settings
-$Grp_DestGPS = GUICtrlCreateGroup("Destination GPS Position", 5, 184, 405, 125)
-$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 20, 211, 17, 17)
-If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
-GUICtrlCreateLabel("Latitude:", 40, 214, 45, 17)
-$dLat = GUICtrlCreateInput($DdLat, 85, 209, 120, 21)
-GUICtrlCreateLabel("Longitude:", 210, 214, 54, 17)
-$dLon = GUICtrlCreateInput($DdLon, 265, 209, 120, 21)
-$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 20, 244, 17, 17)
-If $RadDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
-GUICtrlCreateLabel("Bearing:", 40, 247, 43, 17)
-$dBrng = GUICtrlCreateInput($DdBrng, 85, 242, 120, 21)
-GUICtrlCreateLabel("Distance:", 210, 247, 49, 17)
-$dDist = GUICtrlCreateInput($DdDist, 265, 242, 120, 21)
-$But_SetDestination = GUICtrlCreateButton("Set Desination", 104, 272, 201, 25, $WS_GROUP)
-;Route Info
-$Lab_StartGPS = GUICtrlCreateLabel("", 15, 320, 388, 15)
-$Lab_DestGPS = GUICtrlCreateLabel("Dest GPS:     Not Set Yet", 15, 340, 388, 15)
-$Lab_BrngDist = GUICtrlCreateLabel("", 15, 360, 388, 15)
-$Lab_GpsInfo = GUICtrlCreateLabel("", 15, 380, 388, 15)
-$But_OpenCompass = GUICtrlCreateButton("Open Compass", 40, 415, 100, 25, $WS_GROUP)
-$But_OpenGpsDetails = GUICtrlCreateButton("Open GPS Details", 150, 415, 100, 25, $WS_GROUP)
-$But_Exit = GUICtrlCreateButton("Exit", 260, 415, 110, 25, $WS_GROUP)
+GUICtrlCreateLabel("Latitude:", 485, 37, 45, 17)
+$cLat = GUICtrlCreateInput($DcLat, 535, 35, 75, 21)
+GUICtrlCreateLabel("Longitude:", 615, 37, 50, 17)
+$cLon = GUICtrlCreateInput($DcLon, 670, 35, 75, 21)
+$But_GetCurrentGps = GUICtrlCreateButton("Get Current GPS", 755, 35, 90, 21, $WS_GROUP)
 
-GUISetOnEvent($GUI_EVENT_CLOSE, '_Exit')
-GUICtrlSetOnEvent($But_UseGPS, '_GpsToggle')
-GUICtrlSetOnEvent($But_SetDestination, '_SetDestination')
-GUICtrlSetOnEvent($But_OpenCompass, '_CompassGUI')
-GUICtrlSetOnEvent($But_OpenGpsDetails, '_OpenGpsDetailsGUI')
-GUICtrlSetOnEvent($But_Exit, '_Exit')
-GUICtrlSetOnEvent($But_GetCurrentGps, '_GetCurrentGps')
-
+;$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 155, 25, 300, 15)
+;GUICtrlSetColor(-1, $TextColor)
+$Lab_StartGPS = GUICtrlCreateLabel("", 120, 5, 330, 15)
+GUICtrlSetColor(-1, $TextColor)
+$Lab_DestGPS = GUICtrlCreateLabel("Dest GPS:     Not Set Yet", 120, 20, 330, 15)
+GUICtrlSetColor(-1, $TextColor)
+;$debugdisplay = GUICtrlCreateLabel('', 765, 10, 200, 15)
+;GUICtrlSetColor(-1, $TextColor)
+;$msgdisplay = GUICtrlCreateLabel('', 155, 40, 610, 15)
+;GUICtrlSetColor(-1, $TextColor)
 
 GUISetState(@SW_SHOW)
 
-;-------------------------------------------------------------------------------------------------------------------------------
-;                                                       Program Running Loop
-;-------------------------------------------------------------------------------------------------------------------------------
+GUISwitch($MysticacheGUI)
+_SetControlSizes()
+GUISetState(@SW_SHOW)
+
+;Button-Events-------------------------------------------
+GUISetOnEvent($GUI_EVENT_CLOSE, '_Exit')
+;GUISetOnEvent($GUI_EVENT_RESIZED, '_ResetSizes')
+;GUISetOnEvent($GUI_EVENT_MINIMIZE, '_ResetSizes')
+;GUISetOnEvent($GUI_EVENT_RESTORE, '_ResetSizes')
+;GUISetOnEvent($GUI_EVENT_MAXIMIZE, '_ResetSizes')
+;Buttons
+GUICtrlSetOnEvent($But_UseGPS, '_GpsToggle')
+GUICtrlSetOnEvent($AddWpButton, '_AddWaypointGUI')
+GUICtrlSetOnEvent($EditWpButton, '_EditWaypointGUI')
+GUICtrlSetOnEvent($SetDestButton, '_SetDestination')
+;File Menu
+;GUICtrlSetOnEvent($NewSession, '_NewSession')
+;GUICtrlSetOnEvent($SaveAsTXT, '_ExportData')
+;GUICtrlSetOnEvent($SaveAsDetailedTXT, '_ExportDetailedData')
+;GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
+;GUICtrlSetOnEvent($ImportFromVSZ, '_ImportVSZ')
+;GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
+;GUICtrlSetOnEvent($ImportFolder, '_LoadFolder')
+GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
+GUICtrlSetOnEvent($ExitMysticache, '_Exit')
+;Edit Menu
+;GUICtrlSetOnEvent($ClearAll, '_ClearAll')
+;GUICtrlSetOnEvent($Copy, '_CopyAP')
+;Optons Menu
+
+;Export Menu
+;GUICtrlSetOnEvent($ExportToTXT, '_ExportData')
+;GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
+;GUICtrlSetOnEvent($ExportToCsv, '_ExportCsvData')
+;GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
+;GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
+;GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
+;Settings Menu
+GUICtrlSetOnEvent($SetGPS, '_GPSOptions')
+;Extra
+GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
+GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI') 
+;Other
+GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
+
+;Set Listview Widths
+_SetListviewWidths()
+
+;If $Recover = 1 Then _RecoverMDB()
+
+;If $Load <> '' Then AutoLoadList($Load)
+
 
 While 1
-	If $UseGPS =  1 Then _GetGPS()
+	If $UseGPS = 1 Then _GetGPS()
 	If GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
-		$StartLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', '')
-		$StartLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', '')
+		$StartLat = $Latitude
+		$StartLon = $Longitude
 		;$StartBrng = $TrackAngle
 	ElseIf GUICtrlRead($Rad_StartGPS_LatLon) = 1 Then
-		$StartLat = GUICtrlRead($cLat)
-		$StartLon = GUICtrlRead($cLon)
+		$StartLat = _Format_GPS_All_to_DMM(GUICtrlRead($cLat), "N", "S")
+		$StartLon = _Format_GPS_All_to_DMM(GUICtrlRead($cLon), "E", "W")
 		;$StartBrng = $cBear
 	EndIf
-	GUICtrlSetData($Lab_Rad_CurrentPos, "Current GPS Position: Lat: " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', '') & " Lon: " & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', ''))
+	GUICtrlSetData($Lab_Rad_CurrentPos, "Current GPS Position: Lat: " & _GpsFormat($Latitude) & " Lon: " & _GpsFormat($Longitude))
+	GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & $StartLat & '     Longitude: ' & $StartLon)
+	;If $DestSet = 1 Then GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', $DestBrng) & ' degrees     Distance: ' & StringFormat('%0.1f', $DestDist) & ' meters')
+
+	;Compass Window and Drawing
 	$DestBrng = _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
 	$DestDist = _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
-	GUICtrlSetData($Lab_StartGPS, 'Start GPS:     Latitude: ' & StringFormat('%0.7f', $StartLat) & '     Longitude: ' & StringFormat('%0.7f', $StartLon))
-	If $DestSet = 1 Then GUICtrlSetData($Lab_BrngDist, 'Bearing: ' & StringFormat('%0.1f', $DestBrng) & ' degrees     Distance: ' & StringFormat('%0.1f', $DestDist) & ' meters')
-
+	ConsoleWrite($StartLat & '-' & $StartLon & '-' & $DestLat & '-' & $DestLon & @CRLF)
+	ConsoleWrite($DestBrng & @CRLF)
+	_SetCompassSizes()
 	If $UseGPS = 1 And GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
-		_DrawCompassLine($DestBrng, $TrackAngle)
+		_DrawCompassLine($DestBrng, "0xFFFF3333")
+		_DrawCompassLine($TrackAngle, "0xFF000000")
 	Else
-		_DrawCompassLine($DestBrng)
+		If $DestSet = 1 Then _DrawCompassLine($DestBrng, "0xFFFF3333")
 	EndIf
 
+	$RoundedDestDist = Round($DestDist)
+	If $RoundedDestDist <= 25 Then
+		_DrawCompassCircle(90, "0xFF228b22")
+	ElseIf $RoundedDestDist <= 50 Then
+		_DrawCompassCircle(75, "0xFFadff2f")
+	ElseIf $RoundedDestDist <= 100 Then
+		_DrawCompassCircle(60, "0xFFffff00")
+	ElseIf $RoundedDestDist <= 200 Then
+		_DrawCompassCircle(45, "0xFFdaa520")
+	ElseIf $RoundedDestDist <= 400 Then
+		_DrawCompassCircle(30, "0xFFff4500")
+	ElseIf $RoundedDestDist <= 600 Then
+		_DrawCompassCircle(15, "0xFFff0000")
+	EndIf
 	;Check Mysticache Window Position
 	_WinMoved()
+	_SetControlSizes()
+	_UpdateDestBrng()
 
-	;Check Compass Window Position
-	If WinActive($CompassGUI) And $CompassOpen = 1  Then
+
+	If WinActive($CompassGUI) And $CompassOpen = 1 Then
 		$c = WinGetPos($CompassGUI)
 		If $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] <> $CompassPosition Then $CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] ;If the $CompassGUI has moved or resized, set $CompassPosition to current window size
 	EndIf
@@ -235,34 +503,332 @@ While 1
 
 WEnd
 
-;-------------------------------------------------------------------------------------------------------------------------------
-;                                                       PROGRAM FUNCTIONS
-;-------------------------------------------------------------------------------------------------------------------------------
+Func _AddWaypointGUI()
+	If $AddWaypoingGuiOpen = 0 Then
+		$AddWaypoingGuiOpen = 1
+		$AddWaypoingGui = GUICreate("Add Waypoint", 360, 199, -1, -1)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateLabel("Name:", 15, 16, 35, 17)
+		$GUI_AddName = GUICtrlCreateInput("", 56, 16, 281, 21)
+		GUICtrlCreateLabel("Notes:", 15, 46, 35, 17)
+		$GUI_AddNotes = GUICtrlCreateInput("", 56, 48, 281, 21)
+
+		$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 16, 88, 17, 17)
+		If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
+		GUICtrlCreateLabel("Latitude:", 40, 91, 45, 17)
+		$dLat = GUICtrlCreateInput("", 85, 88, 81, 21)
+		GUICtrlCreateLabel("Longitude:", 184, 91, 54, 17)
+		$dLon = GUICtrlCreateInput("", 240, 88, 81, 21)
+		$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 16, 119, 17, 17)
+		If $RadDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
+		GUICtrlCreateLabel("Bearing:", 40, 122, 43, 17)
+		$dBrng = GUICtrlCreateInput("", 85, 119, 81, 21)
+		GUICtrlCreateLabel("Distance:", 186, 122, 49, 17)
+		$dDist = GUICtrlCreateInput("", 240, 119, 81, 21)
+		$But_AddWapoint = GUICtrlCreateButton("Add Waypoint", 88, 158, 81, 25, $WS_GROUP)
+		$But_Cancel = GUICtrlCreateButton("Cancel", 189, 158, 81, 25, $WS_GROUP)
+		GUISetState(@SW_SHOW)
+		GUICtrlSetOnEvent($But_AddWapoint, '_AddWaypoint')
+		GUICtrlSetOnEvent($But_Cancel, '_CloseAddWaypointGUI')
+	EndIf
+EndFunc
+
+Func _CloseAddWaypointGUI()
+	GUIDelete($AddWaypoingGui)
+	$AddWaypoingGuiOpen = 0
+EndFunc
+
+Func _AddWaypoint()
+	$WPName = GUICtrlRead($GUI_AddName)
+	$WPNotes = GUICtrlRead($GUI_AddNotes)
+	$WPBrng = GUICtrlRead($dBrng)
+	$WPDist = GUICtrlRead($dDist)
+	$WPLat = GUICtrlRead($dLat)
+	$WPLon = GUICtrlRead($dLon)
+	ConsoleWrite("GUICtrlRead($Rad_DestGPS_LatLon) = " & GUICtrlRead($Rad_DestGPS_LatLon) & ' - GUICtrlRead($Rad_DestGPS_BrngDist) = ' & GUICtrlRead($Rad_DestGPS_BrngDist) & @CRLF)
+	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
+		$DestLat = _Format_GPS_All_to_DMM($WPLat, "N", "S")
+		$DestLon = _Format_GPS_All_to_DMM($WPLon, "E", "W")
+	ElseIf GUICtrlRead($Rad_DestGPS_BrngDist) = 1 Then
+		$DestLat = _DestLat($StartLat, $WPBrng, $WPDist)
+		$DestLon = _DestLon($StartLat, $StartLon, $DestLat, $WPBrng, $WPDist)
+	Else
+		$DestLat = 'N 0.0000'
+		$DestLon = 'E 0.0000'
+	EndIf
+	ConsoleWrite("$DestLat: " & $DestLat & ' - $DestLon: ' & $DestLon & ' - $StartLat: ' & $StartLat & ' - $StartLon: ' & $StartLon & ' - $WPBrng: ' & $WPBrng & ' - $WPDist: ' & $WPDist & @CRLF)
+	$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
+	$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
+	ConsoleWrite("$DestBrng: " & $DestBrng & ' - $DestDist: ' & $DestDist & @CRLF)
+	$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & $WPName & "' And Notes ='" & $WPNotes & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
+	$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+	$FoundWpMatch = UBound($WpMatchArray) - 1
+	If $FoundWpMatch = 0 Then ;If WP is not found then add it
+		$WPID += 1
+		;Add APs to top of list
+		If $AddDirection = 0 Then
+			$query = "UPDATE WP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
+			_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+			$DBAddPos = 0
+		Else ;Add to bottom
+			$DBAddPos = -1
+		EndIf
+		;Add Into ListView
+		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
+		_ListViewAdd($ListRow, $WPID, $WPName, $WPNotes, $DestLat, $DestLon, $DestBrng, $DestDist)
+		_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist)
+
+		;_CreatMultipleFields($dbfile, "WP", $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(3)|Bearing TEXT(20)|Distance TEXT(20)')
+
+	Else
+		Msgbox(0, "Error", "This waypoint already exists")
+	EndIf
+	_CloseAddWaypointGUI()
+EndFunc
+
+Func _EditWaypointGUI()
+	If $EditWaypoingGuiOpen = 0 Then
+		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
+			$query = "SELECT WPID, ListRow, Name, Notes, Latitude, Longitude, Bearing, Distance FROM WP WHERE ListRow='" & $Selected & "'"
+			$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+			$DB_WPID = $WpMatchArray[1][1]
+			$DB_ListRow = $WpMatchArray[1][2]
+			$DB_Name = $WpMatchArray[1][3]
+			$DB_Notes = $WpMatchArray[1][4]
+			$DB_Latitude = $WpMatchArray[1][5]
+			$DB_Longitude = $WpMatchArray[1][6]
+			$DB_Bearing = $WpMatchArray[1][7]
+			$DB_Distance = $WpMatchArray[1][8]
+			$dWPID = $DB_WPID
+			$dListRow = $DB_ListRow
+			$EditWaypoingGuiOpen = 1
+			$EditWaypoingGui = GUICreate("Edit Waypoint", 360, 199, -1, -1)
+			GUISetBkColor($BackgroundColor)
+			GUICtrlCreateLabel("Name:", 15, 16, 35, 17)
+			$GUI_AddName = GUICtrlCreateInput($DB_Name, 56, 16, 281, 21)
+			GUICtrlCreateLabel("Notes:", 15, 46, 35, 17)
+			$GUI_AddNotes = GUICtrlCreateInput($DB_Notes, 56, 48, 281, 21)
+
+			$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 16, 88, 17, 17)
+			If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
+			GUICtrlCreateLabel("Latitude:", 40, 91, 45, 17)
+			$dLat = GUICtrlCreateInput($DB_Latitude, 85, 88, 81, 21)
+			GUICtrlCreateLabel("Longitude:", 184, 91, 54, 17)
+			$dLon = GUICtrlCreateInput($DB_Longitude, 240, 88, 81, 21)
+			$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 16, 119, 17, 17)
+			If $RadDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
+			GUICtrlCreateLabel("Bearing:", 40, 122, 43, 17)
+			$dBrng = GUICtrlCreateInput($DB_Bearing, 85, 119, 81, 21)
+			GUICtrlCreateLabel("Distance:", 186, 122, 49, 17)
+			$dDist = GUICtrlCreateInput($DB_Distance, 240, 119, 81, 21)
+			$But_AddWapoint = GUICtrlCreateButton("Edit Waypoint", 88, 158, 81, 25, $WS_GROUP)
+			$But_Cancel = GUICtrlCreateButton("Cancel", 189, 158, 81, 25, $WS_GROUP)
+			GUISetState(@SW_SHOW)
+			GUICtrlSetOnEvent($But_AddWapoint, '_EditWaypoint')
+			GUICtrlSetOnEvent($But_Cancel, '_CloseEditWaypointGUI')
+		EndIf
+	EndIf
+EndFunc
+
+Func _CloseEditWaypointGUI()
+	GUIDelete($EditWaypoingGui)
+	$EditWaypoingGuiOpen = 0
+EndFunc
+
+Func _EditWaypoint()
+	$WPWPID = $dWPID
+	$WPListrow = $dListRow
+	$WPName = GUICtrlRead($GUI_AddName)
+	$WPNotes = GUICtrlRead($GUI_AddNotes)
+	$WPBrng = GUICtrlRead($dBrng)
+	$WPDist = GUICtrlRead($dDist)
+	$WPLat = GUICtrlRead($dLat)
+	$WPLon = GUICtrlRead($dLon)
+	
+	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
+		$DestLat = _Format_GPS_All_to_DMM($WPLat, "N", "S")
+		$DestLon = _Format_GPS_All_to_DMM($WPLon, "E", "W")
+	ElseIf GUICtrlRead($Rad_DestGPS_BrngDist) = 1 Then
+		$DestLat = _DestLat($StartLat, $WPBrng, $WPDist)
+		$DestLon = _DestLon($StartLat, $StartLon, $DestLat, $WPBrng, $WPDist)
+	Else
+		$DestLat = 'N 0.0000'
+		$DestLon = 'E 0.0000'
+	EndIf
+	$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
+	$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
+	
+	_ListViewAdd($WPListrow, $WPWPID, $WPName, $WPNotes, $DestLat, $DestLon, $DestBrng, $DestDist)
+	_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPWPID & '|' & $WPListrow & '|' & $WPName & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist)
+	
+	_CloseEditWaypointGUI()
+EndFunc
+
+
+Func _SetDestination()
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
+		$query = "SELECT Latitude, Longitude FROM WP WHERE ListRow='" & $Selected & "'"
+		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+		$DestLat = $WpMatchArray[1][1]
+		$DestLon = $WpMatchArray[1][2]
+		$DestSet = 1
+		GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & $DestLat & '     Longitude: ' & $DestLon)
+	EndIf
+EndFunc   ;==>_SetDestination
+
+
+Func _UpdateDestBrng()
+	$query = "SELECT WPID, ListRow, Latitude, Longitude, Bearing, Distance FROM WP"
+	$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+	$FoundWpMatch = UBound($WpMatchArray) - 1
+	ConsoleWrite("$FoundWpMatch: " & $FoundWpMatch & @CRLF)
+	If $FoundWpMatch <> 0 Then ;If WP was found
+		For $udb = 1 to $FoundWpMatch
+			$DB_WPID = $WpMatchArray[$udb][1]
+			$DB_ListRow = $WpMatchArray[$udb][2]
+			$DB_Latitude = $WpMatchArray[$udb][3]
+			$DB_Longitude = $WpMatchArray[$udb][4]
+			$DB_Bearing = $WpMatchArray[$udb][5]
+			$DB_Distance = $WpMatchArray[$udb][6]
+			ConsoleWrite("$DB_ListRow: " & $DB_ListRow & @CRLF)
+
+			$New_Brng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DB_Latitude, $DB_Longitude))
+			$New_Dist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DB_Latitude, $DB_Longitude))
+
+			If $DB_Bearing <> $New_Brng Then
+				$UpdBrng = $New_Brng
+				$query = "UPDATE WP SET Bearing='" & $New_Brng & "' WHERE WPID='" & $DB_WPID & "'"
+				ConsoleWrite($query & @CRLF)
+				_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+			Else
+				$UpdBrng = ''
+			EndIf
+
+			If $DB_Distance <> $New_Dist Then
+				$UpdDist = $New_Dist
+				$query = "UPDATE WP SET Distance='" & $New_Dist & "' WHERE WPID='" & $DB_WPID & "'"
+				ConsoleWrite($query & @CRLF)
+				_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+			Else
+				$UpdDist = ''
+			EndIf
+			
+			_ListViewAdd($DB_ListRow, '', '', '', '', '', $UpdBrng, $UpdDist)
+		Next
+	EndIf
+EndFunc
+
+
+Func _ListViewAdd($line, $Add_Line = '', $Add_Name = '', $Add_Notes = '', $Add_Latitude = '', $Add_Longitude = '', $Add_Bearing = '', $Add_Distance = '')
+	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Line, $column_Line)
+	If $Add_Name <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Name, $column_Name)
+	If $Add_Notes <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Notes, $column_Notes)
+	If $Add_Latitude <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Latitude, $column_Latitude)
+	If $Add_Longitude <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Longitude, $column_Longitude)
+	If $Add_Bearing <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Bearing, $column_Bearing)
+	If $Add_Distance <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Distance, $column_Distance)
+EndFunc   ;==>_ListViewAdd
+
+Func _SetUpDbTables($dbfile)
+	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetUpDbTables()') ;#Debug Display
+	_CreateDB($dbfile)
+	_AccessConnectConn($dbfile, $DB_OBJ)
+	_CreateTable($dbfile, 'GPS', $DB_OBJ)
+	_CreateTable($dbfile, 'WP', $DB_OBJ)
+	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($dbfile, 'WP', $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(255)|Bearing TEXT(255)|Distance TEXT(255)')
+EndFunc   ;==>_SetUpDbTables
+
+Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
+	Local $mon, $d, $y, $h, $m, $s, $ms
+	$DateSplit = StringSplit($Date, '-')
+	$TimeSplit = StringSplit($time, ':')
+	If $DateSplit[0] = 3 And $TimeSplit[0] = 3 Then
+		If StringInStr($TimeSplit[3], '.') Then
+			$SecMsSplit = StringSplit($TimeSplit[3], '.')
+			$s = $SecMsSplit[1]
+			$ms = $SecMsSplit[2]
+		Else
+			$s = $TimeSplit[3]
+			$ms = '000'
+		EndIf
+		$tSystem = _Date_Time_EncodeSystemTime($DateSplit[2], $DateSplit[3], $DateSplit[1], $TimeSplit[1], $TimeSplit[2], $s)
+		If $ConvertToUTC = 1 Then
+			$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
+		Else
+			$rTime = _Date_Time_SystemTimeToTzSpecificLocalTime(DllStructGetPtr($tSystem))
+		EndIf
+		$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
+		$dts2 = StringSplit($dts1[1], '/')
+		$dts3 = StringSplit($dts1[2], ':')
+		$mon = $dts2[1]
+		$d = $dts2[2]
+		$y = $dts2[3]
+		$h = $dts3[1]
+		$m = $dts3[2]
+		$s = $dts3[3]
+		Return ($y & '-' & $mon & '-' & $d & ' ' & $h & ':' & $m & ':' & $s & '.' & $ms)
+	Else
+		Return ('0000-00-00 00:00:00.000')
+	EndIf
+EndFunc   ;==>_DateTimeUtcConvert
+
+Func _DateTimeLocalFormat($DateTimeString)
+	$dta = StringSplit($DateTimeString, ' ')
+	$ds = _DateLocalFormat($dta[1])
+	Return ($ds & ' ' & $dta[2])
+EndFunc   ;==>_DateTimeLocalFormat
+
+Func _DateLocalFormat($DateString)
+	If StringInStr($DateString, '/') Then
+		$da = StringSplit($DateString, '/')
+		$y = $da[1]
+		$m = $da[2]
+		$d = $da[3]
+		Return (StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y))
+	ElseIf StringInStr($DateString, '-') Then
+		$da = StringSplit($DateString, '-')
+		$y = $da[1]
+		$m = $da[2]
+		$d = $da[3]
+		Return (StringReplace(StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y), '/', '-'))
+	EndIf
+EndFunc   ;==>_DateLocalFormat
+
+Func _GpsFormat($gps);Converts ddmm.mmmm to the users set gps format
+	If $GpsFormat = 1 Then $return = _Format_GPS_DMM_to_DDD($gps)
+	If $GpsFormat = 2 Then $return = _Format_GPS_DMM_to_DMS($gps)
+	If $GpsFormat = 3 Then $return = $gps
+	Return ($return)
+EndFunc   ;==>_GpsFormat
 
 Func _Exit()
+	_ExitMysticache()
+EndFunc
+
+Func _ExitSaveDB()
+	_ExitMysticache(1)
+EndFunc   ;==>_Exit
+
+Func _ExitMysticache($SaveDB=0)
+	GUISetState(@SW_HIDE, $MysticacheGUI)
+	_AccessCloseConn($DB_OBJ)
 	_SaveSettings()
-	Exit
+	If $SaveDB <> 1 Then FileDelete($MysticacheDB)
+	If $UseGPS = 1 Then ;If GPS is active, stop it so the COM port does not stay open
+		_TurnOffGPS()
+		Exit
+	Else
+		Exit
+	EndIf
 EndFunc   ;==>_Exit
 
 Func _GetCurrentGps()
-	GUICtrlSetData($cLat, StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', ''))
-	GUICtrlSetData($cLon, StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', ''))
-EndFunc
-
-Func _SetDestination()
-	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
-		$DestLat = GUICtrlRead($dLat)
-		$DestLon = GUICtrlRead($dLon)
-	ElseIf GUICtrlRead($Rad_DestGPS_BrngDist) = 1 Then
-		$DestLat = _DestLat($StartLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
-		$DestLon = _DestLon($StartLat, $StartLon, $DestLat, GUICtrlRead($dBrng), GUICtrlRead($dDist))
-	Else
-		$DestLat = '0.0000000'
-		$DestLon = '0.0000000'
-	EndIf
-	GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & StringFormat('%0.7f', $DestLat) & '     Longitude: ' & StringFormat('%0.7f',$DestLon))
-	$DestSet = 1
-EndFunc   ;==>_SetDestination
+	;GUICtrlSetData($cLat, StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', ''))
+	;GUICtrlSetData($cLon, StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', ''))
+EndFunc   ;==>_GetCurrentGps
 
 Func _WinMoved();Checks if window has moved. Returns 1 if it has
 	$a = WinGetPos($MysticacheGUI)
@@ -285,7 +851,6 @@ Func _WinMoved();Checks if window has moved. Returns 1 if it has
 EndFunc   ;==>_WinMoved
 
 Func _SaveSettings()
-	_SetGpsType()
 
 	IniWrite($settings, 'WindowPositions', 'State', $State)
 	IniWrite($settings, 'WindowPositions', 'Position', $Position)
@@ -296,36 +861,27 @@ Func _SaveSettings()
 	IniWrite($settings, 'Colors', 'ControlBackgroundColor', $ControlBackgroundColor)
 	IniWrite($settings, 'Colors', 'TextColor', $TextColor)
 
-	IniWrite($settings, 'GpsSettings', 'ComPort', GUICtrlRead($CommPort))
-	IniWrite($settings, 'GpsSettings', 'Baud', GUICtrlRead($CommBaud))
-	IniWrite($settings, 'GpsSettings', 'Parity', GUICtrlRead($CommParity))
-	IniWrite($settings, 'GpsSettings', 'DataBit', GUICtrlRead($CommDataBit))
-	IniWrite($settings, 'GpsSettings', 'StopBit', GUICtrlRead($CommBit))
+	IniWrite($settings, 'GpsSettings', 'ComPort', $ComPort)
+	IniWrite($settings, 'GpsSettings', 'Baud', $BAUD)
+	IniWrite($settings, 'GpsSettings', 'Parity', $PARITY)
+	IniWrite($settings, 'GpsSettings', 'DataBit', $DATABIT)
+	IniWrite($settings, 'GpsSettings', 'StopBit', $STOPBIT)
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
 	IniWrite($settings, 'GpsSettings', 'GpsType', $GpsType)
+	IniWrite($settings, 'GpsSettings', 'GpsFormat', $GpsFormat)
 
 	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_CurrentPos', GUICtrlRead($Rad_StartGPS_CurrentPos))
 	IniWrite($settings, 'StartGPS', 'Rad_StartGPS_LatLon', GUICtrlRead($Rad_StartGPS_LatLon))
 	IniWrite($settings, 'StartGPS', 'cLat', GUICtrlRead($cLat))
 	IniWrite($settings, 'StartGPS', 'cLon', GUICtrlRead($cLon))
 
-	IniWrite($settings, 'DestGPS', 'Rad_DestGPS_LatLon', GUICtrlRead($Rad_DestGPS_LatLon))
-	IniWrite($settings, 'DestGPS', 'Rad_DestGPS_BrngDist', GUICtrlRead($Rad_DestGPS_BrngDist))
-	IniWrite($settings, 'DestGPS', 'dLat', GUICtrlRead($dLat))
-	IniWrite($settings, 'DestGPS', 'dLon', GUICtrlRead($dLon))
-	IniWrite($settings, 'DestGPS', 'dBrng', GUICtrlRead($dBrng))
-	IniWrite($settings, 'DestGPS', 'dDist', GUICtrlRead($dDist))
-EndFunc
-
-Func _SetGpsType()
-	If GUICtrlRead($Interface) = "CommMG" Then
-		$GpsType = 0
-	ElseIf GUICtrlRead($Interface) = "Netcomm OCX" Then
-		$GpsType = 1
-	Else
-		$GpsType = 2
-	EndIf
-EndFunc
+	;IniWrite($settings, 'DestGPS', 'Rad_DestGPS_LatLon', GUICtrlRead($Rad_DestGPS_LatLon))
+	;IniWrite($settings, 'DestGPS', 'Rad_DestGPS_BrngDist', GUICtrlRead($Rad_DestGPS_BrngDist))
+	;IniWrite($settings, 'DestGPS', 'dLat', GUICtrlRead($dLat))
+	;IniWrite($settings, 'DestGPS', 'dLon', GUICtrlRead($dLon))
+	;IniWrite($settings, 'DestGPS', 'dBrng', GUICtrlRead($dBrng))
+	;IniWrite($settings, 'DestGPS', 'dDist', GUICtrlRead($dDist))
+EndFunc   ;==>_SaveSettings
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS FUNCTIONS
@@ -335,18 +891,16 @@ Func _GpsToggle();Turns GPS on or off
 	If $UseGPS = 1 Then
 		$TurnOffGPS = 1
 	Else
-		_SetGpsType()
-
-		$openport = _OpenComPort(GUICtrlRead($CommPort), GUICtrlRead($CommBaud), GUICtrlRead($CommParity), GUICtrlRead($CommDataBit), GUICtrlRead($CommBit));Open The GPS COM port
+		$openport = _OpenComPort($ComPort, $BAUD, $PARITY, $DATABIT, $STOPBIT);Open The GPS COM port
 		If $openport = 1 Then
 			$UseGPS = 1
 			GUICtrlSetData($But_UseGPS, "Stop GPS")
 			$GPGGA_Update = TimerInit()
 			$GPRMC_Update = TimerInit()
-			GUICtrlSetData($Lab_GpsInfo, "Succesfully Opened GPS")
+			;GUICtrlSetData($Lab_GpsInfo, "Succesfully Opened GPS")
 		Else
 			$UseGPS = 0
-			GUICtrlSetData($Lab_GpsInfo, "Error Opening GPS")
+			;GUICtrlSetData($Lab_GpsInfo, "Error Opening GPS")
 			SoundPlay($SoundDir & $ErrorFlag_sound, 0)
 		EndIf
 	EndIf
@@ -370,12 +924,14 @@ Func _TurnOffGPS();Turns off GPS, resets variable\
 	$SpeedInMPH = '0'
 	$SpeedInKmH = '0'
 	$TrackAngle = '0'
-	_CloseComPort(GUICtrlRead($CommPort)) ;Close The GPS COM port
+
+	_CloseComPort($ComPort) ;Close The GPS COM port
 	GUICtrlSetData($But_UseGPS, "Use GPS")
-	GUICtrlSetData($Lab_GpsInfo, "")
+	;GUICtrlSetData($Lab_GpsInfo, "")
 EndFunc   ;==>_TurnOffGPS
 
 Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = '8', $sStopBit = '1', $sFlow = '0');Open specified COM port
+	;ConsoleWrite($GpsType & @CRLF)
 	If $GpsType = 0 Then
 		If $sPARITY = 'O' Then ;Odd
 			$iPar = '1'
@@ -576,7 +1132,7 @@ Func _GetGPS(); Recieves data from gps device
 EndFunc   ;==>_GetGPS
 
 Func _GPGGA($data);Strips data from a gps $GPGGA data string
-	GUICtrlSetData($Lab_GpsInfo, $data)
+	;GUICtrlSetData($Lab_GpsInfo, $data)
 	If _CheckGpsChecksum($data) = 1 Then
 		$GPGGA_Split = StringSplit($data, ",");
 		If $GPGGA_Split[0] >= 14 Then
@@ -597,7 +1153,7 @@ Func _GPGGA($data);Strips data from a gps $GPGGA data string
 EndFunc   ;==>_GPGGA
 
 Func _GPRMC($data);Strips data from a gps $GPRMC data string
-	GUICtrlSetData($Lab_GpsInfo, $data)
+	;GUICtrlSetData($Lab_GpsInfo, $data)
 	If _CheckGpsChecksum($data) = 1 Then
 		$GPRMC_Split = StringSplit($data, ",")
 		If $GPRMC_Split[0] >= 11 Then
@@ -642,6 +1198,24 @@ Func _CheckGpsChecksum($checkdata);Checks if GPS Data Checksum is correct. Retur
 	EndIf
 EndFunc   ;==>_CheckGpsChecksum
 
+Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
+	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM_to_DMS()') ;#Debug Display
+	$return = '0° 0' & Chr(39) & ' 0"'
+	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	If $splitlatlon1[0] = 2 Then
+		$splitlatlon2 = StringSplit($splitlatlon1[2], ".")
+		If $splitlatlon2[0] = 2 Then
+			$DD = StringTrimRight($splitlatlon2[1], 2)
+			$MM = StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2)
+			$SS = StringFormat('%0.4f', (('.' & $splitlatlon2[2]) * 60)); multiply remaining minutes by 60 to get ss
+			$return = $splitlatlon1[1] & ' ' & $DD & '° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd° mm' ss"N)
+		Else
+			$return = $splitlatlon1[1] & ' 0° 0' & Chr(39) & ' 0"'
+		EndIf
+	EndIf
+	Return ($return)
+EndFunc   ;==>_Format_GPS_DMM_to_DMS
+
 Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
 	$return = '0.0000000'
 	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
@@ -653,6 +1227,37 @@ Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddd
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DDD
+
+Func _Format_GPS_All_to_DMM($gps, $PosChr, $NegChr);converts dd.ddddddd, 'dd° mm' ss", or ddmm.mmmm to ddmm.mmmm
+	If StringInStr($gps, '-') Or StringInStr($gps, $NegChr) Then
+		$gDir = $NegChr
+	Else
+		$gDir = $PosChr
+	EndIf
+	$gps = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($gps, " ", ""), "-", ""), "+", ""), $PosChr, ""), $NegChr, "")
+	$splitlatlon2 = StringSplit($gps, ".")
+	;ConsoleWrite('$splitlatlon2[0]: ' & $splitlatlon2[0] & '-' & $splitlatlon2[1] & '-' & $splitlatlon2[2] & @CRLF)
+	If $splitlatlon2[0] = 1 Then
+		$DDSplit = StringSplit($gps, "°")
+		If $DDSplit[0] = 2 Then
+			$DD = $DDSplit[1] * 100
+			$MMSplit = StringSplit($DDSplit[2], "'")
+			If $MMSplit[0] = 2 Then
+				$MM = $MMSplit[1] + (StringReplace($MMSplit[2], '"', '') / 60)
+				$return = $gDir & ' ' & StringFormat('%0.4f', $DD + $MM)
+			EndIf
+		EndIf
+	ElseIf $splitlatlon2[0] = 2 Then
+		If StringLen($splitlatlon2[2]) = 4 Then ;ddmm.mmmm to ddmm.mmmm
+			$return = $gDir & ' ' & StringFormat('%0.4f', $gps)
+		Else; dd.dddd to ddmm.mmmm
+			$DD = $splitlatlon2[1] * 100
+			$MM = ('.' & $splitlatlon2[2]) * 60 ;multiply remaining decimal by 60 to get mm.mmmm
+			$return = $gDir & ' ' & StringFormat('%0.4f', $DD + $MM);Format data properly (ex. N ddmm.mmmm)
+		EndIf
+	EndIf
+	Return ($return)
+EndFunc   ;==>_Format_GPS_All_to_DMM
 
 Func _FormatGpsTime($time)
 	$time = StringTrimRight($time, 4)
@@ -677,38 +1282,110 @@ EndFunc   ;==>_FormatGpsDate
 
 Func _DistanceBetweenPoints($Lat1, $Lon1, $Lat2, $Lon2)
 	Local $EarthRadius = 6378137 ;meters
-	$Lat1 = _deg2rad($Lat1)
-	$Lon1 = _deg2rad($Lon1)
-	$Lat2 = _deg2rad($Lat2)
-	$Lon2 = _deg2rad($Lon2)
+	$Lat1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat1), " ", ""), "N", ""), "S", "-"))
+	$Lon1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lon1), " ", ""), "E", ""), "W", "-"))
+	$Lat2 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat2), " ", ""), "N", ""), "S", "-"))
+	$Lon2 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lon2), " ", ""), "E", ""), "W", "-"))
 	Return (ACos(Sin($Lat1) * Sin($Lat2) + Cos($Lat1) * Cos($Lat2) * Cos($Lon2 - $Lon1)) * $EarthRadius);Return distance in meters
 EndFunc   ;==>_DistanceBetweenPoints
 
 Func _BearingBetweenPoints($Lat1, $Lon1, $Lat2, $Lon2)
-	$Lat1 = _deg2rad($Lat1)
-	$Lon1 = _deg2rad($Lon1)
-	$Lat2 = _deg2rad($Lat2)
-	$Lon2 = _deg2rad($Lon2)
-	$bDegrees = _rad2deg(_ATan2(Cos($Lat1) * Sin($Lat2) - Sin($Lat1) * Cos($Lat2) * Cos($Lon2 - $Lon1), Sin($Lon2 - $Lon1) * Cos($Lat2)))
+	$Lat1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat1), " ", ""), "N", ""), "S", "-"))
+	$Lon1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lon1), " ", ""), "E", ""), "W", "-"))
+	$Lat2 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat2), " ", ""), "N", ""), "S", "-"))
+	$Lon2 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lon2), " ", ""), "E", ""), "W", "-"))
+	$bDegrees = _rad2deg(_ATan2(Cos($Lat1) * Sin($Lat2) - Sin($Lat1) * Cos($Lat2) * Cos($Lon2 - $Lon1), Sin($Lon2 - $Lon1) * Cos($Lat2)));Return Bearing in degrees
 	If $bDegrees < 0 Then $bDegrees += 360
 	Return ($bDegrees);Return bearing in degrees
 EndFunc   ;==>_BearingBetweenPoints
 
 Func _DestLat($Lat1, $Brng1, $Dist1)
 	Local $EarthRadius = 6378137 ;meters
-	$Lat1 = _deg2rad($Lat1)
+	$Lat1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat1), " ", ""), "N", ""), "S", "-"))
 	$Brng1 = _deg2rad($Brng1)
-	Return (StringFormat('%0.7f', _rad2deg(ASin(Sin($Lat1) * Cos($Dist1 / $EarthRadius) + Cos($Lat1) * Sin($Dist1 / $EarthRadius) * Cos($Brng1)))));Return destination decimal latitude
+	Return (_Format_GPS_All_to_DMM(_rad2deg(ASin(Sin($Lat1) * Cos($Dist1 / $EarthRadius) + Cos($Lat1) * Sin($Dist1 / $EarthRadius) * Cos($Brng1))), "N", "S"));Return destination dmm latitude
 EndFunc   ;==>_DestLat
 
 Func _DestLon($Lat1, $Lon1, $Lat2, $Brng1, $Dist1)
 	Local $EarthRadius = 6378137 ;meters
-	$Lat1 = _deg2rad($Lat1)
-	$Lon1 = _deg2rad($Lon1)
-	$Lat2 = _deg2rad($Lat2)
+	$Lat1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat1), " ", ""), "N", ""), "S", "-"))
+	$Lon1 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lon1), " ", ""), "E", ""), "W", "-"))
+	$Lat2 = _deg2rad(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Lat2), " ", ""), "N", ""), "S", "-"))
 	$Brng1 = _deg2rad($Brng1)
-	Return (StringFormat('%0.7f', _rad2deg($Lon1 + _ATan2(Cos($Dist1 / $EarthRadius) - Sin($Lat1) * Sin($Lat2), Sin($Brng1) * Sin($Dist1 / $EarthRadius) * Cos($Lat1)))));Return destination decimal longitude
+	Return (_Format_GPS_All_to_DMM(_rad2deg($Lon1 + _ATan2(Cos($Dist1 / $EarthRadius) - Sin($Lat1) * Sin($Lat2), Sin($Brng1) * Sin($Dist1 / $EarthRadius) * Cos($Lat1))), "E", "W"));Return destination dmm longitude
 EndFunc   ;==>_DestLon
+
+Func _GPSOptions()
+	;GPS Settings
+	$CloseGpsGUI = 0
+	Opt("GUIOnEventMode", 0) ; Turn Off OnEvent mode
+	$GpsOptions = GUICreate("GPS Settings", 420, 115, -1, -1)
+	GUISetBkColor($BackgroundColor)
+	GUICtrlCreateLabel("Com Port:", 15, 20, 50, 17)
+	$CommPort = GUICtrlCreateCombo("1", 65, 15, 80, 25)
+	GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20", $ComPort)
+	GUICtrlCreateLabel("Baud:", 150, 20, 50, 17)
+	$CommBaud = GUICtrlCreateCombo("4800", 185, 15, 80, 25)
+	GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
+	GUICtrlCreateLabel("Interface:", 270, 20, 50, 17)
+	If $GpsType = 0 Then
+		$DefGpsInt = "CommMG"
+	ElseIf $GpsType = 1 Then
+		$DefGpsInt = "Netcomm OCX"
+	Else
+		$DefGpsInt = "Kernel32"
+	EndIf
+	$Interface = GUICtrlCreateCombo("Kernel32", 325, 15, 80, 25)
+	GUICtrlSetData(-1, "CommMG|Netcomm OCX", $DefGpsInt)
+	GUICtrlCreateLabel("Stop Bit:", 16, 52, 50, 17)
+	$CommBit = GUICtrlCreateCombo("1", 65, 47, 80, 25)
+	GUICtrlSetData(-1, "1.5|2", $STOPBIT)
+	GUICtrlCreateLabel("Parity:", 150, 52, 50, 17)
+	If $PARITY = 'E' Then
+		$l_PARITY = 'Even'
+	ElseIf $PARITY = 'M' Then
+		$l_PARITY = 'Mark'
+	ElseIf $PARITY = 'O' Then
+		$l_PARITY = 'Odd'
+	ElseIf $PARITY = 'S' Then
+		$l_PARITY = 'Space'
+	Else
+		$l_PARITY = 'None'
+	EndIf
+	$CommParity = GUICtrlCreateCombo("None", 185, 47, 80, 25)
+	GUICtrlSetData(-1, 'Even|Mark|Odd|Space', $l_PARITY)
+	GUICtrlCreateLabel("Data Bit:", 270, 52, 50, 17)
+	$CommDataBit = GUICtrlCreateCombo("4", 325, 47, 80, 25)
+	GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
+	$GPS_OK = GUICtrlCreateButton("Ok", 100, 80, 81, 25, 0)
+	$GPS_Cancel = GUICtrlCreateButton("Cancel", 240, 80, 81, 25, 0)
+	GUISetState(@SW_SHOW)
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE
+				ExitLoop
+			Case $GPS_Cancel
+				ExitLoop
+			Case $GPS_OK
+				$ComPort = GUICtrlRead($CommPort)
+				$BAUD = GUICtrlRead($CommBaud)
+				$PARITY = GUICtrlRead($CommParity)
+				$DATABIT = GUICtrlRead($CommDataBit)
+				$STOPBIT = GUICtrlRead($CommBit)
+				If GUICtrlRead($Interface) = "CommMG" Then
+					$GpsType = 0
+				ElseIf GUICtrlRead($Interface) = "Netcomm OCX" Then
+					$GpsType = 1
+				Else
+					$GpsType = 2
+				EndIf
+				ExitLoop
+		EndSwitch
+	WEnd
+	Opt("GUIOnEventMode", 1) ; Change to OnEvent mode
+	GUIDelete($GpsOptions)
+EndFunc   ;==>_GPSOptions
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS DETAILS GUI FUNCTIONS
@@ -884,113 +1561,81 @@ Func _CloseCompassGui();closes the compass window
 EndFunc   ;==>_CloseCompassGui
 
 Func _SetCompassSizes();Takes the size of a hidden label in the compass window and determines the Width/Height of the compass
-	$a = ControlGetPos("", "", $CompassBack)
-	If Not @error Then
-		$compasspos = $a[0] & $a[1] & $a[2] & $a[3]
-		If $a[2] > $a[3] Then
-			Dim $CompassHeight = $a[3] - 30
-		Else
-			Dim $CompassHeight = $a[2] - 30
+	If $CompassOpen = 1 Then
+		;Check Compass Window Position
+		If WinActive($CompassGUI) Then
+			$c = WinGetPos($CompassGUI)
+			If $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] <> $CompassPosition Then $CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] ;If the $CompassGUI has moved or resized, set $CompassPosition to current window size
 		EndIf
+		;Get sizes
+		$a = ControlGetPos("", "", $CompassBack)
+		If Not @error Then
+			$compasspos = $a[0] & $a[1] & $a[2] & $a[3]
+			If $a[2] > $a[3] Then
+				Dim $CompassHeight = $a[3] - 30
+			Else
+				Dim $CompassHeight = $a[2] - 30
+			EndIf
+		EndIf
+		$CompassMidWidth = 10 + ($CompassHeight / 2)
+		$CompassMidHeight = 10 + ($CompassHeight / 2)
+		GUICtrlSetPos($north, $CompassMidWidth, 0, 15, 15)
+		GUICtrlSetPos($south, $CompassMidWidth, $CompassHeight + 15, 15, 15)
+		GUICtrlSetPos($east, $CompassHeight + 15, $CompassMidHeight, 15, 15)
+		GUICtrlSetPos($west, 0, $CompassMidHeight, 15, 15)
+
+		_GDIPlus_GraphicsDispose($CompassGraphic)
+		_GDIPlus_Shutdown()
+		_GDIPlus_Startup()
+
+		$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
+		$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
+		$hBrush = _GDIPlus_BrushCreateSolid($CompassColor)
+		_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, $CompassHeight, $CompassHeight, $hBrush)
 	EndIf
-	$CompassMidWidth = 10 + ($CompassHeight / 2)
-	$CompassMidHeight = 10 + ($CompassHeight / 2)
-	GUICtrlSetPos($north, $CompassMidWidth, 0, 15, 15)
-	GUICtrlSetPos($south, $CompassMidWidth, $CompassHeight + 15, 15, 15)
-	GUICtrlSetPos($east, $CompassHeight + 15, $CompassMidHeight, 15, 15)
-	GUICtrlSetPos($west, 0, $CompassMidHeight, 15, 15)
-
-	_GDIPlus_GraphicsDispose($CompassGraphic)
-	_GDIPlus_Shutdown()
-	_GDIPlus_Startup()
-
-	$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
-	$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
-	$hBrush = _GDIPlus_BrushCreateSolid($CompassColor) ;red
-	_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, $CompassHeight, $CompassHeight, $hBrush)
 EndFunc   ;==>_SetCompassSizes
 
-Func _DrawCompassLine($Degree,$Degree2='-1');, $Degree2);Draws compass in GPS Details GUI
+Func _DrawCompassLine($Degree, $LineColorARGB = "0xFF000000");, $Degree2);Draws compass in GPS Details GUI
 	If $CompassOpen = 1 Then
-		_SetCompassSizes()
 		$Radius = ($CompassHeight / 2) - 1
 		$CenterX = ($CompassHeight / 2) + 15
 		$CenterY = ($CompassHeight / 2) + 15
-
-		;Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y) for $Degree
-		If $Degree = 0 Or $Degree = 360 Then
-			$CircleX = $CenterX
-			$CircleY = $CenterY - $Radius
-		ElseIf $Degree > 0 And $Degree < 90 Then
-			$Radians = $Degree * 0.0174532925
-			$CircleX = $CenterX + (Sin($Radians) * $Radius)
-			$CircleY = $CenterY - (Cos($Radians) * $Radius)
-		ElseIf $Degree = 90 Then
-			$CircleX = $CenterX + $Radius
-			$CircleY = $CenterY
-		ElseIf $Degree > 90 And $Degree < 180 Then
-			$TmpDegree = $Degree - 90
-			$Radians = $TmpDegree * 0.0174532925
-			$CircleX = $CenterX + (Cos($Radians) * $Radius)
-			$CircleY = $CenterY + (Sin($Radians) * $Radius)
-		ElseIf $Degree = 180 Then
-			$CircleX = $CenterX
-			$CircleY = $CenterY + $Radius
-		ElseIf $Degree > 180 And $Degree < 270 Then
-			$TmpDegree = $Degree - 180
-			$Radians = $TmpDegree * 0.0174532925
-			$CircleX = $CenterX - (Sin($Radians) * $Radius)
-			$CircleY = $CenterY + (Cos($Radians) * $Radius)
-		ElseIf $Degree = 270 Then
-			$CircleX = $CenterX - $Radius
-			$CircleY = $CenterY
-		ElseIf $Degree > 270 And $Degree < 360 Then
-			$TmpDegree = $Degree - 270
-			$Radians = $TmpDegree * 0.0174532925
-			$CircleX = $CenterX - (Cos($Radians) * $Radius)
-			$CircleY = $CenterY - (Sin($Radians) * $Radius)
-		EndIf
-		;Draw $Degree Line
-		$pen = _GDIPlus_PenCreate("0xFFFF3333")
-		_GDIPlus_GraphicsDrawLine($CompassGraphic, $CenterX, $CenterY, $CircleX, $CircleY, $pen)
-		_GDIPlus_PenDispose($pen)
-
-		If $Degree2 <> '-1' Then
-			;Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y) for $Degree2
-			If $Degree2 = 0 Or $Degree2 = 360 Then
+		If $Degree >= 0 And $Degree <= 360 Then ;Only Draw line if valid degree value was given
+			;Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y) for $Degree
+			If $Degree = 0 Or $Degree = 360 Then
 				$CircleX = $CenterX
 				$CircleY = $CenterY - $Radius
-			ElseIf $Degree2 > 0 And $Degree2 < 90 Then
-				$Radians = $Degree2 * 0.0174532925
+			ElseIf $Degree > 0 And $Degree < 90 Then
+				$Radians = $Degree * 0.0174532925
 				$CircleX = $CenterX + (Sin($Radians) * $Radius)
 				$CircleY = $CenterY - (Cos($Radians) * $Radius)
-			ElseIf $Degree2 = 90 Then
+			ElseIf $Degree = 90 Then
 				$CircleX = $CenterX + $Radius
 				$CircleY = $CenterY
-			ElseIf $Degree2 > 90 And $Degree2 < 180 Then
-				$TmpDegree = $Degree2 - 90
+			ElseIf $Degree > 90 And $Degree < 180 Then
+				$TmpDegree = $Degree - 90
 				$Radians = $TmpDegree * 0.0174532925
 				$CircleX = $CenterX + (Cos($Radians) * $Radius)
 				$CircleY = $CenterY + (Sin($Radians) * $Radius)
-			ElseIf $Degree2 = 180 Then
+			ElseIf $Degree = 180 Then
 				$CircleX = $CenterX
 				$CircleY = $CenterY + $Radius
-			ElseIf $Degree2 > 180 And $Degree2 < 270 Then
-				$TmpDegree = $Degree2 - 180
+			ElseIf $Degree > 180 And $Degree < 270 Then
+				$TmpDegree = $Degree - 180
 				$Radians = $TmpDegree * 0.0174532925
 				$CircleX = $CenterX - (Sin($Radians) * $Radius)
 				$CircleY = $CenterY + (Cos($Radians) * $Radius)
-			ElseIf $Degree2 = 270 Then
+			ElseIf $Degree = 270 Then
 				$CircleX = $CenterX - $Radius
 				$CircleY = $CenterY
-			ElseIf $Degree2 > 270 And $Degree2 < 360 Then
-				$TmpDegree = $Degree2 - 270
+			ElseIf $Degree > 270 And $Degree < 360 Then
+				$TmpDegree = $Degree - 270
 				$Radians = $TmpDegree * 0.0174532925
 				$CircleX = $CenterX - (Cos($Radians) * $Radius)
 				$CircleY = $CenterY - (Sin($Radians) * $Radius)
 			EndIf
 			;Draw $Degree Line
-			$pen = _GDIPlus_PenCreate("0xFF000000")
+			$pen = _GDIPlus_PenCreate($LineColorARGB, 2)
 			_GDIPlus_GraphicsDrawLine($CompassGraphic, $CenterX, $CenterY, $CircleX, $CircleY, $pen)
 			_GDIPlus_PenDispose($pen)
 		EndIf
@@ -998,6 +1643,13 @@ Func _DrawCompassLine($Degree,$Degree2='-1');, $Degree2);Draws compass in GPS De
 	EndIf
 EndFunc   ;==>_DrawCompassLine
 
+Func _DrawCompassCircle($Percent, $LineColorARGB = "0xFF000000");, $Degree2);Draws compass in GPS Details GUI
+	$Radius = ($CompassHeight / 2) - 1
+	$pen = _GDIPlus_PenCreate($LineColorARGB, 2)
+	;ConsoleWrite(15 + ($Radius * ($Percent * .01)) & '-' & $Radius & '-' & $Percent & @CRLF)
+	_GDIPlus_GraphicsDrawEllipse($CompassGraphic, 15 + ($Radius * ($Percent * .01)), 15 + ($Radius * ($Percent * .01)), $CompassHeight - (2 * ($Radius * ($Percent * .01))), $CompassHeight - (2 * ($Radius * ($Percent * .01))), $pen)
+	_GDIPlus_PenDispose($pen)
+EndFunc   ;==>_DrawCompassCircle
 ;---------------------------------------------------------------------------------------
 ;Math Functions
 ;---------------------------------------------------------------------------------------
@@ -1026,3 +1678,56 @@ Func _ATan2($x, $y) ;ATan2 function, since autoit only has ATan
 		SetError(1)
 	EndIf
 EndFunc   ;==>_ATan2
+
+Func _SetControlSizes();Sets control positions in GUI based on the windows current size
+	$a = WinGetPos($MysticacheGUI)
+	WinMove($DataChild, "", 0, 60, $a[2] - 10, $a[3] - 115)
+	$b = WinGetPos($DataChild) ;get child window size
+	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
+	If $sizes <> $sizes_old Then
+		$ListviewAPs_left = ($b[2] * 0.01)
+		$ListviewAPs_width = ($b[2] * 0.99) - $ListviewAPs_left
+		$ListviewAPs_top = ($b[3] * 0.01)
+		$ListviewAPs_height = ($b[3] * 0.99) - $ListviewAPs_top
+
+		;ConsoleWrite($ListviewAPs_left & '-' & $ListviewAPs_width & '-' & $ListviewAPs_top & '-' & $ListviewAPs_height & @CRLF)
+
+		GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+		GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+	EndIf
+	$sizes_old = $sizes
+EndFunc   ;==>_SetControlSizes
+
+Func _SortColumnToggle(); Sets the ap list column header that was clicked
+	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SortColumnToggle()') ;#Debug Display
+	$SortColumn = GUICtrlGetState($ListviewAPs)
+EndFunc   ;==>_SortColumnToggle
+
+Func _SetListviewWidths()
+	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetListviewWidths()') ;#Debug Display
+	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
+
+	#comments-start
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Active - 0, $column_Width_Active - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_SSID - 0, $column_Width_SSID - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BSSID - 0, $column_Width_BSSID - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_MANUF - 0, $column_Width_MANUF - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Signal - 0, $column_Width_Signal - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Authentication - 0, $column_Width_Authentication - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Encryption - 0, $column_Width_Encryption - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_RadioType - 0, $column_Width_RadioType - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Channel - 0, $column_Width_Channel - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Latitude - 0, $column_Width_Latitude - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Longitude - 0, $column_Width_Longitude - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0, $column_Width_LatitudeDMS - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0, $column_Width_LongitudeDMS - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0, $column_Width_LatitudeDMM - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0, $column_Width_LongitudeDMM - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0, $column_Width_BasicTransferRates - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0, $column_Width_OtherTransferRates - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_FirstActive - 0, $column_Width_FirstActive - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LastActive - 0, $column_Width_LastActive - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_NetworkType - 0, $column_Width_NetworkType - 0)
+		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Label - 0, $column_Width_Label - 0)
+	#comments-end
+EndFunc   ;==>_SetListviewWidths
