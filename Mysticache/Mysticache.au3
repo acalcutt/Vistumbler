@@ -4,9 +4,9 @@ Opt("GUIOnEventMode", 1);Change to OnEvent mode
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v2.0 Alpha 1'
+$version = 'v2.0 Alpha 3'
 $Script_Start_Date = '2009/10/22'
-$last_modified = '2009/10/30'
+$last_modified = '2009/11/07'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <Date.au3>
@@ -19,6 +19,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include "UDFs\cfxUDF.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\FileInUse.au3"
+#include "UDFs\_XMLDomWrapper.au3"
 ;Get Date/Time-------------------------------------------
 $dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ')
 $datestamp = $dt[1]
@@ -39,6 +40,8 @@ Dim $CompassOpen = 0
 Dim $GpsDetailsOpen = 0
 Dim $DestSet = 0
 Dim $Debug = 0
+Dim	$Close = 0
+Dim	$SaveDbOnExit = 0
 Dim $RefreshLoopTime = 500
 Dim $ErrorFlag_sound = 'error.wav'
 Dim $GpsDetailsGUI
@@ -69,7 +72,7 @@ Dim $SpeedInKmH = '0'
 Dim $TrackAngle = '0'
 
 Dim $AddWaypoingGuiOpen = 0
-Dim $AddWaypoingGui, $Rad_DestGPS_LatLon, $Rad_DestGPS_BrngDist, $GUI_AddName, $GUI_AddNotes, $dLat, $dLon, $dBrng, $dDist, $dWPID, $dListRow
+Dim $AddWaypoingGui, $Rad_DestGPS_LatLon, $Rad_DestGPS_BrngDist, $GUI_AddName, $GUI_AddGCID, $GUI_AddNotes, $dLat, $dLon, $dBrng, $dDist, $dWPID, $dListRow
 Dim $EditWaypoingGui, $EditWaypoingGuiOpen
 
 Dim $winpos_old, $winpos, $sizes, $sizes_old
@@ -134,6 +137,24 @@ If FileExists($DefaultLanguagePath) = 0 Then
 	$DefaultLanguageFile = 'English.ini'
 	$DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
 EndIf
+
+Dim $column_Name_Line = IniRead($settings, 'Column_Names', 'Column_Line', "#")
+Dim $column_Name_Name = IniRead($settings, 'Column_Names', 'Column_Name', "Name")
+Dim $column_Name_GCID = IniRead($settings, 'Column_Names', 'Column_GCID', "GC #")
+Dim $column_Name_Notes = IniRead($settings, 'Column_Names', 'Column_Notes', "Notes")
+Dim $column_Name_Latitude = IniRead($settings, 'Column_Names', 'Column_Latitude', "Latitude")
+Dim $column_Name_Longitude = IniRead($settings, 'Column_Names', 'Column_Longitude', "Longitude")
+Dim $column_Name_Bearing = IniRead($settings, 'Column_Names', 'Column_Bearing', "Bearing")
+Dim $column_Name_Distance = IniRead($settings, 'Column_Names', 'Column_Distance', "Distance")
+
+Dim $column_Width_Line = IniRead($settings, 'Column_Width', 'Column_Line', 35)
+Dim $column_Width_Name = IniRead($settings, 'Column_Width', 'Column_Name', 200)
+Dim $column_Width_GCID = IniRead($settings, 'Column_Width', 'Column_GCID', 75)
+Dim $column_Width_Notes = IniRead($settings, 'Column_Width', 'Column_Notes', 250)
+Dim $column_Width_Latitude = IniRead($settings, 'Column_Width', 'Column_Latitude', 100)
+Dim $column_Width_Longitude = IniRead($settings, 'Column_Width', 'Column_Longitude', 100)
+Dim $column_Width_Bearing = IniRead($settings, 'Column_Width', 'Column_Bearing', 100)
+Dim $column_Width_Distance = IniRead($settings, 'Column_Width', 'Column_Distance', 100)
 
 Dim $Text_File = IniRead($DefaultLanguagePath, 'GuiText', 'File', '&File')
 Dim $Text_SaveAsTXT = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsTXT', 'Save As TXT')
@@ -268,24 +289,52 @@ Else
 	_SetUpDbTables($MysticacheDB)
 EndIf
 
-Dim $column_Line = 0
-Dim $column_Name = 1
-Dim $column_Notes = 2
-Dim $column_Latitude = 3
-Dim $column_Longitude = 4
-Dim $column_Bearing = 5
-Dim $column_Distance = 6
-
-$var = IniReadSection($settings, "Columns")
+Dim $UseDefaultHeaders = 0
+Dim $headers
+$cnames = IniReadSection($settings, "Column_Names")
 If @error Then
-	$headers = '#|Name|Notes|Latitude|Longitude|Bearing|Distance'
+	$UseDefaultHeaders = 1
 Else
-	For $a = 0 To ($var[0][0] - 1)
-		For $b = 1 To $var[0][0]
-			If $a = $var[$b][1] Then $headers &= IniRead($DefaultLanguagePath, 'Column_Names', $var[$b][0], IniRead($settings, 'Column_Names', $var[$b][0], '')) & '|'
+	$var = IniReadSection($settings, "Columns")
+	If @error Then
+		$UseDefaultHeaders = 2
+	Else
+		Dim $column_Line = IniRead($settings, 'Columns', 'Column_Line', 0)
+		Dim $column_Name = IniRead($settings, 'Columns', 'Column_Name', 1)
+		Dim $column_GCID = IniRead($settings, 'Columns', 'Column_GCID', 2)
+		Dim $column_Notes = IniRead($settings, 'Columns', 'Column_Notes', 3)
+		Dim $column_Latitude = IniRead($settings, 'Columns', 'Column_Latitude', 4)
+		Dim $column_Longitude = IniRead($settings, 'Columns', 'Column_Longitude', 5)
+		Dim $column_Bearing = IniRead($settings, 'Columns', 'Column_Bearing', 6)
+		Dim $column_Distance = IniRead($settings, 'Columns', 'Column_Distance', 7)
+		For $a = 0 To ($var[0][0] - 1)
+			If $a <> 0 Then $headers &= '|'
+			For $b = 1 To $var[0][0]
+				If $a = $var[$b][1] Then
+					$headers &= IniRead($settings, 'Column_Names', $var[$b][0], '')
+					ExitLoop
+				EndIf
+			Next
 		Next
-	Next
+	EndIf
 EndIf
+
+If $UseDefaultHeaders <> 0 Then
+	Dim $column_Line = 0
+	Dim $column_Name = 1
+	Dim $column_GCID = 2
+	Dim $column_Notes = 3
+	Dim $column_Latitude = 4
+	Dim $column_Longitude = 5
+	Dim $column_Bearing = 6
+	Dim $column_Distance = 7
+
+	$headers = '#|Name|GC #|Notes|Latitude|Longitude|Bearing|Distance'
+EndIf
+
+ConsoleWrite($column_Line & ' - ' & $column_Name & ' - ' & $column_GCID & ' - ' & $column_Notes & ' - ' & $column_Latitude & ' - ' & $column_Longitude & ' - ' & $column_Bearing & ' - ' & $column_Distance & @CRLF)
+ConsoleWrite("$UseDefaultHeaders: " & $UseDefaultHeaders & @CRLF)
+ConsoleWrite("$headers: " & $headers & @CRLF)
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GUI
@@ -312,6 +361,7 @@ $file = GUICtrlCreateMenu($Text_File)
 ;$SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
 ;$ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
 ;$ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
+$ImportFromGPX = GUICtrlCreateMenuItem("Import GPX", $file)
 ;$ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
 ;$ImportFolder = GUICtrlCreateMenuItem($Text_ImportFolder, $file)
 $ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
@@ -388,6 +438,7 @@ GUISetState(@SW_SHOW)
 
 GUISwitch($MysticacheGUI)
 _SetControlSizes()
+_SetListviewWidths()
 GUISetState(@SW_SHOW)
 
 ;Button-Events-------------------------------------------
@@ -406,6 +457,7 @@ GUICtrlSetOnEvent($SetDestButton, '_SetDestination')
 ;GUICtrlSetOnEvent($SaveAsTXT, '_ExportData')
 ;GUICtrlSetOnEvent($SaveAsDetailedTXT, '_ExportDetailedData')
 ;GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
+GUICtrlSetOnEvent($ImportFromGPX, '_ImportGPX')
 ;GUICtrlSetOnEvent($ImportFromVSZ, '_ImportVSZ')
 ;GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
 ;GUICtrlSetOnEvent($ImportFolder, '_LoadFolder')
@@ -427,7 +479,7 @@ GUICtrlSetOnEvent($ExitMysticache, '_Exit')
 GUICtrlSetOnEvent($SetGPS, '_GPSOptions')
 ;Extra
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
-GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI') 
+GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
 ;Other
 GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 
@@ -457,29 +509,30 @@ While 1
 	;Compass Window and Drawing
 	$DestBrng = _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
 	$DestDist = _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon)
-	ConsoleWrite($StartLat & '-' & $StartLon & '-' & $DestLat & '-' & $DestLon & @CRLF)
-	ConsoleWrite($DestBrng & @CRLF)
+	;ConsoleWrite($StartLat & '-' & $StartLon & '-' & $DestLat & '-' & $DestLon & @CRLF)
+	;ConsoleWrite($DestBrng & @CRLF)
 	_SetCompassSizes()
 	If $UseGPS = 1 And GUICtrlRead($Rad_StartGPS_CurrentPos) = 1 Then
-		_DrawCompassLine($DestBrng, "0xFFFF3333")
-		_DrawCompassLine($TrackAngle, "0xFF000000")
-	Else
 		If $DestSet = 1 Then _DrawCompassLine($DestBrng, "0xFFFF3333")
+		_DrawCompassLine($TrackAngle, "0xFF000000")
 	EndIf
 
-	$RoundedDestDist = Round($DestDist)
-	If $RoundedDestDist <= 25 Then
-		_DrawCompassCircle(90, "0xFF228b22")
-	ElseIf $RoundedDestDist <= 50 Then
-		_DrawCompassCircle(75, "0xFFadff2f")
-	ElseIf $RoundedDestDist <= 100 Then
-		_DrawCompassCircle(60, "0xFFffff00")
-	ElseIf $RoundedDestDist <= 200 Then
-		_DrawCompassCircle(45, "0xFFdaa520")
-	ElseIf $RoundedDestDist <= 400 Then
-		_DrawCompassCircle(30, "0xFFff4500")
-	ElseIf $RoundedDestDist <= 600 Then
-		_DrawCompassCircle(15, "0xFFff0000")
+	If $DestSet = 1 Then
+		_DrawCompassLine($DestBrng, "0xFFFF3333")
+		$RoundedDestDist = Round($DestDist)
+		If $RoundedDestDist <= 25 Then
+			_DrawCompassCircle(90, "0xFF228b22")
+		ElseIf $RoundedDestDist <= 50 Then
+			_DrawCompassCircle(75, "0xFFadff2f")
+		ElseIf $RoundedDestDist <= 100 Then
+			_DrawCompassCircle(60, "0xFFffff00")
+		ElseIf $RoundedDestDist <= 200 Then
+			_DrawCompassCircle(45, "0xFFdaa520")
+		ElseIf $RoundedDestDist <= 400 Then
+			_DrawCompassCircle(30, "0xFFff4500")
+		ElseIf $RoundedDestDist <= 600 Then
+			_DrawCompassCircle(15, "0xFFff0000")
+		EndIf
 	EndIf
 	;Check Mysticache Window Position
 	_WinMoved()
@@ -499,34 +552,133 @@ While 1
 	EndIf
 
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
+	If $Close = 1 Then _ExitMysticache($SaveDbOnExit) ;If the close flag has been set, exit visumbler
 	Sleep($RefreshLoopTime)
 
+
 WEnd
+
+Func _ImportGPX()
+	$GPXfile = FileOpenDialog("Import from GPX", '', "GPS eXchange Format" & ' (*.GPX)', 1)
+	$result = _XMLFileOpen($GPXfile)
+	$path = "/*[1]"
+    $WptArray = _XMLGetChildNodes($path)
+    If IsArray($WptArray) Then
+        ;ConsoleWrite("!" & $indent & "Path: " & $path & @CRLF) ;Output indexed path in red
+        For $X = 1 to $WptArray[0]
+			Local $ImpLat, $ImpLon, $ImpGCID, $ImpNotes, $ImpName
+			Local $aKeys[1], $aValues[1] ;Arrays used for attributes
+            ;ConsoleWrite($indent & "[" & $X & "]: Element: " & $WptArray[$X]) ;Output tag name
+			If $WptArray[$X] = "wpt" Then
+				ConsoleWrite("! -------------------------------------------------------------------------------------------> wpt" & @CRLF)
+				_XMLGetAllAttrib($path & "/*[" & $X & "]",$aKeys, $aValues) ;Retrieve all attributes
+				If NOT @ERROR Then
+					For $Y = 0 to Ubound($aKeys)-1
+						;ConsoleWrite($aKeys[$Y] & "=" & $aValues[$Y] & ", ") ;Output all attributes
+						If $aKeys[$Y] = "lat" Then $ImpLat = $aValues[$Y]
+						If $aKeys[$Y] = "lon" Then $ImpLon = $aValues[$Y]
+						_XMLGetAllAttrib($path & "/*[" & $X & "]",$aKeys, $aValues) ;Retrieve all attributes
+					Next
+				EndIf
+				ConsoleWrite($path & "/*[" & $X & "]" & @CRLF)
+				$WptDataPath = $path & "/*[" & $X & "]"
+				$WptDataArray = _XMLGetChildNodes($WptDataPath)
+				If IsArray($WptDataArray) Then
+
+					For $X1 = 1  to $WptDataArray[0]
+						$WptFieldPath = $WptDataPath & "/*[" & $X1 & "]"
+						$WptFieldValueArray = _XMLGetValue ($WptDataPath & "/*[" & $X1 & "]")
+						If IsArray($WptFieldValueArray) Then
+							If $WptDataArray[$X1] = "name" Then $ImpGCID = $WptFieldValueArray[1]
+							If $WptDataArray[$X1] = "desc" Then $ImpNotes = $WptFieldValueArray[1]
+							If $WptDataArray[$X1] = "urlname" Then $ImpName = $WptFieldValueArray[1]
+						EndIf
+					Next
+				EndIf
+				ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpGCID & " - " & $ImpNotes & " - " & $ImpName & @CRLF)
+
+				$WPName = $ImpName
+				$WPGCID = $ImpGCID
+				$WPNotes = $ImpNotes
+				$DestLat = _Format_GPS_All_to_DMM(StringFormat('%0.7f', $ImpLat), "N", "S")
+				$DestLon = _Format_GPS_All_to_DMM(StringFormat('%0.7f', $ImpLon), "E", "W")
+				$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
+				$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
+
+				$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPName, "'", "''") & "' And GCID = '" & StringReplace($WPGCID, "'", "''") & "' And Notes ='" & StringReplace($WPNotes, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
+				$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+				$FoundWpMatch = UBound($WpMatchArray) - 1
+				If $FoundWpMatch = 0 Then ;If WP is not found then add it
+					$WPID += 1
+					;Add APs to top of list
+					If $AddDirection = 0 Then
+						$query = "UPDATE WP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
+						_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+						$DBAddPos = 0
+					Else ;Add to bottom
+						$DBAddPos = -1
+					EndIf
+					;Add Into ListView
+					$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
+					_ListViewAdd($ListRow, $WPID, $WPName, $WPGCID, $WPNotes, $DestLat, $DestLon, $DestBrng, $DestDist)
+					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPGCID & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist)
+				EndIf
+
+			EndIf
+        Next
+
+    EndIf
+EndFunc
+
+Func _SetListviewWidths()
+	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Line - 0, $column_Width_Line - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Name - 0, $column_Width_Name - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_GCID - 0, $column_Width_GCID - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Notes - 0, $column_Width_Notes - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Latitude - 0, $column_Width_Latitude - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Longitude - 0, $column_Width_Longitude - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Bearing - 0, $column_Width_Bearing - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Distance - 0, $column_Width_Distance - 0)
+EndFunc   ;==>_SetListviewWidths
+
+Func _GetListviewWidths()
+	$column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0)
+	$column_Width_Name = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Name - 0)
+	$column_Width_GCID = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_GCID - 0)
+	$column_Width_Notes = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Notes - 0)
+	$column_Width_Latitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0)
+	$column_Width_Longitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0)
+	$column_Width_Bearing = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Bearing - 0)
+	$column_Width_Distance = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Distance - 0)
+EndFunc   ;==>_GetListviewWidths
 
 Func _AddWaypointGUI()
 	If $AddWaypoingGuiOpen = 0 Then
 		$AddWaypoingGuiOpen = 1
-		$AddWaypoingGui = GUICreate("Add Waypoint", 360, 199, -1, -1)
+		$AddWaypoingGui = GUICreate("Add Waypoint", 360, 230, -1, -1)
 		GUISetBkColor($BackgroundColor)
 		GUICtrlCreateLabel("Name:", 15, 16, 35, 17)
 		$GUI_AddName = GUICtrlCreateInput("", 56, 16, 281, 21)
-		GUICtrlCreateLabel("Notes:", 15, 46, 35, 17)
-		$GUI_AddNotes = GUICtrlCreateInput("", 56, 48, 281, 21)
+		GUICtrlCreateLabel("GC #:", 15, 46, 35, 17)
+		$GUI_AddGCID = GUICtrlCreateInput("", 56, 48, 281, 21)
+		GUICtrlCreateLabel("Notes:", 15, 76, 35, 17)
+		$GUI_AddNotes = GUICtrlCreateInput("", 56, 78, 281, 21)
 
-		$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 16, 88, 17, 17)
+		$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 16, 118, 17, 17)
 		If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
-		GUICtrlCreateLabel("Latitude:", 40, 91, 45, 17)
-		$dLat = GUICtrlCreateInput("", 85, 88, 81, 21)
-		GUICtrlCreateLabel("Longitude:", 184, 91, 54, 17)
-		$dLon = GUICtrlCreateInput("", 240, 88, 81, 21)
-		$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 16, 119, 17, 17)
+		GUICtrlCreateLabel("Latitude:", 40, 121, 45, 17)
+		$dLat = GUICtrlCreateInput("", 85, 118, 81, 21)
+		GUICtrlCreateLabel("Longitude:", 184, 121, 54, 17)
+		$dLon = GUICtrlCreateInput("", 240, 118, 81, 21)
+		$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 16, 149, 17, 17)
 		If $RadDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
-		GUICtrlCreateLabel("Bearing:", 40, 122, 43, 17)
-		$dBrng = GUICtrlCreateInput("", 85, 119, 81, 21)
-		GUICtrlCreateLabel("Distance:", 186, 122, 49, 17)
-		$dDist = GUICtrlCreateInput("", 240, 119, 81, 21)
-		$But_AddWapoint = GUICtrlCreateButton("Add Waypoint", 88, 158, 81, 25, $WS_GROUP)
-		$But_Cancel = GUICtrlCreateButton("Cancel", 189, 158, 81, 25, $WS_GROUP)
+		GUICtrlCreateLabel("Bearing:", 40, 152, 43, 17)
+		$dBrng = GUICtrlCreateInput("", 85, 149, 81, 21)
+		GUICtrlCreateLabel("Distance:", 186, 152, 49, 17)
+		$dDist = GUICtrlCreateInput("", 240, 149, 81, 21)
+		$But_AddWapoint = GUICtrlCreateButton("Add Waypoint", 88, 188, 81, 25, $WS_GROUP)
+		$But_Cancel = GUICtrlCreateButton("Cancel", 189, 188, 81, 25, $WS_GROUP)
 		GUISetState(@SW_SHOW)
 		GUICtrlSetOnEvent($But_AddWapoint, '_AddWaypoint')
 		GUICtrlSetOnEvent($But_Cancel, '_CloseAddWaypointGUI')
@@ -540,6 +692,7 @@ EndFunc
 
 Func _AddWaypoint()
 	$WPName = GUICtrlRead($GUI_AddName)
+	$WPGCID = GUICtrlRead($GUI_AddGCID)
 	$WPNotes = GUICtrlRead($GUI_AddNotes)
 	$WPBrng = GUICtrlRead($dBrng)
 	$WPDist = GUICtrlRead($dDist)
@@ -575,8 +728,8 @@ Func _AddWaypoint()
 		EndIf
 		;Add Into ListView
 		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
-		_ListViewAdd($ListRow, $WPID, $WPName, $WPNotes, $DestLat, $DestLon, $DestBrng, $DestDist)
-		_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist)
+		_ListViewAdd($ListRow, $WPID, $WPName, $WPGCID, $WPNotes, $DestLat, $DestLon, $DestBrng, $DestDist)
+		_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPGCID & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist)
 
 		;_CreatMultipleFields($dbfile, "WP", $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(3)|Bearing TEXT(20)|Distance TEXT(20)')
 
@@ -590,40 +743,43 @@ Func _EditWaypointGUI()
 	If $EditWaypoingGuiOpen = 0 Then
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
-			$query = "SELECT WPID, ListRow, Name, Notes, Latitude, Longitude, Bearing, Distance FROM WP WHERE ListRow='" & $Selected & "'"
+			$query = "SELECT WPID, ListRow, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance FROM WP WHERE ListRow='" & $Selected & "'"
 			$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 			$DB_WPID = $WpMatchArray[1][1]
 			$DB_ListRow = $WpMatchArray[1][2]
 			$DB_Name = $WpMatchArray[1][3]
-			$DB_Notes = $WpMatchArray[1][4]
-			$DB_Latitude = $WpMatchArray[1][5]
-			$DB_Longitude = $WpMatchArray[1][6]
-			$DB_Bearing = $WpMatchArray[1][7]
-			$DB_Distance = $WpMatchArray[1][8]
+			$DB_GCID = $WpMatchArray[1][4]
+			$DB_Notes = $WpMatchArray[1][5]
+			$DB_Latitude = $WpMatchArray[1][6]
+			$DB_Longitude = $WpMatchArray[1][7]
+			$DB_Bearing = $WpMatchArray[1][8]
+			$DB_Distance = $WpMatchArray[1][9]
 			$dWPID = $DB_WPID
 			$dListRow = $DB_ListRow
 			$EditWaypoingGuiOpen = 1
-			$EditWaypoingGui = GUICreate("Edit Waypoint", 360, 199, -1, -1)
+			$EditWaypoingGui = GUICreate("Edit Waypoint", 360, 230, -1, -1)
 			GUISetBkColor($BackgroundColor)
 			GUICtrlCreateLabel("Name:", 15, 16, 35, 17)
 			$GUI_AddName = GUICtrlCreateInput($DB_Name, 56, 16, 281, 21)
-			GUICtrlCreateLabel("Notes:", 15, 46, 35, 17)
-			$GUI_AddNotes = GUICtrlCreateInput($DB_Notes, 56, 48, 281, 21)
+			GUICtrlCreateLabel("GC #:", 15, 46, 35, 17)
+			$GUI_AddGCID = GUICtrlCreateInput($DB_GCID, 56, 48, 281, 21)
+			GUICtrlCreateLabel("Notes:", 15, 76, 35, 17)
+			$GUI_AddNotes = GUICtrlCreateInput($DB_Notes, 56, 78, 281, 21)
 
-			$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 16, 88, 17, 17)
+			$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 16, 118, 17, 17)
 			If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
-			GUICtrlCreateLabel("Latitude:", 40, 91, 45, 17)
-			$dLat = GUICtrlCreateInput($DB_Latitude, 85, 88, 81, 21)
-			GUICtrlCreateLabel("Longitude:", 184, 91, 54, 17)
-			$dLon = GUICtrlCreateInput($DB_Longitude, 240, 88, 81, 21)
-			$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 16, 119, 17, 17)
+			GUICtrlCreateLabel("Latitude:", 40, 121, 45, 17)
+			$dLat = GUICtrlCreateInput($DB_Latitude, 85, 118, 81, 21)
+			GUICtrlCreateLabel("Longitude:", 184, 121, 54, 17)
+			$dLon = GUICtrlCreateInput($DB_Longitude, 240, 118, 81, 21)
+			$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 16, 149, 17, 17)
 			If $RadDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
-			GUICtrlCreateLabel("Bearing:", 40, 122, 43, 17)
-			$dBrng = GUICtrlCreateInput($DB_Bearing, 85, 119, 81, 21)
-			GUICtrlCreateLabel("Distance:", 186, 122, 49, 17)
-			$dDist = GUICtrlCreateInput($DB_Distance, 240, 119, 81, 21)
-			$But_AddWapoint = GUICtrlCreateButton("Edit Waypoint", 88, 158, 81, 25, $WS_GROUP)
-			$But_Cancel = GUICtrlCreateButton("Cancel", 189, 158, 81, 25, $WS_GROUP)
+			GUICtrlCreateLabel("Bearing:", 40, 152, 43, 17)
+			$dBrng = GUICtrlCreateInput($DB_Bearing, 85, 149, 81, 21)
+			GUICtrlCreateLabel("Distance:", 186, 152, 49, 17)
+			$dDist = GUICtrlCreateInput($DB_Distance, 240, 149, 81, 21)
+			$But_AddWapoint = GUICtrlCreateButton("Edit Waypoint", 88, 188, 81, 25, $WS_GROUP)
+			$But_Cancel = GUICtrlCreateButton("Cancel", 189, 188, 81, 25, $WS_GROUP)
 			GUISetState(@SW_SHOW)
 			GUICtrlSetOnEvent($But_AddWapoint, '_EditWaypoint')
 			GUICtrlSetOnEvent($But_Cancel, '_CloseEditWaypointGUI')
@@ -640,12 +796,13 @@ Func _EditWaypoint()
 	$WPWPID = $dWPID
 	$WPListrow = $dListRow
 	$WPName = GUICtrlRead($GUI_AddName)
+	$WPGCID = GUICtrlRead($GUI_AddGCID)
 	$WPNotes = GUICtrlRead($GUI_AddNotes)
 	$WPBrng = GUICtrlRead($dBrng)
 	$WPDist = GUICtrlRead($dDist)
 	$WPLat = GUICtrlRead($dLat)
 	$WPLon = GUICtrlRead($dLon)
-	
+
 	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 Then
 		$DestLat = _Format_GPS_All_to_DMM($WPLat, "N", "S")
 		$DestLon = _Format_GPS_All_to_DMM($WPLon, "E", "W")
@@ -658,10 +815,12 @@ Func _EditWaypoint()
 	EndIf
 	$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 	$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
-	
-	_ListViewAdd($WPListrow, $WPWPID, $WPName, $WPNotes, $DestLat, $DestLon, $DestBrng, $DestDist)
-	_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPWPID & '|' & $WPListrow & '|' & $WPName & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist)
-	
+
+	_ListViewAdd($WPListrow, $WPWPID, $WPName, $WPGCID, $WPNotes, $DestLat, $DestLon, $DestBrng, $DestDist)
+
+	$query = "UPDATE WP SET Name='" & $WPName & "', GCID='" & $WPGCID & "', Notes='" & $WPNotes & "', Latitude='" & $DestLat & "', Longitude='" & $DestLon & "', Bearing='" & $DestBrng & "', Distance='" & $DestDist & "' WHERE WPID='" & $WPWPID & "'"
+	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+
 	_CloseEditWaypointGUI()
 EndFunc
 
@@ -714,16 +873,17 @@ Func _UpdateDestBrng()
 			Else
 				$UpdDist = ''
 			EndIf
-			
-			_ListViewAdd($DB_ListRow, '', '', '', '', '', $UpdBrng, $UpdDist)
+
+			_ListViewAdd($DB_ListRow, '','', '', '', '', '', $UpdBrng, $UpdDist)
 		Next
 	EndIf
 EndFunc
 
 
-Func _ListViewAdd($line, $Add_Line = '', $Add_Name = '', $Add_Notes = '', $Add_Latitude = '', $Add_Longitude = '', $Add_Bearing = '', $Add_Distance = '')
+Func _ListViewAdd($line, $Add_Line = '', $Add_Name = '', $Add_GCID = '', $Add_Notes = '', $Add_Latitude = '', $Add_Longitude = '', $Add_Bearing = '', $Add_Distance = '')
 	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Line, $column_Line)
 	If $Add_Name <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Name, $column_Name)
+	If $Add_GCID <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_GCID, $column_GCID)
 	If $Add_Notes <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Notes, $column_Notes)
 	If $Add_Latitude <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Latitude, $column_Latitude)
 	If $Add_Longitude <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Longitude, $column_Longitude)
@@ -738,7 +898,7 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'GPS', $DB_OBJ)
 	_CreateTable($dbfile, 'WP', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'WP', $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(255)|Bearing TEXT(255)|Distance TEXT(255)')
+	_CreatMultipleFields($dbfile, 'WP', $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|GCID TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(255)|Bearing TEXT(255)|Distance TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
 Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
@@ -805,15 +965,16 @@ Func _GpsFormat($gps);Converts ddmm.mmmm to the users set gps format
 EndFunc   ;==>_GpsFormat
 
 Func _Exit()
-	_ExitMysticache()
+	$Close = 1
+	$SaveDbOnExit = 0
 EndFunc
 
 Func _ExitSaveDB()
-	_ExitMysticache(1)
+	$Close = 1
+	$SaveDbOnExit = 1
 EndFunc   ;==>_Exit
 
 Func _ExitMysticache($SaveDB=0)
-	GUISetState(@SW_HIDE, $MysticacheGUI)
 	_AccessCloseConn($DB_OBJ)
 	_SaveSettings()
 	If $SaveDB <> 1 Then FileDelete($MysticacheDB)
@@ -851,6 +1012,48 @@ Func _WinMoved();Checks if window has moved. Returns 1 if it has
 EndFunc   ;==>_WinMoved
 
 Func _SaveSettings()
+
+	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
+	;_ArrayDisplay($currentcolumn)
+	For $c = 1 To $currentcolumn[0]
+		;ConsoleWrite($column_Notes & @CRLF)
+		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
+		If $column_Name = $currentcolumn[$c] Then $save_column_Name = $c - 1
+		If $column_GCID = $currentcolumn[$c] Then $save_column_GCID = $c - 1
+		If $column_Notes = $currentcolumn[$c] Then $save_column_Notes = $c - 1
+		If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
+		If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
+		If $column_Bearing = $currentcolumn[$c] Then $save_column_Bearing = $c - 1
+		If $column_Distance = $currentcolumn[$c] Then $save_column_Distance = $c - 1
+	Next
+
+	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
+	IniWrite($settings, "Columns", "Column_Name", $save_column_Name)
+	IniWrite($settings, "Columns", "Column_GCID", $save_column_GCID)
+	IniWrite($settings, "Columns", "Column_Notes", $save_column_Notes)
+	IniWrite($settings, "Columns", "Column_Latitude", $save_column_Latitude)
+	IniWrite($settings, "Columns", "Column_Longitude", $save_column_Longitude)
+	IniWrite($settings, "Columns", "Column_Bearing", $save_column_Bearing)
+	IniWrite($settings, "Columns", "Column_Distance", $save_column_Distance)
+
+	_GetListviewWidths()
+	IniWrite($settings, "Column_Width", "Column_Line", $column_Width_Line)
+	IniWrite($settings, "Column_Width", "Column_Name", $column_Width_Name)
+	IniWrite($settings, "Column_Width", "Column_GCID", $column_Width_GCID)
+	IniWrite($settings, "Column_Width", "Column_Notes", $column_Width_Notes)
+	IniWrite($settings, "Column_Width", "Column_Latitude", $column_Width_Latitude)
+	IniWrite($settings, "Column_Width", "Column_Longitude", $column_Width_Longitude)
+	IniWrite($settings, "Column_Width", "Column_Bearing", $column_Width_Bearing)
+	IniWrite($settings, "Column_Width", "Column_Distance", $column_Width_Distance)
+
+	IniWrite($settings, "Column_Names", "Column_Line", $column_Name_Line)
+	IniWrite($settings, "Column_Names", "Column_Name", $column_Name_Name)
+	IniWrite($settings, "Column_Names", "Column_GCID", $column_Name_GCID)
+	IniWrite($settings, "Column_Names", "Column_Notes", $column_Name_Notes)
+	IniWrite($settings, "Column_Names", "Column_Latitude", $column_Name_Latitude)
+	IniWrite($settings, "Column_Names", "Column_Longitude", $column_Name_Longitude)
+	IniWrite($settings, "Column_Names", "Column_Bearing", $column_Name_Bearing)
+	IniWrite($settings, "Column_Names", "Column_Distance", $column_Name_Distance)
 
 	IniWrite($settings, 'WindowPositions', 'State', $State)
 	IniWrite($settings, 'WindowPositions', 'Position', $Position)
@@ -1703,31 +1906,3 @@ Func _SortColumnToggle(); Sets the ap list column header that was clicked
 	$SortColumn = GUICtrlGetState($ListviewAPs)
 EndFunc   ;==>_SortColumnToggle
 
-Func _SetListviewWidths()
-	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetListviewWidths()') ;#Debug Display
-	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
-
-	#comments-start
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Active - 0, $column_Width_Active - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_SSID - 0, $column_Width_SSID - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BSSID - 0, $column_Width_BSSID - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_MANUF - 0, $column_Width_MANUF - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Signal - 0, $column_Width_Signal - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Authentication - 0, $column_Width_Authentication - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Encryption - 0, $column_Width_Encryption - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_RadioType - 0, $column_Width_RadioType - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Channel - 0, $column_Width_Channel - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Latitude - 0, $column_Width_Latitude - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Longitude - 0, $column_Width_Longitude - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0, $column_Width_LatitudeDMS - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0, $column_Width_LongitudeDMS - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0, $column_Width_LatitudeDMM - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0, $column_Width_LongitudeDMM - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0, $column_Width_BasicTransferRates - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0, $column_Width_OtherTransferRates - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_FirstActive - 0, $column_Width_FirstActive - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_LastActive - 0, $column_Width_LastActive - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_NetworkType - 0, $column_Width_NetworkType - 0)
-		_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Label - 0, $column_Width_Label - 0)
-	#comments-end
-EndFunc   ;==>_SetListviewWidths
