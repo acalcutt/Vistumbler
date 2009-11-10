@@ -412,6 +412,7 @@ $ExportToKML = GUICtrlCreateMenuItem("All Waypoints", $ExportKmlMenu)
 $Extra = GUICtrlCreateMenu("Extra")
 $GpsDetails = GUICtrlCreateMenuItem("Gps Details", $Extra)
 $GpsCompass = GUICtrlCreateMenuItem("Compass", $Extra)
+$OpenSaveFolder = GUICtrlCreateMenuItem("Open Save Folder", $Extra)
 
 $DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $MysticacheGUI)
 GUISetBkColor($BackgroundColor)
@@ -504,6 +505,7 @@ GUICtrlSetOnEvent($SetGPS, '_GPSOptions')
 ;Extra
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
 GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
+GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
 ;Other
 GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 
@@ -519,6 +521,12 @@ $UpdatedWpListData = 0
 $UpdatedCompass = 0
 $begin = TimerInit() ;Start $begin timer, used to measure loop time
 While 1
+	;Set TimeStamps (UTC Values)
+	$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ') ;UTC Time
+	$datestamp = $dt[1]
+	$timestamp = $dt[2]
+	$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC ;Local Time
+
 	If $UseGPS = 1 And $UpdatedGPS = 0 Then
 		$GetGpsSuccess = _GetGPS();Scan for GPS if GPS enabled
 		If $GetGpsSuccess = 1 And $SaveGpsHistory = 1 Then
@@ -2228,7 +2236,7 @@ Func _SaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	If $MapGpsWpts = 1 Then
 		$file &= '<Style id="Waypoint">' & @CRLF _
 				 & '<IconStyle>' & @CRLF _
-				 & '<scale>.5</scale>' & @CRLF _
+				 & '<scale>.7</scale>' & @CRLF _
 				 & '<Icon>' & @CRLF _
 				 & '<href>' & $ImageDir & 'waypoint.png</href>' & @CRLF _
 				 & '</Icon>' & @CRLF _
@@ -2252,14 +2260,14 @@ Func _SaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 					 & '<name>Waypoints</name>' & @CRLF
 			For $exp = 1 To $FoundWpMatch
 				$ExpWPID = $WpMatchArray[$exp][1]
-				$ExpName = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][2], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
-				$ExpGPID = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][3], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
-				$ExpNotes = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][4], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+				$ExpName = _KmlSanitize($WpMatchArray[$exp][2])
+				$ExpGPID = _KmlSanitize($WpMatchArray[$exp][3])
+				$ExpNotes = _KmlSanitize($WpMatchArray[$exp][4])
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][5]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][6]), 'W', '-'), 'E', ''), ' ', '')
 				$ExpBrng = $WpMatchArray[$exp][7]
 				$ExpDest = $WpMatchArray[$exp][8]
-				$ExpLink = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][9], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+				$ExpLink = _KmlSanitize($WpMatchArray[$exp][9])
 
 				$file &= '<Placemark>' & @CRLF _
 						 & '<name>' & $ExpName & '</name>' & @CRLF _
@@ -2315,6 +2323,11 @@ Func _SaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 		Return (1)
 	EndIf
 EndFunc   ;==>_AutoSaveKml
+
+Func _KmlSanitize($intext)
+	$return = StringReplace(StringReplace(StringReplace($intext, '&', '&amp;'), '<', '&lt;'), '>', '&gt;')
+	Return($return)
+EndFunc
 
 Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	$FoundApWithGps = 0
@@ -2434,7 +2447,12 @@ Func _SaveLOC($gpx, $MapGpsWpts = 1)
 	Else
 		Return (1)
 	EndIf
-EndFunc   ;==>_SaveGarminGPX
+EndFunc
+
+Func _OpenSaveFolder();Opens save folder in explorer
+	DirCreate($SaveDir)
+	Run('RunDll32.exe url.dll,FileProtocolHandler "' & $SaveDir & '"')
+EndFunc   ;==>_OpenSaveFolder
 ;---------------------------------------------------------------------------------------
 ;Math Functions
 ;---------------------------------------------------------------------------------------
