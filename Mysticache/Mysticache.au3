@@ -4,7 +4,7 @@ Opt("GUIOnEventMode", 1);Change to OnEvent mode
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v2.0 Alpha 5'
+$version = 'v2.0 Alpha 6'
 $Script_Start_Date = '2009/10/22'
 $last_modified = '2009/11/09'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
@@ -42,7 +42,6 @@ Dim $GpsDetailsOpen = 0
 Dim $DestSet = 0
 Dim $Debug = 0
 Dim $Close = 0
-Dim $SaveGpsHistory = 0
 Dim $SaveDbOnExit = 0
 Dim $Recover = 0
 Dim $RefreshLoopTime = 500
@@ -136,9 +135,11 @@ DirCreate($TmpDir)
 DirCreate($LanguageDir)
 DirCreate($SaveDir)
 
-Dim $AddDirection = IniRead($settings, 'Vistumbler', 'NewApPosistion', 0)
-Dim $DefaultLanguage = IniRead($settings, 'Vistumbler', 'Language', 'English')
-Dim $DefaultLanguageFile = IniRead($settings, 'Vistumbler', 'LanguageFile', $DefaultLanguage & '.ini')
+Dim $AddDirection = IniRead($settings, 'Options', 'AddDirection', -1)
+Dim $SaveGpsHistory = IniRead($settings, 'Options', 'SaveGpsHistory', 0)
+
+Dim $DefaultLanguage = IniRead($settings, 'Language', 'Language', 'English')
+Dim $DefaultLanguageFile = IniRead($settings, 'Language', 'LanguageFile', $DefaultLanguage & '.ini')
 Dim $DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
 If FileExists($DefaultLanguagePath) = 0 Then
 	$DefaultLanguage = 'English'
@@ -383,6 +384,7 @@ $Edit = GUICtrlCreateMenu($Text_Edit)
 ;$ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $But_SaveGpsHistory = GUICtrlCreateMenuItem("Save GPS History", $Options)
+If $SaveGpsHistory = 1 Then GUICtrlSetState($But_SaveGpsHistory, $GUI_CHECKED)
 $But_AddWaypointsToTop = GUICtrlCreateMenuItem("Add new waypoints to top of list", $Options)
 If $AddDirection = 0 Then GUICtrlSetState($But_AddWaypointsToTop, $GUI_CHECKED)
 
@@ -392,6 +394,10 @@ $SetGPS = GUICtrlCreateMenuItem("GPS Settings", $SettingsMenu)
 
 
 $Export = GUICtrlCreateMenu($Text_Export)
+$ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
+$ExportToGPX = GUICtrlCreateMenuItem("All Waypoints", $ExportGpxMenu)
+$ExportLocMenu = GUICtrlCreateMenu("Export To LOC", $Export)
+$ExportToLoc = GUICtrlCreateMenuItem("All Waypoints", $ExportLocMenu)
 ;$ExportTXTMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
 ;$ExportToTXT = GUICtrlCreateMenuItem("All Waypoints", $ExportTXTMenu)
 ;$ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
@@ -401,8 +407,7 @@ $ExportToCsv = GUICtrlCreateMenuItem("All Waypoints", $ExportCsvMenu)
 $ExportKmlMenu = GUICtrlCreateMenu($Text_ExportToKML, $Export)
 $ExportToKML = GUICtrlCreateMenuItem("All Waypoints", $ExportKmlMenu)
 ;$CreateApSignalMap = GUICtrlCreateMenuItem("Selected Waypoint", $ExportKmlMenu)
-;$ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
-;$ExportToGPX = GUICtrlCreateMenuItem("All Waypoints", $ExportGpxMenu)
+
 
 $Extra = GUICtrlCreateMenu("Extra")
 $GpsDetails = GUICtrlCreateMenuItem("Gps Details", $Extra)
@@ -416,29 +421,29 @@ GUISetState()
 
 $ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $MysticacheGUI) ; Create Child window for controls
 GUISetBkColor($BackgroundColor)
-$But_UseGPS = GUICtrlCreateButton($Text_UseGPS, 15, 8, 100, 20, 0)
-$AddWpButton = GUICtrlCreateButton("Add Waypoint", 15, 35, 100, 20, 0)
-$EditWpButton = GUICtrlCreateButton("Edit Waypoint", 120, 35, 100, 20, 0)
-$DelWpButton = GUICtrlCreateButton("Delete Waypoint", 230, 35, 100, 20, 0)
-$SetDestButton = GUICtrlCreateButton("Use as Destination", 340, 35, 100, 20, 0)
+$But_UseGPS = GUICtrlCreateButton($Text_UseGPS, 15, 8, 120, 20, 0)
+$AddWpButton = GUICtrlCreateButton("Add Waypoint", 15, 35, 120, 20, 0)
+$EditWpButton = GUICtrlCreateButton("Edit Waypoint", 140, 35, 120, 20, 0)
+$DelWpButton = GUICtrlCreateButton("Delete Waypoint", 265, 35, 120, 20, 0)
+$SetDestButton = GUICtrlCreateButton("Use as Destination", 390, 35, 120, 20, 0)
 
-$Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 450, 0, 405, 60)
-$Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("", 465, 15, 17, 17)
-$Lab_Rad_CurrentPos = GUICtrlCreateLabel("Current GPS Position", 485, 17, 350, 17)
+$Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 520, 0, 440, 60)
+$Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("", 530, 15, 17, 17)
+$Lab_Rad_CurrentPos = GUICtrlCreateLabel("Current GPS Position", 550, 17, 350, 17)
 If $RadStartGpsCurPos = 1 Then GUICtrlSetState($Rad_StartGPS_CurrentPos, $GUI_CHECKED)
-$Rad_StartGPS_LatLon = GUICtrlCreateRadio("", 465, 35, 17, 17)
+$Rad_StartGPS_LatLon = GUICtrlCreateRadio("", 530, 35, 17, 17)
 If $RadStartGpsLatLon = 1 Then GUICtrlSetState($Rad_StartGPS_LatLon, $GUI_CHECKED)
-GUICtrlCreateLabel("Latitude:", 485, 37, 45, 17)
-$cLat = GUICtrlCreateInput($DcLat, 535, 35, 75, 21)
-GUICtrlCreateLabel("Longitude:", 615, 37, 50, 17)
-$cLon = GUICtrlCreateInput($DcLon, 670, 35, 75, 21)
-$But_GetCurrentGps = GUICtrlCreateButton("Get Current GPS", 755, 35, 90, 21, $WS_GROUP)
+GUICtrlCreateLabel("Latitude:", 550, 37, 45, 17)
+$cLat = GUICtrlCreateInput($DcLat, 600, 35, 100, 21)
+GUICtrlCreateLabel("Longitude:", 705, 37, 50, 17)
+$cLon = GUICtrlCreateInput($DcLon, 760, 35, 100, 21)
+$But_GetCurrentGps = GUICtrlCreateButton("Get Current GPS", 865, 35, 90, 21, $WS_GROUP)
 
 ;$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 155, 25, 300, 15)
 ;GUICtrlSetColor(-1, $TextColor)
-$Lab_StartGPS = GUICtrlCreateLabel("", 120, 5, 330, 15)
+$Lab_StartGPS = GUICtrlCreateLabel("", 140, 5, 380, 15)
 GUICtrlSetColor(-1, $TextColor)
-$Lab_DestGPS = GUICtrlCreateLabel("Dest GPS:     Not Set Yet", 120, 20, 330, 15)
+$Lab_DestGPS = GUICtrlCreateLabel("Dest GPS:     Not Set Yet", 140, 20, 380, 15)
 GUICtrlSetColor(-1, $TextColor)
 ;$debugdisplay = GUICtrlCreateLabel('', 765, 10, 200, 15)
 ;GUICtrlSetColor(-1, $TextColor)
@@ -486,12 +491,14 @@ GUICtrlSetOnEvent($But_SaveGpsHistory, '_SaveGpsHistoryToggle')
 GUICtrlSetOnEvent($But_AddWaypointsToTop, '_AddWpPosToggle')
 
 ;Export Menu
+GUICtrlSetOnEvent($ExportToGPX, '_ExportAllToGPX')
+GUICtrlSetOnEvent($ExportToLoc, '_ExportAllToLOC')
 ;GUICtrlSetOnEvent($ExportToTXT, '_ExportData')
 ;GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
 GUICtrlSetOnEvent($ExportToCsv, '_ExportCsvData')
 GUICtrlSetOnEvent($ExportToKML, '_ExportAllToKml')
 ;GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
-;GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
+
 ;Settings Menu
 GUICtrlSetOnEvent($SetGPS, '_GPSOptions')
 ;Extra
@@ -1260,6 +1267,12 @@ EndFunc   ;==>_SetControlSizes
 
 
 Func _SaveSettings()
+
+	IniWrite($settings, "Options", "AddDirection", $AddDirection)
+	IniWrite($settings, "Options", "SaveGpsHistory", $SaveGpsHistory)
+
+	IniWrite($settings, "Language", "Language", $DefaultLanguage)
+	IniWrite($settings, "Language", "LanguageFile", $DefaultLanguageFile)
 
 	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
 	;_ArrayDisplay($currentcolumn)
@@ -2170,10 +2183,34 @@ Func _DrawCompassCircle($Percent, $LineColorARGB = "0xFF000000");, $Degree2);Dra
 	_GDIPlus_PenDispose($pen)
 EndFunc   ;==>_DrawCompassCircle
 
+Func _ExportAllToGPX()
+	$gpx = FileSaveDialog("GPX Output File", $SaveDir, 'GPS eXchange Format (*.gpx)', '', $ldatetimestamp & '.gpx')
+	If Not @error Then
+		$savekml = _SaveGPX($gpx)
+		If $savekml = 1 Then
+			MsgBox(0, 'Done', 'Saved As' & ': "' & $gpx & '"')
+		Else
+			MsgBox(0, 'Error', 'Error saving file' & ': "' & $gpx & '"')
+		EndIf
+	EndIf
+EndFunc   ;==>_ExportAllToKml
+
+Func _ExportAllToLOC()
+	$LOC = FileSaveDialog("LOC Output File", $SaveDir, 'GPS eXchange Format (*.loc)', '', $ldatetimestamp & '.loc')
+	If Not @error Then
+		$savekml = _SaveLOC($LOC)
+		If $savekml = 1 Then
+			MsgBox(0, 'Done', 'Saved As' & ': "' & $LOC & '"')
+		Else
+			MsgBox(0, 'Error', 'Error saving file' & ': "' & $LOC & '"')
+		EndIf
+	EndIf
+EndFunc   ;==>_ExportAllToKml
+
 Func _ExportAllToKml()
 	$kml = FileSaveDialog("Google Earth Output File", $SaveDir, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
 	If Not @error Then
-		$savekml = _AutoSaveKml($kml)
+		$savekml = _SaveKml($kml)
 		If $savekml = 1 Then
 			MsgBox(0, 'Done', 'Saved As' & ': "' & $kml & '"')
 		Else
@@ -2182,7 +2219,7 @@ Func _ExportAllToKml()
 	EndIf
 EndFunc   ;==>_ExportAllToKml
 
-Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
+Func _SaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	$file = '<?xml version="1.0" encoding="utf-8"?>' & @CRLF _
 			 & '<kml xmlns="http://earth.google.com/kml/2.0">' & @CRLF _
 			 & '<Document>' & @CRLF _
@@ -2218,8 +2255,8 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 				$ExpName = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][2], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
 				$ExpGPID = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][3], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
 				$ExpNotes = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][4], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
-				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][5]), 'W', '-'), 'E', ''), ' ', '')
-				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][6]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][5]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][6]), 'W', '-'), 'E', ''), ' ', '')
 				$ExpBrng = $WpMatchArray[$exp][7]
 				$ExpDest = $WpMatchArray[$exp][8]
 				$ExpLink = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][9], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
@@ -2227,6 +2264,7 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 				$file &= '<Placemark>' & @CRLF _
 						 & '<name>' & $ExpName & '</name>' & @CRLF _
 						 & '<description><![CDATA[<b>' & 'Name' & ': </b>' & $ExpName & '<br /><b>' & 'GC #' & ': </b>' & $ExpGPID & '<br /><b>' & "Notes" & ': </b>' & $ExpNotes & '<br /><b>' & 'Latitude' & ': </b>' & $ExpLat & '<br /><b>' & 'Longitude' & ': </b>' & $ExpLon & '<br /><b>' & "Link" & ': </b>' & $ExpLink & '<br />]]></description>' & @CRLF _
+						 & '<styleUrl>#Waypoint</styleUrl>' & @CRLF _
 						 & '<Point>' & @CRLF _
 						 & '<coordinates>' & $ExpLon & ',' & $ExpLat & ',0</coordinates>' & @CRLF _
 						 & '</Point>' & @CRLF _
@@ -2278,6 +2316,125 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	EndIf
 EndFunc   ;==>_AutoSaveKml
 
+Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
+	$FoundApWithGps = 0
+	If StringInStr($gpx, '.gpx') = 0 Then $gpx = $gpx & '.gpx'
+	FileDelete($gpx)
+	$file = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' & @CRLF _
+			 & '<gpx creator="' & $Script_Name & '" version="1.1">' & @CRLF _
+			 & '<name>' & $ldatetimestamp & '</name>' & @CRLF _
+			 & '<desc>Geocache file generated by ' & $Script_Name & '</desc>' & @CRLF _
+			 & '<author>' & $Script_Name & '</author>' & @CRLF
+	If $MapGpsWpts = 1 Then
+		$query = "SELECT WPID, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link FROM WP"
+		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+		$FoundWpMatch = UBound($WpMatchArray) - 1
+		If $FoundWpMatch <> 0 Then
+			For $exp = 1 To $FoundWpMatch
+				$ExpWPID = $WpMatchArray[$exp][1]
+				$ExpName = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][2], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+				$ExpGPID = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][3], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+				$ExpNotes = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][4], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][5]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][6]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpBrng = $WpMatchArray[$exp][7]
+				$ExpDest = $WpMatchArray[$exp][8]
+				$ExpLink = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][9], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+
+
+				If $ExpLat <> '0.0000000' And $ExpLon <> '-0.0000000' Then
+					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<name>' & $ExpGPID & '</name>' & @CRLF _
+							 & '<desc>' & $ExpNotes & '</desc>' & @CRLF _
+							 & '<url>' & $ExpLink & '</url>' & @CRLF _
+							 & '<urlname>' & $ExpName & '</urlname>' & @CRLF _
+							 & '</wpt>' & @CRLF
+				EndIf
+			Next
+		EndIf
+	EndIf
+
+	If $MapGpsTrack = 1 Then
+		$query = "SELECT Latitude, Longitude, Alt, Date1, Time1, SpeedInKmH FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
+		$GpsMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+		$FoundGpsMatch = UBound($GpsMatchArray) - 1
+		If $FoundGpsMatch <> 0 Then
+			$file &= '<trk>' & @CRLF _
+					 & '<name>GPS Track</name>' & @CRLF _
+					 & '<trkseg>' & @CRLF
+			For $exp = 1 To $FoundGpsMatch
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[$exp][3])
+				$ExpDate = $GpsMatchArray[$exp][4]
+				$ExpTime = $GpsMatchArray[$exp][5]
+				$ExpSpeedKmh = $GpsMatchArray[$exp][6]
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$FoundApWithGps = 1
+					$file &= '<trkpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '</trkpt>' & @CRLF
+				EndIf
+			Next
+			$file &= '</trkseg>' & @CRLF _
+					 & '</trk>' & @CRLF
+		EndIf
+	EndIf
+	$file &= '</gpx>' & @CRLF
+
+	$filewrite = FileWrite($gpx, $file)
+	If $filewrite = 0 Then
+		Return (0)
+	Else
+		Return (1)
+	EndIf
+EndFunc   ;==>
+
+Func _SaveLOC($gpx, $MapGpsWpts = 1)
+	$FoundApWithGps = 0
+	If StringInStr($gpx, '.loc') = 0 Then $gpx = $gpx & '.loc'
+	FileDelete($gpx)
+	$file = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' & @CRLF _
+			 & '<loc version="1.0" src="' & $Script_Name & '">' & @CRLF
+	If $MapGpsWpts = 1 Then
+		$query = "SELECT WPID, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link FROM WP"
+		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+		$FoundWpMatch = UBound($WpMatchArray) - 1
+		If $FoundWpMatch <> 0 Then
+			For $exp = 1 To $FoundWpMatch
+				$ExpWPID = $WpMatchArray[$exp][1]
+				$ExpName = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][2], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+				$ExpGPID = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][3], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+				$ExpNotes = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][4], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][5]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][6]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpBrng = $WpMatchArray[$exp][7]
+				$ExpDest = $WpMatchArray[$exp][8]
+				$ExpLink = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($WpMatchArray[$exp][9], '"', '\"'), "'", "&apos;"), '&', '&amp;'), '<', '&lt;'), '>', '&gt;'), '\', '\\')
+
+
+				If $ExpLat <> '0.0000000' And $ExpLon <> '-0.0000000' Then
+					$file &= '<waypoint>' & @CRLF _
+							 & '<name id="' & $ExpGPID & '"><![CDATA[' & $ExpNotes & ']]></name>' & @CRLF _
+							 & '<coord lat="' & $ExpLat & '" lon="' & $ExpLon & '"/>' & @CRLF _
+							 & '<link text="Waypoint Details">' & $ExpLink & '</link>' & @CRLF _
+							 & '<urlname>' & $ExpName & '</urlname>' & @CRLF _
+							 & '</waypoint>' & @CRLF
+				EndIf
+			Next
+		EndIf
+	EndIf
+
+	$file &= '</loc>' & @CRLF
+
+	$filewrite = FileWrite($gpx, $file)
+	If $filewrite = 0 Then
+		Return (0)
+	Else
+		Return (1)
+	EndIf
+EndFunc   ;==>_SaveGarminGPX
 ;---------------------------------------------------------------------------------------
 ;Math Functions
 ;---------------------------------------------------------------------------------------
@@ -2309,6 +2466,11 @@ Func _ATan2($X, $y) ;ATan2 function, since autoit only has ATan
 		SetError(1)
 	EndIf
 EndFunc   ;==>_ATan2
+
+Func _MetersToFeet($meters)
+	$feet = $meters / 3.28
+	Return ($feet)
+EndFunc   ;==>_MetersToFeet
 
 Func _SortColumnToggle(); Sets the ap list column header that was clicked
 	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SortColumnToggle()') ;#Debug Display
