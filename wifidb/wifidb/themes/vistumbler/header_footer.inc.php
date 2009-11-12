@@ -56,6 +56,18 @@ function pageheader($title, $output="detailed")
 								<td style="width: 10px" class="cell_top_right">
 									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
 								</td>
+								<td style="width: 100%" align="right">
+									<?php
+									if(login_check())
+									{
+										list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
+										echo "Welcome ".$username." !";
+									}else
+									{
+										?><a class="links" href="login.php">Login</a><?php
+									}
+									?>
+								</td>
 							</tr>
 							<tr>
 								<td class="cell_side_left">&nbsp;</td>

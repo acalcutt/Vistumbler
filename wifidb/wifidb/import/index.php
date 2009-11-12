@@ -146,7 +146,19 @@ switch($func)
 								</P>
 							</TD>
 							<TD>
-								<P><A NAME="user"></A><INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+								<P><A NAME="user"></A>
+								<?php
+								if($GLOBALS['login_check'])
+								{
+									?><INPUT TYPE=Text DISABLED NAME="user" value="<?php echo $GLOBALS['username'];?>"><?php
+								}else
+								{
+									?>
+									<INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in">
+									<?php
+								}
+								?>
+								</P>
 							</TD>
 						</TR>
 						<TR>
@@ -219,7 +231,19 @@ switch($func)
 						</P>
 					</TD>
 					<TD>
-						<P><A NAME="user"></A><INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
+						<P><A NAME="user"></A>
+						<?php
+						if($GLOBALS['login_check'])
+						{
+							?><INPUT TYPE=text DISABLED NAME="user" value="<?php echo $GLOBALS['username'];?>"><?php
+						}else
+						{
+							?>
+							<INPUT TYPE=TEXT NAME="user" SIZE=28 STYLE="width: 2.42in; height: 0.25in">
+							<?php
+						}
+						?>
+						</P>
 					</TD>
 				</TR>
 				<TR>

@@ -378,7 +378,7 @@ class graphs
 		ImageDestroy($img);
 	}
 	
-	function timeline($test = "", $lcolor = "", $start = "", $end = "", $users = array("BLANK" => array( "Title" => "", "aps"=> 0, "id"=>0, )) )
+	function timeline($bgcolor = "",$lcolor = "", $start = "", $end = "")
 	{
 		if ($text == 'rand')
 		{

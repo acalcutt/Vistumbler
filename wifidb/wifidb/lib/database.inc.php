@@ -5,9 +5,9 @@
 #		error_reporting(E_ERROR);
 global $ver, $full_path, $half_path, $dim;
 $ver = array(
-			"wifidb"			=>	" *Alpha* 0.16 Build 5 {pre-release} ",
+			"wifidb"			=>	" *Alpha* 0.17 Build 1 {pre-release} ",
 			"codename"			=>	"Hyannis",
-			"Last_Core_Edit" 	=> 	"2009-Sept-28",
+			"Last_Core_Edit" 	=> 	"2009-Nov-11",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
@@ -181,7 +181,20 @@ if(@$GLOBALS['screen_output'] != "CLI")
 	{require($full_path."header_footer.inc.php");}
 }
 
+#-------------------------------------------------------------------------------------#
+#----------------------------------  Get Set values  ---------------------------------#
+#-------------------------------------------------------------------------------------#
+function get_set($table,$column)
+{
+	$sql = "SHOW COLUMNS FROM $table LIKE '$column'";
+	if (!($ret = mysql_query($sql)))
+	die("Error: Could not show columns");
 
+	$line = mysql_fetch_assoc($ret);
+	$set = $line['Type'];
+	$set = substr($set,5,strlen($set)-7); // Remove "set(" at start and ");" at end
+	return preg_split("/','/",$set); // Split into and array
+}
 #-------------------------------------------------------------------------------------#
 #--------------------------------DUMP VAR TO HTML -----------------------------#
 #-------------------------------------------------------------------------------------#
@@ -4985,7 +4998,6 @@ class daemon
 		fwrite($fileappend_daily_label, $DLdata);
 		fclose($fileappend_daily_label);
 	}
-
 #END DAEMON CLASS
 }
 ?>

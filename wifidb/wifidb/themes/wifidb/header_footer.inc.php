@@ -1,18 +1,26 @@
 <?php
+
 #========================================================================================================================#
 #											Header (writes the Headers for all pages)									 #
 #========================================================================================================================#
 
 function pageheader($title, $output="detailed")
 {
+	global $login_check, $priv;
 	session_start();
-	if(!$_SESSION['token'] or !$_GET['token'])
+	
+	if(!$_COOKIE['PHPSESSID'])
+	{
+		$token = md5(uniqid(rand(), true));
+		$_SESSION['token'] = $token;
+	}elseif(!$_GET['token'])
 	{
 		$token = md5(uniqid(rand(), true));
 		$_SESSION['token'] = $token;
 	}else
 	{
-		$token = $_SESSION['token'];
+		$token = $_COOKIE['PHPSESSID'];
+		$_SESSION['token'] = $token;
 	}
 	
 	$root		= 	$GLOBALS['root'];
@@ -20,11 +28,18 @@ function pageheader($title, $output="detailed")
 	$conn		=	$GLOBALS['conn'];
 	$db			=	$GLOBALS['db'];
 	$head		= 	$GLOBALS['header'];
+	$half_path	=	$GLOBALS['half_path'];
+	include_once($half_path.'/lib/database.inc.php');
+	include_once($half_path.'/lib/security.inc.php');
+	include_once($half_path.'/lib/config.inc.php');
+	$sec = new security();
 	
+#	$database = new database();
 	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>\r\n".$head."\r\n</head>\r\n";
 	check_install_folder();
 	if($output == "detailed")
 	{
+		$login_check = $sec->login_check();
 		# START YOUR HTML EDITS HERE #
 		?>
 		<link rel="stylesheet" href="<?php if($root != ''){echo $hosturl.$root;}?>/themes/wifidb/styles.css">
@@ -32,7 +47,8 @@ function pageheader($title, $output="detailed")
 		<div align="center">
 		<table border="0" width="85%" cellspacing="5" cellpadding="2">
 			<tr style="background-color: #315573;"><td colspan="2">
-			<table width="100%"><tr>
+			<table width="100%">
+				<tr>
 					<td style="width: 215px">
 						&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://www.randomintervals.com"><img border="0" src="<?php echo $hosturl.$root; ?>/img/logo.png"></a>
 					</td>
@@ -44,7 +60,49 @@ function pageheader($title, $output="detailed")
 							<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
 						</b></p>
 					</td>
-			</tr></table>
+					<td width="20%" align="right">
+					<?php
+					if($login_check)
+					{
+						$user_logins_table = $GLOBALS['user_logins_table'];
+						list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
+					#	echo $username."<BR>";
+						$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+					#	echo $sql0;
+						$result = mysql_query($sql0, $conn);
+						$newArray = mysql_fetch_array($result);
+						$last_login = $newArray['last_login'];
+						
+						$priv = $sec->check_privs();
+#						echo $priv."<BR>";
+						?>
+						Welcome, <a class="links" href="/<?php echo $root;?>/cp/"><?php echo $username;?></a><br>
+						<font size="2">last login: <?php echo $last_login;?></font><br>
+						<a class="links" href="<?php echo $hosturl.$root; ?>/login.php?func=logout_proc">Logout</a>
+					</td>
+						<?php
+					}else
+					{
+						$filtered = filter_var($_SERVER['QUERY_STRING'],FILTER_SANITIZE_ENCODED);
+						?>
+						<a class="links" href="<?php echo $hosturl.$root; ?>/login.php?return=<?php
+						$SELF = $_SERVER['PHP_SELF'];
+						if($SELF == '/wifidb/login.php')
+						{
+							$SELF = "/$root/";
+							$filtered = '';
+						}
+						if($filtered != '')
+						{echo $SELF.'?'.$filtered;}
+						else{echo $SELF;}
+						
+						?>">Login</a>
+					<?php
+					}
+					?>
+					</td>
+				</tr>
+			</table>
 			</td></tr>
 			<tr>
 				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
@@ -79,6 +137,9 @@ function pageheader($title, $output="detailed")
 
 function footer($filename = '', $output = "detailed")
 {
+	$half_path	=	$GLOBALS['half_path'];
+	include_once($half_path.'/lib/database.inc.php');
+	include_once($half_path.'/lib/config.inc.php');
 	$tracker = $GLOBALS['tracker'];
 	$ads = $GLOBALS['ads'];
 	$file_ex = explode("/", $filename);
@@ -100,20 +161,34 @@ function footer($filename = '', $output = "detailed")
 		?>
 			<h6><i><u><?php echo $filename_1;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename_1));?></h6>
 			<?php
+			echo $GLOBALS['privs'];
+			if($GLOBALS['login_check'])
+			{
+				if($GLOBALS['privs'] < 2)
+				{
+					?><font size="2"><b>Admin Control Panel</b>  |-|  </font><?php
+				}
+				if($GLOBALS['privs'] < 3)
+				{
+					?><font size="2"><b>Moderator Control Panel</b>  |-|  </font><?php
+				}
+				?><font size="2"><b>User Control Panel</b></font><?php
+			}
 		}
 		?>
 		</td>
 		</tr>
 		<tr>
 		<td></td>
+		<!--  ADS AND TRACKER" -->
 		<td align="center">
 		<?php
 		echo $tracker;
 		echo $ads;
 		?>
 		</td>
+		<!-- END ADS AND TRACKER" -->
 		</tr>
-
 		</table>
 		</body>
 		</html>

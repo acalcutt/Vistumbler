@@ -196,6 +196,7 @@ if(is_string($func))
 					</table>
 					<?PHP
 			}
+			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 		
 		case 'done':
@@ -253,10 +254,11 @@ if(is_string($func))
 				?>
 				</table><?php
 			}
+			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 		
 		case 'daemon_kml':
-			$date = date("y-m-d");
+			$date = date("Y-m-d");
 			$DATES = array();
 			$DGK_folder = array();
 			$file_count = 0;
@@ -288,6 +290,7 @@ if(is_string($func))
 			}
 			rsort($DGK_folder, SORT_STRING);
 			rsort($DATES);
+			if($DATES[0] == ''){$today = $date;}else{$today = $DATES[0];}
 			?>
 			<table width="700px" border="1" cellspacing="0" cellpadding="0" align="center">
 			<tr>
@@ -332,13 +335,13 @@ if(is_string($func))
 					<tr>
 						<td class='daemon_kml'>Full KML Last Edit: </td>
 							<?php
-							$full = '../out/daemon/'.$DATES[0].'/full_db.kml';
+							$full = '../out/daemon/'.$today.'/full_db.kml';
 							if(file_exists($full))
 							{
 								echo "<td>".date ("Y-m-d H:i:s", filemtime($full))."</td><td>".format_size(dos_filesize($full), 2);
 							}else
 							{
-								echo "<td>None generated for ".$DATES[0]." yet, be patient young grasshopper.</td><td> 0.00 kb";
+								echo "<td>None generated for ".$today." yet, <br>be patient young grasshopper.</td><td> 0.00 kb";
 							}
 							?>
 							</td>
@@ -346,13 +349,13 @@ if(is_string($func))
 					<tr>
 						<td class='daemon_kml'>Daily KML Last Edit: </td>
 							<?php
-							$daily = '../out/daemon/'.$DATES[0].'/daily_db.kml';
+							$daily = '../out/daemon/'.$today.'/daily_db.kml';
 							if(file_exists($daily))
 							{
 								echo "<td>".date ("Y-m-d H:i:s", filemtime($daily))."</td><td>".format_size(dos_filesize($daily), 2);
 							}else
 							{
-								echo "<td>None generated for ".$DATES[0]." yet, be patient young grasshopper.</td><td> 0.00 kb";
+								echo "<td>None generated for ".$today." yet, <br>be patient young grasshopper.</td><td> 0.00 kb";
 							}
 							?>
 							</td>
@@ -395,17 +398,18 @@ if(is_string($func))
 						</td></tr></table>
 						</td>
 						</tr>
+					</table></td>
+						</tr>
 					</table>
-					</td>
-				</tr>
-			</table>
 			<?php
+			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 
 		case "no_daemon":
 			?>
 			<h2>You do not have the Daemon Option enabled, you will not be able to use this page until you enable it.</h2>
 			<?php
+			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 		
 		default:
@@ -496,7 +500,7 @@ if(is_string($func))
 			?>
 				<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> UTC</td><td>
 			<?php
-				if($dst == 1){$dst = -1;}
+			#	if($dst == 1){$dst = -1;}
 				$str_time = strtotime($file_array['size']);
 				$alter_by = ((($TZone+$dst)*60)*60);
 				$altered = $str_time+$alter_by;
@@ -629,9 +633,8 @@ if(is_string($func))
 				}
 				?></td></tr></table><br><?php
 			}
+			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 	}
 }
-echo "<BR>";
-footer($_SERVER['SCRIPT_FILENAME']);
 ?>

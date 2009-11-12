@@ -85,6 +85,18 @@ height: 400px;
 	background-color: #477DA9;
 }
 
+.tree {
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+}
+
+.cp_select_coloum {
+	border-style: none;
+	border-color: inherit;
+	border-width: 1px;
+	background-color: #315573;
+}
+
 a.links {
 	font-weight: bold; 
 	color: #123;
@@ -166,4 +178,13 @@ table.update ha {
 	width: 80%;
 	vertical-align: top;
 	text-align: center;
+}
+
+
+
+.dark {
+	background-color: #85ABCB;
+}
+.light {
+	background-color: #BAD0E2;
 }
