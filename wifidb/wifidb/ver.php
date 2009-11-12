@@ -23,8 +23,8 @@ pageheader("Version Page");
 		
 		<table width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
-			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 5</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Oct-8</td></tr>
+			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.17 Build 1</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Nov-11</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -33,6 +33,10 @@ pageheader("Version Page");
 					<LI>Fixed a bug in the scheduling page where it would not calculate the correct Timezone stamp, but the time was correct. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=411">KB411</a></LI>
 					<LI>Fixed a bug in teh default theme where the page name was not being called correctly and was outputing an error or no text.</LI>
 					<LI>Altered the All APs page to only show a few pages before and after the current page number.</LI>
+					<LI>Added a User based login system. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
+					<LI>User Control Panel.</LI>
+					<LI>Mysticahe support</LI>
+					<LI>XML Support</LI>
 				</OL>
 			</td></tr>
 		</table>
