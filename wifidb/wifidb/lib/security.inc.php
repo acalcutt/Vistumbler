@@ -21,7 +21,7 @@ class security
 		{
 			#	die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
 			#	<a href="'.$_SERVER['PHP_SELF'].'">go get a cookie</a>. make it a double stuff.<br>');
-			return 0;
+			return array(0, "No Cookie");
 			break;
 		}
 		list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
@@ -37,7 +37,7 @@ class security
 			return $username_db;
 		}else
 		{
-			return 0;
+			return array(0, "Bad Cookie Password");
 		}
 	}
 
@@ -108,7 +108,7 @@ class security
 		if($db_pass === $pass_seed)
 		{
 	#		echo "GOOD CHECK!<BR>";
-			if(setcookie("WiFiDB_login_yes", md5("@LOGGEDIN!".$pass_seed).":".$username, time()+(3600*7)))
+			if(setcookie("WiFiDB_login_yes", md5("@LOGGEDIN!".$pass_seed).":".$username, time()+(3600*30)))
 			{
 				$sql1 = "UPDATE `$db`.`$user_logins_table` SET `last_login` = '$date' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
 				if(mysql_query($sql1, $conn))
@@ -132,7 +132,7 @@ class security
 			if($username_db !== '')
 			{
 				$fails++;
-				echo $fails.' - '.$GLOBALS['config_fails'];
+		#		echo $fails.' - '.$GLOBALS['config_fails'];
 				if($fails >= $GLOBALS['config_fails'])
 				{
 					$sql1 = "UPDATE `$db`.`$user_logins_table` SET `locked` = '1' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
@@ -196,11 +196,15 @@ class security
 			$create_user_cache = "CREATE TABLE `$user_cache` 
 							(
 							  `id` int(255) NOT NULL auto_increment,
+							  `author` varchar(255) NOT NULL,
 							  `name` varchar(255) NOT NULL,
+							  `shared_by` varchar(255) NOT NULL,
 							  `gcid` int(255) NOT NULL,
 							  `notes` text NOT NULL,
 							  `cat` set('police','fastfood','finefood','gas','geocache','think of more') NOT NULL,
 							  `type` varchar(255) NOT NULL,
+							  `diff` varchar(2,2) NOT NULL,
+							  `terain` varchar(2,2) NOT NULL,
 							  `lat` varchar(255) NOT NULL,
 							  `long` varchar(255) NOT NULL,
 							  `link` varchar(255) NOT NULL,
@@ -209,7 +213,7 @@ class security
 							  `c_date` datetime NOT NULL,
 							  `u_date` datetime NOT NULL,
 							  UNIQUE KEY `id` (`id`)
-							) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0";
+							) ENGINE=INNODB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0";
 			if(mysql_query($create_user_cache, $conn))
 			{
 				return 1;

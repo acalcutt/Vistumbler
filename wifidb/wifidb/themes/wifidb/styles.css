@@ -6,6 +6,9 @@ body {
 	color:#123;
 	font-size/* */:/**/small; font-style:normal; font-variant:normal; font-weight:normal; font-family:Trebuchet MS
 }
+.content_head{
+				color: #A9C6FA;
+}
 
 #foo {
 	position: absolute;
@@ -100,6 +103,10 @@ height: 400px;
 a.links {
 	font-weight: bold; 
 	color: #123;
+}
+a.links_s {
+	font-weight: bold; 
+	color: #CCC;
 }
 a.upgrade {
 	font-weight: bold; 

@@ -129,10 +129,45 @@ class WDB_XML
 					$cat = "geocache";
 					$u_date = "0000-00-00 00:00:00";
 					
-					$desc_exp = explode("by", $wpt['_c']['desc']['_v']);
-					$desc_exp2 = explode(",",$desc_exp[1]);
+#					?Traditional?Cache?(1.5/1.5)
+
+					$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
+					$desc_exp2 = explode(", ",$desc_exp[1]);
 					
-					$author = addslashes($desc_exp2[0]);
+					$desc_exp3 = explode("(", $desc_exp2[1]);
+					$replace = str_ireplace(")",$desc_exp3[1]);
+					$desc_exp4 = explode("/", $replace);
+					if($wpt['_c']['author']['_v'] == '')
+					{
+						$author = addslashes($desc_exp2[0]);
+					}else
+					{
+						$author = addslashes($wpt['_c']['author']['_v']);
+					}
+					
+					if($wpt['_c']['Difficulty']['_v'] == '' or $wpt['_c']['Terrain']['_v'] == '' or $wpt['_c']['Cache Type']['_v'] == '')
+					{
+						$diff = addslashes($desc_exp4[0]);
+						$terain = addslashes($desc_exp4[1]);
+						$type = addslashes($desc_exp3[0]);
+					}else
+					{
+						$diff = addslashes($wpt['_c']['Difficulty']['_v']);
+						$terain = addslashes($wpt['_c']['Terrain']['_v']);
+						$type = addslashes($wpt['_c']['Cache Type']['_v']);
+					}
+					
+					if($wpt['_c']['Terrain']['_v'] == '')
+					{
+						$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
+						$desc_exp2 = explode(", ",$desc_exp[1]);
+						$diff = addslashes($desc_exp2[0]);
+						$terain = $wpt['_c']['Terrain']['_v'];
+					}else
+					{
+						$terain = addslashes($wpt['_c']['Terrain']['_v']);
+					}
+					
 					$name = addslashes($desc_exp[0]);
 					$c_date = date("Y-m-d G:i:s");
 					
@@ -140,14 +175,13 @@ class WDB_XML
 					$URL = addslashes($wpt['_c']['url']['_v']);
 					$lat = addslashes($wpt['_a']['lat']);
 					$long = addslashes($wpt['_a']['lon']);
-					$type = addslashes($wpt['_c']['type']['_v'].":::".$wpt['_c']['sym']['_v']);
 					
 					$gcid = addslashes($wpt['_c']['name']['_v']);
 			#		echo $gcid."<BR>";
 					$notes = "No Notes";
 					$link = addslashes($wpt['_c']['url']['_v']);
 					
-					$sql0 = "INSERT INTO `$db`.`$User_cache` (`id`, `name`, `gcid`, `notes`, `cat`, `type`, `lat`, `long`, `link`, `share`, `share_id`, `c_date`, `u_date`) VALUES (NULL, '$name','$gcid','$notes','$cat','$type','$lat','$long','$link','$share','$share_id','$c_date','$u_date')";
+					$sql0 = "INSERT INTO `$db`.`$User_cache` (`id`, `name`, `author`, `gcid`, `notes`, `cat`, `type`, `lat`, `long`, `link`, `share`, `share_id`, `c_date`, `u_date`) VALUES (NULL, '$name', '$author', '$gcid', '$notes', '$cat', '$type', '$lat', '$long', '$link', '$share', '$share_id', '$c_date', '$u_date')";
 			#	echo $sql0."<BR>";
 					if(mysql_query($sql0, $conn))
 					{
@@ -187,19 +221,20 @@ class WDB_XML
 			$return = mysql_query($select, $conn);
 			$pri_wpt = mysql_fetch_array($return);
 			
-			$author = $User;
-			$name = $pri_wpt['name'];
+			$author = $pri_wpt['author'];
+			$shared_by = $User;
+			$name = addslashes($pri_wpt['name']);
 			$gcid = $pri_wpt['gcid'];
-			$notes = $pri_wpt['notes'];
+			$notes = addslashes($pri_wpt['notes']);
 			$cat = $pri_wpt['cat'];
-			$type = $pri_wpt['type'];
+			$type = addslashes($pri_wpt['type']);
 			$lat = $pri_wpt['lat'];
 			$long = $pri_wpt['long'];
 			$link = $pri_wpt['link'];
 			$c_date = $pri_wpt['c_date'];
 			$u_date = date("Y-m-d G:i:s");
 			
-			$sql1 = "INSERT INTO `$db`.`$share_cache` (`id`, `author`, `name`, `gcid`, `notes`, `cat`, `type`, `lat`, `long`, `link`, `c_date`, `u_date`, `pvt_id`) VALUES (NULL, '$author', '$name', '$gcid', '$notes', '$cat', '$type', '$lat', '$long', '$link', '$c_date', '$u_date', '$id')";
+			$sql1 = "INSERT INTO `$db`.`$share_cache` (`id`, `author`, `shared_by`, `name`, `gcid`, `notes`, `cat`, `type`, `lat`, `long`, `link`, `c_date`, `u_date`, `pvt_id`) VALUES (NULL, '$author', '$shared_by', '$name', '$gcid', '$notes', '$cat', '$type', '$lat', '$long', '$link', '$c_date', '$u_date', '$id')";
 			if(mysql_query($sql1, $conn))
 			{
 				$select = "SELECT `id` FROM `$db`.`$share_cache` WHERE `gcid` LIKE '$gcid' AND `name` LIKE '$name'";
@@ -215,11 +250,11 @@ class WDB_XML
 					return 1;
 				}else
 				{
-					return mysql_error($conn);
+					return array("Mysql_error", mysql_error($conn));
 				}
 			}else
 			{
-				return mysql_error($conn);
+				return array("Mysql_error", mysql_error($conn));
 			}
 		}else
 		{
@@ -310,5 +345,138 @@ class WDB_XML
 		}
 	}
 	
+	###############################
+	#     Convert From _ to _     #
+	###############################
+	
+	function convert_xml($xml_file='', $from_to='')
+	{
+	$sec = new security();
+	
+	$db_ver = $GLOBALS['ver']['wifidb'];
+	$body = "# Mysticache CSV - Detailed Export Version 1.0\r\n# Created By: RanInt WiFi DB $db_ver \r\n# -------------------------------------------------\r\n# Author,,Name,,GCID,,Notes,,Catagory,,Type,,Difficulty,,Terain,,Latatude,,Longitude,,Link URL\r\n# -------------------------------------------------\r\n";
+	$buffer = file_get_contents($xml_file);
+	$edit = preg_replace("/[\r\n\r\n]/","",$buffer);
+	$xml=WDB_XML::xml2ary($edit);
+	$User = $sec->login_check();
+#	dump($User);
+	if($User)
+	{
+		$from_to_exp = explode(">",$from_to);
+		$from = $from_to_exp[0];
+		$to = $from_to_exp[1];
+		switch($from)
+		{
+			case "GPX"
+				switch($to)
+				{
+					##############
+					case "CSV":
+						$count_gpx = count($xml['gpx']['_c']['wpt'])-1;
+					#	echo $count."<BR>";
+						$User_cache = $User."_waypoints";
+						if($count_gpx > 0)
+						{
+							$cnt_wpt = 0;
+							foreach($xml['gpx']['_c']['wpt'] as $wpt)
+							{
+								$share = 0;
+								$share_id = 0;
+								
+								$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
+								$desc_exp2 = explode(", ",$desc_exp[1]);
+								
+								$desc_exp3 = explode("(", $desc_exp2[1]);
+								$replace = str_ireplace(")","",$desc_exp3[1]);
+								$desc_exp4 = explode("/", $replace);
+								if($wpt['_c']['author']['_v'] == '')
+								{
+									$author = addslashes($desc_exp2[0]);
+								}else
+								{
+									$author = addslashes($wpt['_c']['author']['_v']);
+								}
+								
+								if($wpt['_c']['Difficulty']['_v'] == '' or $wpt['_c']['Terrain']['_v'] == '' or $wpt['_c']['Cache Type']['_v'] == '')
+								{
+									$diff = addslashes(rtrim($desc_exp4[0]));
+									$terain = addslashes(rtrim($desc_exp4[1]));
+									$type = addslashes(rtrim($desc_exp3[0]));
+								}else
+								{
+									$diff = addslashes($wpt['_c']['Difficulty']['_v']);
+									$terain = addslashes($wpt['_c']['Terrain']['_v']);
+									$type = addslashes($wpt['_c']['Cache Type']['_v']);
+								}
+								
+								if($wpt['_c']['Notes']['_v'] == '')
+								{
+									$notes = "No Notes";
+								}else
+								{
+									$notes = addslashes($wpt['_c']['Notes']['_v']);
+								}
+								
+								$notes = "No Notes";
+								
+								$name = addslashes(rtrim($desc_exp[0]));
+								$gcid = addslashes($wpt['_c']['name']['_v']);
+								$cat = "geocache";
+								$lat = addslashes($wpt['_a']['lat']);
+								$long = addslashes($wpt['_a']['lon']);
+								$link = addslashes($wpt['_c']['url']['_v']);
+								$c_date = date("Y-m-d G:i:s");
+								$u_date = "0000-00-00 00:00:00";
+								
+							#		$body = "##Author,,name,,gcid,,notes,,cat,,type,,lat,,long,,link\r\n";
+								$pre = $author.",,".$name.",,".$gcid.",,".$notes.",,".$cat.",,".$type.",,".$diff.",,".$terain.",,".$lat.",,".$long.",,".$link."\r\n";
+					#			echo $pre."<BR>\r\n";
+								$body .= $pre;
+								
+							}
+							$cache_out_gpx	=	$half_path."/cp/$User/gpx/";
+							$xml_exp_file = explode(".",$xml_file);
+							$file_ext	=	$xml_exp_file[0].".csv";
+							$filename	=	$cache_out_csv.$file_ext;
+							// define initial write and appends
+							$filewrite	=	fopen($filename, "w");
+							
+							if(fwrite($filewrite, $body))
+							{
+								return 1;
+								fileclose($filewrite);
+							}else
+							{
+								return array($body, $filename);
+							}
+						}else
+						{
+							return "empty";
+						}
+					break;
+					########
+					
+					default:
+						return "blank_switch";
+					break;
+				}
+			break;
+			
+			##########
+			case "LOC":
+				
+			break;
+			
+			
+			########
+			default:
+				return "blank_switch";
+			break;
+		}
+	}else
+	{
+		return "login";
+	}
+}
 }
 ?>

@@ -13,10 +13,6 @@ function pageheader($title, $output="detailed")
 	{
 		$token = md5(uniqid(rand(), true));
 		$_SESSION['token'] = $token;
-	}elseif(!$_GET['token'])
-	{
-		$token = md5(uniqid(rand(), true));
-		$_SESSION['token'] = $token;
 	}else
 	{
 		$token = $_COOKIE['PHPSESSID'];
@@ -40,6 +36,10 @@ function pageheader($title, $output="detailed")
 	if($output == "detailed")
 	{
 		$login_check = $sec->login_check();
+		if(is_array($login_check))
+		{
+			$login_check = 0;
+		}
 		# START YOUR HTML EDITS HERE #
 		?>
 		<link rel="stylesheet" href="<?php if($root != ''){echo $hosturl.$root;}?>/themes/wifidb/styles.css">
@@ -107,6 +107,7 @@ function pageheader($title, $output="detailed")
 			<tr>
 				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
 				<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" /><br>
+				<span class="content_head"><strong><em>[WiFIDB]</em></strong></span><br>
 				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/?token=<?php echo $token;?>">Main Page</a><br>
 				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a><br>
 				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/import/?token=<?php echo $token;?>">Import</a><br>
@@ -120,6 +121,18 @@ function pageheader($title, $output="detailed")
 				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a><br>
 				<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a><br>
 				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Versions</a><br>
+				<br>
+				<span class="content_head"><strong><em>[Mysticache]</em></strong></span><br>
+				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/caches.php?token=<?php echo $token;?>">View shared Caches</a><br>
+				<?php
+				if($login_check)
+				{
+				?>
+				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/cp/?func=boeyes&boeye_func=list_all">List All My Caches</a>
+				<?php
+				}
+				
+				?>
 			</td>
 			<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
 			<p align="center">
