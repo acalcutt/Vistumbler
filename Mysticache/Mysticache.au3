@@ -4,9 +4,9 @@ Opt("GUIOnEventMode", 1);Change to OnEvent mode
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v2.0 Alpha 7 (Friday the 13th edition)'
+$version = 'v2.0 Beta 1'
 $Script_Start_Date = '2009/10/22'
-$last_modified = '2009/11/13'
+$last_modified = '2009/11/18'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <Date.au3>
@@ -31,6 +31,7 @@ For $loop = 1 To $CmdLine[0]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.gpx' Then $Load = $CmdLine[$loop]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.loc' Then $Load = $CmdLine[$loop]
 Next
+
 ;Variables-----------------------------------------------
 Dim $WPID = 0
 Dim $GPS_ID = 0
@@ -44,6 +45,8 @@ Dim $Debug = 0
 Dim $Close = 0
 Dim $SaveDbOnExit = 0
 Dim $Recover = 0
+Dim $ClearAllWps = 0
+Dim $Redraw = 0
 Dim $RefreshLoopTime = 500
 Dim $ErrorFlag_sound = 'error.wav'
 Dim $GpsDetailsGUI
@@ -75,7 +78,7 @@ Dim $SpeedInKmH = '0'
 Dim $TrackAngle = '0'
 
 Dim $AddWaypoingGuiOpen = 0
-Dim $AddWaypoingGui, $Rad_DestGPS_LatLon, $Rad_DestGPS_BrngDist, $GUI_AddName, $GUI_AddGCID, $GUI_AddNotes, $dLat, $dLon, $dBrng, $dDist, $dWPID, $dListRow
+Dim $AddWaypoingGui, $Rad_DestGPS_LatLon, $Rad_DestGPS_BrngDist, $GUI_AddName, $GUI_AddGCID, $GUI_AddNotes, $GUI_AddAuthor, $GUI_AddLink, $GUI_AddType, $GUI_AddDifficulty, $GUI_AddTerrain, $dLat, $dLon, $dBrng, $dDist, $dWPID, $dListRow
 Dim $EditWaypoingGui, $EditWaypoingGuiOpen
 
 Dim $winpos_old, $winpos, $sizes, $sizes_old
@@ -134,6 +137,12 @@ DirCreate($ImageDir)
 DirCreate($TmpDir)
 DirCreate($LanguageDir)
 DirCreate($SaveDir)
+
+;Cleanup Old Temp Files----------------------------------
+_CleanupFiles($TmpDir, '*.tmp')
+_CleanupFiles($TmpDir, '*.ldb')
+_CleanupFiles($TmpDir, '*.ini')
+_CleanupFiles($TmpDir, '*.kml')
 
 Dim $AddDirection = IniRead($settings, 'Options', 'AddDirection', -1)
 Dim $SaveGpsHistory = IniRead($settings, 'Options', 'SaveGpsHistory', 0)
@@ -380,7 +389,7 @@ Else
 EndIf
 ;File Menu
 $file = GUICtrlCreateMenu($Text_File)
-;$NewSession = GUICtrlCreateMenuItem($Text_NewSession, $file)
+$NewSession = GUICtrlCreateMenuItem("New Session", $file)
 ;$SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
 ;$SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
 ;$ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
@@ -397,7 +406,7 @@ $Edit = GUICtrlCreateMenu($Text_Edit)
 ;$Copy = GUICtrlCreateMenuItem($Text_Copy, $Edit)
 ;$Delete = GUICtrlCreateMenuItem("Delete", $Edit)
 ;$SelectAll = GUICtrlCreateMenuItem("Select All", $Edit)
-;$ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
+$ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
 $Options = GUICtrlCreateMenu($Text_Options)
 $But_SaveGpsHistory = GUICtrlCreateMenuItem("Save GPS History", $Options)
 If $SaveGpsHistory = 1 Then GUICtrlSetState($But_SaveGpsHistory, $GUI_CHECKED)
@@ -429,6 +438,7 @@ $Extra = GUICtrlCreateMenu("Extra")
 $GpsDetails = GUICtrlCreateMenuItem("Gps Details", $Extra)
 $GpsCompass = GUICtrlCreateMenuItem("Compass", $Extra)
 $OpenSaveFolder = GUICtrlCreateMenuItem("Open Save Folder", $Extra)
+$OpenWptLink = GUICtrlCreateMenuItem("Open Waypoint Link", $Extra)
 
 $DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $MysticacheGUI)
 GUISetBkColor($BackgroundColor)
@@ -484,10 +494,11 @@ GUISetOnEvent($GUI_EVENT_CLOSE, '_Exit')
 GUICtrlSetOnEvent($But_UseGPS, '_GpsToggle')
 GUICtrlSetOnEvent($AddWpButton, '_AddWaypointGUI')
 GUICtrlSetOnEvent($EditWpButton, '_EditWaypointGUI')
+GUICtrlSetOnEvent($DelWpButton, '_DeleteWaypoint')
 GUICtrlSetOnEvent($SetDestButton, '_SetDestination')
 GUICtrlSetOnEvent($But_GetCurrentGps, '_GetCurrentGps')
 ;File Menu
-;GUICtrlSetOnEvent($NewSession, '_NewSession')
+GUICtrlSetOnEvent($NewSession, '_NewSession')
 ;GUICtrlSetOnEvent($SaveAsTXT, '_ExportData')
 ;GUICtrlSetOnEvent($SaveAsDetailedTXT, '_ExportDetailedData')
 ;GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
@@ -500,7 +511,7 @@ GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($ExitMysticache, '_Exit')
 
 ;Edit Menu
-;GUICtrlSetOnEvent($ClearAll, '_ClearAll')
+GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 ;GUICtrlSetOnEvent($Copy, '_CopyAP')
 
 ;Optons Menu
@@ -522,6 +533,7 @@ GUICtrlSetOnEvent($SetGPS, '_GPSOptions')
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
 GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
 GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
+GUICtrlSetOnEvent($OpenWptLink, '_OpenWptLink')
 ;Other
 GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 
@@ -617,6 +629,7 @@ While 1
 
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
 	If $Close = 1 Then _ExitMysticache($SaveDbOnExit) ;If the close flag has been set, exit visumbler
+	If $ClearAllWps = 1 Then _ClearAllWp();Clear all Waypoint
 
 	If TimerDiff($begin) >= $RefreshLoopTime Then
 		$UpdatedGPS = 0
@@ -628,6 +641,10 @@ While 1
 		Sleep(10)
 	EndIf
 WEnd
+
+Func _NewSession()
+	Run(@ScriptDir & "\Mysticache.exe")
+EndFunc   ;==>_NewSession
 
 Func _ImportGPX()
 	$GPXfile = FileOpenDialog("Import from GPX", '', "GPS eXchange Format" & ' (*.GPX)', 1)
@@ -907,29 +924,42 @@ EndFunc   ;==>_GetListviewWidths
 Func _AddWaypointGUI()
 	If $AddWaypoingGuiOpen = 0 Then
 		$AddWaypoingGuiOpen = 1
-		$AddWaypoingGui = GUICreate("Add Waypoint", 360, 230, -1, -1)
-		GUISetBkColor($BackgroundColor)
-		GUICtrlCreateLabel("Name:", 15, 16, 35, 17)
-		$GUI_AddName = GUICtrlCreateInput("", 56, 16, 281, 21)
-		GUICtrlCreateLabel("GC #:", 15, 46, 35, 17)
-		$GUI_AddGCID = GUICtrlCreateInput("", 56, 48, 281, 21)
-		GUICtrlCreateLabel("Notes:", 15, 76, 35, 17)
-		$GUI_AddNotes = GUICtrlCreateInput("", 56, 78, 281, 21)
 
-		$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 16, 118, 17, 17)
+		$AddWaypoingGui = GUICreate("Add Waypoint", 502, 373)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateGroup("Waypoint Details", 10, 8, 481, 217)
+		GUICtrlCreateLabel("Name:", 20, 31, 55, 17)
+		$GUI_AddName = GUICtrlCreateInput("", 80, 29, 401, 21)
+		GUICtrlCreateLabel("GC #:", 20, 63, 55, 17)
+		$GUI_AddGCID = GUICtrlCreateInput("", 80, 61, 401, 21)
+		GUICtrlCreateLabel("Notes:", 20, 95, 55, 17)
+		$GUI_AddNotes = GUICtrlCreateInput("", 80, 93, 401, 21)
+		GUICtrlCreateLabel("Author:", 20, 128, 55, 17)
+		$GUI_AddAuthor = GUICtrlCreateInput("", 80, 126, 401, 21)
+		GUICtrlCreateLabel("Link:", 20, 160, 55, 17)
+		$GUI_AddLink = GUICtrlCreateInput("", 80, 158, 401, 21)
+		GUICtrlCreateLabel("Type:", 20, 193, 55, 17)
+		$GUI_AddType = GUICtrlCreateInput("", 80, 191, 165, 21)
+		GUICtrlCreateLabel("Difficulty:", 265, 193, 50, 17)
+		$GUI_AddDifficulty = GUICtrlCreateInput("", 320, 191, 50, 21)
+		GUICtrlCreateLabel("Terrain:", 385, 194, 40, 17)
+		$GUI_AddTerrain = GUICtrlCreateInput("", 430, 192, 50, 21)
+		GUICtrlCreateGroup("Waypoint Location", 8, 232, 481, 97)
+		$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 18, 260, 17, 17)
 		If $RadDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
-		GUICtrlCreateLabel("Latitude:", 40, 121, 45, 17)
-		$dLat = GUICtrlCreateInput("", 85, 118, 81, 21)
-		GUICtrlCreateLabel("Longitude:", 184, 121, 54, 17)
-		$dLon = GUICtrlCreateInput("", 240, 118, 81, 21)
-		$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 16, 149, 17, 17)
+		GUICtrlCreateLabel("Latitude:", 40, 261, 45, 17)
+		$dLat = GUICtrlCreateInput("", 98, 257, 153, 21)
+		GUICtrlCreateLabel("Longitude:", 264, 261, 54, 17)
+		$dLon = GUICtrlCreateInput("", 328, 257, 153, 21)
+		$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 17, 293, 17, 17)
 		If $RadDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
-		GUICtrlCreateLabel("Bearing:", 40, 152, 43, 17)
-		$dBrng = GUICtrlCreateInput("", 85, 149, 81, 21)
-		GUICtrlCreateLabel("Distance:", 186, 152, 49, 17)
-		$dDist = GUICtrlCreateInput("", 240, 149, 81, 21)
-		$But_AddWapoint = GUICtrlCreateButton("Add Waypoint", 88, 188, 81, 25, $WS_GROUP)
-		$But_Cancel = GUICtrlCreateButton("Cancel", 189, 188, 81, 25, $WS_GROUP)
+		GUICtrlCreateLabel("Bearing:", 39, 294, 43, 17)
+		$dBrng = GUICtrlCreateInput("", 97, 290, 153, 21)
+		GUICtrlCreateLabel("Distance:", 263, 294, 49, 17)
+		$dDist = GUICtrlCreateInput("", 327, 290, 153, 21)
+		$But_AddWapoint = GUICtrlCreateButton("Add Waypoint", 96, 336, 129, 25, $WS_GROUP)
+		$But_Cancel = GUICtrlCreateButton("Cancel", 272, 338, 129, 25, $WS_GROUP)
+
 		GUISetState(@SW_SHOW)
 		GUICtrlSetOnEvent($But_AddWapoint, '_AddWaypoint')
 		GUICtrlSetOnEvent($But_Cancel, '_CloseAddWaypointGUI')
@@ -948,15 +978,16 @@ Func _AddWaypoint()
 	$WPName = GUICtrlRead($GUI_AddName)
 	$WPGCID = GUICtrlRead($GUI_AddGCID)
 	$WPNotes = GUICtrlRead($GUI_AddNotes)
+	$WPLink = GUICtrlRead($GUI_AddLink)
+	$WPAuth = GUICtrlRead($GUI_AddAuthor)
+	$WPType = GUICtrlRead($GUI_AddType)
+	$WPDif = GUICtrlRead($GUI_AddDifficulty)
+	$WPTer = GUICtrlRead($GUI_AddTerrain)
 	$WPBrng = GUICtrlRead($dBrng)
 	$WPDist = GUICtrlRead($dDist)
 	$WPLat = GUICtrlRead($dLat)
 	$WPLon = GUICtrlRead($dLon)
-	$WPLink = ""
-	$WPAuth = ""
-	$WPType = ""
-	$WPDif = ""
-	$WPTer = ""
+
 
 	If GUICtrlRead($Rad_DestGPS_LatLon) = 1 And BitAND($WPLat <> "", $WPLon <> "") Then
 		$DestLat = _Format_GPS_All_to_DMM($WPLat, "N", "S")
@@ -992,7 +1023,6 @@ Func _AddWaypoint()
 		_ListViewAdd($ListRow, $WPID, $WPName, $WPGCID, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 		_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPGCID & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 
-		;_CreatMultipleFields($dbfile, "WP", $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(3)|Bearing TEXT(20)|Distance TEXT(20)')
 		_CloseAddWaypointGUI()
 	Else
 		MsgBox(0, "Error", "This waypoint already exists")
@@ -1005,7 +1035,7 @@ Func _EditWaypointGUI()
 	If $EditWaypoingGuiOpen = 0 Then
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
-			$query = "SELECT WPID, ListRow, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance FROM WP WHERE ListRow='" & $Selected & "'"
+			$query = "SELECT WPID, ListRow, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link, Type, Difficulty, Terrain, Author FROM WP WHERE ListRow='" & $Selected & "'"
 			$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 			$DB_WPID = $WpMatchArray[1][1]
 			$DB_ListRow = $WpMatchArray[1][2]
@@ -1016,35 +1046,56 @@ Func _EditWaypointGUI()
 			$DB_Longitude = _GpsFormat($WpMatchArray[1][7])
 			$DB_Bearing = $WpMatchArray[1][8]
 			$DB_Distance = $WpMatchArray[1][9]
+			$DB_Link = $WpMatchArray[1][10]
+			$DB_Type = $WpMatchArray[1][11]
+			$DB_Difficulty = $WpMatchArray[1][12]
+			$DB_Terrain = $WpMatchArray[1][13]
+			$DB_Author = $WpMatchArray[1][14]
 			$dWPID = $DB_WPID
 			$dListRow = $DB_ListRow
 			$EditWaypoingGuiOpen = 1
-			$EditWaypoingGui = GUICreate("Edit Waypoint", 360, 230, -1, -1)
-			GUISetBkColor($BackgroundColor)
-			GUICtrlCreateLabel("Name:", 15, 16, 35, 17)
-			$GUI_AddName = GUICtrlCreateInput($DB_Name, 56, 16, 281, 21)
-			GUICtrlCreateLabel("GC #:", 15, 46, 35, 17)
-			$GUI_AddGCID = GUICtrlCreateInput($DB_GCID, 56, 48, 281, 21)
-			GUICtrlCreateLabel("Notes:", 15, 76, 35, 17)
-			$GUI_AddNotes = GUICtrlCreateInput($DB_Notes, 56, 78, 281, 21)
 
-			$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 16, 118, 17, 17)
+
+
+			$EditWaypoingGui = GUICreate("Edit Waypoint", 502, 373)
+			GUISetBkColor($BackgroundColor)
+			GUICtrlCreateGroup("Waypoint Details", 10, 8, 481, 217)
+			GUICtrlCreateLabel("Name:", 20, 31, 55, 17)
+			$GUI_AddName = GUICtrlCreateInput($DB_Name, 80, 29, 401, 21)
+			GUICtrlCreateLabel("GC #:", 20, 63, 55, 17)
+			$GUI_AddGCID = GUICtrlCreateInput($DB_GCID, 80, 61, 401, 21)
+			GUICtrlCreateLabel("Notes:", 20, 95, 55, 17)
+			$GUI_AddNotes = GUICtrlCreateInput($DB_Notes, 80, 93, 401, 21)
+			GUICtrlCreateLabel("Author:", 20, 128, 55, 17)
+			$GUI_AddAuthor = GUICtrlCreateInput($DB_Author, 80, 126, 401, 21)
+			GUICtrlCreateLabel("Link:", 20, 160, 55, 17)
+			$GUI_AddLink = GUICtrlCreateInput($DB_Link, 80, 158, 401, 21)
+			GUICtrlCreateLabel("Type:", 20, 193, 55, 17)
+			$GUI_AddType = GUICtrlCreateInput($DB_Type, 80, 191, 165, 21)
+			GUICtrlCreateLabel("Difficulty:", 265, 193, 50, 17)
+			$GUI_AddDifficulty = GUICtrlCreateInput($DB_Difficulty, 320, 191, 50, 21)
+			GUICtrlCreateLabel("Terrain:", 385, 194, 40, 17)
+			$GUI_AddTerrain = GUICtrlCreateInput($DB_Terrain, 430, 192, 50, 21)
+			GUICtrlCreateGroup("Waypoint Location", 8, 232, 481, 97)
+			$Rad_DestGPS_LatLon = GUICtrlCreateRadio("", 18, 260, 17, 17)
 			If $RadEditDestGPSLatLon = 1 Then GUICtrlSetState($Rad_DestGPS_LatLon, $GUI_CHECKED)
-			GUICtrlCreateLabel("Latitude:", 40, 121, 45, 17)
-			$dLat = GUICtrlCreateInput($DB_Latitude, 85, 118, 81, 21)
-			GUICtrlCreateLabel("Longitude:", 184, 121, 54, 17)
-			$dLon = GUICtrlCreateInput($DB_Longitude, 240, 118, 81, 21)
-			$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 16, 149, 17, 17)
+			GUICtrlCreateLabel("Latitude:", 40, 261, 45, 17)
+			$dLat = GUICtrlCreateInput($DB_Latitude, 98, 257, 153, 21)
+			GUICtrlCreateLabel("Longitude:", 264, 261, 54, 17)
+			$dLon = GUICtrlCreateInput($DB_Longitude, 328, 257, 153, 21)
+			$Rad_DestGPS_BrngDist = GUICtrlCreateRadio("", 17, 293, 17, 17)
 			If $RadEditDestGPSBrngDist = 1 Then GUICtrlSetState($Rad_DestGPS_BrngDist, $GUI_CHECKED)
-			GUICtrlCreateLabel("Bearing:", 40, 152, 43, 17)
-			$dBrng = GUICtrlCreateInput($DB_Bearing, 85, 149, 81, 21)
-			GUICtrlCreateLabel("Distance:", 186, 152, 49, 17)
-			$dDist = GUICtrlCreateInput($DB_Distance, 240, 149, 81, 21)
-			$But_AddWapoint = GUICtrlCreateButton("Edit Waypoint", 88, 188, 81, 25, $WS_GROUP)
-			$But_Cancel = GUICtrlCreateButton("Cancel", 189, 188, 81, 25, $WS_GROUP)
+			GUICtrlCreateLabel("Bearing:", 39, 294, 43, 17)
+			$dBrng = GUICtrlCreateInput($DB_Bearing, 97, 290, 153, 21)
+			GUICtrlCreateLabel("Distance:", 263, 294, 49, 17)
+			$dDist = GUICtrlCreateInput($DB_Distance, 327, 290, 153, 21)
+			$But_AddWapoint = GUICtrlCreateButton("Edit Waypoint", 96, 336, 129, 25, $WS_GROUP)
+			$But_Cancel = GUICtrlCreateButton("Cancel", 272, 338, 129, 25, $WS_GROUP)
 			GUISetState(@SW_SHOW)
 			GUICtrlSetOnEvent($But_AddWapoint, '_EditWaypoint')
 			GUICtrlSetOnEvent($But_Cancel, '_CloseEditWaypointGUI')
+		Else
+			MsgBox(0, "Error", "No waypoint selected")
 		EndIf
 	EndIf
 EndFunc   ;==>_EditWaypointGUI
@@ -1063,11 +1114,11 @@ Func _EditWaypoint()
 	$WPName = GUICtrlRead($GUI_AddName)
 	$WPGCID = GUICtrlRead($GUI_AddGCID)
 	$WPNotes = GUICtrlRead($GUI_AddNotes)
-	$WPLink = ""
-	$WPAuth = ""
-	$WPType = ""
-	$WPDif = ""
-	$WPTer = ""
+	$WPLink = GUICtrlRead($GUI_AddLink)
+	$WPAuth = GUICtrlRead($GUI_AddAuthor)
+	$WPType = GUICtrlRead($GUI_AddType)
+	$WPDif = GUICtrlRead($GUI_AddDifficulty)
+	$WPTer = GUICtrlRead($GUI_AddTerrain)
 	$WPBrng = GUICtrlRead($dBrng)
 	$WPDist = GUICtrlRead($dDist)
 	$WPLat = GUICtrlRead($dLat)
@@ -1097,6 +1148,94 @@ Func _EditWaypoint()
 	_CloseEditWaypointGUI()
 EndFunc   ;==>_EditWaypoint
 
+Func _DeleteWaypoint()
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what WP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then
+		;Get WPID and ListRow
+		$query = "SELECT WPID, ListRow FROM WP WHERE ListRow='" & $Selected & "'"
+		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+		$DelWPID = $WpMatchArray[1][1]
+		$DelListRow = $WpMatchArray[1][2]
+		;Delete Waypoint from Listview
+		_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $DelListRow)
+		;Delete Waypoint from DB
+		$query = "DELETE FROM WP WHERE WPID='" & $DelWPID & "'"
+		_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+		;Decrease WPID count
+		$WPID -= 1
+		;Update WPID and Listrow in DB of all other APs
+		$query = "SELECT WPID, ListRow FROM WP"
+		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+		$FoundWpMatch = UBound($WpMatchArray) - 1
+		If $FoundWpMatch <> 0 Then
+			For $du = 1 To $FoundWpMatch
+				$WPWPID = $WpMatchArray[$du][1]
+				$WPListrow = $WpMatchArray[$du][2]
+				ConsoleWrite('Listrow - ' & $WPListrow & '>' & $DelListRow & @CRLF)
+				If StringFormat("%09i", $WPListrow) > StringFormat("%09i", $DelListRow) Then
+					$NewListrow = $WPListrow - 1
+					$query = "UPDATE WP SET Listrow = '" & $NewListrow & "' WHERE WPID='" & $WPWPID & "'"
+					_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+					$WPListrow = $NewListrow
+				EndIf
+				ConsoleWrite('WPID - ' & $WPWPID & '>' & $DelWPID & @CRLF)
+				If StringFormat("%09i", $WPWPID) > StringFormat("%09i", $DelWPID) Then
+					$NewWPID = $WPWPID - 1
+					$query = "UPDATE WP SET WPID='" & $NewWPID & "' WHERE WPID='" & $WPWPID & "'"
+					_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+					$WPWPID = $NewWPID
+				EndIf
+				_ListViewAdd($WPListrow, $WPWPID, '', '', '', '', '', '', '', '', '', '', '', '')
+			Next
+		EndIf
+	Else
+		MsgBox(0, "Error", "No waypoint selected")
+	EndIf
+EndFunc
+
+Func _OpenWptLink()
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what WP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then
+		;Get WPID and ListRow
+		$query = "SELECT Link FROM WP WHERE ListRow='" & $Selected & "'"
+		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+		$WPLink = $WpMatchArray[1][1]
+		If $WPLink <> '' Then
+			Run("RunDll32.exe url.dll,FileProtocolHandler " & $WPLink)
+		Else
+			MsgBox(0, "Error", "This waypoint has no link")
+		EndIf
+	Else
+		MsgBox(0, "Error", "No waypoint selected")
+	EndIf
+EndFunc
+
+Func _ClearAll();Clear all APs
+	$ClearAllWps = 1
+EndFunc   ;==>_ClearAll
+
+Func _ClearAllWp()
+	;Reset Variables
+	$WPID = 0
+	$GPS_ID = 0
+	;Clear DB
+	$query = "DELETE * FROM GPS"
+	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM WP"
+	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+	;Clear Listview
+	GUISwitch($DataChild)
+	_GetListviewWidths()
+	GUICtrlDelete($ListviewAPs)
+	$ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+	_SetListviewWidths()
+	;GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
+	GUISwitch($MysticacheGUI)
+	$Redraw = 1
+	_SetControlSizes()
+	$ClearAllWps = 0
+EndFunc   ;==>_ClearAllAp
 
 Func _RecoverMDB()
 	$query = "UPDATE WP SET ListRow = '-1'"
@@ -1149,6 +1288,8 @@ Func _SetDestination()
 		$DestLon = $WpMatchArray[1][2]
 		$DestSet = 1
 		GUICtrlSetData($Lab_DestGPS, 'Dest GPS:     Latitude: ' & _GpsFormat($DestLat) & '     Longitude: ' & _GpsFormat($DestLon))
+	Else
+		MsgBox(0, "Error", "No waypoint selected")
 	EndIf
 	GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 EndFunc   ;==>_SetDestination
@@ -1346,7 +1487,8 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 	WinMove($DataChild, "", 0, 60, $a[2] - 10, $a[3] - 115)
 	$b = WinGetPos($DataChild) ;get child window size
 	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
-	If $sizes <> $sizes_old Then
+	If $sizes <> $sizes_old Or $Redraw = 1 Then
+		$Redraw = 0
 		$ListviewAPs_left = ($b[2] * 0.01)
 		$ListviewAPs_width = ($b[2] * 0.99) - $ListviewAPs_left
 		$ListviewAPs_top = ($b[3] * 0.01)
@@ -2296,8 +2438,8 @@ Func _XMLSanitize($return)
 	$return = StringReplace($return, '&', '&amp;')
 	$return = StringReplace($return, '<', '&lt;')
 	$return = StringReplace($return, '>', '&gt;')
-	Return($return)
-EndFunc
+	Return ($return)
+EndFunc   ;==>_XMLSanitize
 
 Func _ExportAllToKml()
 	$kml = FileSaveDialog("Google Earth Output File", $SaveDir, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
@@ -2406,7 +2548,7 @@ Func _SaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	Else
 		Return (1)
 	EndIf
-EndFunc   ;==>_AutoSaveKml
+EndFunc   ;==>_SaveKml
 
 Func _ExportAllToGPX()
 	$gpx = FileSaveDialog("GPX Output File", $SaveDir, 'GPS eXchange Format (*.gpx)', '', $ldatetimestamp & '.gpx')
@@ -2418,7 +2560,7 @@ Func _ExportAllToGPX()
 			MsgBox(0, 'Error', 'Error saving file' & ': "' & $gpx & '"')
 		EndIf
 	EndIf
-EndFunc   ;==>_ExportAllToKml
+EndFunc   ;==>_ExportAllToGPX
 
 Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	$FoundApWithGps = 0
@@ -2498,7 +2640,7 @@ Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	Else
 		Return (1)
 	EndIf
-EndFunc   ;==>
+EndFunc   ;==>_SaveGPX
 
 Func _ExportAllToLOC()
 	$loc = FileSaveDialog("LOC Output File", $SaveDir, 'LOC (*.loc)', '', $ldatetimestamp & '.loc')
@@ -2561,7 +2703,7 @@ Func _SaveLOC($gpx, $MapGpsWpts = 1)
 	Else
 		Return (1)
 	EndIf
-EndFunc
+EndFunc   ;==>_SaveLOC
 
 Func _OpenSaveFolder();Opens save folder in explorer
 	DirCreate($SaveDir)
@@ -2608,3 +2750,13 @@ Func _SortColumnToggle(); Sets the ap list column header that was clicked
 	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SortColumnToggle()') ;#Debug Display
 	$SortColumn = GUICtrlGetState($ListviewAPs)
 EndFunc   ;==>_SortColumnToggle
+
+Func _CleanupFiles($cDIR, $cTYPE)
+	$Tmpfiles = _FileListToArray($cDIR, $cTYPE, 1);Find all files in the folder that end in .tmp
+	If IsArray($Tmpfiles) Then
+		For $FoundTmp = 1 To $Tmpfiles[0]
+			$tmpname = $TmpDir & $Tmpfiles[$FoundTmp]
+			If _FileInUse($tmpname) = 0 Then FileDelete($tmpname)
+		Next
+	EndIf
+EndFunc   ;==>_CleanupFiles
