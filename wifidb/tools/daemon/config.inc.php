@@ -1,14 +1,20 @@
 <?php
-global $daemon_ver, $start_date, $last_edit;
-global $wifidb_install, $log_level, $log_interval, $verbose, $dst, $time_interval_to_check;
-global $colors_setting, $default_user, $default_title, $default_notes, $dim, $console_line_limit;
-
-if(PHP_OS == 'WINNT'){$dim = '\\';}
-if(PHP_OS == 'Linux'){$dim = '/';}
-$daemon_ver	=	"1.7.1";
+$daemon_ver	=	"2.0.0";
 $start_date	=	"2009-April-23";
-$last_edit	=	"2009-Sept-28";
-#do not touch above this line unless you know what you are doing.
+$last_edit	=	"2009-Dec-07";
+
+global $daemon_ver, $start_date, $last_edit;
+global $wifidb_install, $log_level, $log_interval, $verbose, $dst, $time_interval_to_check, $daemon_log;
+global $colors_setting, $default_user, $default_title, $default_notes, $dim, $console_line_limit;
+if(PHP_OS == 'WINNT'){$dim = '\\';}else{$dim = '/';}
+
+#############################################
+#############################################
+####   DO NOT TOUCH ABOVE THIS BLOCK,    ####
+#### UNLESS YOU KNOW WHAT YOU ARE DOING. ####
+#############################################
+#############################################
+
 
 //Defaults for unclaimed imports
 $default_user	= 'WiFiDB';
@@ -16,11 +22,11 @@ $default_title	= 'Recovery';
 $default_notes	= 'No Notes';
 
 //path to the folder that wifidb is installed in default is /var/www/wifidb/ , because I use Debian. fuck windows 
-$wifidb_install		=	'/var/www/wifidb';
+$wifidb_install		=	'/srv/www/virtual/vistumbler.net/wifidb';
 $console_line_limit	=	500;
 $console_trim_log	=	0;
-$pid_file_loc		=	'/var/run/wifidbd.pid';
-
+$pid_file_loc		=	'/var/run/wifidbd/';
+$daemon_log_folder	=	'/var/log/wifidb/';
 # IF you are running windows you need to define the install path to the PHP binary
 $php_install	=	"C:\php5_install_folder";
 

@@ -8,8 +8,8 @@ require('daemon/config.inc.php');
 if(PHP_OS == 'WINNT'){$GLOBALS['dim'] = '\\';}
 if(PHP_OS == 'Linux'){$GLOBALS['dim'] = '/';}
 
-require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
-require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'database.inc.php');
+require_once($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
+require_once($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'database.inc.php');
 
 #echo $GLOBALS['wifidb_tools']."\n";
 if(isset($argv[1]))
@@ -17,46 +17,44 @@ if(isset($argv[1]))
 else{$command = "none";}
 $command = strtolower($command);
 $command = $command[0].$command[1].$command[2].$command[3];
-if($command != "none") //parse WiFiDB argument to get value
+switch ($command)
 {
-	switch ($command)
-	{
-		case "rest" :
-			if(file_exists($GLOBALS['pid_file_loc']))
-			{
-				stop();
-				start();
-			}else
-			{
-				
-				echo "WiFiDB Daemon was not running..\n".$GLOBALS['pid_file_loc']."\n";
-				start();
-			}
-			break;
-			
-		case "stop" :
+	case "rest" :
+		if(file_exists($GLOBALS['pid_file_loc']))
+		{
 			stop();
-			break;
-			
-		case "star" :
 			start();
-			break;
+		}else
+		{
 			
-		case "vers" :
-			ver();
-			break;
-			
-		case "help" :
-			help();
-			break;
-			
-		case "star" :
-			status();
-			break;
-	}
-}else
-{
-	echo "You need to specify whether you want to start/restart/stop/help/ver the WiFiDB Daemon\n";
+			echo "WiFiDB Daemon was not running..\n".$GLOBALS['pid_file_loc']."\n";
+			start();
+		}
+		break;
+		
+	case "stop" :
+		stop();
+		break;
+		
+	case "star" :
+		start();
+		break;
+		
+	case "vers" :
+		ver();
+		break;
+		
+	case "help" :
+		help();
+		break;
+		
+	case "star" :
+		status();
+		break;
+		
+	case 'none':
+		echo "You need to specify whether you want to start/restart/stop/help/ver the WiFiDB Daemon\n";
+	break;
 }
 
 # Start and Stop functions for the daemon
