@@ -1,6 +1,7 @@
 Author: Andrew Calcutt
 Website: vistumbler.net
-Version: 1.0.1
-Date Created: 2009-07-25
+Version: 1.1.0
+Date Created: 2009-11-25
 Details:
-This is a theme based off of Andrews website.
+1.1.0 - Added Login header and mysticache contents.
+1.0.1 - This is a theme based off of Andrews website.

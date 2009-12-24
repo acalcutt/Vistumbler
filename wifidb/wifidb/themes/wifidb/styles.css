@@ -10,6 +10,10 @@ body {
 				color: #A9C6FA;
 }
 
+.sub_header{
+	background-color:#508FAE;
+}
+
 #foo {
 	position: absolute;
 	z-index: 99;

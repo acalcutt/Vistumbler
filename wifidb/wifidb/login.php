@@ -4,66 +4,80 @@ global $conn, $user_logins_table, $db;
 include_once('lib/database.inc.php');
 include_once('lib/security.inc.php');
 include_once('lib/config.inc.php');
-$sec = new security();
-$func				=	'';
 
+$sec = new security();
+$func =	'';
 $func = filter_input(INPUT_GET, 'func', FILTER_SANITIZE_SPECIAL_CHARS);
+$return = $_GET['return'];
+if($return == '' and !$_POST['return']){$return = "/$root/";}
 
 switch($func)
 {
 	case "login_proc":
-		$return = filter_input(INPUT_POST, 'return');
+		$return = $_POST['return'];
 		$username = filter_input(INPUT_POST, 'time_user', FILTER_SANITIZE_SPECIAL_CHARS);
 		$password = filter_input(INPUT_POST, 'time_pass', FILTER_SANITIZE_SPECIAL_CHARS);
-		$login = $sec->login($username, $password, $seed, $return);
-		pageheader("Login Page");
-		
-		if($login == "locked")
+		$login = $sec->login($username, $password, $seed);
+	#	dump($_POST['return']);
+		switch($login)
 		{
-			echo '<h2>This user is locked out. contact this WiFiDB\'s admin, or go to the <a href="http://forum.techidiots.net/">forums</a> and bitch to Phil.<br></h2>';
+			case "locked":
+				?><h2>This user is locked out. contact this WiFiDB\'s admin, or go to the <a href="http://forum.techidiots.net/">forums</a> and bitch to Phil.<br></h2><?php
+			break;
+			
+			case "p_fail":
+				?><h2>Either Bad Username or Password.</h2>
+				<?php
+			break;
+			
+			case"u_fail":
+				?><h2>Username does not exsist.</h2><?php
+			break;
+			
+			case "u_u_r_fail":
+				echo "failed to update User row";
+			break;
+			
+			case "good":
+				redirect_page($return, 2000, 'Login Successful!');
+			break;
+			
+			case "cookie_fail":
+				echo "Set Cookie fail, check the bottom of the glass, or your browser.";
+			break;
+			
+			default:
+				echo "Unknown Return.";
+			break;
 		}
-		footer($_SERVER['SCRIPT_FILENAME']);
+#		footer($_SERVER['SCRIPT_FILENAME']);
 	break;
 	
 	#---#
 	case "logout_proc":
+		$username = filter_input(INPUT_POST, 'time_user', FILTER_SANITIZE_SPECIAL_CHARS);
+		$password = filter_input(INPUT_POST, 'time_pass', FILTER_SANITIZE_SPECIAL_CHARS);
+		$login = $sec->login($username, $password, $seed, $return);
 		
 		if(!@$_COOKIE['WiFiDB_login_yes'])
 		{
-			?>
-				<script type="text/javascript">
-					function reload()
-					{
-						location.href = '<?php echo $hosturl.$root.'/';?>';
-					}
-				</script>
-				<body onload="reload()">Cookie already expired...</body>
-			<?php
+			redirect_page($return, 2000, 'Logout Successful!');
 		}else
 		{
-			if(setcookie("WiFiDB_login_yes", md5("@LOGGEDIN!".$pass_seed).":".$username, time()-3600))
+			if(setcookie("WiFiDB_login_yes", md5("@LOGGEDOUT!".$pass_seed).":".$username, 0))
 			{
-				?>
-				<script type="text/javascript">
-					function reload()
-					{
-						location.href = '<?php echo $hosturl.$root.'/';?>';
-					}
-				</script>
-				<body onload="reload()">Logged Out...</body>
-				<?php
+				redirect_page($return, 2000, 'Logout Successful!');
 			}
 			else
 			{
 				echo "Could not log you out.. :-(";
 			}
 		}
-		
 	break;
 	
 	#---#
 	case "create_user_form":
-		pageheader("Login Page");
+		pageheader("Security Page");
 		?>
 		<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_proc">
 		<table align="center">
@@ -71,11 +85,11 @@ switch($func)
 				<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
 			</tr>
 			<tr>
-				<td>Username</td>
+				<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
 				<td><input type="text" name="time_user"></td>
 			</tr>
 			<tr>
-				<td>Password</td>
+				<td>Password <font size="1">(CaSeSenSiTivE)</font></td>
 				<td><input type="password" name="time_pass"></td>
 			</tr>
 			<tr>
@@ -98,7 +112,7 @@ switch($func)
 	
 	#---#
 	case "create_user_proc":
-		pageheader("Login Page");
+		pageheader("Security Page");
 		$username = filter_input(INPUT_POST, 'time_user', FILTER_SANITIZE_SPECIAL_CHARS);
 		$password = filter_input(INPUT_POST, 'time_pass', FILTER_SANITIZE_SPECIAL_CHARS);
 		$password2 = filter_input(INPUT_POST, 'time_pass2', FILTER_SANITIZE_SPECIAL_CHARS);
@@ -107,67 +121,108 @@ switch($func)
 		{
 			
 			?>
+			<font color="red"><h2>Passwords did not match</h2></font>
 			<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_proc">
 			<table align="center">
 				<tr>
 					<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
 				</tr>
 				<tr>
-					<td>Username</td>
-					<td><input type="text" name="time_user"></td>
+					<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
+					<td><input type="text" name="time_user" value="<?php echo $username;?>"></td>
 				</tr>
 				<tr>
-					<td>Password</td>
+					<td>Password <font size="1">(CaSeSenSiTivE)</font></td>
 					<td><input type="password" name="time_pass"></td>
 				</tr>
 				<tr>
-					<td>Password (again)</td>
+					<td>Password (again)<font size="1">(CaSeSenSiTivE)</font></td>
 					<td><input type="password" name="time_pass2"></td>
 				</tr>
 				<tr>
 					<td>Email</td>
-					<td><input type="text" name="time_email"></td>
+					<td><input type="text" name="time_email" value="<?php echo $email;?>"></td>
 				</tr>
 				<tr>
 					<td colspan="2"><p align="center"><input type="submit" value="Create Me!"></p></td>
 				</tr>
 			</table>
-			
 			</form>
 			<?php
 			footer($_SERVER['SCRIPT_FILENAME']);
 			die();
 		}
-		if($sec->create_user($username, $password, $email, $seed))
+		$create = $sec->create_user($username, $password, $email);
+		switch($create)
 		{
-			?>
-			<p align="center"><font  color="green"><h2>User Created! Go ahead and login.</h2></font></p>
-			<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
-			<table align="center">
-				<tr>
-					<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
-				</tr>
-				<tr>
-					<td>Username</td>
-					<td><input type="text" name="time_user"></td>
-				</tr>
-				<tr>
-					<td>Password</td>
-					<td><input type="password" name="time_pass"></td>
-				</tr>
-				<tr>
-					<td colspan="2"><p align="center"><input type="submit" value="Login"></p></td>
-				</tr>
-				<tr>
-					<td colspan="2"><p align="center"><a class="links" href="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_form">Create a user account</a><br><a class="links" href="<?php echo $_SERVER['PHP_SELF'];?>?func=reset_user_pass">Forgot your password?</a></p></td>
-				</tr>
-			</table>
-			</form>
-			<?php
-		
-		}else
-		{
-			echo "<br><h1>D'oh!</h1>";
+			case 1:
+				?>
+				<p align="center"><font  color="green"><h2>User Created! Go ahead and login.</h2></font></p>
+				<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
+				<table align="center">
+					<tr>
+						<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
+					</tr>
+					<tr>
+						<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
+						<td><input type="text" name="time_user"></td>
+					</tr>
+					<tr>
+						<td>Password <font size="1">(CaSeSenSiTivE)</font></td>
+						<td><input type="password" name="time_pass"></td>
+					</tr>
+					<tr>
+						<td colspan="2"><p align="center"><input type="submit" value="Login"></p></td>
+					</tr>
+					<tr>
+						<td colspan="2"><p align="center"><a class="links" href="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_form">Create a user account</a><br><a class="links" href="<?php echo $_SERVER['PHP_SELF'];?>?func=reset_user_pass">Forgot your password?</a></p></td>
+					</tr>
+				</table>
+				</form>
+				<?php
+			break;
+			
+			case is_array($create):
+				list($er, $msg) = $create;
+				switch($er)
+				{
+					case "create_wpt":
+						echo 'There was an error in Creating the Geocache table.<BR>This is a serious error, contact Phil on the <a href="http://forum.techidiots.net/">forums</a><br>MySQL Error Message: '.$msg."<br><br><h1>D'oh!</h1>";
+					break;
+					
+					case "dup_u":
+						?><h2><font color="red">There was an error in Creating the Geocache table.</font></h2><BR>
+						<?php # echo $msg;?>
+						<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_proc">
+						<table align="center">
+							<tr>
+								<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
+							</tr>
+							<tr>
+								<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
+								<td><input type="text" name="time_user" value="<?php echo $username;?>"></td>
+							</tr>
+							<tr>
+								<td>Password <font size="1">(CaSeSenSiTivE)</font></td>
+								<td><input type="password" name="time_pass"></td>
+							</tr>
+							<tr>
+								<td>Password (again)<font size="1">(CaSeSenSiTivE)</font></td>
+								<td><input type="password" name="time_pass2"></td>
+							</tr>
+							<tr>
+								<td>Email</td>
+								<td><input type="text" name="time_email" value="<?php echo $email;?>"></td>
+							</tr>
+							<tr>
+								<td colspan="2"><p align="center"><input type="submit" value="Create Me!"></p></td>
+							</tr>
+						</table>
+						</form>
+						<?php
+					break;
+				}
+			break;
 		}
 		footer($_SERVER['SCRIPT_FILENAME']);
 	break;
@@ -176,15 +231,7 @@ switch($func)
 	case "dash":
 		if($sec->login_check())
 		{
-			?>
-			<script type="text/javascript">
-				function reload()
-				{
-					location.href = '<?php echo $hosturl.$root.'/';?>';
-				}
-			</script>
-			<body onload="reload()"></body>
-			<?php
+			redirect_page("/$root/", 2000, 'Logout Successful');
 		}else
 		{
 			echo '<BR>NOOO!!!!!<br>
@@ -192,13 +239,12 @@ switch($func)
 			<a href="http://forum.techidiots.net/">forums</a> and bitch to Phil.<br>
 			Or <a href="'.$hosturl.$root.'/login.php">go back</a> and try again.';
 		}
-		
 	break;
 	
 	#---#
 	case "reset_user_pass_proc":
 		
-		pageheader("Login Page");
+		pageheader("Security Page");
 		$username = filter_input(INPUT_POST, 'time_user', FILTER_SANITIZE_SPECIAL_CHARS);
 		$email = filter_input(INPUT_POST, 'time_email', FILTER_SANITIZE_SPECIAL_CHARS);
 		
@@ -209,7 +255,7 @@ switch($func)
 		$user_email = $newArray['email'];
 		if($username_db == '')
 		{
-			echo "<p align='center'><font color='red'><h2>User not found, try again, remember user-names are case sensitive.</h2></font></p>";
+			echo "<p align='center'><font color='red'><h2>User not found, try again, remember user-names are (CaSeSenSiTivE) sensitive.</h2></font></p>";
 			?>
 			<p align='center'><font color='red'><h2>Reset forgotten password</h2></font></p>
 			<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=reset_user_pass_proc">
@@ -274,7 +320,7 @@ switch($func)
 				}
 			}else
 			{
-				echo "<p align='center'><font color='red'><h2>Email address could not be matched, try again, remember emails are case sensitive.</h2></font></p>";
+				echo "<p align='center'><font color='red'><h2>Email address could not be matched, try again, remember emails are (CaSeSenSiTivE) sensitive.</h2></font></p>";
 				?>
 				<p align='center'><font color='red'><h2>Reset forgotten password</h2></font></p>
 				<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=reset_user_pass_proc">
@@ -283,7 +329,7 @@ switch($func)
 						<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
 					</tr>
 					<tr>
-						<td>Username</td>
+						<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
 						<td><input type="text" name="time_user"></td>
 					</tr>
 					<tr>
@@ -303,7 +349,7 @@ switch($func)
 
 	#---#
 	case "reset_user_pass":
-		pageheader("Login Page");
+		pageheader("Security Page");
 		?>
 		<p align='center'><font color='red'><h2>Reset forgoten password</h2></font></p>
 		<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=reset_user_pass_proc">
@@ -312,7 +358,7 @@ switch($func)
 				<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
 			</tr>
 			<tr>
-				<td>Username</td>
+				<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
 				<td><input type="text" name="time_user"></td>
 			</tr>
 			<tr>
@@ -330,8 +376,8 @@ switch($func)
 	
 	#---#
 	default :
-		pageheader("Login Page");
-		$return = filter_input(INPUT_GET, 'return');
+		pageheader("Security Page");
+		$return = str_replace("%5C", "%5C", $return);
 		?>
 		<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
 		<table align="center">
@@ -339,11 +385,11 @@ switch($func)
 				<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
 			</tr>
 			<tr>
-				<td>Username</td>
+				<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
 				<td><input type="text" name="time_user"></td>
 			</tr>
 			<tr>
-				<td>Password</td>
+				<td>Password <font size="1">(CaSeSenSiTivE)</font></td>
 				<td><input type="password" name="time_pass"></td>
 			</tr>
 			<tr>

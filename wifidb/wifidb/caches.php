@@ -24,8 +24,11 @@ if (isset($_GET['token']))
 				if ($_COOKIE['WiFiDB_page_limit']){$inc = $_COOKIE['WiFiDB_page_limit'];}else{$inc=100;}
 				if ($ord=="" or !is_string($ord)){$ord="ASC";}
 				if ($sort=="" or !is_string($sort)){$sort="id";}
-
+				$sql0 = "SELECT * FROM `$db`.`$share_cache`";
+				$result = mysql_query($sql0, $conn);
+				$total_rows = mysql_num_rows($result);
 				?>
+				<b><font size='6'>Shared Geocaches </font></b><br>
 				<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
 					<tr>
 						<th class="style3">ID<a href="?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=id&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
@@ -35,82 +38,92 @@ if (isset($_GET['token']))
 						<th class="style3">Catagory<a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
 					</tr>
 					<?php
-					$user_cache = $username."_waypoints";
-					$sql0 = "SELECT * FROM `$db`.`$share_cache` ORDER BY `$sort` $ord LIMIT $from, $inc";
-					$result = mysql_query($sql0, $conn);
-					while($gcache = mysql_fetch_array($result))
+					if($total_rows > 0 )
 					{
-						if($tracker == 0)
+						$user_cache = $username."_waypoints";
+						$sql0 = "SELECT * FROM `$db`.`$share_cache` ORDER BY `$sort` $ord LIMIT $from, $inc";
+						$result = mysql_query($sql0, $conn);
+						while($gcache = mysql_fetch_array($result))
 						{
-							$style_class = "light";
-							$tracker = 1;
-						}else
-						{
-							$style_class = "dark";
-							$tracker = 0;
+							if($tracker == 0)
+							{
+								$style_class = "light";
+								$tracker = 1;
+							}else
+							{
+								$style_class = "dark";
+								$tracker = 0;
+							}
+						?>
+						<tr>
+							<td class="<?php echo $style_class;?>">
+								<?php echo $gcache['id'];?>
+							</td>
+							<td class="<?php echo $style_class;?>">
+								<a class="links" href="?func=fetch_wpt&id=<?php echo $gcache['id'];?>"><?php echo $gcache['name'];?></a>
+							</td>
+							<td class="<?php echo $style_class;?>">
+								<?php echo $gcache['lat'];?>
+							</td>
+							<td class="<?php echo $style_class;?>">
+								<?php echo $gcache['long'];?>
+							</td>
+							<td class="<?php echo $style_class;?>">
+								<?php echo $gcache['cat'];?>
+							</td>
+						</tr>
+						<?php
 						}
+						?>
+						<tr>
+							<td colspan="5"><CENTER>
+								<?php
+								$from_fwd=$from;
+								$from = 0;
+								$page = 1;
+								$pages = $total_rows/$inc;
+								$pages_exp = explode(".",$pages);
+						#		echo $pages.' --- '.$pages_exp[1].'<BR>';
+								$pages_end = "0.".$pages_exp[1];
+								$pages_end = $pages_end+0;
+								$pages = $pages-$pages_end;
+						#		echo $pages.' --- '.$pages_end.'<BR>';
+								$mid_page = ($from_/$inc)+1;
+								$pages_together = ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from=0&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">First</a>] - ';
+								for($I=0; $I<=$pages; $I++)
+								{
+									if($I >= ($mid_page - 6) AND $I <= ($mid_page + 4))
+									{
+						#				echo $mid_page." --- ".$I." --- ".$page."<BR>";
+										
+										if($mid_page == $page)
+										{
+											$pages_together .= ' <i><u>'.$page.'</u></i> - ';
+										}else
+										{
+											$pages_together .= ' <a class="links" href="?func=boeyes&boeye_func=list_all&from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">'.$page.'</a> - ';
+										}
+									}
+									$from=$from+$inc;
+									$page++;
+								}
+								$pages_together .= ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from='.(($pages)*$inc).'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">Last</a>]  ';
+								echo "<br>Page: < ".$pages_together." >";
+								?>
+							</CENTER></td>
+						</tr>
+						<?php
+					}else
+					{
 					?>
 					<tr>
-						<td class="<?php echo $style_class;?>">
-							<?php echo $gcache['id'];?>
-						</td>
-						<td class="<?php echo $style_class;?>">
-							<a class="links" href="?func=fetch_wpt&id=<?php echo $gcache['id'];?>"><?php echo $gcache['name'];?></a>
-						</td>
-						<td class="<?php echo $style_class;?>">
-							<?php echo $gcache['lat'];?>
-						</td>
-						<td class="<?php echo $style_class;?>">
-							<?php echo $gcache['long'];?>
-						</td>
-						<td class="<?php echo $style_class;?>">
-							<?php echo $gcache['cat'];?>
-						</td>
+						<td colspan="5"><CENTER>
+						There are no Caches in the share table, go share some if you have `em.
+						</CENTER></td>
 					</tr>
 					<?php
 					}
 					?>
-					<tr>
-						<td colspan="5"><CENTER>
-							<?php
-							$sql0 = "SELECT * FROM `$db`.`$share_cache`";
-							$result = mysql_query($sql0, $conn);
-							$total_rows = mysql_num_rows($result);
-								
-							$from_fwd=$from;
-							$from = 0;
-							$page = 1;
-							$pages = $total_rows/$inc;
-							$pages_exp = explode(".",$pages);
-					#		echo $pages.' --- '.$pages_exp[1].'<BR>';
-							$pages_end = "0.".$pages_exp[1];
-							$pages_end = $pages_end+0;
-							$pages = $pages-$pages_end;
-					#		echo $pages.' --- '.$pages_end.'<BR>';
-							$mid_page = ($from_/$inc)+1;
-							$pages_together = ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from=0&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">First</a>] - ';
-							for($I=0; $I<=$pages; $I++)
-							{
-								if($I >= ($mid_page - 6) AND $I <= ($mid_page + 4))
-								{
-					#				echo $mid_page." --- ".$I." --- ".$page."<BR>";
-									
-									if($mid_page == $page)
-									{
-										$pages_together .= ' <i><u>'.$page.'</u></i> - ';
-									}else
-									{
-										$pages_together .= ' <a class="links" href="?func=boeyes&boeye_func=list_all&from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">'.$page.'</a> - ';
-									}
-								}
-								$from=$from+$inc;
-								$page++;
-							}
-							$pages_together .= ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from='.(($pages)*$inc).'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">Last</a>]  ';
-							echo "<br>Page: < ".$pages_together." >";
-							?>
-						</CENTER></td>
-					</tr>
 				</table>
 				<?php
 			break;
@@ -118,6 +131,7 @@ if (isset($_GET['token']))
 			case "fetch_wpt":
 				
 			break;
+		}
 	}else
 	{
 		echo "Token Could not be comapired";

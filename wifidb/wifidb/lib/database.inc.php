@@ -5,9 +5,9 @@
 #		error_reporting(E_ERROR);
 global $ver, $full_path, $half_path, $dim;
 $ver = array(
-			"wifidb"			=>	" *Alpha* 0.17 Build 1 {pre-release} ",
+			"wifidb"			=>	" *Alpha* 0.20 Build 1 {pre-release} ",
 			"codename"			=>	"Hyannis",
-			"Last_Core_Edit" 	=> 	"2009-Nov-11",
+			"Last_Core_Edit" 	=> 	"2009-Dec-07",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
@@ -26,7 +26,8 @@ $ver = array(
 										"exp_newest_kml"	=>	"1.0"
 										),
 			"Daemon"			=>	array(
-										"daemon_kml"		=>	"1.0"
+										"daemon_kml"		=>	"1.0",
+										"daemon_imp_exp"	=>	"1.0"
 										),
 			"Misc"				=>	array(
 										"breadcrumbs"		=>	"1.1",
@@ -37,8 +38,10 @@ $ver = array(
 										"make_ssid"			=>	"1.0",
 										"verbosed"			=>	"1.2",
 										"logd"				=>	"1.2",
+										"mail_admin"		=>	"1.0",
 										"IFWC"				=>	"2.0",
-										"dump"				=>	"1.0"
+										"dump"				=>	"1.0",
+										"get_set"			=>	"1.0"
 										),
 			"Themes"			=>	array(
 										"pageheader"		=>  "1.2",
@@ -181,6 +184,8 @@ if(@$GLOBALS['screen_output'] != "CLI")
 	{require($full_path."header_footer.inc.php");}
 }
 
+
+
 #-------------------------------------------------------------------------------------#
 #----------------------------------  Get Set values  ---------------------------------#
 #-------------------------------------------------------------------------------------#
@@ -195,6 +200,9 @@ function get_set($table,$column)
 	$set = substr($set,5,strlen($set)-7); // Remove "set(" at start and ");" at end
 	return preg_split("/','/",$set); // Split into and array
 }
+
+
+
 #-------------------------------------------------------------------------------------#
 #--------------------------------DUMP VAR TO HTML -----------------------------#
 #-------------------------------------------------------------------------------------#
@@ -243,6 +251,8 @@ function dump($value,$level=0)
   if ($level==0) echo '</pre>';
 }
 
+
+
 #-------- recurse_chown_chgrp[Recureivly chown and chgrp a folder ----------#
 function recurse_chown_chgrp($mypath, $uid, $gid)
 {
@@ -261,6 +271,7 @@ function recurse_chown_chgrp($mypath, $uid, $gid)
 		}
 	}
 }
+
 
 
 #---------------- recurse_chmod [Recureivly chmod a folder -----------------#
@@ -287,6 +298,7 @@ function recurse_chmod($mypath, $mod)
 function check_install_folder()
 {
 	include('config.inc.php');
+	if($GLOBALS['bypass_check']){return 1;}
 	if(PHP_OS == 'Linux'){ $div = '/';}
 	if(PHP_OS == 'WINNT'){ $div = '\\';}
 	$path = getcwd();
@@ -328,8 +340,47 @@ function check_install_folder()
 
 }
 
+
+
 #========================================================================================================================#
-#											verbose (Echos out a message to the screen or page)			        #
+#											mail_admin (Emails the admins of the DB about updates)						 #
+#========================================================================================================================#
+
+function mail_admin($contents = '', $enable_f = 1, $error_f = 0)
+{
+	if($enable_f)
+	{
+		require('config.inc.php');
+		$conn			= 	$GLOBALS['conn'];
+		$db				= 	$GLOBALS['db'];
+		$db_st			= 	$GLOBALS['db_st'];
+		$wtable			=	$GLOBALS['wtable'];
+		$user_logins_table = $GLOBALS['user_logins_table'];
+		
+		$user_s_ = array();
+		$sql10 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `disabled` != '1' AND `member` LIKE 'admins%'";
+	#	echo $sql10."<BR>";
+		$result10 = mysql_query($sql10, $conn);
+		while($users = mysql_fetch_array($result10))
+		{
+			$user_s[] = $users['username']." <".$users['email'].">";
+		}
+		$admin_emails = implode(",",$user_s);
+		
+		$host_exp = explode("//",$GLOBALS['hosturl']);
+		$domain = str_replace("/","",$host_exp[1]);
+		
+		$from_header = 'wfdb_app_automated@'.$domain."\r\n X-Mailer: PHP/".phpversion();
+		$subject = "WifiDB Automated Updates";
+		if($error_f){$subject .= " ^*^*^*^ ERROR!!! ^*^*^*^";}
+		
+	#	echo $admin_emails.' <- Emails<br>'.$subject.' &larr; Subject<BR>'.$contents.' &larr; Contents<BR>'.$from_header.' &larr; From_header';
+		mail($admin_emails, $subject, $contents, $from_header);
+	}
+}
+
+#========================================================================================================================#
+#											verbose (Echos out a message to the screen or page)			        		 #
 #========================================================================================================================#
 
 function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
@@ -379,6 +430,9 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 	}
 }
 
+
+
+
 #========================================================================================================================#
 #											log write (writes a message to the log file)								 #
 #========================================================================================================================#
@@ -386,8 +440,7 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 function verbosed($message = "", $level = 0, $out="CLI", $header = 0)
 {
 	require('config.inc.php');
-	$time = time();
-	$datetime = date("Y-m-d H:i:s",$time);
+	$datetime = date("Y-m-d H:i:s",time());
 	if($out == "CLI")
 	{
 		if($message != '')
@@ -417,71 +470,30 @@ function verbosed($message = "", $level = 0, $out="CLI", $header = 0)
 }
 
 
+
+
 #========================================================================================================================#
 #											regenerateSession (regens Token for a session)								 #
 #========================================================================================================================#
 
-function regenerateSession($reload = false)
+function session_starter()
 {
-	// This token is used by forms to prevent cross site forgery attempts
-	if(!isset($_SESSION['token']) || $reload)
-		$_SESSION['token'] = md5(microtime(true));
-
-	if(!isset($_SESSION['IPaddress']) || $reload)
-		$_SESSION['IPaddress'] = $_SERVER['REMOTE_ADDR'];
-
-	if(!isset($_SESSION['userAgent']) || $reload)
-		$_SESSION['userAgent'] = $_SERVER['HTTP_USER_AGENT'];
-
-	//$_SESSION['user_id'] = $this->user->getId();
-
-	// Set current session to expire in 1 minute
-	$_SESSION['OBSOLETE'] = true;
-	$_SESSION['EXPIRES'] = time() + 60;
-
-	// Create new session without destroying the old one
-	session_regenerate_id(false);
-
-	// Grab current session ID and close both sessions to allow other scripts to use them
-	$newSession = session_id();
-	session_write_close();
-
-	// Set session ID to the new one, and start it back up again
-	session_id($newSession);
+	global $token;
 	session_start();
-
-	// Don't want this one to expire
-	unset($_SESSION['OBSOLETE']);
-	unset($_SESSION['EXPIRES']);
-	return $_SESSION['token'];
-}
-
-#========================================================================================================================#
-#									check session (checks to see if a session is live or not)					 		 #
-#========================================================================================================================#
-
-function checkSession()
-{
-	try{
-		if($_SESSION['OBSOLETE'] && ($_SESSION['EXPIRES'] < time()))
-			throw new Exception('Attempt to use expired session.');
-		if(!is_numeric($_SESSION['user_id']))
-			throw new Exception('No session started.');
-		if($_SESSION['IPaddress'] != $_SERVER['REMOTE_ADDR'])
-			throw new Exception('IP Address mixmatch (possible session hijacking attempt).');
-		if($_SESSION['userAgent'] != $_SERVER['HTTP_USER_AGENT'])
-			throw new Exception('Useragent mixmatch (possible session hijacking attempt).');
-		if(!$this->loadUser($_SESSION['user_id']))
-			throw new Exception('Attempted to log in user that does not exist with ID: ' . $_SESSION['user_id']);
-		if(!$_SESSION['OBSOLETE'] && mt_rand(1, 100) == 1)
-		{
-			$this->regenerateSession();
-		}
-		return true;
-	}catch(Exception $e){
-		return false;
+	if(!$_COOKIE['PHPSESSID'])
+	{
+		$token = md5(uniqid(rand(), true));
+		$_SESSION['token'] = $token;
+	}else
+	{
+		$token = $_COOKIE['PHPSESSID'];
+		$_SESSION['token'] = $token;
 	}
+	return $token;
 }
+
+
+
 
 #========================================================================================================================#
 #									breadcrumb (creates a breadcrumb to follow on each page)							 #
@@ -528,6 +540,9 @@ function breadcrumb($PATH_INFO)
 	return true;
 }
 
+
+
+
 #========================================================================================================================#
 #													Smart Quotes (char filtering)										 #
 #========================================================================================================================#
@@ -566,6 +581,9 @@ function smart_quotes($text="") // Used for SSID Sanatization
 	return $text;
 }
 
+
+
+
 #========================================================================================================================#
 #													Smart (filtering for GPS)											 #
 #========================================================================================================================#
@@ -588,6 +606,9 @@ function smart($text="") // Used for GPS
 	return $text;
 }
 
+
+
+
 #========================================================================================================================#
 #							dos_filesize (gives file size for either windows or linux machines)				 			 #
 #========================================================================================================================#
@@ -606,6 +627,8 @@ function dos_filesize($fn)
 	}
 }
 
+
+
 #========================================================================================================================#
 #					format_size (formats bytes based size to B, kB, MB, GB... and so on, also does rounding)				        #
 #========================================================================================================================#
@@ -613,10 +636,18 @@ function dos_filesize($fn)
 function format_size($size, $round = 2)
 {
 	//Size must be bytes!
+	
 	$sizes = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
-	for ($i=0; $size > 1024 && $i < count($sizes) - 1; $i++) $size /= 1024;
+	
+	for ($i=0; $size > 1024 && $i < count($sizes) - 1; $i++)
+	{
+		$size /= 1024;
+	}
+#	echo $size."<BR>";
 	return round($size,$round).$sizes[$i];
 }
+
+
 
 #=========================================================================================================================#
 #							make ssid (makes a DB safe, File safe and Unsan versions of an SSID)			 		#
@@ -634,7 +665,56 @@ function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 	return $A;
 }
 
+function top_ssids()
+{
+	$conn			= 	$GLOBALS['conn'];
+	$db				= 	$GLOBALS['db'];
+	$db_st			= 	$GLOBALS['db_st'];
+	$wtable			=	$GLOBALS['wtable'];
+	$users_t		=	$GLOBALS['users_t'];
+	$gps_ext		=	$GLOBALS['gps_ext'];
+	$files			=	$GLOBALS['files'];
+	$user_logins_table = $GLOBALS['user_logins_table'];
+	$root			= 	$GLOBALS['root'];
+	$half_path		=	$GLOBALS['half_path'];
+	if($GLOBALS['half_path'] =='')
+	{
+		include_once($GLOBALS['wifidb_install'].'/lib/config.inc.php');
+	}else
+	{
+		include_once($GLOBALS['half_path'].'lib/config.inc.php');
+	}
 
+	$ssids = array();
+	$number = array();
+
+	$sql0 = "SELECT * FROM `$db`.`$wtable`";
+	$result0 = mysql_query($sql0, $conn) or die(mysql_error($conn));
+	$total_rows = mysql_num_rows($result0);
+	if($total_rows != 0)
+	{
+		while ($files = mysql_fetch_array($result0))
+		{
+			$ssids[]	=	$files['ssid'];
+		}
+		$ssids = array_unique($ssids);
+		sort($ssids);
+		foreach($ssids as $key=>$ssid)
+		{
+			$sql1 = "SELECT * FROM `$db`.`$wtable` WHERE `ssid` LIKE '$ssid'";
+			$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+			$total_rows = mysql_num_rows($result1);
+			
+			$num_ssid[]	=	array( 0=>$total_rows, 1=>$ssid);
+		}
+		rsort($num_ssid);
+		return $num_ssid;
+	}else
+	{
+		echo "<h2>There is nothing to stat, import something so I can graph it.</h2>";
+		return 0;
+	}
+}
 	
 	#=========================================================================================================================#
 	#																							#
@@ -860,6 +940,15 @@ class database
 		require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 		require 'config.inc.php';
 		
+		$conn			= 	$GLOBALS['conn'];
+		$db				= 	$GLOBALS['db'];
+		$db_st			= 	$GLOBALS['db_st'];
+		$wtable			=	$GLOBALS['wtable'];
+		$users_t		=	$GLOBALS['users_t'];
+		$gps_ext		=	$GLOBALS['gps_ext'];
+		$root			= 	$GLOBALS['root'];
+		$half_path		=	$GLOBALS['half_path'];
+		
 		$file_exp = explode("/", $source);
 		$file_exp_seg = count($file_exp);
 		$file1 = $file_exp[$file_exp_seg-1];
@@ -903,8 +992,8 @@ class database
 		
 #		$result = mysql_query("SELECT `row` FROM `$db`.`files_tmp` WHERE `file` LIKE '$file1' LIMIT 1", $conn);
 #		$newArray = mysql_fetch_array($result);
-		$sqlu = "INSERT INTO `$db`.`users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`) VALUES ( '', '$user', '','$notes', '', '$title', '', '')";
-		$user_row_new_result = mysql_query("SELECT `id` FROM `$db`.`users` ORDER BY `id` DESC LIMIT 1", $conn);
+		$sqlu = "INSERT INTO `$db`.`$users_t` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`) VALUES ( '', '$user', '','$notes', '', '$title', '', '')";
+		$user_row_new_result = mysql_query("SELECT `id` FROM `$db`.`$users_t` ORDER BY `id` DESC LIMIT 1", $conn);
 		if(!$user_row_new_result)
 		{
 			logd($error_reserv_user_row."!\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
@@ -918,7 +1007,7 @@ class database
 				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 			}
 		}
-		$user_row_result = mysql_query("SELECT `id` FROM `$db`.`users` ORDER BY `id` DESC LIMIT 1", $conn);
+		$user_row_result = mysql_query("SELECT `id` FROM `$db`.`$users_t` ORDER BY `id` DESC LIMIT 1", $conn);
 		$user_row_array = mysql_fetch_array($user_row_result);
 		$user_row_id = $user_row_array['id'];  //STILL NEED TO IMPLEMENT THIS, ONLY JUST STARTED
 		
@@ -1813,7 +1902,7 @@ class database
 		$gdatacount = count($gdata);
 		if($user_ap_s != "")
 		{
-			$sqlu = "INSERT INTO `$db`.`users` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`, `hash`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount', '$hash')";
+			$sqlu = "INSERT INTO `$db`.`$users_t` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`, `hash`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount', '$hash')";
 			if(!mysql_query($sqlu, $conn))
 			{
 				if($out=="CLI")
@@ -2221,8 +2310,7 @@ class database
 		<tr class="style4"><th>New/Update</th><th>ID</th><th>User</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
 		<?php
 		$start3 = microtime(true);
-		mysql_select_db($db, $conn);
-		$result = mysql_query("SELECT * FROM `$db`.`users`", $conn);
+		$result = mysql_query("SELECT * FROM `$db`.`$users_t`", $conn);
 		while ($field = mysql_fetch_array($result)) 
 		{
 			if($field['points'] != '')
@@ -2251,7 +2339,7 @@ class database
 				$exp = explode(",",$aplist);
 				$apid = $exp[0];
 				$new_update = $exp[1];
-				$result = mysql_query("SELECT * FROM `$db`.`users` WHERE `id`='$apid'", $conn);
+				$result = mysql_query("SELECT * FROM `$db`.`$users_t` WHERE `id`='$apid'", $conn);
 				while ($field = mysql_fetch_array($result)) 
 				{
 					if($field["title"]==''){$field["title"]="Untitled";}
@@ -2305,12 +2393,13 @@ class database
 		$userarray = array();
 		?>
 			<h1>Stats For: All Users</h1>
-			<table border="1" align="center"><tr class="style4">
+			<table border="1" align="center">
+			<tr class="style4">
 			<th>ID</th><th>UserName</th><th>Title</th><th>Import Notes</th><th>Number of APs</th><th>Imported On</th></tr><tr>
 		<?php
 		
-		mysql_select_db($db,$conn);
-		$sql = "SELECT * FROM `users` ORDER BY username ASC";
+		
+		$sql = "SELECT * FROM `$db`.`$users_t` ORDER BY username ASC";
 		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 		$num = mysql_num_rows($result);
 		if($num == 0)
@@ -2327,9 +2416,14 @@ class database
 		$users = array_unique($users);
 		$pre_user = "";
 		$n=0;
+		$row_color = 0;
 		foreach($users as $user)
 		{
-			$sql = "SELECT * FROM `users` WHERE `username`='$user'";
+			if($row_color == 1)
+			{$row_color = 0; $color = "light";}
+			else{$row_color = 1; $color = "dark";}
+			
+			$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username`='$user'";
 			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 			while ($user_array = mysql_fetch_array($result))
 			{
@@ -2347,12 +2441,28 @@ class database
 				if($user_array['points'] === ""){continue;}
 				if($pre_user !== $username)
 				{
-					echo '<tr><td>'.$user_array['id'].'</td><td><a class="links" href="userstats.php?func=alluserlists&user='.$username.'&token='.$_SESSION['token'].'">'.$username.'</a></td><td><a class="links" href="userstats.php?func=useraplist&row='.$user_array["id"].'&token='.$_SESSION['token'].'">'.$user_array['title'].'</a></td><td>'.wordwrap($notes, 56, "<br />\n").'</td><td>'.$pc.'</td><td>'.$user_array['date'].'</td></tr>';
+					?>
+					<tr >
+						<td class="<?php echo $color;?>"><?php echo $user_array['id'];?></td>
+						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $username;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $username;?></a></td>
+						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user_array['title'];?></a></td>
+						<td class="<?php echo $color;?>"><?php echo wordwrap($notes, 56, "<br />\n"); ?></td>
+						<td class="<?php echo $color;?>"><?php echo $pc;?></td>
+						<td class="<?php echo $color;?>"><?php echo $user_array['date'];?></td>
+					</tr>
+					<?php
 				}
 				else
 				{
 					?>
-					<tr><td></td><td></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user_array['title'];?></a></td><td><?php echo wordwrap($notes, 56, "<br />\n"); ?></td><td><?php echo $pc;?></td><td><?php echo $user_array['date'];?></td></tr>
+					<tr>
+						<td></td>
+						<td></td>
+						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user_array['title'];?></a></td>
+						<td class="<?php echo $color;?>"><?php echo wordwrap($notes, 56, "<br />\n"); ?></td>
+						<td class="<?php echo $color;?>"><?php echo $pc;?></td>
+						<td class="<?php echo $color;?>"><?php echo $user_array['date'];?></td>
+					</tr>
 					<?php
 				}
 				$pre_user = $username;
@@ -2389,8 +2499,7 @@ class database
 		<table border="1" align="center"><tr class="style4"><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr>
 		<?php
 		include('config.inc.php');
-		mysql_select_db($db,$conn);
-		$sql = "SELECT * FROM `users` WHERE `username`='$user'";
+		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username`='$user'";
 		$re = mysql_query($sql, $conn) or die(mysql_error($conn));
 		while($user_array = mysql_fetch_array($re))
 		{
@@ -2416,7 +2525,7 @@ class database
 			$apid = $ap['apid'];
 			$row = $ap['row'];
 			
-			$sql = "SELECT * FROM `$wtable` WHERE `ID`='$apid'";
+			$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$apid'";
 			$res = mysql_query($sql, $conn) or die(mysql_error($conn));
 			while ($ap_array = mysql_fetch_array($res))
 			{
@@ -2478,8 +2587,7 @@ class database
 		echo '<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user='.$user.'&token='.$_SESSION['token'].'">'.$user.'</a>';
 		echo '<h2><a class="links" href=../opt/export.php?func=exp_user_all_kml&user='.$user.'&token='.$_SESSION['token'].'">Export To KML File</a></h2>';
 		echo '<table border="1"><tr class="style4"><th>ID</th><th>Title</th><th># of APs</th><th>Imported on</th></tr><tr>';
-		mysql_select_db($db,$conn);
-		$sql = "SELECT * FROM `users` WHERE `username` = '$user'";
+		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` = '$user'";
 		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 		while($user_array = mysql_fetch_array($result))
 		{
@@ -2508,8 +2616,7 @@ class database
 		$start = microtime(true);
 		include('config.inc.php');
 		$pagerow = 0;
-		mysql_select_db($db,$conn);
-		$sql = "SELECT * FROM `users` WHERE `id`='$row'";
+		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `id`='$row'";
 		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 		$user_array = mysql_fetch_array($result);
 		$aps=explode("-",$user_array["points"]);
@@ -2530,7 +2637,7 @@ class database
 			$apid = $ap_and_row[0];
 			$row = $ap_and_row[1];
 			
-			$sql = "SELECT * FROM `$wtable` WHERE `ID`='$apid'";
+			$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$apid'";
 			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 			while ($ap_array = mysql_fetch_array($result))
 			{
@@ -2589,8 +2696,7 @@ class database
 				$total = 0;
 				$no_gps = 0;
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th colspan="2" style="border-style: solid; border-width: 1px">Start of WiFi DB export to KML</th></tr>';
-				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
-				$sql = "SELECT * FROM `$wtable`";
+				$sql = "SELECT * FROM `$db`.`$wtable`";
 				$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$total = mysql_num_rows($result);
 				$temp_kml = '../tmp/full_db_export.kml';
@@ -2617,12 +2723,11 @@ class database
 					$chan		= $ap_array['chan'];
 					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
 					$table_gps = $table.$gps_ext;
-					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
-					$sql1 = "SELECT * FROM `$table`";
+					$sql1 = "SELECT * FROM `$db_st`.`$table`";
 					$result1 = mysql_query($sql1, $conn);
 					if(!$result1){$bad++;continue;}
 					$rows = mysql_num_rows($result1);
-					$sql = "SELECT * FROM `$table` WHERE `id`='1'";
+					$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='1'";
 					$newArray = mysql_fetch_array($result1);
 					switch($sectype)
 					{
@@ -2666,11 +2771,11 @@ class database
 					$nt = $newArray['nt'];
 					$label = $newArray['label'];
 					
-					$sql6 = "SELECT * FROM `$table_gps`";
+					$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
 					$result6 = mysql_query($sql6, $conn);
 					$max = mysql_num_rows($result6);
 					
-					$sql_1 = "SELECT * FROM `$table_gps`";
+					$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
 					$result_1 = mysql_query($sql_1, $conn);
 					$zero = 0;
 					while($gps_table_first = mysql_fetch_array($result_1))
@@ -2702,7 +2807,7 @@ class database
 					}
 					//=====================================================================================================//
 					
-					$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+					$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$max'";
 					$result_2 = mysql_query($sql_2, $conn);
 					$gps_table_last = mysql_fetch_array($result_2);
 					$date_last = $gps_table_last["date"];
@@ -2791,13 +2896,12 @@ class database
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start of export Users List to KML</th></tr>';
 				if($row == 0)
 				{
-					$sql_row = "SELECT * FROM `users` ORDER BY `id` DESC LIMIT 1";
+					$sql_row = "SELECT * FROM `$db`.`$users_t` ORDER BY `id` DESC LIMIT 1";
 					$result_row = mysql_query($sql_row, $conn) or die(mysql_error($conn));
 					$row_array = mysql_fetch_array($result_row);
 					$row = $row_array['id'];
 				}
-				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
-				$sql = "SELECT * FROM `users` WHERE `id`='$row'";
+				$sql = "SELECT * FROM `$db`.`$users_t` WHERE `id`='$row'";
 				$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$user_array = mysql_fetch_array($result);
 				
@@ -2838,8 +2942,7 @@ class database
 					$update_row = $apid_exp[1];
 					$udflag = $ap_exp[0];
 					
-					mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
-					$sql0 = "SELECT * FROM `$wtable` WHERE `id`='$apid'";
+					$sql0 = "SELECT * FROM `$db`.`$wtable` WHERE `id`='$apid'";
 					$result0 = mysql_query($sql0, $conn) or die(mysql_error($conn));
 					$newArray = mysql_fetch_array($result0);
 					
@@ -2892,9 +2995,8 @@ class database
 					}
 					
 					$table=$ssid.'-'.$mac.'-'.$sectype.'-'.$r.'-'.$chan;
-					mysql_select_db($db_st) or die("Unable to select Database: ".$db_st);
 					
-					$sql = "SELECT * FROM `$table` WHERE `id`='$update_row'";
+					$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$update_row'";
 					$result = mysql_query($sql, $conn);
 					$AP_table = mysql_fetch_array($result);
 					$otx = $AP_table["otx"];
@@ -2903,11 +3005,11 @@ class database
 					$label = $AP_table['label'];
 					$table_gps = $table.$gps_ext;
 					
-					$sql6 = "SELECT * FROM `$table_gps`";
+					$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
 					$result6 = mysql_query($sql6, $conn);
 					$max = mysql_num_rows($result6);
 					
-					$sql = "SELECT * FROM `$table_gps`";
+					$sql = "SELECT * FROM `$db_st`.`$table_gps`";
 					$result = mysql_query($sql, $conn);
 					while($gps_table_first = mysql_fetch_array($result))
 					{
@@ -2930,7 +3032,7 @@ class database
 					$total++;
 					if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; $no_gps++;continue;}
 					
-					$sql_1 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+					$sql_1 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$max'";
 					$result_1 = mysql_query($sql_1, $conn);
 					$gps_table_last = mysql_fetch_array($result_1);
 					$date_last = $gps_table_last["date"];
@@ -3043,7 +3145,6 @@ class database
 					$ssid = $ssids_ptb[0];
 					$table=$ssid.'-'.$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan'];
 					$table_gps = $table.$gps_ext;
-					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 		#			echo $table."<br>";
 					$sql = "SELECT * FROM `$db_st`.`$table`";
 					$result = mysql_query($sql, $conn) or die(mysql_error($conn));
@@ -3201,10 +3302,9 @@ class database
 				$start = microtime(true);
 				$total=0;
 				$no_gps = 0;
-				mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 				echo '<table align="center" style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start export of all APs for User: '.$user.', to KML</th></tr>';
 				$ap_id = array();
-				$sql = "SELECT `points` FROM `users` WHERE `username`='$user'";
+				$sql = "SELECT `points` FROM `$db`.`$users_t` WHERE `username`='$user'";
 				$result = mysql_query($sql, $conn);
 				while($points = mysql_fetch_array($result))
 				{
@@ -3242,11 +3342,10 @@ class database
 				$NN = 0;
 				foreach($ap_id as $ap)
 				{
-					mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 					$id = $ap['id'];
 					$rows = $ap['row'];
 					
-					$sql = "SELECT * FROM `$wtable` WHERE `id`='$id'";
+					$sql = "SELECT * FROM `$db`.`$wtable` WHERE `id`='$id'";
 					$result = mysql_query($sql, $conn);
 					$aps = mysql_fetch_array($result);
 					
@@ -3262,46 +3361,45 @@ class database
 					$table_gps = $table.$gps_ext;
 					
 					switch($r)
-						{
-							case "a":
-								$radio="802.11a";
-								break;
-							case "b":
-								$radio="802.11b";
-								break;
-							case "g":
-								$radio="802.11g";
-								break;
-							case "n":
-								$radio="802.11n";
-								break;
-							case "u":
-								$radio="802.11u";
-								break;
-							default:
-							$radio="Unknown Radio";
-								break;
-						}
+					{
+						case "a":
+							$radio="802.11a";
+							break;
+						case "b":
+							$radio="802.11b";
+							break;
+						case "g":
+							$radio="802.11g";
+							break;
+						case "n":
+							$radio="802.11n";
+							break;
+						case "u":
+							$radio="802.11u";
+							break;
+						default:
+						$radio="Unknown Radio";
+							break;
+					}
 					switch($sectype)
-						{
-							case 1:
-								$type = "#openStyleDead";
-								$auth = "Open";
-								$encry = "None";
-								break;
-							case 2:
-								$type = "#wepStyleDead";
-								$auth = "Open";
-								$encry = "WEP";
-								break;
-							case 3:
-								$type = "#secureStyleDead";
-								$auth = "WPA-Personal";
-								$encry = "TKIP-PSK";
-								break;
-						}
-					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db_st);
-					$sql = "SELECT * FROM `$table` WHERE `id`='$rows'";
+					{
+						case 1:
+							$type = "#openStyleDead";
+							$auth = "Open";
+							$encry = "None";
+							break;
+						case 2:
+							$type = "#wepStyleDead";
+							$auth = "Open";
+							$encry = "WEP";
+							break;
+						case 3:
+							$type = "#secureStyleDead";
+							$auth = "WPA-Personal";
+							$encry = "TKIP-PSK";
+							break;
+					}
+					$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$rows'";
 					$result1 = mysql_query($sql, $conn) or die(mysql_error($conn));
 					
 					while ($newArray = mysql_fetch_array($result1))
@@ -3320,11 +3418,11 @@ class database
 						$exp_last = explode("," , $signal_exp[$sig_count-1]);
 						$last_sig_gps_id = $exp_last[1];
 						
-						$sql6 = "SELECT * FROM `$table_gps`";
+						$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
 						$result6 = mysql_query($sql6, $conn);
 						$max = mysql_num_rows($result6);
 						
-						$sql_1 = "SELECT * FROM `$table_gps`";
+						$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
 						$result_1 = mysql_query($sql_1, $conn);
 						$zero = 0;
 						while($gps_table_first = mysql_fetch_array($result_1))
@@ -3347,7 +3445,7 @@ class database
 						}
 						if($zero == 1){echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$aps['ssid'].'</td></tr>'; $zero == 0; $no_gps++; $total++;continue;}
 						$total++;
-						$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$last_sig_gps_id'";
+						$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$last_sig_gps_id'";
 						$result_2 = mysql_query($sql_2, $conn);
 						$gps_table_last = mysql_fetch_array($result_2);
 						$date_last = $gps_table_last["date"];
@@ -3444,13 +3542,12 @@ class database
 					// open file and write header:
 					
 					$manuf =& database::manufactures($aparray['mac']);
-					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 		#			echo $table."<br>";
-					$sql = "SELECT * FROM `$table`";
+					$sql = "SELECT * FROM `$db_st`.`$table`";
 					$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 					$rows = mysql_num_rows($result);
 		#			echo $rows."<br>";
-					$sql = "SELECT * FROM `$table` WHERE `id`='$row'";
+					$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$row'";
 					$result1 = mysql_query($sql, $conn) or die(mysql_error($conn));
 		#			echo $ap['mac']."<BR>";
 					$newArray = mysql_fetch_array($result1);
@@ -3491,11 +3588,11 @@ class database
 					$nt = $newArray['nt'];
 					$label = $newArray['label'];
 					
-					$sql6 = "SELECT * FROM `$table_gps`";
+					$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
 					$result6 = mysql_query($sql6, $conn);
 					$max = mysql_num_rows($result6);
 					
-					$sql_1 = "SELECT * FROM `$table_gps`";
+					$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
 					$result_1 = mysql_query($sql_1, $conn);
 					while($gps_table = mysql_fetch_array($result_1))
 					{
@@ -3517,7 +3614,7 @@ class database
 					$total++;
 					if($zero == 1){echo '<tr><td style="border-style: solid; border-width: 1px">No GPS Data, Skipping Access Point: '.$ssid.'</td></tr>'; $zero == 0; $no_gps++;continue;}
 					
-					$sql_2 = "SELECT * FROM `$table_gps` WHERE `id`='$max'";
+					$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$max'";
 					$result_2 = mysql_query($sql_2, $conn);
 					$gps_table_last = mysql_fetch_array($result_2);
 					$date_last = $gps_table_last["date"];
@@ -3527,7 +3624,7 @@ class database
 					$file_data .= ("<Placemark id=\"".$aparray['mac']."\">\r\n	<name>".$ssid."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid."<br /><b>Mac Address: </b>".$aparray['mac']."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$aparray['chan']."<br /><b>Authentication: </b>".$aparray['auth']."<br /><b>Encryption: </b>".$aparray['encry']."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$manuf."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$aparray['id']."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$aparray['mac']."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n");
 					echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 					
-					$sql_3 = "SELECT * FROM `$table` WHERE `id`='$row'";
+					$sql_3 = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$row'";
 					$sig_result = mysql_query($sql_3, $conn) or die(mysql_error($conn));
 					$array = mysql_fetch_array($sig_result);
 					$signals = explode("-",$array['sig']);
@@ -3538,7 +3635,7 @@ class database
 						$gpsid = $sig_exp[0];
 #						echo $signal.'<br>';
 						$sig = $sig_exp[1];
-						$sql_1 = "SELECT * FROM `$table_gps` WHERE `id` = '$gpsid'";
+						$sql_1 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id` = '$gpsid'";
 						$result_1 = mysql_query($sql_1, $conn);
 						$gps = mysql_fetch_array($result_1);
 						$lat_exp = explode(" ", $gps['lat']);
@@ -3633,7 +3730,6 @@ class database
 		$start = microtime(true);
 		$total=0;
 		$no_gps = 0;
-		mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 		echo '<table align="center" style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px" colspan="2">Start export of all APs for User: '.$user.', to KML</th></tr>';
 		
 		$date=date('Y-m-d_H-i-s');
@@ -3656,7 +3752,7 @@ class database
 		fwrite( $fileappend, "<Folder>\r\n<name>Access Points for User: ".$user."</name>\r\n");
 		echo '<tr><td colspan="2" style="border-style: solid; border-width: 1px">Wrote Header to KML File</td></tr>';
 		$NN = 0;
-		$sql = "SELECT * FROM `$wtable` WHERE " . implode(' AND ', $values);
+		$sql = "SELECT * FROM `$db`.`$wtable` WHERE " . implode(' AND ', $values);
 		$result = mysql_query($sql, $conn);
 		while($aps = mysql_fetch_array($result))
 		{
@@ -3832,8 +3928,8 @@ class database
 				$row_id_exp = explode(",",$row);
 				$id = $row_id_exp[1];
 				$row = $row_id_exp[0];
-				$date=date('Y-m-d_H-i-s');
-				$sql = "SELECT * FROM `$wtable` WHERE `ID`='$id'";
+				$date = date('Y-m-d_H-i-s');
+				$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$id'";
 				$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$aparray = mysql_fetch_array($result);
 				$ssid_array = make_ssid($aparray['ssid']);
@@ -3853,13 +3949,12 @@ class database
 					$file_data  = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\r\n<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"WiFiDB 0.16 Build 2\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">";
 					// write file header buffer var
 					
-					mysql_select_db($db_st,$conn) or die("Unable to select Database:".$db);
 		#			echo $table."<br>";
-					$sql = "SELECT * FROM `$table`";
+					$sql = "SELECT * FROM `$db_st`.`$table`";
 					$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 					$rows = mysql_num_rows($result);
 		#			echo $rows."<br>";
-					$sql = "SELECT * FROM `$table` WHERE `id`='$row'";
+					$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$row'";
 					$result1 = mysql_query($sql, $conn) or die(mysql_error($conn));
 					$mac_e = str_split($aparray['mac'],2);
 					$macadd = $mac_e[0].":".$mac_e[1].":".$mac_e[2].":".$mac_e[3].":".$mac_e[4].":".$mac_e[5];
@@ -3870,11 +3965,11 @@ class database
 					if($type == 2){$color = "Navaid, Amber";}
 					if($type == 3){$color = "Navaid, Red";}
 					
-					$sql6 = "SELECT * FROM `$table_gps`";
+					$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
 					$result6 = mysql_query($sql6, $conn);
 					$max = mysql_num_rows($result6);
 					
-					$sql_1 = "SELECT * FROM `$table_gps`";
+					$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
 					$result_1 = mysql_query($sql_1, $conn);
 					while($gps_table = mysql_fetch_array($result_1))
 					{
@@ -3907,7 +4002,7 @@ class database
 									."<gpxx:Category>Category ".$type."</gpxx:Category>\r\n</gpxx:Categories>\r\n</gpxx:WaypointExtension>\r\n</extensions>\r\n</wpt>\r\n\r\n";
 					echo '<tr><td style="border-style: solid; border-width: 1px">Wrote AP: '.$ssid.'</td></tr>';
 					
-					$sql_3 = "SELECT * FROM `$table` WHERE `id`='$row'";
+					$sql_3 = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$row'";
 					$sig_result = mysql_query($sql_3, $conn) or die(mysql_error($conn));
 					$array = mysql_fetch_array($sig_result);
 					$signals = explode("-",$array['sig']);
@@ -3918,7 +4013,7 @@ class database
 						$gpsid = $sig_exp[0];
 						
 						$sig = $sig_exp[1];
-						$sql_1 = "SELECT * FROM `$table_gps` WHERE `id` = '$gpsid'";
+						$sql_1 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id` = '$gpsid'";
 						$result_1 = mysql_query($sql_1, $conn);
 						$gps = mysql_fetch_array($result_1);
 						$lat_exp = explode(" ", $gps['lat']);
@@ -3974,8 +4069,7 @@ class database
 				$n	=	1; 
 				$nn	=	1; # AP Array key
 				echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to VS1</th></tr>';
-				mysql_select_db($db,$conn) or die("Unable to select Database: ".$db);
-				$sql_		= "SELECT * FROM `$wtable`";
+				$sql_		= "SELECT * FROM `$db`.`$wtable`";
 				$result_	= mysql_query($sql_, $conn) or die(mysql_error($conn));
 				while($ap_array = mysql_fetch_array($result_))
 				{
@@ -4016,17 +4110,16 @@ class database
 								$radio="Unknown Radio";
 								break;
 						}
-					mysql_select_db($db_st,$conn) or die("Unable to select Database: ".$db_st);
 					$ssid_array = make_ssid($aparray['ssid']);
 					$ssid_t = $ssid_array[0];
 					$ssid_f = $ssid_array[1];
 					$ssid = $ssid_array[2];
 					$table	=	$ssid_t.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
-					$sql	=	"SELECT * FROM `$table`";
+					$sql	=	"SELECT * FROM `$db_st`.`$table`";
 					$result	=	mysql_query($sql, $conn) or die(mysql_error($conn));
 					$rows	=	mysql_num_rows($result);
 					
-					$sql1 = "SELECT * FROM `$table` WHERE `id` = '$rows'";
+					$sql1 = "SELECT * FROM `$db_st`.`$table` WHERE `id` = '$rows'";
 					$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
 					$newArray = mysql_fetch_array($result1);
 #					echo $nn."<BR>";
@@ -4067,11 +4160,10 @@ class database
 					echo $table_gps."<BR>";
 					foreach($signals as $sign)
 					{
-						mysql_select_db($db_st,$conn) or die("Unable to select Database: ".$db_st);
 						$sig_exp = explode(",", $sign);
 						$gps_id	= $sig_exp[0];
 						
-						$sql1 = "SELECT * FROM `$table_gps` WHERE `id` = '$gps_id'";
+						$sql1 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id` = '$gps_id'";
 						$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
 						$gps_table = mysql_fetch_array($result1);
 						$gps_array[$n]	=	array(
@@ -4558,7 +4650,6 @@ class daemon
 		$WLLdata = '';
 		$SLLdata = '';
 		
-		mysql_select_db($db,$conn) or die("Unable to select Database:".$db);
 		$sql = "SELECT * FROM `$db`.`$wtable`";
 		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 		$total = mysql_num_rows($result);
@@ -4766,6 +4857,7 @@ class daemon
 		$db = $GLOBALS['db'];
 		$conn = $GLOBALS['conn'];
 		$wtable = $GLOBALS['wtable'];
+		$users_t = $GLOBALS['users_t'];
 		$gps_ext = $GLOBALS['gps_ext'];
 		$root = $GLOBALS['root'];
 		$hosturl = $GLOBALS['hosturl'];
@@ -4793,7 +4885,7 @@ class daemon
 		while($user_rows = mysql_fetch_array($result))
 		{
 			$id = $user_rows['user_row'];
-			$sql11 = "SELECT `points` FROM `$db`.`users` WHERE `id` = '$id'";
+			$sql11 = "SELECT `points` FROM `$db`.`$users_t` WHERE `id` = '$id'";
 	#		echo $sql11."\n";
 			$points_result = mysql_query($sql11, $conn) or die(mysql_error($conn));
 			$points = mysql_fetch_array($points_result);
@@ -4998,6 +5090,92 @@ class daemon
 		fwrite($fileappend_daily_label, $DLdata);
 		fclose($fileappend_daily_label);
 	}
+
+
+####################
+	function getdaemonstats()
+	{
+		$WFDBD_PID = $GLOBALS['pid_file_loc'];
+		$os = PHP_OS;
+		if ( $os[0] == 'L')
+		{
+			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><?php
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('ps vp '.$pid_open[0] , $output, $sta);
+				if(isset($output[1]))
+				{
+					$start = trim($output[1], " ");
+					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
+					$mem = $match[0][0];
+					
+					preg_match_all("/(php.*)/", $start, $matc);
+					$CMD = $matc[0][0];
+					
+					preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
+					$time = $mat[0][0];
+					
+					$patterns[1] = '/  /';
+					$patterns[2] = '/ /';
+					$ps_stats = preg_replace($patterns , "|" , $start);
+					$ps_Sta_exp = explode("|", $ps_stats);
+					?>
+					<tr class="style4">
+						<th>PID</th>
+						<th>TIME</th>
+						<th>Memory</th>
+						<th>CMD</th>
+					</tr>
+					<tr align="center" bgcolor="green">
+						<td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td>
+						<td><?php echo $time;?></td>
+						<td><?php echo $mem."%";?></td>
+						<td><?php echo $CMD;?></td>
+					</tr>
+					<?php
+				}else
+				{
+					?><tr align="center" bgcolor="red"><td colspan="4">Linux Based WiFiDB Daemon is not running!</td><?php
+				}
+			}else
+			{
+				?><tr align="center" bgcolor="red"><td colspan="4">Linux Based WiFiDB Daemon is not running!</td><?php
+			}
+		}elseif( $os[0] == 'W')
+		{
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+				if(isset($output[2]))
+				{
+					?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+					$ps_stats = explode("," , $output[2]);
+					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+				}else
+				{
+					?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr>
+					<tr align="center" bgcolor="red"><td colspan="4">Windows Based WiFiDB Daemon is not running!</td><?php
+				}
+			}else
+			{
+				?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr>
+				<tr align="center" bgcolor="red"><td colspan="4">Windows Based WiFiDB Daemon is not running!</td><?php
+			}
+		}else
+		{
+			?><tr class="style4"><th colspan="4">Unkown OS Based WiFiDB Daemon</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based WiFiDB Daemon is not running!</td><?php
+		}
+		
+	}
+
+	
+	
+
 #END DAEMON CLASS
 }
 ?>

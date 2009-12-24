@@ -2,6 +2,15 @@
 include('../lib/database.inc.php');
 pageheader("Exports Page");
 include('../lib/config.inc.php');
+
+$conn			= 	$GLOBALS['conn'];
+$db				= 	$GLOBALS['db'];
+$db_st			= 	$GLOBALS['db_st'];
+$wtable			=	$GLOBALS['wtable'];
+$users_t		=	$GLOBALS['users_t'];
+$gps_ext		=	$GLOBALS['gps_ext'];
+$root			= 	$GLOBALS['root'];
+$half_path		=	$GLOBALS['half_path'];
 ?>
 			<h2>Exports Page</h2>
 <?php
@@ -24,7 +33,7 @@ switch($func)
 			<?php
 			$rows = 0;
 			mysql_select_db($db,$conn);
-			$sql = "SELECT `id`,`title`, `username`, `aps`, `date` FROM `users`";
+			$sql = "SELECT `id`,`title`, `username`, `aps`, `date` FROM `$db`.`$users_t`";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
 			$rowsl = mysql_num_rows($re);
 			if($rowsl < 1)
@@ -61,7 +70,7 @@ switch($func)
 			<select name="user">
 			<?php
 			mysql_select_db($db,$conn);
-			$sql = "SELECT `username` FROM `users`";
+			$sql = "SELECT `username` FROM `$db`.`$users_t`";
 			$re = mysql_query($sql, $conn) or die(mysql_error());
 			$rowsu = mysql_num_rows($re);
 			if($rowsu < 1)

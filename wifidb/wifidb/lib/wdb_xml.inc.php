@@ -108,375 +108,322 @@ class WDB_XML
 		
 		$error = '';
 		
-		$buffer = file_get_contents($xml_file);
-		$edit = preg_replace("/[\r\n\r\n]/","",$buffer);
-		$xml=WDB_XML::xml2ary($edit);
-
-		$count_gpx = count($xml['gpx']['_c']['wpt'])-1;
-	#	echo $count."<BR>";
 		$User = $sec->login_check();
-	#	echo $User." <-----";
 		if($User)
 		{
 			$User_cache = $User."_waypoints";
-			if($count_gpx > 0)
+			$file_exp = explode(".", $xml_file);
+			$ext = strtolower($file_exp[1]);
+			switch($ext)
 			{
-				$cnt_wpt = 0;
-				foreach($xml['gpx']['_c']['wpt'] as $wpt)
-				{
-					$share = 0;
-					$share_id = 0;
-					$cat = "geocache";
-					$u_date = "0000-00-00 00:00:00";
-					
-#					?Traditional?Cache?(1.5/1.5)
+				##########################################################
+				case "gpx":
+					$buffer = file_get_contents($xml_file);
+					$edit = preg_replace("/[\r\n\r\n]/","",$buffer);
+					$xml=WDB_XML::xml2ary($edit);
 
-					$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
-					$desc_exp2 = explode(", ",$desc_exp[1]);
+					$count_gpx = count($xml['gpx']['_c']['wpt'])-1;
 					
-					$desc_exp3 = explode("(", $desc_exp2[1]);
-					$replace = str_ireplace(")",$desc_exp3[1]);
-					$desc_exp4 = explode("/", $replace);
-					if($wpt['_c']['author']['_v'] == '')
+					if($count_gpx > 0)
 					{
-						$author = addslashes($desc_exp2[0]);
+						$cnt_wpt = 0;
+						foreach($xml['gpx']['_c']['wpt'] as $wpt)
+						{
+							$share = 0;
+							$share_id = 0;
+							$cat = "geocache";
+							$u_date = "0000-00-00 00:00:00";
+							
+		#					?Traditional?Cache?(1.5/1.5)
+
+							$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
+							$desc_exp2 = explode(", ",$desc_exp[1]);
+							
+							$desc_exp3 = explode("(", $desc_exp2[1]);
+							$replace = str_ireplace(")", "", $desc_exp3[1]);
+							$desc_exp4 = explode("/", $replace);
+							if($wpt['_c']['author']['_v'] == '')
+							{
+								$author = addslashes($desc_exp2[0]);
+							}else
+							{
+								$author = addslashes($wpt['_c']['author']['_v']);
+							}
+							
+							if($wpt['_c']['Difficulty']['_v'] == '' or $wpt['_c']['Terrain']['_v'] == '' or $wpt['_c']['Cache Type']['_v'] == '')
+							{
+								$diff = addslashes($desc_exp4[0]);
+								$terain = addslashes($desc_exp4[1]);
+								$type = addslashes($desc_exp3[0]);
+							}else
+							{
+								$diff = addslashes($wpt['_c']['Difficulty']['_v']);
+								$terain = addslashes($wpt['_c']['Terrain']['_v']);
+								$type = addslashes($wpt['_c']['Cache Type']['_v']);
+							}
+							
+							if($wpt['_c']['Terrain']['_v'] == '')
+							{
+								$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
+								$desc_exp2 = explode(", ",$desc_exp[1]);
+								$diff = addslashes($desc_exp2[0]);
+								$terain = $wpt['_c']['Terrain']['_v'];
+							}else
+							{
+								$terain = addslashes($wpt['_c']['Terrain']['_v']);
+							}
+							
+							$name = addslashes($desc_exp[0]);
+							$c_date = date("Y-m-d G:i:s");
+							
+							$URLname = addslashes($wpt['_c']['urlname']['_v']);
+							$URL = addslashes($wpt['_c']['url']['_v']);
+							$lat = addslashes($wpt['_a']['lat']);
+							$long = addslashes($wpt['_a']['lon']);
+							
+							$gcid = addslashes($wpt['_c']['name']['_v']);
+					#		echo $gcid."<BR>";
+							$notes = "No Notes";
+							$link = addslashes($wpt['_c']['url']['_v']);
+							
+							$sql0 = "INSERT INTO `$db`.`$User_cache` (`id`, `name`, `author`, `gcid`, `notes`, `cat`, `type`, `diff`, `terain`, `lat`, `long`, `link`, `share`, `share_id`, `c_date`, `u_date`) VALUES ('', '$name', '$author', '$gcid', '$notes', '$cat', '$type','$diff', '$terain', '$lat', '$long', '$link', '$share', '$share_id', '$c_date', '$u_date')";
+					#	echo $sql0."<BR>";
+							if(mysql_query($sql0, $conn))
+							{
+					#			echo "Inserted!<BR>\r\n";
+							}else
+							{
+								$error .= mysql_error($conn)."\r\n";
+							}
+							$cnt_wpt++;
+						}
+					#	echo $error;
+						return array($User, $cnt_wpt);
 					}else
 					{
-						$author = addslashes($wpt['_c']['author']['_v']);
+						echo "The GPX file that you have uploaded has no data, go back and get a good file you bad user...";
+						return 0;
 					}
-					
-					if($wpt['_c']['Difficulty']['_v'] == '' or $wpt['_c']['Terrain']['_v'] == '' or $wpt['_c']['Cache Type']['_v'] == '')
-					{
-						$diff = addslashes($desc_exp4[0]);
-						$terain = addslashes($desc_exp4[1]);
-						$type = addslashes($desc_exp3[0]);
-					}else
-					{
-						$diff = addslashes($wpt['_c']['Difficulty']['_v']);
-						$terain = addslashes($wpt['_c']['Terrain']['_v']);
-						$type = addslashes($wpt['_c']['Cache Type']['_v']);
-					}
-					
-					if($wpt['_c']['Terrain']['_v'] == '')
-					{
-						$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
-						$desc_exp2 = explode(", ",$desc_exp[1]);
-						$diff = addslashes($desc_exp2[0]);
-						$terain = $wpt['_c']['Terrain']['_v'];
-					}else
-					{
-						$terain = addslashes($wpt['_c']['Terrain']['_v']);
-					}
-					
-					$name = addslashes($desc_exp[0]);
-					$c_date = date("Y-m-d G:i:s");
-					
-					$URLname = addslashes($wpt['_c']['urlname']['_v']);
-					$URL = addslashes($wpt['_c']['url']['_v']);
-					$lat = addslashes($wpt['_a']['lat']);
-					$long = addslashes($wpt['_a']['lon']);
-					
-					$gcid = addslashes($wpt['_c']['name']['_v']);
-			#		echo $gcid."<BR>";
-					$notes = "No Notes";
-					$link = addslashes($wpt['_c']['url']['_v']);
-					
-					$sql0 = "INSERT INTO `$db`.`$User_cache` (`id`, `name`, `author`, `gcid`, `notes`, `cat`, `type`, `lat`, `long`, `link`, `share`, `share_id`, `c_date`, `u_date`) VALUES (NULL, '$name', '$author', '$gcid', '$notes', '$cat', '$type', '$lat', '$long', '$link', '$share', '$share_id', '$c_date', '$u_date')";
-			#	echo $sql0."<BR>";
-					if(mysql_query($sql0, $conn))
-					{
-					#	echo "Inserted!<BR>\r\n";
-					}else
-					{
-						$error .= mysql_error($conn).":::";
-					}
-					$cnt_wpt++;
-				}
-				return array($User, $cnt_wpt);
-			}else
-			{
-				echo "The file that you have uploaded is not of the correct Formatting, go back and get a good file you bad user...";
-				return 0;
-			}
-		}else
-		{
-			return "login";
-		}
-	}
-
-	function share_wpt($id)
-	{
-		include_once($GLOBALS['half_path'].'/lib/security.inc.php');
-		$sec = new security();
-		$id+0;
-		$db = $GLOBALS['db'];
-		$conn = $GLOBALS['conn'];
-		$share_cache = $GLOBALS['share_cache'];
-		$User = $sec->login_check();
-	#	echo $User." <-----";
-		if($User)
-		{
-			$User_cache = $User."_waypoints";
-			$select = "SELECT * FROM `$db`.`$User_cache` WHERE `id` = '$id'";
-			$return = mysql_query($select, $conn);
-			$pri_wpt = mysql_fetch_array($return);
-			
-			$author = $pri_wpt['author'];
-			$shared_by = $User;
-			$name = addslashes($pri_wpt['name']);
-			$gcid = $pri_wpt['gcid'];
-			$notes = addslashes($pri_wpt['notes']);
-			$cat = $pri_wpt['cat'];
-			$type = addslashes($pri_wpt['type']);
-			$lat = $pri_wpt['lat'];
-			$long = $pri_wpt['long'];
-			$link = $pri_wpt['link'];
-			$c_date = $pri_wpt['c_date'];
-			$u_date = date("Y-m-d G:i:s");
-			
-			$sql1 = "INSERT INTO `$db`.`$share_cache` (`id`, `author`, `shared_by`, `name`, `gcid`, `notes`, `cat`, `type`, `lat`, `long`, `link`, `c_date`, `u_date`, `pvt_id`) VALUES (NULL, '$author', '$shared_by', '$name', '$gcid', '$notes', '$cat', '$type', '$lat', '$long', '$link', '$c_date', '$u_date', '$id')";
-			if(mysql_query($sql1, $conn))
-			{
-				$select = "SELECT `id` FROM `$db`.`$share_cache` WHERE `gcid` LIKE '$gcid' AND `name` LIKE '$name'";
-		#		echo $select."<BR>";
-				$return = mysql_query($select, $conn);
-				$shr_wpt = mysql_fetch_array($return);
-				$share_id = $shr_wpt['id'];
-		#		echo $share_id."<BR>";
-				$update_user_share_flag = "UPDATE `$db`.`$User_cache` SET `share` = '1', `share_id` = '$share_id', `u_date` = '$u_date' WHERE `id` = '$id'";
-		#		echo $update_user_share_flag."<BR>";
-				if(mysql_query($update_user_share_flag, $conn))
-				{
-					return 1;
-				}else
-				{
-					return array("Mysql_error", mysql_error($conn));
-				}
-			}else
-			{
-				return array("Mysql_error", mysql_error($conn));
-			}
-		}else
-		{
-			return "login";
-		}
-	}
-
-	function remove_share_wpt($id)
-	{
-		include_once($GLOBALS['half_path'].'/lib/security.inc.php');
-		$sec = new security();
-		
-		$id+0;
-		$db = $GLOBALS['db'];
-		$conn = $GLOBALS['conn'];
-		$share_cache = $GLOBALS['share_cache'];
-		
-		$u_date = date("Y-m-d G:i:s");
-		$User = $sec->login_check();
-	#	echo $User." <-----";
-		if($User)
-		{
-			$User_cache = $User."_waypoints";
-			$remove = "DELETE FROM `$db`.`$share_cache` WHERE `$share_cache`.`pvt_id` = '$id' LIMIT 1";
-			if(mysql_query($remove, $conn))
-			{
-				$update_user_share_flag = "UPDATE `$db`.`$User_cache` SET `share` = '0',`share_id` = '0', `u_date` = '$u_date' WHERE `$User_cache`.`id` = '$id' LIMIT 1";
-				if(mysql_query($update_user_share_flag, $conn))
-				{
-					return 1;
-				}else
-				{
-					return mysql_error($conn);
-				}
-			}else
-			{
-				return mysql_error($conn);
-			}
-		}else
-		{
-			return "login";
-		}
-	}
-
-	function update_wpt($id = 0, $name = '', $gcid = '', $notes = '', $cat = '', $type = '' , $lat = '', $long = '', $link = '')
-	{
-		include_once($GLOBALS['half_path'].'/lib/security.inc.php');
-		$sec = new security();
-		
-		$db = $GLOBALS['db'];
-		$conn = $GLOBALS['conn'];
-		$share_cache = $GLOBALS['share_cache'];
-		$u_date = date("Y-m-d G:i:s");
-		
-		$User = $sec->login_check();
-	#	echo $User." <-----";
-		if($User)
-		{
-			$User_cache = $User."_waypoints";
-			$sql0 = "UPDATE `$db`.`$User_cache` SET `name` = '$name', `gcid` = '$gcid', `notes` = '$notes', `cat` = '$cat', `type` = '$type', `lat` = '$lat', `long` = '$long', `link` = '$link', `u_date` = '$u_date' WHERE `$User_cache`.`id` = '$id' LIMIT 1";
-			if(mysql_query($sql0, $conn))
-			{
-				$select = "SELECT `share`, `share_id` FROM `$db`.`$User_cache` WHERE `id` = '$id'";
+				break;
 				
-				$return = mysql_query($select, $conn);
-				$shr_wpt = mysql_fetch_array($return);
-				$share_id = $shr_wpt['share_id'];
-				$share = $shr_wpt['share'];
-				if($share == 1)
-				{
-					$sql1 = "UPDATE `$db`.`$share_cache` SET `author` = '$username', `name` = '$name ', `gcid` = '$gcid ', `notes` = '$notes', `cat` = '$cat', `type` = '$type', `lat` = '$lat', `long` = '$long', `link` = '$link', `u_date` = '$u_date' WHERE `$share_cache`.`id` = '$share_id' LIMIT 1";
-					if(mysql_query($sql1, $conn))
+				
+				################################################
+				case "loc":
+					$buffer = file_get_contents($xml_file);
+					$edit = preg_replace("/[\r\n\r\n]/","",$buffer);
+					
+					$xml=WDB_XML::xml2ary($edit);
+					
+				#	dump($xml);
+					
+					$count_gpx = count($xml['loc']['_c']['waypoint'])-1;
+					
+					if($count_gpx > 0)
 					{
-						return 1;
+						$cnt_wpt = 0;
+						foreach($xml['loc']['_c']['waypoint'] as $wpt)
+						{
+							$share = 0;
+							$share_id = 0;
+							$cat = "geocache";
+							$u_date = "0000-00-00 00:00:00";
+							
+		#					?Traditional?Cache?(1.5/1.5)
+							
+							$desc_exp = explode(" by ", $wpt['_c']['name']['_v'], 2);
+							$desc_exp2 = explode(", ",$desc_exp[1]);
+							
+							$desc_exp3 = explode("(", $desc_exp2[1]);
+							$replace = str_ireplace(")","",$desc_exp3[1]);
+							$desc_exp4 = explode("/", $replace);
+							
+							if($wpt['_c']['author']['_v'] == '')
+							{
+								$author = addslashes($desc_exp2[0]);
+							}else
+							{
+								$author = addslashes($wpt['_c']['author']['_v']);
+							}
+							
+							$desc_exp = explode(" by ", $wpt['_c']['desc']['_v'], 2);
+							$desc_exp2 = explode(", ",$desc_exp[1]);
+							$diff = addslashes($desc_exp4[0]);
+							$terain = addslashes($desc_exp4[1]);
+							$type = addslashes($desc_exp3[0]);
+							
+							$name = addslashes($wpt['_c']['urlname']['_v']);
+							$c_date = date("Y-m-d G:i:s");
+							
+							$lat = addslashes($wpt['_c']['coord']['_a']['lat']);
+							$long = addslashes($wpt['_c']['coord']['_a']['lon']);
+							
+							$gcid = addslashes($wpt['_c']['name']['_a']['id']);
+							
+							$notes = "No Notes";
+							$link = addslashes($wpt['_c']['link']['_v']);
+							
+							$sql0 = "INSERT INTO `$db`.`$User_cache` (`id`, `name`, `author`, `gcid`, `notes`, `cat`, `type`, `diff`, `terain`, `lat`, `long`, `link`, `share`, `share_id`, `c_date`, `u_date`) VALUES (NULL, '$name', '$author', '$gcid', '$notes', '$cat', '$type', '$diff', '$terain', '$lat', '$long', '$link', '$share', '$share_id', '$c_date', '$u_date')";
+					#	echo $sql0."<BR>";
+							if(mysql_query($sql0, $conn))
+							{
+							#	echo "Inserted!<BR>\r\n";
+							}else
+							{
+								$error .= mysql_error($conn)."<br>";
+							}
+							$cnt_wpt++;
+						}
+						return array($User, $cnt_wpt);
 					}else
 					{
-						return mysql_error($conn);
+						echo "The LOC file that you have uploaded has no data, go back and get a good file you bad user...";
+						return 0;
 					}
-				}
-				return 1;
-			}else
-			{
-				return mysql_error($conn);
+				break;
+				
+				################################################
+				case "csv":
+				
+				break;
 			}
 		}else
 		{
 			return "login";
 		}
 	}
-	
-	###############################
+
+		###############################
 	#     Convert From _ to _     #
 	###############################
 	
 	function convert_xml($xml_file='', $from_to='')
 	{
-	$sec = new security();
-	
-	$db_ver = $GLOBALS['ver']['wifidb'];
-	$body = "# Mysticache CSV - Detailed Export Version 1.0\r\n# Created By: RanInt WiFi DB $db_ver \r\n# -------------------------------------------------\r\n# Author,,Name,,GCID,,Notes,,Catagory,,Type,,Difficulty,,Terain,,Latatude,,Longitude,,Link URL\r\n# -------------------------------------------------\r\n";
-	$buffer = file_get_contents($xml_file);
-	$edit = preg_replace("/[\r\n\r\n]/","",$buffer);
-	$xml=WDB_XML::xml2ary($edit);
-	$User = $sec->login_check();
-#	dump($User);
-	if($User)
-	{
-		$from_to_exp = explode(">",$from_to);
-		$from = $from_to_exp[0];
-		$to = $from_to_exp[1];
-		switch($from)
+		$sec = new security();
+		
+		$db_ver = $GLOBALS['ver']['wifidb'];
+		$body = "# Mysticache CSV - Detailed Export Version 1.0\r\n# Created By: RanInt WiFi DB $db_ver \r\n# -------------------------------------------------\r\n# Author,,Name,,GCID,,Notes,,Catagory,,Type,,Difficulty,,Terain,,Latatude,,Longitude,,Link URL\r\n# -------------------------------------------------\r\n";
+		$buffer = file_get_contents($xml_file);
+		$edit = preg_replace("/[\r\n\r\n]/","",$buffer);
+		$xml=WDB_XML::xml2ary($edit);
+		$User = $sec->login_check();
+	#	dump($User);
+		if($User)
 		{
-			case "GPX"
-				switch($to)
-				{
-					##############
-					case "CSV":
-						$count_gpx = count($xml['gpx']['_c']['wpt'])-1;
-					#	echo $count."<BR>";
-						$User_cache = $User."_waypoints";
-						if($count_gpx > 0)
-						{
-							$cnt_wpt = 0;
-							foreach($xml['gpx']['_c']['wpt'] as $wpt)
+			$from_to_exp = explode(">",$from_to);
+			$from = $from_to_exp[0];
+			$to = $from_to_exp[1];
+			switch($from)
+			{
+				case "GPX":
+					switch($to)
+					{
+						##############
+						case "CSV":
+							$count_gpx = count($xml['gpx']['_c']['wpt'])-1;
+						#	echo $count."<BR>";
+							$User_cache = $User."_waypoints";
+							if($count_gpx > 0)
 							{
-								$share = 0;
-								$share_id = 0;
-								
-								$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
-								$desc_exp2 = explode(", ",$desc_exp[1]);
-								
-								$desc_exp3 = explode("(", $desc_exp2[1]);
-								$replace = str_ireplace(")","",$desc_exp3[1]);
-								$desc_exp4 = explode("/", $replace);
-								if($wpt['_c']['author']['_v'] == '')
+								$cnt_wpt = 0;
+								foreach($xml['gpx']['_c']['wpt'] as $wpt)
 								{
-									$author = addslashes($desc_exp2[0]);
-								}else
-								{
-									$author = addslashes($wpt['_c']['author']['_v']);
-								}
-								
-								if($wpt['_c']['Difficulty']['_v'] == '' or $wpt['_c']['Terrain']['_v'] == '' or $wpt['_c']['Cache Type']['_v'] == '')
-								{
-									$diff = addslashes(rtrim($desc_exp4[0]));
-									$terain = addslashes(rtrim($desc_exp4[1]));
-									$type = addslashes(rtrim($desc_exp3[0]));
-								}else
-								{
-									$diff = addslashes($wpt['_c']['Difficulty']['_v']);
-									$terain = addslashes($wpt['_c']['Terrain']['_v']);
-									$type = addslashes($wpt['_c']['Cache Type']['_v']);
-								}
-								
-								if($wpt['_c']['Notes']['_v'] == '')
-								{
+									$share = 0;
+									$share_id = 0;
+									
+									$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
+									$desc_exp2 = explode(", ",$desc_exp[1]);
+									
+									$desc_exp3 = explode("(", $desc_exp2[1]);
+									$replace = str_ireplace(")","",$desc_exp3[1]);
+									$desc_exp4 = explode("/", $replace);
+									if($wpt['_c']['author']['_v'] == '')
+									{
+										$author = addslashes($desc_exp2[0]);
+									}else
+									{
+										$author = addslashes($wpt['_c']['author']['_v']);
+									}
+									
+									if($wpt['_c']['Difficulty']['_v'] == '' or $wpt['_c']['Terrain']['_v'] == '' or $wpt['_c']['Cache Type']['_v'] == '')
+									{
+										$diff = addslashes(rtrim($desc_exp4[0]));
+										$terain = addslashes(rtrim($desc_exp4[1]));
+										$type = addslashes(rtrim($desc_exp3[0]));
+									}else
+									{
+										$diff = addslashes($wpt['_c']['Difficulty']['_v']);
+										$terain = addslashes($wpt['_c']['Terrain']['_v']);
+										$type = addslashes($wpt['_c']['Cache Type']['_v']);
+									}
+									
+									if($wpt['_c']['Notes']['_v'] == '')
+									{
+										$notes = "No Notes";
+									}else
+									{
+										$notes = addslashes($wpt['_c']['Notes']['_v']);
+									}
+									
 									$notes = "No Notes";
+									
+									$name = addslashes(rtrim($desc_exp[0]));
+									$gcid = addslashes($wpt['_c']['name']['_v']);
+									$cat = "geocache";
+									$lat = addslashes($wpt['_a']['lat']);
+									$long = addslashes($wpt['_a']['lon']);
+									$link = addslashes($wpt['_c']['url']['_v']);
+									$c_date = date("Y-m-d G:i:s");
+									$u_date = "0000-00-00 00:00:00";
+									
+								#		$body = "##Author,,name,,gcid,,notes,,cat,,type,,lat,,long,,link\r\n";
+									$pre = $author.",,".$name.",,".$gcid.",,".$notes.",,".$cat.",,".$type.",,".$diff.",,".$terain.",,".$lat.",,".$long.",,".$link."\r\n";
+						#			echo $pre."<BR>\r\n";
+									$body .= $pre;
+									
+								}
+								$cache_out_gpx	=	$half_path."/cp/$User/gpx/";
+								$xml_exp_file = explode(".",$xml_file);
+								$file_ext	=	$xml_exp_file[0].".csv";
+								$filename	=	$cache_out_csv.$file_ext;
+								// define initial write and appends
+								$filewrite	=	fopen($filename, "w");
+								
+								if(fwrite($filewrite, $body))
+								{
+									return 1;
+									fileclose($filewrite);
 								}else
 								{
-									$notes = addslashes($wpt['_c']['Notes']['_v']);
+									return array($body, $filename);
 								}
-								
-								$notes = "No Notes";
-								
-								$name = addslashes(rtrim($desc_exp[0]));
-								$gcid = addslashes($wpt['_c']['name']['_v']);
-								$cat = "geocache";
-								$lat = addslashes($wpt['_a']['lat']);
-								$long = addslashes($wpt['_a']['lon']);
-								$link = addslashes($wpt['_c']['url']['_v']);
-								$c_date = date("Y-m-d G:i:s");
-								$u_date = "0000-00-00 00:00:00";
-								
-							#		$body = "##Author,,name,,gcid,,notes,,cat,,type,,lat,,long,,link\r\n";
-								$pre = $author.",,".$name.",,".$gcid.",,".$notes.",,".$cat.",,".$type.",,".$diff.",,".$terain.",,".$lat.",,".$long.",,".$link."\r\n";
-					#			echo $pre."<BR>\r\n";
-								$body .= $pre;
-								
-							}
-							$cache_out_gpx	=	$half_path."/cp/$User/gpx/";
-							$xml_exp_file = explode(".",$xml_file);
-							$file_ext	=	$xml_exp_file[0].".csv";
-							$filename	=	$cache_out_csv.$file_ext;
-							// define initial write and appends
-							$filewrite	=	fopen($filename, "w");
-							
-							if(fwrite($filewrite, $body))
-							{
-								return 1;
-								fileclose($filewrite);
 							}else
 							{
-								return array($body, $filename);
+								return "empty";
 							}
-						}else
-						{
-							return "empty";
-						}
-					break;
-					########
-					
-					default:
-						return "blank_switch";
-					break;
-				}
-			break;
-			
-			##########
-			case "LOC":
+						break;
+						########
+						
+						default:
+							return "blank_switch";
+						break;
+					}
+				break;
 				
-			break;
-			
-			
-			########
-			default:
-				return "blank_switch";
-			break;
+				##########
+				case "LOC":
+					
+				break;
+				
+				
+				########
+				default:
+					return "blank_switch";
+				break;
+			}
+		}else
+		{
+			return "login";
 		}
-	}else
-	{
-		return "login";
 	}
-}
 }
 ?>

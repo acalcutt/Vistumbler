@@ -8,8 +8,10 @@ pageheader("Version Page");
 		<p align="center"><font size="7"><b>WiFiDB Version History</b></font></p>
 		<table border="0" cellpadding="4">
 			<tr>
-				<td>Project Name(Codename)...</td><td><b>WiFiDB <?php echo $ver['wifidb'];?>(<?php echo $ver['codename'];?>)</b></td>
+				<td>Project Name...</td><td><b>WiFiDB <?php echo $ver['wifidb'];?></b></td>
 			</tr>
+			<tr>
+				<td>Project Codename...</td><td><b><?php echo $ver['codename'];?></b></td>
 			<tr>
 				<td>Project State...............</td><td><b>Alpha (planning and early dev)</b><td>
 			</tr>
@@ -23,8 +25,8 @@ pageheader("Version Page");
 		
 		<table width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
-			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.17 Build 1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Nov-11</td></tr>
+			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Dec-07</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -34,9 +36,13 @@ pageheader("Version Page");
 					<LI>Fixed a bug in teh default theme where the page name was not being called correctly and was outputing an error or no text.</LI>
 					<LI>Altered the All APs page to only show a few pages before and after the current page number.</LI>
 					<LI>Added a User based login system. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
-					<LI>User Control Panel.</LI>
-					<LI>Mysticahe support</LI>
-					<LI>XML Support</LI>
+					<LI>User Control Panel. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
+					<LI>Mysticahe support ( GPX / LOC / CSV ) . <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
+					<LI>XML Support. </LI>
+					<LI>Apparently I didn't know how to spell "Environment". Fixed in Index and Import page. (This is only ever seen on my domians)</LI>
+					<LI>Changed the name of the User Imports lists table from `users` to `users_imports`. ( I was getting confused with the other new users tables.)</LI>
+					<LI>Support to be-friend / ignore certian users.</LI>
+					<LI>Added Administrator Panel.</LI>
 				</OL>
 			</td></tr>
 		</table>

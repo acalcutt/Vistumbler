@@ -18,7 +18,7 @@ $result3 = mysql_query($sql, $conn);
 $sql = "SELECT `id`,`ssid` FROM `$db`.`$wtable` ORDER BY ID DESC LIMIT 1";
 $result4 = mysql_query($sql, $conn);
 
-$sql = "SELECT `username` FROM `$db`.`users`";
+$sql = "SELECT `username` FROM `$db`.`$users_t`";
 $result5 = mysql_query($sql, $conn);
 
 #
@@ -32,7 +32,7 @@ $usercount = count($usersa);
 if ($usercount == NULL){$lastuser['username'] = "No imports have finished yet.";}
 if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
 
-$sql = "SELECT username, title, id FROM `$db`.`users` WHERE `id`='$row_users'";
+$sql = "SELECT username, title, id FROM `$db`.`$users_t` WHERE `id`='$row_users'";
 $result6 = mysql_query($sql, $conn);
 #
 $open = mysql_num_rows($result1);
@@ -54,12 +54,6 @@ if(!$result0 OR !$result1 OR !$result2 OR !$result3 OR !$result4 OR !$result5 or
 }
 ?>
 			To View all AP's click <a class="links" href="all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $_SESSION['token'];?>">Here</a><br><br>
-			<?php
-			if ($_SERVER['HTTP_HOST'] == "rihq.randomintervals.com" or $_SERVER['HTTP_HOST'] == "www.randomintervals.com" or $_SERVER['HTTP_HOST'] == "192.168.1.26" or $_SERVER['HTTP_HOST'] == "randomintervals.com")
-			{echo '<h2>This is one of my Development servers </h2>
-			<h4>(which is unstable because I am always working in it)</h4>
-			<h2>Go on over to the <i>Vistumbler <a target="_blank" href="http://www.vistumbler.net/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
-			?>
 <table WIDTH=85% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 	<tr>
 		<td colspan="4" class="style1"><strong><em>Statistics</em></strong></td>
@@ -91,6 +85,14 @@ if(!$result0 OR !$result1 OR !$result2 OR !$result3 OR !$result4 OR !$result5 or
 		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No imports yet.";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['title'];?></a><?php } ?></td>
 	</tr>
 </table>
+<table width="75%"><td><tr>
+<?php
+if ($_SERVER['HTTP_HOST'] == "rihq.randomintervals.com" or $_SERVER['HTTP_HOST'] == "www.randomintervals.com" or $_SERVER['HTTP_HOST'] == "192.168.1.26" or $_SERVER['HTTP_HOST'] == "randomintervals.com")
+{echo '<b><font size="3">This is one of my Development servers </font><br>
+<font size="2">(which is unstable because I am always working in it)</font><br>
+<font size="3">Go on over to the <i>Vistumbler <a class="links" target="_blank" href="http://www.vistumbler.net/wifidb/">\'Production Server\'</i></a> for a more stable environment</font></b>';}
+?>
+</td></tr></table>
 <?php
 footer($_SERVER['SCRIPT_FILENAME']);
 ?>

@@ -5,8 +5,10 @@ include('../lib/config.inc.php');
 if ($_SERVER['HTTP_HOST'] == "rihq.randomintervals.com" or $_SERVER['HTTP_HOST'] == "www.randomintervals.com" or $_SERVER['HTTP_HOST'] == "192.168.1.26" or $_SERVER['HTTP_HOST'] == "randomintervals.com")
 {echo '<h2>This is one of my Development servers </h2>
 <h4>(which is unstable because I am always working in it)</h4>
-<h2>Go on over to the <i>Vistumbler <a target="_blank" href="http://www.vistumbler.net/wifidb/">\'Production Server\'</i></a> for a more stable enviroment</h2>';}
-
+<h2>Go on over to the <i>Vistumbler <a target="_blank" href="http://www.vistumbler.net/wifidb/">\'Production Server\'</i></a> for a more stable environment</h2>';}
+$conn = $GLOBALS['conn'];
+$users_t	= $GLOBALS['users_t'];
+$files_tmp	= $GLOBALS['files_tmp'];
 if(isset($_GET['func']))
 {
 	if($_GET['func'] == 'import')
@@ -33,7 +35,7 @@ switch($func)
 				$file_ext = explode('.', $filename);
 				$ext = strtolower($file_ext[1]);
 				if($ext != 'vs1'){echo '<h2>You can only upload VS1 files<br><A class="links" HREF="javascript:history.go(-1)">Go back</a> and do it right!</h2>'; footer($_SERVER['SCRIPT_FILENAME']); die();}
-				$rand	=	rand(); //generate a random number to be added to the new filename so there isnot a chance of being a duplicate name.
+				$rand	=	rand(); //generate a random number to be added to the new filename so there is not a chance of being a duplicate name.
 				
 				$user = filter_var($user, FILTER_SANITIZE_SPECIAL_CHARS);
 				$notes = filter_var($notes, FILTER_SANITIZE_SPECIAL_CHARS);
@@ -89,7 +91,7 @@ switch($func)
 						//in order that they where uploaded
 						$imp_file = $rand.'_'.$filename;
 						$date = date("y-m-d H:i:s");
-						$sql = "INSERT INTO `$db`.`files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) VALUES ( '', '$imp_file', '$date', '$user', '$notes', '$title', '$size1', '$hash')";
+						$sql = "INSERT INTO `$db`.`$files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) VALUES ( '', '$imp_file', '$date', '$user', '$notes', '$title', '$size1', '$hash')";
 						$result = mysql_query( $sql , $conn);
 						if($result)
 						{
@@ -113,7 +115,7 @@ switch($func)
 				<?php
 				mysql_select_db($db,$conn);
 
-				$sqls = "SELECT * FROM `users`";
+				$sqls = "SELECT * FROM `$users_t`";
 				$result = mysql_query($sqls, $conn) or die(mysql_error());
 				$row = mysql_num_rows($result);
 				#$database->exp_kml($export="exp_newest_kml");
@@ -150,7 +152,8 @@ switch($func)
 								<?php
 								if($GLOBALS['login_check'])
 								{
-									?><INPUT TYPE=Text DISABLED NAME="user" value="<?php echo $GLOBALS['username'];?>"><?php
+									?><INPUT TYPE=Text DISABLED NAME="user_display" value="<?php echo $GLOBALS['username'];?>"><?php
+									?><INPUT TYPE=hidden NAME="user" value="<?php echo $GLOBALS['username'];?>"><?php
 								}else
 								{
 									?>
@@ -235,7 +238,8 @@ switch($func)
 						<?php
 						if($GLOBALS['login_check'])
 						{
-							?><INPUT TYPE=text DISABLED NAME="user" value="<?php echo $GLOBALS['username'];?>"><?php
+							?><INPUT TYPE=Text DISABLED NAME="user_display" value="<?php echo $GLOBALS['username'];?>"><?php
+							?><INPUT TYPE=hidden NAME="user" value="<?php echo $GLOBALS['username'];?>"><?php
 						}else
 						{
 							?>
@@ -272,6 +276,5 @@ switch($func)
 		<?php
 		break;
 }
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+footer($_SERVER['SCRIPT_FILENAME']);
 ?>

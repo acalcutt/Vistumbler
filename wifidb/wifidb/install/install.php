@@ -62,7 +62,6 @@ if($_POST['daemon'] == TRUE && $_POST['toolsdir'] == "")
 	#													Gather the needed infomation								   	     #
 	#========================================================================================================================#
 $Local_tz=date_default_timezone_get();
-$ENG = "InnoDB";
 $date = date("Y-m-d");
 
 $root_sql_user	=	addslashes(strip_tags($_POST['root_sql_user']));
@@ -75,6 +74,9 @@ $sqlp			=	addslashes(strip_tags($_POST['sqlp']));
 $wifi			=	addslashes(strip_tags($_POST['wifi']));
 $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
+$username		=	addslashes(strip_tags($_POST['wdb_admn_username']));
+$password		=	addslashes(strip_tags($_POST['wdb_admn_passwrd']));
+$email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
 $timeout		=   "(86400 * 365)";
 
 if(isset($_POST['daemon']))
@@ -107,7 +109,7 @@ echo '<tr class="style4"><TH colspan="2">Database Install</TH></tr>';
 $conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
 $ENG = "InnoDB";
 #drop exisiting db if it is there and create a new one [this is the install after all / not the upgrade]
-$sqls0 =	"DROP DATABASE`$wifi_st`";
+$sqls0 =	"DROP DATABASE `$wifi_st`";
 $sqls1 =	"CREATE DATABASE IF NOT EXISTS `$wifi_st`";
 $RE_DB_ST_Re = mysql_query($sqls0, $conn);
 $RE_DB_ST_Re = mysql_query($sqls1, $conn) or die(mysql_error());
@@ -181,7 +183,7 @@ else{echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT Theme setting 
 	#													Create Users table											   	     #
 	#========================================================================================================================#
 #create users table (History for imports)
-$sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users` (
+$sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users_imports` (
 		`id` INT( 255 ) NOT NULL AUTO_INCREMENT,
 		`username` VARCHAR( 255 ) NOT NULL,
 		`points` TEXT NOT NULL,
@@ -360,6 +362,140 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Create tmp Files table <b>`$wifi`</b>.`files`;</td></tr> ";
 }
+#############################################
+$sql = "CREATE TABLE IF NOT EXISTS `share_waypoints` (
+  `id` int(255) NOT NULL auto_increment,
+  `author` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `gcid` varchar(255) NOT NULL,
+  `notes` text NOT NULL,
+  `cat` set('home','family','medical','police','fire','fastfood','finefood','gas','geocache','think of more...') NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `diff` varchar(4) NOT NULL,
+  `terain` varchar(4) NOT NULL,
+  `lat` varchar(255) NOT NULL,
+  `long` varchar(255) NOT NULL,
+  `link` varchar(255) NOT NULL,
+  `c_date` datetime NOT NULL,
+  `u_date` datetime NOT NULL,
+  `pvt_id` int(255) NOT NULL,
+  `shared_by` varchar(255) NOT NULL,
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Create Shared Geocaches table <b>`$wifi`</b>.`share_waypoints`;</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>To create Shared Geocaches table <b>`$wifi`</b>.`share_waypoints`;</td></tr> ";
+}
+############################################
+$sql1 = "CREATE TABLE IF NOT EXISTS `daemon_perf_mon` (
+  `id` int(255) NOT NULL auto_increment,
+  `timestamp` datetime NOT NULL,
+  `pid` int(255) NOT NULL,
+  `uptime` varchar(255) NOT NULL,
+  `CMD` varchar(255) NOT NULL,
+  `mem` varchar(7) NOT NULL,
+  `mesg` varchar(255) NOT NULL,
+  UNIQUE KEY `timestamp` (`timestamp`),
+  KEY `id` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Create Daemon Performance table <b>`$wifi`</b>.`daemon_perf_mon`;</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>To create Daemon Performance table <b>`$wifi`</b>.`daemon_perf_mon`;</td></tr> ";
+}
+
+##########################################
+$sql1 = "CREATE TABLE `$wifi`.`DB_stats` (
+`id` INT( 255 ) NOT NULL ,
+`timestamp` VARCHAR( 60 ) NOT NULL ,
+`graph_min` VARCHAR( 255 ) NOT NULL ,
+`graph_max` VARCHAR( 255 ) NOT NULL ,
+`graph_avg` VARCHAR( 255 ) NOT NULL ,
+`kmz_min` VARCHAR( 255 ) NOT NULL ,
+`kmz_max` VARCHAR( 255 ) NOT NULL ,
+`kmz_avg` VARCHAR( 255 ) NOT NULL ,
+`file_min` VARCHAR( 255 ) NOT NULL ,
+`file_max` VARCHAR( 255 ) NOT NULL ,
+`file_avg` VARCHAR( 255 ) NOT NULL ,
+`total_aps` VARCHAR( 255 ) NOT NULL ,
+`wep_aps` VARCHAR( 255 ) NOT NULL ,
+`open_aps` VARCHAR( 255 ) NOT NULL ,
+`secure_aps` VARCHAR( 255 ) NOT NULL ,
+`user` BLOB NOT NULL ,
+`ap_gps_totals` BLOB NOT NULL ,
+`top_ssids` BLOB NOT NULL ,
+`geos` BLOB NOT NULL ,
+INDEX ( `id` ) ,
+UNIQUE (`timestamp`)
+) ENGINE = InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Create DB stats table <b>`$wifi`</b>.`DB_stats`;</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>To create DB stats table <b>`$wifi`</b>.`DB_stats`;</td></tr> ";
+}
+##############
+$sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
+  `id` int(255) NOT NULL auto_increment,
+  `username` varchar(32) NOT NULL,
+  `password` varchar(32) NOT NULL,
+  `help` varchar(255) NOT NULL,
+  `uid` varchar(32) NOT NULL,
+  `disabled` tinyint(1) NOT NULL,
+  `locked` tinyint(1) NOT NULL,
+  `login_fails` int(255) NOT NULL,
+  `member` text NOT NULL,
+  `last_login` datetime NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `h_email` tinyint(1) NOT NULL,
+  `join_date` datetime NOT NULL,
+  `friends` text NOT NULL,
+  `foes` text NOT NULL,
+  `website` varchar(255) NOT NULL,
+  `Vis_ver` varchar(255) NOT NULL,
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `uid` (`uid`),
+  UNIQUE KEY `email` (`email`),
+  KEY `id` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 AUTO_INCREMENT=1";
+$insert = mysql_query($sql1, $conn) or die(mysql_error());
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Create DB stats table <b>`$wifi`</b>.`DB_stats`;</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>To create DB stats table <b>`$wifi`</b>.`DB_stats`;</td></tr> ";
+}
+
+	#========================================================================================================================#
+	#										Create WiFiDB Administrator User										   	     #
+	#========================================================================================================================#
+require("../../lib/security.inc.php");
+$sec = new security();
+$insert = $sec->create_user($username, $password, $email);
+switch($create)
+{
+	case 1:
+		echo "<tr class=\"good\"><td>Success..........</td><td>Create DB stats table <b>`$wifi`</b>.`DB_stats`;</td></tr>";
+	break;
+	
+	case is_array($create):
+		list($er, $msg) = $create;
+		switch($er)
+		{
+			case "create_wpt":
+				echo '<tr class="bad"><td>Failure..........</td><td>There was an error in Creating the Geocache table.<BR>This is a serious error, contact Phil on the <a href="http://forum.techidiots.net/">forums</a><br>MySQL Error Message: '.$msg."<br><h1>D'oh!</h1></td></tr>";
+			break;
+			
+			case "dup_u":
+				echo '<tr class="bad"><td>Failure..........</td><td>To create Wdb Admin User. :-(<br>MySQl Error: '.$msg.'<br><h1>Do`h!</h1></td></tr>';
+			break;
+		}
+	break;
+}
+
+
 	#========================================================================================================================#
 	#									Create WiFiDB user for WiFi and WiFi_st										   	     #
 	#========================================================================================================================#
@@ -390,7 +526,6 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Created user: $sqlu @ $php
 	#========================================================================================================================#
 	#											Create the Config.inc.php file										   	     #
 	#========================================================================================================================#
-#create config.inc.php file in /lib folder
 ?>
 <tr class="style4"><TH colspan="2">Config.inc.php File Creation</th></tr>
 <tr class="style4"><th>Status</th><th>Step of Install</th></tr>
@@ -408,26 +543,31 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td><
 
 #Add last edit date and globals
 $CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."header, $"."ads, $"."tracker, $"."hosturl;
-global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."wifidb_tools, $"."daemon, $"."root;
+global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."wifidb_tools, $"."daemon, $"."root, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm;
 global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."console_log;
-global $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone;\r\n\r\n$"."lastedit	=	'$date';\r\n\r\n");
+global $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."bypass_check;\r\n
+\r\n$"."lastedit	=	'$date';\r\n
+\r\n#----------General Settings------------#
+$"."bypass_check	=	1;
+$"."wifidb_tools	=	'$toolsdir';
+$"."timezn			=	'$Local_tz';
+$"."root			=	'$root';
+$"."hosturl		=	'$hosturl';");
 
 if($CR_CF_FL_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add Install date</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add Global variables and general variables values.</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Install date</td></tr>";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Global variables and general variables values.</td></tr>";}
 
 
 #add default daemon values
-$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#\r\n"
-									."$"."daemon		=	".$daemon.";\r\n"
-									."$"."debug			=	0;\r\n"
-									."$"."log_level		=	0;\r\n"
-									."$"."log_interval		=	0;\r\n"
-									."$"."wifidb_tools		=	'".$toolsdir."';\r\n"
-									."$"."timezn		=	'".$Local_tz."';\r\n"
-									."$"."WiFiDB_LNZ_User 	=	'$httpduser';\r\n"
-									."$"."apache_grp		=	'$httpdgrp';\r\n\r\n");
+$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#
+$"."daemon				=	$daemon;
+$"."debug				=	0;
+$"."log_level			=	0;
+$"."log_interval		=	0;
+$"."WiFiDB_LNZ_User 	=	'$httpduser';
+$"."apache_grp			=	'$httpdgrp';");
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
 else{
@@ -470,29 +610,27 @@ if($AD_CF_DG_Re)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default debug values</td></tr>";}
 
-#add url info
-$AD_CF_UR_Re = fwrite($fileappend, "#---------------- URL Info ----------------#\r\n"
-									."$"."root		=	'$root';\r\n"
-									."$"."hosturl	=	'$hosturl';\r\n\r\n");
+#add Table names
+$AD_CF_UR_Re = fwrite($fileappend, "#---------------- Tables ----------------#
+$"."settings_tb		=	'settings';
+$"."users_t			=	'users_imports';
+$"."links				=	'links';
+$"."wtable				=	'wifi0';
+$"."user_logins_table	=	'user_info';
+$"."share_cache		=	'share_waypoints';
+$"."files				=	'files';
+$"."files_tmp			=	'files_tmp';
+$"."annunc				=	'annunc';
+$"."annunc_comm		=	'annunc_comm';
+$"."gps_ext			=	'_GPS';
+$"."sep				=	'-';");
 
 if($AD_CF_UR_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add PHP Host URL</td></tr>";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add Table variable values</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding PHP Host URL</td></tr>";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Table variable values</td></tr>";}
 
 
-#add Table names
-$AD_CF_WT_Re = fwrite($fileappend, "#---------------- Tables ----------------#\r\n"
-									."$"."settings_tb	=	'settings';\r\n"
-									."$"."users_t	=	'users';\r\n"
-									."$"."links		=	'links';\r\n"
-									."$"."wtable	=	'wifi0';\r\n"
-									."$"."gps_ext	=	'_GPS';\r\n"
-									."$"."sep		=	'-';\r\n\r\n");
-if($AD_CF_WT_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add Table names</td></tr>";}
-else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Table names</td></tr>";}
 
 #add sql host info
 $AD_CF_DB_Re = fwrite($fileappend, "#---------------- DataBases ----------------#\r\n"
@@ -537,6 +675,13 @@ if($AD_CF_FI_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
+
+include('../../lib/security.inc.php');
+$sec = new security();
+if($sec->create_user($username, $password, $email)===1)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Database Admin User Created!</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Database Admin User Not Created!</td></tr>";}
 
 	#========================================================================================================================#
 	#													Install has finished										   	     #

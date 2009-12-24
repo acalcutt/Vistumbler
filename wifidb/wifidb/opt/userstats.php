@@ -21,7 +21,7 @@ if (isset($_GET['token']))
 				$username_get = $_GET['user'];
 				$username_get = strip_tags($username_get);
 				$username = smart_quotes($username_get);
-				$sql = "SELECT * FROM `$db`.`users` WHERE `username` LIKE '$username' ORDER BY `id` DESC LIMIT 1";
+				$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `id` DESC LIMIT 1";
 				$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$user_last = mysql_fetch_array($user_query);
 				$last_import_id = $user_last['id'];
@@ -30,13 +30,13 @@ if (isset($_GET['token']))
 				$last_import_title = $user_last['title'];
 				$last_import_date = $user_last['date'];
 				
-				$sql = "SELECT * FROM `$db`.`users` WHERE `username` LIKE '$username' ORDER BY `id` ASC LIMIT 1";
+				$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `id` ASC LIMIT 1";
 				$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$user_first = mysql_fetch_array($user_query);
 				$user_ID = $user_first['id'];
 				$first_import_date = $user_first['date'];
 				
-				$sql = "SELECT * FROM `$db`.`users` WHERE `username` LIKE '$username'";
+				$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username'";
 				$other_imports = mysql_query($sql, $conn) or die(mysql_error($conn));
 				while($imports = mysql_fetch_array($other_imports))
 				{
@@ -83,7 +83,7 @@ if (isset($_GET['token']))
 				<tr bgcolor="#508FAE"><th>ID</th><th>Title</th><th>Total APs</th><th>Date</th></tr>
 				
 				<?php
-				$sql = "SELECT * FROM `$db`.`users` WHERE `username` LIKE '$username' AND `id` != '$last_import_id' ORDER BY `id` DESC";
+				$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' AND `id` != '$last_import_id' ORDER BY `id` DESC";
 				$other_imports = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$other_rows = mysql_num_rows($other_imports);
 				
