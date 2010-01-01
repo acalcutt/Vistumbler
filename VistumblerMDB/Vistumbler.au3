@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.8'
+$version = 'v9.81'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2009/10/13'
 ;Includes------------------------------------------------
@@ -39,6 +39,7 @@ $last_modified = '2009/10/13'
 #include "UDFs\NativeWifi.au3"
 #include "UDFs\ZIP.au3"
 #include "UDFs\FileInUse.au3"
+#include "UDFs\WinGetPosEx.au3"
 ;Set/Create Folders--------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
 Dim $DefaultSaveDir = @ScriptDir & '\Save\'
@@ -981,7 +982,7 @@ Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' &
 $Vistumbler = GUICreate($title, 980, 692, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
 
-$a = WinGetPos($Vistumbler);Get window current position
+$a = _WinGetPosEx($Vistumbler);Get window current position
 Dim $VistumblerState = IniRead($settings, 'WindowPositions', 'VistumblerState', "Window");Get last window position from the ini file
 Dim $VistumblerPosition = IniRead($settings, 'WindowPositions', 'VistumblerPosition', $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3])
 $b = StringSplit($VistumblerPosition, ",")
@@ -1464,14 +1465,14 @@ While 1
 
 	;Check Compass Window Position
 	If WinActive($CompassGUI) And $CompassOpen = 1 And $UpdatedCompassPos = 0 Then
-		$c = WinGetPos($CompassGUI)
+		$c = _WinGetPosEx($CompassGUI)
 		If $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] <> $CompassPosition Then $CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3] ;If the $CompassGUI has moved or resized, set $CompassPosition to current window size
 		$UpdatedCompassPos = 1
 	EndIf
 
 	;Check GPS Details Windows Position
 	If WinActive($GpsDetailsGUI) And $GpsDetailsOpen = 1 And $UpdatedGpsDetailsPos = 0 Then
-		$g = WinGetPos($GpsDetailsGUI)
+		$g = _WinGetPosEx($GpsDetailsGUI)
 		If $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
 		$UpdatedGpsDetailsPos = 1
 	EndIf
@@ -3096,7 +3097,7 @@ Func _CompassGUI()
 		If $cpsplit[0] = 4 Then ;If $CompassPosition is a proper position, move and resize window
 			WinMove($CompassGUI, '', $cpsplit[1], $cpsplit[2], $cpsplit[3], $cpsplit[4])
 		Else ;Set $CompassPosition to the current window position
-			$c = WinGetPos($CompassGUI)
+			$c = _WinGetPosEx($CompassGUI)
 			$CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3]
 		EndIf
 		_SetCompassSizes()
@@ -3249,7 +3250,7 @@ Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 		If $gpsplit[0] = 4 Then ;If $CompassPosition is a proper position, move and resize window
 			WinMove($GpsDetailsGUI, '', $gpsplit[1], $gpsplit[2], $gpsplit[3], $gpsplit[4])
 		Else ;Set $CompassPosition to the current window position
-			$g = WinGetPos($GpsDetailsGUI)
+			$g = _WinGetPosEx($GpsDetailsGUI)
 			$GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3]
 		EndIf
 
@@ -3432,7 +3433,7 @@ EndFunc   ;==>_Sort
 
 Func _WinMoved();Checks if window has moved. Returns 1 if it has
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WinMoved()') ;#Debug Display
-	$a = WinGetPos($Vistumbler)
+	$a = _WinGetPosEx($Vistumbler)
 	$winpos_old = $winpos
 	$winpos = $a[0] & $a[1] & $a[2] & $a[3] & WinGetState($title, "")
 
@@ -3453,9 +3454,9 @@ EndFunc   ;==>_WinMoved
 
 Func _SetControlSizes();Sets control positions in GUI based on the windows current size
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetControlSizes()') ;#Debug Display
-	$a = WinGetPos($Vistumbler)
+	$a = _WinGetPosEx($Vistumbler)
 	WinMove($DataChild, "", 0, 60, $a[2] - 10, $a[3] - 115)
-	$b = WinGetPos($DataChild) ;get child window size
+	$b = _WinGetPosEx($DataChild) ;get child window size
 	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Then
 		$DataChild_Width = $b[2]
