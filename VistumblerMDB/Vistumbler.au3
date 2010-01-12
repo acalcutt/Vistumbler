@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.81'
+$version = 'v9.81 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2009/10/13'
+$last_modified = '2010/01/11'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -47,6 +47,7 @@ Dim $LanguageDir = @ScriptDir & '\Languages\'
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $TmpDir = @ScriptDir & '\temp\'
+Dim $ToolsDir = @ScriptDir & '\Tools\'
 DirCreate($SettingsDir)
 DirCreate($DefaultSaveDir)
 DirCreate($SettingsDir)
@@ -54,6 +55,7 @@ DirCreate($LanguageDir)
 DirCreate($SoundDir)
 DirCreate($ImageDir)
 DirCreate($TmpDir)
+DirCreate($ToolsDir)
 ;Cleanup Old Temp Files----------------------------------
 _CleanupFiles($TmpDir, '*.tmp')
 _CleanupFiles($TmpDir, '*.ldb')
@@ -220,6 +222,7 @@ Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDi
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
+Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFilter
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal
@@ -1152,6 +1155,22 @@ $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
 $VistumblerForum = GUICtrlCreateMenuItem($Text_VistumblerForum, $Help)
 $VistumblerWiki = GUICtrlCreateMenuItem($Text_VistumblerWiki, $Help)
 $UpdateVistumbler = GUICtrlCreateMenuItem($Text_CheckForUpdates, $Help)
+
+Dim $ToolMenuID[1]
+Dim $ToolFilename[1]
+$ExternalToolsMenu = GUICtrlCreateMenu("External Tools")
+$menuid = GUICtrlCreateMenuItem("Open External Tools Folder", $ExternalToolsMenu)
+GUICtrlSetOnEvent($menuid, '_OpenExternalToolsFolder')
+$ToolFiles = _FileListToArray($ToolsDir, '*.*', 1);Find all files in the folder
+For $FoundTools = 1 To $ToolFiles[0]
+	$file = $ToolFiles[$FoundTools]
+	$menuid = GUICtrlCreateMenuItem(StringTrimRight($file, 4), $ExternalToolsMenu)
+	_ArrayAdd($ToolMenuID, $menuid)
+	_ArrayAdd($ToolFilename, $ToolsDir & $file)
+	$ToolMenuID[0] = UBound($ToolMenuID) - 1
+	$ToolFilename[0] = UBound($ToolFilename) - 1
+	GUICtrlSetOnEvent($menuid, '_OpenExternalTool')
+Next
 
 $SupportVistumbler = GUICtrlCreateMenu($Text_SupportVistumbler)
 $VistumblerDonate = GUICtrlCreateMenuItem($Text_VistumblerDonate, $SupportVistumbler)
@@ -4291,9 +4310,12 @@ EndFunc   ;==>_CopyOK
 
 Func _OpenSaveFolder();Opens save folder in explorer
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenSaveFolder() ') ;#Debug Display
-	DirCreate($SaveDir)
 	Run('RunDll32.exe url.dll,FileProtocolHandler "' & $SaveDir & '"')
 EndFunc   ;==>_OpenSaveFolder
+
+Func _OpenExternalToolsFolder()
+	Run('RunDll32.exe url.dll,FileProtocolHandler "' & $ToolsDir & '"')
+EndFunc   ;==>_OpenExternalToolsFolder
 
 Func _AutoSave();Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSave()') ;#Debug Display
@@ -4517,27 +4539,62 @@ Func _ExportCsvFilteredData();Saves data to a selected file
 	_ExportCsvDataGui(1)
 EndFunc   ;==>_ExportCsvFilteredData
 
-Func _ExportCsvDataGui($Filter = 0);Saves data to a selected file
+Func _ExportCsvDataGui($Gui_CsvFilter = 0);Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui()') ;#Debug Display
-	DirCreate($SaveDir)
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'CSV (*.csv)', '', $ldatetimestamp & '.csv')
-	If @error <> 1 Then
-		If StringInStr($file, '.csv') = 0 Then $file = $file & '.csv'
-		FileDelete($file)
-		_ExportToCSV($file, $Filter)
-		MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $file & '"')
-		GUICtrlSetData($msgdisplay, '')
-		$newdata = 0
-	EndIf
+	$Gui_Csv = GUICreate($Text_ExportToCSV, 543, 132)
+	GUISetBkColor($BackgroundColor)
+	$Gui_CsvFile = GUICtrlCreateInput($SaveDir & $ldatetimestamp & '.csv', 20, 20, 409, 21)
+	$GUI_CsvSaveAs = GUICtrlCreateButton("Save As", 440, 20, 81, 22, $WS_GROUP)
+	$Gui_CsvRadSummary = GUICtrlCreateRadio("Summary", 20, 50, 289, 20)
+	GUICtrlSetState($Gui_CsvRadSummary, $GUI_CHECKED)
+	$Gui_CsvRadDetailed = GUICtrlCreateRadio("Detailed", 20, 70, 289, 20)
+	$Gui_CsvOk = GUICtrlCreateButton($Text_Ok, 128, 95, 97, 25, $WS_GROUP)
+	$Gui_CsvCancel = GUICtrlCreateButton($Text_Cancel, 290, 95, 97, 25, $WS_GROUP)
+	GUISetState(@SW_SHOW)
+	GUICtrlSetOnEvent($GUI_CsvSaveAs, "_ExportCsvDataGui_SaveAs")
+	GUICtrlSetOnEvent($Gui_CsvOk, "_ExportCsvDataGui_Ok")
+	GUICtrlSetOnEvent($Gui_CsvCancel, "_ExportCsvDataGui_Close")
+	GUISetOnEvent($GUI_EVENT_CLOSE, '_ExportCsvDataGui_Close')
 EndFunc   ;==>_ExportCsvDataGui
 
-Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
+Func _ExportCsvDataGui_Ok()
+	$file = GUICtrlRead($Gui_CsvFile)
+	$rad_summary = GUICtrlRead($Gui_CsvRadSummary)
+	$rad_detailed = GUICtrlRead($Gui_CsvRadDetailed)
+	_ExportCsvDataGui_Close()
+	If StringInStr($file, '.csv') = 0 Then $file = $file & '.csv'
+	FileDelete($file)
+	ConsoleWrite($rad_summary & @CRLF)
+	If $rad_summary = 1 Then
+		_ExportToCSV($file, $Gui_CsvFilter, 0)
+	Else
+		_ExportToCSV($file, $Gui_CsvFilter, 1)
+	EndIf
+	MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $file & '"')
+	GUICtrlSetData($msgdisplay, '')
+	$newdata = 0
+EndFunc   ;==>_ExportCsvDataGui_Ok
+
+Func _ExportCsvDataGui_SaveAs()
+	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'CSV (*.csv)', '', GUICtrlRead($Gui_CsvFile))
+	If @error <> 1 Then GUICtrlSetData($Gui_CsvFile, $file)
+EndFunc   ;==>_ExportCsvDataGui_SaveAs
+
+Func _ExportCsvDataGui_Close()
+	GUIDelete($EditMacGUIForm)
+EndFunc   ;==>_ExportCsvDataGui_Close
+
+Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data to a csv file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
-	FileWriteLine($savefile, "Name,BSSID,MANUFACTURER,Highest Signal w/GPS,Authetication,Encryption,Radio Type,Channel,Latitude,Longitude,Basic Transfer Rates,Other Transfer Rates,First Seen(UTC),Last Seen(UTC),Network Type,Label")
 	If $Filter = 1 Then
 		$query = $AddQuery
 	Else
 		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	EndIf
+	If $Detailed = 0 Then
+		FileWriteLine($savefile, "SSID,BSSID,MANUFACTURER,HIGHEST SIGNAL W/GPS,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,LATITUDE,LONGITUDE,BTX,OTX,FIRST SEEN(UTC),LAST SEEN(UTC),NETWORK TYPE,LABEL")
+	ElseIf $Detailed = 1 Then
+		FileWriteLine($savefile, "SSID,BSSID,MANUFACTURER,SIGNAL,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,BTX,OTX,NETWORK TYPE,LABEL,LATITUDE,LONGITUDE,SATELLITES,HDOP,ALTITUDE,HEIGHT OF GEOID,SPEED(km/h),SPEED(MPH),TRACK ANGLE,DATE(UTC),TIME(UTC)")
 	EndIf
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
@@ -4559,39 +4616,64 @@ Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
 		$ExpFirstID = $ApMatchArray[$exp][15]
 		$ExpLastID = $ApMatchArray[$exp][16]
 
-		;Get High GPS Signal
-		If $ExpHighGpsID = 0 Then
-			$ExpHighGpsSig = 0
-			$ExpHighGpsLat = 'N 0.0000'
-			$ExpHighGpsLon = 'E 0.0000'
-		Else
-			$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpHighGpsID & "'"
+		If $Detailed = 0 Then
+			;Get High GPS Signal
+			If $ExpHighGpsID = 0 Then
+				$ExpHighGpsSig = 0
+				$ExpHighGpsLat = 'N 0.0000'
+				$ExpHighGpsLon = 'E 0.0000'
+			Else
+				$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpHighGpsID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpHighGpsSig = $HistMatchArray[1][1]
+				$ExpHighGpsID = $HistMatchArray[1][2]
+				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ExpHighGpsID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpHighGpsLat = $GpsMatchArray[1][1]
+				$ExpHighGpsLon = $GpsMatchArray[1][2]
+			EndIf
+			;Get First Found Time From FirstHistID
+			$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpFirstID & "'"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ExpHighGpsSig = $HistMatchArray[1][1]
-			$ExpHighGpsID = $HistMatchArray[1][2]
-			$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ExpHighGpsID & "'"
+			$ExpFirstGpsId = $HistMatchArray[1][1]
+			$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFirstGpsId & "'"
 			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ExpHighGpsLat = $GpsMatchArray[1][1]
-			$ExpHighGpsLon = $GpsMatchArray[1][2]
+			$FirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+			;Get Last Found Time From LastHistID
+			$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpLastGpsId = $HistMatchArray[1][1]
+			$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsId & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+			;Write summary csv line
+			FileWriteLine($savefile, StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', ''))
+		ElseIf $Detailed = 1 Then
+			;Get All Signals and GpsIDs for current ApID
+			$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpApID & "' ORDER BY Date1, Time1"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundHistMatch = UBound($HistMatchArray) - 1
+			For $exph = 1 To $FoundHistMatch
+				$ExpGID = $HistMatchArray[$exph][1]
+				$ExpSig = $HistMatchArray[$exph][2]
+				;Get GPS Data Based on GpsID
+				$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID='" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpSat = $GpsMatchArray[1][3]
+				$ExpHorDilPitch = $GpsMatchArray[1][4]
+				$ExpAlt = $GpsMatchArray[1][5]
+				$ExpGeo = $GpsMatchArray[1][6]
+				$ExpSpeedMPH = $GpsMatchArray[1][7]
+				$ExpSpeedKmh = $GpsMatchArray[1][8]
+				$ExpTrack = $GpsMatchArray[1][9]
+				$ExpDate = $GpsMatchArray[1][10]
+				$ExpTime = $GpsMatchArray[1][11]
+				;Write detailed csv line
+				FileWriteLine($savefile, '"' & $ExpSSID & '",' & $ExpBSSID & ',"' & $ExpMANU & '",' & $ExpSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $ExpNET & ',"' & $ExpLAB & '",' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & ',' & $ExpDate & ',' & $ExpTime)
+			Next
 		EndIf
-
-		;Get First Found Time From FirstHistID
-		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpFirstID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ExpFirstGpsId = $HistMatchArray[1][1]
-		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFirstGpsId & "'"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-
-		;Get Last Found Time From LastHistID
-		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ExpLastGpsId = $HistMatchArray[1][1]
-		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsId & "'"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-
-		FileWriteLine($savefile, StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', ''))
 	Next
 EndFunc   ;==>_ExportToCSV
 
@@ -8723,6 +8805,16 @@ Func _InterfaceChanged()
 		Next
 	EndIf
 EndFunc   ;==>_InterfaceChanged
+
+Func _OpenExternalTool()
+	$menuid = @GUI_CtrlId
+	$file = ""
+	For $tma = 1 To $ToolMenuID[0]
+		If $ToolMenuID[$tma] = $menuid Then $file = $ToolFilename[$tma]
+	Next
+	If $file <> "" Then Run("RunDll32.exe url.dll,FileProtocolHandler " & $file);open file with rundll 32
+	ConsoleWrite($file & @CRLF)
+EndFunc   ;==>_OpenExternalTool
 
 Func Log10($x)
 	Return Log($x) / Log(10) ;10 is the base
