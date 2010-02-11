@@ -10,32 +10,6 @@ $sec_ver = array(
 					"ff_exists"			=>	"1.0"
 				);
 
-function redirect_page($return = "/wifidb/", $delay = 0, $msg = "no Message", $new_window = 0)
-{
-	?>
-		<script type="text/javascript">
-			function reload()
-			{
-				<?php
-				if($new_window == 1)
-				{ ?>
-					window.open('<?php echo $return;?>'); <?
-				}
-				elseif($new_window == 2)
-				{ ?>
-					window.open('<?php echo $return;?>');
-					location.href = '/<?php echo $GLOBALS["root"];?>/'; <?php
-				}
-				elseif($new_window == 0)
-				{ ?>
-					location.href = '<?php echo $return;?>'; <?php
-				}
-				?>
-			}
-			</script>
-			<body onload="setTimeout('reload()', <?php echo $delay;?>)"><?php echo $msg;?></body>
-	<?php
-}
 
 function ff_exists($string, $array)
 {
@@ -50,6 +24,19 @@ function ff_exists($string, $array)
 
 class security
 {
+	#######################################
+	function gen_keys($len = 12)
+	{
+		// http://snippets.dzone.com/posts/show/3123
+		$base			=	'ABCDEFGHKLMNOPQRSTWXYZabcdefghjkmnpqrstwxyz123456789!@#$%^&*()_+-=';
+		$max			=	strlen($base)-1;
+		$activatecode	=	'';
+		mt_srand((double)microtime()*1000000);
+		while (strlen($activatecode) < $len+1)
+		{$activatecode.=$base{mt_rand(0,$max)};}
+		return $activatecode;
+	}
+
 	#######################################
 	function login_check($admin = 0)
 	{
@@ -135,50 +122,33 @@ class security
 			$cookie_name = 'WiFiDB_login_yes';
 			$cookie_seed = "@LOGGEDIN!";
 		}
+		
 		global $privs_a;
 		$user_logins_table = $GLOBALS['user_logins_table'];
 		$db = $GLOBALS['db'];
 		$conn = $GLOBALS['conn'];
 		
-		if(!@$_COOKIE['WiFiDB_login_yes'])
+		if(!@$_COOKIE[$cookie_name])
 		{
-			#	die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
-			#	<a href="'.$_SERVER['PHP_SELF'].'">go get a cookie</a>. make it a double stuff.<br>');
+				die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
+				<a href="'.$_SERVER['PHP_SELF'].'">go get a cookie</a>. make it a double stuff.<br>');
 			return 0;
 			break;
 		}
 		list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
-	#	echo $username;
-		$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+#		echo $username;
+		$sql0 = "SELECT `users`,`mods`,`devs`,`admins` FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
 		$result = mysql_query($sql0, $conn);
 		$newArray = mysql_fetch_array($result);
-		$member = $newArray['member'];
-		$groups = explode(",", $member);
-		$privs = 0;
-	#	echo $privs;
-		foreach($groups as $group)
-		{
-	#		echo $group."<BR>";
-			if($group == 'admins')
-			{
-				$privs += 1000;
-			}elseif($group == 'devs')
-			{
-				$privs += 100;
-			}elseif($group == 'mods')
-			{
-				$privs += 10;
-			}elseif($group == 'users')
-			{
-				$privs += 1;
-			}
-		}
+		$groups = array(3=>$newArray['admins'],2=>$newArray['devs'],1=>$newArray['mods'],0=>$newArray['users']);
+		$privs = implode("",$groups);
+		$privs+0;
+#		echo $privs;
 		if($privs >= 1000){$priv_name = "Administrator";}
 		elseif($privs >= 100){$priv_name = "Developer";}
 		elseif($privs >= 10){$priv_name = "Moderator";}
 		else{$priv_name = "User";}
 
-	#	echo $privs;
 		return array($privs, $priv_name);
 	#
 	}
@@ -187,6 +157,7 @@ class security
 
 	function login($username = '', $password = '', $seed = 'MNKEY!', $admin = 0)
 	{
+		if($seed ==''){$seed == $GLOBALS['login_seed'];}
 		if($admin == 1)
 		{
 			$cookie_name = 'WiFiDB_admin_login_yes';
@@ -224,7 +195,10 @@ class security
 	#		echo "GOOD CHECK!<BR>";
 			if(setcookie($cookie_name, md5($cookie_seed.$pass_seed).":".$username, (time()+(86400*7))))
 			{
-				$sql1 = "UPDATE `$db`.`$user_logins_table` SET `last_login` = '$date' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
+				$sql0 = "SELECT `last_active` FROM `$db`.`$user_logins_table` WHERE `id` = '$id' LIMIT 1";
+				$array = mysql_fetch_array(mysql_query($sql1, $conn));
+				$last_active = $array['last_active'];
+				$sql1 = "UPDATE `$db`.`$user_logins_table` SET `last_active` = '$last_active', `last_login` = '$date' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
 				if(mysql_query($sql1, $conn))
 				{
 					return "good";
@@ -242,7 +216,7 @@ class security
 			{
 				$fails++;
 				$to_go = $GLOBALS['config_fails'] - $fails;
-		#		echo $fails.' - '.$GLOBALS['config_fails'];
+				echo $fails.' - '.$GLOBALS['config_fails'];
 				if($fails >= $GLOBALS['config_fails'])
 				{
 					$sql1 = "UPDATE `$db`.`$user_logins_table` SET `locked` = '1' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
@@ -289,7 +263,7 @@ class security
 
 
 	#######################################
-	function create_user($username="", $password="", $email="local@localhost.local", $seed="MONK!")
+	function create_user($username="", $password="", $email="local@localhost.local", $seed="MNKY!")
 	{
 		if($username == '' or $password == ''){die("Username and/or password cannot be blank.");}
 		$user_logins_table = $GLOBALS['user_logins_table'];
@@ -300,7 +274,7 @@ class security
 		$uid_exp = str_split($uid_b, 6);
 		$uid = implode("-", $uid_exp);
 		#echo $uid."<BR>";
-		$user_cache = $username.'_waypoints';
+		$user_cache = 'waypoints_'.$username;
 		$pass_seed = md5($password.$seed);
 		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `member` ,`last_login` ,`email`, `uid`, `join_date` )VALUES ( NULL , '$username', '$pass_seed', ',,,users', '$date', '$email', '$uid', '$date')";
 		if(mysql_query($insert_user, $conn))

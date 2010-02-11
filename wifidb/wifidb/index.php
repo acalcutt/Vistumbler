@@ -58,27 +58,27 @@ if(!$result0 OR !$result1 OR !$result2 OR !$result3 OR !$result4 OR !$result5 or
 	<tr>
 		<td colspan="4" class="style1"><strong><em>Statistics</em></strong></td>
 	</tr>
-	<tr><td class="style2" colspan="4" ></td></tr>
+	<tr class="style3"><td class="style2" colspan="4" ></td></tr>
 	<tr>
 		<th class="style3" style="width: 100px">Total AP&#39;s</th>
 		<th class="style3">Open AP&#39;s</th>
 		<th class="style3">WEP AP&#39;s</th>
 		<th class="style3">Secure AP&#39;s</th>
 	</tr>
-	<tr>
+	<tr class="light">
 		<td align="center" class="style2" style="width: 100px"><?php echo $rows; ?></td>
 		<td align="center" class="style2"><?php echo $open; ?></td>
 		<td align="center" class="style2"><?php echo $WEP; ?></td>
 		<td align="center" class="style2"><?php echo $Sec; ?></td>
 	</tr>
-	<tr><td class="style2" colspan="4" ></td></tr>
+	<tr class="style3"><td class="style2" colspan="4" ></td></tr>
 	<tr>
 		<th class="style3" style="width: 100px">Total Users</th>
 		<th class="style3">Last user to import</th>
 		<th class="style3">Last AP added</th>
 		<th class="style3">Last Import List</th>
 	</tr>
-	<tr>
+	<tr class="dark">
 		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
 		<td align="center" class="style2"><?php if ($usercount == NULL){echo "No users in Database.";}else{?><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['username'];?></a><?php } ?></a></td>
 		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No APs imported yet.";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastap_ssid;?></a><?php } ?></td>

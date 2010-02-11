@@ -112,11 +112,18 @@ a.links_s {
 	font-weight: bold; 
 	color: #CCC;
 }
+a.links_sa{
+	font-weight: bold; 
+	color: #05F;
+}
 a.upgrade {
 	font-weight: bold; 
 	color: #0F0;
 }
-
+a.email {
+	font-weight: bold; 
+	color: #128;
+}
 
 table.importconvert
 { 

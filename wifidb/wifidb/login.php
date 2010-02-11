@@ -5,6 +5,7 @@ include_once('lib/database.inc.php');
 include_once('lib/security.inc.php');
 include_once('lib/config.inc.php');
 
+$seed = $GLOBALS['login_seed'];
 $sec = new security();
 $func =	'';
 $func = filter_input(INPUT_GET, 'func', FILTER_SANITIZE_SPECIAL_CHARS);
@@ -18,6 +19,7 @@ switch($func)
 		$username = filter_input(INPUT_POST, 'time_user', FILTER_SANITIZE_SPECIAL_CHARS);
 		$password = filter_input(INPUT_POST, 'time_pass', FILTER_SANITIZE_SPECIAL_CHARS);
 		$login = $sec->login($username, $password, $seed);
+		pageheader("Security Page");
 	#	dump($_POST['return']);
 		switch($login)
 		{
@@ -27,6 +29,30 @@ switch($func)
 			
 			case "p_fail":
 				?><h2>Either Bad Username or Password.</h2>
+				<?php
+				$return = str_replace("%5C", "%5C", $return);
+				?>
+				<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
+				<table align="center">
+					<tr>
+						<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
+					</tr>
+					<tr>
+						<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
+						<td><input type="text" name="time_user"></td>
+					</tr>
+					<tr>
+						<td>Password <font size="1">(CaSeSenSiTivE)</font></td>
+						<td><input type="password" name="time_pass"></td>
+					</tr>
+					<tr>
+						<td colspan="2"><p align="center"><input type="hidden" name="return" value="<?php echo $return;?>"><input type="submit" value="Login"></p></td>
+					</tr>
+					<tr>
+						<td colspan="2"><p align="center"><a class="links" href="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_form">Create a user account</a><br><a class="links" href="<?php echo $_SERVER['PHP_SELF'];?>?func=reset_user_pass">Forgot your password?</a></p></td>
+					</tr>
+				</table>
+				</form>
 				<?php
 			break;
 			
@@ -50,7 +76,7 @@ switch($func)
 				echo "Unknown Return.";
 			break;
 		}
-#		footer($_SERVER['SCRIPT_FILENAME']);
+		footer($_SERVER['SCRIPT_FILENAME']);
 	break;
 	
 	#---#
@@ -152,7 +178,7 @@ switch($func)
 			footer($_SERVER['SCRIPT_FILENAME']);
 			die();
 		}
-		$create = $sec->create_user($username, $password, $email);
+		$create = $sec->create_user($username, $password, $email, $seed);
 		switch($create)
 		{
 			case 1:
@@ -283,18 +309,7 @@ switch($func)
 			if($email === $user_email)
 			{
 				##########################
-				// http://snippets.dzone.com/posts/show/3123
-				$len			=	12;
-				$base			=	'ABCDEFGHKLMNOPQRSTWXYZabcdefghjkmnpqrstwxyz123456789!@#$%^&*()_+-=';
-				$max			=	strlen($base)-1;
-				$activatecode	=	'';
-				
-				mt_srand((double)microtime()*1000000);
-				
-				while (strlen($activatecode) < $len+1)
-				{
-					$activatecode.=$base{mt_rand(0,$max)};
-				}
+				$activatecode = $sec->gen_keys(12);
 				##########################
 				
 				
@@ -305,7 +320,7 @@ switch($func)
 				$from_header = "From: WiFiDB_accounts@".$host_domain;
 				if($contents != "")
 				{
-					$users_email = "longbow486@msn.com";
+					$users_email = $GLOBALS['admin_email'];
 					if(mail($users_email, $subject, $contents, $from_header))
 				#	if(sendmail($username_db, $users_email, "WiFiDB No-Reply", "wifidb@randomintervals.com", $subject, $contents, $from_header))
 					{

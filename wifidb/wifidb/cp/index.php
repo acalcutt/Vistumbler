@@ -5,6 +5,7 @@ include('../lib/database.inc.php');
 
 include_once($GLOBALS['half_path'].'/lib/security.inc.php');
 
+$seed	=	$GLOBALS['login_seed'];
 $theme = $GLOBALS['theme'];
 $func = '';
 $func = filter_input(INPUT_GET, 'func', FILTER_SANITIZE_SPECIAL_CHARS);
@@ -47,26 +48,26 @@ if($login_check)
 					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 					<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 				</tr>
-				<tr>
+				<tr class="light">
 					<td colspan="6">&nbsp; </td>
 				</tr>
 				<tr>
-					<td colspan="6">
+					<td colspan="6" class="dark">
 					<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=update_user_profile">
 					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Email</th>
-							<td align="center" class="style2"><input type="text" name="email" size="<?php echo strlen($email)*2;?>px" value="<?php echo $email;?>"> Hide? <input name="h_email" type="checkbox" <?php if($newArray['h_email']){echo 'checked="checked"';}?> value="<?php echo $newArray['h_email'];?>"></td>
+							<td align="center"  class="light"><input type="text" name="email" size="<?php echo strlen($email)*2;?>px" value="<?php echo $email;?>"> Hide? <input name="h_email" type="checkbox" <?php if($newArray['h_email']){echo 'checked="checked"';}?> value="<?php echo $newArray['h_email'];?>"></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Website</th>
-							<td align="center" class="style2"><input type="text" name="website" size="<?php echo strlen($website)*1.5;?>px" value="<?php echo $website;?>"></td>
+							<td align="center"  class="light"><input type="text" name="website" size="<?php echo strlen($website)*1.5;?>px" value="<?php echo $website;?>"></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Vistumbler Version</th>
-							<td align="center" class="style2"><input type="text" name="Vis_ver" size="<?php echo strlen($Vis_ver)*1.5;?>px" value="<?php echo $Vis_ver;?>"></td>
+							<td align="center"  class="light"><input type="text" name="Vis_ver" size="<?php echo strlen($Vis_ver)*1.5;?>px" value="<?php echo $Vis_ver;?>"></td>
 						</tr>
-						<tr>
+						<tr class="light">
 							<td colspan="2"><p align="center"><input type="submit" value="Update Me!"></p></td>
 						</tr>
 					</table>
@@ -103,21 +104,20 @@ if($login_check)
 					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 					<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 				</tr>
-				<tr>
-					<td colspan="6">&nbsp; 
-					</td>
+				<tr class="light">
+					<td colspan="6">&nbsp;</td>
 				</tr>
 				<tr>
-					<td colspan="6">
+					<td colspan="6" class="dark">
 					<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=update_user_pref">
 					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Email me about updates</th>
-							<td align="center" class="style2"><input name="mail_updates" type="checkbox" <?php if($newArray['mail_updatesmail_updates']){echo 'checked="checked"';}?> value="<?php echo $newArray['email_updates'];?>"></td>
+							<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['mail_updatesmail_updates']){echo 'checked="checked"';}?> value="<?php echo $newArray['email_updates'];?>"></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Hide Login Status</th>
-							<td align="center" class="style2"><input name="h_status" type="checkbox" <?php if($newArray['h_status']){echo 'checked="checked"';}?> value="<?php echo $newArray['h_status'];?>"></td>
+							<td align="center" class="light"><input name="h_status" type="checkbox" <?php if($newArray['h_status']){echo 'checked="checked"';}?> value="<?php echo $newArray['h_status'];?>"></td>
 						</tr>
 						<tr>
 							<td colspan="2"><p align="center"><input type="submit" value="Update Me!"></p></td>
@@ -169,9 +169,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links_s" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td class="light" colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links_s" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="8">
+							<td colspan="6" class="dark">
 							<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 								<tr>
 									<th class="style3">ID<a href="?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=id&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
@@ -184,7 +184,7 @@ if($login_check)
 									<th class="style3">Share?</th>
 								</tr>
 								<?php
-								$user_cache = $username."_waypoints";
+								$user_cache = 'waypoints_'.$username;
 								$sql0 = "SELECT * FROM `$db`.`$user_cache` ORDER BY `$sort` $ord LIMIT $from, $inc";
 								$result = mysql_query($sql0, $conn);
 								$rows = mysql_num_rows($result);
@@ -235,7 +235,7 @@ if($login_check)
 								}else
 								{?>
 									<tr>
-										<td colspan="8">
+										<td class="light" colspan="8">
 										<CENTER>
 										You have no caches, get <a class="links" href="?func=boeyes&boeye_func=import_switch">crackin'</a>
 										</CENTER>
@@ -304,9 +304,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td class="light" colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 									<?php
 									$id = 0;
@@ -353,9 +353,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 									<?php
 									$id = 0;
@@ -402,9 +402,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 									<?php
 									$id = 0;
@@ -440,7 +440,7 @@ if($login_check)
 				case "update_wpt":
 					$id = 0;
 					$id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_SPECIAL_CHARS);
-					$User_cache = $username.'_waypoints';
+					$User_cache = 'waypoints_'.$username;
 					$select = "SELECT * FROM `$db`.`$User_cache` WHERE `id` = '$id'";
 					$return = mysql_query($select, $conn);
 					$pri_wpt = mysql_fetch_array($return);
@@ -453,13 +453,13 @@ if($login_check)
 							<th class="cp_select_coloum"><a class="links_s" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 									<h2>Edit Geocache data</h2>
 									<form method="post" action="?func=boeyes&boeye_func=update_wpt_proc" name="insertForm"  enctype="multipart/form-data">
-									<table align="center" class="tree">
+									<table align="center" class="tree" border="1">
 										<tr >
 											<td  align="center" style="width: 20%" class="dark">Name</td>
 											<td class="dark">
@@ -563,9 +563,9 @@ if($login_check)
 							<th class="cp_select_coloum"><a class="links_s" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 								<?php
 								$update = $myscache->update_wpt($id = 0, $name, $gcid, $notes, $cat, $type, $lat, $long, $link);
@@ -605,17 +605,17 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links_s" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links_s" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 									<h3>All supported files are Mysticache Exports</h3>
 									<table>
 										<tr>
-											<td><a class="links" href="?func=boeyes&boeye_func=import_gpx">Import GPX</a> - <a class="links_sample" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/Mysticache/sample.gpx?view=markup">Sample</a></td>
+											<td><a class="links" href="?func=boeyes&boeye_func=import_gpx">Import GPX</a> - <a class="links_sample" target="_new" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/Mysticache/sample.gpx?view=markup">Sample</a></td>
 										</tr>
 										<tr>
-											<td><a class="links" href="?func=boeyes&boeye_func=import_loc">Import LOC</a> - <a class="links_sample" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/Mysticache/test.loc?view=markup">Sample</a></td>
+											<td><a class="links" href="?func=boeyes&boeye_func=import_loc">Import LOC</a> - <a class="links_sample" target="_new" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/Mysticache/test.loc?view=markup">Sample</a></td>
 										</tr>
 									</table>
 								</CENTER>
@@ -637,9 +637,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 								<?php
 								if (isset($_GET['file']))
@@ -663,12 +663,12 @@ if($login_check)
 												<P>File location: 
 												</P>
 											</TD>
-											<TD>
+											<TD class="light">
 												<P><A NAME="file"></A><INPUT TYPE=FILE NAME="file" SIZE=56 STYLE="width: 5.41in; height: 0.25in"></P>
 											</TD>
 										</TR>
-										<TR>
-											<TD>.</TD><TD>
+										<TR class="light">
+											<TD>&nbsp;</TD><TD>
 												<P>
 											<?php	
 												if($rebuild === 0)
@@ -699,9 +699,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER><?php
 					include('../lib/wdb_xml.inc.php');
 					$wdbxml = new WDB_XML();
@@ -770,9 +770,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links_s" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links_s" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 								<?php
 								if($_GET['file'] != '')
@@ -784,17 +784,17 @@ if($login_check)
 								<h2>Import Mysticache LOC file</h2>
 									<form action="?func=boeyes&boeye_func=import_loc_proc" method="post" enctype="multipart/form-data">
 									<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
-										<TR height="40">
+										<TR height="40" class="style4">
 											<TD class="style4">
 												<P>File location: 
 												</P>
 											</TD>
-											<TD>
+											<TD class="light">
 												<P><A NAME="file"></A><INPUT TYPE=FILE NAME="file" SIZE=56 STYLE="width: 5.41in; height: 0.25in"></P>
 											</TD>
 										</TR>
-										<TR>
-											<TD>.</TD><TD>
+										<TR class="light">
+											<TD>&nbsp;</TD><TD>
 												<P>
 											<?php	
 												if($rebuild === 0)
@@ -825,9 +825,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links_s" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links_s" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 					<?php
 					include('../lib/wdb_xml.inc.php');
@@ -906,9 +906,9 @@ if($login_check)
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 								<CENTER>
 					<?php
 					include('../lib/wdb_xml.inc.php');
@@ -970,7 +970,7 @@ if($login_check)
 				
 				#####################
 				default:
-					$User_cache = $username.'_waypoints';
+					$User_cache = 'waypoints_'.$username;
 					$select = "SELECT * FROM `$db`.`$User_cache`";
 					$return = mysql_query($select, $conn);
 					$num_wpts = mysql_num_rows($return);
@@ -989,9 +989,9 @@ if($login_check)
 							<th class="cp_select_coloum"><a class="links_s" href="index.php?func=boeyes">Mysticache</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 						</tr>
-						<tr><td colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
-							<td colspan="6">
+							<td colspan="6" class="dark">
 							<CENTER><table BORDER=1 CELLPADDING=2 CELLSPACING=0 width ="50%">
 								<tr>
 									<th colspan="2" class="style4">
@@ -999,19 +999,18 @@ if($login_check)
 									</th>
 								</tr>
 								<tr>
-									<td width="60%">
+									<td width="60%" class="style4">
 										Number of Caches:
 									</td>
-									
-									<td>
+									<td class="light">
 										<?php echo $num_wpts;?>
 									</td>
 								</tr>
 								<tr>
-									<td width="60%">
+									<td width="60%" class="style4">
 										Number of Shared Caches:
 									</td>
-									<td>
+									<td class="light">
 										<?php echo $num_shared_wpts;?>
 									</td>
 								</tr>
@@ -1041,12 +1040,12 @@ if($login_check)
 					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 					<th class="cp_select_coloum"><a class="links_s" href="index.php?func=foes">Friends / Foes</a></th>
 				</tr>
-				<tr>
+				<tr class="light">
 					<td colspan="6">&nbsp; 
 					</td>
 				</tr>
 				<tr>
-					<td colspan="6">
+					<td colspan="6" class="dark">
 					<CENTER>
 					<?php
 					?>
@@ -1074,6 +1073,91 @@ if($login_check)
 			</table>
 			<?php
 			footer($_SERVER['SCRIPT_FILENAME']);
+		break;
+		
+		##-------------##
+		case "mailbox":
+			$page = addslashes(strtolower($_get['page']));
+			echo $page;
+			pageheader("User Control Panel --> MailBox");
+			if($page == '')
+			{
+				?><b><font size="6"><?php echo $username; ?>'s Mailbox</font></b>
+				<script type="text/javascript">
+
+				/***********************************************
+				* Dynamic Ajax Content- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
+				* This notice MUST stay intact for legal use
+				* Visit Dynamic Drive at http://www.dynamicdrive.com/ for full source code
+				***********************************************/
+
+				var loadedobjects=""
+				var rootdomain="http://"+window.location.hostname
+
+				function ajaxpage(url, containerid){
+				var page_request = false
+				if (window.XMLHttpRequest) // if Mozilla, Safari etc
+				page_request = new XMLHttpRequest()
+				else if (window.ActiveXObject){ // if IE
+				try {
+				page_request = new ActiveXObject("Msxml2.XMLHTTP")
+				} 
+				catch (e){
+				try{
+				page_request = new ActiveXObject("Microsoft.XMLHTTP")
+				}
+				catch (e){}
+				}
+				}
+				else
+				return false
+				page_request.onreadystatechange=function(){
+				loadpage(page_request, containerid)
+				}
+				page_request.open('GET', url, true)
+				page_request.send(null)
+				}
+
+				function loadpage(page_request, containerid){
+				if (page_request.readyState == 4 && (page_request.status==200 || window.location.href.indexOf("http")==-1))
+				document.getElementById(containerid).innerHTML=page_request.responseText
+				}
+
+				</script>
+				<table width="100%"><tr><td><img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="100%" height="1" /></td></tr>
+				<tr><td id="leftcolumn">
+				[<a class="links" href="javascript:ajaxpage('?func=mailbox&page=inbox', 'rightcolumn');">Inbox</a>]
+				[<a class="links" href="javascript:ajaxpage('?func=mailbox&page=compose', 'rightcolumn');">Write</a>]
+				[<a class="links" href="javascript:ajaxpage('?func=mailbox&page=sentmsgs', 'rightcolumn');">Sent</a>]
+				</td></tr>
+				<tr>
+				<td id="rightcolumn" align="center">
+				<iframe src="?func=mailbox&page=inbox" width="100%" height="500">
+					<p>Your browser does not support iframes.</p>
+				</iframe>
+				</td>
+				</tr></table>
+				<?php
+			}else
+			{
+				switch($page)
+				{
+					###############
+					case "inbox":
+						?> <table> <tr><th>Inbox</th></tr></table> <?php
+					break;
+					###############
+					case "compose":
+						?> <table> <tr><th>Compose message</th></tr></table> <?php
+					break;
+					###############
+					case "sent":
+						?> <table> <tr><th>Sent Messages</th></tr></table> <?php
+					break;
+				}
+			}
+			$filename = $_SERVER['SCRIPT_FILENAME'];
+			footer($filename);
 		break;
 		
 		
@@ -1182,40 +1266,40 @@ if($login_check)
 					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
 					<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
 				</tr>
-				<tr>
+				<tr class="light">
 					<td colspan="6">&nbsp; 
 					</td>
 				</tr>
 				<tr>
-					<td colspan="6">
+					<td colspan="6" class="dark">
 					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Privledge Level</th>
-							<td align="center" class="style2"><?php echo $priv_name;?></td>
+							<td align="center" class="light"><?php echo $priv_name;?></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Largest Import</th>
-							<td align="center" class="style2"><?php echo $large_import_title;?></td>
+							<td align="center" class="light"><?php echo $large_import_title;?></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Last Import</th>
-							<td align="center" class="style2"><?php echo $last_import_title;?></td>
+							<td align="center" class="light"><?php echo $last_import_title;?></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">AP with most GPS</th>
-							<td align="center" class="style2"><?php echo $max_ssid;?></td>
+							<td align="center" class="light"><?php echo $max_ssid;?></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Last New AP</th>
-							<td align="center" class="style2"><?php echo $new_ssid;?></td>
+							<td align="center" class="light"><?php echo $new_ssid;?></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Last Login</th>
-							<td align="center" class="style2"><?php echo $last_login;?></td>
+							<td align="center" class="light"><?php echo $last_login;?></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Join Date</th>
-							<td align="center" class="style2"><?php echo $join_date;?></td>
+							<td align="center" class="light"><?php echo $join_date;?></td>
 						</tr>
 					</table>
 					</td>

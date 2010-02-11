@@ -1,4 +1,8 @@
-﻿#leftcolumn{
+﻿
+.sub_header{
+	background-color:#508FAE;
+}
+#leftcolumn{
 float:left;
 width:90%;
 border: 3px solid black;
@@ -177,6 +181,10 @@ a.upgrade {
 	font-weight: bold; 
 	color: #0F0;
 }
+a.email {
+	font-weight: bold; 
+	color: #128;
+}
 
 table.importconvert
 { 
@@ -258,4 +266,13 @@ table.asscotable {
 	width: 80%;
 	vertical-align: top;
 	text-align: center;
+}
+
+
+
+.dark {
+	background-color: #85ABCB;
+}
+.light {
+	background-color: #BAD0E2;
 }

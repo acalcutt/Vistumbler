@@ -33,91 +33,6 @@ if(is_string($func))
 {
 	switch($func)
 	{
-		case 'waiting':
-			?><table border="1" width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr><?php
-			$sql1 = "SELECT * FROM `$db`.`files_tmp`";
-			$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
-			$total_rows = mysql_num_rows($result1);
-			
-			$sql = "SELECT * FROM `$db`.`files_tmp` ORDER BY `id` ASC LIMIT 10, $total_rows";
-			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
-			if($total_rows === 0)
-			{
-				?><tr class="dark"><td border="1" colspan="7" align="center">There are no files waiting to be imported, Go and import a file</td></tr></table><?php
-			}else
-			{
-				?><tr align="center"><td border="1"><br><?php
-				while ($newArray = mysql_fetch_array($result))
-				{
-					if($newArray['importing'] == '1' )
-					{
-						$color = 'style="background-color: lime"';
-					}else
-					{
-						$color = 'style="background-color: yellow"';
-					}
-					?>
-					<table <?php echo $color;?> border="1"  width="100%">
-					<tr class="style4"><th>ID</th><th>Filename</th><th>Date</th><th>title</th><th>size</th></tr>
-					<tr <?php echo $color;?>>
-					<td align="center">
-					<?php
-					echo $newArray['id'];
-					?>
-					</td><td align="center">
-					<?php
-					echo $newArray['file'];
-					?>
-					</td><td align="center">
-					<?php
-					echo $newArray['date'];
-					?>
-					</td><td align="center">
-					<?php
-					echo $newArray['title'];
-					?>
-					</td><td align="center">
-					<?php
-					echo $newArray['size'];
-					?>
-					</td></tr>
-					<tr class="style4">
-					<th <?php echo $color;?>>
-					</th>
-					<th>Hash Sum</th><th>User</th><th >Current SSID</th><th>AP / Total AP's</th></tr>
-					<tr <?php echo $color;?>>
-					<td></td>
-					<td align="center">
-					<?php
-					echo $newArray['hash'];
-					?>
-					</td><td align="center">
-					<?php
-					echo $newArray['user'];
-					?>
-					</td><td align="center">
-					<?php
-					if($newArray['ap'] == NULL){$ssid = "None being imported";}else{$ssid = $newArray['ap'];}
-					echo $ssid;
-					?>
-					</td><td align="center">
-					<?php
-					if($newArray['tot'] == NULL){$tot = "None being imported";}else{$tot = $newArray['tot'];}
-					echo $tot;
-					?>
-					</td></tr>
-					</table>
-					<br>
-					<?php
-				}
-					?>
-					</td></tr>
-					</table>
-					<?PHP
-			}
-			footer($_SERVER['SCRIPT_FILENAME']);
-		break;
-		
 		case 'done':
 			?>
 			<br><table border="1" width="90%"><tr class="style4">
@@ -220,25 +135,25 @@ if(is_string($func))
 					</tr>
 				</table>
 				<table border="1" cellspacing="0" cellpadding="0" style="width: 100%">
-					<tr>
+					<tr class="light">
 						<td class="daemon_kml" colspan="3">
-					<?php
-					if(file_exists("../out/daemon/update.kml"))
-					{
-					?>
-					<a class="links" href="../out/daemon/update.kml">Current WiFiDB Network Link</a>
-					<?php
-					}else
-					{
-					?>
-						The Daemon Needs to be on and you need to import something with GPS for the first update.kml file to be created.
-					<?php
-					}
-					?>
+							<?php
+							if(file_exists("../out/daemon/update.kml"))
+							{
+							?>
+							<a class="links" href="../out/daemon/update.kml">Current WiFiDB Network Link</a>
+							<?php
+							}else
+							{
+							?>
+								The Daemon Needs to be on and you need to import something with GPS for the first update.kml file to be created.
+							<?php
+							}
+							?>
 						</td>
 					</tr>
-					<tr>
-						<td class='daemon_kml'>Newest AP KML Last Edit: </td>
+					<tr class="light">
+						<td class="daemon_kml">Newest AP KML Last Edit: </td>
 							<?php
 							$newest = '../out/daemon/newestAP.kml';
 							if(file_exists($newest))
@@ -251,7 +166,7 @@ if(is_string($func))
 							?>
 						</td>
 					</tr>
-					<tr>
+					<tr class="light">
 						<td class='daemon_kml'>Full KML Last Edit: </td>
 							<?php
 							$full = '../out/daemon/'.$today.'/full_db.kml';
@@ -265,7 +180,7 @@ if(is_string($func))
 							?>
 							</td>
 					</tr>
-					<tr>
+					<tr class="light">
 						<td class='daemon_kml'>Daily KML Last Edit: </td>
 							<?php
 							$daily = '../out/daemon/'.$today.'/daily_db.kml';
@@ -283,12 +198,9 @@ if(is_string($func))
 					<tr>
 						<td colspan="3" class="style4">History</td>
 					</tr>
-				</table>
-				<table style="width: 65%" align="center">
 					<tr>
-						<td class="daemon_kml">
-						<table border="1" cellspacing="0" cellpadding="0" width="100%"><tr><td>
-						<table border="1" cellspacing="0" cellpadding="0" width="100%">
+						<td colspan="3" class="light">
+						<table align="center" border="1" cellspacing="0" cellpadding="0" width="50%">
 							<tr class="style4">
 								<td width="33%">Date Created</td>
 								<td width="33%">Last Edit Time</td>
@@ -323,9 +235,7 @@ if(is_string($func))
 						}
 						?>
 						</table>
-						</td></tr></table>
-						</td>
-						</tr>
+						</td></tr>
 					</table></td>
 						</tr>
 					</table>
@@ -426,7 +336,7 @@ if(is_string($func))
 				$_SESSION['token'] = $token;
 			}			
 			?>
-				<tr><td>Next Import scheduled on:</td><td><?php echo $file_array['size'];?> UTC</td><td>
+				<tr><td class="style3">Next Import scheduled on:</td><td class="light"><?php echo $file_array['size'];?> UTC</td><td class="light">
 			<?php
 			#	if($dst == 1){$dst = -1;}
 				$str_time = strtotime($file_array['size']);
@@ -439,7 +349,7 @@ if(is_string($func))
 				echo $next_run.$Zone;
 			?>
 				</td></tr>
-				<tr><td colspan="1">Select Refresh Rate:</td><td colspan="2">
+				<tr><td  class="style3" colspan="1">Select Refresh Rate:</td><td class="light" colspan="2">
 					<form action="scheduling.php?func=refresh&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 					<input type="hidden" name="token" value="<?php echo $token; ?>" />
 					<SELECT NAME="refresh">  
@@ -492,7 +402,7 @@ if(is_string($func))
 			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 			if($total_rows === 0)
 			{
-				?><tr><td border="1" colspan="7" align="center">There are no files waiting to be imported, Go and import a file</td></tr></table><?php
+				?><tr class="light"><td border="1" colspan="7" align="center">There are no files waiting to be imported, Go and import a file</td></tr></table><?php
 			}else
 			{
 				?><tr align="center"><td border="1"><br><?php

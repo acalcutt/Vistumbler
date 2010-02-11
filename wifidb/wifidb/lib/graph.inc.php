@@ -139,11 +139,11 @@ class graphs
 		$yy=21;
 		$u=20;
 		$uu=21;
-		if ($text == 'rand')
+		if ($text == 'rand' or $text == '')
 		{
-			$tr = rand(25,220);
-			$tg = rand(25,220);
-			$tb = rand(25,220);
+			$tr = rand(50,200);
+			$tg = rand(50,200);
+			$tb = rand(50,200);
 		}else
 		{
 			$text_color = explode(':', $text);
@@ -151,11 +151,11 @@ class graphs
 			$tg=$text_color[1];
 			$tb=$text_color[2];
 		}
-		if ($linec== 'rand')
+		if ($linec == 'rand' or $linec == '')
 		{
-			$r = rand(25,220);
-			$g = rand(25,220);
-			$b = rand(25,220);
+			$r = rand(50,200);
+			$g = rand(50,200);
+			$b = rand(50,200);
 		}else
 		{
 			$line_color = explode(':', $linec);
@@ -259,7 +259,7 @@ class graphs
 		$p=460;
 		$I=0;
 
-		if ($text == 'rand')
+		if ($text == 'rand' or $text == '')
 		{
 			$tr = rand(50,200);
 			$tg = rand(50,200);
@@ -271,7 +271,7 @@ class graphs
 			$tg=$text_color[1];
 			$tb=$text_color[2];
 		}
-		if ($linec == 'rand')
+		if ($linec == 'rand' or $linec == '')
 		{
 			$r = rand(50,200);
 			$g = rand(50,200);

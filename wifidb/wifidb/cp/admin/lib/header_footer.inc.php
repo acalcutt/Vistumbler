@@ -65,7 +65,7 @@ function admin_pageheader($page = '')
 		}
 	}
 	</script>
-	<link rel="stylesheet" href="<?php if($root != ''){echo $hosturl.$root;}?>/themes/wifidb/styles.css">
+	<link rel="stylesheet" href="<?php if($root != ''){echo $hosturl.$root;}else{echo $root;}?>/themes/wifidb/styles.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="85%" cellspacing="5" cellpadding="2">
@@ -88,67 +88,15 @@ function admin_pageheader($page = '')
 		<tr>
 			<td style="background-color: #304D80;width: 15%;vertical-align: top;">
 			<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" /><br>
-			<?php
-			switch($func)
-			{
-				case "overview":
-					?>
-					<span class="content_head"><strong><em>[Overview]</em></strong></span><br>
-					<a class="links<?php if($mode == 'aps'){echo '_s';}?>" href="?func=overview&mode=APs">Access Points</a><br>
-					<a class="links<?php if($mode == 'geo'){echo '_s';}?>" href="?func=overview&mode=geo">Geocaches</a><br>
-					<a class="links<?php if($mode == 'users'){echo '_s';}?>" href="?func=overview&mode=users">Users</a><br>
-					<a class="links<?php if($mode == 'daemon'){echo '_s';}?>" href="?func=overview&mode=daemon">Daemon Stats</a>
-					<?php
-				break;
-				
-				case "uandp":
-					?>
-					<span class="content_head"><strong><em>[Users and Permissions]</em></strong></span><br>
-					<a class="links<?php if($mode == 'man_users'){echo '_s';}?>" href="?func=uandp&mode=man_users">Manage Users</a><br>
-					<a class="links<?php if($mode == 'man_groups'){echo '_s';}?>" href="?func=uandp&mode=man_groups">Manage Groups</a><br>
-					<a class="links<?php if($mode == 'man_titles'){echo '_s';}?>" href="?func=uandp&mode=man_titles">Manage Titles</a>
-					<?php
-				break;
-				
-				case "maint":
-					?>
-					<span class="content_head"><strong><em>[Maintenance]</em></strong></span><br>
-					<a class="links<?php if($mode == 'clean_tmp'){echo '_s';}?>" href="?func=maint&mode=clean_tmp">Clean-up temp folders</a><br>
-					<a class="links<?php if($mode == 'clean_upload'){echo '_s';}?>" href="?func=maint&mode=clean_upload">Clean-up upload files</a><br>
-					<a class="links<?php if($mode == 'clean_signal'){echo '_s';}?>" href="?func=maint&mode=clean_signal">Clean-up Signal Graphs</a><br>
-					<a class="links<?php if($mode == 'check_dates'){echo '_s';}?>" href="?func=maint&mode=check_dates">Check for bad dates</a><br>
-					<a class="links<?php if($mode == 'check_cords'){echo '_s';}?>" href="?func=maint&mode=check_cords">Check for geo-cords</a><br>
-					<?php
-				break;
-				
-				case "system":
-					?>
-					<span class="content_head"><strong><em>[System]</em></strong></span><br>
-					<a class="links<?php if($mode == 'daemon'){echo '_s';}?>" href="?func=system&mode=daemon">Daemon</a><br>
-					<a class="links<?php if($mode == 'daemon_config'){echo '_s';}?>" href="?func=system&mode=daemon_config">Edit Daemon Config File</a><br>
-					<a class="links<?php if($mode == 'db_config'){echo '_s';}?>" href="?func=system&mode=db_config">Edit Config File</a><br><br>
-					<a class="links<?php if($mode == 'updates'){echo '_s';}?>" href="?func=system&mode=updates">Check for updates</a>
-					<?php
-				break;
-				
-				default:
-					?>
-					<span class="content_head"><strong><em>[Overview]</em></strong></span><br>
-					<a class="links<?php if($mode == 'aps'){echo '_s';}?>" href="?func=overview&mode=APs">Access Points</a><br>
-					<a class="links<?php if($mode == 'geo'){echo '_s';}?>" href="?func=overview&mode=geo">Geocaches</a><br>
-					<a class="links<?php if($mode == 'users'){echo '_s';}?>" href="?func=overview&mode=users">Users</a><br>
-					<a class="links<?php if($mode == 'daemon'){echo '_s';}?>" href="?func=overview&mode=daemon">Daemon Stats</a>
-					<?php
-				break;
-			}
-			?>
+			<span class="content_head"><strong><em><a class="links_s" href="<?php echo $hosturl.$root; ?>/">[WiFIDB]</a></em></strong></span><br>
+			<span class="content_head"><strong><em><a class="links_s" href="<?php echo $hosturl.$root;?>/caches.php">[Mytsticache]</a></em></strong></span><br>
 		</td>
 		<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
 		<table width="100%">
 			<tr>
 				<?php
 				$user_logins_table = $GLOBALS['user_logins_table'];
-				list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
+				list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_admin_login_yes']);
 				$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
 				$result = mysql_query($sql0, $conn);
 				$newArray = mysql_fetch_array($result);
@@ -161,11 +109,16 @@ function admin_pageheader($page = '')
 		</table>
 		<table width="100%" align="center" border='1'>
 			<tr class="sub_header">
-				<td align="center" width="25%">&nbsp;&nbsp;<a class="links<?php if($func == 'overview' or $func == ''){echo '_s';}?>" href="?func=overview">Overview</a>&nbsp;&nbsp;</td>
-				<td align="center" width="25%">&nbsp;&nbsp;<a class="links<?php if($func == 'uandp'){echo '_s';}?>" href="?func=uandp">Users and Permissions</a>&nbsp;&nbsp;</td>
-				<td align="center" width="25%">&nbsp;&nbsp;<a class="links<?php if($func == 'maint'){echo '_s';}?>" href="?func=maint">Maintenance</a>&nbsp;&nbsp;</td>
-				<td align="center" width="25%">&nbsp;&nbsp;<a class="links<?php if($func == 'system'){echo '_s';}?>" href="?func=system">System</a>&nbsp;&nbsp;</td>
+				<td align="center" width="25%" <?php if($func == 'overview' or $func == ''){echo 'class="cp_select_coloum"';} ?> >&nbsp;&nbsp;<a class="links<?php if($func == 'overview' or $func == ''){echo '_s';}?>" href="?func=overview">Overview</a>&nbsp;&nbsp;</td>
+				<td align="center" width="25%" <?php if($func == 'uandp'){echo 'class="cp_select_coloum"';} ?> >&nbsp;&nbsp;<a class="links<?php if($func == 'uandp'){echo '_s';}?>" href="?func=uandp">Users and Permissions</a>&nbsp;&nbsp;</td>
+				<td align="center" width="25%" <?php if($func == 'maint'){echo 'class="cp_select_coloum"';} ?> >&nbsp;&nbsp;<a class="links<?php if($func == 'maint'){echo '_s';}?>" href="?func=maint">Maintenance</a>&nbsp;&nbsp;</td>
+				<td align="center" width="25%" <?php if($func == 'system'){echo 'class="cp_select_coloum"';} ?> >&nbsp;&nbsp;<a class="links<?php if($func == 'system'){echo '_s';}?>" href="?func=system">System</a>&nbsp;&nbsp;</td>
 			</tr>
+			<?php
+			$mode = strtolower($mode);
+			$func = strtolower($func);
+			set_flow($func, $mode);
+			?>
 		</table>
 		<p align="center">
 		<br>

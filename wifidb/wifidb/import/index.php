@@ -215,7 +215,7 @@ switch($func)
 						<P>Title of Import: 
 						</P>
 					</TD>
-					<TD>
+					<TD class="light">
 						<P><A NAME="title"></A><INPUT TYPE=TEXT NAME="title" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
 					</TD>
 				</TR>
@@ -224,7 +224,7 @@ switch($func)
 						<P>File location: 
 						</P>
 					</TD>
-					<TD>
+					<TD class="light">
 						<P><A NAME="file"></A><INPUT TYPE=FILE NAME="file" SIZE=56 STYLE="width: 5.41in; height: 0.25in"></P>
 					</TD>
 				</TR>
@@ -233,7 +233,7 @@ switch($func)
 						<P>Username: 
 						</P>
 					</TD>
-					<TD>
+					<TD class="light">
 						<P><A NAME="user"></A>
 						<?php
 						if($GLOBALS['login_check'])
@@ -255,12 +255,13 @@ switch($func)
 						<P>Notes: 
 						</P>
 					</TD>
-					<TD>
+					<TD class="light">
 						<P><TEXTAREA NAME="notes" ROWS=4 COLS=50 STYLE="width: 4.42in; height: 1.01in"></TEXTAREA><BR>
 						</P>
 					</TD>
 				</TR>
-					<TD>.</TD><TD>
+				<TR class="light">
+					<TD>&nbsp;</TD><TD>
 						<P>
 					<?php	
 						if($rebuild === 0)

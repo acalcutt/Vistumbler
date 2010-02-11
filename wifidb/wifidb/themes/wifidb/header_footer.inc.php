@@ -130,6 +130,7 @@ function pageheader($title, $output="detailed")
 function footer($filename = '', $output = "detailed")
 {
 	$half_path	=	$GLOBALS['half_path'];
+	include_once($half_path.'lib/security.inc.php');
 	include_once($half_path.'/lib/database.inc.php');
 	include_once($half_path.'/lib/config.inc.php');
 	$root = $GLOBALS['root'];
@@ -157,8 +158,8 @@ function footer($filename = '', $output = "detailed")
 	#		echo $GLOBALS['privs'];
 			if($GLOBALS['login_check'])
 			{
-				$privs_a = $GLOBALS['privs_a'];
-				list($privs, $priv_name) = $privs_a;
+				# $privs_a = $GLOBALS['privs_a'];
+				list($privs, $priv_name) = security::check_privs(0);
 			#	echo $privs;
 				if($privs >= 1000)
 				{

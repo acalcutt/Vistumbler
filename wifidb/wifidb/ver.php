@@ -6,57 +6,90 @@ pageheader("Version Page");
 <font face="Courier New">
 		<div align="left">
 		<p align="center"><font size="7"><b>WiFiDB Version History</b></font></p>
-		<table border="0" cellpadding="4">
-			<tr>
+		
+		<table border="0" cellpadding="4" width="100%" border="2" id="details">
+			<tr class="dark">
 				<td>Project Name...</td><td><b>WiFiDB <?php echo $ver['wifidb'];?></b></td>
 			</tr>
-			<tr>
+			<tr class="light">
 				<td>Project Codename...</td><td><b><?php echo $ver['codename'];?></b></td>
-			<tr>
-				<td>Project State...............</td><td><b>Alpha (planning and early dev)</b><td>
+			<tr class="dark">
+				<td>Project State...</td><td><b>Alpha (planning and early dev)</b></td>
 			</tr>
-			<tr>
-				<td>Project Dev(s)..............</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b><td>
+			<tr class="light">
+				<td>Project Dev(s)...</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b></td>
 			</tr>
-			<tr>
-				<td><b><a class="links" href="http://www.randomintervals.com/wifidb/">Download WiFiDB</a></b></td>
+			<tr class="dark">
+				<td align="center" colspan="2"><b><a class="links" title="You know you want to." href="http://www.randomintervals.com/wifidb/">Download WiFiDB</a></b></td>
 			</tr>
 		</table>
 		
-		<table width="100%" border="2" id="16b4">
+		<table class="light" width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Dec-07</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-Jan-19</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
 					<LI>Added Autodetect of Timezone and DST to the core. Now when it is the first time you visit the site, it will load a javascript to detect it and write a cookie. (wifidb_client_timezone, wifidb_client_dst, and wifidb_client_check)</LI>
-					<LI>Fixed a bug in the graphing index page where it was not using the new SSID make function to generate the proper SSIDs for SQL tables, File names, and General useage. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=409">KB409</a></LI>
-					<LI>Fixed a bug in the scheduling page where it would not calculate the correct Timezone stamp, but the time was correct. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=411">KB411</a></LI>
+					<LI>Fixed a bug in the graphing index page where it was not using the new SSID make function to generate the proper SSIDs for SQL tables, File names, and General useage. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=409">KB409</a></LI>
+					<LI>Fixed a bug in the scheduling page where it would not calculate the correct Timezone stamp, but the time was correct. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=411">KB411</a></LI>
 					<LI>Fixed a bug in teh default theme where the page name was not being called correctly and was outputing an error or no text.</LI>
 					<LI>Altered the All APs page to only show a few pages before and after the current page number.</LI>
-					<LI>Added a User based login system. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
-					<LI>User Control Panel. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
-					<LI>Mysticahe support ( GPX / LOC / CSV ) . <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
+					<LI>Added a User based login system. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
+					<LI>User Control Panel. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
+					<LI>Mysticahe support ( GPX / LOC / CSV ) . <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
 					<LI>XML Support. </LI>
+					<LI>Fixed a bug with GPS conversions. If one of the Cords has only 2 digits before the decimal the geo-cord was converted wrong. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=478">KB478</a></LI>
 					<LI>Apparently I didn't know how to spell "Environment". Fixed in Index and Import page. (This is only ever seen on my domians)</LI>
 					<LI>Changed the name of the User Imports lists table from `users` to `users_imports`. ( I was getting confused with the other new users tables.)</LI>
 					<LI>Support to be-friend / ignore certian users.</LI>
-					<LI>Added Administrator Panel.</LI>
+					<LI>Added Administrator Panel. More info: <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=475">KB475</a></LI>
+						<UL>
+							<LI>Overview</LI>
+							<UL>
+								<LI>Access Points</LI>
+								<LI>Geocaches</LI>
+								<LI>Users</LI>
+								<LI>Daemon Stats</LI>
+								<LI>Graphs </LI>
+							</UL>
+							<LI>Users and Groups</LI>
+							<UL>
+								<LI>Manage Users</LI>
+								<LI>Manage Groups </LI>
+								<LI>Manage Titles </LI>
+							</UL>
+							<LI>Maintenance</LI>
+							<UL>
+								<LI>Empty Temp folder</LI>
+								<LI>Archive Upload folders</LI>
+								<LI>Empty AP Graphing folder</LI>
+								<LI>Check For bad Dates in APs</LI>
+								<LI>Check for bad Geo-cords in APs</LI>
+							</UL>
+							<LI>System *WIP*</LI>
+							<UL>
+								<LI>Daemon Control</LI>
+								<LI>Edit Daemon Config</LI>
+								<LI>Edit Front end config</LI>
+								<LI>Check for Updates</LI>
+							</UL>
+						</UL>
 				</OL>
 			</td></tr>
 		</table>
 		<br>
-		<table width="100%" border="2" id="16b4">
+		<table class="dark" width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 4</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-28</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
-					<LI>Added Daemon Generated KML exports. Details <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=388">here.</a></LI>
-					<LI>Fixed some HTML mode issues. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=47&t=385">KB385</a></LI>
-					<LI>Fixed some issues that relate to WiFiDB running on a shared server host.<a href="http://forum.techidiots.net/forum/viewtopic.php?f=47&t=385">KB385</a></LI>
+					<LI>Added Daemon Generated KML exports. Details <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=388">here.</a></LI>
+					<LI>Fixed some HTML mode issues. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=47&t=385">KB385</a></LI>
+					<LI>Fixed some issues that relate to WiFiDB running on a shared server host.<a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=47&t=385">KB385</a></LI>
 					<LI>Forgot to remove a mysql_error() function from a verbose statement, in the update portion of the import_vs1() function</LI>
 					<LI>Added Daemon Console Viewer.</LI>
 					<LI>Fixed the issue with some tables in the 'vistumbler' theme where not centered.</LI>
@@ -79,7 +112,7 @@ pageheader("Version Page");
 		<br>
 		
 		
-		<table width="100%" border="2" id="16b3.1">
+		<table class="light" width="100%" border="2" id="16b3.1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3.1</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Aug-12</td></tr>
@@ -115,7 +148,7 @@ pageheader("Version Page");
 		</table>
 		<br>
 		
-		<table width="100%" border="2" id="16b3">
+		<table class="dark" width="100%" border="2" id="16b3">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 3</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Jul-09</td></tr>
@@ -172,7 +205,7 @@ pageheader("Version Page");
 			</td></tr>
 		</table>
 		<br>
-		<table width="100%" border="2" id="16b21">
+		<table class="light" width="100%" border="2" id="16b21">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2.1</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-May-05</td></tr>
@@ -193,7 +226,7 @@ pageheader("Version Page");
 			</td></tr>
 		</table>
 		<br>
-<table width="100%" border="2" id="16b2">
+<table class="dark" width="100%" border="2" id="16b2">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 2</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Apr-29</td></tr>
@@ -227,7 +260,7 @@ pageheader("Version Page");
 </table>
 
 <br>
-<table width="100%" border="2" id="16b1">
+<table class="light" width="100%" border="2" id="16b1">
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px" height="26">Version: 0.16 Build 1</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Mar-20</td></tr>
@@ -283,7 +316,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b80" cellpadding="1">
+<table class="dark" width="100%" border="2" id="15b80" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 80</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Jan-29</td></tr>
@@ -297,7 +330,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b79" cellpadding="1">
+<table class="light" width="100%" border="2" id="15b79" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 79</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Jan-24</td></tr>
@@ -310,7 +343,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b78" cellpadding="1">
+<table class="dark" width="100%" border="2" id="15b78" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 78</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Jan-22</td></tr>
@@ -323,7 +356,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b77" cellpadding="1">
+<table class="light" width="100%" border="2" id="15b77" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%;" height="26">Version: 0.15 Build 77</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%;" height="26">Date: 2009-Jan-11</td></tr>
@@ -336,7 +369,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b76" cellpadding="1">
+<table class="dark" width="100%" border="2" id="15b76" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 76	</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Dec-20</td></tr>
@@ -349,7 +382,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b75" cellpadding="1">
+<table class="light" width="100%" border="2" id="15b75" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 75	</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Dec-19</td></tr>
@@ -365,7 +398,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b73" cellpadding="1">
+<table class="dark" width="100%" border="2" id="15b73" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 73	</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Nov-28</td></tr>
@@ -378,7 +411,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="15b67" cellpadding="1">
+<table class="light" width="100%" border="2" id="15b67" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.15 Build 67	</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Nov-19</td></tr>
@@ -393,7 +426,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="14" cellpadding="1">
+<table class="dark" width="100%" border="2" id="14" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.14	</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Nov-14</td></tr>
@@ -408,7 +441,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="13" cellpadding="1">
+<table class="light" width="100%" border="2" id="13" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.13	</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Oct-30</td></tr>
@@ -421,7 +454,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="12" cellpadding="1">
+<table class="dark" width="100%" border="2" id="12" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.12</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Aug-19</td></tr>
@@ -435,7 +468,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="11" cellpadding="1">
+<table class="light" width="100%" border="2" id="11" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td>
 	<td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.11</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Aug-12</td></tr>
@@ -451,7 +484,7 @@ pageheader("Version Page");
 	</td></tr>
 </table>
 <br>
-<table width="100%" border="2" id="1" cellpadding="1">
+<table class="dark" width="100%" border="2" id="1" cellpadding="1">
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px;width:50%" height="26">Version: 0.1	</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Date: 2008-Jun-10</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>

@@ -156,8 +156,13 @@ if($total_rows === 0)
 	die(footer($_SERVER['SCRIPT_FILENAME']));
 }
 
+$row_color = 0;
 while ($newArray = mysql_fetch_array($result))
 {
+	if($row_color == 1)
+	{$row_color = 0; $color = "light";}
+	else{$row_color = 1; $color = "dark";}
+
 	$id_s = $newArray['id'];
 	$ssid_s = $newArray['ssid'];
 	$mac_s = $newArray['mac'];
@@ -170,7 +175,7 @@ while ($newArray = mysql_fetch_array($result))
 		$auth_s = "Uknown";
 		$encry_s = "Unknown";
 	}
-	echo '<tr><td>'.$id_s.'</td><td><a class="links" href="fetch.php?id='.$id_s.'&token='.$_SESSION['token'].'">'.$ssid_s.'</a></td>';
+	echo '<tr class="'.$color.'"><td>'.$id_s.'</td><td><a class="links" href="fetch.php?id='.$id_s.'&token='.$_SESSION['token'].'">'.$ssid_s.'</a></td>';
 	echo '<td>'.$mac_s.'</td>';
 	echo '<td>'.$chan_s.'</td>';
 	if($radio_s=="a")

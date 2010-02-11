@@ -19,7 +19,7 @@ if(is_array($login_check) or $login_check == "No Cookie"){$login_check = 0;}else
 $returns = $sec->check_privs(1);
 list($priv_s1, $priv_name1) = $returns;
 
-if($login_check == 1 and $priv_s1 > 1000)
+if($login_check == 1 and $priv_s1 >= 1000)
 {
 	include('./lib/header_footer.inc.php');
 	include('./lib/administration.inc.php');

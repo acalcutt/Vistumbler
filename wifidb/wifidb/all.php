@@ -39,8 +39,13 @@ if (isset($_GET['token']))
 		$total_rows = mysql_num_rows($result1);
 		if($total_rows != 0)
 		{
+			$row_color = 0;
 			while ($newArray = mysql_fetch_array($result))
 			{
+				if($row_color == 1)
+				{$row_color = 0; $color = "light";}
+				else{$row_color = 1; $color = "dark";}
+				
 				$id = $newArray['id'];
 				$ssid_array = make_ssid($newArray['ssid']);
 				$ssid = $ssid_array[2];
@@ -51,7 +56,7 @@ if (isset($_GET['token']))
 				$radio = $newArray['radio'];
 				$auth = $newArray['auth'];
 				$encry = $newArray['encry'];
-				echo '<tr><td><a class="links" href="opt/fetch.php?id='.$id.'&token='.$_SESSION["token"].'">'.$ssid.'</a></td>';
+				echo '<tr class="'.$color.'"><td><a class="links" href="opt/fetch.php?id='.$id.'&token='.$_SESSION["token"].'">'.$ssid.'</a></td>';
 				echo '<td>'.$mac.'</td>';
 				echo '<td>'.$chan.'</td>';
 				if($radio=="a")

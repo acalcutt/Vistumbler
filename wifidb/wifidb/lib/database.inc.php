@@ -7,7 +7,7 @@ global $ver, $full_path, $half_path, $dim;
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.20 Build 1 {pre-release} ",
 			"codename"			=>	"Hyannis",
-			"Last_Core_Edit" 	=> 	"2009-Dec-07",
+			"Last_Core_Edit" 	=> 	"2010-Jan-19",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.6.1",
@@ -19,11 +19,12 @@ $ver = array(
 										"exp_kml"			=>	"3.6.0",
 										"exp_vs1"			=>	"1.1.0",
 										"exp_gpx"			=>	"1.0.0",
-										"convert_dm_dd"		=>	"1.3.0",
+										"convert_dm_dd"		=>	"1.3.1",
 										"convert_dd_dm"		=>	"1.3.1",
 										"manufactures"		=>	"1.0",
 										"gen_gps"			=>	"1.0",
-										"exp_newest_kml"	=>	"1.0"
+										"exp_newest_kml"	=>	"1.0",
+										"table_exists"		=>	"1.0"
 										),
 			"Daemon"			=>	array(
 										"daemon_kml"		=>	"1.0",
@@ -48,6 +49,13 @@ $ver = array(
 										"footer"			=>	"1.2"
 										),
 			);
+			
+			
+
+
+#-------------------------------------------------------------------------------------#
+#----------------------------------  Get Set values  ---------------------------------#
+#-------------------------------------------------------------------------------------#
 if(@$GLOBALS['screen_output'] != "CLI")
 {
 	global $theme, $full_path, $half_path;
@@ -184,6 +192,40 @@ if(@$GLOBALS['screen_output'] != "CLI")
 	{require($full_path."header_footer.inc.php");}
 }
 
+
+
+
+
+#-------------------------------------------------------------------------------------#
+#----------------------------------  Get Set values  ---------------------------------#
+#-------------------------------------------------------------------------------------#
+function redirect_page($return = "/wifidb/", $delay = 0, $msg = "no Message", $new_window = 0)
+{
+	if($return == ''){$return = "/wifidb/";}
+	?>
+		<script type="text/javascript">
+			function reload()
+			{
+				<?php
+				if($new_window == 1)
+				{ ?>
+					window.open('<?php echo $return;?>'); <?
+				}
+				elseif($new_window == 2)
+				{ ?>
+					window.open('<?php echo $return;?>');
+					location.href = '/<?php echo $GLOBALS["root"];?>/'; <?php
+				}
+				elseif($new_window == 0)
+				{ ?>
+					location.href = '<?php echo $return;?>'; <?php
+				}
+				?>
+			}
+			</script>
+			<body onload="setTimeout('reload()', <?php echo $delay;?>)"><?php echo $msg;?></body>
+	<?php
+}
 
 
 #-------------------------------------------------------------------------------------#
@@ -623,7 +665,7 @@ function dos_filesize($fn)
 			return '0';
 	}else
 	{
-		return filesize($fn);
+		return @filesize($fn);
 	}
 }
 
@@ -639,11 +681,11 @@ function format_size($size, $round = 2)
 	
 	$sizes = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
 	
-	for ($i=0; $size > 1024 && $i < count($sizes) - 1; $i++)
+	for ($i=0; $size > 1024 && $i < (count($sizes)-1); $i++)
 	{
-		$size /= 1024;
+		$size = $size/1024;
 	}
-#	echo $size."<BR>";
+	#echo $size."<BR>";
 	return round($size,$round).$sizes[$i];
 }
 
@@ -682,7 +724,7 @@ function top_ssids()
 		include_once($GLOBALS['wifidb_install'].'/lib/config.inc.php');
 	}else
 	{
-		include_once($GLOBALS['half_path'].'lib/config.inc.php');
+		include_once($GLOBALS['half_path'].'/lib/config.inc.php');
 	}
 
 	$ssids = array();
@@ -726,6 +768,26 @@ function top_ssids()
 
 class database
 {
+	#=========================================================================================================================#
+	#										table_exists (Check to see if a table is in the DB before trying to read from it) #
+	#=========================================================================================================================#
+
+	function table_exists($table, $db)
+	{ 
+		$tables = mysql_list_tables($db); 
+		while($temp = mysql_fetch_array($tables))
+		{
+			#var_dump($temp['Tables_in_wifi']);
+		#	echo $temp['Tables_in_wifi']." - ".$table."\r\n";
+			if ($temp['Tables_in_wifi'] == $table)
+			{
+				return TRUE;
+			}
+		}
+		return FALSE;
+	}
+
+
 	#=========================================================================================================================#
 	#										gen_gps (generate GPS cords from a VS1 file to Array)				 	#
 	#=========================================================================================================================#
@@ -1777,10 +1839,10 @@ class database
 								}
 								$user_n++;
 							#######################
-								#    #       ##         ##       #
-								#  #         #   #   #   #       #
-								# #          #      #      #       #
-								#    #       #               #       ####
+								#    #       ##    ##       #
+								#  #         # #  # #       #
+								# # .        #  ##  #		#
+								#    #       #      #       ####
 								database::exp_newest_kml($named = 0, $verbose=1);
 							#######################
 							}else
@@ -1975,6 +2037,8 @@ class database
 		$geocord_in = preg_replace($patterns, $replacements, $geocord_in);
 		$geocord_exp = explode(".", $geocord_in);
 		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
+		
+		
 		// 428.7753 ---- 428 - 7753
 		$geocord_dec = "0.".$geocord_exp[1];
 		// 428.7753 ---- 428 - 0.7753
@@ -2001,7 +2065,7 @@ class database
 #			echo $geocord_deg.'<br>';
 		}elseif($len <= 2)
 		{
-			$geocord_deg = $geocord_exp[0][0];
+			$geocord_deg = 0;
 #			echo $geocord_deg.'<br>';
 		}
 		$geocord_out = $geocord_deg + $geocord_div;
@@ -2256,7 +2320,7 @@ class database
 				<?php echo $lu; ?></td><td>
 				<?php echo $field["nt"]; ?></td><td>
 				<?php echo $field["label"]; ?></td><td>
-				<a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $field["user"]; ?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["user"]; ?></a></td><td>
+				<a class="links" href="../opt/userstats.php?func=alluserlists&user=<?php echo $field["user"]; ?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["user"]; ?></a></td><td>
 				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>&token=<?php echo $_SESSION['token'];?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">KML</a>
 			<!--	OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php #echo $row_id;?>&token=<?php #echo $_SESSION['token'];?>">GPX</a> -->
 				</td></tr>
@@ -3025,6 +3089,7 @@ class database
 						$alt = $gps_table_first['alt'];
 						$lat =& database::convert_dm_dd($gps_table_first['lat']);
 						$long =& database::convert_dm_dd($gps_table_first['long']);
+					#	echo $gps_table_first['lat']." - ".$lat."<br>".$gps_table_first['lat']." - ".$lat."<br>";
 						$zero = 0;
 						$NN++;
 						break;
@@ -4231,7 +4296,6 @@ class database
 		require "config.inc.php";
 		$date=date('Y-m-d_H-i-s');
 		$start = microtime(true);
-		
 		$sql = "SELECT * FROM `$db`.`$wtable` ORDER BY `id` DESC LIMIT 1";
 		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 		$ap_array = mysql_fetch_array($result);
@@ -4636,7 +4700,7 @@ class daemon
 		$WEP_loc 	=	$GLOBALS['WEP_loc'];
 		$WPA_loc 	=	$GLOBALS['WPA_loc'];
 		$KML_SOURCE_URL	=	$GLOBALS['KML_SOURCE_URL'];
-		
+		$database	=	new database();
 		// define initial write and appends
 		$filewrite = fopen($temp_kml, "w");
 		$fileappend = fopen($temp_kml, "a");
@@ -4661,7 +4725,7 @@ class daemon
 		verbosed($GLOBALS['COLORS']['YELLOW']."Preparing Buffer for Full DB KML", $verbose, "CLI");
 		while($ap_array = mysql_fetch_array($result))
 		{
-			$man 		= database::manufactures($ap_array['mac']);
+			$man 		= $database->manufactures($ap_array['mac']);
 			$id			= $ap_array['id'];
 			$ssid_ptb_ = $ap_array['ssid'];
 			$ssids_ptb = str_split($ssid_ptb_,25);
@@ -4746,8 +4810,8 @@ class daemon
 				$time_first = $gps_table_first["time"];
 				$fa   = $date_first." ".$time_first;
 				$alt  = $gps_table_first['alt'];
-				$lat  =& database::convert_dm_dd($gps_table_first['lat']);
-				$long =& database::convert_dm_dd($gps_table_first['long']);
+				$lat  =& $database->convert_dm_dd($gps_table_first['lat']);
+				$long =& $database->convert_dm_dd($gps_table_first['long']);
 				$zero = 0;
 				break;
 			}
@@ -4865,6 +4929,7 @@ class daemon
 		$WEP_loc 	=	$GLOBALS['WEP_loc'];
 		$WPA_loc 	=	$GLOBALS['WPA_loc'];
 		$KML_SOURCE_URL	=	$GLOBALS['KML_SOURCE_URL'];
+		$database	=	new database();
 		
 #		echo "Daily KML File: ".$temp_daily_kml."\n";
 		$filewrite = fopen($temp_daily_kml, "w");
@@ -4919,7 +4984,7 @@ class daemon
 			$result0 = mysql_query($sql0, $conn) or die(mysql_error($conn));
 			while($ap_array = mysql_fetch_array($result0))
 			{
-				$man 		= database::manufactures($ap_array['mac']);
+				$man 		= $database->manufactures($ap_array['mac']);
 				$id			= $ap_array['id'];
 				$ssid_ptb_ = $ap_array['ssid'];
 				$ssids_ptb = str_split($ssid_ptb_,25);
@@ -5012,8 +5077,8 @@ class daemon
 						$fa   = $date_first." ".$time_first;
 						$alt  = $gps_table_first['alt'];
 						
-						$lat  =& database::convert_dm_dd($gps_table_first['lat']);
-						$long =& database::convert_dm_dd($gps_table_first['long']);
+						$lat  =& $database->convert_dm_dd($gps_table_first['lat']);
+						$long =& $database->convert_dm_dd($gps_table_first['long']);
 						$zero = 0;
 						break;
 					}
@@ -5095,11 +5160,101 @@ class daemon
 ####################
 	function getdaemonstats()
 	{
-		$WFDBD_PID = $GLOBALS['pid_file_loc'];
+		$return =0;
+		$WFDBD_PID = $GLOBALS['pid_file_loc'].'imp_expd.pid';
+	#	echo $WFDBD_PID."<br>";
 		$os = PHP_OS;
 		if ( $os[0] == 'L')
 		{
-			?><tr class="style4"><th colspan="4">Linux Based WiFiDB Daemon</th></tr><?php
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+			#	echo $pid_open[0]."<br>";
+				exec('ps vp '.$pid_open[0] , $output, $sta);
+				if(isset($output[1]))
+				{
+					$start = trim($output[1], " ");
+					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
+					$mem = $match[0][0];
+					
+					preg_match_all("/(php.*)/", $start, $matc);
+					$CMD = $matc[0][0];
+					
+					preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
+					$time = $mat[0][0];
+					
+					$patterns[1] = '/  /';
+					$patterns[2] = '/ /';
+					$ps_stats = preg_replace($patterns , "|" , $start);
+					$ps_Sta_exp = explode("|", $ps_stats);
+					$return = 1;
+					?>
+					<tr class="style4">
+						<th>PID</th>
+						<th>TIME</th>
+						<th>Memory</th>
+						<th>CMD</th>
+					</tr>
+					<tr align="center" bgcolor="green">
+						<td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td>
+						<td><?php echo $time;?></td>
+						<td><?php echo $mem."%";?></td>
+						<td><?php echo $CMD;?></td>
+					</tr>
+					<?php
+					return 1;
+				}else
+				{
+					?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php
+					return 0;
+				}
+			}else
+			{
+				?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php
+				return 0;
+			}
+		}elseif( $os[0] == 'W')
+		{
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+				if(isset($output[2]))
+				{
+					?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+					$ps_stats = explode("," , $output[2]);
+					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+					return 1;
+				}else
+				{
+					?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr>
+					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Daemon is not running!</td><?php
+					return 0;
+				}
+			}else
+			{
+				?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr>
+				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Daemon is not running!</td><?php
+				return 0;
+			}
+		}else
+		{
+			?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Daemon</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Daemon is not running!</td><?php
+			return 0;
+		}
+	}
+	
+####################
+	function getdbdaemonstats()
+	{
+		$return =0;
+		$WFDBD_PID = $GLOBALS['pid_file_loc'].'dbstatsd.pid';
+		$os = PHP_OS;
+		if ( $os[0] == 'L')
+		{
 			$output = array();
 			if(file_exists($WFDBD_PID))
 			{
@@ -5135,13 +5290,98 @@ class daemon
 						<td><?php echo $CMD;?></td>
 					</tr>
 					<?php
+					$return =1;
 				}else
 				{
-					?><tr align="center" bgcolor="red"><td colspan="4">Linux Based WiFiDB Daemon is not running!</td><?php
+					?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php
 				}
 			}else
 			{
-				?><tr align="center" bgcolor="red"><td colspan="4">Linux Based WiFiDB Daemon is not running!</td><?php
+				?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php
+			}
+		}elseif( $os[0] == 'W')
+		{
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+				$return =1;
+				if(isset($output[2]))
+				{
+					?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+					$ps_stats = explode("," , $output[2]);
+					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+				}else
+				{
+					?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
+					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php
+				}
+			}else
+			{
+				?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
+				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php
+			}
+		}else
+		{
+			?><tr class="style4"><th colspan="4">Unkown OS Based Database Statistics Daemon</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Database Statistics Daemon is not running!</td><?php
+		}
+		return $return;
+	}
+
+	
+####################
+	function getperfdaemonstats()
+	{
+		$return =0;
+		$WFDBD_PID = $GLOBALS['pid_file_loc'].'daemonperfd.pid';
+		$os = PHP_OS;
+		if ( $os[0] == 'L')
+		{
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('ps vp '.$pid_open[0] , $output, $sta);
+				if(isset($output[1]))
+				{
+					$start = trim($output[1], " ");
+					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
+					$mem = $match[0][0];
+					
+					preg_match_all("/(php.*)/", $start, $matc);
+					$CMD = $matc[0][0];
+					
+					preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
+					$time = $mat[0][0];
+					
+					$patterns[1] = '/  /';
+					$patterns[2] = '/ /';
+					$ps_stats = preg_replace($patterns , "|" , $start);
+					$ps_Sta_exp = explode("|", $ps_stats);
+					$return =1;
+					?>
+					<tr class="style4">
+						<th>PID</th>
+						<th>TIME</th>
+						<th>Memory</th>
+						<th>CMD</th>
+					</tr>
+					<tr align="center" bgcolor="green">
+						<td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td>
+						<td><?php echo $time;?></td>
+						<td><?php echo $mem."%";?></td>
+						<td><?php echo $CMD;?></td>
+					</tr>
+					<?php
+				}else
+				{
+					?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php
+				}
+			}else
+			{
+				?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php
 			}
 		}elseif( $os[0] == 'W')
 		{
@@ -5152,29 +5392,261 @@ class daemon
 				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
 				if(isset($output[2]))
 				{
-					?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
+					?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
 					$ps_stats = explode("," , $output[2]);
+					$return =1;
 					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
 				}else
 				{
-					?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr>
-					<tr align="center" bgcolor="red"><td colspan="4">Windows Based WiFiDB Daemon is not running!</td><?php
+					?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr>
+					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Performance Monitor is not running!</td><?php
 				}
 			}else
 			{
-				?><tr class="style4"><th colspan="4">Windows Based WiFiDB Daemon</th></tr>
-				<tr align="center" bgcolor="red"><td colspan="4">Windows Based WiFiDB Daemon is not running!</td><?php
+				?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr>
+				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Performance Monitor is not running!</td><?php
 			}
 		}else
 		{
-			?><tr class="style4"><th colspan="4">Unkown OS Based WiFiDB Daemon</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based WiFiDB Daemon is not running!</td><?php
+			?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Performance Monitor</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Performance Monitor is not running!</td><?php
 		}
-		
+		return $return;
 	}
+#########################################
 
-	
-	
+#########################################
+	function start($d)
+	{
+		require('config.inc.php');
+		require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
+		if (!file_exists("/var/log/wifidb/"))
+		{
+			mkdir($GLOBALS['daemon_log_folder']);
+		}
+		switch($d)
+		{
+			case "imp_exp":
+				$console_log = $GLOBALS['daemon_log_folder'].'imp_expd.log';
+			#	echo "Starting WiFiDB 'Import/Export Daemon'..\n";
+				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."imp_expd.php";
+				if (PHP_OS == "WINNT")
+				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
+				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
+				
+			#	echo $cmd."\n";
+				if(file_exists($daemon_script))
+				{
+					$start = popen($cmd, 'w');
+					if($start)
+					{
+					#	echo "WiFiDB 'Import/Export Daemon' Started..\n";
+						return 1;
+					}else
+					{
+						echo "WiFiDB 'Import/Export Daemon' Could not start\nStatus: ".$start."\n";
+						foreach($screen_output as $line)
+						{
+							echo $line."\n";
+						}
+						return 0;
+					}
+				}else
+				{
+					echo "Could not find the WiFiDB 'Import/Export Daemon' file. [imp_expd.php].\n";
+					return 0;
+				}
+			break;
+			#####
+			#####
+			case "daemon_perf":
+				$console_log = $GLOBALS['daemon_log_folder'].'daemonperfd.log';
+			#	echo "Starting WiFiDB 'Daemon Performance Montitor'..\n";
+				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."daemonperfd.php";
+				if (PHP_OS == "WINNT")
+				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
+				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
+				
+			#	echo $cmd."\n";
+				if(file_exists($daemon_script))
+				{
+					$start = popen($cmd, 'w');
+					if($start)
+					{
+			#			echo "WiFiDB 'Daemon Performance Montitor' Started..\n";
+						return 1;
+					}else
+					{
+						echo "WiFiDB 'Daemon Performance Montitor' Could not start\nStatus: ".$start."\n";
+						foreach($screen_output as $line)
+						{
+							echo $line."\n";
+						}
+						return 0;
+					}
+				}else
+				{
+					echo "Could not find the WiFiDB 'Daemon Performance Montitor' file. [daemonperfd.php].\n";
+					return 0;
+				}
+			break;
+			#####
+			#####
+			case "daemon_stats":
+				$console_log = $GLOBALS['daemon_log_folder'].'dbstatsd.log';
+			#	echo "Starting WiFiDB 'Database Statistics Daemon'..\n";
+				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."dbstatsd.php";
+				if (PHP_OS == "WINNT")
+				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
+				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
+				
+			#	echo $cmd."\n";
+				if(file_exists($daemon_script))
+				{
+					$start = popen($cmd, 'w');
+					if($start)
+					{
+			#			echo "WiFiDB 'Database Statistics Daemon' Started..\n";
+						return 1;
+					}else
+					{
+						echo "WiFiDB 'Database Statistics Daemon' Could not start\nStatus: ".$start."\n";
+						foreach($screen_output as $line)
+						{
+							echo $line."\n";
+						}
+						return 0;
+					}
+				}else
+				{
+					echo "Could not find the WiFiDB 'Database Statistics Daemon' file. [dbstatsd.php].\n";
+					return 0;
+				}
+			break;
+			
+			default:
+				echo "You cannot use the start function without a switch, other wise what does it know to start?\r\n";
+				return 0;
+			break;
+		}
+	}
+#########################################
+
+#########################################
+	function stop($d)
+	{
+		require('config.inc.php');
+		require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
+		if (!file_exists("/var/log/wifidb/"))
+		{
+			mkdir($GLOBALS['daemon_log_folder']);
+		}
+		switch($d)
+		{
+			case "imp_exp":
+				$console_log = $GLOBALS['daemon_log_folder'].'imp_expd.log';
+			#	echo "Starting WiFiDB 'Import/Export Daemon'..\n";
+				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."imp_expd.php";
+				if (PHP_OS == "WINNT")
+				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
+				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
+				
+			#	echo $cmd."\n";
+				if(file_exists($daemon_script))
+				{
+					$start = popen($cmd, 'w');
+					if($start)
+					{
+					#	echo "WiFiDB 'Import/Export Daemon' Started..\n";
+						return 1;
+					}else
+					{
+						echo "WiFiDB 'Import/Export Daemon' Could not start\nStatus: ".$start."\n";
+						foreach($screen_output as $line)
+						{
+							echo $line."\n";
+						}
+						return 0;
+					}
+				}else
+				{
+					echo "Could not find the WiFiDB 'Import/Export Daemon' file. [imp_expd.php].\n";
+					return 0;
+				}
+			break;
+			#####
+			#####
+			case "daemon_perf":
+				$console_log = $GLOBALS['daemon_log_folder'].'daemonperfd.log';
+			#	echo "Starting WiFiDB 'Daemon Performance Montitor'..\n";
+				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."daemonperfd.php";
+				if (PHP_OS == "WINNT")
+				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
+				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
+				
+			#	echo $cmd."\n";
+				if(file_exists($daemon_script))
+				{
+					$start = popen($cmd, 'w');
+					if($start)
+					{
+			#			echo "WiFiDB 'Daemon Performance Montitor' Started..\n";
+						return 1;
+					}else
+					{
+						echo "WiFiDB 'Daemon Performance Montitor' Could not start\nStatus: ".$start."\n";
+						foreach($screen_output as $line)
+						{
+							echo $line."\n";
+						}
+						return 0;
+					}
+				}else
+				{
+					echo "Could not find the WiFiDB 'Daemon Performance Montitor' file. [daemonperfd.php].\n";
+					return 0;
+				}
+			break;
+			#####
+			#####
+			case "daemon_stats":
+				$console_log = $GLOBALS['daemon_log_folder'].'dbstatsd.log';
+			#	echo "Starting WiFiDB 'Database Statistics Daemon'..\n";
+				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."dbstatsd.php";
+				if (PHP_OS == "WINNT")
+				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
+				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
+				
+			#	echo $cmd."\n";
+				if(file_exists($daemon_script))
+				{
+					$start = popen($cmd, 'w');
+					if($start)
+					{
+			#			echo "WiFiDB 'Database Statistics Daemon' Started..\n";
+						return 1;
+					}else
+					{
+						echo "WiFiDB 'Database Statistics Daemon' Could not start\nStatus: ".$start."\n";
+						foreach($screen_output as $line)
+						{
+							echo $line."\n";
+						}
+						return 0;
+					}
+				}else
+				{
+					echo "Could not find the WiFiDB 'Database Statistics Daemon' file. [dbstatsd.php].\n";
+					return 0;
+				}
+			break;
+			
+			default:
+				echo "You cannot use the start function without a switch, other wise what does it know to start?\r\n";
+				return 0;
+			break;
+		}
+	}
 
 #END DAEMON CLASS
 }
