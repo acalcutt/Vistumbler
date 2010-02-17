@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v9.81 Beta 1'
+$version = 'v10 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/01/11'
+$last_modified = '2010/02/16'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -108,12 +108,14 @@ Dim $VistumblerDbName
 Dim $ManuDB = $SettingsDir & 'Manufacturers.mdb'
 Dim $LabDB = $SettingsDir & 'Labels.mdb'
 Dim $InstDB = $SettingsDir & 'Instruments.mdb'
+Dim $FiltDB = $SettingsDir & 'Filters.mdb'
 Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate')), 'MM', 'M'), 'dd', 'd')
 
 Dim $DB_OBJ
 Dim $ManuDB_OBJ
 Dim $LabDB_OBJ
 Dim $InstDB_OBJ
+Dim $FiltDB_OBJ
 Dim $APID = 0
 Dim $HISTID = 0
 Dim $GPS_ID = 0
@@ -136,12 +138,12 @@ Dim $GoogleEarth_OpenFile = _TempFile($TmpDir, "autokml_networklink_", ".kml")
 Dim $tempfile = _TempFile($TmpDir, "netsh-tmp_", ".tmp")
 Dim $tempfile_showint = _TempFile($TmpDir, "netsh-si-tmp_", ".tmp")
 Dim $wifidbgpstmp = _TempFile($TmpDir, "wifidb-gps-tmp_", ".tmp")
-Dim $Latitude = 'N 0.0000'
-Dim $Longitude = 'E 0.0000'
-Dim $Latitude2 = 'N 0.0000'
-Dim $Longitude2 = 'E 0.0000'
-Dim $LatitudeWifidb = 'N 0.0000'
-Dim $LongitudeWifidb = 'E 0.0000'
+Dim $Latitude = 'N 0000.0000'
+Dim $Longitude = 'E 0000.0000'
+Dim $Latitude2 = 'N 0000.0000'
+Dim $Longitude2 = 'E 0000.0000'
+Dim $LatitudeWifidb = 'N 0000.0000'
+Dim $LongitudeWifidb = 'E 0000.0000'
 Dim $NumberOfSatalites = '00'
 Dim $HorDilPitch = '0'
 Dim $Alt = '0'
@@ -196,8 +198,14 @@ Dim $DefaultApapterID
 Dim $OpenedPort
 Dim $LastGpsString
 
+Dim $AddQuery
+Dim $RemoveQuery
+
 Dim $ListviewAPs
 Dim $TreeviewAPs
+
+Dim $NetworkAdapters[1]
+Dim $wlanhandle = _Wlan_OpenHandle()
 
 Dim $TreeviewAPs_left, $TreeviewAPs_width, $TreeviewAPs_top, $TreeviewAPs_height
 Dim $ListviewAPs_left, $ListviewAPs_width, $ListviewAPs_top, $ListviewAPs_height
@@ -223,6 +231,7 @@ Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFilter
+Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal
@@ -351,6 +360,7 @@ Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
 Dim $UseWiFiDbGpsLocate = IniRead($settings, 'Vistumbler', 'UseWiFiDbGpsLocate', 0)
+Dim $DefFiltID = IniRead($settings, 'Vistumbler', 'DefFiltID', '-1')
 
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
@@ -415,27 +425,6 @@ Dim $GoogleEarth_EXE = IniRead($settings, 'AutoKML', 'GoogleEarth_EXE', 'C:\Prog
 
 Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_URL', 'http://www.randomintervals.com/wifi/')
 Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_URL', 'http://www.vistumbler.net/wifidb/')
-
-Dim $Filter_Line = IniRead($settings, 'Filters', 'FilterLine', '*')
-Dim $Filter_Active = IniRead($settings, 'Filters', 'FilterActive', '*')
-Dim $Filter_BSSID = IniRead($settings, 'Filters', 'FilterBSSID', '*')
-Dim $Filter_SSID = IniRead($settings, 'Filters', 'FilterSSID', '*')
-Dim $Filter_AUTH = IniRead($settings, 'Filters', 'FilterAUTH', '*')
-Dim $Filter_ENCR = IniRead($settings, 'Filters', 'FilterENCR', '*')
-Dim $Filter_SIG = IniRead($settings, 'Filters', 'FilterSIG', '*')
-Dim $Filter_CHAN = IniRead($settings, 'Filters', 'FilterCHAN', '*')
-Dim $Filter_RADTYPE = IniRead($settings, 'Filters', 'FilterRADTYPE', '*')
-Dim $Filter_BTX = IniRead($settings, 'Filters', 'FilterBTX', '*')
-Dim $Filter_OTX = IniRead($settings, 'Filters', 'FilterOTX', '*')
-Dim $Filter_NETTYPE = IniRead($settings, 'Filters', 'FilterNETTYPE', '*')
-Dim $Filter_FirstAcvtive = IniRead($settings, 'Filters', 'FilterFirstAcvtive', '*')
-Dim $Filter_LastActive = IniRead($settings, 'Filters', 'FilterLastActive', '*')
-Dim $Filter_Latitude = IniRead($settings, 'Filters', 'FilterLatitude', '*')
-Dim $Filter_Longitude = IniRead($settings, 'Filters', 'FilterLongitude', '*')
-Dim $Filter_MANU = IniRead($settings, 'Filters', 'FilterMANU', '*')
-Dim $Filter_LAB = IniRead($settings, 'Filters', 'FilterLAB', '*')
-Dim $AddQuery = IniRead($settings, "Filters", "AddQuery", "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP")
-Dim $RemoveQuery = IniRead($settings, "Filters", "RemoveQuery", "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP")
 
 Dim $column_Line = IniRead($settings, 'Columns', 'Column_Line', 0)
 Dim $column_Active = IniRead($settings, 'Columns', 'Column_Active', 1)
@@ -540,9 +529,17 @@ Dim $Text_Apply = IniRead($DefaultLanguagePath, 'GuiText', 'Apply', '&Apply')
 Dim $Text_Browse = IniRead($DefaultLanguagePath, 'GuiText', 'Browse', '&Browse')
 
 Dim $Text_File = IniRead($DefaultLanguagePath, 'GuiText', 'File', '&File')
+Dim $Text_Import = IniRead($DefaultLanguagePath, 'GuiText', 'Import', '&Import')
 Dim $Text_SaveAsTXT = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsTXT', 'Save As TXT')
 Dim $Text_SaveAsVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsVS1', 'Save As VS1')
 Dim $Text_SaveAsVSZ = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsVSZ', 'Save As VSZ')
+Dim $Text_Export = IniRead($DefaultLanguagePath, 'GuiText', 'Export', 'Ex&port')
+Dim $Text_ExportToKML = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToKML', 'Export To KML')
+Dim $Text_ExportToGPX = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToGPX', 'Export To GPX')
+Dim $Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 'Export To TXT')
+Dim $Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
+Dim $Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
+Dim $Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
 Dim $Text_ImportFromTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
 Dim $Text_ImportFromVSZ = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
 Dim $Text_Exit = IniRead($DefaultLanguagePath, 'GuiText', 'Exit', 'E&xit')
@@ -556,6 +553,8 @@ Dim $Text_Paste = IniRead($DefaultLanguagePath, 'GuiText', 'Paste', 'Paste')
 Dim $Text_Delete = IniRead($DefaultLanguagePath, 'GuiText', 'Delete', 'Delete')
 Dim $Text_Select = IniRead($DefaultLanguagePath, 'GuiText', 'Select', 'Select')
 Dim $Text_SelectAll = IniRead($DefaultLanguagePath, 'GuiText', 'SelectAll', 'Select All')
+
+Dim $Text_View = IniRead($DefaultLanguagePath, 'GuiText', 'View', '&View')
 
 Dim $Text_Options = IniRead($DefaultLanguagePath, 'GuiText', 'Options', '&Options')
 Dim $Text_AutoSort = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSort', 'AutoSort')
@@ -576,13 +575,6 @@ Dim $Text_SetSearchWords = IniRead($DefaultLanguagePath, 'GuiText', 'SetSearchWo
 Dim $Text_SetMacLabel = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacLabel', 'Set Labels by Mac')
 Dim $Text_SetMacManu = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacManu', 'Set Manufactures by Mac')
 
-Dim $Text_Export = IniRead($DefaultLanguagePath, 'GuiText', 'Export', 'Ex&port')
-Dim $Text_ExportToKML = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToKML', 'Export To KML')
-Dim $Text_ExportToGPX = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToGPX', 'Export To GPX')
-Dim $Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 'Export To TXT')
-Dim $Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
-Dim $Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
-Dim $Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
 Dim $Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'View graph (Phils PHP)')
 Dim $Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'Phils WiFiDB (Alpha)')
 Dim $Text_UploadDataToWifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'UploadDataToWiFiDB', 'Upload Data to WiFiDB')
@@ -809,6 +801,12 @@ Dim $Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'Auto
 Dim $Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
 Dim $Text_Color = IniRead($DefaultLanguagePath, 'GuiText', 'Color', 'Color')
 Dim $Text_PhilsWifiTools = IniRead($DefaultLanguagePath, "GuiText", "PhilsWifiTools", "Phil's WiFi Tools")
+Dim $Text_AddRemFilters = IniRead($DefaultLanguagePath, "GuiText", "AddRemFilters", "Add/Remove Filters")
+Dim $Text_NoFilterSelected = IniRead($DefaultLanguagePath, "GuiText", "NoFilterSelected", "No filter selected.")
+Dim $Text_AddFilter = IniRead($DefaultLanguagePath, "GuiText", "AddFilter", "Add Filter")
+Dim $Text_EditFilter = IniRead($DefaultLanguagePath, "GuiText", "EditFilter ", "Edit Filter ")
+Dim $Text_DeleteFilter = IniRead($DefaultLanguagePath, "GuiText", "DeleteFilter", "Delete Filter")
+Dim $Text_TimeBeforeMarkedDead = IniRead($DefaultLanguagePath, "GuiText", "TimeBeforeMarkedDead", "Time to wait before marking AP dead (s)")
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -967,6 +965,21 @@ Else
 	_CreateTable($InstDB, 'Instruments', $InstDB_OBJ)
 	_CreatMultipleFields($InstDB, 'Instruments', $InstDB_OBJ, 'INSTNUM TEXT(3)|INSTTEXT TEXT(255)')
 EndIf
+;Connect to Filter database
+If FileExists($FiltDB) Then
+	_AccessConnectConn($FiltDB, $FiltDB_OBJ)
+	$query = "SELECT FiltID FROM Filters"
+	$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
+	$FiltID = UBound($FiltMatchArray) - 1
+	$query = "DELETE * FROM FiltMenu"
+	_ExecuteMDB($FiltDB, $FiltDB_OBJ, $query)
+Else
+	_CreateDB($FiltDB)
+	_AccessConnectConn($FiltDB, $FiltDB_OBJ)
+	_CreateTable($FiltDB, 'Filters', $FiltDB_OBJ)
+	_CreatMultipleFields($FiltDB, 'Filters', $FiltDB_OBJ, 'FiltID TEXT(255)|FiltName TEXT(255)|FiltDesc TEXT(255)|SSID TEXT(255)|BSSID TEXT(255)|CHAN TEXT(255)|AUTH TEXT(255)|ENCR TEXT(255)|RADTYPE TEXT(255)|NETTYPE TEXT(255)|Signal TEXT(255)|BTX TEXT(255)|OTX TEXT(255)|ApID TEXT(255)|Active TEXT(255)')
+	$FiltID = 0
+EndIf
 
 $var = IniReadSection($settings, "Columns")
 If @error Then
@@ -999,12 +1012,28 @@ EndIf
 ;File Menu
 $file = GUICtrlCreateMenu($Text_File)
 $NewSession = GUICtrlCreateMenuItem($Text_NewSession, $file)
-$SaveAsTXT = GUICtrlCreateMenuItem($Text_SaveAsTXT, $file)
-$SaveAsDetailedTXT = GUICtrlCreateMenuItem($Text_SaveAsVS1, $file)
-$ExportFromVSZ = GUICtrlCreateMenuItem($Text_SaveAsVSZ, $file)
-$ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $file)
-$ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $file)
-$ImportFolder = GUICtrlCreateMenuItem($Text_ImportFolder, $file)
+$Save = GUICtrlCreateMenu($Text_Import, $file)
+$ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $Save)
+$ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $Save)
+$ImportFolder = GUICtrlCreateMenuItem($Text_ImportFolder, $Save)
+$Export = GUICtrlCreateMenu($Text_Export, $file)
+$ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
+$ExportToVS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportVS1Menu)
+$ExportToFilVS1 = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportVS1Menu)
+$ExportTXTMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
+$ExportToTXT = GUICtrlCreateMenuItem($Text_AllAPs, $ExportTXTMenu)
+$ExportToFilTXT = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportTXTMenu)
+$ExportCsvMenu = GUICtrlCreateMenu($Text_ExportToCSV, $Export)
+$ExportToCsv = GUICtrlCreateMenuItem($Text_AllAPs, $ExportCsvMenu)
+$ExportToFilCsv = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportCsvMenu)
+$ExportKmlMenu = GUICtrlCreateMenu($Text_ExportToKML, $Export)
+$ExportToKML = GUICtrlCreateMenuItem($Text_AllAPs, $ExportKmlMenu)
+$ExportToFilKML = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportKmlMenu)
+$CreateApSignalMap = GUICtrlCreateMenuItem($Text_SelectedAP, $ExportKmlMenu)
+$ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
+$ExportToGPX = GUICtrlCreateMenuItem($Text_AllAPs, $ExportGpxMenu)
+$ExportNS1Menu = GUICtrlCreateMenu($Text_ExportToNS1, $Export)
+$ExportToNS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportNS1Menu)
 $ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 ;Edit Menu
@@ -1022,26 +1051,17 @@ $RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
 If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
 $AutoSaveGUI = GUICtrlCreateMenuItem($Text_AutoSave, $Options)
 If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
-$AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $Options)
-If $AutoSort = 1 Then GUICtrlSetState($AutoSortGUI, $GUI_CHECKED)
+
 $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$AutoSelectMenuButton = GUICtrlCreateMenuItem($Text_AutoSelectConnectedAP, $Options)
-If $AutoSelect = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $Options)
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $Options)
-If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
 If $SpeakSignal = 1 Then GUICtrlSetState($SpeakApSignal, $GUI_CHECKED)
 $GUI_MidiActiveAps = GUICtrlCreateMenuItem($Text_PlayMidiSounds, $Options)
 If $Midi_PlayForActiveAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $Options)
-If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $Options)
-If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GuiUseNativeWifi = GUICtrlCreateMenuItem($Text_UseNativeWifi, $Options)
@@ -1049,6 +1069,45 @@ If $UseNativeWifi = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $Options)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+
+$ViewMenu = GUICtrlCreateMenu($Text_View)
+$FilterMenu = GUICtrlCreateMenu($Text_Filters, $ViewMenu)
+Dim $FilterMenuID_Array[1]
+Dim $FilterID_Array[1]
+Dim $FoundFilter = 0
+$AddRemoveFilters = GUICtrlCreateMenuItem($Text_AddRemFilters, $FilterMenu)
+$query = "SELECT FiltID, FiltName FROM Filters"
+$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
+$FoundFiltMatch = UBound($FiltMatchArray) - 1
+If $FoundFiltMatch <> 0 Then
+	For $ffm = 1 To $FoundFiltMatch
+		$Filter_ID = $FiltMatchArray[$ffm][1]
+		$Filter_Name = $FiltMatchArray[$ffm][2]
+		$menuid = GUICtrlCreateMenuItem($Filter_Name, $FilterMenu)
+		GUICtrlSetOnEvent($menuid, '_FilterChanged')
+		_ArrayAdd($FilterMenuID_Array, $menuid)
+		_ArrayAdd($FilterID_Array, $Filter_ID)
+		$FilterMenuID_Array[0] = UBound($FilterMenuID_Array) - 1
+		$FilterID_Array[0] = UBound($FilterID_Array) - 1
+		If $DefFiltID <> '-1' And $Filter_ID = $DefFiltID Then
+			$FoundFilter = 1
+			GUICtrlSetState($menuid, $GUI_CHECKED)
+		EndIf
+	Next
+EndIf
+If $FoundFilter = 0 Then $DefFiltID = '-1'
+_CreateFilterQuerys()
+
+$AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $ViewMenu)
+If $AutoSort = 1 Then GUICtrlSetState($AutoSortGUI, $GUI_CHECKED)
+$AutoSelectMenuButton = GUICtrlCreateMenuItem($Text_AutoSelectConnectedAP, $ViewMenu)
+If $AutoSelect = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $ViewMenu)
+If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $ViewMenu)
+If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $ViewMenu)
+If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
 
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
@@ -1061,87 +1120,30 @@ $SetMacManu = GUICtrlCreateMenuItem($Text_SetMacManu, $SettingsMenu)
 $SetColumnWidths = GUICtrlCreateMenuItem($Text_SetColumnWidths, $SettingsMenu)
 $SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort & ' / ' & $Text_RefreshNetworks & ' / ' & $Text_AutoWiFiDbGpsLocate, $SettingsMenu)
 $SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI, $SettingsMenu)
-$SetFilters = GUICtrlCreateMenuItem($Text_SetFilters, $SettingsMenu)
 
-$Export = GUICtrlCreateMenu($Text_Export)
-$ExportTXTMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
-$ExportToTXT = GUICtrlCreateMenuItem($Text_AllAPs, $ExportTXTMenu)
-$ExportToFilTXT = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportTXTMenu)
-$ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
-$ExportToVS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportVS1Menu)
-$ExportToFilVS1 = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportVS1Menu)
-$ExportCsvMenu = GUICtrlCreateMenu($Text_ExportToCSV, $Export)
-$ExportToCsv = GUICtrlCreateMenuItem($Text_AllAPs, $ExportCsvMenu)
-$ExportToFilCsv = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportCsvMenu)
-$ExportKmlMenu = GUICtrlCreateMenu($Text_ExportToKML, $Export)
-$ExportToKML = GUICtrlCreateMenuItem($Text_AllAPs, $ExportKmlMenu)
-$ExportToFilKML = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportKmlMenu)
-$CreateApSignalMap = GUICtrlCreateMenuItem($Text_SelectedAP, $ExportKmlMenu)
-$ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
-$ExportToGPX = GUICtrlCreateMenuItem($Text_AllAPs, $ExportGpxMenu)
-$ExportNS1Menu = GUICtrlCreateMenu($Text_ExportToNS1, $Export)
-$ExportToNS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportNS1Menu)
-
-Dim $NetworkAdapters[1]
-Dim $DefaultApapterDesc
-Dim $found_adapter = 0
-Dim $menuid = 0
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
-If $UseNativeWifi = 1 Then
-	$wlanhandle = _Wlan_OpenHandle()
-	$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
-	$numofint = UBound($wlaninterfaces) - 1
-	For $antm = 0 To $numofint
-		$adapterid = $wlaninterfaces[$antm][0]
-		$adaptername = $wlaninterfaces[$antm][1]
-		$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
-		_ArrayAdd($NetworkAdapters, $menuid)
-		GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
-		If $DefaultApapter = $adaptername Then
-			$found_adapter = 1
-			$DefaultApapterID = $adapterid
-			GUICtrlSetState($menuid, $GUI_CHECKED)
-		EndIf
-	Next
-	If $menuid <> 0 And $found_adapter = 0 Then
-		$DefaultApapter = $adaptername
-		$DefaultApapterID = $adapterid
-		GUICtrlSetState($menuid, $GUI_CHECKED)
-	EndIf
-	If $menuid = 0 Then GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
-Else
-	;Get network interfaces and add the to the interface menu
-	$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
-	$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
-	For $object In $colNIC
-		$adaptername = $object.NetConnectionID
-		$adapterdesc = $object.Description
-		$menuid = GUICtrlCreateMenuItem($adaptername & ' (' & $adapterdesc & ')', $Interfaces)
-		_ArrayAdd($NetworkAdapters, $menuid)
-		GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
-		If $DefaultApapter = $adaptername Then
-			$DefaultApapterDesc = $adapterdesc
-			$found_adapter = 1
-			GUICtrlSetState($menuid, $GUI_CHECKED)
-		EndIf
-	Next
-	If $menuid <> 0 And $found_adapter = 0 Then
-		$DefaultApapter = $adaptername
-		$DefaultApapterDesc = $adapterdesc
-		GUICtrlSetState($menuid, $GUI_CHECKED)
-	EndIf
-	If $menuid = 0 Then GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
-	$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
-	;Find adapterid
-	$wlanhandle = _Wlan_OpenHandle()
-	$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
-	$numofint = UBound($wlaninterfaces) - 1
-	For $antm = 0 To $numofint
-		If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
-	Next
-EndIf
+$RefreshInterfaces = GUICtrlCreateMenuItem("Refresh Interfaces", $Interfaces)
+GUICtrlSetOnEvent($RefreshInterfaces, '_RefreshInterfaces')
+_AddInterfaces()
 
 $Extra = GUICtrlCreateMenu($Text_Extra)
+#comments-start
+	$ExternalToolsMenu = GUICtrlCreateMenu("External Tools", $Extra)
+	Dim $ToolMenuID[1]
+	Dim $ToolFilename[1]
+	$menuid = GUICtrlCreateMenuItem("Open External Tools Folder", $ExternalToolsMenu)
+	GUICtrlSetOnEvent($menuid, '_OpenExternalToolsFolder')
+	$ToolFiles = _FileListToArray($ToolsDir, '*.*', 1);Find all files in the folder
+	For $FoundTools = 1 To $ToolFiles[0]
+	$file = $ToolFiles[$FoundTools]
+	$menuid = GUICtrlCreateMenuItem(StringTrimRight($file, 4), $ExternalToolsMenu)
+	_ArrayAdd($ToolMenuID, $menuid)
+	_ArrayAdd($ToolFilename, $ToolsDir & $file)
+	$ToolMenuID[0] = UBound($ToolMenuID) - 1
+	$ToolFilename[0] = UBound($ToolFilename) - 1
+	GUICtrlSetOnEvent($menuid, '_OpenExternalTool')
+	Next
+#comments-end
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
 $GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $Extra)
 $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $Extra)
@@ -1156,21 +1158,8 @@ $VistumblerForum = GUICtrlCreateMenuItem($Text_VistumblerForum, $Help)
 $VistumblerWiki = GUICtrlCreateMenuItem($Text_VistumblerWiki, $Help)
 $UpdateVistumbler = GUICtrlCreateMenuItem($Text_CheckForUpdates, $Help)
 
-Dim $ToolMenuID[1]
-Dim $ToolFilename[1]
-$ExternalToolsMenu = GUICtrlCreateMenu("External Tools")
-$menuid = GUICtrlCreateMenuItem("Open External Tools Folder", $ExternalToolsMenu)
-GUICtrlSetOnEvent($menuid, '_OpenExternalToolsFolder')
-$ToolFiles = _FileListToArray($ToolsDir, '*.*', 1);Find all files in the folder
-For $FoundTools = 1 To $ToolFiles[0]
-	$file = $ToolFiles[$FoundTools]
-	$menuid = GUICtrlCreateMenuItem(StringTrimRight($file, 4), $ExternalToolsMenu)
-	_ArrayAdd($ToolMenuID, $menuid)
-	_ArrayAdd($ToolFilename, $ToolsDir & $file)
-	$ToolMenuID[0] = UBound($ToolMenuID) - 1
-	$ToolFilename[0] = UBound($ToolFilename) - 1
-	GUICtrlSetOnEvent($menuid, '_OpenExternalTool')
-Next
+
+
 
 $SupportVistumbler = GUICtrlCreateMenu($Text_SupportVistumbler)
 $VistumblerDonate = GUICtrlCreateMenuItem($Text_VistumblerDonate, $SupportVistumbler)
@@ -1246,11 +1235,8 @@ GUICtrlSetOnEvent($GraphButton1, '_GraphToggle')
 GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
 ;File Menu
 GUICtrlSetOnEvent($NewSession, '_NewSession')
-GUICtrlSetOnEvent($SaveAsTXT, '_ExportData')
-GUICtrlSetOnEvent($SaveAsDetailedTXT, '_ExportDetailedData')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
 GUICtrlSetOnEvent($ImportFromVSZ, '_ImportVSZ')
-GUICtrlSetOnEvent($ExportFromVSZ, '_ExportVSZ')
 GUICtrlSetOnEvent($ImportFolder, '_LoadFolder')
 GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
@@ -1288,6 +1274,8 @@ GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
 GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
 GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
 GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
+;View Menu
+GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
 ;Settings Menu
 GUICtrlSetOnEvent($SetAuto, '_SettingsGUI_Auto')
 GUICtrlSetOnEvent($SetAutoKML, '_SettingsGUI_AutoKML')
@@ -1298,7 +1286,6 @@ GUICtrlSetOnEvent($SetMacManu, '_SettingsGUI_Manu')
 GUICtrlSetOnEvent($SetMacLabel, '_SettingsGUI_Lab')
 GUICtrlSetOnEvent($SetColumnWidths, '_SettingsGUI_Col')
 GUICtrlSetOnEvent($SetSearchWords, '_SettingsGUI_SW')
-GUICtrlSetOnEvent($SetFilters, '_SettingsGUI_Fil')
 ;Extra Menu
 GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
@@ -1361,7 +1348,7 @@ While 1
 	If $UseWiFiDbGpsLocate = 1 And $UpdatedWiFiDbGPS <> 1 And $Scan = 1 And TimerDiff($WiFiDbLocate_Timer) >= $WiFiDbLocateRefreshTime Then
 		$GetWifidbGpsSuccess = _LocateGpsInWifidb()
 		If $GetWifidbGpsSuccess = 1 Then
-			If $LatitudeWifidb <> 'N 0.0000' And $LongitudeWifidb <> 'E 0.0000' Then
+			If $LatitudeWifidb <> 'N 0000.0000' And $LongitudeWifidb <> 'E 0000.0000' Then
 				$Latitude = $LatitudeWifidb
 				$Longitude = $LongitudeWifidb
 				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
@@ -2504,10 +2491,10 @@ Func _TurnOffGPS();Turns off GPS, resets variable
 	$UseGPS = 0
 	$TurnOffGPS = 0
 	$disconnected_time = -1
-	$Latitude = 'N 0.0000'
-	$Longitude = 'E 0.0000'
-	$Latitude2 = 'N 0.0000'
-	$Longitude2 = 'E 0.0000'
+	$Latitude = 'N 0000.0000'
+	$Longitude = 'E 0000.0000'
+	$Latitude2 = 'N 0000.0000'
+	$Longitude2 = 'E 0000.0000'
 	$NumberOfSatalites = '00'
 	$HorDilPitch = '0'
 	$Alt = '0'
@@ -2690,8 +2677,8 @@ Func _WifiDbLocateToggle();Turns wifi gps locate on or off
 	If $UseWiFiDbGpsLocate = 1 Then
 		GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_UNCHECKED)
 		$UseWiFiDbGpsLocate = 0
-		$Latitude = 'N 0.0000'
-		$Longitude = 'E 0.0000'
+		$Latitude = 'N 0000.0000'
+		$Longitude = 'E 0000.0000'
 		$LatitudeWifidb = 'N 0.0000'
 		$LongitudeWifidb = 'E 0.0000'
 	Else
@@ -2889,8 +2876,8 @@ Func _GetGPS(); Recieves data from gps device
 		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then ;If the GPGGA data has a fix(1) then write data to perminant variables
 			If $FixTime <> $Temp_FixTime Then $GPGGA_Update = TimerInit()
 			$FixTime = $Temp_FixTime
-			$Latitude = $Temp_Lat
-			$Longitude = $Temp_Lon
+			$Latitude = _Format_GPS_DMM($Temp_Lat)
+			$Longitude = _Format_GPS_DMM($Temp_Lon)
 			$NumberOfSatalites = $Temp_NumberOfSatalites
 			$HorDilPitch = $Temp_HorDilPitch
 			$Alt = $Temp_Alt
@@ -3021,6 +3008,16 @@ Func _GPRMC($data);Strips data from a gps $GPRMC data string
 	EndIf
 EndFunc   ;==>_GPRMC
 
+Func _Format_GPS_DMM($gps)
+	$return = '0000.0000'
+	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	If $splitlatlon1[0] = 2 Then
+		$splitlatlon2 = StringSplit(StringFormat("%0.4f", $splitlatlon1[2]), ".");Split dd from data
+		$ls = StringFormat("%04i", $splitlatlon2[1])
+		$return = $splitlatlon1[1] & ' ' & StringFormat("%04i", $splitlatlon2[1]) & '.' & $splitlatlon2[2];set return
+	EndIf
+	Return ($return)
+EndFunc   ;==>_Format_GPS_DMM
 Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM_to_DDD()') ;#Debug Display
 	$return = '0.0000000'
@@ -3044,6 +3041,7 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 			$DD = StringTrimRight($splitlatlon2[1], 2)
 			$MM = StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2)
 			$SS = StringFormat('%0.4f', (('.' & $splitlatlon2[2]) * 60)); multiply remaining minutes by 60 to get ss
+			If $DD = "" Then $DD = "0"
 			$return = $splitlatlon1[1] & ' ' & $DD & '° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd° mm' ss"N)
 		Else
 			$return = $splitlatlon1[1] & ' 0° 0' & Chr(39) & ' 0"'
@@ -3306,8 +3304,8 @@ Func _ClearGpsDetailsGUI();Clears all GPS Details information
 	GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": GPGGA:" & Round(TimerDiff($GPGGA_Update) / 1000) & " / " & ($GpsTimeout / 1000) & " - " & "GPRMC:" & Round(TimerDiff($GPRMC_Update) / 1000) & " / " & ($GpsTimeout / 1000))
 	If Round(TimerDiff($GPGGA_Update)) > $GpsTimeout Then
 		$FixTime = ''
-		$Latitude = 'N 0.0000'
-		$Longitude = 'E 0.0000'
+		$Latitude = 'N 0000.0000'
+		$Longitude = 'E 0000.0000'
 		$NumberOfSatalites = '00'
 		$HorDilPitch = '0'
 		$Alt = '0'
@@ -3318,8 +3316,8 @@ Func _ClearGpsDetailsGUI();Clears all GPS Details information
 	EndIf
 	If Round(TimerDiff($GPRMC_Update)) > $GpsTimeout Then
 		$FixTime2 = ''
-		$Latitude2 = 'N 0.0000'
-		$Longitude2 = 'E 0.0000'
+		$Latitude2 = 'N 0000.0000'
+		$Longitude2 = 'E 0000.0000'
 		$SpeedInKnots = '0'
 		$SpeedInMPH = '0'
 		$SpeedInKmH = '0'
@@ -3988,7 +3986,6 @@ Func _LocateGpsInWifidb()
 		$url_root = $PhilsWdbURL & 'opt/locate.php?'
 		$url_data = $url_root & "ActiveBSSIDs=" & $ActiveMacs
 		$webpagesource = _INetGetSource($url_data)
-		ConsoleWrite($webpagesource & @CRLF)
 		If StringInStr($webpagesource, '|') Then
 			$wifigpsdata = StringSplit($webpagesource, "|")
 			If $wifigpsdata[1] <> '' And $wifigpsdata[1] <> '' Then
@@ -4007,10 +4004,10 @@ Func _ClearWifiGpsDetails();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearWifiGpsDetails()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": WifiDb:" & Round(TimerDiff($WifidbGPS_Update) / 1000) & " / " & ($GpsTimeout / 1000))
 	If Round(TimerDiff($WifidbGPS_Update)) > $GpsTimeout Then
-		$Latitude = 'N 0.0000'
-		$Longitude = 'E 0.0000'
-		$LatitudeWifidb = 'N 0.0000'
-		$LongitudeWifidb = 'E 0.0000'
+		$Latitude = 'N 0000.0000'
+		$Longitude = 'E 0000.0000'
+		$LatitudeWifidb = 'N 0000.0000'
+		$LongitudeWifidb = 'E 0000.0000'
 		GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
 		GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
 		$WifidbGPS_Update = TimerInit()
@@ -4564,7 +4561,6 @@ Func _ExportCsvDataGui_Ok()
 	_ExportCsvDataGui_Close()
 	If StringInStr($file, '.csv') = 0 Then $file = $file & '.csv'
 	FileDelete($file)
-	ConsoleWrite($rad_summary & @CRLF)
 	If $rad_summary = 1 Then
 		_ExportToCSV($file, $Gui_CsvFilter, 0)
 	Else
@@ -4676,6 +4672,257 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 		EndIf
 	Next
 EndFunc   ;==>_ExportToCSV
+
+Func _SaveGarminGPX($gpx, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsTrack = 0, $Sanitize = 1)
+	$FoundApWithGps = 0
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveGarminGPX()') ;#Debug Display
+	If StringInStr($gpx, '.gpx') = 0 Then $gpx = $gpx & '.gpx'
+	FileDelete($gpx)
+	$file = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' & @CRLF _
+			 & '<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="Vistumbler ' & $version & '" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">' & @CRLF
+	If $MapOpenAPs = 1 Then
+		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '1' And HighGpsHistId <> '0'"
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][1]
+				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
+				$ExpBSSID = $ApMatchArray[$exp][2]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
+				$ExpDate = $GpsMatchArray[1][4]
+				$ExpTime = $GpsMatchArray[1][5]
+
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
+							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
+							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
+							 & '<sym>Navaid, Green</sym>' & @CRLF _
+							 & '<extensions>' & @CRLF _
+							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
+							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
+							 & '<gpxx:Categories>' & @CRLF _
+							 & '<gpxx:Category>Category 1</gpxx:Category>' & @CRLF _
+							 & '</gpxx:Categories>' & @CRLF _
+							 & '</gpxx:WaypointExtension>' & @CRLF _
+							 & '</extensions>' & @CRLF _
+							 & '</wpt>' & @CRLF & @CRLF
+				EndIf
+			Next
+		EndIf
+	EndIf
+	If $MapWepAps = 1 Then
+		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '2' And HighGpsHistId <> '0'"
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving WEP AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][1]
+				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
+				$ExpBSSID = $ApMatchArray[$exp][2]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
+
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
+				$ExpDate = $GpsMatchArray[1][4]
+				$ExpTime = $GpsMatchArray[1][5]
+
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
+							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
+							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
+							 & '<sym>Navaid, Amber</sym>' & @CRLF _
+							 & '<extensions>' & @CRLF _
+							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
+							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
+							 & '<gpxx:Categories>' & @CRLF _
+							 & '<gpxx:Category>Category 2</gpxx:Category>' & @CRLF _
+							 & '</gpxx:Categories>' & @CRLF _
+							 & '</gpxx:WaypointExtension>' & @CRLF _
+							 & '</extensions>' & @CRLF _
+							 & '</wpt>' & @CRLF & @CRLF
+				EndIf
+			Next
+		EndIf
+	EndIf
+	If $MapSecAps = 1 Then
+		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '3' And HighGpsHistId <> '0'"
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			$FoundApWithGps = 1
+			For $exp = 1 To $FoundApMatch
+				GUICtrlSetData($msgdisplay, 'Saving Secure AP ' & $exp & '/' & $FoundApMatch)
+				$ExpSSID = $ApMatchArray[$exp][1]
+				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
+				$ExpBSSID = $ApMatchArray[$exp][2]
+				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
+
+				;Get Gps ID of HighGpsHistId
+				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpGID = $HistMatchArray[1][1]
+				;Get Latitude and Longitude
+				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
+				$ExpDate = $GpsMatchArray[1][4]
+				$ExpTime = $GpsMatchArray[1][5]
+
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
+							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
+							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
+							 & '<sym>Navaid, Red</sym>' & @CRLF _
+							 & '<extensions>' & @CRLF _
+							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
+							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
+							 & '<gpxx:Categories>' & @CRLF _
+							 & '<gpxx:Category>Category 3</gpxx:Category>' & @CRLF _
+							 & '</gpxx:Categories>' & @CRLF _
+							 & '</gpxx:WaypointExtension>' & @CRLF _
+							 & '</extensions>' & @CRLF _
+							 & '</wpt>' & @CRLF & @CRLF
+				EndIf
+			Next
+		EndIf
+	EndIf
+
+	If $GpsTrack = 1 Then
+		$query = "SELECT Latitude, Longitude, Alt, Date1, Time1, SpeedInKmH FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundGpsMatch = UBound($GpsMatchArray) - 1
+		If $FoundGpsMatch <> 0 Then
+			$file &= '<trk>' & @CRLF _
+					 & '<name>GPS Track</name>' & @CRLF _
+					 & '<trkseg>' & @CRLF
+			For $exp = 1 To $FoundGpsMatch
+				GUICtrlSetData($msgdisplay, 'Saving Gps Position ' & $exp & '/' & $FoundGpsMatch)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpAlt = _MetersToFeet($GpsMatchArray[$exp][3])
+				$ExpDate = $GpsMatchArray[$exp][4]
+				$ExpTime = $GpsMatchArray[$exp][5]
+				$ExpSpeedKmh = $GpsMatchArray[$exp][6]
+				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+					$FoundApWithGps = 1
+					$file &= '<trkpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
+							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
+							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
+							 & '</trkpt>' & @CRLF
+				EndIf
+			Next
+			$file &= '</trkseg>' & @CRLF _
+					 & '</trk>' & @CRLF
+		EndIf
+	EndIf
+	$file &= '</gpx>' & @CRLF
+
+	If $FoundApWithGps = 1 Then
+		FileWrite($gpx, $file)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+	;EndIf
+EndFunc   ;==>_SaveGarminGPX
+
+Func _SaveToGPX()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveToGPX()') ;#Debug Display
+	Opt("GUIOnEventMode", 0)
+	$ExportGPXGUI = GUICreate($Text_ExportToGPX, 263, 143)
+	GUISetBkColor($BackgroundColor)
+	$GUI_ExportGPX_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 15, 240, 15)
+	If $MapOpen = 1 Then GUICtrlSetState($GUI_ExportGPX_MapOpen, $GUI_CHECKED)
+	$GUI_ExportGPX_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 35, 240, 15)
+	If $MapWEP = 1 Then GUICtrlSetState($GUI_ExportGPX_MapWEP, $GUI_CHECKED)
+	$GUI_ExportGPX_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 55, 240, 15)
+	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportGPX_MapSec, $GUI_CHECKED)
+	$GUI_ExportGPX_DrawTrack = GUICtrlCreateCheckbox($Text_DrawTrack, 15, 75, 240, 15)
+	If $ShowTrack = 1 Then GUICtrlSetState($GUI_ExportGPX_DrawTrack, $GUI_CHECKED)
+	$GUI_ExportGPX_OK = GUICtrlCreateButton($Text_Ok, 40, 115, 81, 25, 0)
+	$GUI_ExportGPX_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 115, 81, 25, 0)
+	GUISetState(@SW_SHOW)
+
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE
+				GUIDelete($ExportGPXGUI)
+				ExitLoop
+			Case $GUI_ExportGPX_Cancel
+				GUIDelete($ExportGPXGUI)
+				ExitLoop
+			Case $GUI_ExportGPX_OK
+				If GUICtrlRead($GUI_ExportGPX_MapOpen) = 1 Then
+					$MapOpen = 1
+				Else
+					$MapOpen = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportGPX_MapWEP) = 1 Then
+					$MapWEP = 1
+				Else
+					$MapWEP = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportGPX_MapSec) = 1 Then
+					$MapSec = 1
+				Else
+					$MapSec = 0
+				EndIf
+				If GUICtrlRead($GUI_ExportGPX_DrawTrack) = 1 Then
+					$ShowTrack = 1
+				Else
+					$ShowTrack = 0
+				EndIf
+				GUIDelete($ExportGPXGUI)
+				DirCreate($SaveDir)
+				$gpx = FileSaveDialog("Garmin Output File", $SaveDir, 'GPS eXchange Format (*.gpx)', '', $ldatetimestamp & '.gpx')
+				If Not @error Then
+					$saveGPX = _SaveGarminGPX($gpx, $MapOpen, $MapWEP, $MapSec, $ShowTrack)
+					If $saveGPX = 1 Then
+						MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $gpx & '"')
+					Else
+						MsgBox(0, $Text_Done, $Text_NoApsWithGps & ' ' & $Text_NoFileSaved)
+					EndIf
+				EndIf
+				ExitLoop
+		EndSwitch
+	WEnd
+	Opt("GUIOnEventMode", 1)
+EndFunc   ;==>_SaveToGPX
 
 Func _ExportVSZ()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportVSZ()') ;#Debug Display
@@ -4872,8 +5119,8 @@ Func _ImportOk()
 						If $loadlist[0] = 6 Or $loadlist[0] = 12 Then ; If Line is GPS ID Line
 							If $loadlist[0] = 6 Then
 								$LoadGID = $loadlist[1]
-								$LoadLat = $loadlist[2]
-								$LoadLon = $loadlist[3]
+								$LoadLat = _Format_GPS_DMM($loadlist[2])
+								$LoadLon = _Format_GPS_DMM($loadlist[3])
 								$LoadSat = $loadlist[4]
 								$LoadHorDilPitch = 0
 								$LoadAlt = 0
@@ -4888,8 +5135,8 @@ Func _ImportOk()
 								If StringInStr($LoadTime, '.') = 0 Then $LoadTime &= '.000'
 							ElseIf $loadlist[0] = 12 Then
 								$LoadGID = $loadlist[1]
-								$LoadLat = $loadlist[2]
-								$LoadLon = $loadlist[3]
+								$LoadLat = _Format_GPS_DMM($loadlist[2])
+								$LoadLon = _Format_GPS_DMM($loadlist[3])
 								$LoadSat = $loadlist[4]
 								$LoadHorDilPitch = $loadlist[5]
 								$LoadAlt = $loadlist[6]
@@ -5265,6 +5512,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
 	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
 	IniWrite($settings, "Vistumbler", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
+	IniWrite($settings, "Vistumbler", 'DefFiltID', $DefFiltID)
 
 	IniWrite($settings, 'WindowPositions', 'VistumblerState', $VistumblerState)
 	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
@@ -5333,27 +5581,6 @@ Func _WriteINI()
 
 	IniWrite($settings, 'PhilsWifiTools', 'Graph_URL', $PhilsGraphURL)
 	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_URL', $PhilsWdbURL)
-
-	IniWrite($settings, 'Filters', 'FilterLine', $Filter_Line)
-	IniWrite($settings, 'Filters', 'FilterActive', $Filter_Active)
-	IniWrite($settings, 'Filters', 'FilterBSSID', $Filter_BSSID)
-	IniWrite($settings, 'Filters', 'FilterSSID', $Filter_SSID)
-	IniWrite($settings, 'Filters', 'FilterAUTH', $Filter_AUTH)
-	IniWrite($settings, 'Filters', 'FilterENCR', $Filter_ENCR)
-	IniWrite($settings, 'Filters', 'FilterSIG', $Filter_SIG)
-	IniWrite($settings, 'Filters', 'FilterCHAN', $Filter_CHAN)
-	IniWrite($settings, 'Filters', 'FilterRADTYPE', $Filter_RADTYPE)
-	IniWrite($settings, 'Filters', 'FilterBTX', $Filter_BTX)
-	IniWrite($settings, 'Filters', 'FilterOTX', $Filter_OTX)
-	IniWrite($settings, 'Filters', 'FilterNETTYPE', $Filter_NETTYPE)
-	IniWrite($settings, 'Filters', 'FilterFirstAcvtive', $Filter_FirstAcvtive)
-	IniWrite($settings, 'Filters', 'FilterLastActive', $Filter_LastActive)
-	IniWrite($settings, 'Filters', 'FilterLatitude', $Filter_Latitude)
-	IniWrite($settings, 'Filters', 'FilterLongitude', $Filter_Longitude)
-	IniWrite($settings, 'Filters', 'FilterMANU', $Filter_MANU)
-	IniWrite($settings, 'Filters', 'FilterLAB', $Filter_LAB)
-	IniWrite($settings, 'Filters', 'AddQuery', $AddQuery)
-	IniWrite($settings, 'Filters', 'RemoveQuery', $RemoveQuery)
 
 	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
 	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
@@ -5447,6 +5674,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "Apply", $Text_Apply)
 	IniWrite($DefaultLanguagePath, "GuiText", "Browse", $Text_Browse)
 	IniWrite($DefaultLanguagePath, "GuiText", "File", $Text_File)
+	IniWrite($DefaultLanguagePath, "GuiText", "Import", $Text_Import)
 	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsTXT", $Text_SaveAsTXT)
 	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsVS1", $Text_SaveAsVS1)
 	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsVSZ", $Text_SaveAsVSZ)
@@ -5462,6 +5690,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "Delete", $Text_Delete)
 	IniWrite($DefaultLanguagePath, "GuiText", "Select", $Text_Select)
 	IniWrite($DefaultLanguagePath, "GuiText", "SelectAll", $Text_SelectAll)
+	IniWrite($DefaultLanguagePath, "GuiText", "View", $Text_View)
 	IniWrite($DefaultLanguagePath, "GuiText", "Options", $Text_Options)
 	IniWrite($DefaultLanguagePath, "GuiText", "AutoSort", $Text_AutoSort)
 	IniWrite($DefaultLanguagePath, "GuiText", "SortTree", $Text_SortTree)
@@ -5706,6 +5935,12 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Experimental', $Text_Experimental)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Color', $Text_Color)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'PhilsWifiTools', $Text_PhilsWifiTools)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddRemFilters', $Text_AddRemFilters)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoFilterSelected', $Text_NoFilterSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddFilter', $Text_AddFilter)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'EditFilter', $Text_EditFilter)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteFilter', $Text_DeleteFilter)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'TimeBeforeMarkedDead', $Text_TimeBeforeMarkedDead)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -6510,7 +6745,7 @@ Func _AutoKmlGpsFile($kml)
 			 & '				</Icon>' & @CRLF _
 			 & '			</IconStyle>' & @CRLF _
 			 & '		</Style>' & @CRLF
-	If $Latitude <> 'N 0.0000' And $Longitude <> 'E 0.0000' Then
+	If $Latitude <> 'N 0000.0000' And $Longitude <> 'E 0000.0000' Then
 		$file &= '			<LookAt>  ' & @CRLF _
 				 & '				<longitude>' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Longitude), 'W', '-'), 'E', ''), ' ', '') & '</longitude>' & @CRLF _
 				 & '				<latitude>' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($Latitude), 'S', '-'), 'N', ''), ' ', '') & '</latitude>' & @CRLF _
@@ -6522,7 +6757,7 @@ Func _AutoKmlGpsFile($kml)
 	EndIf
 	$file &= '		<Folder>' & @CRLF _
 			 & '			<name>GPS Position</name>' & @CRLF
-	If $Latitude <> 'N 0.0000' And $Longitude <> 'E 0.0000' Then
+	If $Latitude <> 'N 0000.0000' And $Longitude <> 'E 0000.0000' Then
 		$file &= '			<Placemark>' & @CRLF _
 				 & '				<name>Current Position</name>' & @CRLF _
 				 & '				<description><![CDATA[<b>' & $Column_Names_Latitude & ': </b>' & _GpsFormat($Latitude) & '<br /><b>' & $Column_Names_Longitude & ': </b>' & _GpsFormat($Longitude) & '<br />]]></description>' & @CRLF _
@@ -6707,11 +6942,6 @@ Func _SettingsGUI_AutoKML();Opens GUI to Auto tab
 	_SettingsGUI(8)
 EndFunc   ;==>_SettingsGUI_AutoKML
 
-Func _SettingsGUI_Fil();Opens GUI to Filter Tab
-	$Apply_Filter = 1
-	_SettingsGUI(9)
-EndFunc   ;==>_SettingsGUI_Fil
-
 Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	If $SettingsOpen = 1 Then
 		WinActivate($Text_VistumblerSettings)
@@ -6754,7 +6984,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 236, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 251, 195, 21)
-		GUICtrlCreateLabel("Time to wait before marking AP dead (s)", 31, 277, 300, 15)
+		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 31, 277, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 31, 292, 195, 21)
 		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 277, 300, 15)
@@ -7244,52 +7474,6 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 385, 385, 265, 20)
 		GUICtrlSetColor(-1, $TextColor)
 
-		;Filters Tab
-		$Tab_Filters = GUICtrlCreateTabItem("Filters")
-		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		GUICtrlCreateGroup('Filters', 8, 32, 665, 425)
-		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($SearchWord_SSID, 28, 125, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_SSID_GUI = GUICtrlCreateInput($Filter_SSID, 28, 140, 300, 20)
-		GUICtrlCreateLabel($SearchWord_BSSID, 28, 165, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_BSSID_GUI = GUICtrlCreateInput($Filter_BSSID, 28, 180, 300, 20)
-		GUICtrlCreateLabel($SearchWord_Channel, 28, 205, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_CHAN_GUI = GUICtrlCreateInput($Filter_CHAN, 28, 220, 300, 20)
-		GUICtrlCreateLabel($SearchWord_Authentication, 28, 245, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_AUTH_GUI = GUICtrlCreateInput($Filter_AUTH, 28, 260, 300, 20)
-		GUICtrlCreateLabel($SearchWord_Encryption, 28, 285, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_ENCR_GUI = GUICtrlCreateInput($Filter_ENCR, 28, 300, 300, 20)
-		GUICtrlCreateLabel($SearchWord_RadioType, 28, 325, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_RADTYPE_GUI = GUICtrlCreateInput($Filter_RADTYPE, 28, 340, 300, 20)
-		GUICtrlCreateLabel($SearchWord_NetworkType, 28, 365, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_NETTYPE_GUI = GUICtrlCreateInput($Filter_NETTYPE, 28, 380, 300, 20)
-		GUICtrlCreateLabel($SearchWord_Signal, 28, 405, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_SIG_GUI = GUICtrlCreateInput($Filter_SIG, 28, 420, 300, 20)
-		GUICtrlCreateLabel($SearchWord_BasicRates, 353, 125, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_BTX_GUI = GUICtrlCreateInput($Filter_BTX, 353, 140, 300, 20)
-		GUICtrlCreateLabel($SearchWord_OtherRates, 353, 165, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_OTX_GUI = GUICtrlCreateInput($Filter_OTX, 353, 180, 300, 20)
-		GUICtrlCreateLabel('Line', 353, 205, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_Line_GUI = GUICtrlCreateInput($Filter_Line, 353, 220, 300, 20)
-		GUICtrlCreateLabel($Text_Active, 353, 245, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$Filter_Active_GUI = GUICtrlCreateInput($Filter_Active, 353, 260, 300, 20)
-		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_FilterMsg, 32, 72, 618, 41)
-		GUICtrlSetColor(-1, $TextColor)
-
-
 		GUICtrlCreateTabItem("")
 
 		;END OF TABS
@@ -7308,7 +7492,6 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		If $StartTab = 6 Then GUICtrlSetState($Tab_SW, $GUI_SHOW)
 		If $StartTab = 7 Then GUICtrlSetState($Tab_Auto, $GUI_SHOW)
 		If $StartTab = 8 Then GUICtrlSetState($Tab_AutoKML, $GUI_SHOW)
-		If $StartTab = 9 Then GUICtrlSetState($Tab_Filters, $GUI_SHOW)
 
 
 		GUICtrlSetOnEvent($Add_MANU, '_AddManu')
@@ -7511,6 +7694,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Apply = IniRead($DefaultLanguagePath, 'GuiText', 'Apply', '&Apply')
 		$Text_Browse = IniRead($DefaultLanguagePath, 'GuiText', 'Browse', '&Browse')
 		$Text_File = IniRead($DefaultLanguagePath, 'GuiText', 'File', '&File')
+		$Text_Import = IniRead($DefaultLanguagePath, 'GuiText', 'Import', '&Import')
 		$Text_SaveAsTXT = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsTXT', 'Save As TXT')
 		$Text_SaveAsVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsVS1', 'Save As VS1')
 		$Text_SaveAsVSZ = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsVSZ', 'Save As VSZ')
@@ -7526,6 +7710,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Delete = IniRead($DefaultLanguagePath, 'GuiText', 'Delete', 'Delete')
 		$Text_Select = IniRead($DefaultLanguagePath, 'GuiText', 'Select', 'Select')
 		$Text_SelectAll = IniRead($DefaultLanguagePath, 'GuiText', 'SelectAll', 'Select All')
+		$Text_View = IniRead($DefaultLanguagePath, 'GuiText', 'View', '&View')
 		$Text_Options = IniRead($DefaultLanguagePath, 'GuiText', 'Options', '&Options')
 		$Text_AutoSort = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSort', 'AutoSort')
 		$Text_SortTree = IniRead($DefaultLanguagePath, 'GuiText', 'SortTree', 'Sort Tree(slow)')
@@ -7769,6 +7954,12 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
 		$Text_Color = IniRead($DefaultLanguagePath, 'GuiText', 'Color', 'Color')
 		$Text_PhilsWifiTools = IniRead($DefaultLanguagePath, "GuiText", "PhilsWifiTools", "Phil's WiFi Tools")
+		$Text_AddRemFilters = IniRead($DefaultLanguagePath, "GuiText", "AddRemFilters", "Add/Remove Filters")
+		$Text_NoFilterSelected = IniRead($DefaultLanguagePath, "GuiText", "NoFilterSelected", "No filter selected.")
+		$Text_AddFilter = IniRead($DefaultLanguagePath, "GuiText", "AddFilter", "Add Filter")
+		$Text_EditFilter = IniRead($DefaultLanguagePath, "GuiText", "EditFilter ", "Edit Filter ")
+		$Text_DeleteFilter = IniRead($DefaultLanguagePath, "GuiText", "DeleteFilter", "Delete Filter")
+		$Text_TimeBeforeMarkedDead = IniRead($DefaultLanguagePath, "GuiText", "TimeBeforeMarkedDead", "Time to wait before marking AP dead (s)")
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -7954,67 +8145,9 @@ Func _ApplySettingsGUI();Applys settings
 		$Midi_Instument = $MidiInstSplit[1]
 		$Midi_PlayTime = GUICtrlRead($GUI_Midi_PlayTime)
 	EndIf
-	If $Apply_Filter = 1 Then
-		$Filter_SSID = GUICtrlRead($Filter_SSID_GUI)
-		$Filter_BSSID = GUICtrlRead($Filter_BSSID_GUI)
-		$Filter_CHAN = GUICtrlRead($Filter_CHAN_GUI)
-		$Filter_AUTH = GUICtrlRead($Filter_AUTH_GUI)
-		$Filter_ENCR = GUICtrlRead($Filter_ENCR_GUI)
-		$Filter_RADTYPE = GUICtrlRead($Filter_RADTYPE_GUI)
-		$Filter_NETTYPE = GUICtrlRead($Filter_NETTYPE_GUI)
-		$Filter_SIG = GUICtrlRead($Filter_SIG_GUI)
-		$Filter_BTX = GUICtrlRead($Filter_BTX_GUI)
-		$Filter_OTX = GUICtrlRead($Filter_OTX_GUI)
-		$Filter_Line = GUICtrlRead($Filter_Line_GUI)
-		$Filter_Active = StringReplace(StringReplace(GUICtrlRead($Filter_Active_GUI), $Text_Active, '1'), $Text_Dead, '0')
 
-		;If $Filter_SSID = '' Then $Filter_SSID = '*'
-		If $Filter_BSSID = '' Then $Filter_BSSID = '*'
-		If $Filter_CHAN = '' Then $Filter_CHAN = '*'
-		If $Filter_AUTH = '' Then $Filter_AUTH = '*'
-		If $Filter_ENCR = '' Then $Filter_ENCR = '*'
-		If $Filter_RADTYPE = '' Then $Filter_RADTYPE = '*'
-		If $Filter_NETTYPE = '' Then $Filter_NETTYPE = '*'
-		If $Filter_SIG = '' Then $Filter_SIG = '*'
-		If $Filter_BTX = '' Then $Filter_BTX = '*'
-		If $Filter_OTX = '' Then $Filter_OTX = '*'
-		If $Filter_Line = '' Then $Filter_Line = '*'
-		If $Filter_Active = '' Then $Filter_Active = '*'
 
-		$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
-		$aquery = ''
-		$aquery = _AddFilerString($aquery, 'SSID', $Filter_SSID)
-		$aquery = _AddFilerString($aquery, 'BSSID', $Filter_BSSID)
-		$aquery = _AddFilerString($aquery, 'CHAN', $Filter_CHAN)
-		$aquery = _AddFilerString($aquery, 'AUTH', $Filter_AUTH)
-		$aquery = _AddFilerString($aquery, 'ENCR', $Filter_ENCR)
-		$aquery = _AddFilerString($aquery, 'RADTYPE', $Filter_RADTYPE)
-		$aquery = _AddFilerString($aquery, 'NETTYPE', $Filter_NETTYPE)
-		$aquery = _AddFilerString($aquery, 'Signal', $Filter_SIG)
-		$aquery = _AddFilerString($aquery, 'BTX', $Filter_BTX)
-		$aquery = _AddFilerString($aquery, 'OTX', $Filter_OTX)
-		$aquery = _AddFilerString($aquery, 'ApID', $Filter_Line)
-		$aquery = _AddFilerString($aquery, 'Active', $Filter_Active)
-		If $aquery <> '' Then $AddQuery &= ' WHERE (' & $aquery & ')'
-
-		$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
-		$rquery = ''
-		$rquery = _RemoveFilterString($rquery, 'SSID', $Filter_SSID)
-		$rquery = _RemoveFilterString($rquery, 'BSSID', $Filter_BSSID)
-		$rquery = _RemoveFilterString($rquery, 'CHAN', $Filter_CHAN)
-		$rquery = _RemoveFilterString($rquery, 'AUTH', $Filter_AUTH)
-		$rquery = _RemoveFilterString($rquery, 'ENCR', $Filter_ENCR)
-		$rquery = _RemoveFilterString($rquery, 'RADTYPE', $Filter_RADTYPE)
-		$rquery = _RemoveFilterString($rquery, 'NETTYPE', $Filter_NETTYPE)
-		$rquery = _RemoveFilterString($rquery, 'Signal', $Filter_SIG)
-		$rquery = _RemoveFilterString($rquery, 'BTX', $Filter_BTX)
-		$rquery = _RemoveFilterString($rquery, 'OTX', $Filter_OTX)
-		$rquery = _RemoveFilterString($rquery, 'ApID', $Filter_Line)
-		$rquery = _RemoveFilterString($rquery, 'Active', $Filter_Active)
-		If $rquery <> '' Then $RemoveQuery &= ' WHERE (' & $rquery & ')'
-	EndIf
-
-	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1
+	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1
 	If $RestartVistumbler = 1 Then MsgBox(0, $Text_Restart, $Text_RestartMsg)
 EndFunc   ;==>_ApplySettingsGUI
 
@@ -8690,6 +8823,478 @@ Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
 EndFunc   ;==>_CompareDate
 
 ;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       FILTER FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
+
+Func _ModifyFilters()
+	$GUI_ModifyFilters = GUICreate($Text_AddRemFilters, 620, 330)
+	GUISetBkColor($BackgroundColor)
+	$FilterLV = GUICtrlCreateListView("ID|Name|Description", 10, 8, 600, 254, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+	_GUICtrlListView_SetColumnWidth($FilterLV, 0, 30)
+	_GUICtrlListView_SetColumnWidth($FilterLV, 1, 160)
+	_GUICtrlListView_SetColumnWidth($FilterLV, 2, 400)
+	$query = "SELECT FiltID, FiltName, FiltDesc FROM Filters"
+	$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
+	$FoundFiltMatch = UBound($FiltMatchArray) - 1
+	If $FoundFiltMatch <> 0 Then
+		For $ffm = 1 To $FoundFiltMatch
+			$Filter_ID = $FiltMatchArray[$ffm][1]
+			$Filter_Name = $FiltMatchArray[$ffm][2]
+			$Filter_Desc = $FiltMatchArray[$ffm][3]
+			GUICtrlCreateListViewItem($Filter_ID & '|' & $Filter_Name & '|' & $Filter_Desc, $FilterLV)
+		Next
+	EndIf
+	$GUI_AddFilter = GUICtrlCreateButton($Text_AddFilter, 10, 265, 200, 25, $WS_GROUP)
+	$GUI_EditFilter = GUICtrlCreateButton($Text_EditFilter, 210, 265, 200, 25, $WS_GROUP)
+	$GUI_DelFilter = GUICtrlCreateButton($Text_DeleteFilter, 410, 265, 200, 25, $WS_GROUP)
+	$GUI_Filter_Close = GUICtrlCreateButton($Text_Close, 250, 296, 113, 25, $WS_GROUP)
+	GUISetState(@SW_SHOW)
+	GUISetOnEvent($GUI_EVENT_CLOSE, '_ModifyFilters_Close')
+	GUICtrlSetOnEvent($GUI_Filter_Close, "_ModifyFilters_Close")
+	GUICtrlSetOnEvent($GUI_AddFilter, "_AddFilter")
+	GUICtrlSetOnEvent($GUI_EditFilter, "_EditFilter")
+	GUICtrlSetOnEvent($GUI_DelFilter, "_DeleteFilter")
+EndFunc   ;==>_ModifyFilters
+
+Func _DeleteFilter()
+	Local $menuid = '-1'
+	Local $ArrayID = '-1'
+	Local $Selected = _GUICtrlListView_GetNextItem($FilterLV)
+	If $Selected <> -1 Then
+		$FilterID = _GUICtrlListView_GetItemText($FilterLV, $Selected, 0)
+		;Get MenuID based on Filter ID
+		For $fl = 1 To $FilterID_Array[0]
+			If $FilterID_Array[$fl] = $FilterID Then
+				$menuid = $FilterMenuID_Array[$fl]
+				$ArrayID = $fl
+				ExitLoop
+			EndIf
+		Next
+		;Delete Filter from DB
+		$query = "DELETE FROM Filters WHERE FiltID='" & $FilterID & "'"
+		_ExecuteMDB($FiltDB, $FiltDB_OBJ, $query)
+		$FiltID -= 1
+		$query = "UPDATE Filters SET FiltID = FiltID - 1 WHERE FiltID > '" & $FilterID & "'"
+		_ExecuteMDB($FiltDB, $FiltDB_OBJ, $query)
+		;Delete Menu Item
+		If $menuid <> '-1' Then GUICtrlDelete($menuid)
+		If $ArrayID <> '-1' Then
+			_ArrayDelete($FilterID_Array, $ArrayID)
+			_ArrayDelete($FilterMenuID_Array, $ArrayID)
+			$FilterID_Array[0] = UBound($FilterID_Array) - 1
+			$FilterMenuID_Array[0] = UBound($FilterMenuID_Array) - 1
+		EndIf
+		For $fl = 1 To $FilterID_Array[0]
+			If $FilterID_Array[$fl] > $FilterID Then $FilterID_Array[$fl] = $FilterID_Array[$fl] - 1
+		Next
+		;Create new filter string if this is the default filter
+		If $DefFiltID = $FilterID Then
+			$DefFiltID = '-1'
+			_CreateFilterQuerys()
+		EndIf
+		;Refresh GUI
+		_ModifyFilters_Close()
+		_ModifyFilters()
+	Else
+		MsgBox(0, $Text_Error, $Text_NoFilterSelected)
+	EndIf
+EndFunc   ;==>_DeleteFilter
+
+Func _ModifyFilters_Close()
+	GUIDelete($GUI_ModifyFilters)
+EndFunc   ;==>_ModifyFilters_Close
+
+Func _AddFilter()
+	_AddEditFilter()
+	_ModifyFilters_Close()
+EndFunc   ;==>_AddFilter
+
+Func _EditFilter()
+	$Selected = _GUICtrlListView_GetNextItem($FilterLV)
+	If $Selected <> -1 Then
+		$FilterID = _GUICtrlListView_GetItemText($FilterLV, $Selected, 0)
+		_AddEditFilter($FilterID)
+		_ModifyFilters_Close()
+	Else
+		MsgBox(0, $Text_Error, $Text_NoFilterSelected)
+	EndIf
+EndFunc   ;==>_EditFilter
+
+Func _AddEditFilter($Filter_ID = '-1')
+	Local $Filter_Name, $Filter_Desc, $Filter_SSID = "*", $Filter_BSSID = "*", $Filter_CHAN = "*", $Filter_AUTH = "*", $Filter_ENCR = "*", $Filter_RADTYPE = "*", $Filter_NETTYPE = "*", $Filter_SIG = "*", $Filter_BTX = "*", $Filter_OTX = "*", $Filter_Line = "*", $Filter_Active = "*"
+	If $Filter_ID <> '-1' Then
+		$query = "SELECT FiltName, FiltDesc, SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $Filter_ID & "'"
+		$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
+		$Filter_Name = $FiltMatchArray[1][1]
+		$Filter_Desc = $FiltMatchArray[1][2]
+		$Filter_SSID = $FiltMatchArray[1][3]
+		$Filter_BSSID = $FiltMatchArray[1][4]
+		$Filter_CHAN = $FiltMatchArray[1][5]
+		$Filter_AUTH = $FiltMatchArray[1][6]
+		$Filter_ENCR = $FiltMatchArray[1][7]
+		$Filter_RADTYPE = $FiltMatchArray[1][8]
+		$Filter_NETTYPE = $FiltMatchArray[1][9]
+		$Filter_SIG = $FiltMatchArray[1][10]
+		$Filter_BTX = $FiltMatchArray[1][11]
+		$Filter_OTX = $FiltMatchArray[1][12]
+		$Filter_Line = $FiltMatchArray[1][13]
+		$Filter_Active = $FiltMatchArray[1][14]
+	EndIf
+	$Filter_ID_GUI = $Filter_ID
+
+	$AddEditFilt_GUI = GUICreate("Add/Edit Filter", 690, 500, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+
+
+	GUICtrlCreateLabel("Filter Name", 28, 15, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_Name_GUI = GUICtrlCreateInput($Filter_Name, 28, 30, 300, 20)
+	GUICtrlCreateLabel("Filter Description", 353, 15, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_Desc_GUI = GUICtrlCreateInput($Filter_Desc, 353, 30, 300, 20)
+
+
+
+	GUISetBkColor($BackgroundColor)
+	GUICtrlCreateGroup('Filters', 8, 75, 665, 400)
+	GUICtrlCreateLabel($Text_FilterMsg, 32, 90, 618, 40)
+	GUICtrlSetColor(-1, $TextColor)
+	GUICtrlSetColor(-1, $TextColor)
+	GUICtrlCreateLabel($SearchWord_SSID, 28, 125, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_SSID_GUI = GUICtrlCreateInput($Filter_SSID, 28, 140, 300, 20)
+	GUICtrlCreateLabel($SearchWord_BSSID, 28, 165, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_BSSID_GUI = GUICtrlCreateInput($Filter_BSSID, 28, 180, 300, 20)
+	GUICtrlCreateLabel($SearchWord_Channel, 28, 205, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_CHAN_GUI = GUICtrlCreateInput($Filter_CHAN, 28, 220, 300, 20)
+	GUICtrlCreateLabel($SearchWord_Authentication, 28, 245, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_AUTH_GUI = GUICtrlCreateInput($Filter_AUTH, 28, 260, 300, 20)
+	GUICtrlCreateLabel($SearchWord_Encryption, 28, 285, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_ENCR_GUI = GUICtrlCreateInput($Filter_ENCR, 28, 300, 300, 20)
+	GUICtrlCreateLabel($SearchWord_RadioType, 28, 325, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_RADTYPE_GUI = GUICtrlCreateInput($Filter_RADTYPE, 28, 340, 300, 20)
+	GUICtrlCreateLabel($SearchWord_NetworkType, 28, 365, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_NETTYPE_GUI = GUICtrlCreateInput($Filter_NETTYPE, 28, 380, 300, 20)
+	GUICtrlCreateLabel($SearchWord_Signal, 28, 405, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_SIG_GUI = GUICtrlCreateInput($Filter_SIG, 28, 420, 300, 20)
+	GUICtrlCreateLabel($SearchWord_BasicRates, 353, 125, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_BTX_GUI = GUICtrlCreateInput($Filter_BTX, 353, 140, 300, 20)
+	GUICtrlCreateLabel($SearchWord_OtherRates, 353, 165, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_OTX_GUI = GUICtrlCreateInput($Filter_OTX, 353, 180, 300, 20)
+	GUICtrlCreateLabel('Line', 353, 205, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_Line_GUI = GUICtrlCreateInput($Filter_Line, 353, 220, 300, 20)
+	GUICtrlCreateLabel($Text_Active, 353, 245, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_Active_GUI = GUICtrlCreateInput($Filter_Active, 353, 260, 300, 20)
+	GUICtrlSetColor(-1, $TextColor)
+	$GUI_AddEditFilt_Can = GUICtrlCreateButton($Text_Cancel, 535, 470, 75, 25, 0)
+	$GUI_AddEditFilt_Ok = GUICtrlCreateButton($Text_Ok, 460, 470, 75, 25, 0)
+
+	GUICtrlSetOnEvent($GUI_AddEditFilt_Can, "_AddEditFilter_Close")
+	GUICtrlSetOnEvent($GUI_AddEditFilt_Ok, "_AddEditFilter_Ok")
+	GUISetState(@SW_SHOW)
+EndFunc   ;==>_AddEditFilter
+
+Func _AddEditFilter_Close()
+	GUIDelete($AddEditFilt_GUI)
+	_ModifyFilters()
+EndFunc   ;==>_AddEditFilter_Close
+
+Func _AddEditFilter_Ok()
+	$Filter_Name = GUICtrlRead($Filter_Name_GUI)
+	$Filter_Desc = GUICtrlRead($Filter_Desc_GUI)
+	$Filter_SSID = GUICtrlRead($Filter_SSID_GUI)
+	$Filter_BSSID = GUICtrlRead($Filter_BSSID_GUI)
+	$Filter_CHAN = GUICtrlRead($Filter_CHAN_GUI)
+	$Filter_AUTH = GUICtrlRead($Filter_AUTH_GUI)
+	$Filter_ENCR = GUICtrlRead($Filter_ENCR_GUI)
+	$Filter_RADTYPE = GUICtrlRead($Filter_RADTYPE_GUI)
+	$Filter_NETTYPE = GUICtrlRead($Filter_NETTYPE_GUI)
+	$Filter_SIG = GUICtrlRead($Filter_SIG_GUI)
+	$Filter_BTX = GUICtrlRead($Filter_BTX_GUI)
+	$Filter_OTX = GUICtrlRead($Filter_OTX_GUI)
+	$Filter_Line = GUICtrlRead($Filter_Line_GUI)
+	$Filter_Active = StringReplace(StringReplace(GUICtrlRead($Filter_Active_GUI), $Text_Active, '1'), $Text_Dead, '0')
+
+	;If $Filter_SSID = '' Then $Filter_SSID = '*'
+	If $Filter_BSSID = '' Then $Filter_BSSID = '*'
+	If $Filter_CHAN = '' Then $Filter_CHAN = '*'
+	If $Filter_AUTH = '' Then $Filter_AUTH = '*'
+	If $Filter_ENCR = '' Then $Filter_ENCR = '*'
+	If $Filter_RADTYPE = '' Then $Filter_RADTYPE = '*'
+	If $Filter_NETTYPE = '' Then $Filter_NETTYPE = '*'
+	If $Filter_SIG = '' Then $Filter_SIG = '*'
+	If $Filter_BTX = '' Then $Filter_BTX = '*'
+	If $Filter_OTX = '' Then $Filter_OTX = '*'
+	If $Filter_Line = '' Then $Filter_Line = '*'
+	If $Filter_Active = '' Then $Filter_Active = '*'
+
+	If $Filter_ID_GUI = '-1' Then
+		$FiltID += 1
+		_AddRecord($FiltDB, "Filters", $FiltDB_OBJ, $FiltID & '|' & $Filter_Name & '|' & $Filter_Desc & '|' & $Filter_SSID & '|' & $Filter_BSSID & '|' & $Filter_CHAN & '|' & $Filter_AUTH & '|' & $Filter_ENCR & '|' & $Filter_RADTYPE & '|' & $Filter_NETTYPE & '|' & $Filter_SIG & '|' & $Filter_BTX & '|' & $Filter_OTX & '|' & $Filter_Line & '|' & $Filter_Active)
+		$menuid = GUICtrlCreateMenuItem($Filter_Name, $FilterMenu)
+		GUICtrlSetOnEvent($menuid, '_FilterChanged')
+		_ArrayAdd($FilterMenuID_Array, $menuid)
+		_ArrayAdd($FilterID_Array, $FiltID)
+		$FilterMenuID_Array[0] = UBound($FilterMenuID_Array) - 1
+		$FilterID_Array[0] = UBound($FilterID_Array) - 1
+	Else
+		$Filter_ID = $Filter_ID_GUI
+		$query = "UPDATE Filters SET FiltName='" & $Filter_Name & "', FiltDesc='" & $Filter_Desc & "', SSID='" & $Filter_SSID & "', BSSID='" & $Filter_BSSID & "', CHAN='" & $Filter_CHAN & "', AUTH='" & $Filter_AUTH & "', ENCR='" & $Filter_ENCR & "', RADTYPE='" & $Filter_RADTYPE & "', NETTYPE='" & $Filter_NETTYPE & "', Signal='" & $Filter_SIG & "', BTX='" & $Filter_BTX & "', OTX='" & $Filter_OTX & "', ApID='" & $Filter_Line & "', Active='" & $Filter_Active & "' WHERE FiltID='" & $Filter_ID & "'"
+		_ExecuteMDB($FiltDB, $FiltDB_OBJ, $query)
+		For $fi = 1 To $FilterID_Array[0]
+			If $FilterID_Array[$fi] = $Filter_ID Then
+				$Filter_MenuID = $FilterMenuID_Array[$fi]
+				GUICtrlSetData($Filter_MenuID, $Filter_Name)
+				ExitLoop
+			EndIf
+		Next
+
+	EndIf
+	GUIDelete($AddEditFilt_GUI)
+	_CreateFilterQuerys()
+	_ModifyFilters()
+EndFunc   ;==>_AddEditFilter_Ok
+
+Func _FilterChanged()
+	$menuid = @GUI_CtrlId
+	For $fs = 1 To $FilterMenuID_Array[0]
+		If $FilterMenuID_Array[$fs] = $menuid Then
+			$Filter_ID = $FilterID_Array[$fs]
+			If $Filter_ID <> $DefFiltID Then
+				;Check to see if another filter is selected, deselect it if it exists
+				If $DefFiltID <> '-1' Then
+					For $fm = 1 To $FilterID_Array[0]
+						If $FilterID_Array[$fm] = $DefFiltID Then
+							$Filter_MenuID = $FilterMenuID_Array[$fm]
+							GUICtrlSetState($Filter_MenuID, $GUI_UNCHECKED)
+							ExitLoop
+						EndIf
+					Next
+				EndIf
+				For $fm = 1 To $FilterMenuID_Array[0]
+					If $FilterMenuID_Array[$fm] = $menuid Then
+						$DefFiltID = $FilterID_Array[$fm]
+						GUICtrlSetState($menuid, $GUI_CHECKED)
+						ExitLoop
+					EndIf
+				Next
+			Else
+				For $fm = 1 To $FilterMenuID_Array[0]
+					If $FilterMenuID_Array[$fm] = $menuid Then
+						$Filter_ID = $FilterID_Array[$fm]
+						$DefFiltID = '-1'
+						GUICtrlSetState($menuid, $GUI_UNCHECKED)
+					EndIf
+				Next
+			EndIf
+			ExitLoop
+		EndIf
+	Next
+	_CreateFilterQuerys()
+EndFunc   ;==>_FilterChanged
+
+Func _CreateFilterQuerys()
+	$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	If $DefFiltID <> '-1' Then
+		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
+		$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
+		$Filter_SSID = $FiltMatchArray[1][1]
+		$Filter_BSSID = $FiltMatchArray[1][2]
+		$Filter_CHAN = $FiltMatchArray[1][3]
+		$Filter_AUTH = $FiltMatchArray[1][4]
+		$Filter_ENCR = $FiltMatchArray[1][5]
+		$Filter_RADTYPE = $FiltMatchArray[1][6]
+		$Filter_NETTYPE = $FiltMatchArray[1][7]
+		$Filter_SIG = $FiltMatchArray[1][8]
+		$Filter_BTX = $FiltMatchArray[1][9]
+		$Filter_OTX = $FiltMatchArray[1][10]
+		$Filter_Line = $FiltMatchArray[1][11]
+		$Filter_Active = $FiltMatchArray[1][12]
+
+		$aquery = ''
+		$aquery = _AddFilerString($aquery, 'SSID', $Filter_SSID)
+		$aquery = _AddFilerString($aquery, 'BSSID', $Filter_BSSID)
+		$aquery = _AddFilerString($aquery, 'CHAN', $Filter_CHAN)
+		$aquery = _AddFilerString($aquery, 'AUTH', $Filter_AUTH)
+		$aquery = _AddFilerString($aquery, 'ENCR', $Filter_ENCR)
+		$aquery = _AddFilerString($aquery, 'RADTYPE', $Filter_RADTYPE)
+		$aquery = _AddFilerString($aquery, 'NETTYPE', $Filter_NETTYPE)
+		$aquery = _AddFilerString($aquery, 'Signal', $Filter_SIG)
+		$aquery = _AddFilerString($aquery, 'BTX', $Filter_BTX)
+		$aquery = _AddFilerString($aquery, 'OTX', $Filter_OTX)
+		$aquery = _AddFilerString($aquery, 'ApID', $Filter_Line)
+		$aquery = _AddFilerString($aquery, 'Active', $Filter_Active)
+		If $aquery <> '' Then $AddQuery &= ' WHERE (' & $aquery & ')'
+
+		$rquery = ''
+		$rquery = _RemoveFilterString($rquery, 'SSID', $Filter_SSID)
+		$rquery = _RemoveFilterString($rquery, 'BSSID', $Filter_BSSID)
+		$rquery = _RemoveFilterString($rquery, 'CHAN', $Filter_CHAN)
+		$rquery = _RemoveFilterString($rquery, 'AUTH', $Filter_AUTH)
+		$rquery = _RemoveFilterString($rquery, 'ENCR', $Filter_ENCR)
+		$rquery = _RemoveFilterString($rquery, 'RADTYPE', $Filter_RADTYPE)
+		$rquery = _RemoveFilterString($rquery, 'NETTYPE', $Filter_NETTYPE)
+		$rquery = _RemoveFilterString($rquery, 'Signal', $Filter_SIG)
+		$rquery = _RemoveFilterString($rquery, 'BTX', $Filter_BTX)
+		$rquery = _RemoveFilterString($rquery, 'OTX', $Filter_OTX)
+		$rquery = _RemoveFilterString($rquery, 'ApID', $Filter_Line)
+		$rquery = _RemoveFilterString($rquery, 'Active', $Filter_Active)
+		If $rquery <> '' Then $RemoveQuery &= ' WHERE (' & $rquery & ')'
+	EndIf
+EndFunc   ;==>_CreateFilterQuerys
+
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       WIRELESS INTERFACE FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
+
+Func _AddInterfaces()
+	Dim $NetworkAdapters[1]
+	Local $found_adapter = 0
+	Local $menuid = 0
+	If $UseNativeWifi = 1 Then
+		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$numofint = UBound($wlaninterfaces) - 1
+		For $antm = 0 To $numofint
+			$adapterid = $wlaninterfaces[$antm][0]
+			$adaptername = $wlaninterfaces[$antm][1]
+			$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
+			_ArrayAdd($NetworkAdapters, $menuid)
+			GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
+			If $DefaultApapter = $adaptername Then
+				$found_adapter = 1
+				$DefaultApapterID = $adapterid
+				GUICtrlSetState($menuid, $GUI_CHECKED)
+			EndIf
+		Next
+		If $menuid <> 0 And $found_adapter = 0 Then
+			$DefaultApapter = $adaptername
+			$DefaultApapterID = $adapterid
+			GUICtrlSetState($menuid, $GUI_CHECKED)
+		EndIf
+		If $menuid = 0 Then GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
+	Else
+		;Get network interfaces and add the to the interface menu
+		Local $DefaultApapterDesc
+		$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+		$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
+		For $object In $colNIC
+			$adaptername = $object.NetConnectionID
+			$adapterdesc = $object.Description
+			$menuid = GUICtrlCreateMenuItem($adaptername & ' (' & $adapterdesc & ')', $Interfaces)
+			_ArrayAdd($NetworkAdapters, $menuid)
+			GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
+			If $DefaultApapter = $adaptername Then
+				$DefaultApapterDesc = $adapterdesc
+				$found_adapter = 1
+				GUICtrlSetState($menuid, $GUI_CHECKED)
+			EndIf
+		Next
+		If $menuid <> 0 And $found_adapter = 0 Then
+			$DefaultApapter = $adaptername
+			$DefaultApapterDesc = $adapterdesc
+			GUICtrlSetState($menuid, $GUI_CHECKED)
+		EndIf
+		If $menuid = 0 Then GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
+		$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
+		;Find adapterid
+		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$numofint = UBound($wlaninterfaces) - 1
+		For $antm = 0 To $numofint
+			If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
+		Next
+	EndIf
+EndFunc   ;==>_AddInterfaces
+
+Func _InterfaceChanged()
+	$menuid = @GUI_CtrlId
+	For $uc = 1 To $NetworkAdapters[0]
+		If $NetworkAdapters[$uc] = $menuid Then
+			GUICtrlSetState($NetworkAdapters[$uc], $GUI_CHECKED)
+		Else
+			GUICtrlSetState($NetworkAdapters[$uc], $GUI_UNCHECKED)
+		EndIf
+	Next
+	$das = StringSplit(GUICtrlRead(@GUI_CtrlId, 1), ' (', 1)
+	$DefaultApapter = $das[1]
+	;If Using Native Wifi, Find DefaultAdapterId
+	If $UseNativeWifi = 1 Then
+		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$numofint = UBound($wlaninterfaces) - 1
+		For $antm = 0 To $numofint
+			$adapterid = $wlaninterfaces[$antm][0]
+			$adaptername = $wlaninterfaces[$antm][1]
+			If $DefaultApapter = $adaptername Then $DefaultApapterID = $adapterid
+		Next
+	Else
+		Dim $DefaultApapterID = '', $DefaultApapterDesc = ''
+		$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+		$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
+		For $object In $colNIC
+			$adaptername = $object.NetConnectionID
+			$adapterdesc = $object.Description
+			If $DefaultApapter = $adaptername Then $DefaultApapterDesc = $adapterdesc
+		Next
+		;Find adapterid
+		$wlanhandle = _Wlan_OpenHandle()
+		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$numofint = UBound($wlaninterfaces) - 1
+		For $antm = 0 To $numofint
+			If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
+		Next
+	EndIf
+EndFunc   ;==>_InterfaceChanged
+
+Func _RefreshInterfaces()
+	;Delete all old menu items
+	For $ri = 1 To $NetworkAdapters[0]
+		$menuid = $NetworkAdapters[$ri]
+		GUICtrlDelete($menuid)
+	Next
+	;Add updated interfaces
+	_AddInterfaces()
+EndFunc   ;==>_RefreshInterfaces
+
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       MATH FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
+
+Func Log10($x)
+	Return Log($x) / Log(10) ;10 is the base
+EndFunc   ;==>Log10
+
+Func _MetersToFeet($meters)
+	$feet = $meters / 3.28
+	Return ($feet)
+EndFunc   ;==>_MetersToFeet
+
+Func _deg2rad($Degree) ;convert degrees to radians
+	Local $PI = 3.14159265358979
+	Return ($Degree * ($PI / 180))
+EndFunc   ;==>_deg2rad
+
+Func _rad2deg($radian) ;convert radians to degrees
+	Local $PI = 3.14159265358979
+	Return ($radian * (180 / $PI))
+EndFunc   ;==>_rad2deg
+
+Func _EstimateDbFromSignalPercent($InSig)
+	$EstimatedDB = Round(-70 + (20 * Log10($InSig / (105 - $InSig))))
+	Return ($EstimatedDB)
+EndFunc   ;==>_EstimateDbFromSignalPercent
+
+;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       OTHER FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
@@ -8767,84 +9372,6 @@ Func _SelectConnectedAp()
 	Return ($return)
 EndFunc   ;==>_SelectConnectedAp
 
-Func _InterfaceChanged()
-	$menuid = @GUI_CtrlId
-	For $uc = 1 To $NetworkAdapters[0]
-		If $NetworkAdapters[$uc] = $menuid Then
-			GUICtrlSetState($NetworkAdapters[$uc], $GUI_CHECKED)
-		Else
-			GUICtrlSetState($NetworkAdapters[$uc], $GUI_UNCHECKED)
-		EndIf
-	Next
-	$das = StringSplit(GUICtrlRead(@GUI_CtrlId, 1), ' (', 1)
-	$DefaultApapter = $das[1]
-	;If Using Native Wifi, Find DefaultAdapterId
-	If $UseNativeWifi = 1 Then
-		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
-		$numofint = UBound($wlaninterfaces) - 1
-		For $antm = 0 To $numofint
-			$adapterid = $wlaninterfaces[$antm][0]
-			$adaptername = $wlaninterfaces[$antm][1]
-			If $DefaultApapter = $adaptername Then $DefaultApapterID = $adapterid
-		Next
-	Else
-		Dim $DefaultApapterID = '', $DefaultApapterDesc = ''
-		$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
-		$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
-		For $object In $colNIC
-			$adaptername = $object.NetConnectionID
-			$adapterdesc = $object.Description
-			If $DefaultApapter = $adaptername Then $DefaultApapterDesc = $adapterdesc
-		Next
-		;Find adapterid
-		$wlanhandle = _Wlan_OpenHandle()
-		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
-		$numofint = UBound($wlaninterfaces) - 1
-		For $antm = 0 To $numofint
-			If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
-		Next
-	EndIf
-EndFunc   ;==>_InterfaceChanged
-
-Func _OpenExternalTool()
-	$menuid = @GUI_CtrlId
-	$file = ""
-	For $tma = 1 To $ToolMenuID[0]
-		If $ToolMenuID[$tma] = $menuid Then $file = $ToolFilename[$tma]
-	Next
-	If $file <> "" Then Run("RunDll32.exe url.dll,FileProtocolHandler " & $file);open file with rundll 32
-	ConsoleWrite($file & @CRLF)
-EndFunc   ;==>_OpenExternalTool
-
-Func Log10($x)
-	Return Log($x) / Log(10) ;10 is the base
-EndFunc   ;==>Log10
-
-Func _FilterMatch($F_Line = '*', $F_Active = '*', $F_BSSID = '*', $F_SSID = '*', $F_AUTH = '*', $F_ENCR = '*', $F_SIG = '*', $F_CHAN = '*', $F_RADTYPE = '*', $F_BTX = '*', $F_OTX = '*', $F_NETTYPE = '*', $F_FirstAcvtive = '*', $F_LastActive = '*', $F_Latitude = '*', $F_Longitude = '*', $F_MANU = '*', $F_LAB = '*')
-	If _DataMatchInDelimitedString($F_Line, $Filter_Line) = 1 And _
-			_DataMatchInDelimitedString($F_Active, $Filter_Active) = 1 And _
-			_DataMatchInDelimitedString($F_BSSID, $Filter_BSSID) = 1 And _
-			_DataMatchInDelimitedString($F_SSID, $Filter_SSID) = 1 And _
-			_DataMatchInDelimitedString($F_AUTH, $Filter_AUTH) = 1 And _
-			_DataMatchInDelimitedString($F_ENCR, $Filter_ENCR) = 1 And _
-			_DataMatchInDelimitedString($F_SIG, $Filter_SIG) = 1 And _
-			_DataMatchInDelimitedString($F_CHAN, $Filter_CHAN) = 1 And _
-			_DataMatchInDelimitedString($F_RADTYPE, $Filter_RADTYPE) = 1 And _
-			_DataMatchInDelimitedString($F_BTX, $Filter_BTX) = 1 And _
-			_DataMatchInDelimitedString($F_OTX, $Filter_OTX) = 1 And _
-			_DataMatchInDelimitedString($F_NETTYPE, $Filter_NETTYPE) = 1 And _
-			_DataMatchInDelimitedString($F_FirstAcvtive, $Filter_FirstAcvtive) = 1 And _
-			_DataMatchInDelimitedString($F_LastActive, $Filter_LastActive) = 1 And _
-			_DataMatchInDelimitedString($F_Latitude, $Filter_Latitude) = 1 And _
-			_DataMatchInDelimitedString($F_Longitude, $Filter_Longitude) = 1 And _
-			_DataMatchInDelimitedString($F_MANU, $Filter_MANU) = 1 And _
-			_DataMatchInDelimitedString($F_LAB, $Filter_LAB) = 1 Then
-		Return (1)
-	Else
-		Return (0)
-	EndIf
-EndFunc   ;==>_FilterMatch
-
 Func _DataMatchInDelimitedString($mdata, $mDelimitedString, $mDelimiter = '|', $mAllSymbol = '*')
 	If $mDelimitedString = $mAllSymbol Then
 		Return (1)
@@ -8869,271 +9396,9 @@ Func _DeleteListviewRow($dapid)
 	;_GUICtrlListView_DeleteItem($ListviewAPs, $drow)
 	;$query = "UPDATE AP SET ListRow = '-1' WHERE ApID = '" & $fApID & "'"
 	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	;$query = "UPDATE AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
+	;$query = " AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
 	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 EndFunc   ;==>_DeleteListviewRow
-
-
-Func _SaveGarminGPX($gpx, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsTrack = 0, $Sanitize = 1)
-	$FoundApWithGps = 0
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveGarminGPX()') ;#Debug Display
-	If StringInStr($gpx, '.gpx') = 0 Then $gpx = $gpx & '.gpx'
-	FileDelete($gpx)
-	$file = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' & @CRLF _
-			 & '<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="Vistumbler ' & $version & '" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">' & @CRLF
-	If $MapOpenAPs = 1 Then
-		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '1' And HighGpsHistId <> '0'"
-		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundApMatch = UBound($ApMatchArray) - 1
-		If $FoundApMatch <> 0 Then
-			$FoundApWithGps = 1
-			For $exp = 1 To $FoundApMatch
-				GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
-				$ExpSSID = $ApMatchArray[$exp][1]
-				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
-				$ExpBSSID = $ApMatchArray[$exp][2]
-				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
-				;Get Gps ID of HighGpsHistId
-				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
-				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ExpGID = $HistMatchArray[1][1]
-				;Get Latitude and Longitude
-				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
-				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
-				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
-				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
-				$ExpDate = $GpsMatchArray[1][4]
-				$ExpTime = $GpsMatchArray[1][5]
-
-				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
-					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
-							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
-							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
-							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
-							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
-							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
-							 & '<sym>Navaid, Green</sym>' & @CRLF _
-							 & '<extensions>' & @CRLF _
-							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
-							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
-							 & '<gpxx:Categories>' & @CRLF _
-							 & '<gpxx:Category>Category 1</gpxx:Category>' & @CRLF _
-							 & '</gpxx:Categories>' & @CRLF _
-							 & '</gpxx:WaypointExtension>' & @CRLF _
-							 & '</extensions>' & @CRLF _
-							 & '</wpt>' & @CRLF & @CRLF
-				EndIf
-			Next
-		EndIf
-	EndIf
-	If $MapWepAps = 1 Then
-		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '2' And HighGpsHistId <> '0'"
-		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundApMatch = UBound($ApMatchArray) - 1
-		If $FoundApMatch <> 0 Then
-			$FoundApWithGps = 1
-			For $exp = 1 To $FoundApMatch
-				GUICtrlSetData($msgdisplay, 'Saving WEP AP ' & $exp & '/' & $FoundApMatch)
-				$ExpSSID = $ApMatchArray[$exp][1]
-				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
-				$ExpBSSID = $ApMatchArray[$exp][2]
-				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
-
-				;Get Gps ID of HighGpsHistId
-				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
-				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ExpGID = $HistMatchArray[1][1]
-				;Get Latitude and Longitude
-				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
-				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
-				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
-				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
-				$ExpDate = $GpsMatchArray[1][4]
-				$ExpTime = $GpsMatchArray[1][5]
-
-				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
-					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
-							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
-							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
-							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
-							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
-							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
-							 & '<sym>Navaid, Amber</sym>' & @CRLF _
-							 & '<extensions>' & @CRLF _
-							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
-							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
-							 & '<gpxx:Categories>' & @CRLF _
-							 & '<gpxx:Category>Category 2</gpxx:Category>' & @CRLF _
-							 & '</gpxx:Categories>' & @CRLF _
-							 & '</gpxx:WaypointExtension>' & @CRLF _
-							 & '</extensions>' & @CRLF _
-							 & '</wpt>' & @CRLF & @CRLF
-				EndIf
-			Next
-		EndIf
-	EndIf
-	If $MapSecAps = 1 Then
-		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE = '3' And HighGpsHistId <> '0'"
-		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundApMatch = UBound($ApMatchArray) - 1
-		If $FoundApMatch <> 0 Then
-			$FoundApWithGps = 1
-			For $exp = 1 To $FoundApMatch
-				GUICtrlSetData($msgdisplay, 'Saving Secure AP ' & $exp & '/' & $FoundApMatch)
-				$ExpSSID = $ApMatchArray[$exp][1]
-				If $Sanitize = 1 Then $ExpSSID = StringReplace(StringReplace(StringReplace($ExpSSID, '&', ''), '>', ''), '<', '')
-				$ExpBSSID = $ApMatchArray[$exp][2]
-				$ExpHighGpsHistID = $ApMatchArray[$exp][3]
-
-				;Get Gps ID of HighGpsHistId
-				$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
-				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ExpGID = $HistMatchArray[1][1]
-				;Get Latitude and Longitude
-				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
-				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
-				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
-				$ExpAlt = _MetersToFeet($GpsMatchArray[1][3])
-				$ExpDate = $GpsMatchArray[1][4]
-				$ExpTime = $GpsMatchArray[1][5]
-
-				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
-					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
-							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
-							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
-							 & '<name>' & $ExpSSID & '</name>' & @CRLF _
-							 & '<cmt>' & $ExpBSSID & '</cmt>' & @CRLF _
-							 & '<desc>' & $ExpBSSID & '</desc>' & @CRLF _
-							 & '<sym>Navaid, Red</sym>' & @CRLF _
-							 & '<extensions>' & @CRLF _
-							 & '<gpxx:WaypointExtension xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensions/v3/GpxExtensionsv3.xsd">' & @CRLF _
-							 & '<gpxx:DisplayMode>SymbolAndName</gpxx:DisplayMode>' & @CRLF _
-							 & '<gpxx:Categories>' & @CRLF _
-							 & '<gpxx:Category>Category 3</gpxx:Category>' & @CRLF _
-							 & '</gpxx:Categories>' & @CRLF _
-							 & '</gpxx:WaypointExtension>' & @CRLF _
-							 & '</extensions>' & @CRLF _
-							 & '</wpt>' & @CRLF & @CRLF
-				EndIf
-			Next
-		EndIf
-	EndIf
-
-	If $GpsTrack = 1 Then
-		$query = "SELECT Latitude, Longitude, Alt, Date1, Time1, SpeedInKmH FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundGpsMatch = UBound($GpsMatchArray) - 1
-		If $FoundGpsMatch <> 0 Then
-			$file &= '<trk>' & @CRLF _
-					 & '<name>GPS Track</name>' & @CRLF _
-					 & '<trkseg>' & @CRLF
-			For $exp = 1 To $FoundGpsMatch
-				GUICtrlSetData($msgdisplay, 'Saving Gps Position ' & $exp & '/' & $FoundGpsMatch)
-				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1]), 'S', '-'), 'N', ''), ' ', '')
-				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2]), 'W', '-'), 'E', ''), ' ', '')
-				$ExpAlt = _MetersToFeet($GpsMatchArray[$exp][3])
-				$ExpDate = $GpsMatchArray[$exp][4]
-				$ExpTime = $GpsMatchArray[$exp][5]
-				$ExpSpeedKmh = $GpsMatchArray[$exp][6]
-				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
-					$FoundApWithGps = 1
-					$file &= '<trkpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
-							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
-							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
-							 & '</trkpt>' & @CRLF
-				EndIf
-			Next
-			$file &= '</trkseg>' & @CRLF _
-					 & '</trk>' & @CRLF
-		EndIf
-	EndIf
-	$file &= '</gpx>' & @CRLF
-
-	If $FoundApWithGps = 1 Then
-		FileWrite($gpx, $file)
-		Return (1)
-	Else
-		Return (0)
-	EndIf
-	;EndIf
-EndFunc   ;==>_SaveGarminGPX
-
-Func _SaveToGPX()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveToGPX()') ;#Debug Display
-	Opt("GUIOnEventMode", 0)
-	$ExportGPXGUI = GUICreate($Text_ExportToGPX, 263, 143)
-	GUISetBkColor($BackgroundColor)
-	$GUI_ExportGPX_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 15, 240, 15)
-	If $MapOpen = 1 Then GUICtrlSetState($GUI_ExportGPX_MapOpen, $GUI_CHECKED)
-	$GUI_ExportGPX_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 35, 240, 15)
-	If $MapWEP = 1 Then GUICtrlSetState($GUI_ExportGPX_MapWEP, $GUI_CHECKED)
-	$GUI_ExportGPX_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 55, 240, 15)
-	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportGPX_MapSec, $GUI_CHECKED)
-	$GUI_ExportGPX_DrawTrack = GUICtrlCreateCheckbox($Text_DrawTrack, 15, 75, 240, 15)
-	If $ShowTrack = 1 Then GUICtrlSetState($GUI_ExportGPX_DrawTrack, $GUI_CHECKED)
-	$GUI_ExportGPX_OK = GUICtrlCreateButton($Text_Ok, 40, 115, 81, 25, 0)
-	$GUI_ExportGPX_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 115, 81, 25, 0)
-	GUISetState(@SW_SHOW)
-
-	While 1
-		$nMsg = GUIGetMsg()
-		Switch $nMsg
-			Case $GUI_EVENT_CLOSE
-				GUIDelete($ExportGPXGUI)
-				ExitLoop
-			Case $GUI_ExportGPX_Cancel
-				GUIDelete($ExportGPXGUI)
-				ExitLoop
-			Case $GUI_ExportGPX_OK
-				If GUICtrlRead($GUI_ExportGPX_MapOpen) = 1 Then
-					$MapOpen = 1
-				Else
-					$MapOpen = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportGPX_MapWEP) = 1 Then
-					$MapWEP = 1
-				Else
-					$MapWEP = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportGPX_MapSec) = 1 Then
-					$MapSec = 1
-				Else
-					$MapSec = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportGPX_DrawTrack) = 1 Then
-					$ShowTrack = 1
-				Else
-					$ShowTrack = 0
-				EndIf
-				GUIDelete($ExportGPXGUI)
-				DirCreate($SaveDir)
-				$gpx = FileSaveDialog("Garmin Output File", $SaveDir, 'GPS eXchange Format (*.gpx)', '', $ldatetimestamp & '.gpx')
-				If Not @error Then
-					$saveGPX = _SaveGarminGPX($gpx, $MapOpen, $MapWEP, $MapSec, $ShowTrack)
-					If $saveGPX = 1 Then
-						MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $gpx & '"')
-					Else
-						MsgBox(0, $Text_Done, $Text_NoApsWithGps & ' ' & $Text_NoFileSaved)
-					EndIf
-				EndIf
-				ExitLoop
-		EndSwitch
-	WEnd
-	Opt("GUIOnEventMode", 1)
-EndFunc   ;==>_SaveToGPX
-
-Func _MetersToFeet($meters)
-	$feet = $meters / 3.28
-	Return ($feet)
-EndFunc   ;==>_MetersToFeet
-
-Func _EstimateDbFromSignalPercent($InSig)
-	$EstimatedDB = Round(-70 + (20 * Log10($InSig / (105 - $InSig))))
-	Return ($EstimatedDB)
-EndFunc   ;==>_EstimateDbFromSignalPercent
 
 Func _NewSession()
 	Run(@ScriptDir & "\Vistumbler.exe")
@@ -9149,12 +9414,14 @@ Func _CleanupFiles($cDIR, $cTYPE)
 	EndIf
 EndFunc   ;==>_CleanupFiles
 
-Func _deg2rad($Degree) ;convert degrees to radians
-	Local $PI = 3.14159265358979
-	Return ($Degree * ($PI / 180))
-EndFunc   ;==>_deg2rad
-
-Func _rad2deg($radian) ;convert radians to degrees
-	Local $PI = 3.14159265358979
-	Return ($radian * (180 / $PI))
-EndFunc   ;==>_rad2deg
+#comments-start
+	Func _OpenExternalTool()
+	$menuid = @GUI_CtrlId
+	$file = ""
+	For $tma = 1 To $ToolMenuID[0]
+	If $ToolMenuID[$tma] = $menuid Then $file = $ToolFilename[$tma]
+	Next
+	If $file <> "" Then Run("RunDll32.exe url.dll,FileProtocolHandler " & $file);open file with rundll 32
+	ConsoleWrite($file & @CRLF)
+	EndFunc   ;==>_OpenExternalTool
+#comments-end
