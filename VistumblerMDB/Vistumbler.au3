@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2009 Andrew Calcutt
+;Copyright (C) 2010 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10 Beta 1'
+$version = 'v10 Beta 2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/02/16'
+$last_modified = '2010/03/28'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -1672,7 +1672,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$MANUF = _FindManufacturer($BSSID);Set Manufacturer
 			$LABEL = _SetLabels($BSSID)
 			;Set HISTID
-			If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then
+			If $New_Lat <> 'N 0000.0000' And $New_Lon <> 'E 0000.0000' Then
 				$DBHighGpsHistId = $HISTID
 			Else
 				$DBHighGpsHistId = '0'
@@ -1720,7 +1720,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				EndIf
 			EndIf
 			;Set Highest GPS History ID
-			If $New_Lat <> 'N 0.0000' And $New_Lon <> 'E 0.0000' Then ;If new latitude and longitude are valid
+			If $New_Lat <> 'N 0000.0000' And $New_Lon <> 'E 0000.0000' Then ;If new latitude and longitude are valid
 				If $Found_HighGpsHistId = 0 Then ;If old HighGpsHistId is blank then use the new Hist ID
 					$DBLat = $New_Lat
 					$DBLon = $New_Lon
@@ -2068,8 +2068,8 @@ Func _FilterReAddMatchingNotInList()
 		$ImpActive = $LoadApMatchArray[$imp][18]
 		;Get GPS Position
 		If $ImpHighGpsHistID = 0 Then
-			$ImpLat = 'N 0.0000'
-			$ImpLon = 'E 0.0000'
+			$ImpLat = 'N 0000.0000'
+			$ImpLon = 'E 0000.0000'
 		Else
 			$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ImpHighGpsHistID & "'"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -2679,8 +2679,8 @@ Func _WifiDbLocateToggle();Turns wifi gps locate on or off
 		$UseWiFiDbGpsLocate = 0
 		$Latitude = 'N 0000.0000'
 		$Longitude = 'E 0000.0000'
-		$LatitudeWifidb = 'N 0.0000'
-		$LongitudeWifidb = 'E 0.0000'
+		$LatitudeWifidb = 'N 0000.0000'
+		$LongitudeWifidb = 'E 0000.0000'
 	Else
 		GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
 		$UseWiFiDbGpsLocate = 1
@@ -3903,8 +3903,8 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 			$Found_HighGpsHistId = $ListRowMatchArray[1][13] - 0
 
 			If $Found_HighGpsHistId = 0 Then
-				$Found_Lat = 'N 0.0000'
-				$Found_Lon = 'E 0.0000'
+				$Found_Lat = 'N 0000.0000'
+				$Found_Lon = 'E 0000.0000'
 			Else
 				$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $Found_HighGpsHistId & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4198,8 +4198,8 @@ Func _CopyOK()
 		If GUICtrlRead($Copy_LAT) = 1 Or GUICtrlRead($Copy_LON) = 1 Or GUICtrlRead($Copy_LATDMS) = 1 Or GUICtrlRead($Copy_LONDMS) = 1 Or GUICtrlRead($Copy_LATDMM) = 1 Or GUICtrlRead($Copy_LONDMM) = 1 Then
 			$HighGpsHistID = Round($ApMatchArray[1][11])
 			If $HighGpsHistID = 0 Then
-				$CopyLat = 'N 0.0000'
-				$CopyLon = 'E 0.0000'
+				$CopyLat = 'N 0000.0000'
+				$CopyLon = 'E 0000.0000'
 			Else
 				$query = "SELECT GpsId FROM Hist Where HistID = '" & $HighGpsHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4483,8 +4483,8 @@ Func _ExportToTXT($savefile, $Filter = 0);writes vistumbler data to a txt file
 		;Get High GPS Signal
 		If $ExpHighGpsID = 0 Then
 			$ExpHighGpsSig = 0
-			$ExpHighGpsLat = 'N 0.0000'
-			$ExpHighGpsLon = 'E 0.0000'
+			$ExpHighGpsLat = 'N 0000.0000'
+			$ExpHighGpsLon = 'E 0000.0000'
 		Else
 			$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpHighGpsID & "'"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4616,8 +4616,8 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 			;Get High GPS Signal
 			If $ExpHighGpsID = 0 Then
 				$ExpHighGpsSig = 0
-				$ExpHighGpsLat = 'N 0.0000'
-				$ExpHighGpsLon = 'E 0.0000'
+				$ExpHighGpsLat = 'N 0000.0000'
+				$ExpHighGpsLon = 'E 0000.0000'
 			Else
 				$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpHighGpsID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -4822,7 +4822,7 @@ Func _SaveGarminGPX($gpx, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $GpsT
 	EndIf
 
 	If $GpsTrack = 1 Then
-		$query = "SELECT Latitude, Longitude, Alt, Date1, Time1, SpeedInKmH FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
+		$query = "SELECT Latitude, Longitude, Alt, Date1, Time1, SpeedInKmH FROM GPS WHERE Latitude <> 'N 0000.0000' And Longitude <> 'E 0000.0000' ORDER BY Date1, Time1"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundGpsMatch = UBound($GpsMatchArray) - 1
 		If $FoundGpsMatch <> 0 Then
@@ -5202,7 +5202,7 @@ Func _ImportOk()
 								$GidSigSplit = StringSplit($GidSplit[$loaddat], ',')
 								If $GidSigSplit[0] = 2 Then
 									$ImpGID = $GidSigSplit[1]
-									$ImpSig = $GidSigSplit[2]
+									$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
 									If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
 									$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
 									$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -6318,7 +6318,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 	EndIf
 
 	If $GpsTrack = 1 Then
-		$query = "SELECT Latitude, Longitude, Date1, Time1 FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
+		$query = "SELECT Latitude, Longitude, Date1, Time1 FROM GPS WHERE Latitude <> 'N 0000.0000' And Longitude <> 'E 0000.0000' ORDER BY Date1, Time1"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundGpsMatch = UBound($GpsMatchArray) - 1
 		If $FoundGpsMatch <> 0 Then
@@ -6598,9 +6598,12 @@ Func _KmlCircleDistanceMapAPID($APID)
 				$ExpLon2 = $GpsIDArray[1][1]
 				$ExpLat2 = $GpsIDArray[1][2]
 				If $ExpLat2 <> 'N 0.0000' And $ExpLon2 <> 'E 0.0000' Then
-					$Dist = _KmlDistanceBetweenPoints($ExpLat, $ExpLon, $ExpLat2, $ExpLon2)
-					If $Dist > $ExpDist Then $ExpDist = $Dist
+					If $ExpLat2 <> 'N 0000.0000' And $ExpLon2 <> 'E 0000.0000' Then
+						$Dist = _KmlDistanceBetweenPoints($ExpLat, $ExpLon, $ExpLat2, $ExpLon2)
+						If $Dist > $ExpDist Then $ExpDist = $Dist
+					EndIf
 				EndIf
+				;ConsoleWrite($ExpLon & '-' & $ExpLat & ' ------ ' & $ExpLon2 & '-' & $ExpLat2 & '-' & $ExpDist & @CRLF)
 			Next
 		EndIf
 		$file &= '	<Folder>' & @CRLF _
