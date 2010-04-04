@@ -5,6 +5,7 @@
 	Uwe Lahni 2008
 	V2.0
 	Andrew Calcutt 05/16/2009 - Started converting to UDF
+	Andrew Calcutt 04/03/2010 - Moved contants outside of the functions
 #ce
 #include-once
 Global $dll
@@ -14,14 +15,11 @@ Global $commtimeout
 Global $commtimeout_Struct
 Global $commState
 Global $commState_Struct
-;Global $rxbuf
-Global Const $STX = Chr(2)
-Global Const $ETX = Chr(3)
-Global Const $EOT = Chr(4)
-Global Const $ENQ = Chr(5)
-Global Const $ACK = Chr(6)
-Const $NAK = Chr(15)
-Const $DLE = Chr(16)
+Const $GENERIC_READ_WRITE = 0xC0000000
+Const $S_OPEN_EXISTING = 3
+Const $S_FILE_ATTRIBUTE_NORMAL = 0x80
+Const $NOPARITY = 0
+Const $ONESTOPBIT = 0
 
 ;====================================================================================
 ; Function Name:   _OpenComm($CommPort, $CommBaud, $CommBits, $CommParity, $CommStop, $CommCtrl, $DEBUG)
@@ -46,12 +44,6 @@ Func _OpenComm($CommPort, $CommBaud = '4800', $CommBits = '8', $CommParity = '0'
 	$commtimeouts = "long ReadIntervalTimeout;long ReadTotalTimeoutMultiplier;"
 	$commtimeouts &= "long ReadTotalTimeoutConstant;long WriteTotalTimeoutMultiplier;long WriteTotalTimeoutConstant"
 
-	Const $GENERIC_READ_WRITE = 0xC0000000
-	Const $OPEN_EXISTING = 3
-	Const $FILE_ATTRIBUTE_NORMAL = 0x80
-	Const $NOPARITY = 0
-	Const $ONESTOPBIT = 0
-
 	$dcb_Struct = DllStructCreate($dcbs)
 	If @error Then errpr()
 
@@ -62,8 +54,8 @@ Func _OpenComm($CommPort, $CommBaud = '4800', $CommBits = '8', $CommParity = '0'
 			"int", $GENERIC_READ_WRITE, _
 			"int", 0, _
 			"ptr", 0, _
-			"int", $OPEN_EXISTING, _
-			"int", $FILE_ATTRIBUTE_NORMAL, _
+			"int", $S_OPEN_EXISTING, _
+			"int", $S_FILE_ATTRIBUTE_NORMAL, _
 			"int", 0)
 	If @error Then errpr()
 	If Number($hSerialPort[0]) < 1 Then
@@ -178,8 +170,8 @@ EndFunc   ;==>_rxwait
 ; Parameters:     $rxbuf - buffer data
 ;				  $MinBufferSize - minimum buffer data size
 ;				  $DEBUG - Show debug messages = 1
-; Returns:  
-;           
+; Returns:
+;
 ; Note:
 ;====================================================================================
 Func _rx($rxbuf, $MinBufferSize = 0, $DEBUG = 0)
