@@ -219,16 +219,15 @@ function user_alph_row($func, $mode, $first, $data)
 
 	$tracker = 0;
 	$user_number = 0;
-	$priv_name = $GLOBALS['priv_name'];
 	if($first == '')
 	{
-		$sql0 = "SELECT `id`,`username`,`website`,`member`,`last_login`,`join_date` FROM `$db`.`$user_logins_table` WHERE `disabled` != '1'";
+		$sql0 = "SELECT `id`,`username`,`website`,`admins`,`devs`,`mods`,`users`,`last_login`,`join_date` FROM `$db`.`$user_logins_table` WHERE `disabled` != '1' AND `username` NOT LIKE 'Admin'";
 	}elseif($first == '#')
 	{
-		$sql0 = "SELECT `id`,`username`,`website`,`member`,`last_login`,`join_date` FROM `$db`.`$user_logins_table` WHERE `disabled` != '1' AND `username` REGEXP '[0-9][[:>:]]'";
+		$sql0 = "SELECT `id`,`username`,`website`,`admins`,`devs`,`mods`,`users`,`last_login`,`join_date` FROM `$db`.`$user_logins_table` WHERE `disabled` != '1' AND `username` REGEXP '[0-9][[:>:]]' AND `username` NOT LIKE 'Admin'";
 	}else
 	{
-		$sql0 = "SELECT `id`,`username`,`website`,`member`,`last_login`,`join_date` FROM `$db`.`$user_logins_table` WHERE `disabled` != '1' AND `username` LIKE '".$first."%'";
+		$sql0 = "SELECT `id`,`username`,`website`,`admins`,`devs`,`mods`,`users`,`last_login`,`join_date` FROM `$db`.`$user_logins_table` WHERE `disabled` != '1' AND `username` LIKE '".$first."%' AND `username` NOT LIKE 'Admin'";
 	}
 
 	#	echo $sql0."<BR>";
@@ -283,30 +282,30 @@ function set_flow($func, $mode)
 		<td colspan="1" class="<?php if($func == 'overview' or $func == ''){echo 'cp_select_coloum';}else{echo "light";}?>">
 			<font size="2">
 				<a class="links<?php if(($mode == 'aps' or $mode == 'apstats' or $mode == 'aphdata') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=aps">Access Points</a> -
-				<a class="links<?php if(($mode == 'geo' or $mode == 'mcstats' or $mode == 'mchdata') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=geo">Geocaches</a> -
+				<a class="links<?php if(($mode == 'geo' or $mode == 'mcstats' or $mode == 'mchdata') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=geo">Geocaches</a><br>
 				<a class="links<?php if(($mode == 'users') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=users">Users</a> -
-				<a class="links<?php if(($mode == 'daemon' or $mode == 'daemon_hist') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=daemon">Daemon Stats</a> -
+				<a class="links<?php if(($mode == 'daemon' or $mode == 'daemon_hist') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=daemon">Daemon Stats</a><br>
 				<a class="links<?php if(($mode == 'graphs') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=graphs">Graphs</a>
 		</td>
 		<td colspan="1" class="<?php if($func == 'uandp'){echo 'cp_select_coloum';}else{echo "light";}?>">
 			<font size="2">
-				<a class="links<?php if(($mode == 'man_users' or $mode == 'man_user_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_users">Manage Users</a> - 
-				<a class="links<?php if(($mode == 'man_groups' or $mode == 'man_grp_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_groups">Manage Groups</a> -
-				<a class="links<?php if(($mode == 'man_titles' or $mode == 'man_titles_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_titles">Manage Titles</a> -
+				<a class="links<?php if(($mode == 'man_users' or $mode == 'man_user_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_users">Users</a> - 
+				<a class="links<?php if(($mode == 'man_groups' or $mode == 'man_grp_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_groups">Groups</a> - 
+				<a class="links<?php if(($mode == 'man_titles' or $mode == 'man_titles_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_titles">Titles</a>
 			</font>
 		</td>
 		<td colspan="1" class="<?php if($func == 'maint'){echo 'cp_select_coloum';}else{echo "light";}?>">
 			<font size="2">
-				<a class="links<?php if(($mode == 'clean_tmp' or $mode == 'clean_tmp_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_tmp">Cleanup Temp Folder</a> - 
-				<a class="links<?php if(($mode == 'clean_upload' or $mode == 'clean_upload_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_upload">Cleanup Upload Folder</a> -
-				<a class="links<?php if(($mode == 'clean_signal' or $mode == 'clean_signal_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_signal">Cleanup Graphs</a> -
+				<a class="links<?php if(($mode == 'clean_tmp' or $mode == 'clean_tmp_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_tmp">Temp Folder</a> - 
+				<a class="links<?php if(($mode == 'clean_upload' or $mode == 'clean_upload_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_upload">Upload Folder</a><br>
+				<a class="links<?php if(($mode == 'clean_signal' or $mode == 'clean_signal_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_signal">Graphs Folder</a>
 			</font>
 		</td>
 		<td colspan="1" class="<?php if($func == 'system'){echo 'cp_select_coloum';}else{echo "light";}?>">
 			<font size="2">
-				<a class="links<?php if(($mode == 'daemon' or $mode == 'daemon_proc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=daemon">Daemon Control</a> - 
-				<a class="links<?php if(($mode == 'daemon_config' or $more == 'daemon_config_proc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=daemon_config">Edit Daemon Config</a> -
-				<a class="links<?php if(($mode == 'db_config' or $mode == 'db_config_proc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=db_config">Edit DB Config</a> -
+				<a class="links<?php if(($mode == 'daemon' or $mode == 'daemon_proc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=daemon">Daemon Ctl</a> - 
+				<a class="links<?php if(($mode == 'daemon_config' or $mode == 'daemon_cfgproc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=daemon_config">Daemon Cfg</a><br>
+				<a class="links<?php if(($mode == 'db_config' or $mode == 'db_config_proc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=db_config">DB Cfg</a> -
 				<a class="links<?php if(($mode == 'updates' or $mode == 'updates_proc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=updates">Updates</a>
 			</font>
 		</td>
@@ -475,9 +474,9 @@ class admin
 			###
 			case "aps":
 				$sql0 = "SELECT * FROM `$db`.`$DB_stats` ORDER BY `id` DESC LIMIT 1";
-				$result = mysql_query($sql0, $conn);
-				if($dbstats_a = mysql_fetch_array($result))
+				if($result = mysql_query($sql0, $conn))
 				{
+					$dbstats_a = mysql_fetch_array($result);
 					$common_ssid = $dbstats_a['top_ssids'][0];
 					$ap_gps = $dbstats_a['ap_gps_totals'][0];
 					$user_most_aps = $dbstats_a['user'][0];
@@ -588,10 +587,9 @@ class admin
 			
 			case "geo":
 				$sql0 = "SELECT * FROM `$db`.`$DB_stats` ORDER BY `id` DESC LIMIT 1";
-				$result = mysql_query($sql0, $conn);
-				
-				if($dbstats_a = mysql_fetch_array($result))
+				if($result = mysql_query($sql0, $conn))
 				{
+					$dbstats_a = mysql_fetch_array($result);
 					$user_geocache1 = explode("-", $dbstats_a['geos']);
 					$user_geocache2 = explode("|", $user_geocache1[0]);
 					$user_geocache = $user_geocache2[1]."( ".$user_geocache2[0]." )";
@@ -602,8 +600,10 @@ class admin
 					$gpx_avg = $dbstats_a['gpx_avg'];
 					$gpx_min = $dbstats_a['gpx_min'];
 					$gpx_num = $dbstats_a['gpx_num'];
+					$timestamp = $dbstats_a['timestamp'];
 				}else
 				{
+					$timestamp = date('Y-m-d H:i:s');
 					$user_geocache = "None...";
 					$num_priv_geo = 0;
 					$num_pub_geo = 0;
@@ -697,103 +697,108 @@ class admin
 			
 			case "users":
 				$detailed_user_view = addslashes(@$_GET['detailed_users']);
-				if(@$detailed_user_view)
+				if($detailed_user_view)
 				{
-					?>
-					<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=0" title="Show the Short version" >detailed</a>)</font></b><br>
-					<table border="1" width="75%">
-					<tr class="style4"><th>ID</th><th>User Name</th><th>Number of APs</th><th>Number of Geocahes</th><th>UID</th><th>Last Login</th><th>Join Date</th><th>E-Mail</th><th>Website</th><th>Vistumbler Version</th><th>Title / Rank</th></tr>
-					<?php
+				}else
+				{
+					
+				}
+				$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` NOT LIKE 'admin%' ORDER BY `username` ASC";
+				if($result = mysql_query($sql0, $conn))
+				{
+					$row_color = 0;
+					while($users_a = mysql_fetch_array($result))
+					{
+						if($users_a['uid'] == ''){continue;}
+						if($row_color){$row_color =0; $style = "light";}else{$row_color = 1; $style = "dark";}
+						$username = $users_a['username'];
+						$user_geos = "waypoints_".$users_a['username'];
+						
+						$sql1 = "SELECT * FROM `$db`.`$users_t` WHERE `username` = '$username'";
+						$result1 = mysql_query($sql1, $conn);
+						$Num_aps=0;
+						while($points_a = mysql_fetch_array($result1))
+						{
+							$points = explode("-", $points_a['points']);
+							$Num_aps = $Num_aps+count($points);
+						}
+						
+						$sql1 = "SELECT `id` FROM `$db`.`$user_geos`";
+						$result1 = mysql_query($sql1, $conn);
+						$Num_geo = @mysql_num_rows($result1);
+						if($Num_geo==''){$Num_geo = 0;}
+						$rank = '';
+						if($users_a["admins"]){	$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/admins.gif\" title=\"Obey the admins, for they are gods.\" /> \r\n"; }
+						if($users_a["devs"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/devs.gif\" title=\"Piss off a dev and be sure to never see the light of a console again.\" /> \r\n";}
+						if($users_a["mods"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/mods.gif\" title=\"Mods are the KGB of Packet land.\" /> \r\n";}
+						if($users_a["users"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/users.gif\" title=\"Fellow users can be your freind or they can be your enemey, either way keep them close, and keep track of those fuckers, their sneeky\" /> \r\n";}
+						
+						if($detailed_user_view)
+						{
+							?>
+							<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=0" title="Show the Short version" >detailed</a>)</font></b><br>
+							<table border="1" style="width: 95%">
+							<tr class="style4">
+								<th>ID</th>
+								<th>User Name</th>
+								<th>Number of APs</th>
+								<th>E-Mail</th>
+								<th>Website</th>
+								<th>Vistumbler Version</th>
+								<th>Title</th></tr>
+							<tr class="dark">
+								<td><?php echo $users_a['id']; ?></td>
+								<td><?php echo $users_a['username']; ?></td>
+								<td><?php echo $Num_aps; ?></td>
+								<td><?php if($users_a['h_email']){echo "Email Hidden, except to admins";}else{ ?><a class='email' href='<?php echo $users_a['email']; ?>' ><?php echo $users_a['email']; ?></a><?php } ?></td>
+								<td><?php echo $users_a['website']; ?></td>
+								<td><?php echo $users_a['Vis_ver']; ?></td>
+								<td>
+									<?php echo $rank; ?>
+								</td>
+							</tr>
+							<tr class="style4">
+								<th colspan="2">&nbsp;</th>
+								<th>Rank</th>
+								<th>Number of Geocaches</th>
+								<th>Last Login</th>
+								<th>Join Date</th>
+								<th>UID</th>
+							</tr>
+							<tr class="dark">
+								<td colspan="2">&nbsp;</td>
+								<td><?php echo $users_a['rank']; ?></td>
+								<td><?php echo $Num_geo; ?></td>
+								<td><?php echo $users_a['last_login']; ?></td>
+								<td><?php echo $users_a['join_date']; ?></td>
+								<td><?php echo $users_a['uid']; ?></td>
+							</tr>
+						</table><?php
+						}else
+						{
+							?>
+							<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=1" title="Show Detailed Version">short</a>)</font></b><br>
+							
+							<table border="1" width="75%">
+								<tr class="style4">
+									<th>ID</th><th>User Name</th><th>Number of APs</th><th>Last Login</th><th>Join Date</th><th>Vistumbler Version</th><th>Title / Rank</th></tr>
+								<tr class="<?php echo $style; ?>">
+									<td><?php echo $users_a['id']; ?></td>
+									<td><?php echo $users_a['username']; ?></td>
+									<td><?php echo $Num_aps; ?></td>
+									<td><?php echo $users_a['last_login']; ?></td>
+									<td><?php echo $users_a['join_date']; ?></td>
+									<td><?php echo $users_a['Vis_ver']; ?></td>
+									<td width="30%"><?php echo $rank; ?></td>
+								</tr>
+							<?php
+						}
+					}
 				}else
 				{
 					?>
-					<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=1" title="Show Detailed Version">short</a>)</font></b><br>
-					<table border="1" width="75%">
-					<tr class="style4"><th>ID</th><th>User Name</th><th>Number of APs</th><th>Last Login</th><th>Join Date</th><th>Vistumbler Version</th><th>Title / Rank</th></tr>
+					<tr class="bad"><td align='center' colspan='<?php if($detailed_user_view){ echo '11';}else{echo '7';} ?>'>There are no Users yet, why dont you go make some freinds.</td></tr>
 					<?php
-				}
-				$sql0 = "SELECT `id`, `username`, `uid`, `member`, `last_login`, `email`, `h_email`, `join_date`, `website`, `Vis_ver` FROM `$db`.`$user_logins_table` ORDER BY `username` ASC";
-				$result = mysql_query($sql0, $conn);
-				$row_color = 0;
-				while($users_a = mysql_fetch_array($result))
-				{
-					if($users_a['uid'] == ''){continue;}
-					if($row_color){$row_color =0; $style = "light";}else{$row_color = 1; $style = "dark";}
-					$username = $users_a['username'];
-					$user_geos = "waypoints_".$users_a['username'];
-					
-					$sql1 = "SELECT * FROM `$db`.`$users_t` WHERE `username` = '$username'";
-					$result1 = mysql_query($sql1, $conn);
-					$Num_aps=0;
-					while($points_a = mysql_fetch_array($result1))
-					{
-						$points = explode("-", $points_a['points']);
-						$Num_aps = $Num_aps+count($points);
-					}
-					
-					$sql1 = "SELECT `id` FROM `$db`.`$user_geos`";
-					$result1 = mysql_query($sql1, $conn);
-					$Num_geo = @mysql_num_rows($result1);
-					if($Num_geo==''){$Num_geo = 0;}
-					
-					$member_ = explode("," , $users_a['member']);
-					$i=0;
-					$rank = '';
-					foreach($member_ as $memb)
-					{
-						if($memb != '')
-						{
-							switch($memb)
-							{
-								case "admins":
-									$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/admins.gif\" title=\"Obey the admins, for they are gods.\" /> \r\n";
-								break;
-								
-								case "devs":
-									$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/devs.gif\" title=\"Piss off a dev and be sure to never see the light of a console again.\" /> \r\n";
-								break;
-								
-								case "mods":
-									$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/mods.gif\" title=\"Mods are the KGB of Packet land.\" /> \r\n";
-								break;
-								
-								case "users":
-									$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/users.gif\" title=\"Fellow users can be your freind or they can be your enemey, either way keep them close, and keep track of those fuckers, their sneeky\" /> \r\n";
-							}
-						}
-					}
-					
-					if(@$detailed_user_view)
-					{
-						?>
-						<tr class="<?php echo $style; ?>">
-						<td><?php echo $users_a['id']; ?></td>
-						<td><?php echo $users_a['username']; ?></td>
-						<td><?php echo $Num_aps; ?></td>
-						<td><?php echo $Num_geo; ?></td>
-						<td><?php echo $users_a['uid']; ?></td>
-						<td><?php echo $users_a['last_login']; ?></td>
-						<td><?php echo $users_a['join_date']; ?></td>
-						<td><?php if($users_a['h_email']){echo "Email Hidden, except to admins";}else{echo "<a class='email' href='mailto:".$users_a['email']."' >".$users_a['email']."</a>";} ?></td>
-						<td><?php echo $users_a['website']; ?></td>
-						<td><?php echo $users_a['Vis_ver']; ?></td>
-						<td><?php echo $rank; ?></td>
-						</tr>
-						<?php
-					}else
-					{
-						?>
-						<tr class="<?php echo $style; ?>">
-						<td><?php echo $users_a['id']; ?></td>
-						<td><?php echo $users_a['username']; ?></td>
-						<td><?php echo $Num_aps; ?></td>
-						<td><?php echo $users_a['last_login']; ?></td>
-						<td><?php echo $users_a['join_date']; ?></td>
-						<td><?php echo $users_a['Vis_ver']; ?></td>
-						<td width="30%"><?php echo $rank; ?></td>
-						</tr>
-						<?php
-					}
 				}
 				?></table><?php
 			break;
@@ -802,10 +807,10 @@ class admin
 			####################################
 				?><table class="style4" border="1" width="75%"><?php
 				$sql0 = "SELECT * FROM `$db`.`$daemon_perf_table` ORDER BY `id` DESC LIMIT 1";
-				$result = mysql_query($sql0, $conn);
-				
-				if($daemon_a = mysql_fetch_array($result))
+				if($result = mysql_query($sql0, $conn))
 				{
+					$daemon_a = mysql_fetch_array($result);
+					
 					$timestamp = $daemon_a['timestamp'];
 					$pid = $daemon_a['pid'];
 					$runtime = $daemon_a['uptime'];
@@ -842,7 +847,7 @@ class admin
 				{
 					?><tr align="center" bgcolor="red">
 						<td><?php echo $timestamp;?></td>
-						<td colspan="2"><?php echo $msg;?></td>
+						<td colspan="4"><?php echo $msg;?></td>
 					</tr>
 					<?php
 				}else
@@ -940,10 +945,9 @@ class admin
 			####################################
 				
 				$sql0 = "SELECT * FROM `$db`.`$DB_stats` ORDER BY `id` DESC LIMIT 1";
-				$result = mysql_query($sql0, $conn);
-				
-				if($dbstats_a = mysql_fetch_array($result))
+				if($result = mysql_query($sql0, $conn))
 				{
+					$dbstats_a = mysql_fetch_array($result);
 					$common_ssid = $dbstats_a['top_ssids'][0];
 					$ap_gps = $dbstats_a['ap_gps_totals'][0];
 					$user_most_aps = $dbstats_a['user'][0];
@@ -1119,8 +1123,8 @@ class admin
 			
 			#################
 			case "man_users":
-				$data = addslashes(strtolower($_GET['data']));
-				$first = addslashes($_GET['first']);
+				$data = addslashes(strtolower(@$_GET['data']));
+				$first = addslashes(@$_GET['first']);
 				?>
 				<table WIDTH=85% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 					<tr>
@@ -1324,7 +1328,7 @@ class admin
 			break;
 			##################
 			case "man_groups":
-				$data = addslashes(strtolower($_GET['data']));
+				$data = addslashes(strtolower(@$_GET['data']));
 				?>
 				<table WIDTH=85% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 					<tr>
@@ -1574,7 +1578,7 @@ class admin
 			#	dump($_POST['nonadmingrp']);
 				
 				$data = addslashes(strtolower($_GET['data']));
-				$rank = addslashes(strtolower($_POST['rank']));
+				$rank = addslashes($_POST['rank']);
 				$username = addslashes(strtolower($_POST['username']));
 				$user_id = addslashes(strtolower($_POST['user_id']));
 				$sql0 = "SELECT `id` FROM `$db`.`$user_logins_table` WHERE `username` LIKE '".$username."%'";
@@ -1605,8 +1609,8 @@ class admin
 			break;
 			
 			case "man_titles":
-				$data = addslashes(strtolower($_GET['data']));
-				$first = addslashes(strtolower($_GET['first']));
+				$data = addslashes(strtolower(@$_GET['data']));
+				$first = addslashes(strtolower(@$_GET['first']));
 				?>
 				<table WIDTH=85% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 					<tr>
@@ -1930,7 +1934,7 @@ class admin
 ###############################################################################################			
 			########################
 			case "clean_tmp":
-				$directory = $half_path."tmp/";
+				$directory = $half_path."/tmp/";
 			#	echo dirSize("tmp/");
 				$size = 0;
 				?>
@@ -2270,7 +2274,7 @@ class admin
 #######################################################################################			
 			case "clean_upload":
 			#	echo format_size(dirSize('import/up/'), $round = 2);
-				$directory = $half_path."import/up/";
+				$directory = $half_path."/import/up/";
 			#	echo dirSize("tmp/");
 				$size = 0;
 				?>
@@ -2611,8 +2615,7 @@ class admin
 ###################################################################################################
 			case "clean_signal":
 			#	echo format_size(dirSize('out/graph/'), $round = 2);
-				$part = 'out/graph/';
-				$directory = $half_path.$part;
+				$directory = $half_path.'/out/graph/';
 			#	echo dirSize("tmp/");
 				$size = 0;
 				?>
@@ -2737,6 +2740,7 @@ class admin
 	{
 		$root		= 	$GLOBALS['root'];
 		$half_path	=	$GLOBALS['half_path'];
+		$daemon = new daemon();
 		switch($mode)
 		{
 			case "daemon":
@@ -2752,7 +2756,7 @@ class admin
 								<th colspan="4">Import / Export Daemon</th>
 							</tr>
 							<?php
-							$imp_exp_stat = daemon::getdaemonstats();
+							$imp_exp_stat = $daemon->getdaemonstats();
 							?>
 							<tr class="style4">
 								<th>
@@ -2783,7 +2787,7 @@ class admin
 								<th colspan="4">Import / Export Performance Monitor Daemon</th>
 							</tr>
 							<?php
-							$perf_stats = daemon::getperfdaemonstats();
+							$perf_stats = $daemon->getperfdaemonstats();
 							?>
 							<tr class="style4">
 								<th>
@@ -2814,7 +2818,7 @@ class admin
 								<th colspan="4">Database Statistics Daemon</th>
 							</tr>
 							<?php
-							$daemon_stats = daemon::getdbdaemonstats();
+							$daemon_stats = $daemon->getdbdaemonstats();
 							?>
 							<tr class="style4">
 								<th>
@@ -2847,20 +2851,18 @@ class admin
 				dump(get_defined_vars());
 				dump($_POST);
 				$post_exp = explode("::", $_POST['daemon']);
-				$daemon = $post_exp[0];
+				$daemon_switch = $post_exp[0];
 				$switch = $post_exp[1];
-				
-				switch($daemon)
+				switch($daemon_switch)
 				{
 					case "imp_exp_daemon":
 						switch($switch)
 						{
 							case "start":
-								echo "Starting the Import / Export Daemon<br>";
-								if(!daemon::getdaemonstats())
+								if(!$daemon->getdaemonstats())
 								{
-									$ret = $daemon->start("imp_exp");
-									if($ret == 1)
+									echo "Starting the Import / Export Daemon<br>";
+									if($daemon->start("imp_exp"))
 									{
 										sleep(2);
 										$pidfile = file($GLOBALS['pid_file_loc'].'imp_expd.pid');
@@ -2891,7 +2893,7 @@ class admin
 						{
 							case "start":
 								echo "Starting the Import / Export Performance Monitor Daemon<br>";
-								if(!daemon::getperfdaemonstats())
+								if(!$daemon->getperfdaemonstats())
 								{
 									$ret = $daemon->start("daemon_perf");
 									if($ret == 1)
@@ -2925,7 +2927,7 @@ class admin
 						{
 							case "start":
 								echo "Starting the Database Statistics Daemon<br>";
-								if(!daemon::getdbdaemonstats())
+								if(!$daemon->getdbdaemonstats())
 								{
 									$ret = $daemon->start("daemon_stats");
 									if($ret == 1)
@@ -2956,12 +2958,725 @@ class admin
 				}
 			break;
 			
-			case "daemon_config":
+			case "daemon_cfgproc":
+				$file_ext = 'config.inc.php';
+				$filename = $GLOBALS['wifidb_tools'].'/daemon/'.$file_ext;
+				
+				if (!copy($filename, $GLOBALS['wifidb_tools'].'/daemon/edits/'.date("Y-m-d-H:i:s").'_'.$file_ext))
+				{
+					die("Failed to copy $filename...");
+				}
+				if(!$filewrite = fopen($filename, "w")){die("could not write config file, check permissions?");}
+				$fileappend = fopen($filename, "a");
+
+				$default_user					= addslashes(strip_tags($_POST['default_user']));
+				$default_title					= addslashes(strip_tags($_POST['default_title']));
+				$default_notes					= addslashes(strip_tags($_POST['default_notes']));
+				$wifidb_install					= addslashes(strip_tags($_POST['wifidb_install']));
+				$console_line_limit				= addslashes(strip_tags($_POST['console_line_limit']));
+				$console_trim_log				= addslashes(strip_tags(@$_POST['console_trim_log']));
+				if($console_trim_log == 'on'){$console_trim_log = 1;}else{$console_trim_log = 0;}
+				$pid_file_loc					= addslashes(strip_tags($_POST['pid_file_loc']));
+				$daemon_log_folder				= addslashes(strip_tags($_POST['daemon_log_folder']));
+				$php_install					= strip_tags($_POST['php_install']);
+				$time_interval_to_check			= addslashes(strip_tags($_POST['time_interval_to_check']));
+				$PERF_time_interval_to_check 	= addslashes(strip_tags($_POST['PERF_time_interval_to_check']));
+				$DBSTATS_time_interval_to_check = addslashes(strip_tags($_POST['DBSTATS_time_interval_to_check']));
+				$log_level						= addslashes(strip_tags($_POST['log_level']));
+				$log_interval					= addslashes(strip_tags($_POST['log_interval']));
+				$verbose						= addslashes(strip_tags($_POST['verbose']));
+				if($verbose == 'on'){$verbose = 1;}else{$verbose = 0;}
+				
+				$colors_setting					= addslashes(strip_tags($_POST['colors_setting']));
+				if($colors_setting == 'on'){$colors_setting = 1;}else{$colors_setting = 0;}
+				
+				$BAD_CT_COLOR					= addslashes(strip_tags($_POST['BAD_CT_COLOR']));
+				$GOOD_CT_COLOR					= addslashes(strip_tags($_POST['GOOD_CT_COLOR']));
+				$OTHER_CT_COLOR					= addslashes(strip_tags($_POST['OTHER_CT_COLOR']));
+				$BAD_DBS_COLOR					= addslashes(strip_tags($_POST['BAD_DBS_COLOR']));
+				$GOOD_DBS_COLOR					= addslashes(strip_tags($_POST['GOOD_DBS_COLOR']));
+				$OTHER_DBS_COLOR				= addslashes(strip_tags($_POST['OTHER_DBS_COLOR']));
+				$BAD_DPM_COLOR					= addslashes(strip_tags($_POST['BAD_DPM_COLOR']));
+				$GOOD_DPM_COLOR					= addslashes(strip_tags($_POST['GOOD_DPM_COLOR']));
+				$OTHER_DPM_COLOR				= addslashes(strip_tags($_POST['OTHER_DPM_COLOR']));
+				$BAD_IED_COLOR					= addslashes(strip_tags($_POST['BAD_IED_COLOR']));
+				$GOOD_IED_COLOR					= addslashes(strip_tags($_POST['GOOD_IED_COLOR']));
+				$OTHER_IED_COLOR				= addslashes(strip_tags($_POST['OTHER_IED_COLOR']));
+				$debug 							= addslashes(strip_tags(@$_POST['debug']));
+				if($debug  == 'on'){$debug  = 1;}else{$debug  = 0;}
+				$daemon_config = "<?php //#last edited -> ".date("Y-M-d H:i:s")."\r\nglobal $"."daemon_ver, $"."start_date, $"."last_edit;
+global $"."wifidb_install, $"."log_level, $"."log_interval, $"."verbose, $"."dst, $"."time_interval_to_check, $"."daemon_log, $"."debug;
+global $"."colors_setting, $"."default_user, $"."default_title, $"."default_notes, $"."dim, $"."console_line_limit;
+global $"."PERF_time_interval_to_check, $"."DBSTATS_time_interval_to_check;
+global $"."BAD_CT_COLOR, $"."GOOD_CT_COLOR, $"."OTHER_CT_COLOR, $"."BAD_DBS_COLOR, $"."GOOD_DBS_COLOR, $"."OTHER_DBS_COLOR, $"."BAD_DPM_COLOR, $"."GOOD_DPM_COLOR, $"."OTHER_DPM_COLOR, $"."BAD_IED_COLOR, $"."GOOD_IED_COLOR, $"."OTHER_IED_COLOR;
+if(PHP_OS == 'WINNT')
+{
+\t$"."dim = '\\\\';
+}
+else
+{
+\t$"."dim = '/';
+}
+
+#############################################
+#############################################
+####   DO NOT TOUCH ABOVE THIS BLOCK,    ####
+#### UNLESS YOU KNOW WHAT YOU ARE DOING. :)##
+#############################################
+#############################################
+
+
+//Defaults for unclaimed imports
+$"."default_user	= '$default_user';
+$"."default_title	= '$default_title';
+$"."default_notes	= '$default_notes';
+
+//path to the folder that wifidb is installed in default is /var/www/wifidb/ , because I use Debian. fuck windows 
+$"."wifidb_install		=	'$wifidb_install';
+$"."console_line_limit	=	$console_line_limit;
+$"."console_trim_log	=	$console_trim_log;
+$"."pid_file_loc		=	'$pid_file_loc';
+$"."daemon_log_folder	=	'$daemon_log_folder';
+
+//IF you are running windows you need to define the install path to the PHP binary
+$"."php_install	=	'$php_install';
+
+//In seconds 1800 = 30 min interval
+	//# Sleep for the Import/Export Daemon
+$"."time_interval_to_check	=	$time_interval_to_check;
+	//# Sleep for the I/E Daemon Performance Monitor (check every 5 minuets [300 seconds] by default.
+$"."PERF_time_interval_to_check = $PERF_time_interval_to_check;
+	//# Database Statistics Daemon sleep, really should be at once a day (86400 seconds) if you have a very large database.
+$"."DBSTATS_time_interval_to_check = $DBSTATS_time_interval_to_check;
+
+//The level that you want the log file to write, off (0), Errors only (1), Detailed Errors [when available] (2). That is all for now.
+$"."log_level	=	$log_level;
+
+//0, one file 'log/wifidbd_log.log'. 1, one file a day 'log/wifidbd_log_[yyyy-mm-dd].log'.
+$"."log_interval	=	$log_interval;
+
+//0; no out put, STUF, 1; let me see the world.
+$"."verbose	=	$verbose;
+
+//if you want the CLI output to be color coded 1 = ON, 0 = OFF
+//if you ware running windows, this is disabled for you, so even if you turn it on, its not going to work :-p
+$"."colors_setting	=	$colors_setting;
+
+//Default colors for the CLI
+//Allowed colors:
+	//LIGHTGRAY, BLUE, GREEN, RED, YELLOW
+	//wifidbd.php
+$"."BAD_CT_COLOR	=	'$BAD_CT_COLOR';
+$"."GOOD_CT_COLOR	=	'$GOOD_CT_COLOR';
+$"."OTHER_CT_COLOR	=	'$OTHER_CT_COLOR';
+	//dbstatsd.php
+$"."BAD_DBS_COLOR	=	'$BAD_DBS_COLOR';
+$"."GOOD_DBS_COLOR	=	'$GOOD_DBS_COLOR';
+$"."OTHER_DBS_COLOR	=	'$OTHER_DBS_COLOR';
+	//daemonperfd.php
+$"."BAD_DPM_COLOR	=	'$BAD_DPM_COLOR';
+$"."GOOD_DPM_COLOR	=	'$GOOD_DPM_COLOR';
+$"."OTHER_DPM_COLOR	=	'$OTHER_DPM_COLOR';
+	//imp_expd.php
+$"."BAD_IED_COLOR	=	'$BAD_IED_COLOR';
+$"."GOOD_IED_COLOR	=	'$GOOD_IED_COLOR';
+$"."OTHER_IED_COLOR	=	'$OTHER_IED_COLOR';
+
+//Debug functions turned on, may also include dropping tables and re-createing them 
+//so only turn on if you really know what you are doing
+$"."debug = $debug;\r\n?>";
+
+#	echo "<table><tr><td>".str_replace("\n", "<br>", $daemon_config)."</td></tr></table>";
+	
+				if(fwrite($fileappend, $daemon_config))
+				{
+					redirect_page('?func=system&mode=daemon_config', 5000, "<b>Daemon Config file has been writen.<br>You will now need to restart the Daemons for the setting changes to take effect.</b>");
+				}else
+				{
+					echo "Failed to write the Daemon config file, check permissions?";
+				}
+			break;
 			
+			case "daemon_config":
+				$file_ext = 'config.inc.php';
+				$filename = $GLOBALS['wifidb_tools'].'/daemon/'.$file_ext;
+				include($filename);
+				?>
+				<form name="WiFiDB_daemon_cfg_form" action="?func=system&mode=daemon_cfgproc" method="post" enctype="multipart/form-data">
+				<h2>Edit the WifiDB Daemon Config File.</h2>
+				<table width="75%" border="1" cellspacing="0" cellpadding="0">
+				<tr><th colspan="2" class="style4">Basic WiFiDB Settings<p align="right"><a class="links" href="<?php echo $GLOBALS['hosturl'].$GLOBALS['root'].'/cp/admin/help/index.php?topic=Daemon_config'; ?>" target="_new">Help?</p></th></tr>
+				  <tr class="dark">
+					<td >Default User</td>
+					<td style="width: 60%"><input style="width: 100%" name="default_user" value="<?php echo $default_user; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Default Title</td>
+					<td><input style="width: 100%" name="default_title" value="<?php echo $default_title; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Default Notes</td>
+					<td><input style="width: 100%" name="default_notes" value="<?php echo $default_notes; ?>"></td></tr>
+				  <tr class="dark">
+					<td >WifiDB Install Folder</td>
+					<td><input style="width: 100%" name="wifidb_install" value="<?php echo $wifidb_install; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Console Line Limit</td>
+					<td ><input style="width: 25%" name="console_line_limit" value="<?php echo $console_line_limit; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Console Trim Log</td>
+					<td ><input type="checkbox" name="console_trim_log" <?php if($console_trim_log){echo ' CHECKED';} ?> ></td></tr>
+				  <tr class="dark">
+					<td >PID File Location</td>
+					<td style="width: 60%"><input style="width: 100%" name="pid_file_loc" value="<?php echo $pid_file_loc; ?>"></td></tr>
+				  <tr class="dark">
+					<td >PHP Install Folder</td>
+					<td><input style="width: 100%" name="php_install" value="<?php echo $php_install; ?>"></td></tr>
+				  <tr>
+					<th colspan="2" class="style4">Daemon Time Intervals to Check (Seconds)</th>
+				  </tr>
+				  <tr class="dark">
+					<td >Import / Export</td>
+					<td ><input name="time_interval_to_check" value="<?php echo $time_interval_to_check; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Performance Monitor</td>
+					<td ><input name="PERF_time_interval_to_check" value="<?php echo $PERF_time_interval_to_check; ?>"></td>
+				</TR>
+				  <tr class="dark">
+					<td >Database Statistics Daemon</td>
+					<td ><input name="DBSTATS_time_interval_to_check" value="<?php echo $DBSTATS_time_interval_to_check; ?>"></td>
+				</TR>
+				  <tr>
+					<th colspan="2" class="style4">Logging Settings</th>
+				</TR>
+				  <tr class="dark">
+					<td >Log Level</td>
+					<td ><input name="log_level" value="<?php echo $log_level; ?>"></td>
+				</TR>
+				  <tr class="dark">
+					<td >Log Interval</td>
+					<td ><input name="log_interval" value="<?php echo $log_interval; ?>"></td>
+				</TR>
+				<tr class="dark">
+					<td >Daemon Log Folder</td>
+					<td><input style="width: 100%" name="daemon_log_folder" value="<?php echo $daemon_log_folder; ?>"></td>
+				</tr>
+				<tr>
+					<th class="style4" colspan="2">Output Settings</th>
+				</TR>
+				  <tr class="dark">
+					<td >Verbose</td>
+					<td ><input type="checkbox" name="verbose" <?php if($verbose){echo 'CHECKED';} ?> ></td>
+				</TR>
+				  <tr class="dark">
+					<td >Colors (on/off)</td>
+					<td ><input type="checkbox" name="colors_setting" <?php if($colors_setting){echo 'CHECKED';} ?> ></td>
+				</TR>
+				<tr class="dark">
+					<TD>Debug</TD>
+					<td><input type="checkbox" name="debug" <?php if($debug){echo 'CHECKED';}?> ></td>
+				</tr>
+
+				  <tr>
+					<th colspan="2" class="style4">Daemon Control Colors</th>
+				</TR>
+				  <tr class="dark">
+					<td >Bad</td>
+					<td ><input name="BAD_CT_COLOR" value="<?php echo $BAD_CT_COLOR; ?>"></td>
+				</TR>
+				  <tr class="dark">
+					<td >Good</td>
+					<td ><input name="GOOD_CT_COLOR" value="<?php echo $GOOD_CT_COLOR; ?>"></td>
+				</TR>
+				<TR class="dark">
+					<TD >Other</TD>
+					<td><input name="OTHER_CT_COLOR" value="<?php echo $OTHER_CT_COLOR; ?>"></td>
+				</TR>
+				<tr>
+				<Th colspan="2" class="style4">Database Statistics Daemon Colors</Th>
+				</tr>
+				<tr class="dark">
+				<TD >Bad</TD>
+								<td><input name="BAD_DBS_COLOR" value="<?php echo $BAD_DBS_COLOR; ?>"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Good</TD>
+								<td><input name="GOOD_DBS_COLOR" value="<?php echo $GOOD_DBS_COLOR; ?>"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Other</TD>
+								<td><input name="OTHER_DBS_COLOR" value="<?php echo $OTHER_DBS_COLOR; ?>"></td>
+				</tr>
+				<tr>
+				<Th colspan="2" class="style4">Daemon Perfomance Monitor Colors</Th>
+				</tr>
+				<tr class="dark">
+				<TD >Bad</TD>
+								<td><input name="BAD_DPM_COLOR" value="<?php echo $BAD_DPM_COLOR; ?>"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Good</TD>
+								<td><input name="GOOD_DPM_COLOR" value="<?php echo $GOOD_DPM_COLOR; ?>"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Other</TD>
+								<td><input name="OTHER_DPM_COLOR" value="<?php echo $OTHER_DPM_COLOR; ?>"></td>
+				</tr>
+				<tr>
+				<Th colspan="2" class="style4">Import / Export Daemon Colors</Th>
+				</tr>
+				<tr class="dark">
+				<TD >Bad</TD>
+								<td><input name="BAD_IED_COLOR" value="<?php echo $BAD_IED_COLOR; ?>"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Good</TD>
+								<td><input name="GOOD_IED_COLOR" value="<?php echo $GOOD_IED_COLOR; ?>"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Other</TD>
+								<td><input name="OTHER_IED_COLOR" value="<?php echo $OTHER_IED_COLOR; ?>"></td>
+				</tr>
+				<TR class="style4"><TD colspan="2" class="daemon_kml">
+				<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
+				</TD>
+				</TR>
+				</TABLE>
+				</form>
+				<?php
+			break;
+			
+			case "db_config_proc":
+				$wifidb_tools		=	addslashes(strip_tags($_POST['wifidb_tools']));
+				$root				=	addslashes(strip_tags($_POST['root']));
+				$hosturl			=	addslashes(strip_tags($_POST['hosturl']));
+				$admin_email		=	addslashes(strip_tags($_POST['admin_email']));
+				$config_fails		=	addslashes(strip_tags($_POST['config_fails']));
+				$daemon				=	addslashes(strip_tags($_POST['daemon']));
+				$WiFiDB_LNZ_User 	=	addslashes(strip_tags($_POST['WiFiDB_LNZ_User']));
+				$apache_grp			=	addslashes(strip_tags($_POST['apache_grp']));
+				$default_theme		=	addslashes(strip_tags($_POST['default_theme']));
+				$default_refresh 	=	addslashes(strip_tags($_POST['default_refresh']));
+				$timeout			=	addslashes(strip_tags($_POST['timeout']));
+				$console_refresh	=	addslashes(strip_tags($_POST['console_refresh']));
+				$console_scroll		=	addslashes(strip_tags($_POST['console_scroll']));
+				$console_last5		=	addslashes(strip_tags($_POST['console_last5']));
+				$console_lines		=	addslashes(strip_tags($_POST['console_lines']));
+				$console_log		=	addslashes(strip_tags($_POST['console_log']));
+				$bypass_check		=	addslashes(strip_tags($_POST['bypass_check']));
+				$rebuild			=	addslashes(strip_tags($_POST['rebuild']));
+				$bench				=	addslashes(strip_tags($_POST['bench']));
+				$debug				=	addslashes(strip_tags($_POST['debug']));
+				$settings_tb		=	addslashes(strip_tags($_POST['settings_tb']));
+				$users_t			=	addslashes(strip_tags($_POST['users_t']));
+				$links				=	addslashes(strip_tags($_POST['links']));
+				$wtable				=	addslashes(strip_tags($_POST['wtable']));
+				$user_logins_table	=	addslashes(strip_tags($_POST['user_logins_table']));
+				$share_cache		=	addslashes(strip_tags($_POST['share_cache']));
+				$files				=	addslashes(strip_tags($_POST['files']));
+				$files_tmp			=	addslashes(strip_tags($_POST['files_tmp']));
+				$annunc				=	addslashes(strip_tags($_POST['annunc']));
+				$annunc_comm		=	addslashes(strip_tags($_POST['annunc_comm']));
+				$gps_ext			=	addslashes(strip_tags($_POST['gps_ext']));
+				$sep				=	addslashes(strip_tags($_POST['sep']));
+				$db					=	addslashes(strip_tags($_POST['db']));
+				$db_st				=	addslashes(strip_tags($_POST['db_st']));
+				$host				=	addslashes(strip_tags($_POST['host']));
+				$db_user			=	addslashes(strip_tags($_POST['db_user']));
+				$db_pwd				=	addslashes(strip_tags($_POST['db_pwd']));
+				$collate			=	addslashes(strip_tags($_POST['collate']));
+				$engine				=	addslashes(strip_tags($_POST['engine']));
+				$char_set			=	addslashes(strip_tags($_POST['char_set']));
+				$open_loc			=	addslashes(strip_tags($_POST['open_loc']));
+				$WEP_loc			=	addslashes(strip_tags($_POST['WEP_loc']));
+				$WPA_loc			=	addslashes(strip_tags($_POST['WPA_loc']));
+				$KML_SOURCE_URL		=	addslashes(strip_tags($_POST['KML_SOURCE_URL']));
+				$kml_out			=	addslashes(strip_tags($_POST['kml_out']));
+				$vs1_out			=	addslashes(strip_tags($_POST['vs1_out']));
+				$daemon_out			=	addslashes(strip_tags($_POST['daemon_out']));
+				$gpx_out			=	addslashes(strip_tags($_POST['gpx_out']));
+				$ads				= 	addslashes($_POST['ads']);
+				$header				= 	addslashes($_POST['header']);
+				$tracker			= 	addslashes($_POST['tracker']);
+				echo $_POST['header'];
+				$DB_Config = "$"."lastedit	=	'".date('Y-M-d H:i:s')."';
+global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."admin_email;
+global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."db, $"."db_st, $"."wifidb_tools, $"."daemon, $"."root, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm;
+global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."console_log, $"."DB_stats_table, $"."daemon_perf_table;
+global $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."bypass_check, $"."config_fails, $"."login_seed, $"."collate, $"."engine, $"."char_set;
+
+
+#----------General Settings------------#
+$"."bypass_check		=	$bypass_check;
+$"."wifidb_tools		=	'$wifidb_tools';
+$"."timezn				=	'$timezn';
+$"."root				=	'$root';
+$"."hosturl			=	'$hosturl';
+$"."admin_email		=	'$admin_email';
+$"."config_fails		=	$config_fails;
+$"."login_seed			=	'$login_seed';
+
+#---------------- Daemon Info ----------------#
+$"."daemon				=	$daemon;
+$"."log_level			=	$log_level;
+$"."log_interval		=	$log_interval;
+$"."WiFiDB_LNZ_User 	=	'$WiFiDB_LNZ_User';
+$"."apache_grp			=	'$apache_grp';
+
+#-------------Themes Settings--------------#
+$"."default_theme		= '$default_theme';
+$"."default_refresh 	= $default_refresh;
+$"."default_timezone	= $default_timezone;
+$"."default_dst		= $default_dst;
+$"."timeout			= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) 
+
+#-------------Console Viewer Settings--------------#
+$"."console_refresh	= $console_refresh;
+$"."console_scroll		= $console_scroll;
+$"."console_last5		= $console_last5;
+$"."console_lines		= $console_lines;
+$"."console_log		= '$console_log';
+
+#---------------- Debug Info ----------------#
+$"."rebuild	=	$rebuild;
+$"."bench		=	$bench;
+$"."debug		=	$debug;
+
+#---------------- Tables ----------------#
+$"."settings_tb	=	'$settings_tb';
+$"."users_t		=	'$users_t';
+$"."links			=	'$links';
+$"."wtable			=	'$wtable';
+$"."user_logins_table	=	'$user_logins_table';
+$"."share_cache	=	'$share_cache';
+$"."files			=	'$files';
+$"."files_tmp		=	'$files_tmp';
+$"."annunc			=	'$annunc';
+$"."annunc_comm	=	'$annunc_comm';
+$"."gps_ext		=	'$gps_ext';
+$"."sep			=	'$sep';
+
+#---------------- DataBases ----------------#
+$"."db		=	'$db';
+$"."db_st	=	'$db_st';
+
+#---------------- SQL Info ----------------#
+$"."host		=	'$host';
+$"."db_user	=	'$db_user';
+$"."db_pwd		=	'$db_pwd';
+$"."conn		=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die('Unable to connect to SQL server: $"."host');
+$"."collate	=	'$collate';
+$"."engine		=	'$engine';
+$"."char_set	=	'$char_set';
+
+#---------------- Export Info ----------------#
+$"."open_loc		=	'$open_loc';
+$"."WEP_loc		=	'$WEP_loc';
+$"."WPA_loc		=	'$WPA_loc';
+$"."KML_SOURCE_URL	=	'$KML_SOURCE_URL';
+$"."kml_out		=	'$kml_out';
+$"."vs1_out		=	'$vs1_out';
+$"."daemon_out		=	'$daemon_out';
+$"."gpx_out		=	'$gpx_out';
+
+#---------------- Header and Footer Additional Info -----------------#
+	 // Put the code for your ads in here www.google.com/adsense
+$"."ads		= '$ads';
+
+$"."header	= '$header';
+
+	// put the code for the url tracker that you use here (ie - www.google.com/analytics )
+$"."tracker	= '$tracker';";
+
+				echo "<table><tr><td>".str_replace("\r\n", "<br>", $DB_Config)."</td></tr></table>";
 			break;
 			
 			case "db_config":
-			
+				$file_ext = 'config.inc.php';
+				$filename = $half_path.'/lib/'.$file_ext;
+				include($filename);
+				?>
+				<form name="WiFiDB_daemon_cfg_form" action="?func=system&mode=db_config_proc" method="post" enctype="multipart/form-data">
+				<h2>Edit the WifiDB Config File.</h2>
+				<table width="75%" border="1" cellspacing="0" cellpadding="0">
+				<tr><th colspan="2" class="style4">Basic WiFiDB Settings
+					<p align="right"><a class="links" href="<?php echo $GLOBALS['hosturl'].$GLOBALS['root'].'/cp/admin/help/index.php?topic=Daemon_config'; ?>" target="_new">Help?</p></th></tr>
+				  <tr class="dark">
+					<td >WiFiDB Tools Folder</td>
+					<td>
+					<input style="width: 96%" name="wifidb_tools" value="<?php echo $wifidb_tools; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Root Folder</td>
+					<td>
+					<input style="width: 33%" name="root" value="<?php echo $root; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Host URL</td>
+					<td>
+					<input style="width: 96%" name="hosturl" value="<?php echo $hosturl; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Admin Email</td>
+					<td>
+					<input style="width: 84%" name="admin_email" value="<?php echo $admin_email; ?>"></td></tr>
+				  <tr class="dark">
+					<td >Max Login Fails before Lock</td>
+					<td ><input style="width: 25%" name="config_fails" value="<?php echo $config_fails; ?>"></td></tr>
+				  <tr>
+					<th colspan="2" class="style4">Daemon Settings</th>
+				</tr>
+				  <tr class="dark">
+					<td >Daemon (on/off)</td>
+					<td ><input type="checkbox" name="daemon" <?php if($daemon){echo 'CHECKED';} ?> ></td></tr>
+				  <tr class="dark">
+					<td >HTTP Server user</td>
+					<td>
+					<input style="width: 40%" name="WiFiDB_LNZ_User" value="<?php echo $WiFiDB_LNZ_User; ?>"></td></tr>
+				  <tr class="dark">
+					<td >HTTP Server Group</td>
+					<td >
+					<input name="apache_grp" value="<?php echo $apache_grp; ?>" style="width: 175px"></td></tr>
+				  <tr>
+					<th colspan="2" class="style4">Themes Settings</th>
+				</tr>
+				  <tr class="dark">
+					<td >Default Theme</td>
+					<td >
+						<select name="default_theme">
+						<OPTION selected VALUE=""> Select a Theme.
+						<?php
+						$dh = opendir("../../themes/") or die("couldn't open directory");
+						while (!(($file = readdir($dh)) == false))
+						{
+							if ((is_dir("../../themes/$file"))) 
+							{
+								if($file=="."){continue;}
+								if($file==".."){continue;}
+								if($file==".svn"){continue;}
+								echo '<OPTION VALUE="'.$file.'"> '.$file;
+							}
+						}
+						?>
+						</select>
+					</td>
+				</TR>
+				  <tr class="dark">
+					<td >Default Refresh</td>
+					<td ><input name="default_refresh" value="<?php echo $default_refresh; ?>"></td>
+				</TR>
+				  <tr class="dark">
+					<td >Timeout</td>
+					<td ><input name="timeout" value="<?php echo $timeout; ?>"></td>
+				</TR>
+				<tr>
+					<th colspan="2" class="style4">Console Viewer Settings</th>
+				</tr>
+				  <tr class="dark">
+					<td >Console Refresh</td>
+					<td >
+					<input name="console_refresh" value="<?php echo $console_refresh; ?>" style="width: 53px"></td>
+				</TR>
+				<tr class="dark">
+					<td >Console Scroll</td>
+					<td >
+					<input name="console_scroll" type="checkbox"  <?php if($console_scroll){echo "CHECKED";} ?> style="width: 53px"></td>
+				</TR>
+				  <tr class="dark">
+					<td >Console Last 5</td>
+					<td >
+					<input name="console_last5" type="checkbox"  <?php if($console_last5){echo "CHECKED";} ?> style="width: 53px"></td>
+				</TR>
+				  <tr class="dark">
+					<td >Console Lines</td>
+					<td >
+					<input name="console_lines" value="<?php echo $console_lines; ?>"></td>
+				</TR>
+				  <tr class="dark">
+					<td >Console Log</td>
+					<td ><input name="console_log" <?php echo $console_log; ?> ></td>
+				</TR>
+				  <tr>
+					<th colspan="2" class="style4">Debug and Other Settings</th>
+				</TR>
+				  <tr class="dark">
+					<td >Bypass Install folder check</td>
+					<td >
+					<input type="checkbox" name="bypass_check" <?php if($bypass_check){echo 'CHECKED';} ?> ></td>
+				</TR>
+				  <tr class="dark">
+					<td >Rebuild flag</td>
+					<td >
+					<input type="checkbox" name="rebuild" <?php if($rebuild){echo 'CHECKED';} ?> ></td>
+				</TR>
+				<TR class="dark">
+					<TD >Debug Flag</TD>
+					<td>
+					<input type="checkbox" name="debug" <?php if($debug){echo 'CHECKED';} ?> ></td>
+				</TR>
+				<TR class="dark">
+					<TD >Benchmark Flag</TD>
+					<td>
+					<input type="checkbox" name="bench" <?php if($bench){echo 'CHECKED';} ?> ></td>
+				</TR>
+				<tr>
+					<th colspan="2" class="style4">SQL Server settings</Th>
+				</tr>
+				<tr class="dark">
+					<TD>SQL Host address</TD>
+					<td><input name="host" value="<?php echo $host; ?>" ></td>
+				</tr>
+				<tr class="dark">
+					<TD>WiFiDB SQL User</TD>
+					<td>
+						<input style="width: 48%" name="db_user" value="<?php echo $db_user; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>WiFiDB SQL Password</TD>
+					<td>
+						<input style="width: 49%" name="db_pwd" value="<?php echo $db_pwd; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>SQL Collate</TD>
+					<td>
+						<input style="width: 46%" name="collate" value="<?php echo $collate; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>SQL Engine</TD>
+					<td>
+						<input style="width: 47%" name="engine" value="<?php echo $engine; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>Char Set</TD>
+					<td>
+						<input style="width: 44%" name="char_set" value="<?php echo $char_set; ?>"></td>
+				</tr>
+				<tr>
+					<Th colspan="2" class="style4">Database Settings</Th>
+				</tr>
+				<tr class="dark">
+					<TD >Settings DB Name</TD>
+					<td>
+						<input name="db" value="<?php echo $db; ?>" style="width: 100px"></td>
+				</tr>
+				<tr class="dark">
+					<TD >Storage DB Name</TD>
+					<td>
+						<input name="db_st" value="<?php echo $db_st; ?>" style="width: 100px"></td>
+				</tr>
+				<tr class="dark">
+					<TD >Settings Table</TD>
+					<td>
+						<input name="settings_tb" value="<?php echo $settings_tb; ?>" style="width: 206px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Users Import Table</TD>
+					<td>
+						<input name="users_t" value="<?php echo $users_t; ?>" style="width: 206px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Links Table</TD>
+					<td>
+						<input name="links" value="<?php echo $links; ?>" style="width: 216px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Wifi Pointers Table</TD>
+					<td>
+						<input name="wtable" value="<?php echo $wtable; ?>" style="width: 212px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Users Login Table</TD>
+					<td>
+						<input name="user_logins_table" value="<?php echo $user_logins_table; ?>" style="width: 205px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Geocache Shares Table</TD>
+					<td>
+						<input name="share_cache" value="<?php echo $share_cache; ?>" style="width: 212px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Imported Files Table</TD>
+					<td>
+						<input name="files" value="<?php echo $files; ?>" style="width: 212px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Waiting Files Table</TD>
+					<td>
+						<input name="files_tmp" value="<?php echo $files_tmp; ?>" style="width: 219px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Announcement Table</TD>
+					<td>
+						<input name="annunc" value="<?php echo $annunc; ?>" style="width: 232px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Announcement Comments Table</TD>
+					<td>
+						<input name="annunc_comm" value="<?php echo $annunc_comm; ?>" style="width: 231px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >GPS Table extension</TD>
+					<td>
+						<input name="gps_ext" value="<?php echo $gps_ext; ?>" style="width: 88px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Table Separator</TD>
+					<td>
+						<input name="sep" value="<?php echo $sep; ?>" style="width: 51px"></td>
+				</tr>
+				<tr class="dark">
+					<Th colspan="2" class="style4" >KML Settings</Th>
+				</tr>
+				<tr class="dark">
+					<TD>Open Image</TD>
+					<td>
+						<input style="width: 100%" name="open_loc" value="<?php echo $open_loc; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>WEP Image</TD><td><input style="width: 100%" name="WEP_loc" value="<?php echo $WEP_loc; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>Secure Image</TD>
+					<td>
+						<input style="width: 100%" name="WPA_loc" value="<?php echo $WPA_loc; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>KML Source URL</TD>
+					<td>
+						<input style="width: 100%" name="KML_SOURCE_URL" value="<?php echo $KML_SOURCE_URL; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<Th colspan='2' class="style4">Output Folders</Th>
+				</tr>
+				<tr class="dark">
+					<TD>KMZ Out Folder</TD>
+					<td>
+						<input style="width: 100%" name="kml_out" value="<?php echo $kml_out; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>VS1 Out Folder</TD>
+					<td>
+						<input style="width: 100%" name="vs1_out" value="<?php echo $vs1_out; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>Daemon Out Folder</TD>
+					<td>
+						<input style="width: 100%" name="daemon_out" value="<?php echo $daemon_out; ?>"></td>
+				</tr>
+				<tr class="dark">
+					<TD>GPX Out Folder</TD>
+					<td>
+						<input style="width: 100%" name="gpx_out" value="<?php echo $gpx_out; ?>"></td>
+				</tr>
+				<TR>
+					<TD colspan="2" class="daemon_kml">
+						<input type='hidden' name="ads" value='<?php echo $ads; ?>'>
+						<input type='hidden' name="header" value='<?php echo addslashes($header); ?>'>
+						<input type='hidden' name="tracker" value='<?php echo $tracker; ?>'>
+						<input type='hidden' name="login_seed" value='<?php echo $login_seed; ?>'>
+						<input type='hidden' name="db_user" value='<?php echo $db_user; ?>'>
+						<input type='hidden' name="db_pwd" value='<?php echo $db_pwd; ?>'>
+						<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
+					</TD>
+				</TR>
+				</TABLE>
+				</form>
+				<?php
 			break;
 			
 			case "updates":

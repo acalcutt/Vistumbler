@@ -35,6 +35,7 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 
 <form name="WiFiDB_Install" action="install.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Install</h2>
+  <h3>Version: 0.20 Build 1</h3>
   <h4>Please Read <a class="links" target="_blank" href="notes.html">these notes</a> before installing the Wireless Database</h4>
 <?php
 
@@ -63,14 +64,20 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
     <td><input name="hosturl"></td></tr>
   <tr>
     <td>
-      <p>MySQL Host <font size="1">(Default `localhost` )</font></td><td>........................................</td>
+      <p>MySQL Host <font size="1">(Default `localhost` or 127.0.0.1 )</font></td><td>........................................</td>
     <td><input name="sqlhost"></td></tr>
   <tr>
     <td>WiFiDB SQL Username</td><td>........................................</td>
     <td><input name="sqlu"></td></tr>
   <tr>
     <td>WiFiDB SQL Password</td><td>........................................</td>
-    <td><input name="sqlp"></td></tr>
+    <td><input TYPE=PASSWORD name="sqlp"></td></tr>
+  <tr>
+    <td>WiFiDB Admin User Password</td><td>........................................</td>
+    <td><input TYPE=PASSWORD name="wdb_admn_pass"></td></tr>
+  <tr>
+    <td>WiFiDB Admin Email</td><td>........................................</td>
+    <td><input name="wdb_admn_emailadrs"></td></tr>
   <tr>
     <td>WiFi DB name <font size="1">(Default `wifi` )</font></td><td>........................................</td>
     <td><input name="wifi"></td></tr>

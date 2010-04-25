@@ -43,12 +43,6 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
     <td colspan="2" >Install WiFiDB from <a class="links" href="index2.php">scratch</a></td></tr>
   <tr>
     <td colspan="2" >Upgrade WiFiDB from a <a class="links" href="upgrade/">previous version</a></td></tr>
-  <tr>
-    <td colspan="2" width="100%">Run a Patch on your current install</td></tr>
-  <tr>
-    <td>....</td><td><a class="links" href="patch_gps_table/">Patch GPS Tables</a></td></tr>
-  <tr>
-    <td>....</td><td><a class="links" href="patch_blank_gps/">Patch Blank GPS</a> and Alter Dates in GPS tables from MM/DD/YYYY to YYYY/MM/DD</td></tr>
 </TABLE>
 <?php
 $filename = $_SERVER['SCRIPT_FILENAME'];

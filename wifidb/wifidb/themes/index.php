@@ -1,7 +1,6 @@
 <?php
 include('../lib/config.inc.php');
 global $theme;
-session_start();
 if(!isset($_SESSION['token']) or !isset($_GET['token']))
 {
 	$token = md5(uniqid(rand(), true));
@@ -21,11 +20,12 @@ if($func == 'change')
 {
 	if( !isset($_POST['theme']) ) { $_POST['theme'] = ""; }
 	$theme_post = strip_tags(addslashes($_POST['theme']));
-	setcookie( 'wifidb_theme' , $theme_post , (time()+(86400 * 7)), "/".$root."/" ); // 86400 = 1 day
+	$cookie_path = (@$GLOBALS['root']!='' ? '/'.$GLOBALS['root'].'/' : '/');
+	setcookie( 'wifidb_theme' , $theme_post , (time()+(86400 * 7)), $cookie_path ); // 86400 = 1 day
 	header('Location: ?token='.$_SESSION['token']);
 }
-$theme = ($_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $default_theme);
-#echo $theme."1<BR>";
+$theme = (@$_COOKIE['wifidb_theme']!='' ? @$_COOKIE['wifidb_theme'] : $default_theme);
+#echo $theme."<BR>";
 include('../lib/database.inc.php');
 
 pageheader("Themes Switchboard");

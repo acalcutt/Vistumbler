@@ -10,8 +10,8 @@ $sec = new security();
 $xml = new WDB_XML();
 $database = new database();
 
-$func = strtolower(addslashes($_GET['func']));
-$mode = strtolower(addslashes($_GET['mode']));
+$func = strtolower(addslashes(@$_GET['func']));
+$mode = strtolower(addslashes(@$_GET['mode']));
 
 $login_check = $sec->login_check(1);
 if(is_array($login_check) or $login_check == "No Cookie"){$login_check = 0;}else{$login_check = 1;}

@@ -5,10 +5,10 @@ include('../lib/config.inc.php');
 include('../lib/database.inc.php');
 include($GLOBALS['wifidb_tools'].'/daemon/config.inc.php');
 
-$scroll = ($_COOKIE['console_scroll']!='' ? $_COOKIE['console_scroll'] : $GLOBALS['console_scroll']);
-$refresh = ($_COOKIE['console_refresh']!='' ? $_COOKIE['console_refresh'] : $GLOBALS['console_refresh']);
-$last5 = ($_COOKIE['console_last5']!='' ? $_COOKIE['console_last5'] : $GLOBALS['console_last5']);
-$lines = ($_COOKIE['console_lines']!='' ? $_COOKIE['console_lines'] : $GLOBALS['console_lines']);
+$scroll = (@$_COOKIE['console_scroll']!='' ? @$_COOKIE['console_scroll'] : $GLOBALS['console_scroll']);
+$refresh = (@$_COOKIE['console_refresh']!='' ? @$_COOKIE['console_refresh'] : $GLOBALS['console_refresh']);
+$last5 = (@$_COOKIE['console_last5']!='' ? @$_COOKIE['console_last5'] : $GLOBALS['console_last5']);
+$lines = (@$_COOKIE['console_lines']!='' ? @$_COOKIE['console_lines'] : $GLOBALS['console_lines']);
 
 $N=1;
 $NN=1;

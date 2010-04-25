@@ -8,7 +8,7 @@ $theme = $GLOBALS['theme'];
 <?php
 $sql_a=array();
 
-if ($_POST['ssid'] == "%" or $_POST['mac'] == "%" or $_POST['radio'] == "%" or $_POST['chan'] == "%" or $_POST['auth'] == "%" or $_POST['encry'] == "%" )
+if (@$_POST['ssid'] == "%" or @$_POST['mac'] == "%" or @$_POST['radio'] == "%" or @$_POST['chan'] == "%" or @$_POST['auth'] == "%" or @$_POST['encry'] == "%" )
 {
 	echo '<table><tr><td colspan="6" align="center">Come on man, you cant search or all of something, thats what <a class="links" href="../all.php?token='.$_SESSION["token"].'">this page</a> is for!</td></tr></table>'; 
 	die(footer($_SERVER['SCRIPT_FILENAME']));
@@ -19,28 +19,28 @@ if(isset($_GET['func']))
 else{$func = "";}
 
 if(isset($_POST['ssid']))
-{$ssid = $_POST['ssid'];}
-else{$ssid = $_GET['ssid'];}
+{$ssid = @$_POST['ssid'];}
+else{$ssid = @$_GET['ssid'];}
 
 if(isset($_POST['mac']))
-{$mac = $_POST['mac'];}
-else{$mac = $_GET['mac'];}
+{$mac = @$_POST['mac'];}
+else{$mac = @$_GET['mac'];}
 
 if(isset($_POST['radio']))
-{$radio = $_POST['radio'];}
-else{$radio = $_GET['radio'];}
+{$radio = @$_POST['radio'];}
+else{$radio = @$_GET['radio'];}
 
 if(isset($_POST['chan']))
-{$chan = $_POST['chan'];}
-else{$chan = $_GET['chan'];}
+{$chan = @$_POST['chan'];}
+else{$chan = @$_GET['chan'];}
 
 if(isset($_POST['auth']))
-{$auth = $_POST['auth'];}
-else{$auth = $_GET['auth'];}
+{$auth = @$_POST['auth'];}
+else{$auth = @$_GET['auth'];}
 
 if(isset($_POST['encry']))
-{$encry = $_POST['encry'];}
-else{$encry = $_GET['encry'];}
+{$encry = @$_POST['encry'];}
+else{$encry = @$_GET['encry'];}
 
 $ord   =	addslashes(strip_tags($_GET['ord']));
 $sort  =	addslashes(strip_tags($_GET['sort']));
@@ -128,7 +128,9 @@ if(!$sql_a)
 }
 if($func == "export")
 {
-	database::exp_search($sql_a);
+	$database = new database();
+	$args = array( $ssid, $mac, $chan, $auth, $encry, $radio);
+	$database->exp_search($args);
 	die(footer($_SERVER['SCRIPT_FILENAME']));
 }
 

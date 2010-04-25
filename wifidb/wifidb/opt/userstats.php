@@ -1,6 +1,6 @@
 <?php
 global $theme;
-$theme = ($_COOKIE['wifidb_theme']=='' ? $_COOKIE['wifidb_theme'] : 'wifidb');
+$theme = (@$_COOKIE['wifidb_theme']=='' ? @$_COOKIE['wifidb_theme'] : 'wifidb');
 include('../lib/database.inc.php');
 
 if(isset($_GET['user'])){pageheader("Stats for User: ".$_GET['user']);}
@@ -8,13 +8,13 @@ else{pageheader("Users Stats Page");}
 echo '<p align="center">';
 include('../lib/config.inc.php');
 
-$func = strip_tags(addslashes($_GET['func']));
+$func = strip_tags(addslashes(@$_GET['func']));
 
 $database = new database();
-if (isset($_GET['token']))
-{
-	if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])
-	{
+#if (isset($_GET['token']))
+#{
+#	if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])
+#	{
 		switch($func)
 		{
 			case "alluserlists":
@@ -86,18 +86,19 @@ if (isset($_GET['token']))
 				$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' AND `id` != '$last_import_id' ORDER BY `id` DESC";
 				$other_imports = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$other_rows = mysql_num_rows($other_imports);
-				
-				if($others_rows != "0")
+				if(@$others_rows != "0")
 				{
+					$flip = 0;
 					while($imports = mysql_fetch_array($other_imports))
 					{
 						if($imports['points'] == ""){continue;}
+						if($flip){$style = "dark";$flip=0;}else{$style="light";$flip=1;}
 						$import_id = $imports['id'];
 						$import_title = $imports['title'];
 						$import_date = $imports['date'];
 						$import_ap = $imports['aps'];
 						?>
-						<tr bgcolor="#A9C6FA"><td><?php echo $import_id;?></td><td><a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $import_id.'&token='.$_SESSION['token'];?>"><?php echo $import_title;?></a></td><td><?php echo $import_ap;?></td><td><?php echo $import_date;?></td></tr>
+						<tr class="<?php echo $style; ?>"><td><?php echo $import_id;?></td><td><a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $import_id.'&token='.$_SESSION['token'];?>"><?php echo $import_title;?></a></td><td><?php echo $import_ap;?></td><td><?php echo $import_date;?></td></tr>
 						<?php
 					}
 				}else
@@ -135,13 +136,13 @@ if (isset($_GET['token']))
 				<?php
 		}
 		echo "</p>";
-	}else
-	{
-		echo "<h2>Could not Compare Tokens, try again.</h2>";
-	}
-}else
-{
-	echo "<h2>You dont have a token, try again</h2>";
-}
+#	}else
+#	{
+#		echo "<h2>Could not Compare Tokens, try again.</h2>";
+#	}
+#}else
+#{
+#	echo "<h2>You dont have a token, try again</h2>";
+#}
 footer($_SERVER['SCRIPT_FILENAME']);
 ?>

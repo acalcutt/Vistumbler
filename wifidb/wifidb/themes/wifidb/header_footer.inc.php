@@ -5,7 +5,7 @@
 
 function pageheader($title, $output="detailed")
 {
-	global $login_check;
+	global $login_check,$host_url;
 	
 	$root		= 	$GLOBALS['root'];
 	$hosturl	= 	$GLOBALS['hosturl'];
@@ -16,7 +16,21 @@ function pageheader($title, $output="detailed")
 	include_once($half_path.'/lib/database.inc.php');
 	include_once($half_path.'/lib/security.inc.php');
 	include_once($half_path.'/lib/config.inc.php');
-
+	if($root != '' or $root != '/')
+	{
+		$max = strlen($hosturl);
+		if($hosturl[$max-1] != '/')
+		{
+			$host_url = $hosturl.'/'.$root;
+	#		echo $hosturl."<BR>";
+		}
+		$host_url = $hosturl.$root;
+	#	echo $hosturl."<BR>";
+	}
+	else
+	{
+		$host_url = $hosturl;
+	}
 	$token = session_starter();
 	
 	$sec = new security();
@@ -30,52 +44,54 @@ function pageheader($title, $output="detailed")
 		# START YOUR HTML EDITS HERE #
 		?>
 		<html><head><title>Wireless DataBase <?php echo $GLOBALS['ver']['wifidb'];?> --> <?php echo $title;?></title><?php echo $head; ?></head>
-		<link rel="stylesheet" href="<?php if($root != ''){echo $hosturl.$root;}?>/themes/wifidb/styles.css">
-		<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
+		<link rel="stylesheet" href="<?php echo $host_url;?>/themes/wifidb/styles.css">
+		<body>
 		<div align="center">
-		<table border="0" width="85%" cellspacing="5" cellpadding="2">
-			<tr style="background-color: #315573;"><td colspan="2">
-			<table width="100%">
-				<tr>
-					<td style="width: 215px">
-						&nbsp;&nbsp;&nbsp;&nbsp;<a href="/<?php echo $root;?>/"><img border="0" src="/<?php echo $root; ?>/img/logo.png"></a>
-					</td>
-					<td>
-						<p align="center"><b>
-						<font style="size: 5;font-family: Arial;color: #FFFFFF;">
-						Wireless DataBase<?php echo $GLOBALS['ver']['wifidb'].'<br /><br />'; ?>
-						</font>
-							<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
-						</b></p>
-					</td>
-				</tr>
-			</table>
-			</td></tr>
+		<table width="100%" border="0" cellspacing="5" cellpadding="2">
+			<tr style="background-color: #315573;">
+				<td colspan="2">
+					<table>
+					<tr>
+							<td style="width: 215px">
+								<a href="<?php echo $host_url;?>"><img border="0" src="<?php echo $host_url; ?>/img/logo.png"></a>
+							</td>
+							<td width="100%" align="center">
+								<b>
+								<font style="size: 5;font-family: Arial;color: #FFFFFF;">
+								Wireless DataBase<?php echo $GLOBALS['ver']['wifidb'].'<br /><br />'; ?>
+								</font>
+									<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
+								</b>
+							</td>
+						</tr>
+					</table>
+				</td>
+			</tr>
 			<tr>
 				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
 				<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" /><br>
 				<span class="content_head"><strong><em>[WiFIDB]</em></strong></span><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/?token=<?php echo $token;?>">Main Page</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/import/?token=<?php echo $token;?>">Import</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated KML</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/console/?token=<?php echo $token;?>">Daemon Console</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a><br>
+				<a class="links" href="<?php echo $host_url;?>/?token=<?php echo $token;?>">Main Page</a><br>
+				<a class="links" href="<?php echo $host_url;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a><br>
+				<a class="links" href="<?php echo $host_url;?>/import/?token=<?php echo $token;?>">Import</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated KML</a><br>
+				<a class="links" href="<?php echo $host_url;?>/console/?token=<?php echo $token;?>">Daemon Console</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/search.php?token=<?php echo $token;?>">Search</a><br>
+				<a class="links" href="<?php echo $host_url;?>/themes/?token=<?php echo $token;?>">Themes</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a><br>
 				<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Versions</a><br>
+				<a class="links" href="<?php echo $host_url;?>/ver.php?token=<?php echo $token;?>">WiFiDB Versions</a><br>
 				<br>
 				<span class="content_head"><strong><em>[Mysticache]</em></strong></span><br>
-				<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/caches.php?token=<?php echo $token;?>">View shared Caches</a><br>
+				<a class="links" href="<?php if($root != '' or $root != '/'){echo $hosturl.$root;}else{echo $hosturl;}?>/caches.php?token=<?php echo $token;?>">View shared Caches</a><br>
 				<?php
 				if($login_check)
 				{
 					?>
-					<a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/cp/?func=boeyes&boeye_func=list_all">List All My Caches</a>
+					<a class="links" href="<?php if($root != '' or $root != '/'){echo $hosturl.$root;}else{echo $hosturl;}?>/cp/?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=0&to=100">List All My Caches</a>
 					<?php
 				}
 				?>
@@ -93,8 +109,8 @@ function pageheader($title, $output="detailed")
 						$newArray = mysql_fetch_array($result);
 						$last_login = $newArray['last_login'];
 						?>
-						<td>Welcome, <a class="links" href="/<?php echo $root;?>/cp/"><?php echo $username;?></a><font size="1"> (Last Login: <?php echo $last_login;?>)</font></td>
-						<td align="right"><a class="links" href="<?php echo $hosturl.$root; ?>/login.php?func=logout_proc">Logout</a></td>
+						<td>Welcome, <a class="links" href="<?php echo $host_url;?>/cp/"><?php echo $username;?></a><font size="1"> (Last Login: <?php echo $last_login;?>)</font></td>
+						<td align="right"><a class="links" href="<?php  echo $host_url; ?>/login.php?func=logout_proc">Logout</a></td>
 						<?php
 					}else
 					{
@@ -108,7 +124,7 @@ function pageheader($title, $output="detailed")
 						if($filtered != '')
 						{$SELF = $SELF.'?'.$filtered;}
 						?>
-						<td></td><td align="right"><a class="links" href="<?php echo $hosturl.$root; ?>/login.php?return=<?php echo $SELF; ?>">Login</a></td>
+						<td></td><td align="right"><a class="links" href="<?php  echo $host_url; ?>/login.php?return=<?php echo $SELF; ?>">Login</a></td>
 						<?php
 					}
 					?>
@@ -130,9 +146,10 @@ function pageheader($title, $output="detailed")
 function footer($filename = '', $output = "detailed")
 {
 	$half_path	=	$GLOBALS['half_path'];
-	include_once($half_path.'lib/security.inc.php');
+	include_once($half_path.'/lib/security.inc.php');
 	include_once($half_path.'/lib/database.inc.php');
 	include_once($half_path.'/lib/config.inc.php');
+
 	$root = $GLOBALS['root'];
 	$tracker = $GLOBALS['tracker'];
 	$ads = $GLOBALS['ads'];
@@ -154,25 +171,33 @@ function footer($filename = '', $output = "detailed")
 		{
 		?>
 			<h6><i><u><?php echo $filename_1;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", getlastmod());?></h6>
+			
 			<?php
 	#		echo $GLOBALS['privs'];
 			if($GLOBALS['login_check'])
 			{
+				?>
+				<font size="2"><b>
+				<?php
+				$sec = new security();
 				# $privs_a = $GLOBALS['privs_a'];
-				list($privs, $priv_name) = security::check_privs(0);
+				list($privs, $priv_name) = $sec->check_privs(0);
 			#	echo $privs;
 				if($privs >= 1000)
 				{
-					?><a class="links" href="/<?php echo $root;?>/cp/?func=admin_cp"><font size="2"><b>Admin Control Panel</b></a></font><?php
+					?><a class="links" href="<?php echo $GLOBALS['host_url'];?>/cp/?func=admin_cp">Admin Control Panel</a>  |-|  <?php
 				}
 				if($privs >= 10)
 				{
-					?><font size="2">  |-|  <a class="links" href="/<?php echo $root;?>/cp/?func=mod_cp"><b>Moderator Control Panel</b></a></font><?php
+					?><a class="links" href="<?php echo $GLOBALS['host_url'];?>/cp/?func=mod_cp">Moderator Control Panel</a>  |-|  <?php
 				}
 				if($privs >= 1)
 				{
-					?><font size="2">  |-|  <a class="links" href="/<?php echo $root;?>/cp/"><b>User Control Panel</b></font></a><?php
+					?><a class="links" href="<?php echo $GLOBALS['host_url'];?>/cp/">User Control Panel</a><?php
 				}
+				?>
+				</b></font>
+				<?php
 			}
 		}
 		?>

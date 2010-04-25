@@ -1,6 +1,6 @@
 <?php
 include('../lib/config.inc.php');
-$theme_page = $GLOBALS['theme'];
+$theme = (@$_COOKIE['wifidb_theme']!='' ? @$_COOKIE['wifidb_theme'] : $default_theme);
 ?>
 <link rel="stylesheet" href="<?php if($root != ''){echo '/'.$root;}?>/<?php echo $theme_page;?>/styles.css">
 <?php

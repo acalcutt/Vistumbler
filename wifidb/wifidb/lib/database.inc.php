@@ -54,13 +54,37 @@ $ver = array(
 
 
 #-------------------------------------------------------------------------------------#
-#----------------------------------  Get Set values  ---------------------------------#
+#----------------------------------  Get/Set values  ---------------------------------#
 #-------------------------------------------------------------------------------------#
 if(@$GLOBALS['screen_output'] != "CLI")
 {
 	global $theme, $full_path, $half_path;
 	if(!@include_once('config.inc.php'))
-	{die('<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="http://'.$_SERVER["SERVER_NAME"].'/wifidb/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>');}
+	{
+		$apache_root = $_SERVER['DOCUMENT_ROOT'];
+	#	echo $apache_root.'<BR>'.getcwd();
+		$server_name = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
+		$PATH = $server_name.str_replace($apache_root, '/', getcwd().'/' );
+		echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="http://'.$PATH.'install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
+		die();
+	}else
+	{
+		$sql = "SELECT `id` FROM `$db`.`$users_t`";
+		if(!@mysql_query($sql, $conn))
+		{
+			$apache_root = $_SERVER['DOCUMENT_ROOT'];
+			$cwd = getcwd().'/';
+			if($cwd != '/var/www/install/upgrade/')
+			{
+		#		echo $apache_root.'<BR>'.$cwd;
+		#		echo $_SERVER['SERVER_NAME']."<BR>".$_SERVER['SERVER_ADDR']."<BR>";
+				$server_name = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
+				$PATH = $server_name.str_replace($apache_root, '/', $cwd );
+				echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="http://'.$PATH.'install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
+				die();
+			}
+		}
+	}
 	
 	if(!@isset($_COOKIE['wifidb_client_check']))
 	{
@@ -68,7 +92,7 @@ if(@$GLOBALS['screen_output'] != "CLI")
 		<script type="text/javascript">
 		function checkTimeZone()
 		{
-			var expiredays = <?php echo $GLOBALS['timeout'];?>;
+			var expiredays = 86400;
 			var rightNow = new Date();
 			var date1 = new Date(rightNow.getFullYear(), 0, 1, 0, 0, 0, 0);
 			var date2 = new Date(rightNow.getFullYear(), 6, 1, 0, 0, 0, 0);
@@ -82,25 +106,23 @@ if(@$GLOBALS['screen_output'] != "CLI")
 			{ 
 				var exdate=new Date();
 				exdate.setDate(exdate.getDate()+expiredays);
-				document.cookie="wifidb_client_dst" + "=" +escape("0")+
-				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
-				
-				var expiredays = 3600;
+				document.cookie="wifidb_client_dst=" +escape("0")+
+				((expiredays==null) ? "" : ";expires=" +exdate.toUTCString());
+				var exdate=new Date();
 				exdate.setDate(exdate.getDate()+expiredays);
-				document.cookie="wifidb_client_check" + "=" +escape("1")+
-				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+				document.cookie="wifidb_client_check=" +escape("1")+
+				((expiredays==null) ? "" : ";expires=" +exdate.toUTCString());
 			}
 			else
 			{
 				var exdate=new Date();
 				exdate.setDate(exdate.getDate()+expiredays);
 				document.cookie="wifidb_client_dst" + "=" +escape("1")+
-				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
-				
-				var expiredays = 3600;
+				((expiredays==null) ? "" : ";expires=" +exdate.toUTCString());
+				var exdate=new Date();
 				exdate.setDate(exdate.getDate()+expiredays);
 				document.cookie="wifidb_client_check" + "=" +escape("1")+
-				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+				((expiredays==null) ? "" : ";expires=" +exdate.toUTCString());
 		   }
 		   location.href = '<?php echo $_SERVER['PHP_SELF'];?>';
 		}
@@ -109,13 +131,13 @@ if(@$GLOBALS['screen_output'] != "CLI")
 		<?php
 		die();
 	}
-	if(!@isset($_COOKIE['wifidb_client_timezone']))
+	if(!@$_COOKIE['wifidb_client_timezone'])
 	{
 		?>
 		<script type="text/javascript">
 		function checkTimeZone()
 		{
-			var expiredays = <?php echo $GLOBALS['timeout'];?>;
+			var expiredays = 86400;
 			var rightNow = new Date();
 			var date1 = new Date(rightNow.getFullYear(), 0, 1, 0, 0, 0, 0);
 			var date2 = new Date(rightNow.getFullYear(), 6, 1, 0, 0, 0, 0);
@@ -124,20 +146,19 @@ if(@$GLOBALS['screen_output'] != "CLI")
 			var temp = date2.toGMTString();
 			var date4 = new Date(temp.substring(0, temp.lastIndexOf(" ")-1));
 			var hoursDiffStdTime = (date1 - date3) / (1000 * 60 * 60);
+		//	document.write(hoursDiffStdTime);
 			var hoursDiffDaylightTime = (date2 - date4) / (1000 * 60 * 60);
 			if (hoursDiffDaylightTime == hoursDiffStdTime) 
 			{ 
 				var exdate=new Date();
 				exdate.setDate(exdate.getDate()+expiredays);
-				document.cookie="wifidb_client_timezone" + "=" +escape(hoursDiffStdTime)+
-				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+				document.cookie="wifidb_client_timezone=" +escape(hoursDiffStdTime)+((expiredays==null) ? "" : ";expires=" +exdate.toUTCString());
 			}
 			else
 			{
 				var exdate=new Date();
 				exdate.setDate(exdate.getDate()+expiredays);
-				document.cookie="wifidb_client_timezone" + "=" +escape(hoursDiffStdTime)+
-				((expiredays==null) ? "" : ";expires="+exdate.toGMTString());
+				document.cookie="wifidb_client_timezone=" +escape(hoursDiffStdTime)+((expiredays==null) ? "" : ";expires=" +exdate.toUTCString());
 		   }
 		   location.href = '<?php echo $_SERVER['PHP_SELF'];?>';
 		}
@@ -154,37 +175,41 @@ if(@$GLOBALS['screen_output'] != "CLI")
 	elseif(PHP_OS == 'WINNT'){ $div = '\\';}
 
 	$path = getcwd();
-	
 	$path_exp = explode($div, $path);
 	$path_count = count($path_exp);
 
-	
-#	echo "Path: ".$path."<br>".$div."<br>".$path_count;
-	
-	foreach($path_exp as $key=>$val)
+	include($wifidb_tools.'/daemon/config.inc.php');
+#	echo "Root: ".$root."<br>Path: ".$path."<br>Div: ".$div."<br>Path Count: ".$path_count;
+	if($root == '' or $root == '/')
 	{
-	#	echo $root."<br>";
-		if($val == $root){ $path_key = $key;}
-	#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
+		$half_path = $GLOBALS['wifidb_install'];
 	}
-
-	$half_path = '';
-	$I = 0;
-	if(isset($path_key))
+	else
 	{
-		while($I!=($path_key+1))
+		foreach($path_exp as $key=>$val)
 		{
-	#		echo "I: ".$I."<br>".$path_key;
-			$half_path = $half_path.$path_exp[$I].$div;
-	#		echo "Half Path: ".$half_path."<br>";
-			$I++;
+		#	echo $root."<br>";
+			if($val == $root){ $path_key = $key;}
+		#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
 		}
 
-	}
+		$half_path = '';
+		$I = 0;
+		if(isset($path_key))
+		{
+		#	echo "I: ".$I." - ".$path_key."<br>";
+			while($I!=($path_key+1))
+			{
+				
+				$half_path = $half_path.$path_exp[$I].$div;
+			#	echo "Half Path: ".$half_path."<br>";
+				$I++;
+			}
 
-	include($wifidb_tools.'/daemon/config.inc.php');
-	$full_path = $half_path.'themes';
-#	echo "Default theme: ".$GLOBALS['default_theme']."<br>";
+		}
+	}
+	$full_path = $half_path.'/themes';
+#	echo "Default theme: ".$GLOBALS['default_theme']."<br>Cookie: ".$_COOKIE['wifidb_theme']."<BR>";
 	$theme = (@$_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $GLOBALS['default_theme']);
 	if($theme == ''){$theme = 'wifidb';}
 	$full_path = $full_path."/".$theme."/";
@@ -193,15 +218,20 @@ if(@$GLOBALS['screen_output'] != "CLI")
 }
 
 
+function convert($size)
+{
+	$unit=array('B','KB','MB','GB','TB','PB');
+	return @round($size/pow(1024,($i=floor(log($size,1024)))),6).' '.$unit[$i];
+}
 
 
 
 #-------------------------------------------------------------------------------------#
 #----------------------------------  Get Set values  ---------------------------------#
 #-------------------------------------------------------------------------------------#
-function redirect_page($return = "/wifidb/", $delay = 0, $msg = "no Message", $new_window = 0)
+function redirect_page($return = "", $delay = 0, $msg = "no Message", $new_window = 0)
 {
-	if($return == ''){$return = "/wifidb/";}
+	if($return == ''){$return = $GLOBALS['hosturl'].''.$GLOBALS['root'];}
 	?>
 		<script type="text/javascript">
 			function reload()
@@ -214,7 +244,7 @@ function redirect_page($return = "/wifidb/", $delay = 0, $msg = "no Message", $n
 				elseif($new_window == 2)
 				{ ?>
 					window.open('<?php echo $return;?>');
-					location.href = '/<?php echo $GLOBALS["root"];?>/'; <?php
+					location.href = '<?php echo $GLOBALS['hosturl'].$GLOBALS["root"].'/';?>'; <?php
 				}
 				elseif($new_window == 0)
 				{ ?>
@@ -294,7 +324,6 @@ function dump($value,$level=0)
 }
 
 
-
 #-------- recurse_chown_chgrp[Recureivly chown and chgrp a folder ----------#
 function recurse_chown_chgrp($mypath, $uid, $gid)
 {
@@ -340,7 +369,7 @@ function recurse_chmod($mypath, $mod)
 function check_install_folder()
 {
 	include('config.inc.php');
-	if($GLOBALS['bypass_check']){return 1;}
+	if(@$GLOBALS['bypass_check']){return 1;}
 	if(PHP_OS == 'Linux'){ $div = '/';}
 	if(PHP_OS == 'WINNT'){ $div = '\\';}
 	$path = getcwd();
@@ -374,10 +403,10 @@ function check_install_folder()
 	
 	if(@!$upgrade_wdb)
 	{
-		echo $install_folder_remove;
+		echo @$install_folder_remove;
 	}else
 	{
-		echo $upgrade_wdb;
+		echo @$upgrade_wdb;
 	}
 
 }
@@ -522,7 +551,7 @@ function session_starter()
 {
 	global $token;
 	session_start();
-	if(!$_COOKIE['PHPSESSID'])
+	if(!@$_COOKIE['PHPSESSID'])
 	{
 		$token = md5(uniqid(rand(), true));
 		$_SESSION['token'] = $token;
@@ -593,28 +622,28 @@ function smart_quotes($text="") // Used for SSID Sanatization
 {
 	$pattern = '/"((.)*?)"/i';
 	$strip = array(
-					0=>".",
-					1=>"*",
-					2=>"?",
-					3=>"<",
-					4=>">",
+					0=>".", #
+					1=>"*", #
+					2=>"?", #
+					3=>"<", #
+					4=>">", #
 					5=>'"',
 					6=>"'",
-					7=>"$",
+					7=>"$", #
 					8=>"?>",
 					9=>";",
-					10=>"#",
-					11=>"&",
-					12=>"=",
-					13=>"~",
-					14=>"^",
-					15=>"`",
-					16=>"+",
-					17=>"%",
-					18=>"!",
-					19=>"@",
-					20=>"-",
-					21=>"/",
+					10=>"#", #
+					11=>"&", #
+					12=>"=", #
+					13=>"~", #
+					14=>"^", #
+					15=>"`", #
+					16=>"+", #
+					17=>"%", #
+					18=>"!", #
+					19=>"@", #
+					20=>"-", #
+					21=>"/", #
 					22=>"ÿ",
 					23=>""
 				);
@@ -637,11 +666,11 @@ function smart($text="") // Used for GPS
 					0=>" ",
 					1=>":",
 					2=>"-",
-					3=>".",
-					4=>"N",
-					5=>"E",
-					6=>"W",
-					7=>"S"
+#					3=>".",
+					4=>"N ",
+					5=>"E ",
+					6=>"W ",
+					7=>"S "
 				  );
 	$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
 	$text = str_replace($strip,"",$text);
@@ -697,12 +726,11 @@ function format_size($size, $round = 2)
 
 function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 {
-	$ssids = filter_var($ssid_frm_src_or_pnt_tbl, FILTER_SANITIZE_SPECIAL_CHARS);
+	if($ssid_frm_src_or_pnt_tbl == ''){$ssid_frm_src_or_pnt_tbl="UNNAMED";}
+	$ssids = $ssid_frm_src_or_pnt_tbl;
 	$ssid_safe_full_length = smart_quotes($ssids);
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char long.
 	$ssid_table_safe = $ssid_sized[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
-	if($ssid_table_safe == ''){$ssid_table_safe = "UNNAMED";}
-	if($ssids == ''){$ssids = "UNNAMED";}
 	$A = array(0=> $ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
 	return $A;
 }
@@ -798,27 +826,27 @@ class database
 		switch ($ret_len)
 		{
 			case 6:
-				$retexp[1]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[2]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$ret_lat	=	addslashes($retexp[1]);
+				$ret_long	=	addslashes($retexp[2]);
+				$ret_sats	=	addslashes($retexp[3]);
+				$ret_date	=	addslashes($retexp[4]);
+				$ret_time	=	addslashes($retexp[5]);
 				$order   = array("\r\n", "\n", "\r");
 				$replace = '';
-				$retexp[4] = str_replace($order, $replace, $retexp[4]);
-				$date_exp = explode("-",$retexp[4]);
+				$retdate = str_replace($order, $replace, $ret_date);
+				$date_exp = explode("-",$ret_date);
 				if(strlen($date_exp[0]) <= 2)
 				{
 					$gpsdate = $date_exp[2]."-".$date_exp[0]."-".$date_exp[1];
 				}else
 				{
-					$gpsdate = $retexp[4];
+					$gpsdate = $ret_date;
 				}
 				# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)
 				$gdata = array(
-											"lat"=>$retexp[1],
-											"long"=>$retexp[2],
-											"sats"=>$retexp[3],
+											"lat"=>$ret_lat,
+											"long"=>$ret_long,
+											"sats"=>$ret_sats,
 											"hdp"=>'0.0',
 											"alt"=>'0.0',
 											"geo"=>'-0.0',
@@ -826,20 +854,20 @@ class database
 											"mph"=>'0.0',
 											"track"=>'0.0',
 											"date"=>$gpsdate,
-											"time"=>$retexp[5]
+											"time"=>$ret_time
 											);
 				$gpscount++;
 				break;
 			case 12:
-				$retexp[1]	=	filter_var($retexp[1], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[2]	=	filter_var($retexp[2], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[3]	=	filter_var($retexp[3], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[4]	=	filter_var($retexp[4], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[5]	=	filter_var($retexp[5], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[6]	=	filter_var($retexp[6], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[7]	=	filter_var($retexp[7], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[8]	=	filter_var($retexp[8], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
-				$retexp[9]	=	filter_var($retexp[9], FILTER_SANITIZE_SPECIAL_CHARS, FILTER_FLAG_STRIP_LOW);
+				$ret_lat	=	addslashes($retexp[1]);
+				$ret_long	=	addslashes($retexp[2]);
+				$ret_sats	=	addslashes($retexp[3]);
+				$ret_hdp	=	addslashes($retexp[4]);
+				$ret_alt	=	addslashes($retexp[5]);
+				$ret_geo	=	addslashes($retexp[6]);
+				$ret_kmh	=	addslashes($retexp[7]);
+				$ret_mph	=	addslashes($retexp[8]);
+				$ret_track	=	addslashes($retexp[9]);
 				$order   = array("\r\n", "\n", "\r");
 				$replace = '';
 				$retexp[10] = str_replace($order, $replace, $retexp[10]);
@@ -854,19 +882,20 @@ class database
 				}
 				# GpsID|Latitude|Longitude|NumOfSatalites|HorDilPitch|Alt|Geo|Speed(km/h)|Speed(MPH)|TrackAngle|Date(UTC y-m-d)|Time(UTC h:m:s)
 				$gdata = array(
-											"lat"=>$retexp[1],
-											"long"=>$retexp[2],
-											"sats"=>$retexp[3],
-											"hdp"=>$retexp[4],
-											"alt"=>$retexp[5],
-											"geo"=>$retexp[6],
-											"kmh"=>$retexp[7],
-											"mph"=>$retexp[8],
-											"track"=>$retexp[9],
+											"lat"=>$ret_lat,
+											"long"=>$ret_long,
+											"sats"=>$ret_sats,
+											"hdp"=>$ret_hdp,
+											"alt"=>$ret_alt,
+											"geo"=>$ret_geo,
+											"kmh"=>$ret_kmh,
+											"mph"=>$ret_mph,
+											"track"=>$ret_track,
 											"date"=>$gpsdate,
 											"time"=>$retexp[11]
 											);
 				$gpscount++;
+			#	var_dump($gdata);
 				break;
 			default :
 				$gdata = array(
@@ -938,6 +967,249 @@ class database
 		}
 	}
 	
+	
+	function convert_vs1($source, $out)
+	{
+		//Access point and GPS Data Array
+		$apdata=array();
+		global $gpsdata;
+		
+		$dir = $GLOBALS['wifidb_tools'].'/vs1/';
+		// dfine time that the script started
+		$start = date("H:i:s");
+		// counters
+		$c=0;
+		$cc=0;
+		$n=0;
+		$nn=0;
+		$N=0;
+		$complete=0;
+		//Break out file into an Array
+		$return = file($source);
+		// create file name of VS1 file from the name of the Txt file, 
+		$src=explode("/",$source);
+		$f_max = count($src);
+		$file_src = explode(".",$src[$f_max-1]);
+		$file_ext = $dir.$file_src[0].'.vs1';
+
+		$filename = $file_ext;
+			if($GLOBALS["debug"] == 1 ){echo $file_ext."\n".$filename."\n";}
+
+		// define initial write and appends
+		$filewrite = fopen($filename, "w");
+		$fileappend = fopen($filename, "a");
+
+
+		//create interval for progress
+		$line = count($return);
+		$stat_c = $line/97;
+		if ($GLOBALS["debug"] ==1){echo $stat_c."\n";}
+		if ($GLOBALS["debug"] ==1){echo $line."\n";}
+
+		// Start the main loop
+		foreach($return as $ret)
+		{
+			$c++;
+			$cc++;
+			if ($ret[0] == "#"){continue;}
+			$wifi = explode("|",$ret);
+			$ret_count = count($wifi);
+		if ($ret_count == 17)// test to see if the data is in correct format
+		{	
+			if ($cc >= $stat_c)
+			{
+				$cc=0;
+				$complete++;
+				echo $complete."% - ";
+				if ($complete == 100 ){ echo "\n\n";}
+			}
+			//format date and time
+			$datetime=explode(" ",$wifi[13]);
+			$date=$datetime[0];
+			$time=$datetime[1];
+			
+			// This is a temp array of data to be tested against the GPS array
+			$gpsdata_t=array(
+								"lat"=>$wifi[8],
+								"long"=>$wifi[9],
+								"sats"=>"0",
+								"date"=>$date,
+								"time"=>$time
+								);
+			$lat = smart($gpsdata_t['lat']);
+			$long = smart($gpsdata_t['long']);
+			$time = smart($gpsdata_t['time']);
+			$date = smart($gpsdata_t['date']);
+			$gps_test = $lat."".$long."".$date."".$time;
+				
+			// Create the Security Type number for the respective Access point
+			if ($wifi[4]=="Open"&&$wifi[5]=="None"){$sectype="1";}
+			if ($wifi[4]=="Open"&&$wifi[5]=="WEP"){$sectype="2";}
+			if ($wifi[4]=="WPA-Personal" or $wifi[4] =="WPA2-Personal"){$sectype="3";}
+
+			if ($GLOBALS["debug"] == 1 )
+			{
+				echo "\n\n+-+-+-+-+-+-\n".$gpsdata_t["lat"]."+-\n".$gpsdata_t["long"]."+-\n".$gpsdata_t["sats"]."+-\n".$gpsdata_t["date"]."+-\n".$gpsdata_t["time"]."+-\n";	
+			}
+			
+			if (is_null($gpsdata))
+			{
+				$n++;
+				$N++;
+				if ($GLOBALS["debug"] ==1)
+				{echo "\$n = ".$n."\n\$N = ".$N."\n";}
+				
+				$sig=$n.",".$wifi[3];
+				$gpsdata[$n]=array(
+									"id"=>$n,
+									"lat"=>$wifi[8],
+									"long"=>$wifi[9],
+									"sats"=>'0',
+									"date"=>$date,
+									"time"=>$time
+								);
+									
+				$apdata[$N]=array(
+									"ssid"=>$wifi[0],
+									"mac"=>$wifi[1],
+									"man"=>$wifi[2],
+									"auth"=>$wifi[4],
+									"encry"=>$wifi[5],
+									"sectype"=>$sectype,
+									"radio"=>$wifi[6],
+									"chan"=>$wifi[7],
+									"btx"=>$wifi[10],
+									"otx"=>$wifi[11],
+									"nt"=>$wifi[14],
+									"label"=>$wifi[15],
+									"sig"=>$sig
+								);
+				if ($GLOBALS["debug"] == 1 )
+				{
+					echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."+_\n".$gpsdata[$n]["long"]."+_\n".$gpsdata[$n]["sats"]."+_\n".$gpsdata[$n]["date"]."+_\n".$gpsdata[$n]["time"]."+_\n";	
+					echo "Access Point Number: ".$N."\n";
+					echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."=-\n".$apdata[$N]["mac"]."=-\n".$apdata[$N]["auth"]."=-\n".$apdata[$N]["encry"]."=-\n".$apdata[$N]["sectype"]."=-\n".$apdata[$N]["radio"]."=-\n".$apdata[$N]["chan"]."=-\n".$apdata[$N]["btx"]."=-\n".$apdata[$N]["otx"]."=-\n".$apdata[$N]["nt"]."=-\n".$apdata[$N]["label"]."=-\n".$apdata[$N]["sig"]."\n";
+				}
+			}
+			else
+			{
+#		var_dump($gpsdata);
+				
+				$gpschk =& database::check_gps_array($gpsdata, $gps_test);
+				if ($gpschk[0]==0)
+				{
+					if ($GLOBALS["debug"] ==1)
+					{echo "\$n = ".$n."\n\$N = ".$N."\n";}
+					$n++;
+					$N++;
+					$sig=$n.",".$wifi[3];
+					$gpsdata[$n]=array(
+										"id"=>$n,
+										"lat"=>$wifi[8],
+										"long"=>$wifi[9],
+										"sats"=>'0',
+										"date"=>$date,
+										"time"=>$time
+										);
+
+					$apdata[$N]=array(
+										"ssid"=>$wifi[0],
+										"mac"=>$wifi[1],
+										"man"=>$wifi[2],
+										"auth"=>$wifi[4],
+										"encry"=>$wifi[5],
+										"sectype"=>$sectype,
+										"radio"=>$wifi[6],
+										"chan"=>$wifi[7],
+										"btx"=>$wifi[10],
+										"otx"=>$wifi[11],
+										"nt"=>$wifi[14],
+										"label"=>$wifi[15],
+										"sig"=>$sig
+										);
+					if ($GLOBALS["debug"] == 1 )
+					{
+						echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."  +_\n".$gpsdata[$n]["long"]."  +_\n".$gpsdata[$n]["sats"]."  +_\n".$gpsdata[$n]["date"]."  +_\n".$gpsdata[$n]["time"]."  +_\n";	
+						echo "Access Point Number: ".$N."\n";
+						echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."  =-\n".$apdata[$N]["mac"]."  =-\n".$apdata[$N]["auth"]."  =-\n".$apdata[$N]["encry"]."  =-\n".$apdata[$N]["sectype"]."  =-\n".$apdata[$N]["radio"]."  =-\n".$apdata[$N]["chan"]."  =-\n".$apdata[$N]["btx"]."  =-\n".$apdata[$N]["otx"]."  =-\n".$apdata[$N]["nt"]."  =-\n".$apdata[$N]["label"]."  =-\n".$apdata[$N]["sig"]."\n";
+					}
+				}elseif($gpschk===1)
+				{
+					if ($GLOBALS["debug"] ==1)
+					{echo "\$n = ".$n."\n\$N = ".$N."\n";}
+					$N++;
+					$sig=$n.",".$wifi[3];
+					if ($GLOBALS["debug"] ==1 ){echo "\nduplicate GPS data, not entered into array\n";}
+					$apdata[$N]=array("ssid"=>$wifi[0],
+									"mac"=>$wifi[1],
+									"man"=>$wifi[2],
+									"auth"=>$wifi[4],
+									"encry"=>$wifi[5],
+									"sectype"=>$sectype,
+									"radio"=>$wifi[6],
+									"chan"=>$wifi[7],
+									"btx"=>$wifi[10],
+									"otx"=>$wifi[11],
+									"nt"=>$wifi[14],
+									"label"=>$wifi[15],
+									"sig"=>$sig);
+					if ($GLOBALS["debug"] == 1 )
+					{
+						echo "Access Point Number: ".$N."\n";
+						echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."=-\n".$apdata[$N]["mac"]."=-\n".$apdata[$N]["auth"]."=-\n".$apdata[$N]["encry"]."=-\n".$apdata[$N]["sectype"]."=-\n".$apdata[$N]["radio"]."=-\n".$apdata[$N]["chan"]."=-\n".$apdata[$N]["btx"]."=-\n".$apdata[$N]["otx"]."=-\n".$apdata[$N]["nt"]."=-\n".$apdata[$N]["label"]."=-\n".$apdata[$N]["sig"]."\n";
+					}
+
+				}
+			}
+		}else
+		{
+			echo "\nLine: ".$c." - Wrong data type, dropping row\n";
+		}
+		unset($gpsdata_t[0]);
+		}
+		if ($out == "file" or $out == "File" or $out=="FILE")
+		{
+			$n = 1;
+			# Dump GPS data to VS1 File
+			$h1 = "# Vistumbler VS1 - Detailed Export Version 1.0\r\n# Created By: RanInt WiFi DB Alpha \r\n# -------------------------------------------------\r\n# GpsID|Latitude|Longitude|NumOfSatalites|Date|Time\r\n# -------------------------------------------------\r\n";
+			fwrite($fileappend, $h1);
+			foreach( $gpsdata as $gps )
+			{
+			//	GPS Convertion :
+				$lat  =& database::convert_dd_dm($gps['lat']);
+				$long =& database::convert_dd_dm($gps['long']);
+			//	END GPS convert
+
+				if ($GLOBALS["debug"] ==1 ){echo "Lat : ".$gps['lat']." - Long : ".$gps['long']."\n";}
+				
+				$gpsd = $n."|".$lat."|".$long."|".$gps["sats"]."|".$gps["date"]."|".$gps["time"]."\r\n";
+				if($GLOBALS["debug"] == 1){ echo $gpsd;}
+				fwrite($fileappend, $gpsd);
+				$n++;
+			}
+			$n=1;
+			
+			$ap_head = "# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GpsID,SIGNAL\r\n# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n";
+			fwrite($fileappend, $ap_head);
+			foreach($apdata as $ap)
+			{
+				$apd = $ap["ssid"]."|".$ap["mac"]."|".$ap["man"]."|".$ap["auth"]."|".$ap["encry"]."|".$ap["sectype"]."|".$ap["radio"]."|".$ap["chan"]."|".$ap["btx"]."|".$ap["otx"]."|".$ap["nt"]."|".$ap["label"]."|".$ap["sig"]."\r\n";
+				if($GLOBALS["debug"] == 1){echo $apd;}
+				fwrite($fileappend, $apd);
+				$n++;
+
+			}
+			$end = date("H:i:s");
+			$GPSS=count($gpsdata);
+			$APS=count($apdata);
+			echo "\n\n------------------------------\nTotal Number of Access Points : ".$APS."\nTotal Number of GPS Points : ".$GPSS."\n------------------------------\nDONE!\nStart Time : ".$start."\nStop Time : ".$end."\n-------";
+			return $filename;
+		}
+	}
+	
+	
+	
+	
 	#========================================================================================================================#
 	#													VS1 File import													     #
 	#========================================================================================================================#
@@ -974,9 +1246,7 @@ class database
 		$text_files_support_msg			= "Text Files are not longer supported, either re-export it from Vistumbler or use the converter.exe";
 		$insert_up_gps_msg				= "Error inserting Updated GPS point";
 		$removed_old_gps_msg			= "Error removing old GPS point";
-		
-		
-		
+
 		
 		// define initial write and appends
 		$filename = ("mass_import_errors.log");
@@ -1113,7 +1383,6 @@ class database
 					$SETFLAGTEST = TRUE;
 					$wifi = explode("|",$ret, 13);
 					if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
-					mysql_select_db($db,$conn);
 					$dbsize = mysql_query("SELECT `id` FROM `$db`.`$wtable` ORDER BY `id` DESC LIMIT 1", $GLOBALS['conn']);
 					$size1 = mysql_fetch_array($dbsize);
 					$size = $size1['id']+0;
@@ -1126,11 +1395,13 @@ class database
 					if($wifi[6] == ''){$wifi[6] = "u";}
 					if($wifi[7] == ''){$wifi[7] = "0";}
 					// sanitize wifi data to be used in table name
+				#	list($ssid_S ) = make_ssid($wifi[0]);
 					$ssids = filter_var($wifi[0], FILTER_SANITIZE_SPECIAL_CHARS);
 					$ssidss = smart_quotes($ssids);
 					$ssidsss = str_split($ssidss,25); //split SSID in two at is 25th char.
 					$ssid_S = $ssidsss[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
 										  //the rest of the info will suffice for unique table names
+					
 					if($out=="CLI")
 					{
 						$this_of_this = $FILENUM." / ".$count1;
@@ -1201,9 +1472,8 @@ class database
 					else
 						{$radios = "U";}
 					
-					$conn1 = mysql_connect($host, $db_user, $db_pwd);
-					mysql_select_db($db,$conn1);
-					$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssidss' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios' LIMIT 1", $conn1) or die(mysql_error($conn1));
+					$conn = mysql_connect($host, $db_user, $db_pwd);
+					$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssidss' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios' LIMIT 1", $conn) or die(mysql_error($conn));
 					$rows = mysql_num_rows($result);
 					$newArray = mysql_fetch_array($result);
 					$APid = $newArray['id'];
@@ -1231,7 +1501,6 @@ class database
 							$sectype = "2";
 						}
 					}
-					mysql_close($conn1);
 					$table_ptb = $ssid_pt_S.'-'.$mac_pt.'-'.$sectype_pt.'-'.$radio_pt.'-'.$chan_pt;
 					//create table name to select from, insert into, or create
 					$table = $ssid_S.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
@@ -1944,7 +2213,6 @@ class database
 				if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);die();}
 			}
 		}
-		mysql_select_db($db,$conn);
 		
 		if(is_array($user_aps))
 		{
@@ -2133,7 +2401,7 @@ class database
 	#													GPS check, make sure there are no duplicates						 #
 	#========================================================================================================================#
 
-	function &check_gps_array($gpsarray, $test, $table)
+	function &check_gps_array($gpsarray, $test, $table='')
 	{
 		$start = microtime(true);
 		include('config.inc.php');
@@ -2152,7 +2420,7 @@ class database
 				$date = smart($gps['date']);
 				$gps_t 	= $lat."".$long."".$date."".$time;
 				$gps_t = $gps_t+0;
-				$test	 = $test+0;
+				$test = $test+0;
 				
 				if ($gps_t===$test)
 				{
@@ -2168,16 +2436,24 @@ class database
 					$time_a = $gps['time'];
 					$date_a = $gps['date'];
 					
-					$sql11 = "SELECT * FROM `$db_st`.`$table` WHERE `lat` like '$lat_a' AND `long` like '$long_a' AND `date` like '$date_a' AND `time` like '$time_a' LIMIT 1";
-					$gpresult = mysql_query($sql11, $conn1);
-					$gpsdbarray = mysql_fetch_array($gpresult);
+					if($table != '')
+					{
+						$sql11 = "SELECT * FROM `$db_st`.`$table` WHERE `lat` like '$lat_a' AND `long` like '$long_a' AND `date` like '$date_a' AND `time` like '$time_a' LIMIT 1";
+						$gpresult = mysql_query($sql11, $conn1);
+						$gpsdbarray = mysql_fetch_array($gpresult);
 					
-					$id_ = $gpsdbarray['id'];
-#					echo $sql11."\n".$id_."\n";
-					
-					$return = array(0=>1,1=>$id_);
-					return $return;
-					break;
+						$id_ = $gpsdbarray['id'];
+#						echo $sql11."\n".$id_."\n";
+						
+						$return = array(0=>1,1=>$id_);
+						return $return;
+						break;
+					}else
+					{
+						$return = array(0=>1,1=>0);
+						return $return;
+						break;
+					}
 				}else
 				{
 					if ($GLOBALS["debug"]  == 1){
@@ -2233,9 +2509,8 @@ class database
 			{$radio = "802.11n";}
 		else
 			{$radio = "802.11u";}
-		$ssid_ptb_ = $newArray["ssid"];
-		$ssids_ptb = str_split($newArray['ssid'],25);
-		$ssid_ptb = smart_quotes($ssids_ptb[0]);
+		
+		list($ssid_ptb) = make_ssid($newArray["ssid"]);
 		$table		=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
 		$table_gps	=	$table.$gps_ext;
 		?>
@@ -2258,15 +2533,15 @@ class database
 		<TABLE align=center WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<TABLE align=center WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<COL WIDTH=112><COL WIDTH=439>
-		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>MAC Address</P></TD><TD WIDTH=439><P><?php echo $mac_full;?></P></TD></TR>
-		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Manufacture</P></TD><TD WIDTH=439><P><?php echo $manuf;?></P></TD></TR>
-		<TR VALIGN=TOP><TD class="style4" WIDTH=112 HEIGHT=26><P>Authentication</P></TD><TD WIDTH=439><P><?php echo $newArray['auth'];?></P></TD></TR>
-		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Encryption Type</P></TD><TD WIDTH=439><P><?php echo $newArray['encry'];?></P></TD></TR>
-		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Radio Type</P></TD><TD WIDTH=439><P><?php echo $radio;?></P></TD></TR>
-		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Channel #</P></TD><TD WIDTH=439><P><?php echo $newArray['chan'];?></P></TD></TR>
+		<TR><TD class="style4" WIDTH=112><P>MAC Address</P></TD><TD class="light" WIDTH=439><P><?php echo $mac_full;?></P></TD></TR>
+		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Manufacture</P></TD><TD class="light" WIDTH=439><P><?php echo $manuf;?></P></TD></TR>
+		<TR VALIGN=TOP><TD class="style4" WIDTH=112 HEIGHT=26><P>Authentication</P></TD><TD class="light" WIDTH=439><P><?php echo $newArray['auth'];?></P></TD></TR>
+		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Encryption Type</P></TD><TD class="light" WIDTH=439><P><?php echo $newArray['encry'];?></P></TD></TR>
+		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Radio Type</P></TD><TD class="light" WIDTH=439><P><?php echo $radio;?></P></TD></TR>
+		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Channel #</P></TD><TD class="light" WIDTH=439><P><?php echo $newArray['chan'];?></P></TD></TR>
 		<?php
 		?>
-		<tr><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>&token=<?php echo $_SESSION['token'];?>">Export this AP to KML</a></td></tr>
+		<tr  class="style4"><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>&token=<?php echo $_SESSION['token'];?>">Export this AP to KML</a></td></tr>
 		</table>
 		<br>
 		<TABLE align=center  WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0 id="gps">
@@ -2275,8 +2550,10 @@ class database
 		<?php
 		$start1 = microtime(true);
 		$result = mysql_query("SELECT * FROM `$db_st`.`$table` ORDER BY `id`", $conn) or die(mysql_error($conn));
+		$flip = 0;
 		while ($field = mysql_fetch_array($result))
 		{
+			if($flip){$class="light";$flip=0;}else{$class="dark";$flip=0;}
 			$row = $field["id"];
 			$row_id = $row.','.$ID;
 			$sig_exp = explode("-", $field["sig"]);
@@ -2313,7 +2590,7 @@ class database
 			$time_last = $gps_table_last["time"];
 			$lu = $date_last." ".$time_last;
 			?>
-				<tr><td align="center"><?php echo $row; ?></td><td>
+				<tr class="<?php echo $class; ?>"><td align="center"><?php echo $row; ?></td><td>
 				<?php echo $field["btx"]; ?></td><td>
 				<?php echo $field["otx"]; ?></td><td>
 				<?php echo $fa; ?></td><td>
@@ -2332,8 +2609,8 @@ class database
 				<tbody id="Row<?php echo $tablerowid;?>" style="display:none">
 				<tr class="style4"><th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
 				<?php
-				$tablerowid++;
 				$signals = explode('-',$field['sig']);
+				$flip = 0;
 				foreach($signals as $signal)
 				{
 					$sig_exp = explode(',',$signal);
@@ -2344,9 +2621,9 @@ class database
 				#	$rows = mysql_num_rows($result1);
 					while ($field = mysql_fetch_array($result1)) 
 					{
-				#		if($rows > 1){$rows--; continue;}
+						if($flip){$class="light";$flip=0;}else{$class="dark";$flip=0;}
 						?>
-						<tr><td align="center">
+						<tr class="<?php echo $class; ?>"><td align="center">
 						<?php echo $field["id"]; ?></td><td>
 						<?php echo $field["lat"]; ?></td><td>
 						<?php echo $field["long"]; ?></td><td align="center">
@@ -2358,9 +2635,12 @@ class database
 					$end2 = microtime(true);
 				}
 				?>
+				<tr class="style4"><td onclick="expandcontract('Row<?php echo $tablerowid;?>','ClickIcon<?php echo $tablerowid;?>')" id="ClickIcon<?php echo $tablerowid;?>" style="cursor: pointer; cursor: hand;">-</td><td colspan="5"></td></tr>
 				</table>
+				
 				</td></tr>
 				<?php
+				$tablerowid++;
 		}
 		$end1 = microtime(true);
 		?>
@@ -2583,9 +2863,11 @@ class database
 				}
 			}
 		}
+		$flip = 0;
 		foreach($aps as $ap)
 		{
 			if($ap['flag'] == "1"){continue;}
+			if($flip){$style = "dark";$flip=0;}else{$style="light";$flip=1;}
 			$apid = $ap['apid'];
 			$row = $ap['row'];
 			
@@ -2610,7 +2892,7 @@ class database
 				else
 				{$radio="Unknown Radio";}
 				?>
-				<tr><td align="center">
+				<tr class="<?php echo $style;?>"><td align="center">
 				<?php
 				echo $apid;
 				?>
@@ -2691,16 +2973,16 @@ class database
 		<?php
 		echo '<a class="links" href="../opt/export.php?func=exp_user_list&row='.$user_array["id"].'&token='.$_SESSION['token'].'">Export To KML File</a>';
 		echo '<table border="1" align="center"><tr class="style4"><th>New/Update</th><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
+		$flip = 0;
 		foreach($aps as $ap)
 		{
 			#$pagerow++;
 			$ap_exp = explode("," , $ap);
 			if($ap_exp[0]==0){$flag = "N";}else{$flag = "U";}
-			
+			if($flip){$style = "dark";$flip=0;}else{$style="light";$flip=1;}
 			$ap_and_row = explode(":",$ap_exp[1]);
 			$apid = $ap_and_row[0];
 			$row = $ap_and_row[1];
-			
 			$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$apid'";
 			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 			while ($ap_array = mysql_fetch_array($result))
@@ -2711,9 +2993,13 @@ class database
 				$radio = $ap_array['radio'];
 				$auth = $ap_array['auth'];
 				$encry = $ap_array['encry'];
-			    echo '<tr><td align="center">'.$flag.'</td><td align="center">'.$apid.'</td><td align="center">'.$row.'</td><td align="center"><a class="links" href="fetch.php?id='.$apid.'&token='.$_SESSION['token'].'">'.$ssid.'</a></td>';
-			    echo '<td align="center">'.$mac.'</td>';
-			    echo '<td align="center">'.$auth.'</td>';
+			    echo '<tr class="'.$style.'">
+				<td align="center">'.$flag.'</td>
+				<td align="center">'.$apid.'</td>
+				<td align="center">'.$row.'</td>
+				<td align="center"><a class="links" href="fetch.php?id='.$apid.'&token='.$_SESSION['token'].'">'.$ssid.'</a></td>
+			    <td align="center">'.$mac.'</td>
+			    <td align="center">'.$auth.'</td>';
 				if($radio=="a")
 				{$radio="802.11a";}
 				elseif($radio=="b")
@@ -2724,9 +3010,9 @@ class database
 				{$radio="802.11n";}
 				else
 				{$radio="Unknown Radio";}
-				echo '<td align="center">'.$encry.'</td>';
-				echo '<td align="center">'.$radio.'</td>';
-				echo '<td align="center">'.$chan.'</td></tr>';
+				echo '<td align="center">'.$encry.'</td>
+				<td align="center">'.$radio.'</td>
+				<td align="center">'.$chan.'</td></tr>';
 			}
 		}
 		echo "</table><br></p>";
@@ -2744,7 +3030,7 @@ class database
 	#													Export to Google KML File											 #
 	#========================================================================================================================#
 
-	function exp_kml($export = "", $user = "", $row = 0)
+	function exp_kml($export = "", $user = "", $row = 0, $named=0)
 	{
 		include('config.inc.php');
 		include('manufactures.inc.php');
@@ -4849,7 +5135,12 @@ class daemon
 			unset($long);
 			unset($gps_table_first["lat"]);
 			unset($gps_table_first["long"]);
-			if($verbose){echo":";}
+			if($verbose)
+			{
+				echo chr(27)."[H".chr(27)."[2J";
+				$memUse = convert(memory_get_usage());
+				echo "ID: $id \nMemory Usage: $memUse";
+			}
 		}
 		if($verbose){echo"\n";}
 		$fdata  =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"$KML_SOURCE_URL\"><!--exp_all_db_kml-->\r\n		<Document>\r\n			<name>RanInt WifiDB KML</name>\r\n";
@@ -5161,7 +5452,8 @@ class daemon
 	function getdaemonstats()
 	{
 		$return =0;
-		$WFDBD_PID = $GLOBALS['pid_file_loc'].'imp_expd.pid';
+		$WFDBD_PID = '/var/run/wifidbd.pid';
+	#	$WFDBD_PID = $GLOBALS['pid_file_loc'].'wifidbd.pid';
 	#	echo $WFDBD_PID."<br>";
 		$os = PHP_OS;
 		if ( $os[0] == 'L')
@@ -5418,29 +5710,32 @@ class daemon
 #########################################
 	function start($d)
 	{
+		if($screen_out == 'CLI'){$ender = '\r\n';}else{$ender = '<br>';}
 		require('config.inc.php');
 		require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
 		if (!file_exists("/var/log/wifidb/"))
 		{
-			mkdir($GLOBALS['daemon_log_folder']);
+			echo "Failed, no wifidb folder in /var/log/";
+			return 0;
+		#	mkdir($GLOBALS['daemon_log_folder']);
 		}
 		switch($d)
 		{
 			case "imp_exp":
 				$console_log = $GLOBALS['daemon_log_folder'].'imp_expd.log';
-			#	echo "Starting WiFiDB 'Import/Export Daemon'..\n";
+				echo "Starting WiFiDB 'Import/Export Daemon'..".$ender;
 				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."imp_expd.php";
 				if (PHP_OS == "WINNT")
 				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
 				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
 				
-			#	echo $cmd."\n";
+				echo $cmd.$ender;
 				if(file_exists($daemon_script))
 				{
-					$start = popen($cmd, 'w');
-					if($start)
+					echo "Start!".$ender;
+					if(popen($cmd, 'r'))
 					{
-					#	echo "WiFiDB 'Import/Export Daemon' Started..\n";
+						echo "WiFiDB 'Import/Export Daemon' Started...".$ender;
 						return 1;
 					}else
 					{

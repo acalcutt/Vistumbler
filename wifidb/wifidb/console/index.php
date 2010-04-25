@@ -2,6 +2,8 @@
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
 $func			= '';
+$root = $GLOBALS['root'];
+$hosturl = $GLOBALS['hosturl'];
 if( !isset($_GET['func']) ) { $_GET['func'] = ""; }
 $func = strip_tags(addslashes($_GET['func']));
 
@@ -10,7 +12,7 @@ switch($func)
 	case 'refresh':
 		if( (!isset($_POST['console_refresh'])) or $_POST['console_refresh']=='' ) { $_POST['console_refresh'] = "15"; }
 		setcookie( 'console_refresh' , strip_tags(addslashes($_POST['console_refresh'])) , (time()+$timeout), "/".$root."/console/" ); // 86400 = 1 day
-		header('Location: /'.$root.'/console/');
+		header('Location: '.$hosturl.$root.'/console/');
 	break;
 	
 	case 'console_scroll':
@@ -32,11 +34,11 @@ switch($func)
 	break;
 }
 
-$refresh = ($_COOKIE['console_refresh']!='' ? $_COOKIE['console_refresh'] : $GLOBALS['console_refresh']);
-$scroll = ($_COOKIE['console_scroll']!='' ? $_COOKIE['console_scroll'] : $GLOBALS['console_scroll']);
-$last5 = ($_COOKIE['console_last5']!='' ? $_COOKIE['console_last5'] : $GLOBALS['console_last5']);
-$lines = ($_COOKIE['console_lines']!='' ? $_COOKIE['console_lines'] : $GLOBALS['console_lines']);
-$theme = ($_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $GLOBALS['default_theme']);
+$refresh = (@$_COOKIE['console_refresh']!='' ? @$_COOKIE['console_refresh'] : $GLOBALS['console_refresh']);
+$scroll = (@$_COOKIE['console_scroll']!='' ? @$_COOKIE['console_scroll'] : $GLOBALS['console_scroll']);
+$last5 = (@$_COOKIE['console_last5']!='' ? @$_COOKIE['console_last5'] : $GLOBALS['console_last5']);
+$lines = (@$_COOKIE['console_lines']!='' ? @$_COOKIE['console_lines'] : $GLOBALS['console_lines']);
+$theme = (@$_COOKIE['wifidb_theme']!='' ? @$_COOKIE['wifidb_theme'] : $GLOBALS['default_theme']);
 
 if($refresh < 5 && !$last5)
 {

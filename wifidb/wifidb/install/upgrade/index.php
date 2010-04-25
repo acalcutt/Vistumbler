@@ -36,15 +36,15 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 
 <form name="WiFiDB_patch" action="patch.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Upgrade</h2>
-  <h3>Upgrade DB for 0.16 Build 1 / 2 - 2.1 / 3 - 3.1 R2 <b>--></b> 0.16 Build 4</h3>
+  <h3>Upgrade DB for 0.16 Build 1 / 2 - 2.1 / 3 - 3.1 R2 / 4 and before <b>--></b> 0.20 Build 1</h3>
   <h4>Please Read <a class="links" target="_blank" href="notes.html">these notes</a> before installing the Wireless Database</h4>
 <?php
 
-if(function_exists('gd_info'))
-{$gd = gd_info();	echo '<table><tr class="style4"><td><b><font color=#00ff00>GD Version: '.$gd['GD Version'].', is installed</font></b></td></tr></table>';}
+if(@function_exists('gd_info'))
+{$gd = @gd_info();	echo '<table><tr class="style4"><td><b><font color=#00ff00>GD Version: '.$gd['GD Version'].', is installed</font></b></td></tr></table>';}
 else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have GD or GD2 installed, please install this or you will not beable to use the graphing feature!</font></b></td></tr></table>';}
 
-if(class_exists(ZipArchive))
+if(@class_exists('ZipArchive'))
 {echo '<table><tr class="style4"><td><b><font color=#00ff00>ZipArchive class is installed</font></b></td></tr></table>';}
 else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have the ZipArchive class installed, please install this or you will not beable to use the Export Feature or the Daemon Generated KML.</font></b></td></tr></table>';}
 ?>
@@ -57,15 +57,20 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
     <td>SQL root user Password</td><td>........................................</td>
     <td><input TYPE=PASSWORD name="root_sql_pwd"></td></tr>
   <tr>
-    <td>
-      <p>MySQL Host <font size="1">(Default `localhost` )</font></td><td>........................................</td>
+    <td>MySQL Host <font size="1">(Default `localhost` )</font></td><td>........................................</td>
     <td><input name="sqlhost"></td></tr>
   <tr>
     <td>WiFiDB SQL Username</td><td>........................................</td>
     <td><input name="sqlu"></td></tr>
   <tr>
     <td>WiFiDB SQL Password</td><td>........................................</td>
-    <td><input name="sqlp"></td></tr>
+    <td><input type=password name="sqlp"></td></tr>
+  <tr>
+    <td>Administrator User Password</td><td>........................................</td>
+    <td><input type=password name="wdb_admn_pass"></td></tr>
+  <tr>
+    <td>Administrator User E-Mail</td><td>........................................</td>
+    <td><input name="wdb_admn_emailadrs"></td></tr>
   <tr>
     <td>WiFi DB name <font size="1">(Default `wifi` )</font></td><td>........................................</td>
     <td><input name="wifi"></td></tr>
@@ -79,15 +84,18 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 		<select name="theme">
 		<OPTION selected VALUE=""> Select a Theme.
 		<?php
+		$default_theme = $GLOBALS['default_theme'];
 		$themes = "../../themes";
 		$dh = opendir($themes) or die("couldn't open directory");
 		while (!(($file = readdir($dh)) == false))
 		{
 			if ((is_dir($themes."/".$file))) 
 			{
+				$checked = '';
 				if($file=="."){continue;}
 				if($file==".."){continue;}
 				if($file==".svn"){continue;}
+				if($file === $default_theme){$checked = 'selected';}
 				echo '<OPTION VALUE="'.$file.'"> '.$file;
 			}
 		}
@@ -98,21 +106,21 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 <tr><th colspan="3" class="style4">WiFiDB Daemon Settings</th></tr>
   <tr>
     <td>Use Daemon?</td><td>........................................</td>
-    <td><input type="checkbox" name="daemon" value="TRUE" onchange="endisable()"></td>
+    <td><input type="checkbox" name="daemon" value="TRUE" <?php if($GLOBALS['daemon'] === 1){echo "checked";} ?> onchange="endisable()"></td>
 </TR>
   <tr>
     <td>Tools Directory (if you are using the daemon)</td><td>........................................</td>
-    <td><input name="toolsdir"></td>
+    <td><input <?php if($GLOBALS['daemon'] === 1){echo 'value="'.$GLOBALS['wifidb_tools'].'"';} ?> name="toolsdir"></td>
 </TR>
 </TR>
   <tr>
     <td>HTTPd User</td><td>........................................</td>
-    <td><input name="httpduser"></td>
+    <td><input <?php if($GLOBALS['daemon'] === 1){echo 'value="'.$GLOBALS['WiFiDB_LNZ_User'].'"';} ?> name="httpduser"></td>
 </TR>
 </TR>
   <tr>
     <td>HTTPd Group</td><td>........................................</td>
-    <td><input name="httpdgrp"></td>
+    <td><input <?php if($GLOBALS['daemon'] === 1){echo 'value="'.$GLOBALS['apache_grp'].'"';} ?> name="httpdgrp"></td>
 </TR>
 <TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
 <INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
@@ -123,29 +131,27 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 </p>
 
 <?php
-$timezn = 'Etc/GMT+5';
-date_default_timezone_set($timezn);
-
-
-	$filename = $_SERVER['SCRIPT_FILENAME'];
-	$file_ex = explode("/", $filename);
-	$count = count($file_ex);
-	$file = $file_ex[($count)-1];
+$filename = $_SERVER['SCRIPT_FILENAME'];
+$file_ex = explode("/", $filename);
+$count = count($file_ex);
+$file = $file_ex[($count)-1];
+?>
+</p>
+</td>
+</tr>
+<tr>
+<td bgcolor="#315573" height="23"><a href="../../img/moon.png"><img border="0" src="../../img/moon_tn.png"></a></td>
+<td bgcolor="#315573" width="0" align="center">
+<?php
+if (file_exists($filename))
+{
 	?>
-	</p>
-	</td>
-	</tr>
-	<tr>
-	<td bgcolor="#315573" height="23"><a href="../img/moon.png"><img border="0" src="../img/moon_tn.png"></a></td>
-	<td bgcolor="#315573" width="0" align="center">
+	<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
 	<?php
-	if (file_exists($filename)) {?>
-		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
-	<?php
-	}
-	?>
-	</td>
-	</tr>
-	</table>
-	</body>
-	</html>
+}
+?>
+</td>
+</tr>
+</table>
+</body>
+</html>

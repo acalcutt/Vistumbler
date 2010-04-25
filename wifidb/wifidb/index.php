@@ -29,10 +29,15 @@ while($user_array = mysql_fetch_array($result5))
 }
 $usersa = array_unique($usersa);
 $usercount = count($usersa);
-if ($usercount == NULL){$lastuser['username'] = "No imports have finished yet.";}
-if ($usercount == NULL){$lastuser['title'] = "No imports have finished yet.";}
+if ($usercount == NULL)
+{
+	$lastuser['username'] = "No imports have finished yet.";
+	$lastuser['title'] = "No imports have finished yet.";
+	$lastuser['date'] = date("Y-m-d H:i:s");
+}
+if ($usercount == NULL){}
 
-$sql = "SELECT username, title, id FROM `$db`.`$users_t` WHERE `id`='$row_users'";
+$sql = "SELECT username, title, id, date FROM `$db`.`$users_t` WHERE `id`='$row_users'";
 $result6 = mysql_query($sql, $conn);
 #
 $open = mysql_num_rows($result1);
@@ -82,7 +87,7 @@ if(!$result0 OR !$result1 OR !$result2 OR !$result3 OR !$result4 OR !$result5 or
 		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
 		<td align="center" class="style2"><?php if ($usercount == NULL){echo "No users in Database.";}else{?><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['username'];?></a><?php } ?></a></td>
 		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No APs imported yet.";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
-		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No imports yet.";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['title'];?></a><?php } ?></td>
+		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No imports yet.";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $lastuser['title'];?></a><br> [ <?php echo $lastuser['date']."]"; } ?> </td>
 	</tr>
 </table>
 <table width="75%"><td><tr>

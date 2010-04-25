@@ -13,7 +13,9 @@ $func = filter_input(INPUT_GET, 'func', FILTER_SANITIZE_SPECIAL_CHARS);
 $conn = $GLOBALS['conn'];
 $db = $GLOBALS['db'];
 $user_logins_table = $GLOBALS['user_logins_table'];
-$username = $GLOBALS['username'];
+
+$user_cookie = explode(":", $_COOKIE['WiFiDB_login_yes']);
+$username = $user_cookie[1];
 
 $sec = new security();
 
@@ -28,16 +30,10 @@ if($login_check)
 		##-------------##
 		case 'profile':
 			pageheader("User Control Panel --> Profile");
+			
 			$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
 			$result = mysql_query($sql0, $conn);
 			$newArray = mysql_fetch_array($result);
-			#if(!$newArray['h_email'])
-			#{
-			$email = $newArray['email'];
-			#}
-			#else{$email = "Email is hidden";}
-			$website = $newArray['website'];
-			$Vis_ver = $newArray['Vis_ver'];
 			?>
 			<b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
 			<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
@@ -57,18 +53,24 @@ if($login_check)
 					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Email</th>
-							<td align="center"  class="light"><input type="text" name="email" size="<?php echo strlen($email)*2;?>px" value="<?php echo $email;?>"> Hide? <input name="h_email" type="checkbox" <?php if($newArray['h_email']){echo 'checked="checked"';}?> value="<?php echo $newArray['h_email'];?>"></td>
+							<td class="light"><input type="text" name="email" size="75%" value="<?php echo $newArray['email'];?>"> Hide? <input name="h_email" type="checkbox" <?php if($newArray['h_email']){echo 'checked';}?>></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Website</th>
-							<td align="center"  class="light"><input type="text" name="website" size="<?php echo strlen($website)*1.5;?>px" value="<?php echo $website;?>"></td>
+							<td class="light"><input type="text" name="website" size="75%" value="<?php echo $newArray['website'];?>"></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Vistumbler Version</th>
-							<td align="center"  class="light"><input type="text" name="Vis_ver" size="<?php echo strlen($Vis_ver)*1.5;?>px" value="<?php echo $Vis_ver;?>"></td>
+							<td class="light"><input type="text" name="Vis_ver" size="75%" value="<?php echo $newArray['Vis_ver'];?>"></td>
 						</tr>
 						<tr class="light">
-							<td colspan="2"><p align="center"><input type="submit" value="Update Me!"></p></td>
+							<td colspan="2">
+								<p align="center">
+									<input type="hidden" name="username" value="<?php echo $newArray['username'];?>">
+									<input type="hidden" name="user_id" value="<?php echo $newArray['id'];?>">
+									<input type="submit" value="Update Me!">
+								</p>
+							</td>
 						</tr>
 					</table>
 					</form>
@@ -79,12 +81,76 @@ if($login_check)
 			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 		
+		case "update_user_profile":
+			pageheader("User Control Panel --> Profile");
+			
+			$username = addslashes(strtolower($_POST['username']));
+			$user_id = addslashes(strtolower($_POST['user_id']));
+			
+			$email = htmlentities(addslashes($_POST['email']),ENT_QUOTES);
+			$h_email = addslashes($_POST['h_email']);
+			if($h_email == "on"){$h_email = 1;}else{$h_email = 0;}
+			
+			$website = htmlentities(addslashes($_POST['website']),ENT_QUOTES);
+			$Vis_ver = htmlentities(addslashes($_POST['Vis_ver']),ENT_QUOTES);
+			
+			$sql0 = "SELECT `id` FROM `$db`.`$user_logins_table` WHERE `username` LIKE '".$username."%'";
+			$result = mysql_query($sql0, $conn);
+			$array = mysql_fetch_array($result);
+			if($array['id']+0 === $user_id+0)
+			{
+				$sql1 = "UPDATE `$db`.`$user_logins_table` SET `email` = '$email', `h_email` = '$h_email', `website` = '$website', `Vis_ver` = '$Vis_ver' WHERE `id` = '$user_id' LIMIT 1";
+				$result = mysql_query($sql1, $conn);
+				if(@$result)
+				{					
+					echo "Updated user ($user_id) with new Custom Rank\r\n<br>";
+				}else
+				{
+					echo "There was a serious error: ".mysql_error($conn)."<br>";
+					die(footer($_SERVER['SCRIPT_FILENAME']));
+				}
+				redirect_page('?func=profile', 2000, 'Update User Successful!');
+			}else
+			{
+				Echo "User ID's did not match, there was an error, contact the support forums for more help";
+			}
+			footer($_SERVER['SCRIPT_FILENAME']);
+		break;
 		
 		
 		##-------------##
 		case 'update_user_pref':
-		
-		
+			pageheader("User Control Panel --> Profile");
+			$username = addslashes(strtolower($_POST['username']));
+			$user_id = addslashes(strtolower($_POST['user_id']));
+			
+			$mail_updates = addslashes($_POST['mail_updates']);
+			if($mail_updates == "on"){$mail_updates = 1;}else{$mail_updates = 0;}
+			
+			$h_status = addslashes($_POST['h_status']);
+			if($h_status == "on"){$h_status = 1;}else{$h_status = 0;}
+			
+			$sql0 = "SELECT `id` FROM `$db`.`$user_logins_table` WHERE `username` LIKE '".$username."%'";
+			$result = mysql_query($sql0, $conn);
+			$array = mysql_fetch_array($result);
+			if($array['id']+0 === $user_id+0)
+			{
+				$sql1 = "UPDATE `$db`.`$user_logins_table` SET `mail_updates` = '$mail_updates', `h_status` = '$h_status' WHERE `id` = '$user_id' LIMIT 1";
+				$result = mysql_query($sql1, $conn);
+				if(@$result)
+				{					
+					echo "Updated $username ($user_id) Preferances\r\n<br>";
+				}else
+				{
+					echo "There was a serious error: ".mysql_error($conn)."<br>";
+					die();
+				}
+				redirect_page('?func=pref', 2000, 'Update User Successful!');
+			}else
+			{
+				Echo "User ID's did not match, there was an error, contact the <a href='http://forum.techidiots.net/forum/viewforum.php?f=47'>support forums</a> for more help.";
+			}
+			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 		
 		
@@ -93,6 +159,9 @@ if($login_check)
 		##-------------##
 		case 'pref':
 			pageheader("User Control Panel --> Preferences");
+			$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+			$result = mysql_query($sql0, $conn);
+			$newArray = mysql_fetch_array($result);
 			?>
 			<b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
 			<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
@@ -113,14 +182,20 @@ if($login_check)
 					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Email me about updates</th>
-							<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['mail_updatesmail_updates']){echo 'checked="checked"';}?> value="<?php echo $newArray['email_updates'];?>"></td>
+							<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['mail_updates']){echo 'checked';}?>></td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Hide Login Status</th>
-							<td align="center" class="light"><input name="h_status" type="checkbox" <?php if($newArray['h_status']){echo 'checked="checked"';}?> value="<?php echo $newArray['h_status'];?>"></td>
+							<td align="center" class="light"><input name="h_status" type="checkbox" <?php if($newArray['h_status']){echo 'checked';}?>></td>
 						</tr>
 						<tr>
-							<td colspan="2"><p align="center"><input type="submit" value="Update Me!"></p></td>
+							<td colspan="2">
+								<p align="center">
+									<input type="hidden" name="username" value="<?php echo $newArray['username'];?>">
+									<input type="hidden" name="user_id" value="<?php echo $newArray['id'];?>">
+									<input type="submit" value="Update Me!">
+								</p>
+							</td>
 						</tr>
 					</table>
 					</form>
@@ -145,18 +220,18 @@ if($login_check)
 				break;
 				
 				case "list_all":
-					$ord	=	addslashes($_GET['ord']);
-					$sort	=	addslashes($_GET['sort']);
-					$from	=	addslashes($_GET['from']);
+					$ord	=	addslashes(@$_GET['ord']);
+					$sort	=	addslashes(@$_GET['sort']);
+					$from	=	addslashes(@$_GET['from']);
 					$from	=	$from+0;
 					$from_	=	$from+0;
-					$inc	=	addslashes($_GET['to']);
+					$inc	=	addslashes(@$_GET['to']);
 					$inc	=	$inc+0;
 				#	echo $from."<br>";
 					if ($from=="" or !is_int($from)){$from=0;}
 					if ($from_=="" or !is_int($from_)){$from_=0;}
 					if ($inc=="" or !is_int($inc)){$inc=100;}
-					if ($_COOKIE['WiFiDB_page_limit']){$inc = $_COOKIE['WiFiDB_page_limit'];}else{$inc=100;}
+					if (@$_COOKIE['WiFiDB_page_limit']){$inc = $_COOKIE['WiFiDB_page_limit'];}else{$inc=100;}
 					if ($ord=="" or !is_string($ord)){$ord="ASC";}
 					if ($sort=="" or !is_string($sort)){$sort="id";}
 
@@ -174,21 +249,21 @@ if($login_check)
 							<td colspan="6" class="dark">
 							<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 								<tr>
-									<th class="style3">ID<a href="?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=id&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
-									<th class="style3">Name<a href="?func=boeyes&boeye_func=list_all&sort=name&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=name&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
+									<th class="style3">ID<a href="?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=id&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
+									<th class="style3">Name<a href="?func=boeyes&boeye_func=list_all&sort=name&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=name&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
 									<th class="style3">Edit?</th>
 									<th class="style3">Delete?</th>
-									<th class="style3">Lat<a href="?func=boeyes&boeye_func=list_all&sort=lat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=lat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
-									<th class="style3">Long<a href="?func=boeyes&boeye_func=list_all&sort=long&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=long&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
-									<th class="style3">Catagory<a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo "/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
+									<th class="style3">Lat<a href="?func=boeyes&boeye_func=list_all&sort=lat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=lat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
+									<th class="style3">Long<a href="?func=boeyes&boeye_func=list_all&sort=long&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=long&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
+									<th class="style3">Catagory<a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/down.png"></a><a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>&token=<?php echo $_SESSION["token"];?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['hosturl']."/".$GLOBALS['root']."/";?>themes/<?php echo $theme;?>/img/up.png"></a></th>
 									<th class="style3">Share?</th>
 								</tr>
 								<?php
 								$user_cache = 'waypoints_'.$username;
 								$sql0 = "SELECT * FROM `$db`.`$user_cache` ORDER BY `$sort` $ord LIMIT $from, $inc";
 								$result = mysql_query($sql0, $conn);
-								$rows = mysql_num_rows($result);
-								if($rows != 0)
+								$total_rows = mysql_num_rows($result);
+								if($total_rows > 0)
 								{
 									while($gcache = mysql_fetch_array($result))
 									{
@@ -249,14 +324,20 @@ if($login_check)
 							$sql0 = "SELECT * FROM `$db`.`$user_cache`";
 							$result = mysql_query($sql0, $conn);
 							$total_rows = mysql_num_rows($result);
-								
 							$from_fwd=$from;
 							$from = 0;
 							$page = 1;
 							$pages = $total_rows/$inc;
-							$pages_exp = explode(".",$pages);
-					#		echo $pages.' --- '.$pages_exp[1].'<BR>';
-							$pages_end = "0.".$pages_exp[1];
+							
+							if($total_rows > 0)
+							{
+								$pages_exp = explode(".",$pages);
+						#		echo $pages.' --- '.$pages_exp[1].'<BR>';
+								$pages_end = "0.".$pages_exp[1];
+							}else
+							{
+								$pages_end = 0;
+							}
 							$pages_end = $pages_end+0;
 							$pages = $pages-$pages_end;
 					#		echo $pages.' --- '.$pages_end.'<BR>';
@@ -340,7 +421,6 @@ if($login_check)
 				break;
 				
 				case "remove_wpt":
-				
 					include('../lib/geocache.inc.php');
 					$myscache = new geocache();
 					?>
@@ -973,11 +1053,11 @@ if($login_check)
 					$User_cache = 'waypoints_'.$username;
 					$select = "SELECT * FROM `$db`.`$User_cache`";
 					$return = mysql_query($select, $conn);
-					$num_wpts = mysql_num_rows($return);
+					$num_wpts = @mysql_num_rows($return);
 			#		echo $select;
 					$select = "SELECT * FROM `$db`.`$User_cache` WHERE `share` = '1'";
 					$return = mysql_query($select, $conn);
-					$num_shared_wpts = mysql_num_rows($return);
+					$num_shared_wpts = @mysql_num_rows($return);
 			#		echo $select;
 					?>
 					<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
@@ -1194,64 +1274,6 @@ if($login_check)
 			$user_largest = mysql_fetch_array($user_query);
 			$large_import_title = $user_last['title'];
 			
-			#########
-			$max = 0;
-			$max_ssid = '';
-			$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `id` DESC";
-			$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
-			while($user_ap_l = mysql_fetch_array($user_query))
-			{
-				$pnts_exp = explode("-",$user_ap_l['points']);
-				
-				foreach($pnts_exp as $key=>$point)
-				{
-	#				echo $point."-";
-					$pnt_exp = explode(":",$point);
-					$pnt = explode(",",$pnt_exp[0]);
-					$pnt_id = $pnt[1];
-	#				echo '<BR>'.$pnt_id.'<BR>';
-					$sql = "SELECT * FROM `$db`.`$wtable` WHERE `id` = '$pnt_id' LIMIT 1";
-					$ap_qry = mysql_query($sql, $conn) or die(mysql_error($conn));
-					$ap_ary = mysql_fetch_array($ap_qry);
-					$id = $ap_ary['id'];
-					$ssid_ptb_ = $ap_ary["ssid"];
-					$ssids_ptb = str_split($ap_ary['ssid'],25);
-					$ssid_ptb = smart_quotes($ssids_ptb[0]);
-					$table		=	$ssid_ptb.'-'.$ap_ary["mac"].'-'.$ap_ary["sectype"].'-'.$ap_ary["radio"].'-'.$ap_ary['chan'];
-					$table_gps	=	$table.$gps_ext;
-					
-					$sql = "SELECT * FROM `$db_st`.`$table_gps`";
-					$ap_qry = mysql_query($sql, $conn) or die(mysql_error($conn));
-					$rows = mysql_num_rows($ap_qry);
-	#				echo $rows."<br>";
-					if($rows > $max){$max = $rows; $max_ssid = $ap_ary['ssid']."( ".$rows." )";}
-				}
-			}
-			$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `id` DESC";
-			$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
-			while($user_ap_l = mysql_fetch_array($user_query))
-			{
-#				echo $user_ap_l['points']."<BR>";
-				$pnts_exp = explode("-",$user_ap_l['points']);
-				$pnts_exp = array_reverse($pnts_exp);
-				foreach($pnts_exp as $key => $points_ex)
-				{
-#					echo $points_ex." - ";
-					$pnt_e = explode(",",$points_ex);
-				#	echo $pnt_e[0]." - ";
-					if($pnt_e[0] == "1"){continue;}
-					$pnt = explode(":",$pnt_e[1]);
-					$pnt_id = $pnt[0];
-					$sql = "SELECT `ssid` FROM `$db`.`$wtable` WHERE `id` = '$pnt_id' LIMIT 1";
-			#		echo $sql."<BR>";
-					$ap_qry = mysql_query($sql, $conn) or die(mysql_error($conn));
-					$ap_ary = mysql_fetch_array($ap_qry);
-					$new_ssid = $ap_ary["ssid"];
-#					echo $new_ssid."<BR>";
-					break;
-				}
-				if(@$new_ssid != ''){break;}
-			}
 			if(@$new_ssid == ''){$new_ssid = "No New APs, all are updates";}
 			if(@$last_import_title == ''){$last_import_title = "No imports";}
 			if(@$large_import_title == ''){$large_import_title = "No imports";}
@@ -1339,7 +1361,6 @@ if($login_check)
 			include_once('../lib/security.inc.php');
 			$username = filter_input(INPUT_POST, 'admin_user', FILTER_SANITIZE_SPECIAL_CHARS);
 			$password = filter_input(INPUT_POST, 'admin_pass', FILTER_SANITIZE_SPECIAL_CHARS);
-			
 			$sec = new security();
 			$login = $sec->login($username, $password, $seed, 1);
 			
@@ -1352,8 +1373,34 @@ if($login_check)
 					?><h2>This user is locked out. Contact this WiFiDB\'s admin, or go to the <a href="http://forum.techidiots.net/">forums</a> and bitch to Phil.<br></h2><?php
 				break;
 				
-				case "p_fail":
-					?><h2>Either Bad Username or Password.</h2>
+				case is_array($login):
+					$to_go = $login[1];
+					?><p align="center"><font color="red"><h2>Bad Username or Password!</h2></font></p>
+					<p align="center"><font color="red"><h3>You have <?php echo $to_go;?> more attmpt(s) till you are locked out.</h3></font></p>
+					<?php
+					$return = str_replace("%5C", "%5C", $return);
+					?>
+					<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
+					<table align="center">
+						<tr>
+							<td colspan="2"><p align="center"><img src="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>"/themes/wifidb/img/logo.png"></p></td>
+						</tr>
+						<tr>
+							<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
+							<td><input type="text" name="time_user"></td>
+						</tr>
+						<tr>
+							<td>Password <font size="1">(CaSeSenSiTivE)</font></td>
+							<td><input type="password" name="time_pass"></td>
+						</tr>
+						<tr>
+							<td colspan="2"><p align="center"><input type="hidden" name="return" value="<?php echo $return;?>"><input type="submit" value="Login"></p></td>
+						</tr>
+						<tr>
+							<td colspan="2"><p align="center"><a class="links" href="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_form">Create a user account</a><br><a class="links" href="<?php echo $_SERVER['PHP_SELF'];?>?func=reset_user_pass">Forgot your password?</a></p></td>
+						</tr>
+					</table>
+					</form>
 					<?php
 				break;
 				
@@ -1366,7 +1413,7 @@ if($login_check)
 				break;
 				
 				case "good":
-					redirect_page('/'.$root.'/cp/admin/', 2000, 'Login Successful!', 2);
+					redirect_page($GLOBALS['hosturl'].$root.'cp/admin/', 2000, 'Login Successful!', 2);
 				break;
 				
 				case "cookie_fail":

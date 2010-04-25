@@ -5,6 +5,9 @@ include('../lib/config.inc.php');
 $func			= '';
 $refresh_post	= '';
 $tz_post		= '';
+$root = $GLOBALS['root'];
+$hosturl = $GLOBALS['hosturl'];
+
 if( !isset($_GET['func']) ) { $_GET['func'] = ""; }
 
 $func = strip_tags(addslashes($_GET['func']));
@@ -15,13 +18,14 @@ switch($func)
 		if( (!isset($_POST['refresh'])) or $_POST['refresh']=='' ) { $_POST['refresh'] = "wifidb"; }
 		$refresh_post = strip_tags(addslashes($_POST['refresh']));
 		setcookie( 'wifidb_refresh' , $refresh_post , (time()+($timeout)), "/".$root."/opt/scheduling.php" );
-		header('Location: scheduling.php?token='.$_SESSION['token']);
+		#echo $refresh_post."<BR>";
+		header('Location: '.$hosturl.$root.'/opt/scheduling.php');
 	break;
 
 }
-$TZone = ($_COOKIE['wifidb_client_timezone'] ? $_COOKIE['wifidb_client_timezone'] : $default_timezone);
-$dst = ($_COOKIE['wifidb_client_dst']!='' ? $_COOKIE['wifidb_client_dst'] : -1);
-$refresh = ($_COOKIE['wifidb_refresh']!='' ? $_COOKIE['wifidb_refresh'] : $default_refresh);
+$TZone = (@$_COOKIE['wifidb_client_timezone'] ? @$_COOKIE['wifidb_client_timezone'] : $default_timezone);
+$dst = (@$_COOKIE['wifidb_client_dst']!='' ? @$_COOKIE['wifidb_client_dst'] : -1);
+$refresh = (@$_COOKIE['wifidb_refresh']!='' ? @$_COOKIE['wifidb_refresh'] : $default_refresh);
 
 pageheader("Scheduling Page");
 
@@ -124,7 +128,7 @@ if(is_string($func))
 			}
 			rsort($DGK_folder);
 			rsort($DATES);
-			if($DATES[0] == ''){$today = $date;}else{$today = $DATES[0];}
+			if(@$DATES[0] == ''){$today = $date;}else{$today = $DATES[0];}
 			?>
 			<table width="700px" border="1" cellspacing="0" cellpadding="0" align="center">
 			<tr>
@@ -211,11 +215,9 @@ if(is_string($func))
 						if($file_count == 0)
 						{
 							?>
-							<table style="width: 100%">
 								<tr>
-									<td>There have been no KMZ files created.</td>
+									<td colspan='3'>There have been no KMZ files created.</td>
 								</tr>
-							</table>
 							<?php
 						}else
 						{
@@ -251,75 +253,6 @@ if(is_string($func))
 		break;
 		
 		default:
-		
-			$timezone_names = array(
-							0	=>		"International Date Line",
-							1	=>		"International Date Line",
-							2	=>		"Pacific Ocean",
-							3	=>		"Kamchatskiy, E Russia",
-							4	=>		"Hawaii",
-							5	=>		"Eastern Russia - Sydney, Australia",
-							6	=>		"Alaska Time",
-							7	=>		"Mid Australia",
-							8	=>		"Japan",
-							9	=>		"Pacific Standard Time",
-							10	=>		"China",
-							11	=>		"Mountain Standard Time",
-							12	=>		"W Mongolia",
-							13	=>		"Burma",
-							14	=>		"Central Standard Time",
-							15	=>		"Almaty (Alma ATA), Russia",
-							16	=>		"Atlantic Time",
-							17	=>		"Afghanistan",
-							18	=>		"NW Caspian Sea",
-							19	=>		"Newfoundland Time",
-							20	=>		"Greenland Time",
-							21	=>		"Iran",
-							22	=>		"Moscow, Mid-East, E Africa",
-							23	=>		"Eastern Standard Time",
-							24	=>		"India",
-							25	=>		"Ural Mountains, Russia",
-							26	=>		"Atlantic Ocean",
-							27	=>		"E Europe, E Central Africa",
-							28	=>		"SE Greenland",
-							29	=>		"Mid Europe - Africa",
-							30	=>		"Greenwich, England"
-						);
-			
-			$timezone_numbers = array(
-							0	=>	"/-12/"	,# International Date Line
-							1	=>	"/12/"	,# International Date Line
-							2	=>	"/-11/"	,# Pacific Ocean
-							3	=>	"/11/"	,# Kamchatskiy, E Russia
-							4	=>	"/-10/"	,# Hawaii
-							5	=>	"/10/"	,# Eastern Russia - Sydney, Australia
-							6	=>	"/-9/"	,# Alaska Time
-							7	=>	"/9.5/" ,# Mid Australia
-							8	=>	"/9/"	,# Japan
-							9	=>	"/-8/"	,# Pacific Standard Time
-							10	=>	"/8/"	,# China
-							11	=>	"/-7/"  ,# Mountain Standard Time
-							12	=>	"/7/"	,# W Mongolia
-							13	=>	"/6.5/" ,# Burma
-							14	=>	"/-6/"  ,# Central Standard Time
-							15	=>	"/6/"	,# Almaty (Alma ATA), Russia
-							16	=>	"/-4/"  ,# Atlantic Time
-							17	=>	"/4.5/" ,# Afghanistan
-							18	=>	"/4/"   ,# NW Caspian Sea
-							19	=>	"/-3.5/",# Newfoundland Time
-							20	=>	"/-3/"	,# Greenland Time
-							21	=>	"/3.5/" ,# Iran
-							22	=>	"/3/"	,# Moscow, Mid-East, E Africa
-							23	=>	"/-5/"  ,# Eastern Standard Time
-							24	=>	"/5.5/" ,# India
-							25	=>	"/5/"	,# Ural Mountains, Russia
-							26	=>	"/-2/"  ,# Atlantic Ocean
-							27	=>	"/2/"	,# E Europe, E Central Africa
-							28	=>	"/-1/"  ,# SE Greenland
-							29	=>	"/1/"   ,# Mid Europe - Africa
-							30	=>	"/0/"	 # Greenwich, England
-						);
- 
 			include $GLOBALS['wifidb_tools']."/daemon/config.inc.php";
 			echo '<meta http-equiv="refresh" content="'.$refresh.'"><table border="1" width="90%"><tr class="style4"><th colspan="4">Scheduled Imports</th></tr>';
 			mysql_select_db($db,$conn);
@@ -338,10 +271,14 @@ if(is_string($func))
 			?>
 				<tr><td class="style3">Next Import scheduled on:</td><td class="light"><?php echo $file_array['size'];?> UTC</td><td class="light">
 			<?php
-			#	if($dst == 1){$dst = -1;}
+				if($dst == 1){$dst = 0;}
+			#	echo "Before: ".$file_array['size']."<BR>";
 				$str_time = strtotime($file_array['size']);
+			#	echo "Convert: ".$str_time."<BR>";
 				$alter_by = ((($TZone+$dst)*60)*60);
+			#	echo "CALC: ".$alter_by."<BR>";
 				$altered = $str_time+$alter_by;
+			#	echo "ADD: ".$altered."<BR>";
 				$next_run = date("Y-m-d H:i:s", $altered);
 				$Zone = " [".$TZone."] ";
 				$Zone = preg_replace($timezone_numbers, $timezone_names, $Zone);
@@ -350,6 +287,7 @@ if(is_string($func))
 			?>
 				</td></tr>
 				<tr><td  class="style3" colspan="1">Select Refresh Rate:</td><td class="light" colspan="2">
+					<?php #echo $refresh."<BR>"; ?>
 					<form action="scheduling.php?func=refresh&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
 					<input type="hidden" name="token" value="<?php echo $token; ?>" />
 					<SELECT NAME="refresh">  

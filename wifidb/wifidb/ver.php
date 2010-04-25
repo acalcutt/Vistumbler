@@ -10,24 +10,20 @@ pageheader("Version Page");
 		<table border="0" cellpadding="4" width="100%" border="2" id="details">
 			<tr class="dark">
 				<td>Project Name...</td><td><b>WiFiDB <?php echo $ver['wifidb'];?></b></td>
-			</tr>
 			<tr class="light">
-				<td>Project Codename...</td><td><b><?php echo $ver['codename'];?></b></td>
-			<tr class="dark">
 				<td>Project State...</td><td><b>Alpha (planning and early dev)</b></td>
 			</tr>
-			<tr class="light">
+			<tr class="dark">
 				<td>Project Dev(s)...</td><td><b><a class="links" href="http://forum.techidiots.net/forum/memberlist.php?mode=viewprofile&u=6">PFerland</a></b></td>
 			</tr>
-			<tr class="dark">
+			<tr class="light">
 				<td align="center" colspan="2"><b><a class="links" title="You know you want to." href="http://www.randomintervals.com/wifidb/">Download WiFiDB</a></b></td>
 			</tr>
 		</table>
-		
+		<BR><H2>Change Log</H2>
 		<table class="light" width="100%" border="2" id="16b4">
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
-			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-Jan-19</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-Jan-19</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -40,7 +36,7 @@ pageheader("Version Page");
 					<LI>User Control Panel. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
 					<LI>Mysticahe support ( GPX / LOC / CSV ) . <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=444">KB444</a></LI>
 					<LI>XML Support. </LI>
-					<LI>Fixed a bug with GPS conversions. If one of the Cords has only 2 digits before the decimal the geo-cord was converted wrong. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=478">KB478</a></LI>
+					<LI>Fixed a bug with GPS conversions. If one of the Cords has only 2 digits before the decimal the geo-cord was converted wrong. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=478">KB478</a></LI>
 					<LI>Apparently I didn't know how to spell "Environment". Fixed in Index and Import page. (This is only ever seen on my domians)</LI>
 					<LI>Changed the name of the User Imports lists table from `users` to `users_imports`. ( I was getting confused with the other new users tables.)</LI>
 					<LI>Support to be-friend / ignore certian users.</LI>

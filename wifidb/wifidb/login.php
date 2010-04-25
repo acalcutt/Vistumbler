@@ -9,16 +9,15 @@ $seed = $GLOBALS['login_seed'];
 $sec = new security();
 $func =	'';
 $func = filter_input(INPUT_GET, 'func', FILTER_SANITIZE_SPECIAL_CHARS);
-$return = $_GET['return'];
-if($return == '' and !$_POST['return']){$return = "/$root/";}
-
+$return = @$_GET['return'];
+if($return == '' and !@$_POST['return']){$return = $GLOBALS['hosturl'].''.$GLOBALS['root'];}
 switch($func)
 {
 	case "login_proc":
-		$return = $_POST['return'];
+		$return = @$_POST['return'];
 		$username = filter_input(INPUT_POST, 'time_user', FILTER_SANITIZE_SPECIAL_CHARS);
 		$password = filter_input(INPUT_POST, 'time_pass', FILTER_SANITIZE_SPECIAL_CHARS);
-		$login = $sec->login($username, $password, $seed);
+		$login = $sec->login($username, $password, $seed, 0);
 		pageheader("Security Page");
 	#	dump($_POST['return']);
 		switch($login)
@@ -27,8 +26,10 @@ switch($func)
 				?><h2>This user is locked out. contact this WiFiDB\'s admin, or go to the <a href="http://forum.techidiots.net/">forums</a> and bitch to Phil.<br></h2><?php
 			break;
 			
-			case "p_fail":
-				?><h2>Either Bad Username or Password.</h2>
+			case is_array($login):
+				$to_go = $login[1];
+				?><p align="center"><font color="red"><h2>Bad Username or Password!</h2></font></p>
+				<p align="center"><font color="red"><h3>You have <?php echo $to_go;?> more attmpt(s) till you are locked out.</h3></font></p>
 				<?php
 				$return = str_replace("%5C", "%5C", $return);
 				?>
@@ -83,21 +84,26 @@ switch($func)
 	case "logout_proc":
 		$username = filter_input(INPUT_POST, 'time_user', FILTER_SANITIZE_SPECIAL_CHARS);
 		$password = filter_input(INPUT_POST, 'time_pass', FILTER_SANITIZE_SPECIAL_CHARS);
-		$login = $sec->login($username, $password, $seed, $return);
-		
-		if(!@$_COOKIE['WiFiDB_login_yes'])
+	#	$login = $sec->login($username, $password, $seed, $return);
+		$admin_cookie = filter_input(INPUT_GET, 'a_c', FILTER_SANITIZE_SPECIAL_CHARS);
+		if($admin_cookie==1)
 		{
-			redirect_page($return, 2000, 'Logout Successful!');
+			$cookie_name = 'WiFiDB_admin_login_yes';
+			$msg = 'Admin Logout Successful!';
+			$path = '/cp/';
 		}else
 		{
-			if(setcookie("WiFiDB_login_yes", md5("@LOGGEDOUT!".$pass_seed).":".$username, 0))
-			{
-				redirect_page($return, 2000, 'Logout Successful!');
-			}
-			else
-			{
-				echo "Could not log you out.. :-(";
-			}
+			$cookie_name = 'WiFiDB_login_yes';
+			$msg = 'Logout Successful!';
+			$path = '/';
+		}
+		if(setcookie($cookie_name, md5("@LOGGEDOUT!").":".$username, time()-3600, $path))
+		{
+			redirect_page($return, 2000, $msg);
+		}
+		else
+		{
+			echo "Could not log you out.. :-(";
 		}
 	break;
 	
@@ -145,7 +151,6 @@ switch($func)
 		$email = filter_input(INPUT_POST, 'time_email', FILTER_SANITIZE_SPECIAL_CHARS);
 		if($password !== $password2)
 		{
-			
 			?>
 			<font color="red"><h2>Passwords did not match</h2></font>
 			<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_proc">
@@ -178,7 +183,7 @@ switch($func)
 			footer($_SERVER['SCRIPT_FILENAME']);
 			die();
 		}
-		$create = $sec->create_user($username, $password, $email, $seed);
+		$create = $sec->create_user($username, $password, $email, $user_array=array(0,0,0,1), $seed);
 		switch($create)
 		{
 			case 1:
@@ -217,8 +222,8 @@ switch($func)
 					break;
 					
 					case "dup_u":
-						?><h2><font color="red">There was an error in Creating the Geocache table.</font></h2><BR>
-						<?php # echo $msg;?>
+						?><h2><font color="red">There is a user already with that username or email address. Pick another one.</font></h2><BR>
+						<?php  #echo $msg;?>
 						<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_proc">
 						<table align="center">
 							<tr>
@@ -392,7 +397,7 @@ switch($func)
 	#---#
 	default :
 		pageheader("Security Page");
-		$return = str_replace("%5C", "%5C", $return);
+		$return = str_replace("%	5C", "%5C", $return);
 		?>
 		<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
 		<table align="center">
@@ -419,5 +424,5 @@ switch($func)
 		footer($_SERVER['SCRIPT_FILENAME']);
 	break;
 }
-footer($_SERVER['SCRIPT_FILENAME']);
+#footer($_SERVER['SCRIPT_FILENAME']);
 ?>

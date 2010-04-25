@@ -40,6 +40,7 @@ class security
 	#######################################
 	function login_check($admin = 0)
 	{
+		global $global_loggedin;
 		if($admin == 1)
 		{
 			$cookie_name = 'WiFiDB_admin_login_yes';
@@ -50,38 +51,51 @@ class security
 			$cookie_seed = "@LOGGEDIN!";
 		}
 		global $username, $privs_a;
-		$user_logins_table = $GLOBALS['user_logins_table'];
+		if(@$GLOBALS['user_logins_table'])
+		{
+			$user_logins_table = $GLOBALS['user_logins_table'];
+		}else
+		{
+			return array(0, "upgrade");
+		}
 		$db = $GLOBALS['db'];
 		$conn = $GLOBALS['conn'];
-		
-		if(!@$_COOKIE[$cookie_name])
+		if($admin and !@isset($_COOKIE[$cookie_name]))
 		{
-			#	die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
-			#	<a href="'.$_SERVER['PHP_SELF'].'">go get a cookie</a>. make it a double stuff.<br>');
-			return array(0, "No Cookie");
-			break;
+				die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
+				<a href="'.$GLOBALS["hosturl"].$GLOBALS["root"].'/cp/?func=admin_cp">go get a cookie</a>. make it a double stuff.<br>');
+			#return "No Cookie";
+			#break;
 		}
-		list($cookie_pass_seed, $username) = explode(':', $_COOKIE[$cookie_name]);
-		if($username != '')
+		if(@isset($_COOKIE[$cookie_name]))
 		{
-		#	echo $username;
-			$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
-			$result = mysql_query($sql0, $conn);
-			$newArray = mysql_fetch_array($result);
-			$db_pass = $newArray['password'];
-			$username_db = $newArray['username'];
-			
-			if(md5($cookie_seed.$db_pass) === $cookie_pass_seed)
+			list($cookie_pass_seed, $username) = explode(':', $_COOKIE[$cookie_name]);
+			if($username != '')
 			{
-				$privs_a = security::check_privs();
-			#	var_dump($privs_a);
-				return $username_db;
+			#	echo $username;
+				$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+				$result = mysql_query($sql0, $conn);
+				$newArray = mysql_fetch_array($result);
+				$db_pass = $newArray['password'];
+				$username_db = $newArray['username'];
+				
+				if(md5($cookie_seed.$db_pass) === $cookie_pass_seed)
+				{
+					$privs_a = security::check_privs();
+				#	var_dump($privs_a);
+					$global_loggedin = 0;
+					return $username_db;
+				}else
+				{
+					return array(0, "Bad Cookie Password");
+				}
 			}else
 			{
-				return array(0, "Bad Cookie Password");
+				return "No Cookie";
 			}
 		}else
 		{
+			$global_loggedin = 0;
 			return "No Cookie";
 		}
 	}
@@ -113,32 +127,29 @@ class security
 	#######################################
 	function check_privs($admin = 0)
 	{
+		include_once('config.inc.php');
 		if($admin == 1)
 		{
-			$cookie_name = 'WiFiDB_admin_login_yes';
 			$cookie_seed = "@LOGGEDIN";
+			list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_admin_login_yes']);
 		}else
 		{
-			$cookie_name = 'WiFiDB_login_yes';
 			$cookie_seed = "@LOGGEDIN!";
+			list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
 		}
-		
-		global $privs_a;
 		$user_logins_table = $GLOBALS['user_logins_table'];
-		$db = $GLOBALS['db'];
-		$conn = $GLOBALS['conn'];
-		
-		if(!@$_COOKIE[$cookie_name])
-		{
-				die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
-				<a href="'.$_SERVER['PHP_SELF'].'">go get a cookie</a>. make it a double stuff.<br>');
-			return 0;
-			break;
-		}
-		list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
-#		echo $username;
-		$sql0 = "SELECT `users`,`mods`,`devs`,`admins` FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
-		$result = mysql_query($sql0, $conn);
+	#	if(!@$_COOKIE[$cookie_name])
+	#	{
+	#		die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
+	#		<a href="'.$_SERVER['PHP_SELF'].'">go get a cookie</a>. make it a double stuff.<br>');
+	#		return 0;
+	#		break;
+	#	}
+		$username = $username."";
+	#	echo $username;
+		$sql0 = "SELECT * FROM `wifi`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+	#	echo $sql0;
+		$result = mysql_query($sql0, $GLOBALS['conn']);
 		$newArray = mysql_fetch_array($result);
 		$groups = array(3=>$newArray['admins'],2=>$newArray['devs'],1=>$newArray['mods'],0=>$newArray['users']);
 		$privs = implode("",$groups);
@@ -155,17 +166,21 @@ class security
 
 	#######################################
 
-	function login($username = '', $password = '', $seed = 'MNKEY!', $admin = 0)
+	function login($username = '', $password = '', $seed = '', $admin = 0, $no_save_login = 0)
 	{
 		if($seed ==''){$seed == $GLOBALS['login_seed'];}
+		if($seed == ''){$seed = "PIECAVE!";}
+		
 		if($admin == 1)
 		{
 			$cookie_name = 'WiFiDB_admin_login_yes';
 			$cookie_seed = "@LOGGEDIN";
+			$path		 = '/cp/';
 		}else
 		{
 			$cookie_name = 'WiFiDB_login_yes';
 			$cookie_seed = "@LOGGEDIN!";
+			$path		 = '/';
 		}
 		$user_logins_table = $GLOBALS['user_logins_table'];
 		$db = $GLOBALS['db'];
@@ -192,13 +207,14 @@ class security
 		
 		if($db_pass === $pass_seed)
 		{
-	#		echo "GOOD CHECK!<BR>";
-			if(setcookie($cookie_name, md5($cookie_seed.$pass_seed).":".$username, (time()+(86400*7))))
+			if($admin or $no_save_login){$cookie_timeout = 0;}else{$cookie_timeout = time()+$GLOBALS['timeout'];}
+			
+			if(setcookie($cookie_name, md5($cookie_seed.$pass_seed).":".$username, $cookie_timeout, $path))
 			{
 				$sql0 = "SELECT `last_active` FROM `$db`.`$user_logins_table` WHERE `id` = '$id' LIMIT 1";
-				$array = mysql_fetch_array(mysql_query($sql1, $conn));
+				$array = mysql_fetch_array(mysql_query($sql0, $conn));
 				$last_active = $array['last_active'];
-				$sql1 = "UPDATE `$db`.`$user_logins_table` SET `last_active` = '$last_active', `last_login` = '$date' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
+				$sql1 = "UPDATE `$db`.`$user_logins_table` SET `login_fails` = '0', `last_active` = '$last_active', `last_login` = '$date' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
 				if(mysql_query($sql1, $conn))
 				{
 					return "good";
@@ -216,7 +232,7 @@ class security
 			{
 				$fails++;
 				$to_go = $GLOBALS['config_fails'] - $fails;
-				echo $fails.' - '.$GLOBALS['config_fails'];
+		#		echo $fails.' - '.$GLOBALS['config_fails'];
 				if($fails >= $GLOBALS['config_fails'])
 				{
 					$sql1 = "UPDATE `$db`.`$user_logins_table` SET `locked` = '1' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
@@ -226,57 +242,41 @@ class security
 				{
 					$sql1 = "UPDATE `$db`.`$user_logins_table` SET `login_fails` = '$fails' WHERE `$user_logins_table`.`id` = '$id' LIMIT 1";
 					mysql_query($sql1, $conn);
-					return "p_fail";
+					return array("p_fail", $to_go);
 				}
 			}else
 			{
 				return "u_fail";
 			}
-			?>
-			<p align="center"><font color="red"><h2>Bad Username or Password!</h2></font></p>
-			<p align="center"><font color="red"><h3>You have <?php echo $to_go;?> more attmpt(s) till you are locked out.</h3></font></p>
-			<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
-			<table align="center">
-				<tr>
-					<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
-				</tr>
-				<tr>
-					<td>Username</td>
-					<td><input type="text" name="time_user"></td>
-				</tr>
-				<tr>
-					<td>Password</td>
-					<td><input type="password" name="time_pass"></td>
-				</tr>
-				<tr>
-					<td colspan="2"><p align="center"><input type="submit" value="Login"></p></td>
-				</tr>
-				<tr>
-					<td colspan="2"><p align="center"><a href="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_form">Create a user account</a><br><a href="<?php echo $_SERVER['PHP_SELF'];?>?func=reset_user_pass">Forgot your password?</a></p></td>
-				</tr>
-			</table>
-			</form>
-			<?php
 		}
 	}
 
 
 
 	#######################################
-	function create_user($username="", $password="", $email="local@localhost.local", $seed="MNKY!")
+	function create_user($username="", $password="", $email="local@localhost.local", $user_array=array(0,0,0,1), $seed="")
 	{
-		if($username == '' or $password == ''){die("Username and/or password cannot be blank.");}
+		include('config.inc.php');
 		$user_logins_table = $GLOBALS['user_logins_table'];
 		$db = $GLOBALS['db'];
 		$conn = $GLOBALS['conn'];
 		$date = date("Y-m-d G:i:s");
+		
+		$admin = $user_array[0];
+		$dev = $user_array[1];
+		$mod = $user_array[2];
+		$user = $user_array[3];
+		if($seed == ''){$seed = $GLOBALS['seed'];}
+		if($seed == ''){$seed = "PIECAVE!";}
+		if($username == '' or $password == ''){die("Username and/or password cannot be blank.");}
 		$uid_b = md5($date.$username.$seed);
 		$uid_exp = str_split($uid_b, 6);
 		$uid = implode("-", $uid_exp);
 		#echo $uid."<BR>";
 		$user_cache = 'waypoints_'.$username;
+		$user_stats = 'stats_'.$username;
 		$pass_seed = md5($password.$seed);
-		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `member` ,`last_login` ,`email`, `uid`, `join_date` )VALUES ( NULL , '$username', '$pass_seed', ',,,users', '$date', '$email', '$uid', '$date')";
+		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `admins` , `devs`, `mods`, `users` ,`last_login` ,`email`, `uid`, `join_date` )VALUES ( NULL , '$username', '$pass_seed', '$admin','$dev','$mod','$user', '$date', '$email', '$uid', '$date')";
 		if(mysql_query($insert_user, $conn))
 		{
 			$create_user_cache = "CREATE TABLE `$db`.`$user_cache` 
@@ -300,10 +300,23 @@ class security
 							  `u_date` datetime NOT NULL,
 							  UNIQUE KEY `id` (`id`),
 							  UNIQUE `gcid` (`gcid`)
-							) ENGINE=INNODB  DEFAULT CHARSET=latin1 AUTO_INCREMENT=0";
+							) ENGINE=INNODB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0";
 			if(mysql_query($create_user_cache, $conn))
 			{
-				return 1;
+				$create_user_cache = "CREATE TABLE `$db`.`$user_stats` 
+							(
+							  `id` int(255) NOT NULL auto_increment,
+							  `newest` varchar(255) NOT NULL,
+							  `largest` varchar(255) NOT NULL,
+							  UNIQUE KEY `id` (`id`)
+							) ENGINE=INNODB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0";
+				if(mysql_query($create_user_cache, $conn))
+				{
+					return 1;
+				}else
+				{
+					return array("create_wpt", mysql_error($conn));
+				}
 			}else
 			{
 				return array("create_wpt", mysql_error($conn));

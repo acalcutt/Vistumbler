@@ -5,7 +5,7 @@
 
 function pageheader($title, $output="detailed")
 {
-	global $login_check;
+	global $login_check, $host_url;
 	
 	$root		= 	$GLOBALS['root'];
 	$hosturl	= 	$GLOBALS['hosturl'];
@@ -16,7 +16,22 @@ function pageheader($title, $output="detailed")
 	include_once($half_path.'/lib/database.inc.php');
 	include_once($half_path.'/lib/security.inc.php');
 	include_once($half_path.'/lib/config.inc.php');
-	
+	if($root != '' or $root != '/')
+	{
+		$max = strlen($hosturl);
+		if($hosturl[$max-1] != '/')
+		{
+			$host_url = $hosturl.'/'.$root;
+	#		echo $hosturl."<BR>";
+		}
+		$host_url = $hosturl.$root;
+	#	echo $hosturl."<BR>";
+	}
+	else
+	{
+		$host_url = $hosturl;
+	}
+#	echo $host_url;
 	$token = session_starter();
 	
 	$sec = new security();
@@ -32,16 +47,16 @@ function pageheader($title, $output="detailed")
 		}
 		# START YOUR HTML EDITS HERE #
 		?>
-		<link rel="stylesheet" href="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/styles.css">
+		<link rel="stylesheet" href="<?php echo $host_url; ?>/themes/vistumbler/styles.css">
 			<body style="background-color: #145285">
-			<table style="width: 90%; " class="no_border" align="center">
+			<table style="width: 100%; " class="no_border" align="center">
 				<tr>
 					<td>
 					<table>
 						<tr>
 							<td style="width: 228px">
 							<a href="http://www.randomintervals.com">
-							<img alt="Random Intervals Logo" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/logo.png" class="no_border" /></a></td>
+							<img alt="Random Intervals Logo" src="<?php echo $host_url;?>/themes/vistumbler/img/logo.png" class="no_border" /></a></td>
 						</tr>
 					</table>
 
@@ -54,13 +69,13 @@ function pageheader($title, $output="detailed")
 						<table style="width: 100%" cellpadding="0" cellspacing="0">
 							<tr>
 								<td style="width: 10px; height: 20px" class="cell_top_left">
-									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
+									<img alt="" src="<?php echo $host_url; ?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
 								</td>
 								<td class="cell_top_mid" style="height: 20px">
-									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="185" height="1" />
+									<img alt="" src="<?php echo $host_url; ?>/themes/vistumbler/img/1x1_transparent.gif" width="185" height="1" />
 								</td>
 								<td style="width: 10px" class="cell_top_right">
-									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
+									<img alt="" src="<?php echo $host_url; ?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
 								</td>
 							</tr>
 							<tr>
@@ -68,31 +83,31 @@ function pageheader($title, $output="detailed")
 								<td class="cell_color">
 									<div class="inside_dark_header">WiFiDB Links</div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/?token=<?php echo $token;?>">Main Page</a></strong></div>
+										<a href="<?php echo $host_url;?>/?token=<?php echo $token;?>">Main Page</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></strong></div>
+										<a href="<?php echo $host_url;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/import/?token=<?php echo $token;?>">Import</a></strong></div>
+										<a href="<?php echo $host_url;?>/import/?token=<?php echo $token;?>">Import</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated kml</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated kml</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/console/?token=<?php echo $token;?>">Daemon Console</a></strong></div>
+										<a href="<?php echo $host_url;?>/console/?token=<?php echo $token;?>">Daemon Console</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/search.php?token=<?php echo $token;?>">Search</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/search.php?token=<?php echo $token;?>">Search</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/themes/?token=<?php echo $token;?>">Themes</a></strong></div>
+										<a href="<?php echo $host_url;?>/themes/?token=<?php echo $token;?>">Themes</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></strong></div>
 									<div class="inside_text_bold"><strong>
 										<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php if($root != ''){echo '/'.$root;}?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></strong></div>
+										<a href="<?php echo $host_url;?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></strong></div>
 									<br>
 									<div class="inside_dark_header">[Mysticache]</div>
 									<div class="inside_text_bold"><a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/caches.php?token=<?php echo $token;?>">View shared Caches</a></div>
@@ -100,7 +115,7 @@ function pageheader($title, $output="detailed")
 									if($login_check)
 									{
 									?>
-									<div class="inside_text_bold"><a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/cp/?func=boeyes&boeye_func=list_all">List All My Caches</a></div>
+									<div class="inside_text_bold"><a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/cp/?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=0&to=100">List All My Caches</a></div>
 									<?php
 									}
 									
@@ -119,7 +134,7 @@ function pageheader($title, $output="detailed")
 						<table style="width: 100%" cellpadding="0" cellspacing="0">
 							<tr>
 								<td style="width: 10px; height: 20px" class="cell_top_left">
-									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
+									<img alt="" src="<?php echo $host_url;?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
 								</td>
 								<?php
 								if($login_check)
@@ -157,7 +172,7 @@ function pageheader($title, $output="detailed")
 								}
 								?>
 								<td style="width: 10px" class="cell_top_right">
-									<img alt="" src="<?php if($root != ''){echo '/'.$root;}?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
+									<img alt="" src="<?php echo $host_url;?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
 								</td>
 							</tr>
 							<tr>

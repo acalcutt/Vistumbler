@@ -109,54 +109,38 @@ switch($func)
 			</td>
 		</table>
 		</form>
-		
-		<table border="1" cellspacing="0" cellpadding="3" align="center">
-		<tr class="style4"><th colspan="2">Export All Access Points in the Database to KML</th></tr>
-		<tr class="light"><td colspan="2" align="center">
-		<?php
-		if($rowsu && $rowsl)
-		{
-		?>
-			<a class="links" href="export.php?func=exp_all_db_kml&token=<?php echo $_SESSION['token'];?>">Export All Access Points</a>
-		<?php
-		}else
-		{ echo "Nothing in the database, so you dont get to do a Full DB export.<br>"; }
-		?>
-		</td></tr>
-		</table>
-		<br>
 		<?php
 		break;
 	#--------------------------
 	case "exp_user_all_kml":
-
 		$row = 0;
-		$database->exp_kml($export="exp_user_all_kml", $user,$row);
+		$database->exp_kml($export="exp_user_all_kml", $user,$row, $named=0);
 		break;
 	#--------------------------
 	case "exp_all_db_kml": 
-
-		$database->exp_kml($export="exp_all_db_kml");
+		$user ='';
+		$row = 0;
+		$database->exp_kml($export="exp_all_db_kml",$user,$row, $named=0);
 		break;
 	#--------------------------
 	case "exp_user_list": 
 		$user ="";
-		$database->exp_kml($export="exp_user_list",$user,$row);
+		$database->exp_kml($export="exp_user_list",$user,$row, $named=0);
 		break;
 	#--------------------------	\
 	case "exp_all_signal_gpx": 
 		$user ="";
-		$database->exp_kml($export="exp_all_signal_gpx",$user,$row);
+		$database->exp_kml($export="exp_all_signal_gpx",$user,$row, $named=0);
 		break;
 	#--------------------------
 	case "exp_all_signal": 
 		$user ="";
-		$database->exp_kml($export="exp_all_signal",$user,$row);
+		$database->exp_kml($export="exp_all_signal",$user,$row, $named=0);
 		break;
 	#--------------------------
 	case "exp_single_ap": 
 		$user ="";
-		$database->exp_kml($export="exp_single_ap",$user,$row);
+		$database->exp_kml($export="exp_single_ap",$user,$row, $named=0);
 		break;
 	#--------------------------
 	case NULL:

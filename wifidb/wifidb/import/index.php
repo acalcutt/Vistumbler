@@ -8,6 +8,7 @@ if ($_SERVER['HTTP_HOST'] == "rihq.randomintervals.com" or $_SERVER['HTTP_HOST']
 <h2>Go on over to the <i>Vistumbler <a target="_blank" href="http://www.vistumbler.net/wifidb/">\'Production Server\'</i></a> for a more stable environment</h2>';}
 $conn = $GLOBALS['conn'];
 $users_t	= $GLOBALS['users_t'];
+$user_logins_table = $GLOBALS['user_logins_table'];
 $files_tmp	= $GLOBALS['files_tmp'];
 if(isset($_GET['func']))
 {
@@ -41,6 +42,14 @@ switch($func)
 				$notes = filter_var($notes, FILTER_SANITIZE_SPECIAL_CHARS);
 				$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
 				
+				$sql = "SELECT `username` FROM `$db`.`$user_logins_table` WHERE `username` LIKE '$user'";
+				$result = mysql_query( $sql , $conn);
+				$array = mysql_fetch_array($result);
+				if($array['username'] == $user and !$global_loggedin)
+				{
+					echo "<h2>You need to be logged in to import to a user that has a login.<br> Go <a class='links' href='".$GLOBALS['hosturl']."login.php?return=/import/'>login</a> and then import again.</h2>";
+					die(footer($_SERVER['SCRIPT_FILENAME']));
+				}
 				$uploadfolder = getcwd().'/up/';
 				$uploadfile = $uploadfolder.$rand.'_'.$filename;
 				$return  = file($tmp);

@@ -41,34 +41,10 @@ function admin_pageheader($page = '')
 	if($filtered != '')
 	{$SELF = $SELF.'?'.$filtered;}
 	?>
-	<script type="text/javascript">
-	
-	function confirmation()
-	{
-		if (!confirm("Are you sure you want to leave the Administrative page?"))
-		{
-			document.location = "<?php echo $SELF; ?>";
-		}else
-		{
-			document.location = "<?php echo '/'.$root.'/cp/';?>";
-		}
-	}
-	
-	function confirmation1() {
-		var answer = confirm("Leave the Admin area?")
-		if (answer){
-			alert("Bye bye!")
-			window.location = "<?php echo '/'.$root.'/cp/';?>";
-		}else
-		{
-			alert("All righty then!")
-		}
-	}
-	</script>
 	<link rel="stylesheet" href="<?php if($root != ''){echo $hosturl.$root;}else{echo $root;}?>/themes/wifidb/styles.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
-	<table border="0" width="85%" cellspacing="5" cellpadding="2">
+	<table border="0" width="100%" cellspacing="5" cellpadding="2">
 		<tr style="background-color: #315573;"><td colspan="2">
 		<table width="100%">
 			<tr>
@@ -104,7 +80,7 @@ function admin_pageheader($page = '')
 				
 				?>
 				<td>Welcome, <a class="links" href="javascript:confirmation()"><?php echo $username;?></a><font size="1"> (Last Login: <?php echo $last_login;?>)</font></td>
-				<td align="right"><a class="links" href="<?php echo $hosturl.$root; ?>/login.php?func=logout_proc">Logout</a></td>
+				<td align="right"><a class="links" href="<?php echo $hosturl.$root; ?>/login.php?func=logout_proc&a_c=1">Logout</a></td>
 			</tr>
 		</table>
 		<table width="100%" align="center" border='1'>
