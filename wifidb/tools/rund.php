@@ -1,4 +1,7 @@
 <?php
+#
+# Rund.php for WiFIDB 0.20 Build 1
+#
 global $screen_output;
 $screen_output = "CLI";
 error_reporting(E_ALL|E_STRICT);
@@ -14,33 +17,46 @@ require_once($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'d
 #echo $GLOBALS['wifidb_tools']."\n";
 if(isset($argv[1]))
 {$command = $argv[1];}
-else{$command = "none";}
+else
+{
+	echo "You cannot use start without a switch\r\n\r\n";
+	help();
+	die();
+}
 $command = strtolower($command);
-$command = $command[0].$command[1].$command[2].$command[3];
+$command = substr($command, 0, 4);
+
+if(isset($argv[2]))
+{$command1 = $argv[2];}
+else
+{
+	echo "You cannot use start without a switch\r\n\r\n";
+	help();
+	die();
+}
+$command1 = strtolower($command1);
+$command1 = substr($command1, 0, 3);
+#echo "Command : $command\r\nCommand1 : $command1\r\n";
 switch ($command)
 {
 	case "rest" :
-		if(file_exists($GLOBALS['pid_file_loc']))
-		{
-			stop();
-			start();
-		}else
-		{
-			
-			echo "WiFiDB Daemon was not running..\n".$GLOBALS['pid_file_loc']."\n";
-			start();
-		}
+		stop($command1);
+		start($command1);
 		break;
 		
 	case "stop" :
-		stop();
+		stop($command1);
 		break;
 		
 	case "star" :
-		start();
+		start($command1);
 		break;
 		
 	case "vers" :
+		ver();
+		break;
+		
+	case "ver" :
 		ver();
 		break;
 		
@@ -48,8 +64,8 @@ switch ($command)
 		help();
 		break;
 		
-	case "star" :
-		status();
+	case "stat" :
+		status($command1);
 		break;
 		
 	case 'none':
@@ -59,24 +75,83 @@ switch ($command)
 
 # Start and Stop functions for the daemon
 
-function start()
+function start($command = '')
 {
+#	echo $command."\r\n\r\n";
+	$daemon_ = '';
+	switch($command)
+	{
+		case 'ied':
+	#	echo "alllllll!!!!!!!!\r\n";
+			$daemon_ = 'imp_exp';
+			break;
+		case 'dbs':
+	#	echo "alllllll!!!!!!!!\r\n";
+			$daemon_ = 'dbstats';
+			break;
+		case 'dpm':
+		#	echo "alllllll!!!!!!!!\r\n";
+			$daemon_ = 'daemonperf';
+			break;
+		case 'all':
+		#	echo "alllllll!!!!!!!!\r\n";
+			$daemon_ = array();
+			$daemon_[0] = 'imp_exp';
+			$daemon_[1] = 'dbstats';
+			$daemon_[2] = 'daemonperf';
+		#	dump($daemon_);
+			break;
+	}
+	
+#	dump($daemon_);
+	
 	require('daemon/config.inc.php');
 	require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
-	$console_log = $GLOBALS['console_log'];
 	echo "Starting WiFiDB Daemon..\n";
-	$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."wifidbd.php";
+	
+#	dump($daemon_);
+	
+	$is_array = is_array($daemon_);
+	#echo is_array($daemon_) ? "Array\r\n" : "not an Array\r\n";
+	if($is_array)
+	{
+		foreach($daemon_ as $d)
+		{
+			echo "D: $d \r\n";
+			switch($d)
+			{
+				case 'imp_exp':
+					echo "\r\n";
+					start('ied');
+					break;
+				case 'dbstats':
+					echo "\r\n";
+					start('dbs');
+					break;
+				case 'daemonperf':
+					echo "\r\n";
+					start('dpm');
+					break;
+			}
+		}
+	}
+	
+	$console_log = $GLOBALS['daemon_log_folder'].$daemon_.'d.log';
+	$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim'].$daemon_."d.php";
+	echo $daemon_script."\r\n";
+
 	if (PHP_OS == "WINNT")
-	{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
+	{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemon_script." > ".$console_log;}
 	else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
 	
-	echo $cmd."\n";
+	#echo $cmd."\n";
 	if(file_exists($daemon_script))
 	{
 		$start = popen($cmd, 'w');
 		if($start)
 		{
 			echo "WiFiDB Daemon Started..\n";
+			return 1;
 		}else
 		{
 			echo "WiFiDB Daemon Could not start\nStatus: ".$start."\n";
@@ -84,20 +159,129 @@ function start()
 			{
 				echo $line."\n";
 			}
+			return 0;
 		}
 	}else
 	{
 		echo "Could not find the WiFiDB Daemon file. [wifidbd.php].\n";
+		return 0;
 	}
 }
 
-function stop()
+function stop($command = '')
 {
-	require('daemon/config.inc.php');
-	if(file_exists($GLOBALS['pid_file_loc']))
+	if($command == ''){die("You cannot use start without a switch");}
+	if($command == 'ied'){$daemon = 'imp_exp';}
+	elseif($command == 'dbs'){$daemon = 'dbstats';}
+	elseif($command == 'dbs'){$daemon = 'daemonperf';}
+	elseif($command == 'all')
 	{
-		echo $GLOBALS['pid_file_loc']."\n";
-		$pidfile = file($GLOBALS['pid_file_loc']);
+	#############
+	#############
+	### START OF STOP ALL DAEMONS PORTION
+	#############
+	#############
+		$daemon = 'daemonperf';
+		require('daemon/config.inc.php');
+		$pid = $GLOBALS['pid_file_loc'].$daemon.'d.pid';
+		if(file_exists($pid))
+		{
+			echo $pid."\n";
+			$pidfile = file($pid);
+			echo $pidfile[0]."\n";
+				
+				if (PHP_OS == "WINNT")
+				{$cmd = "taskkill /PID ".$pidfile[0];}
+				else{$cmd = "kill -9 ".$pidfile[0];}
+				
+			$stop = popen($cmd, 'r');
+			
+			if(!$stop)
+			{
+				echo "Error stoping the $daemon Daemon..\n";
+			#	return 0;
+			}
+			else
+			{
+				unlink($GLOBALS['pid_file_loc']);
+			#	return 1;
+			}
+		}else
+		{
+			echo "$daemon Daemon was not running..\n";
+		}
+		#######################
+		$daemon = 'imp_exp';
+		require('daemon/config.inc.php');
+		$pid = $GLOBALS['pid_file_loc'].$daemon.'d.pid';
+		if(file_exists($pid))
+		{
+			echo $pid."\n";
+			$pidfile = file($pid);
+			echo $pidfile[0]."\n";
+				
+				if (PHP_OS == "WINNT")
+				{$cmd = "taskkill /PID ".$pidfile[0];}
+				else{$cmd = "kill -9 ".$pidfile[0];}
+				
+			$stop = popen($cmd, 'r');
+			
+			if(!$stop)
+			{
+				echo "Error stoping the $daemon Daemon..\n";
+			#	return 0;
+			}
+			else
+			{
+				unlink($GLOBALS['pid_file_loc']);
+			#	return 1;
+			}
+		}else
+		{
+			echo "$daemon Daemon was not running..\n";
+		}
+		#########################
+		$daemon = 'dbstats';
+		require('daemon/config.inc.php');
+		$pid = $GLOBALS['pid_file_loc'].$daemon.'d.pid';
+		if(file_exists($pid))
+		{
+			echo $pid."\n";
+			$pidfile = file($pid);
+			echo $pidfile[0]."\n";
+				
+				if (PHP_OS == "WINNT")
+				{$cmd = "taskkill /PID ".$pidfile[0];}
+				else{$cmd = "kill -9 ".$pidfile[0];}
+				
+			$stop = popen($cmd, 'r');
+			
+			if(!$stop)
+			{
+				echo "Error stoping the $daemon Daemon..\n";
+			#	return 0;
+			}
+			else
+			{
+				unlink($GLOBALS['pid_file_loc']);
+			#	return 1;
+			}
+		}else
+		{
+			echo "$daemon Daemon was not running..\n";
+		}
+	}
+	#############
+	#############
+	### END STOP ALL DAEMONS PORTION
+	#############
+	#############
+	require('daemon/config.inc.php');
+	$pid = $GLOBALS['pid_file_loc'].$daemon.'d.pid';
+	if(file_exists($pid))
+	{
+		echo $pid."\n";
+		$pidfile = file($pid);
 		echo $pidfile[0]."\n";
 			
 			if (PHP_OS == "WINNT")
@@ -107,17 +291,174 @@ function stop()
 		$stop = popen($cmd, 'r');
 		
 		if(!$stop)
-		{echo "Error stoping the WiFiDB Daemon..\n";}
-		else{unlink($GLOBALS['pid_file_loc']);}
+		{
+			echo "Error stoping the $daemon Daemon..\n";
+			return 0;
+		}
+		else
+		{
+			unlink($GLOBALS['pid_file_loc']);
+			return 1;
+		}
 	}else
 	{
-		echo "WiFiDB Daemon was not running..\n";
+		echo "$daemon Daemon was not running..\n";
+		return 0;
 	}
 }
 
-function status()
+function status($command = '')
 {
-	$WFDBD_PID = $GLOBALS['wifidb_tools'].'/daemon/wifidbd.pid';
+	if($command == ''){die("You cannot use start without a switch");}
+	if($command == 'ied'){$daemon = 'imp_exp';}
+	elseif($command == 'dbs'){$daemon = 'dbstats';}
+	elseif($command == 'dbs'){$daemon = 'daemonperf';}
+	elseif($command == 'all')
+	{
+		$daemon = 'imp_exp';
+		$WFDBD_PID = $GLOBALS['pid_file_loc'].$daemon.'d.pid';
+		$os = PHP_OS;
+		if ( $os[0] == 'L')
+		{
+			#echo $os."<br>";
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('ps vp '.$pid_open[0] , $output, $sta);
+				if(isset($output[1]))
+				{
+					$msg = "Linux $daemon Daemon is running!\n";
+				}else
+				{
+					$msg = "Linux $daemon Daemon is not running!\n";
+				}
+			}else
+			{
+				$msg = "Linux $daemon Daemon is not running!\n";
+			}
+		}elseif( $os[0] == 'W')
+		{
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+				if(isset($output[2]))
+				{
+					$msg = "Windows $daemon Daemon is running!\n";
+				}else
+				{
+					$msg = "Windows $daemon Daemon is not running!\n";
+				}
+			}else
+			{
+				$msg = "Windows $daemon Daemon is not running!\n";
+			}
+		}else
+		{
+			$msg = "Unkown OS $daemon Daemon is not running!\n";
+		}
+		echo $msg;
+		########################
+		############
+		$daemon = 'dbstats';
+		$WFDBD_PID = $GLOBALS['pid_file_loc'].$daemon.'d.pid';
+		$os = PHP_OS;
+		if ( $os[0] == 'L')
+		{
+			#echo $os."<br>";
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('ps vp '.$pid_open[0] , $output, $sta);
+				if(isset($output[1]))
+				{
+					$msg = "Linux $daemon Daemon is running!\n";
+				}else
+				{
+					$msg = "Linux $daemon Daemon is not running!\n";
+				}
+			}else
+			{
+				$msg = "Linux $daemon Daemon is not running!\n";
+			}
+		}elseif( $os[0] == 'W')
+		{
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+				if(isset($output[2]))
+				{
+					$msg = "Windows $daemon Daemon is running!\n";
+				}else
+				{
+					$msg = "Windows $daemon Daemon is not running!\n";
+				}
+			}else
+			{
+				$msg = "Windows $daemon Daemon is not running!\n";
+			}
+		}else
+		{
+			$msg = "Unkown OS $daemon Daemon is not running!\n";
+		}
+		echo $msg;
+		########################
+		#############
+		
+		$daemon = 'daemonperf';
+		$WFDBD_PID = $GLOBALS['pid_file_loc'].$daemon.'d.pid';
+		$os = PHP_OS;
+		if ( $os[0] == 'L')
+		{
+			#echo $os."<br>";
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('ps vp '.$pid_open[0] , $output, $sta);
+				if(isset($output[1]))
+				{
+					$msg = "Linux $daemon Daemon is running!\n";
+				}else
+				{
+					$msg = "Linux $daemon Daemon is not running!\n";
+				}
+			}else
+			{
+				$msg = "Linux $daemon Daemon is not running!\n";
+			}
+		}elseif( $os[0] == 'W')
+		{
+			$output = array();
+			if(file_exists($WFDBD_PID))
+			{
+				$pid_open = file($WFDBD_PID);
+				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
+				if(isset($output[2]))
+				{
+					$msg = "Windows $daemon Daemon is running!\n";
+				}else
+				{
+					$msg = "Windows $daemon Daemon is not running!\n";
+				}
+			}else
+			{
+				$msg = "Windows $daemon Daemon is not running!\n";
+			}
+		}else
+		{
+			$msg = "Unkown OS $daemon Daemon is not running!\n";
+		}
+		echo $msg;
+		return 1;
+	}
+	
+	$WFDBD_PID = $GLOBALS['pid_file_loc'].$daemon.'d.pid';
 	$os = PHP_OS;
 	if ( $os[0] == 'L')
 	{
@@ -129,14 +470,14 @@ function status()
 			exec('ps vp '.$pid_open[0] , $output, $sta);
 			if(isset($output[1]))
 			{
-				echo "Linux WiFiDB Daemon is running!\n";
+				$msg = "Linux $daemon Daemon is running!\n";
 			}else
 			{
-				echo "Linux WiFiDB Daemon is not running!\n";
+				$msg = "Linux $daemon Daemon is not running!\n";
 			}
 		}else
 		{
-			echo "Linux WiFiDB Daemon is not running!\n";
+			$msg = "Linux $daemon Daemon is not running!\n";
 		}
 	}elseif( $os[0] == 'W')
 	{
@@ -147,19 +488,21 @@ function status()
 			exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
 			if(isset($output[2]))
 			{
-				echo "Windows WiFiDB Daemon is running!\n";
+				$msg = "Windows $daemon Daemon is running!\n";
 			}else
 			{
-				echo "Windows WiFiDB Daemon is not running!\n";
+				$msg = "Windows $daemon Daemon is not running!\n";
 			}
 		}else
 		{
-			echo "Windows WiFiDB Daemon is not running!\n";
+			$msg = "Windows $daemon Daemon is not running!\n";
 		}
 	}else
 	{
-		echo "Unkown OS WiFiDB Daemon is not running!\n";
+		$msg = "Unkown OS $daemon Daemon is not running!\n";
 	}
+	echo $msg;
+	return 1;
 }
 
 function ver()
@@ -254,8 +597,22 @@ VERSION HISTORY
 	 the file is moved to [tools_dir]/backups/logs/console_wifidbd_[date-time].log
 4 -> Added a bash script writen by Andrew, was adpated from the 
 	 plone startup bash script. Use either wifidbd or wifidbd.sh
-==============================\n\n";
+==============================
 
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+2.0.0
+~~~~~~~~~~~~
+~~~~~~~~~~~~
+
+1 -> Made two (2) more daemons.
+	a> Database Statistics Daemon
+		Calculates the daily statistics for the Database for APs, Geocaches, and Users.
+	b> Daemon Performance Monitor
+		Watches the CPU/Memory usage of the Import / Export daemon (imp_expd.php: the old wifidbd.php)
+2 -> wifidbd.php now is the launcher for all three daemons. right now it only starts them, you must use rund.ph to stop them.
+==============================\n\n";
+	return 1;
 }
 
 function help()
@@ -264,30 +621,34 @@ function help()
 	$ver_Last_Core_Edit = $GLOBALS['ver']['Last_Core_Edit'];
 	$ver_d = $GLOBALS['ver_d'];
 	echo "\n  WiFiDB Daemon for WiFiDB Version: $ver_db_core\n  Last Core edit: $ver_Last_Core_Edit\n  Daemon Version: $ver_d\n\n";
-	echo "  There is a file called rund.php that starts/stops/and restarts the daemon. To use
+	echo "   There is a file called rund.php that starts/stops/and restarts the daemon. To use
   type 'php rund.php [start,stop,restart]'. This script will only run on linux 
   based systems. Windows is NOT supported. This is also an optional item it is not
   needed at all to run WiFiDB. To turn it on or off in the DB itself go to the 
   config.inc.php in the lib folder of where you have your WiFiDB installed, and 
   change the variable named sched to 0 (off) or 1 (on).
-
-  To change settings for the daemon itself go to the daemon folder inside the tools 
+   To change settings for the daemon itself go to the daemon folder inside the tools 
   folder and open the config.inc.php file and change sleep to the number of seconds
   that you want to sleep before checking the files_tmp again, there is a safety so
   you cannot set it less then 5 min.
 
-
-  Usage: 
-	rund.php {start|stop|restart|ver|help}
-
-		start			-	Start The WiFiDB Daemon.
-
-		stop			-	Stop the WiFiDB Daemon.
-
-		restart			-	Restart the WiFiDB Daemon.
-
-		version (NIY)		-	The Version History.
-
-		help (NIY)		-	This dialog.\n\n";
+Usage: 
+  rund.php { start [dbs/dpm/ied/all] | stop [dbs/dpm/ied/all] | restart [dbs/dpm/ied/all] | ver | help }
+Examples:
+  rund.php start ied
+  rund.php stop dbs
+  rund.php help
+---------------------------------------
+  ied  -  Import / Export Daemon
+  dbs  -  DataBase Statistics Daemon
+  dpm  -  Daemon Performance Monitor
+  all  -  All Three Above
+---------------------------------------	
+  start		-  Start The WiFiDB Daemon.
+  stop		-  Stop the WiFiDB Daemon.
+  restart	-  Restart the WiFiDB Daemon.
+  version	-  The Version History.
+  help		-  This dialog.\n\n";
+	return 1;
 }
 ?>

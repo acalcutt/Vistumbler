@@ -4,15 +4,38 @@ global $screen_output;
 $screen_output = "CLI";
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 ###########################
+if($OS == "WINNT"){$dim = "\\";}else{$dim = "/";}
 if(!(require_once 'config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
 if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
-
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 require_once $GLOBALS['wifidb_install']."/cp/admin/lib/administration.inc.php";
-$PHP_OS = PHP_OS;
-$OS = $PHP_OS[0];
+###########################
+$PHP_OS							=	PHP_OS;
+$OS								=	$PHP_OS[0];
+$conn							= 	$GLOBALS['conn'];
+$db								= 	$GLOBALS['db'];
+$db_st							= 	$GLOBALS['db_st'];
+$wtable							=	$GLOBALS['wtable'];
+$users_t						=	$GLOBALS['users_t'];
+$gps_ext						=	$GLOBALS['gps_ext'];
+$files							=	$GLOBALS['files'];
+$user_logins_table				=	$GLOBALS['user_logins_table'];
+$root							= 	$GLOBALS['root'];
+$half_path						=	$GLOBALS['half_path'];
+$WFDBD_PID						=	$GLOBALS['pid_file_loc'].'imp_expd.pid';
+$verbose						=	$GLOBALS['verbose'];
+$screen_output					=	$GLOBALS['screen_output'];
+$PERF_time_interval_to_check	=	$GLOBALS['PERF_time_interval_to_check'];
+$enable_mail_admin				=	0;
+$pid_file						=	$GLOBALS['pid_file_loc'].'daemonperfd.pid';
+$This_is_me 					=	getmypid();
+$date_format					=	"Y-m-d H:i:s.u";
+$BAD_CLI_COLOR					=	$GLOBALS['BAD_DPM_COLOR'];
+$GOOD_CLI_COLOR					=	$GLOBALS['GOOD_DPM_COLOR'];
+$OTHER_CLI_COLOR				=	$GLOBALS['OTHER_DPM_COLOR'];
+###########################
 if($GLOBALS['colors_setting'] == 0 or $OS == "W")
 {
 	$COLORS = array(
@@ -32,31 +55,12 @@ if($GLOBALS['colors_setting'] == 0 or $OS == "W")
 					"YELLOW"	=> "\033[1;33m"
 					);
 }
-if($OS == "WINNT"){$dim = "\\";}else{$dim = "/";}
-$conn			= 	$GLOBALS['conn'];
-$db				= 	$GLOBALS['db'];
-$db_st			= 	$GLOBALS['db_st'];
-$wtable			=	$GLOBALS['wtable'];
-$users_t		=	$GLOBALS['users_t'];
-$gps_ext		=	$GLOBALS['gps_ext'];
-$files			=	$GLOBALS['files'];
-$user_logins_table= $GLOBALS['user_logins_table'];
-$root			= 	$GLOBALS['root'];
-$half_path		=	$GLOBALS['half_path'];
-$WFDBD_PID		=	$GLOBALS['pid_file_loc'].'imp_exp.pid';
-$verbose		=	$GLOBALS['verbose'];
-$screen_output	=	$GLOBALS['screen_output'];
-$PERF_time_interval_to_check = $GLOBALS['PERF_time_interval_to_check'];
-
-$os				=	PHP_OS;
-$enable_mail_admin = 0;
-$pid_file = $GLOBALS['pid_file_loc'].'daemonperfd.pid';
-$This_is_me = getmypid();
+###########################
 fopen($pid_file, "w");
 $fileappend = fopen($pid_file, "a");
 $write_pid = fwrite($fileappend, "$This_is_me");
-if(!$write_pid){die($GLOBALS['COLORS']['RED']."Could not write pid file, thats not good... >:[".$GLOBALS['COLORS']['LIGHTGRAY']);}
-
+if(!$write_pid){die($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Could not write pid file, thats not good... >:[".$GLOBALS['COLORS'][$OTHER_CLI_COLOR]);}
+###########################
 #wait for MySQL to become responsive to the script...
 $sql_stat = mysql_stat($conn);
 echo $sql_stat."\r\n";
@@ -68,23 +72,24 @@ while($sql_stat_7 != "Uptime")
 	$sql_stat_7 = substr($sql_stat, 0, 6);
 	#echo $sql_stat_7."\r\n";
 }
-
-verbosed($GLOBALS['COLORS']['GREEN']."
+###########################
+###########################
+verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."
 WiFiDB 'Daemon Performance Montitor'
 Version: 1.0.0
 - Daemon Start: 2009-12-07
-- Last Daemon File Edit: 2009-12-12
+- Last Daemon File Edit: 2010-01-08
 ( /tools/daemon/wifidbd.php -> daemon_perf() )
-- By: Phillip Ferland ( longbow486@gmail.com )
+- By: Phillip Ferland ( pferland@randomintervals.com )
 - http://www.randomintervals.com
 
 PID: [ $This_is_me ]
-".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 
 while(TRUE)
 {
 	$date	=	date("Y-m-d G:i:s");
-	if ( $os[0] == 'L')
+	if ( $OS == 'L')
 	{
 		$os_type = "Linux Based WiFiDB Daemon";
 		$output = array();
@@ -117,7 +122,7 @@ while(TRUE)
 				{
 					mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);echo "FAILURE!\r\n";
 				}else{
-					verbosed($GLOBALS['COLORS']['GREEN']."Success!".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Success!".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}
 			}else
 			{
@@ -127,11 +132,19 @@ while(TRUE)
 				{
 					mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
 Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
-					verbosed($GLOBALS['COLORS']['GREEN']."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}else{
 					mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(",$enable_mail_admin, 1);
-					verbosed($GLOBALS['COLORS']['GREEN']."Success!".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Success!".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}
+			}
+			$output = `top -p 5449; q`;
+			if($output)
+			{
+				echo $output."\r\n";
+			}else
+			{
+				
 			}
 		}else
 		{
@@ -141,14 +154,14 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 			{
 				mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
 Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
-				verbosed($GLOBALS['COLORS']['GREEN']."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+				verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 			}
 			else{
 				mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $enable_mail_admin, 1);
-				verbosed($GLOBALS['COLORS']['GREEN']."Success!".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+				verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Success!".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 			}
 		}
-	}elseif( $os[0] == 'W')
+	}elseif( $OS == 'W')
 	{
 		$output = array();
 		if(file_exists($WFDBD_PID))
@@ -168,7 +181,7 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 				if(!$result = mysql_query($insert, $conn))
 				{
 					mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
-					verbosed($GLOBALS['COLORS']['GREEN']."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}				
 			}else
 			{
@@ -177,10 +190,10 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 				{
 					mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
 Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
-					verbosed($GLOBALS['COLORS']['GREEN']."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}else{
 					mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $enable_mail_admin, 1);
-					verbosed($GLOBALS['COLORS']['GREEN']."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}
 			}
 		}else
@@ -190,10 +203,10 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 			{
 				mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
 Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
-				verbosed($GLOBALS['COLORS']['GREEN']."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+				verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 			}else{
 				mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $enable_mail_admin, 1);
-				verbosed($GLOBALS['COLORS']['GREEN']."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+				verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 			}
 		}
 	}else
@@ -203,10 +216,10 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 		{
 			mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
 Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
-			verbosed($GLOBALS['COLORS']['GREEN']."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+			verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 		}else{
 			mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $enable_mail_admin, 1);
-			verbosed($GLOBALS['COLORS']['GREEN']."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, $screen_output, 1);
+			verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 		}
 	}
 	echo $date." -> Daemon Performance Monitor is going to sleep for ".($PERF_time_interval_to_check/60)." Minuets\r\n";
