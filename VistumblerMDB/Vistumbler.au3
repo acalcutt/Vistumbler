@@ -1206,7 +1206,6 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-orange.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-yellow.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
-
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
 $TreeviewAPs = GUICtrlCreateTreeView(5, 5, 150, 585)
@@ -1650,7 +1649,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApData()') ;#Debug Display
 	$t = TimerInit()
 	$AddedAp = 0
-	If $New = 1 Then
+	If $New = 1 And $SIG <> 0 Then
 		$AP_Status = $Text_Active
 		$AP_StatusNum = 1
 		$AP_DisplaySig = $SIG
@@ -1810,7 +1809,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				_ListViewAdd($Found_ListRow, '', $Exp_AP_Status, '', '', '', '', $Exp_AP_DisplaySig, '', '', '', '', '', $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, '', '')
 
 				;Update Signal Icon
-				If $Exp_AP_DisplaySig = 1 And $Exp_AP_DisplaySig <= 20 Then
+				If $Exp_AP_DisplaySig >= 1 And $Exp_AP_DisplaySig <= 20 Then
 					If $Found_SecType = 1 Then
 						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 1)
 					Else
@@ -2104,6 +2103,7 @@ Func _FilterRemoveNonMatchingInList()
 							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 						EndIf
 					Next
+					_FixListIcons()
 				EndIf
 			Next
 		EndIf
@@ -2165,12 +2165,15 @@ Func _FilterReAddMatchingNotInList()
 		$ImpSig = $HistMatchArray[1][3]
 		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
 		;If AP is not active, mark as dead and set signal to 0
-		If $ImpActive = 0 Then
+		If $ImpActive <> 0 And $ImpSig <> 0 Then
+			$LActive = $Text_Active
+		Else
 			$LActive = $Text_Dead
 			$ImpSig = '0'
-		Else
-			$LActive = $Text_Active
 		EndIf
+
+
+		ConsoleWrite($ImpActive & '-' & $ImpSig & '-' & $LActive & @CRLF)
 		;Add APs to top of list
 		If $AddDirection = 0 Then
 			$query = "UPDATE AP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
@@ -2180,7 +2183,7 @@ Func _FilterReAddMatchingNotInList()
 			$DBAddPos = -1
 		EndIf
 		;Add Into ListView, Set icon color
-		If $ImpSig = 1 And $ImpSig <= 20 Then
+		If $ImpSig >= 1 And $ImpSig <= 20 Then
 			If $ImpSecType = 1 Then
 				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 1)
 			Else
@@ -2245,6 +2248,20 @@ Func _ClearAllAp()
 	_GetListviewWidths()
 	GUICtrlDelete($ListviewAPs)
 	$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	$hImage = _GUIImageList_Create()
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-red.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-orange.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-yellow.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-light-green.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-green.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-grey.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-red.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-orange.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-yellow.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
+	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
+	_GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 	_SetListviewWidths()
 	GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
@@ -2269,6 +2286,25 @@ Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	Next
 EndFunc   ;==>_FixLineNumbers
+
+Func _FixListIcons()
+	$query = "SELECT ListRow, SecType FROM AP WHERE ListRow <> '-1'"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	;Update in Listview
+	For $resetdead = 1 To $FoundApMatch
+		$Found_ListRow = $ApMatchArray[$resetdead][1]
+		$Found_SecType = $ApMatchArray[$resetdead][2]
+		If $Found_SecType = 1 Then
+			_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
+		Else
+			_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 6)
+		EndIf
+	Next
+EndFunc   ;==>_FixListIcons
+
+
+
 
 Func _RecoverMDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RecoverMDB()') ;#Debug Display
@@ -3465,6 +3501,7 @@ Func _HeaderSort($column);Sort a column in ap list
 	EndIf
 	_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column)
 	_FixLineNumbers()
+	_FixListIcons()
 	$SortColumn = -1
 	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_HeaderSort
@@ -3548,6 +3585,7 @@ Func _Sort($Sort);Auto Sort based on a user chosen column
 		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_MANUF)
 	EndIf
 	_FixLineNumbers()
+	_FixListIcons()
 	$sort_timer = TimerInit()
 EndFunc   ;==>_Sort
 
