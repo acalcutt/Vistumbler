@@ -48,6 +48,7 @@ Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $TmpDir = @ScriptDir & '\temp\'
 Dim $ToolsDir = @ScriptDir & '\Tools\'
+Dim $IconDir = @ScriptDir & '\Icons\'
 DirCreate($SettingsDir)
 DirCreate($DefaultSaveDir)
 DirCreate($SettingsDir)
@@ -1193,12 +1194,20 @@ GUISetBkColor($BackgroundColor)
 $ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 $hImage = _GUIImageList_Create()
-_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0xc0c0c0, 16, 16))
-_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0xff0000, 16, 16))
-_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0xff9900, 16, 16))
-_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0xffff00, 16, 16))
-_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0x99ff00, 16, 16))
-_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0x00ff00, 16, 16))
+
+MsgBox(0, "", $IconDir & "Signal\open-grey.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-red.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-orange.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-yellow.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-light-green.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-green.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-grey.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-red.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-orange.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-yellow.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
+_GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
 
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
@@ -1664,7 +1673,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	$NewApFound = 0
 	If $GpsMatchArray <> 0 Then ;If GPS ID Is Found
 		;Query AP table for New AP
-		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $CHAN) & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
+		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active, SecType FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $CHAN) & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
@@ -1701,6 +1710,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$Found_FirstHistID = $ApMatchArray[1][5]
 			$Found_LastHistID = $ApMatchArray[1][6]
 			$Found_Active = $ApMatchArray[1][7]
+			$Found_SecType = $ApMatchArray[1][8]
 			$HISTID += 1
 			;Set Last Time and First Time
 			If $New = 1 Then ;If this is a new access point, use new information
@@ -1797,24 +1807,49 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$Exp_AP_Status = $AP_Status
 				$Exp_AP_DisplaySig = $AP_DisplaySig
 			EndIf
-			If $Found_ListRow <> -1 Then _ListViewAdd($Found_ListRow, '', $Exp_AP_Status, '', '', '', '', $Exp_AP_DisplaySig, '', '', '', '', '', $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, '', '')
+			If $Found_ListRow <> -1 Then
+				;Update AP Listview data
+				_ListViewAdd($Found_ListRow, '', $Exp_AP_Status, '', '', '', '', $Exp_AP_DisplaySig, '', '', '', '', '', $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, '', '')
 
-
-			If $Exp_AP_DisplaySig = 1 And $Exp_AP_DisplaySig <= 20 Then
-				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 1)
-			ElseIf $Exp_AP_DisplaySig >= 21 And $Exp_AP_DisplaySig <= 40 Then
-				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 2)
-			ElseIf $Exp_AP_DisplaySig >= 41 And $Exp_AP_DisplaySig <= 60 Then
-				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 3)
-			ElseIf $Exp_AP_DisplaySig >= 61 And $Exp_AP_DisplaySig <= 80 Then
-				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 4)
-			ElseIf $Exp_AP_DisplaySig >= 81 And $Exp_AP_DisplaySig <= 100 Then
-				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 5)
-			Else
-				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
+				;Update Signal Icon
+				If $Exp_AP_DisplaySig = 1 And $Exp_AP_DisplaySig <= 20 Then
+					If $Found_SecType = 1 Then
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 1)
+					Else
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 7)
+					EndIf
+				ElseIf $Exp_AP_DisplaySig >= 21 And $Exp_AP_DisplaySig <= 40 Then
+					If $Found_SecType = 1 Then
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 2)
+					Else
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 8)
+					EndIf
+				ElseIf $Exp_AP_DisplaySig >= 41 And $Exp_AP_DisplaySig <= 60 Then
+					If $Found_SecType = 1 Then
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 3)
+					Else
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 9)
+					EndIf
+				ElseIf $Exp_AP_DisplaySig >= 61 And $Exp_AP_DisplaySig <= 80 Then
+					If $Found_SecType = 1 Then
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 4)
+					Else
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 10)
+					EndIf
+				ElseIf $Exp_AP_DisplaySig >= 81 And $Exp_AP_DisplaySig <= 100 Then
+					If $Found_SecType = 1 Then
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 5)
+					Else
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 11)
+					EndIf
+				Else
+					If $Found_SecType = 1 Then
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
+					Else
+						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 6)
+					EndIf
+				EndIf
 			EndIf
-
-
 		EndIf
 	EndIf
 	Return ($NewApFound)
@@ -1822,7 +1857,7 @@ EndFunc   ;==>_AddApData
 
 Func _MarkDeadAPs()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_MarkDeadAPs()') ;#Debug Display
-	$query = "SELECT ApID, ListRow, LastGpsID FROM AP WHERE Active = '1'"
+	$query = "SELECT ApID, ListRow, LastGpsID, SecType FROM AP WHERE Active = '1'"
 	;$query = "SELECT ApID.AP, ListRow.AP, LastGpsID.AP Date1.GPS Time1.GPS FROM AP, GPS WHERE Active.AP = '1' And (LastGpsID.AP = GpsID.GPS)"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
@@ -1831,6 +1866,7 @@ Func _MarkDeadAPs()
 		$Found_APID = $ApMatchArray[$resetdead][1]
 		$Found_ListRow = $ApMatchArray[$resetdead][2]
 		$Found_LastGpsID = $ApMatchArray[$resetdead][3]
+		$Found_SecType = $ApMatchArray[$resetdead][4]
 		;Get Last Time
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $Found_LastGpsID & "'"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -1843,7 +1879,14 @@ Func _MarkDeadAPs()
 		If ($Current_dts - $Found_dts) > $TimeBeforeMarkedDead Then
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
-			_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
+			If $Found_SecType = 1 Then
+				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
+			Else
+				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 6)
+			EndIf
+
+
+
 			$query = "UPDATE AP SET Active = '0', Signal = '000' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
@@ -2138,27 +2181,44 @@ Func _FilterReAddMatchingNotInList()
 		Else ;Add to bottom
 			$DBAddPos = -1
 		EndIf
-		;Add Into ListView
-
-
+		;Add Into ListView, Set icon color
 		If $ImpSig = 1 And $ImpSig <= 20 Then
-			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 1)
+			If $ImpSecType = 1 Then
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 1)
+			Else
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 6)
+			EndIf
 		ElseIf $ImpSig >= 21 And $ImpSig <= 40 Then
-			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 2)
+			If $ImpSecType = 1 Then
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 2)
+			Else
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 7)
+			EndIf
 		ElseIf $ImpSig >= 41 And $ImpSig <= 60 Then
-			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 3)
+			If $ImpSecType = 1 Then
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 3)
+			Else
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 8)
+			EndIf
 		ElseIf $ImpSig >= 61 And $ImpSig <= 80 Then
-			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 4)
+			If $ImpSecType = 1 Then
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 4)
+			Else
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 9)
+			EndIf
 		ElseIf $ImpSig >= 81 And $ImpSig <= 100 Then
-			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 5)
+			If $ImpSecType = 1 Then
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 5)
+			Else
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 10)
+			EndIf
 		Else
-			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 0)
+			If $ImpSecType = 1 Then
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 0)
+			Else
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 11)
+			EndIf
 		EndIf
-
-
-		;$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 1)
-
-
 		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
 		$query = "UPDATE AP SET ListRow='" & $ListRow & "' WHERE ApID='" & $ImpApID & "'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
