@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10 Beta 4'
+$version = 'v10 Beta 5'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2010/05/01'
 ;Includes------------------------------------------------
@@ -1206,6 +1206,7 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-orange.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-yellow.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
+
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
 $TreeviewAPs = GUICtrlCreateTreeView(5, 5, 150, 585)
@@ -1807,50 +1808,53 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			If $Found_ListRow <> -1 Then
 				;Update AP Listview data
 				_ListViewAdd($Found_ListRow, '', $Exp_AP_Status, '', '', '', '', $Exp_AP_DisplaySig, '', '', '', '', '', $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, '', '')
-
 				;Update Signal Icon
-				If $Exp_AP_DisplaySig >= 1 And $Exp_AP_DisplaySig <= 20 Then
-					If $Found_SecType = 1 Then
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 1)
-					Else
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 7)
-					EndIf
-				ElseIf $Exp_AP_DisplaySig >= 21 And $Exp_AP_DisplaySig <= 40 Then
-					If $Found_SecType = 1 Then
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 2)
-					Else
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 8)
-					EndIf
-				ElseIf $Exp_AP_DisplaySig >= 41 And $Exp_AP_DisplaySig <= 60 Then
-					If $Found_SecType = 1 Then
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 3)
-					Else
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 9)
-					EndIf
-				ElseIf $Exp_AP_DisplaySig >= 61 And $Exp_AP_DisplaySig <= 80 Then
-					If $Found_SecType = 1 Then
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 4)
-					Else
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 10)
-					EndIf
-				ElseIf $Exp_AP_DisplaySig >= 81 And $Exp_AP_DisplaySig <= 100 Then
-					If $Found_SecType = 1 Then
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 5)
-					Else
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 11)
-					EndIf
-				Else
-					If $Found_SecType = 1 Then
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
-					Else
-						_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 6)
-					EndIf
-				EndIf
+				_UpdateIcon($Found_ListRow, $Exp_AP_DisplaySig, $Found_SecType)
 			EndIf
 		EndIf
 	EndIf
 	Return ($NewApFound)
 EndFunc   ;==>_AddApData
+
+Func _UpdateIcon($ApListRow, $ApSig, $ApSecType)
+	If $ApSig >= 1 And $ApSig <= 20 Then
+		If $ApSecType = 1 Then
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 1)
+		Else
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 7)
+		EndIf
+	ElseIf $ApSig >= 21 And $ApSig <= 40 Then
+		If $ApSecType = 1 Then
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 2)
+		Else
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 8)
+		EndIf
+	ElseIf $ApSig >= 41 And $ApSig <= 60 Then
+		If $ApSecType = 1 Then
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 3)
+		Else
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 9)
+		EndIf
+	ElseIf $ApSig >= 61 And $ApSig <= 80 Then
+		If $ApSecType = 1 Then
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 4)
+		Else
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 10)
+		EndIf
+	ElseIf $ApSig >= 81 And $ApSig <= 100 Then
+		If $ApSecType = 1 Then
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 5)
+		Else
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 11)
+		EndIf
+	Else
+		If $ApSecType = 1 Then
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 0)
+		Else
+			_GUICtrlListView_SetItemImage($ListviewAPs, $ApListRow, 6)
+		EndIf
+	EndIf
+EndFunc   ;==>_UpdateIcon
 
 Func _MarkDeadAPs()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_MarkDeadAPs()') ;#Debug Display
@@ -2288,18 +2292,15 @@ Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 EndFunc   ;==>_FixLineNumbers
 
 Func _FixListIcons()
-	$query = "SELECT ListRow, SecType FROM AP WHERE ListRow <> '-1'"
+	$query = "SELECT ListRow, SecType, Signal FROM AP WHERE ListRow <> '-1'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	;Update in Listview
 	For $resetdead = 1 To $FoundApMatch
 		$Found_ListRow = $ApMatchArray[$resetdead][1]
 		$Found_SecType = $ApMatchArray[$resetdead][2]
-		If $Found_SecType = 1 Then
-			_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
-		Else
-			_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 6)
-		EndIf
+		$Found_Signal = $ApMatchArray[$resetdead][3]
+		_UpdateIcon($Found_ListRow, $Found_Signal, $Found_SecType)
 	Next
 EndFunc   ;==>_FixListIcons
 
