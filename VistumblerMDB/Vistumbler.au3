@@ -329,7 +329,6 @@ Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
 		 & '		</PolyStyle>' & @CRLF _
 		 & '	</Style>' & @CRLF
 
-
 ;Define Arrays
 Dim $Direction[23];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
 Dim $Direction2[3]
@@ -1190,11 +1189,24 @@ GUICtrlSetColor($10, $TextColor)
 
 $DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
 GUISetBkColor($BackgroundColor)
+
 $ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+$hImage = _GUIImageList_Create()
+_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0xc0c0c0, 16, 16))
+_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0xff0000, 16, 16))
+_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0xff9900, 16, 16))
+_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0xffff00, 16, 16))
+_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0x99ff00, 16, 16))
+_GUIImageList_Add($hImage, _GUICtrlListView_CreateSolidBitMap($ListviewAPs, 0x00ff00, 16, 16))
+
+_GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
+
 $TreeviewAPs = GUICtrlCreateTreeView(5, 5, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 GUISetState()
+
+
 
 $ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $Vistumbler) ; Create Child window for controls
 GUISetBkColor($BackgroundColor)
@@ -1786,6 +1798,23 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$Exp_AP_DisplaySig = $AP_DisplaySig
 			EndIf
 			If $Found_ListRow <> -1 Then _ListViewAdd($Found_ListRow, '', $Exp_AP_Status, '', '', '', '', $Exp_AP_DisplaySig, '', '', '', '', '', $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, '', '')
+
+
+			If $Exp_AP_DisplaySig = 1 And $Exp_AP_DisplaySig <= 20 Then
+				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 1)
+			ElseIf $Exp_AP_DisplaySig >= 21 And $Exp_AP_DisplaySig <= 40 Then
+				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 2)
+			ElseIf $Exp_AP_DisplaySig >= 41 And $Exp_AP_DisplaySig <= 60 Then
+				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 3)
+			ElseIf $Exp_AP_DisplaySig >= 61 And $Exp_AP_DisplaySig <= 80 Then
+				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 4)
+			ElseIf $Exp_AP_DisplaySig >= 81 And $Exp_AP_DisplaySig <= 100 Then
+				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 5)
+			Else
+				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
+			EndIf
+
+
 		EndIf
 	EndIf
 	Return ($NewApFound)
@@ -1814,6 +1843,7 @@ Func _MarkDeadAPs()
 		If ($Current_dts - $Found_dts) > $TimeBeforeMarkedDead Then
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
+			_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
 			$query = "UPDATE AP SET Active = '0', Signal = '000' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
@@ -2109,7 +2139,26 @@ Func _FilterReAddMatchingNotInList()
 			$DBAddPos = -1
 		EndIf
 		;Add Into ListView
-		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos)
+
+
+		If $ImpSig = 1 And $ImpSig <= 20 Then
+			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 1)
+		ElseIf $ImpSig >= 21 And $ImpSig <= 40 Then
+			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 2)
+		ElseIf $ImpSig >= 41 And $ImpSig <= 60 Then
+			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 3)
+		ElseIf $ImpSig >= 61 And $ImpSig <= 80 Then
+			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 4)
+		ElseIf $ImpSig >= 81 And $ImpSig <= 100 Then
+			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 5)
+		Else
+			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 0)
+		EndIf
+
+
+		;$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 1)
+
+
 		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
 		$query = "UPDATE AP SET ListRow='" & $ListRow & "' WHERE ApID='" & $ImpApID & "'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
