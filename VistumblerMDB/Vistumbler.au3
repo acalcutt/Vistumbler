@@ -1194,8 +1194,6 @@ GUISetBkColor($BackgroundColor)
 $ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 $hImage = _GUIImageList_Create()
-
-MsgBox(0, "", $IconDir & "Signal\open-grey.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-red.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-orange.ico")
@@ -2186,37 +2184,37 @@ Func _FilterReAddMatchingNotInList()
 			If $ImpSecType = 1 Then
 				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 1)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 6)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 7)
 			EndIf
 		ElseIf $ImpSig >= 21 And $ImpSig <= 40 Then
 			If $ImpSecType = 1 Then
 				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 2)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 7)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 8)
 			EndIf
 		ElseIf $ImpSig >= 41 And $ImpSig <= 60 Then
 			If $ImpSecType = 1 Then
 				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 3)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 8)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 9)
 			EndIf
 		ElseIf $ImpSig >= 61 And $ImpSig <= 80 Then
 			If $ImpSecType = 1 Then
 				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 4)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 9)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 10)
 			EndIf
 		ElseIf $ImpSig >= 81 And $ImpSig <= 100 Then
 			If $ImpSecType = 1 Then
 				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 5)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 10)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 11)
 			EndIf
 		Else
 			If $ImpSecType = 1 Then
 				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 0)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 11)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 6)
 			EndIf
 		EndIf
 		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
