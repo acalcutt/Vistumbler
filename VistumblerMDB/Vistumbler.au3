@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10 Beta 5'
+$version = 'v10 Beta 6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/05/01'
+$last_modified = '2010/05/02'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -1962,6 +1962,7 @@ EndFunc   ;==>_ListViewAdd
 Func _SetListviewWidths()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetListviewWidths()') ;#Debug Display
 	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Line - 0, $column_Width_Line - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Active - 0, $column_Width_Active - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_SSID - 0, $column_Width_SSID - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_BSSID - 0, $column_Width_BSSID - 0)
@@ -2176,8 +2177,6 @@ Func _FilterReAddMatchingNotInList()
 			$ImpSig = '0'
 		EndIf
 
-
-		ConsoleWrite($ImpActive & '-' & $ImpSig & '-' & $LActive & @CRLF)
 		;Add APs to top of list
 		If $AddDirection = 0 Then
 			$query = "UPDATE AP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
@@ -7820,6 +7819,7 @@ Func _ApplySettingsGUI();Applys settings
 		$DefaultLanguage = GUICtrlRead($LanguageBox)
 		$DefaultLanguageFile = $DefaultLanguage & '.ini'
 		$DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
+		$Column_Names_Line = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Line', '#')
 		$Column_Names_Active = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Active', 'Active')
 		$Column_Names_SSID = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_SSID', 'SSID')
 		$Column_Names_BSSID = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_BSSID', 'Mac Address')
