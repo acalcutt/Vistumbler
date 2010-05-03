@@ -10,7 +10,7 @@ $sql_a=array();
 
 if (@$_POST['ssid'] == "%" or @$_POST['mac'] == "%" or @$_POST['radio'] == "%" or @$_POST['chan'] == "%" or @$_POST['auth'] == "%" or @$_POST['encry'] == "%" )
 {
-	echo '<table><tr><td colspan="6" align="center">Come on man, you cant search or all of something, thats what <a class="links" href="../all.php?token='.$_SESSION["token"].'">this page</a> is for!</td></tr></table>'; 
+	echo '<table><tr><td colspan="6" align="center">Come on man, you cant search or all of something, thats what <a class="links" href="../all.php">this page</a> is for!</td></tr></table>'; 
 	die(footer($_SERVER['SCRIPT_FILENAME']));
 }
 
@@ -119,7 +119,7 @@ if($encry!='')
 	$II++;
 }
 $save_url .= '">Save for later</a>';		
-$export_url .=  'token='.$_SESSION['token'].'">Export to KML</a>';
+$export_url .=  '">Export to KML</a>';
 
 if(!$sql_a)
 {
@@ -145,12 +145,12 @@ echo '<p align="center">Total APs found: '.$total_rows.'</p><table border="1" wi
 
 echo $save_url.'<br>'.$export_url.'</td></tr>';
 
-echo '<tr class="style4"><td>ID</td><td>SSID<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
-	.'<td>MAC<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=mac&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=mac&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
-	.'<td>Chan<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=chan&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=chan&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
-	.'<td>Radio Type<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"&token='.$_SESSION["token"].'><img height="15" width="15" border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=radio&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
-	.'<td>Authentication<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=auth&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=auth&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
-	.'<td>Encryption<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=encry&ord=ASC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=encry&ord=DESC&from='.$from.'&to='.$inc.'&token='.$_SESSION["token"].'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td></tr>';
+echo '<tr class="style4"><td>ID</td><td>SSID<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=SSID&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=SSID&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
+	.'<td>MAC<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=mac&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=mac&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
+	.'<td>Chan<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=chan&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=chan&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
+	.'<td>Radio Type<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=radio&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=radio&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
+	.'<td>Authentication<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=auth&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=auth&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td>'
+	.'<td>Encryption<a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=encry&ord=ASC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0" src="../themes/'.$theme.'/img/down.png"></a><a href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&sort=encry&ord=DESC&from='.$from.'&to='.$inc.'"><img height="15" width="15" border="0"src="../themes/'.$theme.'/img/up.png"></a></td></tr>';
 
 if($total_rows === 0)
 {
@@ -177,7 +177,7 @@ while ($newArray = mysql_fetch_array($result))
 		$auth_s = "Uknown";
 		$encry_s = "Unknown";
 	}
-	echo '<tr class="'.$color.'"><td>'.$id_s.'</td><td><a class="links" href="fetch.php?id='.$id_s.'&token='.$_SESSION['token'].'">'.$ssid_s.'</a></td>';
+	echo '<tr class="'.$color.'"><td>'.$id_s.'</td><td><a class="links" href="fetch.php?id='.$id_s.'">'.$ssid_s.'</a></td>';
 	echo '<td>'.$mac_s.'</td>';
 	echo '<td>'.$chan_s.'</td>';
 	if($radio_s=="a")
@@ -206,7 +206,7 @@ $pages = $total_rows/$inc;
 if ($from=0)
 {
 	$from_back=$to_back-$inc;
-	echo '<a class="links" href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&from='.$from_back.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'"><- </a> ';
+	echo '<a class="links" href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&from='.$from_back.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'"><- </a> ';
 }
 else
 {
@@ -214,7 +214,7 @@ else
 }
 for($I=0; $I<=$pages; $I++)
 {
-		echo ' <a class="links" href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">'.$page.'</a> - ';
+		echo ' <a class="links" href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'">'.$page.'</a> - ';
 		$from=$from+$inc;
 		$page++;
 }
@@ -224,7 +224,7 @@ if ($from_<=$pages)
 }
 else
 {
-	echo '<a class="links" href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&from='.$from_fwd.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">></a>';
+	echo '<a class="links" href="?ssid='.$ssid.'&mac='.$mac.'&radio='.$radio.'&chan='.$chan.'&auth='.$auth.'&encry='.$encry.'&from='.$from_fwd.'&to='.$$inc.'&sort='.$sort.'&ord='.$ord.'">></a>';
 }
 footer($_SERVER['SCRIPT_FILENAME']);
 ?>

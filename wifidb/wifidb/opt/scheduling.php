@@ -35,6 +35,7 @@ $func = strip_tags(addslashes($_GET['func']));
 if($GLOBALS['wifidb_tools'] == 'NO PATH' or $GLOBALS['wifidb_tools'] == NULL){$func = "no_daemon";}
 if(is_string($func))
 {
+	$daemon = new daemon();
 	switch($func)
 	{
 		case 'done':
@@ -60,13 +61,13 @@ if(is_string($func))
 					echo $newArray['id'];
 					?>
 					</td><td align="center">
-					<a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $newArray["user_row"];?>&token=<?php echo $_SESSION['token']?>"><?php echo $newArray['file'];?></a>
+					<a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $newArray["user_row"];?>"><?php echo $newArray['file'];?></a>
 					</td><td align="center">
 					<?php
 					echo $newArray['date'];
 					?>
 					</td><td align="center">
-					<a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $newArray["user"];?>&token=<?php echo $_SESSION['token']?>"><?php echo $newArray["user"];?></a>
+					<a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $newArray["user"];?>"><?php echo $newArray["user"];?></a>
 					</td><td align="center">
 					<?php
 					echo $newArray['title'];
@@ -258,16 +259,7 @@ if(is_string($func))
 			mysql_select_db($db,$conn);
 			$sql = "SELECT * FROM `$db`.`settings` WHERE `table` LIKE 'files'";
 			$result = mysql_query($sql, $conn) or die(mysql_error());
-			$file_array = mysql_fetch_array($result);
-			
-			if(isset($_SESSION['token']))
-			{
-				$token = $_SESSION['token'];
-			}else
-			{
-				$token = md5(uniqid(rand(), true));
-				$_SESSION['token'] = $token;
-			}			
+			$file_array = mysql_fetch_array($result);		
 			?>
 				<tr><td class="style3">Next Import scheduled on:</td><td class="light"><?php echo $file_array['size'];?> UTC</td><td class="light">
 			<?php
@@ -280,16 +272,12 @@ if(is_string($func))
 				$altered = $str_time+$alter_by;
 			#	echo "ADD: ".$altered."<BR>";
 				$next_run = date("Y-m-d H:i:s", $altered);
-				$Zone = " [".$TZone."] ";
-				$Zone = preg_replace($timezone_numbers, $timezone_names, $Zone);
-				
-				echo $next_run.$Zone;
+				echo $next_run.'  [ '.getTZ('-5').' ]';
 			?>
 				</td></tr>
 				<tr><td  class="style3" colspan="1">Select Refresh Rate:</td><td class="light" colspan="2">
 					<?php #echo $refresh."<BR>"; ?>
-					<form action="scheduling.php?func=refresh&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
-					<input type="hidden" name="token" value="<?php echo $token; ?>" />
+					<form action="scheduling.php?func=refresh" method="post" enctype="multipart/form-data">
 					<SELECT NAME="refresh">  
 					<OPTION <?php if($refresh == 5){ echo "selected ";}?> VALUE="5"> 5 Seconds
 					<OPTION <?php if($refresh == 10){ echo "selected ";}?> VALUE="10"> 10 Seconds
@@ -313,7 +301,7 @@ if(is_string($func))
 			<table border="1" width="90%">
 			<tr class="style4"><th colspan="4">Daemon Status:</TH></tr>
 			<?php
-			daemon::getdaemonstats();
+			$daemon->getdaemonstats();
 			?>
 			</table>
 			<br>
@@ -323,7 +311,7 @@ if(is_string($func))
 			$total_rows = mysql_num_rows($result1);
 			if($total_rows > 10)
 			{
-				echo '<a class="links" href="scheduling.php?func=waiting&token='.$_SESSION['token'].'">View other files waiting for import.</a><br>';
+				echo '<a class="links" href="scheduling.php?func=waiting">View other files waiting for import.</a><br>';
 			}
 			
 			$sql1 = "SELECT * FROM `$db`.`files`";
@@ -331,7 +319,7 @@ if(is_string($func))
 			$done_rows = mysql_num_rows($result1);
 			if($done_rows > 0)
 			{
-				echo '<a class="links" href="scheduling.php?func=done&token='.$_SESSION['token'].'">View other files that have finished importing.</a><br>';
+				echo '<a class="links" href="scheduling.php?func=done">View other files that have finished importing.</a><br>';
 			}
 			?>
 			<br>

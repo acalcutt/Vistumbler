@@ -95,24 +95,18 @@ function start($command = '')
 			break;
 		case 'all':
 		#	echo "alllllll!!!!!!!!\r\n";
-			$daemon_ = array();
-			$daemon_[0] = 'imp_exp';
-			$daemon_[1] = 'dbstats';
-			$daemon_[2] = 'daemonperf';
-		#	dump($daemon_);
+			$daemon_ = array(
+								0 => 'imp_exp',
+								1 => 'dbstats',
+								2 => 'daemonperf'
+							);
 			break;
 	}
-	
-#	dump($daemon_);
-	
 	require('daemon/config.inc.php');
 	require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
 	echo "Starting WiFiDB Daemon..\n";
 	
-#	dump($daemon_);
-	
 	$is_array = is_array($daemon_);
-	#echo is_array($daemon_) ? "Array\r\n" : "not an Array\r\n";
 	if($is_array)
 	{
 		foreach($daemon_ as $d)
@@ -142,23 +136,32 @@ function start($command = '')
 
 	if (PHP_OS == "WINNT")
 	{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemon_script." > ".$console_log;}
-	else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
+	else{$cmd = "php ".$daemon_script." > ".$console_log." &";}
 	
 	#echo $cmd."\n";
 	if(file_exists($daemon_script))
 	{
-		$start = popen($cmd, 'w');
-		if($start)
+		$handle = popen($cmd, 'r');
+		if($handle)
 		{
-			echo "WiFiDB Daemon Started..\n";
-			return 1;
+			echo "'$handle'; " . gettype($handle) . "\n";
+			$read = fread($handle, 2096);
+			echo $read;
+			sleep(2);
+			$pidfile = @file($GLOBALS['pid_file_loc'].'imp_expd.pid');
+			if($pidfile)
+			{
+				$PID =  $pidfile[0];
+				echo "WiFiDB Daemon Started... [ $PID ]\r\n";
+				return 1;
+			}else
+			{
+				echo "WiFiDB Daemon Failed To Start...\n";
+				return 0;
+			}
 		}else
 		{
-			echo "WiFiDB Daemon Could not start\nStatus: ".$start."\n";
-			foreach($screen_output as $line)
-			{
-				echo $line."\n";
-			}
+			echo "WiFiDB Daemon Could not start\nStatus: ".$handle."\n";
 			return 0;
 		}
 	}else

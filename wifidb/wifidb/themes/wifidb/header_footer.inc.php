@@ -31,7 +31,6 @@ function pageheader($title, $output="detailed")
 	{
 		$host_url = $hosturl;
 	}
-	$token = session_starter();
 	
 	$sec = new security();
 		
@@ -71,22 +70,22 @@ function pageheader($title, $output="detailed")
 				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
 				<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" /><br>
 				<span class="content_head"><strong><em>[WiFIDB]</em></strong></span><br>
-				<a class="links" href="<?php echo $host_url;?>/?token=<?php echo $token;?>">Main Page</a><br>
-				<a class="links" href="<?php echo $host_url;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a><br>
-				<a class="links" href="<?php echo $host_url;?>/import/?token=<?php echo $token;?>">Import</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated KML</a><br>
-				<a class="links" href="<?php echo $host_url;?>/console/?token=<?php echo $token;?>">Daemon Console</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/search.php?token=<?php echo $token;?>">Search</a><br>
-				<a class="links" href="<?php echo $host_url;?>/themes/?token=<?php echo $token;?>">Themes</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a><br>
+				<a class="links" href="<?php echo $host_url;?>">Main Page</a><br>
+				<a class="links" href="<?php echo $host_url;?>/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a><br>
+				<a class="links" href="<?php echo $host_url;?>/import/">Import</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php">Files Waiting for Import</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?func=done">Files Already Imported</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?func=daemon_kml">Daemon Generated KML</a><br>
+				<a class="links" href="<?php echo $host_url;?>/console/">Daemon Console</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/export.php?func=index">Export</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/search.php">Search</a><br>
+				<a class="links" href="<?php echo $host_url;?>/themes/">Themes</a><br>
+				<a class="links" href="<?php echo $host_url;?>/opt/userstats.php?func=allusers">View All Users</a><br>
 				<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a><br>
-				<a class="links" href="<?php echo $host_url;?>/ver.php?token=<?php echo $token;?>">WiFiDB Versions</a><br>
+				<a class="links" href="<?php echo $host_url;?>/ver.php">WiFiDB Versions</a><br>
 				<br>
 				<span class="content_head"><strong><em>[Mysticache]</em></strong></span><br>
-				<a class="links" href="<?php if($root != '' or $root != '/'){echo $hosturl.$root;}else{echo $hosturl;}?>/caches.php?token=<?php echo $token;?>">View shared Caches</a><br>
+				<a class="links" href="<?php if($root != '' or $root != '/'){echo $hosturl.$root;}else{echo $hosturl;}?>/caches.php">View shared Caches</a><br>
 				<?php
 				if($login_check)
 				{
@@ -179,10 +178,8 @@ function footer($filename = '', $output = "detailed")
 				?>
 				<font size="2"><b>
 				<?php
-				$sec = new security();
-				# $privs_a = $GLOBALS['privs_a'];
-				list($privs, $priv_name) = $sec->check_privs(0);
-			#	echo $privs;
+				$privs = $GLOBALS['privs'];
+				$priv_name = $GLOBALS['priv_name'];
 				if($privs >= 1000)
 				{
 					?><a class="links" href="<?php echo $GLOBALS['host_url'];?>/cp/?func=admin_cp">Admin Control Panel</a>  |-|  <?php

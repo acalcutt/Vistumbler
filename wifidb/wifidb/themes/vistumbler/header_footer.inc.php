@@ -32,7 +32,6 @@ function pageheader($title, $output="detailed")
 		$host_url = $hosturl;
 	}
 #	echo $host_url;
-	$token = session_starter();
 	
 	$sec = new security();
 	
@@ -83,34 +82,34 @@ function pageheader($title, $output="detailed")
 								<td class="cell_color">
 									<div class="inside_dark_header">WiFiDB Links</div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/?token=<?php echo $token;?>">Main Page</a></strong></div>
+										<a href="<?php echo $host_url;?>/">Main Page</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/all.php?sort=SSID&ord=ASC&from=0&to=100&token=<?php echo $token;?>">View All APs</a></strong></div>
+										<a href="<?php echo $host_url;?>/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/import/?token=<?php echo $token;?>">Import</a></strong></div>
+										<a href="<?php echo $host_url;?>/import/">Import</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/opt/scheduling.php?token=<?php echo $token;?>">Files Waiting for Import</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/scheduling.php">Files Waiting for Import</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/opt/scheduling.php?func=done&token=<?php echo $token;?>">Files Already Imported</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/scheduling.php?func=done">Files Already Imported</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/opt/scheduling.php?func=daemon_kml&token=<?php echo $token;?>">Daemon Generated kml</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/scheduling.php?func=daemon_kml">Daemon Generated kml</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/console/?token=<?php echo $token;?>">Daemon Console</a></strong></div>
+										<a href="<?php echo $host_url;?>/console/">Daemon Console</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/opt/export.php?func=index&token=<?php echo $token;?>">Export</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/export.php?func=index">Export</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/opt/search.php?token=<?php echo $token;?>">Search</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/search.php">Search</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/themes/?token=<?php echo $token;?>">Themes</a></strong></div>
+										<a href="<?php echo $host_url;?>/themes/">Themes</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/opt/userstats.php?func=allusers&token=<?php echo $token;?>">View All Users</a></strong></div>
+										<a href="<?php echo $host_url;?>/opt/userstats.php?func=allusers">View All Users</a></strong></div>
 									<div class="inside_text_bold"><strong>
 										<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a></strong></div>
 									<div class="inside_text_bold"><strong>
-										<a href="<?php echo $host_url;?>/ver.php?token=<?php echo $token;?>">WiFiDB Version</a></strong></div>
+										<a href="<?php echo $host_url;?>/ver.php">WiFiDB Version</a></strong></div>
 									<br>
 									<div class="inside_dark_header">[Mysticache]</div>
-									<div class="inside_text_bold"><a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/caches.php?token=<?php echo $token;?>">View shared Caches</a></div>
+									<div class="inside_text_bold"><a class="links" href="<?php if($root != ''){echo $hosturl.$root;}?>/caches.php">View shared Caches</a></div>
 									<?php
 									if($login_check)
 									{

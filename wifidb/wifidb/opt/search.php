@@ -2,12 +2,8 @@
 include('../lib/database.inc.php');
 pageheader("Search Page");
 include('../lib/config.inc.php');
-if (isset($_GET['token']))
-{
-	if (isset($_SESSION['token']) && $_GET['token'] == $_SESSION['token'])
-	{
 		?><h2>Search for Access Points</h2>
-						<form action="results.php?ord=ASC&sort=ssid&from=0&to=25&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+						<form action="results.php?ord=ASC&sort=ssid&from=0&to=25" method="post" enctype="multipart/form-data">
 								<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0 align="center">
 									<COL WIDTH=40*>
 									<COL WIDTH=216*>
@@ -83,13 +79,5 @@ if (isset($_GET['token']))
 							</form>
 						</p>
 		<?php
-	}else
-	{
-		echo "<h2>Could not Compare Tokens, try again.</h2>";
-	}
-}else
-{
-	echo "<h2>You dont have a token, try again</h2>";
-}
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);?>

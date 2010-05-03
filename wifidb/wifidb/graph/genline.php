@@ -16,7 +16,7 @@ pageheader("Graph AP Signal History Page");
 include('../lib/config.inc.php');
 include('../lib/graph.inc.php');
 
-?><form action="genline.php?token=<?php echo $_SESSION['token'];?>"" method="post" enctype="multipart/form-data"><?php
+?><form action="genline.php" method="post" enctype="multipart/form-data"><?php
 
 $graphs = new graphs();
 if($_POST['line']==='line')

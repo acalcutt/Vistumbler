@@ -79,7 +79,7 @@ class security
 				$db_pass = $newArray['password'];
 				$username_db = $newArray['username'];
 				
-				if(md5($cookie_seed.$db_pass) === $cookie_pass_seed)
+				if(md5($db_pass.$cookie_seed) === $cookie_pass_seed)
 				{
 					$privs_a = security::check_privs();
 				#	var_dump($privs_a);
@@ -127,7 +127,9 @@ class security
 	#######################################
 	function check_privs($admin = 0)
 	{
+		global $privs, $priv_name;
 		include_once('config.inc.php');
+		$conn = $GLOBALS['conn'];
 		if($admin == 1)
 		{
 			$cookie_seed = "@LOGGEDIN";
@@ -138,30 +140,29 @@ class security
 			list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
 		}
 		$user_logins_table = $GLOBALS['user_logins_table'];
-	#	if(!@$_COOKIE[$cookie_name])
-	#	{
-	#		die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
-	#		<a href="'.$_SERVER['PHP_SELF'].'">go get a cookie</a>. make it a double stuff.<br>');
-	#		return 0;
-	#		break;
-	#	}
-		$username = $username."";
 	#	echo $username;
 		$sql0 = "SELECT * FROM `wifi`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
 	#	echo $sql0;
-		$result = mysql_query($sql0, $GLOBALS['conn']);
+		$result = mysql_query($sql0, $conn);
 		$newArray = mysql_fetch_array($result);
-		$groups = array(3=>$newArray['admins'],2=>$newArray['devs'],1=>$newArray['mods'],0=>$newArray['users']);
-		$privs = implode("",$groups);
-		$privs+0;
-#		echo $privs;
-		if($privs >= 1000){$priv_name = "Administrator";}
-		elseif($privs >= 100){$priv_name = "Developer";}
-		elseif($privs >= 10){$priv_name = "Moderator";}
-		else{$priv_name = "User";}
-
-		return array($privs, $priv_name);
-	#
+		$table_pass = md5($newArray['password'].$cookie_seed);
+		if($table_pass == $cookie_pass_seed)
+		{
+			$groups = array(3=>$newArray['admins'],2=>$newArray['devs'],1=>$newArray['mods'],0=>$newArray['users']);
+			$privs = implode("",$groups);
+			$privs+0;
+	#		echo $privs;
+			if($privs >= 1000){$priv_name = "Administrator";}
+			elseif($privs >= 100){$priv_name = "Developer";}
+			elseif($privs >= 10){$priv_name = "Moderator";}
+			else{$priv_name = "User";}
+			
+			return array($privs, $priv_name);
+		}
+		else
+		{
+			die("Wrong pass or no Cookie, go get one.");
+		}
 	}
 
 	#######################################
@@ -203,13 +204,11 @@ class security
 		$fails = $newArray['login_fails'];
 		$username_db = $newArray['username'];
 
-	#	echo $username."<BR>".$username_db."<BR>".$pass_seed."<BR>".$db_pass."<BR>";
-		
 		if($db_pass === $pass_seed)
 		{
 			if($admin or $no_save_login){$cookie_timeout = 0;}else{$cookie_timeout = time()+$GLOBALS['timeout'];}
 			
-			if(setcookie($cookie_name, md5($cookie_seed.$pass_seed).":".$username, $cookie_timeout, $path))
+			if(setcookie($cookie_name, md5($pass_seed.$cookie_seed).":".$username, $cookie_timeout, $path))
 			{
 				$sql0 = "SELECT `last_active` FROM `$db`.`$user_logins_table` WHERE `id` = '$id' LIMIT 1";
 				$array = mysql_fetch_array(mysql_query($sql0, $conn));

@@ -11,7 +11,7 @@ $theme_ss = $theme."/screenshot.PNG";
 $theme_details = file($theme.'/details.txt');
 $total = count($theme_details);
 ?><table align="center"><tr><th><?php echo $theme;?></th></tr>
-<tr><td align="center"><form action="index.php?func=change&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+<tr><td align="center"><form action="index.php?func=change" method="post" enctype="multipart/form-data">
 <input type="hidden" name="theme" value="<?php echo $theme; ?>" />
 <INPUT  type="submit" NAME="submit" VALUE="Select This Theme" onclick="this.form.submit(); this.disabled = 1;" >
 <!--

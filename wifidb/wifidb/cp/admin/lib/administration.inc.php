@@ -706,6 +706,18 @@ class admin
 				$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` NOT LIKE 'admin%' ORDER BY `username` ASC";
 				if($result = mysql_query($sql0, $conn))
 				{
+					if($detailed_user_view)
+					{
+					?>
+						<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=0" title="Show the Short version" >detailed</a>)</font></b><br>
+					<?php
+					}else
+					{
+					?>
+						<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=1" title="Show Detailed Version">short</a>)</font></b><br>
+						<table border="1" style="width: 95%">
+					<?php
+					}
 					$row_color = 0;
 					while($users_a = mysql_fetch_array($result))
 					{
@@ -736,8 +748,7 @@ class admin
 						if($detailed_user_view)
 						{
 							?>
-							<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=0" title="Show the Short version" >detailed</a>)</font></b><br>
-							<table border="1" style="width: 95%">
+							<table border="1" width="95%">
 							<tr class="style4">
 								<th>ID</th>
 								<th>User Name</th>
@@ -746,11 +757,23 @@ class admin
 								<th>Website</th>
 								<th>Vistumbler Version</th>
 								<th>Title</th></tr>
-							<tr class="dark">
+							<tr class="<?php echo $style; ?>">
 								<td><?php echo $users_a['id']; ?></td>
-								<td><?php echo $users_a['username']; ?></td>
+								<td>
+								<?php
+								if($Num_aps > 0)
+								{
+									?>
+									<a class="links" href="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>/opt/userstats.php?func=alluserlists&user=<?php echo $users_a['username'];?>"><?php echo $users_a['username']; ?></a>
+									<?php 
+								}else
+								{
+									echo $users_a['username'];
+								}
+								?>
+								</td>
 								<td><?php echo $Num_aps; ?></td>
-								<td><?php if($users_a['h_email']){echo "Email Hidden, except to admins";}else{ ?><a class='email' href='<?php echo $users_a['email']; ?>' ><?php echo $users_a['email']; ?></a><?php } ?></td>
+								<td><?php if($users_a['h_email'] and $GLOBALS['priv_name'] != "Administrator"){echo "Email Hidden, except to admins";}else{ ?><a class='email' href='mailto:<?php echo $users_a['email']; ?>' ><?php echo $users_a['email']; ?></a><?php } ?></td>
 								<td><?php echo $users_a['website']; ?></td>
 								<td><?php echo $users_a['Vis_ver']; ?></td>
 								<td>
@@ -765,7 +788,7 @@ class admin
 								<th>Join Date</th>
 								<th>UID</th>
 							</tr>
-							<tr class="dark">
+							<tr class="<?php echo $style; ?>">
 								<td colspan="2">&nbsp;</td>
 								<td><?php echo $users_a['rank']; ?></td>
 								<td><?php echo $Num_geo; ?></td>
@@ -773,18 +796,29 @@ class admin
 								<td><?php echo $users_a['join_date']; ?></td>
 								<td><?php echo $users_a['uid']; ?></td>
 							</tr>
-						</table><?php
+						</table>
+						<br>
+						<?php
 						}else
 						{
 							?>
-							<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=1" title="Show Detailed Version">short</a>)</font></b><br>
-							
-							<table border="1" width="75%">
 								<tr class="style4">
 									<th>ID</th><th>User Name</th><th>Number of APs</th><th>Last Login</th><th>Join Date</th><th>Vistumbler Version</th><th>Title / Rank</th></tr>
 								<tr class="<?php echo $style; ?>">
 									<td><?php echo $users_a['id']; ?></td>
-									<td><?php echo $users_a['username']; ?></td>
+									<td>
+									<?php
+									if($Num_aps > 0)
+									{
+										?>
+										<a class="links" href="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>/opt/userstats.php?func=alluserlists&user=<?php echo $users_a['username'];?>"><?php echo $users_a['username']; ?></a>
+										<?php 
+									}else
+									{
+										echo $users_a['username'];
+									}
+									?>
+									</td>
 									<td><?php echo $Num_aps; ?></td>
 									<td><?php echo $users_a['last_login']; ?></td>
 									<td><?php echo $users_a['join_date']; ?></td>
@@ -2861,13 +2895,19 @@ class admin
 							case "start":
 								if(!$daemon->getdaemonstats())
 								{
-									echo "Starting the Import / Export Daemon<br>";
+									echo "Trying to start the Import / Export Daemon....<br>";
 									if($daemon->start("imp_exp"))
 									{
 										sleep(2);
-										$pidfile = file($GLOBALS['pid_file_loc'].'imp_expd.pid');
-										$PID =  $pidfile[0];
-										echo "STARTED! :-]<br>WiFiDB 'Import/Export Daemon'<br>Version: 2.0.0<br>\t(/tools/daemon/imp_expd.php)<br>PID: [ $PID ]<br>";
+										$pidfile = @file($GLOBALS['pid_file_loc'].'imp_expd.pid');
+										if($pidfile)
+										{
+											$PID =  $pidfile[0];
+											echo "STARTED! :-]<br>WiFiDB 'Import/Export Daemon'<br>Version: 2.0.0<br>\t(/tools/daemon/imp_expd.php)<br>PID: [ $PID ]<br>";
+										}else
+										{
+											echo "Failed to start the Import / Export Daemon :-[";
+										}
 									}else
 									{
 										echo "Failed to start the Import / Export Daemon :-[";
@@ -2929,7 +2969,7 @@ class admin
 								echo "Starting the Database Statistics Daemon<br>";
 								if(!$daemon->getdbdaemonstats())
 								{
-									$ret = $daemon->start("daemon_stats");
+									$ret = $daemon->start("daemon_stats", "");
 									if($ret == 1)
 									{
 										sleep(2);
@@ -2956,6 +2996,7 @@ class admin
 						}
 					break;
 				}
+				admin_footer();
 			break;
 			
 			case "daemon_cfgproc":

@@ -120,7 +120,7 @@ switch($func)
 					die();
 				}
 				?>
-				<p><a class="links" href="/wifidb/opt/scheduling.php?token=<?php echo $_SESSION['token'];?>">Go and check out your new Import</a>. Go on, you know you want to...</p>
+				<p><a class="links" href="/wifidb/opt/scheduling.php">Go and check out your new Import</a>. Go on, you know you want to...</p>
 				<?php
 				mysql_select_db($db,$conn);
 
@@ -131,7 +131,7 @@ switch($func)
 				
 				// ASK FOR ANOTHER IMPORT
 				?>
-				<CENTER><form action="?func=import&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+				<CENTER><form action="?func=import" method="post" enctype="multipart/form-data">
 					<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
 						<TR height="40">
 							<TD class="style4">
@@ -217,7 +217,7 @@ switch($func)
 		}
 		echo "<br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br>";
 		?>
-		<CENTER><form action="?func=import&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+		<CENTER><form action="?func=import" method="post" enctype="multipart/form-data">
 			<TABLE BORDER=1 CELLPADDING=2 CELLSPACING=0>
 				<TR height="40">
 					<TD class="style4">

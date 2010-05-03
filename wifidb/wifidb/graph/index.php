@@ -15,7 +15,7 @@ pageheader("Graph AP Signal History Page");
 include('../lib/config.inc.php');
 include('../lib/graph.inc.php');
 ?>
-<form action="genline.php?token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+<form action="genline.php" method="post" enctype="multipart/form-data">
 <?php
 echo '<h1>Graph an Access Points Signal history *Beta*</h1><h4>Bar Graph=>'.$ver_graph['graphs']['wifibar'].'<br>Line Graph=>'.$ver_graph['graphs']['wifiline'].'</h4>';
 

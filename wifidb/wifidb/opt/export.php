@@ -25,7 +25,7 @@ switch($func)
 {
 	case "index":
 		?>
-		<form action="export.php?func=exp_user_list&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+		<form action="export.php?func=exp_user_list" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3" align="center">
 		<tr class="style4"><th colspan="2">Export a Users Import List to KML</th></tr>
 		<tr class="light">
@@ -68,7 +68,7 @@ switch($func)
 		</table>
 		</form>
 		
-		<form action="export.php?func=exp_user_all_kml&token=<?php echo $_SESSION['token'];?>" method="post" enctype="multipart/form-data">
+		<form action="export.php?func=exp_user_all_kml" method="post" enctype="multipart/form-data">
 		<table border="1" cellspacing="0" cellpadding="3" align="center">
 		<tr class="style4"><th colspan="2">Export All Access Points for a User</th></tr>
 		<tr class="light"><td>Username: </td><td>

@@ -49,7 +49,7 @@ if($login_check)
 				</tr>
 				<tr>
 					<td colspan="6" class="dark">
-					<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=update_user_profile">
+					<form method="post" action="?func=update_user_profile">
 					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Email</th>
@@ -178,7 +178,7 @@ if($login_check)
 				</tr>
 				<tr>
 					<td colspan="6" class="dark">
-					<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=update_user_pref">
+					<form method="post" action="?func=update_user_pref">
 					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Email me about updates</th>
@@ -408,7 +408,7 @@ if($login_check)
 
 										case 1:
 											echo "Un-share of Geocache: $name ( $id )<br>Was successful.";
-											redirect_page("/$root/cp/?func=boeyes&boeye_func=list_all","");
+											redirect_page($GLOBALS['hosturl'].$GLOBALS['root']."/cp/?func=boeyes&boeye_func=list_all","");
 											break;
 									}
 									?>
@@ -456,7 +456,7 @@ if($login_check)
 
 										case 1:
 											echo "Geocache: $name ( $id )<br> Deletion Was successful.";
-											redirect_page("/$root/cp/?func=boeyes&boeye_func=list_all","");
+											redirect_page($GLOBALS['hosturl'].$GLOBALS['root']."/cp/?func=boeyes&boeye_func=list_all","");
 											break;
 									}
 									?>
@@ -505,7 +505,7 @@ if($login_check)
 
 										case 1:
 											echo "Share of Waypoint: $name ( $id )<br>Was sucssesfull.";
-											redirect_page("/$root/cp/?func=boeyes&boeye_func=list_all","");
+											redirect_page($GLOBALS['hosturl'].$GLOBALS['root']."/cp/?func=boeyes&boeye_func=list_all","");
 											break;
 									}
 									?>
@@ -1204,7 +1204,7 @@ if($login_check)
 				}
 
 				</script>
-				<table width="100%"><tr><td><img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="100%" height="1" /></td></tr>
+				<table width="100%"><tr><td><img alt="" src="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>/themes/wifidb/img/1x1_transparent.gif" width="100%" height="1" /></td></tr>
 				<tr><td id="leftcolumn">
 				[<a class="links" href="javascript:ajaxpage('?func=mailbox&page=inbox', 'rightcolumn');">Inbox</a>]
 				[<a class="links" href="javascript:ajaxpage('?func=mailbox&page=compose', 'rightcolumn');">Write</a>]
@@ -1338,7 +1338,7 @@ if($login_check)
 			<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=admin_cp_proc">
 			<table align="center">
 				<tr>
-					<td colspan="2"><p align="center"><img src="../themes/wifidb/img/logo.png"></p></td>
+					<td colspan="2"><p align="center"><img src="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>/themes/wifidb/img/logo.png"></p></td>
 				</tr>
 				<tr>
 					<td>Username <font size="1">(CaSeSenSiTivE)</font></td>
@@ -1383,7 +1383,7 @@ if($login_check)
 					<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
 					<table align="center">
 						<tr>
-							<td colspan="2"><p align="center"><img src="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>"/themes/wifidb/img/logo.png"></p></td>
+							<td colspan="2"><p align="center"><img src="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>/themes/wifidb/img/logo.png"></p></td>
 						</tr>
 						<tr>
 							<td>Username <font size="1">(CaSeSenSiTivE)</font></td>

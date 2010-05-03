@@ -224,7 +224,42 @@ function convert($size)
 	return @round($size/pow(1024,($i=floor(log($size,1024)))),6).' '.$unit[$i];
 }
 
-
+function getTZ($offset = '-5')
+{
+	$timezones = array(
+						'-12'=>'Pacific/Kwajalein',
+						'-11'=>'Pacific/Samoa',
+						'-10'=>'Pacific/Honolulu',
+						'-9'=>'America/Juneau',
+						'-8'=>'America/Los_Angeles',
+						'-7'=>'America/Denver',
+						'-6'=>'America/Mexico_City',
+						'-5'=>'America/New_York',
+						'-4'=>'America/Caracas',
+						'-3.5'=>'America/St_Johns',
+						'-3'=>'America/Argentina/Buenos_Aires',
+						'-2'=>'Atlantic/Azores',// no cities here so just picking an hour ahead
+						'-1'=>'Atlantic/Azores',
+						'0'=>'Europe/London',
+						'1'=>'Europe/Paris',
+						'2'=>'Europe/Helsinki',
+						'3'=>'Europe/Moscow',
+						'3.5'=>'Asia/Tehran',
+						'4'=>'Asia/Baku',
+						'4.5'=>'Asia/Kabul',
+						'5'=>'Asia/Karachi',
+						'5.5'=>'Asia/Calcutta',
+						'6'=>'Asia/Colombo',
+						'7'=>'Asia/Bangkok',
+						'8'=>'Asia/Singapore',
+						'9'=>'Asia/Tokyo',
+						'9.5'=>'Australia/Darwin',
+						'10'=>'Pacific/Guam',
+						'11'=>'Asia/Magadan',
+						'12'=>'Asia/Kamchatka'
+						);
+	return $timezones[$offset];
+}
 
 #-------------------------------------------------------------------------------------#
 #----------------------------------  Get Set values  ---------------------------------#
@@ -2541,7 +2576,7 @@ class database
 		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Channel #</P></TD><TD class="light" WIDTH=439><P><?php echo $newArray['chan'];?></P></TD></TR>
 		<?php
 		?>
-		<tr  class="style4"><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>&token=<?php echo $_SESSION['token'];?>">Export this AP to KML</a></td></tr>
+		<tr  class="style4"><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>">Export this AP to KML</a></td></tr>
 		</table>
 		<br>
 		<TABLE align=center  WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0 id="gps">
@@ -2553,7 +2588,7 @@ class database
 		$flip = 0;
 		while ($field = mysql_fetch_array($result))
 		{
-			if($flip){$class="light";$flip=0;}else{$class="dark";$flip=0;}
+			if($flip){$class="light";$flip=0;}else{$class="dark";$flip=1;}
 			$row = $field["id"];
 			$row_id = $row.','.$ID;
 			$sig_exp = explode("-", $field["sig"]);
@@ -2597,9 +2632,8 @@ class database
 				<?php echo $lu; ?></td><td>
 				<?php echo $field["nt"]; ?></td><td>
 				<?php echo $field["label"]; ?></td><td>
-				<a class="links" href="../opt/userstats.php?func=alluserlists&user=<?php echo $field["user"]; ?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["user"]; ?></a></td><td>
-				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>&token=<?php echo $_SESSION['token'];?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>&token=<?php echo $_SESSION['token'];?>">KML</a>
-			<!--	OR <a class="links" href="export.php?func=exp_all_signal_gpx&row=<?php #echo $row_id;?>&token=<?php #echo $_SESSION['token'];?>">GPX</a> -->
+				<a class="links" href="../opt/userstats.php?func=alluserlists&user=<?php echo $field["user"]; ?>"><?php echo $field["user"]; ?></a></td><td>
+				<a class="links" href="../graph/?row=<?php echo $row; ?>&id=<?php echo $ID; ?>">Graph Signal</a></td><td><a class="links" href="export.php?func=exp_all_signal&row=<?php echo $row_id;?>">KML</a>
 				</td></tr>
 				<tr><td colspan="10" align="center">
 				
@@ -2610,7 +2644,7 @@ class database
 				<tr class="style4"><th>Row</th><th>Lat</th><th>Long</th><th>Sats</th><th>Date</th><th>Time</th></tr>
 				<?php
 				$signals = explode('-',$field['sig']);
-				$flip = 0;
+				$flip_1 = 0;
 				foreach($signals as $signal)
 				{
 					$sig_exp = explode(',',$signal);
@@ -2619,9 +2653,9 @@ class database
 					$start2 = microtime(true);
 					$result1 = mysql_query("SELECT * FROM `$db_st`.`$table_gps` WHERE `id` = '$id'", $conn) or die(mysql_error($conn));
 				#	$rows = mysql_num_rows($result1);
+					if($flip_1){$class="light";$flip_1=0;}else{$class="dark";$flip_1=1;}
 					while ($field = mysql_fetch_array($result1)) 
 					{
-						if($flip){$class="light";$flip=0;}else{$class="dark";$flip=0;}
 						?>
 						<tr class="<?php echo $class; ?>"><td align="center">
 						<?php echo $field["id"]; ?></td><td>
@@ -2662,13 +2696,11 @@ class database
 				$APS = explode("-" , $field['points']);
 				foreach ($APS as $AP)
 				{
-			#		echo $AP."<BR>";
+					if($AP == ''){continue;}
 					$access = explode(",", $AP);
 					$New_or_Update = $access[0];
-					
 					$access1 = explode(":",$access[1]);
 					$user_list_id = $access1[0];
-					
 					if ( $apID  ==  $user_list_id )
 					{
 						$list[]=$field['id'].",".$New_or_Update;
@@ -2678,6 +2710,7 @@ class database
 		}
 		if(isset($list))
 		{
+			$flip_2 = 0;
 			foreach($list as $aplist)
 			{
 				$exp = explode(",",$aplist);
@@ -2686,14 +2719,18 @@ class database
 				$result = mysql_query("SELECT * FROM `$db`.`$users_t` WHERE `id`='$apid'", $conn);
 				while ($field = mysql_fetch_array($result)) 
 				{
+					if($flip_2){$class="light";$flip_2=0;}else{$class="dark";$flip_2=1;}
 					if($field["title"]==''){$field["title"]="Untitled";}
 					$points = explode('-' , $field['points']);
 					$total = count($points);
 					?>
-					<td ><?php if($new_update == 1)
-					{echo "Update";}
-					else{echo "New";} 
-					?></td><td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["id"];?></a></td><td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["username"];?></a></td><td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $field["title"];?></a></td><td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td></tr>
+					<tr class="<?php echo $class;?>">
+						<td><?php if($new_update == 1){echo "Update";}else{echo "New";}?></td>
+						<td align="center"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["id"];?></a></td>
+						<td><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $field["username"];?>"><?php echo $field["username"];?></a></td>
+						<td><a class="links" href="userstats.php?func=useraplist&row=<?php echo $field["id"];?>"><?php echo $field["title"];?></a></td>
+						<td align="center"><?php echo $total;?></td><td><?php echo $field['date'];?></td>
+					</tr>
 					<?php
 				}
 			}
@@ -2788,8 +2825,8 @@ class database
 					?>
 					<tr >
 						<td class="<?php echo $color;?>"><?php echo $user_array['id'];?></td>
-						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $username;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $username;?></a></td>
-						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user_array['title'];?></a></td>
+						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $username;?>"><?php echo $username;?></a></td>
+						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>"><?php echo $user_array['title'];?></a></td>
 						<td class="<?php echo $color;?>"><?php echo wordwrap($notes, 56, "<br />\n"); ?></td>
 						<td class="<?php echo $color;?>"><?php echo $pc;?></td>
 						<td class="<?php echo $color;?>"><?php echo $user_array['date'];?></td>
@@ -2802,7 +2839,7 @@ class database
 					<tr>
 						<td></td>
 						<td></td>
-						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user_array['title'];?></a></td>
+						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>"><?php echo $user_array['title'];?></a></td>
 						<td class="<?php echo $color;?>"><?php echo wordwrap($notes, 56, "<br />\n"); ?></td>
 						<td class="<?php echo $color;?>"><?php echo $pc;?></td>
 						<td class="<?php echo $color;?>"><?php echo $user_array['date'];?></td>
@@ -2836,12 +2873,6 @@ class database
 	function all_users_ap($user="")
 	{
 		$start = microtime(true);
-		?>
-		<h3>View All Users <a class="links" href="userstats.php?func=allusers&token=<?php echo $_SESSION['token'];?>">Here</a></h3>
-		<h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $user;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $user;?></a></h1>
-		<h3><a class="links" href="../opt/export.php?func=exp_user_all_kml&user=<?php echo $user;?>&token=<?php echo $_SESSION['token'];?>">Export To KML File</a></h3>
-		<table border="1" align="center"><tr class="style4"><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr>
-		<?php
 		include('config.inc.php');
 		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username`='$user'";
 		$re = mysql_query($sql, $conn) or die(mysql_error($conn));
@@ -2863,25 +2894,68 @@ class database
 				}
 			}
 		}
-		$flip = 0;
-		foreach($aps as $ap)
+		
+		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$user'";
+		$other_imports = mysql_query($sql, $conn) or die(mysql_error($conn));
+		while($imports = mysql_fetch_array($other_imports))
 		{
-			if($ap['flag'] == "1"){continue;}
-			if($flip){$style = "dark";$flip=0;}else{$style="light";$flip=1;}
-			$apid = $ap['apid'];
-			$row = $ap['row'];
-			
-			$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$apid'";
-			$res = mysql_query($sql, $conn) or die(mysql_error($conn));
-			while ($ap_array = mysql_fetch_array($res))
+			if($imports['points'] == ""){continue;}
+			$points = explode("-",$imports['points']);
+			foreach($points as $key=>$pt)
 			{
+				$pt_ex = explode(",", $pt);
+				if($pt_ex[0] == 1)
+				{
+					unset($points[$key]);
+				}
+			}
+			$pts_count = count($points);
+			$total_aps[] = $pts_count;
+		}
+		$total = 0;
+		foreach($total_aps as $totals)
+		{
+			$total += $totals;
+		}
+		?>
+		<table>
+		<tr><td>
+			<table border="1" align="center" width="100%">
+				<tr class="style4">
+					<th colspan='2'>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $user;?>"><?php echo $user;?></a>
+				</tr>
+				<tr class="sub_head">
+					<td><b>Total Access Points...</b></td><td><?php echo $total;?></td>
+				</tr>
+				<tr class="sub_head">
+					<td><b>Export This list To...</b></td><td><a class="links" href="../opt/export.php?func=exp_user_all_kml&user=<?php echo $user;?>">KML</a></td>
+				</tr>
+			</table>
+			<br>
+			<table border="1" align="center">
+				<tr class="style4">
+					<th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th>
+				</tr>
+			<?php
+			$flip = 0;
+			foreach($aps as $ap)
+			{
+				if($ap['flag'] == "1"){continue;}
+				if($flip){$style = "dark";$flip=0;}else{$style="light";$flip=1;}
+				$apid = $ap['apid'];
+				$row = $ap['row'];
+				
+				$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$apid'";
+				$res = mysql_query($sql, $conn) or die(mysql_error($conn));
+				$ap_array = mysql_fetch_array($res);
+
 				$ssid = $ap_array['ssid'];
-			    $mac = $ap_array['mac'];
-			    $chan = $ap_array['chan'];
+				$mac = $ap_array['mac'];
+				$chan = $ap_array['chan'];
 				$radio = $ap_array['radio'];
 				$auth = $ap_array['auth'];
 				$encry = $ap_array['encry'];
-			    if($radio=="a")
+				if($radio=="a")
 				{$radio="802.11a";}
 				elseif($radio=="b")
 				{$radio="802.11b";}
@@ -2892,65 +2966,166 @@ class database
 				else
 				{$radio="Unknown Radio";}
 				?>
-				<tr class="<?php echo $style;?>"><td align="center">
+				<tr class="<?php echo $style;?>">
+					<td align="center">
 				<?php
 				echo $apid;
 				?>
-				</td><td align="center">
+					</td>
+					<td align="center">
 				<?php
 				echo $row;
 				?>
-				</td><td align="center"><a class="links" href="fetch.php?id=<?php echo $apid;?>&token=<?php echo $_SESSION['token'];?>"><?php echo $ssid;?></a></td>
-				<td>
-				<?php echo $mac;?></td><td align="center">
-				<?php echo $auth;?></td><td align="center">
-				<?php echo $encry;?></td><td align="center">
-				<?php echo $radio;?></td><td align="center">
-				<?php echo $chan;?></td></tr>
+					</td>
+					<td align="center">
+						<a class="links" href="fetch.php?id=<?php echo $apid;?>"><?php echo $ssid;?></a>
+					</td>
+					<td>
+						<?php echo $mac;?>
+					</td>
+					<td align="center">
+						<?php echo $auth;?>
+					</td>
+					<td align="center">
+						<?php echo $encry;?>
+					</td>
+					<td align="center">
+						<?php echo $radio;?>
+					</td>
+					<td align="center">
+						<?php echo $chan;?>
+					</td>
+				</tr>
 				<?php
 			}
-		}
-		echo "</table><br>";
+			?>
+			</table>
+		</td></tr></table>
+		<br>
+		<?php
 		$end = microtime(true);
-				if ($GLOBALS["bench"]  == 1)
-				{
-					echo "Time is [Unix Epoc]<BR>";
-					echo "Start Time: ".$start."<BR>";
-					echo "  End Time: ".$end."<BR>";
-				}
+		if ($GLOBALS["bench"]  == 1)
+		{
+			echo "Time is [Unix Epoc]<BR>";
+			echo "Start Time: ".$start."<BR>";
+			echo "  End Time: ".$end."<BR>";
+		}
 	}
 	
 	#========================================================================================================================#
 	#													Grab all user Import lists											 #
 	#========================================================================================================================#
 
-	function users_lists($user="")
+	function users_lists($username="")
 	{
 		$start = microtime(true);
 		include('config.inc.php');
-		echo '<h1>Import Lists For: <a class="links" href ="../opt/userstats.php?func=allap&user='.$user.'&token='.$_SESSION['token'].'">'.$user.'</a></h1>';		
-		echo '<h3>View All Users <a class="links" href="userstats.php?func=allusers&token='.$_SESSION['token'].'">Here</a></h3>';
-		echo '<h3>View all Access Points for user: <a class="links" href="../opt/userstats.php?func=allap&user='.$user.'&token='.$_SESSION['token'].'">'.$user.'</a>';
-		echo '<h2><a class="links" href=../opt/export.php?func=exp_user_all_kml&user='.$user.'&token='.$_SESSION['token'].'">Export To KML File</a></h2>';
-		echo '<table border="1"><tr class="style4"><th>ID</th><th>Title</th><th># of APs</th><th>Imported on</th></tr><tr>';
-		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` = '$user'";
-		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
-		while($user_array = mysql_fetch_array($result))
+		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `id` DESC LIMIT 1";
+		$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
+		$user_last = mysql_fetch_array($user_query);
+		$last_import_id = $user_last['id'];
+		$user_aps = $user_last['aps'];
+		$user_gps = $user_last['gps'];
+		$last_import_title = $user_last['title'];
+		$last_import_date = $user_last['date'];
+		
+		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `id` ASC LIMIT 1";
+		$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
+		$user_first = mysql_fetch_array($user_query);
+		$user_ID = $user_first['id'];
+		$first_import_date = $user_first['date'];
+		
+		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username'";
+		$other_imports = mysql_query($sql, $conn) or die(mysql_error($conn));
+		while($imports = mysql_fetch_array($other_imports))
 		{
-			if($user_array['title']==''){$title = "Untitled";}else{$title = $user_array['title'];}
-			$points = explode('-',$user_array['points']);
-			$total = count($points);
-			echo '<tr><td align="center">'.$user_array["id"].'</td><td align="center"><a class="links" href="../opt/userstats.php?func=useraplist&row='.$user_array["id"].'&token='.$_SESSION['token'].'">'.$title.'</a></td><td align="center">'.$total.'</td><td align="center">'.$user_array["date"].'</td></tr>';
-			
-		}
-		echo "</table><br>";
-		$end = microtime(true);
-				if ($GLOBALS["bench"]  == 1)
+			if($imports['points'] == ""){continue;}
+			$points = explode("-",$imports['points']);
+			foreach($points as $key=>$pt)
+			{
+				$pt_ex = explode(",", $pt);
+				if($pt_ex[0] == 1)
 				{
-					echo "Time is [Unix Epoc]<BR>";
-					echo "Start Time: ".$start."<BR>";
-					echo "  End Time: ".$end."<BR>";
+					unset($points[$key]);
 				}
+			}
+			$pts_count = count($points);
+			$total_aps[] = $pts_count;
+		}
+		$total = 0;
+		foreach($total_aps as $totals)
+		{
+			$total += $totals;
+		}
+		?>
+		<table width="90%" border="1" align="center">
+		<tr class="style4">
+			<th colspan="4">Stats for : <?php echo $username;?></th>
+		</tr>
+		<tr class="sub_head">
+			<th>ID</th><th>Total APs</th><th>First Import</th><th>Last Import</th>
+		</tr>
+		<tr class="dark">
+			<td><?php echo $user_ID;?></td><td><a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $username?>"><?php echo $total;?></a></td><td><?php echo $first_import_date;?></td><td><?php echo $last_import_date;?></td>
+		</tr>
+		</table>
+		<br>
+
+		<table width="90%" border="1" align="center">
+		<tr class="style4">
+			<th colspan="4">Last Import Details</th>
+		</tr>
+		<tr class="sub_head">
+			<th>ID</th><th colspan="3">Title</th>
+		</tr>
+		<tr class="dark">
+			<td align="center"><?php echo $last_import_id;?></td><td colspan="4" align="center"><a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $last_import_id;?>"><?php echo $last_import_title;?></a></td>
+		</tr>
+		<tr class="sub_head">
+			<th colspan="2">Date</th><th>Total APs</th><th>Total GPS</th>
+		</tr>
+		<tr class="dark">
+			<td colspan="2" align="center"><?php echo $last_import_date;?></td><td align="center"><?php echo $user_aps; ?></td><td align="center"><?php echo $user_gps;?></td>
+		</tr>
+		</table>
+		<br>
+		
+		<table width="90%" border="1" align="center">
+		<tr class="style4">
+			<th colspan="4">All Previous Imports</th>
+		</tr>
+		<tr class="sub_head">
+			<th>ID</th><th>Title</th><th>Total APs</th><th>Date</th>
+		</tr>
+		
+		<?php
+		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' AND `id` != '$last_import_id' ORDER BY `id` DESC";
+		$other_imports = mysql_query($sql, $conn) or die(mysql_error($conn));
+		$other_rows = mysql_num_rows($other_imports);
+		if(@$others_rows != "0")
+		{
+			$flip = 0;
+			while($imports = mysql_fetch_array($other_imports))
+			{
+				if($imports['points'] == ""){continue;}
+				if($flip){$style = "dark";$flip=0;}else{$style="light";$flip=1;}
+				$import_id = $imports['id'];
+				$import_title = $imports['title'];
+				$import_date = $imports['date'];
+				$import_ap = $imports['aps'];
+				?>
+				<tr class="<?php echo $style; ?>"><td><?php echo $import_id;?></td><td><a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $import_id;?>"><?php echo $import_title;?></a></td><td><?php echo $import_ap;?></td><td><?php echo $import_date;?></td></tr>
+				<?php
+			}
+		}else
+		{
+			?>
+				<tr class="light"><td colspan="4" align="center">There are no other Imports. Go get some.</td></tr>
+			<?php
+		}
+		?>
+		</table>
+		<?php
 	}
 	
 	#========================================================================================================================#
@@ -2967,12 +3142,30 @@ class database
 		$user_array = mysql_fetch_array($result);
 		$aps=explode("-",$user_array["points"]);
 		$title = $user_array["title"];
-		echo '<p align="center"><h1>Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user='.$user_array["username"].'&token='.$_SESSION['token'].'">'.$user_array["username"].'</a></h1><h2>With Title: '.$title.'</h2><h2>Imported On: '.$user_array["date"].'</h2>';
 		?>
-		<h3>View All Users <a class="links" href="userstats.php?func=allusers&token=<?php echo $_SESSION['token'];?>">Here</a></h3>
+		<table><tr><td align="center">
+			<table width="100%" border="1" align="center">
+				<tr class="style4">
+					<th colspan="2">
+						Access Points For: <a class="links" href ="../opt/userstats.php?func=alluserlists&user=<?php echo $user_array["username"]; ?>"><?php echo $user_array["username"]; ?></a>
+					</th>
+				</tr>
+				<tr class="sub_head">
+					<td><b>Title</b></td><td><?php echo $title; ?></td>
+				</tr>
+				<tr class="sub_head">
+					<td><b>Imported On</b></td><td><?php echo $user_array["date"]; ?></td>
+				</tr>
+				<tr class="sub_head">
+					<td><b>Total APs in List</b></td><td><?php echo $user_array["aps"]; ?></td>
+				</tr>
+			<table>
+			<br>
+			<table border="1" align="center">
+				<tr class="style4">
+					<th>New/Update</th><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th>
+				</tr>
 		<?php
-		echo '<a class="links" href="../opt/export.php?func=exp_user_list&row='.$user_array["id"].'&token='.$_SESSION['token'].'">Export To KML File</a>';
-		echo '<table border="1" align="center"><tr class="style4"><th>New/Update</th><th>AP ID</th><th>Row</th><th>SSID</th><th>Mac Address</th><th>Authentication</th><th>Encryption</th><th>Radio</th><th>Channel</th></tr><tr>';
 		$flip = 0;
 		foreach($aps as $ap)
 		{
@@ -2993,13 +3186,15 @@ class database
 				$radio = $ap_array['radio'];
 				$auth = $ap_array['auth'];
 				$encry = $ap_array['encry'];
-			    echo '<tr class="'.$style.'">
-				<td align="center">'.$flag.'</td>
-				<td align="center">'.$apid.'</td>
-				<td align="center">'.$row.'</td>
-				<td align="center"><a class="links" href="fetch.php?id='.$apid.'&token='.$_SESSION['token'].'">'.$ssid.'</a></td>
-			    <td align="center">'.$mac.'</td>
-			    <td align="center">'.$auth.'</td>';
+				?>
+			    <tr class="<?php echo $style;?>">
+				<td align="center"><?php echo $flag;?></td>
+				<td align="center"><?php echo $apid;?></td>
+				<td align="center"><?php echo $row;?></td>
+				<td align="center"><a class="links" href="fetch.php?id=<?php echo $apid; ?>"><?php echo $ssid; ?></a></td>
+			    <td align="center"><?php echo $mac;?></td>
+			    <td align="center"><?php echo $auth;?></td>
+				<?php
 				if($radio=="a")
 				{$radio="802.11a";}
 				elseif($radio=="b")
@@ -3010,19 +3205,24 @@ class database
 				{$radio="802.11n";}
 				else
 				{$radio="Unknown Radio";}
-				echo '<td align="center">'.$encry.'</td>
-				<td align="center">'.$radio.'</td>
-				<td align="center">'.$chan.'</td></tr>';
+				?>
+				<td align="center"><?php echo $encry;?></td>
+				<td align="center"><?php echo $radio;?></td>
+				<td align="center"><?php echo $chan;?></td></tr>
+			<?php
 			}
 		}
-		echo "</table><br></p>";
+		?>
+		</table>
+		</td></tr></table>
+		<?php
 		$end = microtime(true);
-				if ($GLOBALS["bench"]  == 1)
-				{
-					echo "Time is [Unix Epoc]<BR>";
-					echo "Start Time: ".$start."<BR>";
-					echo "  End Time: ".$end."<BR>";
-				}
+		if ($GLOBALS["bench"]  == 1)
+		{
+			echo "Time is [Unix Epoc]<BR>";
+			echo "Start Time: ".$start."<BR>";
+			echo "  End Time: ".$end."<BR>";
+		}
 	}
 	
 	
@@ -5452,9 +5652,7 @@ class daemon
 	function getdaemonstats()
 	{
 		$return =0;
-		$WFDBD_PID = '/var/run/wifidbd.pid';
-	#	$WFDBD_PID = $GLOBALS['pid_file_loc'].'wifidbd.pid';
-	#	echo $WFDBD_PID."<br>";
+		$WFDBD_PID = $GLOBALS['pid_file_loc'].'imp_expd.pid';
 		$os = PHP_OS;
 		if ( $os[0] == 'L')
 		{
@@ -5708,17 +5906,17 @@ class daemon
 #########################################
 
 #########################################
-	function start($d)
+	function start($d='',$out='')
 	{
-		if($screen_out == 'CLI'){$ender = '\r\n';}else{$ender = '<br>';}
+		if($out == 'CLI'){$ender = '\r\n';}else{$ender = '<br>';}
 		require('config.inc.php');
 		require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
-		if (!file_exists("/var/log/wifidb/"))
+		if (!file_exists($GLOBALS['daemon_log_folder']))
 		{
-			echo "Failed, no wifidb folder in /var/log/";
-			return 0;
-		#	mkdir($GLOBALS['daemon_log_folder']);
+			echo "No WiFiDB folder in /var/log/";
+			mkdir($GLOBALS['daemon_log_folder']);
 		}
+		############
 		switch($d)
 		{
 			case "imp_exp":
@@ -5726,24 +5924,22 @@ class daemon
 				echo "Starting WiFiDB 'Import/Export Daemon'..".$ender;
 				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."imp_expd.php";
 				if (PHP_OS == "WINNT")
-				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
-				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
+				{$cmd = "start ".$GLOBALS['php_install']."\\php.exe C:\\CLI\\rund.php start ied &";}
+				else{$cmd = "php /CLI/rund.php start ied &";}
 				
 				echo $cmd.$ender;
 				if(file_exists($daemon_script))
 				{
-					echo "Start!".$ender;
-					if(popen($cmd, 'r'))
+					echo "Wait for it.....".$ender;
+					$handle = system($cmd, $r);
+					if($handle)
 					{
-						echo "WiFiDB 'Import/Export Daemon' Started...".$ender;
+						echo "::::: '$handle' ;\r\n $r :::::\n";
+						echo "WiFiDB 'Import/Export Daemon' Started!".$ender;
 						return 1;
 					}else
 					{
-						echo "WiFiDB 'Import/Export Daemon' Could not start\nStatus: ".$start."\n";
-						foreach($screen_output as $line)
-						{
-							echo $line."\n";
-						}
+						echo "WiFiDB 'Import/Export Daemon' Could not start \nStatus: ".$start."\n";
 						return 0;
 					}
 				}else
