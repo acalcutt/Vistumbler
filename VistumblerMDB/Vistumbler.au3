@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10 Beta 7'
+$version = 'v10 Beta 8'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/05/02'
+$last_modified = '2010/05/03'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -1151,6 +1151,7 @@ $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $Extra)
 $ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $Extra)
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $Extra)
+$UpdateManufacturers = GUICtrlCreateMenuItem("Update Manufacturers", $Extra)
 
 $Help = GUICtrlCreateMenu($Text_Help)
 $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
@@ -1313,6 +1314,7 @@ GUICtrlSetOnEvent($OpenKmlNetworkLink, '_StartGoogleAutoKmlRefresh')
 GUICtrlSetOnEvent($ViewInPhilsPHP, '_ViewInPhilsPHP')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
 GUICtrlSetOnEvent($LocateInWDB, '_LocatePositionInWiFiDB')
+GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
 ;Help Menu
 GUICtrlSetOnEvent($VistumblerHome, '_OpenVistumblerHome')
 GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
@@ -8893,6 +8895,11 @@ Func _CheckForUpdates()
 	EndIf
 	Return ($UpdatesAvalible)
 EndFunc   ;==>_CheckForUpdates
+
+Func _ManufacturerUpdate()
+	Run(@ScriptDir & '\UpdateManufactures.exe')
+	Exit
+EndFunc   ;==>_ManufacturerUpdate
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       DATE / TIME FUNCTIONS
