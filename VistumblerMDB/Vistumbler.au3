@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10 Beta 8'
+$version = 'v10 Beta 8.1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/05/03'
+$last_modified = '2010/05/09'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -219,8 +219,10 @@ Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GP
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $AutoKmlDeadHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
 Dim $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
-Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadNs
+Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs
 Dim $ExportKMLGUI, $GUI_TrackColor
+
+Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
 Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1
 Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
@@ -760,6 +762,7 @@ Dim $Text_AddedGuessedSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'Ad
 Dim $Text_SortingTreeview = IniRead($DefaultLanguagePath, 'GuiText', 'SortingTreeview', 'Sorting Treeview')
 Dim $Text_Recovering = IniRead($DefaultLanguagePath, 'GuiText', 'Recovering', 'Recovering')
 Dim $Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler File')
+Dim $Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed CSV File')
 Dim $Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler TXT File')
 Dim $Text_ErrorOpeningGpsPort = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorOpeningGpsPort', 'Error opening GPS port')
 Dim $Text_SecondsSinceGpsUpdate = IniRead($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', 'Seconds Since GPS Update')
@@ -1013,16 +1016,14 @@ EndIf
 $file = GUICtrlCreateMenu($Text_File)
 $NewSession = GUICtrlCreateMenuItem($Text_NewSession, $file)
 $Save = GUICtrlCreateMenu($Text_Import, $file)
-$ImportFromTXT = GUICtrlCreateMenuItem($Text_ImportFromTXT, $Save)
-$ImportFromVSZ = GUICtrlCreateMenuItem($Text_ImportFromVSZ, $Save)
+$ImportFromTXT = GUICtrlCreateMenuItem($Text_Import, $Save)
 $ImportFolder = GUICtrlCreateMenuItem($Text_ImportFolder, $Save)
 $Export = GUICtrlCreateMenu($Text_Export, $file)
 $ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
 $ExportToVS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportVS1Menu)
 $ExportToFilVS1 = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportVS1Menu)
-$ExportTXTMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
-$ExportToTXT = GUICtrlCreateMenuItem($Text_AllAPs, $ExportTXTMenu)
-$ExportToFilTXT = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportTXTMenu)
+$ExportVSZMenu = GUICtrlCreateMenu('Export To VSZ', $Export)
+$ExportToVSZ = GUICtrlCreateMenuItem($Text_AllAPs, $ExportVSZMenu)
 $ExportCsvMenu = GUICtrlCreateMenu($Text_ExportToCSV, $Export)
 $ExportToCsv = GUICtrlCreateMenuItem($Text_AllAPs, $ExportCsvMenu)
 $ExportToFilCsv = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportCsvMenu)
@@ -1256,7 +1257,6 @@ GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
 ;File Menu
 GUICtrlSetOnEvent($NewSession, '_NewSession')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
-GUICtrlSetOnEvent($ImportFromVSZ, '_ImportVSZ')
 GUICtrlSetOnEvent($ImportFolder, '_LoadFolder')
 GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
@@ -1283,10 +1283,9 @@ GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
 GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
 GUICtrlSetOnEvent($GuiUseNativeWifi, '_NativeWifiToggle')
 ;Export Menu
-GUICtrlSetOnEvent($ExportToTXT, '_ExportData')
-GUICtrlSetOnEvent($ExportToFilTXT, '_ExportFilteredData')
 GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
 GUICtrlSetOnEvent($ExportToFilVS1, '_ExportFilteredDetailedData')
+GUICtrlSetOnEvent($ExportToVSZ, '_ExportVSZ')
 GUICtrlSetOnEvent($ExportToCsv, '_ExportCsvData')
 GUICtrlSetOnEvent($ExportToFilCsv, '_ExportCsvFilteredData')
 GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
@@ -1337,7 +1336,7 @@ Dim $SSID_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_SSID)
 
 If $Recover = 1 Then _RecoverMDB()
 
-If $Load <> '' Then AutoLoadList($Load)
+If $Load <> '' Then _LoadListGUI($Load)
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PROGRAM RUNNING LOOP
@@ -5093,37 +5092,22 @@ EndFunc   ;==>_ExportVSZ
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
-Func _ImportVSZ()
-	_ImportVszFile()
-EndFunc   ;==>_ImportVSZ
 
 Func LoadList()
 	_LoadListGUI()
 EndFunc   ;==>LoadList
 
-Func AutoLoadList($imfile1 = "")
-	If StringLower(StringTrimLeft($imfile1, StringLen($imfile1) - 4)) = '.vs1' Or StringUpper(StringTrimLeft($imfile1, StringLen($imfile1) - 3)) = 'TXT' Then
-		_LoadListGUI($imfile1)
-	ElseIf StringLower(StringTrimLeft($imfile1, StringLen($imfile1) - 4)) = '.vsz' Then
-		_ImportVszFile($imfile1)
-	EndIf
-EndFunc   ;==>AutoLoadList
 
-Func _ImportVszFile($vsz_file = '')
-	If $vsz_file = '' Then $vsz_file = FileOpenDialog($Text_ImportFromVSZ, $SaveDir, $Text_VistumblerFile & ' (*.VSZ)', 1)
-	If @error <> 1 Then
-		If StringInStr($vsz_file, '.VSZ') = 0 Then $vsz_file = $vsz_file & '.VSZ'
-		$vsz_temp_file = $TmpDir & 'data.zip'
-		$vs1_file = $TmpDir & 'data.vs1'
-		If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
-		If FileExists($vs1_file) Then FileDelete($vs1_file)
-		FileCopy($vsz_file, $vsz_temp_file)
-		_Zip_Unzip($vsz_temp_file, 'data.vs1', $TmpDir)
-		_LoadListGUI($vs1_file)
-		FileDelete($vsz_temp_file)
-		FileDelete($vs1_file)
-	EndIf
-EndFunc   ;==>_ImportVszFile
+Func _ExtractVSZ($vsz_file)
+	$vsz_temp_file = $TmpDir & 'data.zip'
+	$vs1_file = $TmpDir & 'data.vs1'
+	If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
+	If FileExists($vs1_file) Then FileDelete($vs1_file)
+	FileCopy($vsz_file, $vsz_temp_file)
+	_Zip_Unzip($vsz_temp_file, 'data.vs1', $TmpDir)
+	FileDelete($vsz_temp_file)
+	Return ($vs1_file)
+EndFunc   ;==>_ExtractVSZ
 
 Func _LoadFolder()
 	$FoundFiles = 0
@@ -5138,11 +5122,11 @@ Func _LoadFolder()
 			Next
 			$FoundFiles = 1
 		EndIf
-		$vs1files = _FileListToArray($LoadFolder, '*.vsz', 1);Find all files in the folder that end in .vsz
-		If IsArray($vs1files) Then
-			For $b = 1 To $vs1files[0]
-				GUICtrlSetData($msgdisplay, $Text_Loading & " - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
-				_ImportVszFile($LoadFolder & "\" & $vs1files[$b])
+		$vszfiles = _FileListToArray($LoadFolder, '*.vsz', 1);Find all files in the folder that end in .vsz
+		If IsArray($vszfiles) Then
+			For $b = 1 To $vszfiles[0]
+				GUICtrlSetData($msgdisplay, $Text_Loading & " - " & $b & "/" & $vszfiles[0] & " (" & $LoadFolder & "\" & $vszfiles[$b] & ")")
+				_LoadListGUI($LoadFolder & "\" & $vszfiles[$b])
 				_ImportClose()
 			Next
 			$FoundFiles = 1
@@ -5158,7 +5142,7 @@ EndFunc   ;==>_LoadFolder
 Func _LoadListGUI($imfile1 = "")
 	GUISetState(@SW_MINIMIZE, $Vistumbler)
 
-	$GUI_Import = GUICreate($Text_ImportFromTXT, 501, 245, 234, 241)
+	$GUI_Import = GUICreate(StringReplace($Text_Import, "&", ""), 501, 245, -1, -1)
 	GUISetBkColor($BackgroundColor)
 	$vistumblerfileinput = GUICtrlCreateInput($imfile1, 8, 10, 377, 21)
 	$browse1 = GUICtrlCreateButton($Text_Browse, 392, 8, 97, 25, $WS_GROUP)
@@ -5184,6 +5168,403 @@ Func _LoadListGUI($imfile1 = "")
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_ImportClose')
 	If $imfile1 <> '' Then _ImportOk()
 EndFunc   ;==>_LoadListGUI
+
+
+
+Func _ImportFileBrowse()
+	If GUICtrlRead($RadVis) = 1 Then
+		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_VistumblerFile & ' (*.vs1;*.vsz;*.txt)', 1)
+		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
+	ElseIf GUICtrlRead($RadCsv) = 1 Then
+		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_DetailedCsvFile & ' (*.csv)', 1)
+		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
+	ElseIf GUICtrlRead($RadNs) = 1 Then
+		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_NetstumblerTxtFile & ' (*.txt;*.ns1)', 1)
+		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
+	EndIf
+EndFunc   ;==>_ImportFileBrowse
+
+Func _ImportClose()
+	GUIDelete($GUI_Import)
+	GUISetState(@SW_RESTORE, $Vistumbler)
+EndFunc   ;==>_ImportClose
+
+Func _ImportOk()
+	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Loading)
+	$UpdateTimer = TimerInit()
+	$MemReleaseTimer = TimerInit()
+	$loadfile = GUICtrlRead($vistumblerfileinput)
+	$loadfileMD5 = _MD5ForFile($loadfile)
+
+	$query = "SELECT MD5 FROM LoadedFiles WHERE MD5='" & $loadfileMD5 & "'"
+	$MD5MatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundMD5Match = UBound($MD5MatchArray) - 1
+
+	If $FoundMD5Match <> 0 Then
+		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & 'This file has already been imported')
+	Else
+		GUICtrlSetState($NsOk, $GUI_DISABLE)
+		If GUICtrlRead($RadVis) = 1 Then
+			If StringUpper(StringRight($loadfile, 4)) = '.VSZ' Then
+				$TempVS1 = _ExtractVSZ($loadfile)
+				_ImportVS1($TempVS1)
+				FileDelete($TempVS1)
+			Else
+				_ImportVS1($loadfile)
+			EndIf
+		ElseIf GUICtrlRead($RadNs) = 1 Then
+			_ImportNS1($loadfile)
+		EndIf
+		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_AddingApsIntoList)
+		_FilterReAddMatchingNotInList()
+		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_SortingList)
+		If $AddDirection = 0 Then
+			$v_sort = True;set ascending
+		Else
+			$v_sort = False;set descending
+		EndIf
+		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
+		_FixLineNumbers()
+		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+		GUICtrlSetData($progressbar, 100)
+		GUICtrlSetState($NsOk, $GUI_ENABLE)
+		If Not BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then _AddRecord($ManuDB, "LoadedFiles", $DB_OBJ, $loadfile & '|' & $loadfileMD5)
+		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Done)
+	EndIf
+EndFunc   ;==>_ImportOk
+
+Func _ImportVS1($VS1file)
+	_CreateTable($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ)
+	_CreatMultipleFields($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ, 'OldGpsID TEXT(255)|NewGpsID TEXT(255)')
+	$vistumblerfile = FileOpen($VS1file, 0)
+	If $vistumblerfile <> -1 Then
+		$begintime = TimerInit()
+		$currentline = 1
+		$AddAP = 0
+		$AddGID = 0
+		;Get Total number of lines
+		$totallines = 0
+		While 1
+			FileReadLine($vistumblerfile)
+			If @error = -1 Then ExitLoop
+			$totallines += 1
+		WEnd
+		;Start Importing File
+		For $Load = 1 To $totallines
+			$linein = FileReadLine($vistumblerfile, $Load);Open Line in file
+			If @error = -1 Then ExitLoop
+			If StringTrimRight($linein, StringLen($linein) - 1) <> "#" Then
+				$loadlist = StringSplit($linein, '|');Split Infomation of AP on line
+				If $loadlist[0] = 6 Or $loadlist[0] = 12 Then ; If Line is GPS ID Line
+					If $loadlist[0] = 6 Then
+						$LoadGID = $loadlist[1]
+						$LoadLat = _Format_GPS_DMM($loadlist[2])
+						$LoadLon = _Format_GPS_DMM($loadlist[3])
+						$LoadSat = $loadlist[4]
+						$LoadHorDilPitch = 0
+						$LoadAlt = 0
+						$LoadGeo = 0
+						$LoadSpeedKmh = 0
+						$LoadSpeedMPH = 0
+						$LoadTrackAngle = 0
+						$LoadDate = $loadlist[5]
+						$ld = StringSplit($LoadDate, '-')
+						If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
+						$LoadTime = $loadlist[6]
+						If StringInStr($LoadTime, '.') = 0 Then $LoadTime &= '.000'
+					ElseIf $loadlist[0] = 12 Then
+						$LoadGID = $loadlist[1]
+						$LoadLat = _Format_GPS_DMM($loadlist[2])
+						$LoadLon = _Format_GPS_DMM($loadlist[3])
+						$LoadSat = $loadlist[4]
+						$LoadHorDilPitch = $loadlist[5]
+						$LoadAlt = $loadlist[6]
+						$LoadGeo = $loadlist[7]
+						$LoadSpeedKmh = $loadlist[8]
+						$LoadSpeedMPH = $loadlist[9]
+						$LoadTrackAngle = $loadlist[10]
+						$LoadDate = $loadlist[11]
+						$ld = StringSplit($LoadDate, '-')
+						If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
+						$LoadTime = $loadlist[12]
+						If StringInStr($LoadTime, '.') = 0 Then $LoadTime &= '.000'
+					EndIf
+
+					$query = "SELECT OldGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $LoadGID & "'"
+					$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$FoundTempGidMatch = UBound($TempGidMatchArray) - 1
+					If $FoundTempGidMatch = 0 Then
+						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
+						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+						$FoundGpsMatch = UBound($GpsMatchArray) - 1
+						If $FoundGpsMatch = 0 Then
+							$AddGID += 1
+							$GPS_ID += 1
+							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadHorDilPitch & '|' & $LoadAlt & '|' & $LoadGeo & '|' & $LoadSpeedKmh & '|' & $LoadSpeedMPH & '|' & $LoadTrackAngle & '|' & $LoadDate & '|' & $LoadTime)
+							_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $GPS_ID)
+						ElseIf $FoundGpsMatch = 1 Then
+							$NewGpsId = $GpsMatchArray[1][1]
+							_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $NewGpsId)
+						EndIf
+					ElseIf $FoundTempGidMatch = 1 Then
+						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
+						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+						$FoundGpsMatch = UBound($GpsMatchArray) - 1
+						If $FoundGpsMatch = 0 Then
+							$AddGID += 1
+							$GPS_ID += 1
+							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadHorDilPitch & '|' & $LoadAlt & '|' & $LoadGeo & '|' & $LoadSpeedKmh & '|' & $LoadSpeedMPH & '|' & $LoadTrackAngle & '|' & $LoadDate & '|' & $LoadTime)
+							$query = "UPDATE TempGpsIDMatchTabel SET NewGpsID='" & $GPS_ID & "' WHERE OldGpsID='" & $LoadGID & "'"
+							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+						ElseIf $FoundGpsMatch = 1 Then
+							$NewGpsId = $GpsMatchArray[1][1]
+							$query = "UPDATE TempGpsIDMatchTabel SET NewGpsID='" & $NewGpsId & "' WHERE OldGpsID='" & $LoadGID & "'"
+							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+						EndIf
+					EndIf
+				ElseIf $loadlist[0] = 13 Then ;If String is VS1 data line
+					$Found = 0
+					$SSID = StringStripWS($loadlist[1], 3)
+					$BSSID = StringStripWS($loadlist[2], 3)
+					$Authentication = StringStripWS($loadlist[4], 3)
+					$Encryption = StringStripWS($loadlist[5], 3)
+					$LoadSecType = StringStripWS($loadlist[6], 3)
+					$RadioType = StringStripWS($loadlist[7], 3)
+					$Channel = StringStripWS($loadlist[8], 3)
+					$BasicTransferRates = StringStripWS($loadlist[9], 3)
+					$OtherTransferRates = StringStripWS($loadlist[10], 3)
+					$NetworkType = StringStripWS($loadlist[11], 3)
+					$GigSigHist = StringStripWS($loadlist[13], 3)
+					;Go through GID/Signal history and add information to DB
+					$GidSplit = StringSplit($GigSigHist, '-')
+					For $loaddat = 1 To $GidSplit[0]
+						$GidSigSplit = StringSplit($GidSplit[$loaddat], ',')
+						If $GidSigSplit[0] = 2 Then
+							$ImpGID = $GidSigSplit[1]
+							$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
+							If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
+							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
+							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+							$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
+							If $TempGidMatchArrayMatch <> 0 Then
+								$NewGID = $TempGidMatchArray[1][1]
+								;Add AP Info to DB, Listview, and Treeview
+								$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig)
+								If $NewApAdded = 1 Then $AddAP += 1
+							EndIf
+						EndIf
+						$closebtn = _GUICtrlButton_GetState($NsCancel)
+						If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
+					Next
+				ElseIf $loadlist[0] = 17 Then ; If string is TXT data line
+					$Found = 0
+					$SSID = StringStripWS($loadlist[1], 3)
+					$BSSID = StringStripWS($loadlist[2], 3)
+					$HighGpsSignal = StringReplace(StringStripWS($loadlist[4], 3), '%', '')
+					$Authentication = StringStripWS($loadlist[5], 3)
+					$Encryption = StringStripWS($loadlist[6], 3)
+					$RadioType = StringStripWS($loadlist[7], 3)
+					$Channel = StringStripWS($loadlist[8], 3)
+					$LoadLatitude = _Format_GPS_All_to_DMM(StringStripWS($loadlist[9], 3))
+					$LoadLongitude = _Format_GPS_All_to_DMM(StringStripWS($loadlist[10], 3))
+					$BasicTransferRates = StringStripWS($loadlist[11], 3)
+					$OtherTransferRates = StringStripWS($loadlist[12], 3)
+					$LoadFirstActive = StringStripWS($loadlist[13], 3)
+					$LoadLastActive = StringStripWS($loadlist[14], 3)
+					$NetworkType = StringStripWS($loadlist[15], 3)
+					$SignalHistory = StringStripWS($loadlist[17], 3)
+					$LoadSat = '00'
+					$tsplit = StringSplit($LoadFirstActive, ' ')
+					$LoadFirstActive_Time = $tsplit[2]
+					If StringInStr($LoadFirstActive_Time, '.') = 0 Then $LoadFirstActive_Time &= '.000'
+					$LoadFirstActive_Date = $tsplit[1]
+					$ld = StringSplit($LoadFirstActive_Date, '-')
+					If StringLen($ld[1]) <> 4 Then $LoadFirstActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
+					$tsplit = StringSplit($LoadLastActive, ' ')
+					$LoadLastActive_Time = $tsplit[2]
+					If StringInStr($LoadLastActive_Time, '.') = 0 Then $LoadLastActive_Time &= '.000'
+					$LoadLastActive_Date = $tsplit[1]
+					$ld = StringSplit($LoadLastActive_Date, '-')
+					If StringLen($ld[1]) <> 4 Then $LoadLastActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
+
+					;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
+					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$FoundGpsMatch = UBound($GpsMatchArray) - 1
+					If $FoundGpsMatch = 0 Then
+						$AddGID += 1
+						$GPS_ID += 1
+						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
+						$LoadGID = $GPS_ID
+					Else
+						$LoadGID = $GpsMatchArray[1][1]
+					EndIf
+					;Add First AP Info to DB, Listview, and Treeview
+					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
+					If $NewApAdded = 1 Then $AddAP += 1
+					;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
+					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$FoundGpsMatch = UBound($GpsMatchArray) - 1
+					If $FoundGpsMatch = 0 Then
+						$AddGID += 1
+						$GPS_ID += 1
+						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
+						$LoadGID = $GPS_ID
+					Else
+						$LoadGID = $GpsMatchArray[1][1]
+					EndIf
+					;Add Last AP Info to DB, Listview, and Treeview
+					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
+					If $NewApAdded = 1 Then $AddAP += 1
+				Else
+					;ExitLoop
+				EndIf
+			EndIf
+
+			If TimerDiff($UpdateTimer) > 600 Or ($currentline = $totallines) Then
+				$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+				$percent = ($currentline / $totallines) * 100
+				GUICtrlSetData($progressbar, $percent)
+				GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+				GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
+				GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+				GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+				GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline & "/" & $totallines)
+				GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($currentline / $min, 1), 1))
+				$UpdateTimer = TimerInit()
+			EndIf
+			If TimerDiff($MemReleaseTimer) > 10000 Then
+				_ReduceMemory()
+				$MemReleaseTimer = TimerInit()
+			EndIf
+			$currentline += 1
+			$closebtn = _GUICtrlButton_GetState($NsCancel)
+			If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
+		Next
+	EndIf
+	FileClose($vistumblerfile)
+	$query = "DELETE * FROM TempGpsIDMatchTabel"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	_DropTable($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ)
+EndFunc   ;==>_ImportVS1
+
+Func _ImportNS1($NS1file)
+	Dim $BSSID_Array[1], $SSID_Array[1], $FirstSeen_Array[1], $LastSeen_Array[1], $SignalHist_Array[1], $Lat_Array[1], $Lon_Array[1], $Auth_Array[1], $Encr_Array[1], $Type_Array[1]
+	$netstumblerfile = FileOpen($NS1file, 0)
+	If $netstumblerfile <> -1 Then
+		;Get Total number of lines
+		$totallines = 0
+
+		While 1
+			FileReadLine($netstumblerfile)
+			If @error = -1 Then ExitLoop
+			$totallines += 1
+		WEnd
+		$begintime = TimerInit()
+		$currentline = 1
+		$AddAP = 0
+		$AddGID = 0
+		;$Loading = 1
+
+		For $Load = 1 To $totallines
+			$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
+			If @error = -1 Then ExitLoop
+			If StringInStr($linein, "# $DateGMT:") Then $Date = StringTrimLeft($linein, 12);If the date tag is found, set date
+			If StringLeft($linein, 1) <> "#" Then ;If the line is not commented out, get AP information
+				$array = StringSplit($linein, "	");Seperate AP information
+				If $array[0] = 13 Then
+					If $linein <> "" And IsArray($array) Then
+						;Decode Flags
+						$HexIn = Number("0x" & $array[9])
+						Global $ESS = False, $nsimploopBSS = False, $CFPoll = False, $CFPollReq = False, $WEP = False, $ShortPreAm = False, $PBCC = False, $ChAgile = False
+						If BitAND($HexIn, 0x1) Then $ESS = True
+						If BitAND($HexIn, 0x2) Then $nsimploopBSS = True
+						If BitAND($HexIn, 0x10) Then $WEP = True
+						;Set AP Type based on flags
+						$Type = ''
+						If $HexIn Then
+							If $ESS = True Then $Type &= $SearchWord_Infrastructure
+							If $nsimploopBSS = True Then $Type &= $SearchWord_Adhoc
+						EndIf
+						If $WEP = True Then
+							$LoadSecType = 2
+							If $UseNativeWifi = 1 Then
+								$Encryption = 'WEP'
+								$Authentication = 'Open'
+							Else
+								$Encryption = $SearchWord_Wep
+								$Authentication = $SearchWord_Open
+							EndIf
+						Else
+							$LoadSecType = 1
+							If $UseNativeWifi = 1 Then
+								$Encryption = 'Unencrypted'
+								$Authentication = 'Open'
+							Else
+								$Encryption = $SearchWord_None
+								$Authentication = $SearchWord_Open
+							EndIf
+						EndIf
+						;Set other information
+						$snrarray1 = StringSplit($array[7], " ")
+						$SSID = StringTrimLeft(StringTrimRight($array[3], 2), 2)
+						$BSSID = StringUpper(StringTrimLeft(StringTrimRight($array[5], 2), 2))
+						$time = StringTrimRight($array[6], 6)
+						If StringInStr($time, '.') = 0 Then $time &= '.000'
+						$Signal = $snrarray1[2]
+						If $Signal < 0 Then $Signal = '0'
+						$LoadLatitude = _Format_GPS_All_to_DMM(StringReplace($array[1], "N 360.0000000", "N 0.0000000"))
+						$LoadLongitude = _Format_GPS_All_to_DMM(StringReplace($array[2], "E 720.0000000", "E 0.0000000"))
+						$Channel = $array[13]
+						$DateTime = $Date & " " & $time
+
+						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $Date & "' And Time1 = '" & $time & "'"
+						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+						$FoundGpsMatch = UBound($GpsMatchArray) - 1
+						If $FoundGpsMatch = 0 Then
+							$AddGID += 1
+							$GPS_ID += 1
+							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|00|0|0|0|0|0|0|' & $Date & '|' & $time)
+							$LoadGID = $GPS_ID
+						ElseIf $FoundGpsMatch = 1 Then
+							$LoadGID = $GpsMatchArray[1][1]
+						EndIf
+						;Add Last AP Info to DB, Listview
+						$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal)
+						If $NewApAdded = 1 Then $AddAP += 1
+					EndIf
+				Else
+					ExitLoop
+				EndIf
+			EndIf
+
+			If TimerDiff($UpdateTimer) > 600 Or ($currentline = $totallines) Then
+				$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+				$percent = ($currentline / $totallines) * 100
+				GUICtrlSetData($progressbar, $percent)
+				GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+				GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($Load / $min, 1))
+				GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+				GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+				GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $Load & "/" & $totallines)
+				GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($Load / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($Load / $min, 1), 1))
+				$UpdateTimer = TimerInit()
+			EndIf
+			If TimerDiff($MemReleaseTimer) > 10000 Then
+				_ReduceMemory()
+				$MemReleaseTimer = TimerInit()
+			EndIf
+			$currentline += 1
+			$closebtn = _GUICtrlButton_GetState($NsCancel)
+			If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
+		Next
+	EndIf
+	FileClose($netstumblerfile)
+EndFunc   ;==>_ImportNS1
 
 Func _LoadMDB()
 	GUISetState(@SW_MINIMIZE, $Vistumbler)
@@ -5214,382 +5595,6 @@ Func _ImportMdbOk()
 	Dim $LoadDB_OBJ
 	_AccessConnectConn($VistumblerLoadDB, $LoadDB_OBJ)
 EndFunc   ;==>_ImportMdbOk
-
-Func _ImportFileBrowse()
-	$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_VistumblerFile & ' (*.txt;*.vs1;*.ns1)', 1)
-	If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
-EndFunc   ;==>_ImportFileBrowse
-
-Func _ImportClose()
-	GUIDelete($GUI_Import)
-	GUISetState(@SW_RESTORE, $Vistumbler)
-EndFunc   ;==>_ImportClose
-
-Func _ImportOk()
-	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Loading)
-	$UpdateTimer = TimerInit()
-	$MemReleaseTimer = TimerInit()
-	$loadfile = GUICtrlRead($vistumblerfileinput)
-	$loadfileMD5 = _MD5ForFile($loadfile)
-
-	$query = "SELECT MD5 FROM LoadedFiles WHERE MD5='" & $loadfileMD5 & "'"
-	$MD5MatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundMD5Match = UBound($MD5MatchArray) - 1
-
-	If $FoundMD5Match <> 0 Then
-		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & 'This file has already been imported')
-	Else
-		GUICtrlSetState($NsOk, $GUI_DISABLE)
-		If GUICtrlRead($RadVis) = 1 Then
-			_CreateTable($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ)
-			_CreatMultipleFields($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ, 'OldGpsID TEXT(255)|NewGpsID TEXT(255)')
-			$vistumblerfile = FileOpen($loadfile, 0)
-			If $vistumblerfile <> -1 Then
-				$begintime = TimerInit()
-				$currentline = 1
-				$AddAP = 0
-				$AddGID = 0
-				;$Loading = 1
-				Dim $TmpGPSArray_ID[1]
-				Dim $TmpGPSArray_NewID[1]
-				;Get Total number of lines
-				$totallines = 0
-				While 1
-					FileReadLine($vistumblerfile)
-					If @error = -1 Then ExitLoop
-					$totallines += 1
-				WEnd
-				For $Load = 1 To $totallines
-
-					$linein = FileReadLine($vistumblerfile, $Load);Open Line in file
-					If @error = -1 Then ExitLoop
-					If StringTrimRight($linein, StringLen($linein) - 1) <> "#" Then
-						$loadlist = StringSplit($linein, '|');Split Infomation of AP on line
-						If $loadlist[0] = 6 Or $loadlist[0] = 12 Then ; If Line is GPS ID Line
-							If $loadlist[0] = 6 Then
-								$LoadGID = $loadlist[1]
-								$LoadLat = _Format_GPS_DMM($loadlist[2])
-								$LoadLon = _Format_GPS_DMM($loadlist[3])
-								$LoadSat = $loadlist[4]
-								$LoadHorDilPitch = 0
-								$LoadAlt = 0
-								$LoadGeo = 0
-								$LoadSpeedKmh = 0
-								$LoadSpeedMPH = 0
-								$LoadTrackAngle = 0
-								$LoadDate = $loadlist[5]
-								$ld = StringSplit($LoadDate, '-')
-								If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
-								$LoadTime = $loadlist[6]
-								If StringInStr($LoadTime, '.') = 0 Then $LoadTime &= '.000'
-							ElseIf $loadlist[0] = 12 Then
-								$LoadGID = $loadlist[1]
-								$LoadLat = _Format_GPS_DMM($loadlist[2])
-								$LoadLon = _Format_GPS_DMM($loadlist[3])
-								$LoadSat = $loadlist[4]
-								$LoadHorDilPitch = $loadlist[5]
-								$LoadAlt = $loadlist[6]
-								$LoadGeo = $loadlist[7]
-								$LoadSpeedKmh = $loadlist[8]
-								$LoadSpeedMPH = $loadlist[9]
-								$LoadTrackAngle = $loadlist[10]
-								$LoadDate = $loadlist[11]
-								$ld = StringSplit($LoadDate, '-')
-								If StringLen($ld[1]) <> 4 Then $LoadDate = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
-								$LoadTime = $loadlist[12]
-								If StringInStr($LoadTime, '.') = 0 Then $LoadTime &= '.000'
-							EndIf
-
-							$query = "SELECT OldGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $LoadGID & "'"
-							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-							$FoundTempGidMatch = UBound($TempGidMatchArray) - 1
-							If $FoundTempGidMatch = 0 Then
-								$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
-								$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-								$FoundGpsMatch = UBound($GpsMatchArray) - 1
-								If $FoundGpsMatch = 0 Then
-									$AddGID += 1
-									$GPS_ID += 1
-									_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadHorDilPitch & '|' & $LoadAlt & '|' & $LoadGeo & '|' & $LoadSpeedKmh & '|' & $LoadSpeedMPH & '|' & $LoadTrackAngle & '|' & $LoadDate & '|' & $LoadTime)
-									_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $GPS_ID)
-								ElseIf $FoundGpsMatch = 1 Then
-									$NewGpsId = $GpsMatchArray[1][1]
-									_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $NewGpsId)
-								EndIf
-							ElseIf $FoundTempGidMatch = 1 Then
-								$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
-								$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-								$FoundGpsMatch = UBound($GpsMatchArray) - 1
-								If $FoundGpsMatch = 0 Then
-									$AddGID += 1
-									$GPS_ID += 1
-									_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadHorDilPitch & '|' & $LoadAlt & '|' & $LoadGeo & '|' & $LoadSpeedKmh & '|' & $LoadSpeedMPH & '|' & $LoadTrackAngle & '|' & $LoadDate & '|' & $LoadTime)
-									$query = "UPDATE TempGpsIDMatchTabel SET NewGpsID='" & $GPS_ID & "' WHERE OldGpsID='" & $LoadGID & "'"
-									_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-								ElseIf $FoundGpsMatch = 1 Then
-									$NewGpsId = $GpsMatchArray[1][1]
-									$query = "UPDATE TempGpsIDMatchTabel SET NewGpsID='" & $NewGpsId & "' WHERE OldGpsID='" & $LoadGID & "'"
-									_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-								EndIf
-							EndIf
-						ElseIf $loadlist[0] = 13 Then ;If String is VS1 data line
-							$Found = 0
-							$SSID = StringStripWS($loadlist[1], 3)
-							$BSSID = StringStripWS($loadlist[2], 3)
-							$Authentication = StringStripWS($loadlist[4], 3)
-							$Encryption = StringStripWS($loadlist[5], 3)
-							$LoadSecType = StringStripWS($loadlist[6], 3)
-							$RadioType = StringStripWS($loadlist[7], 3)
-							$Channel = StringStripWS($loadlist[8], 3)
-							$BasicTransferRates = StringStripWS($loadlist[9], 3)
-							$OtherTransferRates = StringStripWS($loadlist[10], 3)
-							$NetworkType = StringStripWS($loadlist[11], 3)
-							$GigSigHist = StringStripWS($loadlist[13], 3)
-							;Go through GID/Signal history and add information to DB
-							$GidSplit = StringSplit($GigSigHist, '-')
-							For $loaddat = 1 To $GidSplit[0]
-								$GidSigSplit = StringSplit($GidSplit[$loaddat], ',')
-								If $GidSigSplit[0] = 2 Then
-									$ImpGID = $GidSigSplit[1]
-									$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
-									If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
-									$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
-									$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-									$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
-									If $TempGidMatchArrayMatch <> 0 Then
-										$NewGID = $TempGidMatchArray[1][1]
-										;Add AP Info to DB, Listview, and Treeview
-										$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig)
-										If $NewApAdded = 1 Then $AddAP += 1
-									EndIf
-								EndIf
-								$closebtn = _GUICtrlButton_GetState($NsCancel)
-								If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
-							Next
-						ElseIf $loadlist[0] = 17 Then ; If string is TXT data line
-							$Found = 0
-							$SSID = StringStripWS($loadlist[1], 3)
-							$BSSID = StringStripWS($loadlist[2], 3)
-							$HighGpsSignal = StringReplace(StringStripWS($loadlist[4], 3), '%', '')
-							$Authentication = StringStripWS($loadlist[5], 3)
-							$Encryption = StringStripWS($loadlist[6], 3)
-							$RadioType = StringStripWS($loadlist[7], 3)
-							$Channel = StringStripWS($loadlist[8], 3)
-							$LoadLatitude = _Format_GPS_All_to_DMM(StringStripWS($loadlist[9], 3))
-							$LoadLongitude = _Format_GPS_All_to_DMM(StringStripWS($loadlist[10], 3))
-							$BasicTransferRates = StringStripWS($loadlist[11], 3)
-							$OtherTransferRates = StringStripWS($loadlist[12], 3)
-							$LoadFirstActive = StringStripWS($loadlist[13], 3)
-							$LoadLastActive = StringStripWS($loadlist[14], 3)
-							$NetworkType = StringStripWS($loadlist[15], 3)
-							$SignalHistory = StringStripWS($loadlist[17], 3)
-							$LoadSat = '00'
-							$tsplit = StringSplit($LoadFirstActive, ' ')
-							$LoadFirstActive_Time = $tsplit[2]
-							If StringInStr($LoadFirstActive_Time, '.') = 0 Then $LoadFirstActive_Time &= '.000'
-							$LoadFirstActive_Date = $tsplit[1]
-							$ld = StringSplit($LoadFirstActive_Date, '-')
-							If StringLen($ld[1]) <> 4 Then $LoadFirstActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
-							$tsplit = StringSplit($LoadLastActive, ' ')
-							$LoadLastActive_Time = $tsplit[2]
-							If StringInStr($LoadLastActive_Time, '.') = 0 Then $LoadLastActive_Time &= '.000'
-							$LoadLastActive_Date = $tsplit[1]
-							$ld = StringSplit($LoadLastActive_Date, '-')
-							If StringLen($ld[1]) <> 4 Then $LoadLastActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
-
-							;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
-							$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
-							$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-							$FoundGpsMatch = UBound($GpsMatchArray) - 1
-							If $FoundGpsMatch = 0 Then
-								$AddGID += 1
-								$GPS_ID += 1
-								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
-								$LoadGID = $GPS_ID
-							Else
-								$LoadGID = $GpsMatchArray[1][1]
-							EndIf
-							;Add First AP Info to DB, Listview, and Treeview
-							$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
-							If $NewApAdded = 1 Then $AddAP += 1
-							;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
-							$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
-							$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-							$FoundGpsMatch = UBound($GpsMatchArray) - 1
-							If $FoundGpsMatch = 0 Then
-								$AddGID += 1
-								$GPS_ID += 1
-								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
-								$LoadGID = $GPS_ID
-							Else
-								$LoadGID = $GpsMatchArray[1][1]
-							EndIf
-							;Add Last AP Info to DB, Listview, and Treeview
-							$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
-							If $NewApAdded = 1 Then $AddAP += 1
-						Else
-							;ExitLoop
-						EndIf
-					EndIf
-
-					If TimerDiff($UpdateTimer) > 600 Or ($currentline = $totallines) Then
-						$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
-						$percent = ($currentline / $totallines) * 100
-						GUICtrlSetData($progressbar, $percent)
-						GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
-						GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
-						GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
-						GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-						GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline & "/" & $totallines)
-						GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($currentline / $min, 1), 1))
-						$UpdateTimer = TimerInit()
-					EndIf
-					If TimerDiff($MemReleaseTimer) > 10000 Then
-						_ReduceMemory()
-						$MemReleaseTimer = TimerInit()
-					EndIf
-					$currentline += 1
-					$closebtn = _GUICtrlButton_GetState($NsCancel)
-					If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
-				Next
-			EndIf
-			FileClose($vistumblerfile)
-			$query = "DELETE * FROM TempGpsIDMatchTabel"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-			_DropTable($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ)
-		ElseIf GUICtrlRead($RadNs) = 1 Then
-			Dim $BSSID_Array[1], $SSID_Array[1], $FirstSeen_Array[1], $LastSeen_Array[1], $SignalHist_Array[1], $Lat_Array[1], $Lon_Array[1], $Auth_Array[1], $Encr_Array[1], $Type_Array[1]
-			$netstumblerfile = FileOpen($loadfile, 0)
-			If $netstumblerfile <> -1 Then
-				;Get Total number of lines
-				$totallines = 0
-
-				While 1
-					FileReadLine($netstumblerfile)
-					If @error = -1 Then ExitLoop
-					$totallines += 1
-				WEnd
-				$begintime = TimerInit()
-				$currentline = 1
-				$AddAP = 0
-				$AddGID = 0
-				;$Loading = 1
-
-				For $Load = 1 To $totallines
-					$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
-					If @error = -1 Then ExitLoop
-					If StringInStr($linein, "# $DateGMT:") Then $Date = StringTrimLeft($linein, 12);If the date tag is found, set date
-					If StringLeft($linein, 1) <> "#" Then ;If the line is not commented out, get AP information
-						$array = StringSplit($linein, "	");Seperate AP information
-						If $array[0] = 13 Then
-							If $linein <> "" And IsArray($array) Then
-								;Decode Flags
-								$HexIn = Number("0x" & $array[9])
-								Global $ESS = False, $nsimploopBSS = False, $CFPoll = False, $CFPollReq = False, $WEP = False, $ShortPreAm = False, $PBCC = False, $ChAgile = False
-								If BitAND($HexIn, 0x1) Then $ESS = True
-								If BitAND($HexIn, 0x2) Then $nsimploopBSS = True
-								If BitAND($HexIn, 0x10) Then $WEP = True
-								;Set AP Type based on flags
-								$Type = ''
-								If $HexIn Then
-									If $ESS = True Then $Type &= $SearchWord_Infrastructure
-									If $nsimploopBSS = True Then $Type &= $SearchWord_Adhoc
-								EndIf
-								If $WEP = True Then
-									$LoadSecType = 2
-									If $UseNativeWifi = 1 Then
-										$Encryption = 'WEP'
-										$Authentication = 'Open'
-									Else
-										$Encryption = $SearchWord_Wep
-										$Authentication = $SearchWord_Open
-									EndIf
-								Else
-									$LoadSecType = 1
-									If $UseNativeWifi = 1 Then
-										$Encryption = 'Unencrypted'
-										$Authentication = 'Open'
-									Else
-										$Encryption = $SearchWord_None
-										$Authentication = $SearchWord_Open
-									EndIf
-								EndIf
-								;Set other information
-								$snrarray1 = StringSplit($array[7], " ")
-								$SSID = StringTrimLeft(StringTrimRight($array[3], 2), 2)
-								$BSSID = StringUpper(StringTrimLeft(StringTrimRight($array[5], 2), 2))
-								$time = StringTrimRight($array[6], 6)
-								If StringInStr($time, '.') = 0 Then $time &= '.000'
-								$Signal = $snrarray1[2]
-								If $Signal < 0 Then $Signal = '0'
-								$LoadLatitude = _Format_GPS_All_to_DMM(StringReplace($array[1], "N 360.0000000", "N 0.0000000"))
-								$LoadLongitude = _Format_GPS_All_to_DMM(StringReplace($array[2], "E 720.0000000", "E 0.0000000"))
-								$Channel = $array[13]
-								$DateTime = $Date & " " & $time
-
-								$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $Date & "' And Time1 = '" & $time & "'"
-								$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-								$FoundGpsMatch = UBound($GpsMatchArray) - 1
-								If $FoundGpsMatch = 0 Then
-									$AddGID += 1
-									$GPS_ID += 1
-									_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|00|0|0|0|0|0|0|' & $Date & '|' & $time)
-									$LoadGID = $GPS_ID
-								ElseIf $FoundGpsMatch = 1 Then
-									$LoadGID = $GpsMatchArray[1][1]
-								EndIf
-								;Add Last AP Info to DB, Listview
-								$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal)
-								If $NewApAdded = 1 Then $AddAP += 1
-							EndIf
-						Else
-							ExitLoop
-						EndIf
-					EndIf
-
-					If TimerDiff($UpdateTimer) > 600 Or ($currentline = $totallines) Then
-						$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
-						$percent = ($currentline / $totallines) * 100
-						GUICtrlSetData($progressbar, $percent)
-						GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
-						GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($Load / $min, 1))
-						GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
-						GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-						GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $Load & "/" & $totallines)
-						GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($Load / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($Load / $min, 1), 1))
-						$UpdateTimer = TimerInit()
-					EndIf
-					If TimerDiff($MemReleaseTimer) > 10000 Then
-						_ReduceMemory()
-						$MemReleaseTimer = TimerInit()
-					EndIf
-					$currentline += 1
-					$closebtn = _GUICtrlButton_GetState($NsCancel)
-					If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
-				Next
-			EndIf
-			FileClose($netstumblerfile)
-		EndIf
-		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
-		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_AddingApsIntoList)
-		_FilterReAddMatchingNotInList()
-		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_SortingList)
-		If $AddDirection = 0 Then
-			$v_sort = True;set ascending
-		Else
-			$v_sort = False;set descending
-		EndIf
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
-		_FixLineNumbers()
-		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
-		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-		GUICtrlSetData($progressbar, 100)
-		GUICtrlSetState($NsOk, $GUI_ENABLE)
-		If Not BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then _AddRecord($ManuDB, "LoadedFiles", $DB_OBJ, $loadfile & '|' & $loadfileMD5)
-		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_Done)
-	EndIf
-EndFunc   ;==>_ImportOk
 
 Func _WriteINI()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WriteINI()') ;#Debug Display
@@ -6043,6 +6048,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SortingTreeview', $Text_SortingTreeview)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Recovering', $Text_Recovering)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerFile', $Text_VistumblerFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DetailedFile', $Text_DetailedCsvFile)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', $Text_NetstumblerTxtFile)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorOpeningGpsPort', $Text_ErrorOpeningGpsPort)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', $Text_SecondsSinceGpsUpdate)
@@ -8067,6 +8073,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_SortingTreeview = IniRead($DefaultLanguagePath, 'GuiText', 'SortingTreeview', 'Sorting Treeview')
 		$Text_Recovering = IniRead($DefaultLanguagePath, 'GuiText', 'Recovering', 'Recovering')
 		$Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler File')
+		$Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed CSV File')
 		$Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler TXT File')
 		$Text_ErrorOpeningGpsPort = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorOpeningGpsPort', 'Error opening GPS port')
 		$Text_SecondsSinceGpsUpdate = IniRead($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', 'Seconds Since GPS Update')
