@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10 Beta 8.1'
+$version = 'v10 Beta 9'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2010/05/09'
 ;Includes------------------------------------------------
@@ -37,6 +37,7 @@ $last_modified = '2010/05/09'
 #include "UDFs\cfxUDF.au3"
 #include "UDFs\MD5.au3"
 #include "UDFs\NativeWifi.au3"
+#include "UDFs\ParseCSV.au3"
 #include "UDFs\ZIP.au3"
 #include "UDFs\FileInUse.au3"
 #include "UDFs\WinGetPosEx.au3"
@@ -2247,6 +2248,8 @@ Func _ClearAllAp()
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "DELETE * FROM TreeviewPos"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM LoadedFiles"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	;Clear Listview
 	GUISwitch($DataChild)
 	_GetListviewWidths()
@@ -3215,6 +3218,25 @@ Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd° mm' ss", or ddmm.mmm
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_All_to_DMM
+
+Func _Format_GPS_DDD_to_DMM($gps, $PosChr, $NegChr);converts dd.ddddddd, to ddmm.mmmm
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GP_DDD_to_DMM()') ;#Debug Display
+	;dd.ddddddd to ddmm.mmmm
+	$return = '0000.0000'
+	If StringInStr($gps, '-') Or StringInStr($gps, $NegChr) Then
+		$gDir = $NegChr
+	Else
+		$gDir = $PosChr
+	EndIf
+	$gps = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($gps, " ", ""), "-", ""), "+", ""), $PosChr, ""), $NegChr, "")
+	$splitlatlon1 = StringSplit($gps, ".")
+	If $splitlatlon1[0] = 2 Then
+		$DD = $splitlatlon1[1] * 100
+		$MM = ('.' & $splitlatlon1[2]) * 60 ;multiply remaining decimal by 60 to get mm.mmmm
+		$return = $gDir & ' ' & StringFormat('%0.4f', $DD + $MM);Format data properly (ex. N ddmm.mmmm)
+	EndIf
+	Return ($return)
+EndFunc   ;==>_Format_GPS_DDD_to_DMM
 
 Func _GpsFormat($gps);Converts ddmm.mmmm to the users set gps format
 	If $GPSformat = 1 Then $return = _Format_GPS_DMM_to_DDD($gps)
@@ -5212,6 +5234,8 @@ Func _ImportOk()
 			Else
 				_ImportVS1($loadfile)
 			EndIf
+		ElseIf GUICtrlRead($RadCsv) = 1 Then
+			_ImportCSV($loadfile)
 		ElseIf GUICtrlRead($RadNs) = 1 Then
 			_ImportNS1($loadfile)
 		EndIf
@@ -5451,6 +5475,176 @@ Func _ImportVS1($VS1file)
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	_DropTable($VistumblerDB, 'TempGpsIDMatchTabel', $DB_OBJ)
 EndFunc   ;==>_ImportVS1
+
+Func _ImportCSV($CSVfile)
+	$vistumblerfile = FileOpen($CSVfile, 0)
+	If $vistumblerfile <> -1 Then
+		$begintime = TimerInit()
+		$currentline = 1
+		$AddAP = 0
+		$AddGID = 0
+		;Start Importing File
+		$CSVArray = _ParseCSV($CSVfile, ',|', '"')
+		$iSize = UBound($CSVArray) - 1
+		$iCol = UBound($CSVArray, 2)
+		ConsoleWrite("-----> " & $iSize & '-' & $iCol & @CRLF)
+		If $iCol = 23 Then ;Import Vistumbler Detailed CSV
+			For $lc = 1 To $iSize
+				$s = $CSVArray[$lc][0]
+				$r = $CSVArray[$lc][1]
+
+				$ImpSSID = $CSVArray[$lc][0]
+				If StringLeft($ImpSSID, 1) = '"' And StringRight($ImpSSID, 1) = '"' Then $ImpSSID = StringTrimLeft(StringTrimRight($ImpSSID, 1), 1)
+				$ImpBSSID = $CSVArray[$lc][1]
+				$ImpMANU = $CSVArray[$lc][2]
+				If StringLeft($ImpMANU, 1) = '"' And StringRight($ImpMANU, 1) = '"' Then $ImpMANU = StringTrimLeft(StringTrimRight($ImpMANU, 1), 1)
+				$ImpSig = $CSVArray[$lc][3]
+				$ImpAUTH = $CSVArray[$lc][4]
+				$ImpENCR = $CSVArray[$lc][5]
+				$ImpRAD = $CSVArray[$lc][6]
+				$ImpCHAN = $CSVArray[$lc][7]
+				$ImpBTX = $CSVArray[$lc][8]
+				$ImpOTX = $CSVArray[$lc][9]
+				$ImpNET = $CSVArray[$lc][10]
+				$ImpLAB = $CSVArray[$lc][11]
+				If StringLeft($ImpLAB, 1) = '"' And StringRight($ImpLAB, 1) = '"' Then $ImpLAB = StringTrimLeft(StringTrimRight($ImpLAB, 1), 1)
+				$ImpLat = _Format_GPS_DDD_to_DMM($CSVArray[$lc][12], "N", "S")
+				$ImpLon = _Format_GPS_DDD_to_DMM($CSVArray[$lc][13], "E", "W")
+				$ImpSat = $CSVArray[$lc][14]
+				$ImpHDOP = $CSVArray[$lc][15]
+				$ImpAlt = $CSVArray[$lc][16]
+				$ImpGeo = $CSVArray[$lc][17]
+				$ImpSpeedKMH = $CSVArray[$lc][18]
+				$ImpSpeedMPH = $CSVArray[$lc][19]
+				$ImpTrackAngle = $CSVArray[$lc][20]
+				$ImpDate = $CSVArray[$lc][21]
+				$ImpTime = $CSVArray[$lc][22]
+
+
+				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And NumOfSats = '" & $ImpSat & "' And Date1 = '" & $ImpDate & "' And Time1 = '" & $ImpTime & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FoundGpsMatch = UBound($GpsMatchArray) - 1
+				If $FoundGpsMatch = 0 Then
+					$AddGID += 1
+					$GPS_ID += 1
+					_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $ImpLat & '|' & $ImpLon & '|' & $ImpSat & '|' & $ImpHDOP & '|' & $ImpAlt & '|' & $ImpGeo & '|' & $ImpSpeedKMH & '|' & $ImpSpeedMPH & '|' & $ImpTrackAngle & '|' & $ImpDate & '|' & $ImpTime)
+					$ImpGID = $GPS_ID
+				ElseIf $FoundGpsMatch = 1 Then
+					$ImpGID = $GpsMatchArray[1][1]
+				EndIf
+
+				ConsoleWrite($ImpSSID & '-' & $ImpBSSID & '-' & $ImpMANU & '-' & $ImpSig & '-' & $ImpAUTH & '-' & $ImpENCR & '-' & $ImpRAD & '-' & $ImpCHAN & '-' & $ImpBTX & '-' & $ImpOTX & '-' & $ImpNET & '-' & $ImpLAB & '-' & $ImpLat & '-' & $ImpSat & '-' & $ImpHDOP & '-' & $ImpAlt & '-' & $ImpGeo & '-' & $ImpSpeedKMH & '-' & $ImpSpeedMPH & '-' & $ImpTrackAngle & '-' & $ImpDate & '-' & $ImpTime & '-' & $ImpGID & @CRLF)
+
+				$NewApAdded = _AddApData(0, $ImpGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpSig)
+				If $NewApAdded = 1 Then $AddAP += 1
+
+				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $iSize) Then
+					$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+					$percent = ($currentline / $iSize) * 100
+					GUICtrlSetData($progressbar, $percent)
+					GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+					GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
+					GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+					GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+					GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline & "/" & $iSize)
+					GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($iSize / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($iSize / Round($currentline / $min, 1), 1))
+					$UpdateTimer = TimerInit()
+				EndIf
+				If TimerDiff($MemReleaseTimer) > 10000 Then
+					_ReduceMemory()
+					$MemReleaseTimer = TimerInit()
+				EndIf
+				$currentline += 1
+				$closebtn = _GUICtrlButton_GetState($NsCancel)
+				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
+
+			Next
+		ElseIf $iCol = 16 Then ;Import Vistumbler Summary CSV
+			For $lc = 1 To $iSize
+				$ImpSSID = $CSVArray[$lc][0]
+				If StringLeft($ImpSSID, 1) = '"' And StringRight($ImpSSID, 1) = '"' Then $ImpSSID = StringTrimLeft(StringTrimRight($ImpSSID, 1), 1)
+				$ImpBSSID = $CSVArray[$lc][1]
+				$ImpMANU = $CSVArray[$lc][2]
+				If StringLeft($ImpMANU, 1) = '"' And StringRight($ImpMANU, 1) = '"' Then $ImpMANU = StringTrimLeft(StringTrimRight($ImpMANU, 1), 1)
+				$ImpHighSig = $CSVArray[$lc][3]
+				$ImpAUTH = $CSVArray[$lc][4]
+				$ImpENCR = $CSVArray[$lc][5]
+				$ImpRAD = $CSVArray[$lc][6]
+				$ImpCHAN = $CSVArray[$lc][7]
+				$ImpLat = _Format_GPS_DDD_to_DMM($CSVArray[$lc][8], "N", "S")
+				$ImpLon = _Format_GPS_DDD_to_DMM($CSVArray[$lc][9], "E", "W")
+				$ImpBTX = $CSVArray[$lc][10]
+				$ImpOTX = $CSVArray[$lc][11]
+				$ImpFirstDateTime = $CSVArray[$lc][12]
+				$ImpLastDateTime = $CSVArray[$lc][13]
+				$ImpNET = $CSVArray[$lc][14]
+				$ImpLAB = $CSVArray[$lc][15]
+				If StringLeft($ImpLAB, 1) = '"' And StringRight($ImpLAB, 1) = '"' Then $ImpLAB = StringTrimLeft(StringTrimRight($ImpLAB, 1), 1)
+				$ImpSat = "00"
+
+				$tsplit = StringSplit($ImpFirstDateTime, ' ')
+				$LoadFirstActive_Date = $tsplit[1]
+				$LoadFirstActive_Time = $tsplit[2]
+
+				$tsplit = StringSplit($ImpLastDateTime, ' ')
+				$LoadLastActive_Date = $tsplit[1]
+				$LoadLastActive_Time = $tsplit[2]
+
+				;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
+				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FoundGpsMatch = UBound($GpsMatchArray) - 1
+				If $FoundGpsMatch = 0 Then
+					$AddGID += 1
+					$GPS_ID += 1
+					_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $ImpLat & '|' & $ImpLon & '|' & $ImpSat & '|0|0|0|0|0|0|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
+					$LoadGID = $GPS_ID
+				Else
+					$LoadGID = $GpsMatchArray[1][1]
+				EndIf
+				;Add First AP Info to DB, Listview, and Treeview
+				$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpHighSig)
+				If $NewApAdded = 1 Then $AddAP += 1
+				;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
+				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FoundGpsMatch = UBound($GpsMatchArray) - 1
+				If $FoundGpsMatch = 0 Then
+					$AddGID += 1
+					$GPS_ID += 1
+					_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $ImpLat & '|' & $ImpLon & '|' & $ImpSat & '|0|0|0|0|0|0|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
+					$LoadGID = $GPS_ID
+				Else
+					$LoadGID = $GpsMatchArray[1][1]
+				EndIf
+				;Add Last AP Info to DB, Listview, and Treeview
+				$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpHighSig)
+				If $NewApAdded = 1 Then $AddAP += 1
+
+				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $iSize) Then
+					$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+					$percent = ($currentline / $iSize) * 100
+					GUICtrlSetData($progressbar, $percent)
+					GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+					GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
+					GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+					GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+					GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline & "/" & $iSize)
+					GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($iSize / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($iSize / Round($currentline / $min, 1), 1))
+					$UpdateTimer = TimerInit()
+				EndIf
+				If TimerDiff($MemReleaseTimer) > 10000 Then
+					_ReduceMemory()
+					$MemReleaseTimer = TimerInit()
+				EndIf
+				$currentline += 1
+				$closebtn = _GUICtrlButton_GetState($NsCancel)
+				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
+			Next
+		EndIf
+	EndIf
+EndFunc   ;==>_ImportCSV
+
 
 Func _ImportNS1($NS1file)
 	Dim $BSSID_Array[1], $SSID_Array[1], $FirstSeen_Array[1], $LastSeen_Array[1], $SignalHist_Array[1], $Lat_Array[1], $Lon_Array[1], $Auth_Array[1], $Encr_Array[1], $Type_Array[1]
