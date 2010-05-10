@@ -1,6 +1,9 @@
 <?php
-#include('../lib/database.inc.php');
-#echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
+global $screen_output;
+$screen_output = 'CLI';
+
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
 ?>
 <link rel="stylesheet" href="../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
@@ -77,11 +80,21 @@ $theme			=	addslashes(strip_tags($_POST['theme']));
 $password		=	addslashes(strip_tags($_POST['wdb_admn_pass']));
 $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
 $timeout		=   "(86400 * 365)";
-$count = count($hosturl)-1;
-if($hosturl[$count] != '/')
+if($hosturl == '')
 {
-	$hosturl = $hosturl.'/';
+	$hosturl = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
+}else
+{
+	$count = count($hosturl)-1;
+	if($hosturl[$count] != '/')
+	{
+		$hosturl = $hosturl.'/';
+	}
 }
+
+if($sqlhost == '')
+{$sqlhost = '127.0.0.1';}
+
 if(isset($_POST['daemon']))
 {
 	$daemon		= addslashes(strip_tags($_POST['daemon']));
@@ -578,19 +591,24 @@ while (strlen($activatecode) < $seed_len_gen+1)
 {$activatecode.=$base{mt_rand(0,$max)};}
 
 #Add last edit date and globals
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."header, $"."ads, $"."tracker, $"."hosturl, $"."admin_email;
-global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."db, $"."db_st, $"."wifidb_tools, $"."daemon, $"."root, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm;
-global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."console_log, $"."DB_stats_table, $"."daemon_perf_table;
-global $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."bypass_check, $"."config_fails, $"."login_seed, $"."collate, $"."engine, $"."char_set;\r\n
-\r\n$"."lastedit	=	'$date';\r\n
-\r\n#----------General Settings------------#
-$"."bypass_check		=	1;
-$"."wifidb_tools		=	'$toolsdir';
-$"."timezn		=	'$Local_tz';
+$CR_CF_FL_Re = fwrite($fileappend, "<?php
+#COOKIE GLOBALS
+global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
+#SQL GLOBALS
+global $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
+#MISC GLOBALS
+global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check;
+
+$"."lastedit	=	'$date';
+
+#----------General Settings------------#
+$"."bypass_check	=	0;
+$"."wifidb_tools	=	'$toolsdir';
+$"."timezn			=	'$Local_tz';
 $"."root			=	'$root';
 $"."hosturl		=	'$hosturl';
-$"."admin_email		=	'';
-$"."config_fails		=	3;
+$"."admin_email	=	'$email';
+$"."config_fails	=	3;
 $"."login_seed		=	'$activatecode';\r\n\r\n");
 
 if($CR_CF_FL_Re)
@@ -601,12 +619,12 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Global variables and g
 
 #add default daemon values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#
-$"."daemon		=	$daemon;
-$"."debug			=	0;
-$"."log_level		=	0;
-$"."log_interval	=	0;
+$"."daemon				=	$daemon;
+$"."debug				=	0;
+$"."log_level			=	0;
+$"."log_interval		=	0;
 $"."WiFiDB_LNZ_User 	=	'$httpduser';
-$"."apache_grp		=	'$httpdgrp';\r\n\r\n");
+$"."apache_grp			=	'$httpdgrp';\r\n\r\n");
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
 else{
@@ -615,11 +633,11 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values<
 
 #add default theme values
 $AD_CF_DG_Re = fwrite($fileappend, "#-------------Themes Settings--------------#
-$"."default_theme	= '$theme';
+$"."default_theme		= '$theme';
 $"."default_refresh 	= 15;
 $"."default_timezone	= 0;
 $"."default_dst		= 0;
-$"."timeout		= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
+$"."timeout			= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default theme values</td></tr>";}
@@ -629,9 +647,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default theme values</
 
 $AD_CF_DG_Re = fwrite($fileappend, "#-------------Console Viewer Settings--------------#
 $"."console_refresh	= 15;
-$"."console_scroll	= 1;
-$"."console_last5	= 1;
-$"."console_lines	= 10;
+$"."console_scroll		= 1;
+$"."console_last5		= 1;
+$"."console_lines		= 10;
 $"."console_log		= '/var/log/wifidb';\r\n\r\n");
 
 if($AD_CF_DG_Re)
@@ -652,17 +670,17 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default debug values</
 #add Table names
 $AD_CF_UR_Re = fwrite($fileappend, "#---------------- Tables ----------------#
 $"."settings_tb		=	'settings';
-$"."users_t		=	'users_imports';
-$"."links			=	'links';
-$"."wtable		=	'wifi0';
+$"."users_t			=	'users_imports';
+$"."links				=	'links';
+$"."wtable				=	'wifi0';
 $"."user_logins_table	=	'user_info';
 $"."share_cache		=	'share_waypoints';
-$"."files			=	'files';
-$"."files_tmp		=	'files_tmp';
-$"."annunc		=	'annunc';
+$"."files				=	'files';
+$"."files_tmp			=	'files_tmp';
+$"."annunc				=	'annunc';
 $"."annunc_comm		=	'annunc_comm';
-$"."gps_ext		=	'_GPS';
-$"."sep			=	'-';\r\n\r\n");
+$"."gps_ext			=	'_GPS';
+$"."sep				=	'-';\r\n\r\n");
 
 if($AD_CF_UR_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Table variable values</td></tr>";}
@@ -674,7 +692,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Table variable valu
 #add sql host info
 $AD_CF_DB_Re = fwrite($fileappend, "#---------------- DataBases ----------------#
 $"."db		=	'$wifi';
-$"."db_st		=	'$wifi_st';\r\n\r\n");
+$"."db_st	=	'$wifi_st';\r\n\r\n");
 if($AD_CF_DB_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add DataBase names</td></tr>";}
 else{
@@ -684,10 +702,10 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding DataBase names</td>
 $AD_CF_SH_Re = fwrite($fileappend, "#---------------- SQL Info ----------------#
 $"."host		=	'$sqlhost';
 $"."db_user	=	'$sqlu';
-$"."db_pwd	=	'$sqlp';
+$"."db_pwd		=	'$sqlp';
 $"."conn		=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");
 $"."collate	=	'utf8_bin';
-$"."engine	=	'innodb';
+$"."engine		=	'innodb';
 $"."char_set	=	'utf8';\r\n\r\n");
 
 if($AD_CF_SH_Re)
@@ -711,7 +729,7 @@ else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td><
 
 $AD_CF_FI_Re = fwrite($fileappend,"#---------------- Header and Footer Additional Info -----------------#
 $"."ads		= ''; # <-- put the code for your ads in here www.google.com/adsense
-$"."header	= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" /><meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />';
+$"."header		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" /><meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />';
 $"."tracker	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
 if($AD_CF_FI_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>";}

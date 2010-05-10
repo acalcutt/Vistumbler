@@ -7,14 +7,14 @@ global $ver, $full_path, $half_path, $dim;
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.20 Build 1 {pre-release} ",
 			"codename"			=>	"Hyannis",
-			"Last_Core_Edit" 	=> 	"2010-Jan-19",
+			"Last_Core_Edit" 	=> 	"2010-May-10",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
-										"apfetch"			=>	"2.6.1",
+										"apfetch"			=>	"2.7.0",
 										"gps_check_array"	=>	"1.2",
-										"all_users"			=>	"1.2",
-										"users_lists"		=>	"1.2",
-										"user_ap_list"		=>	"1.2",
+										"all_users"			=>	"1.3",
+										"users_lists"		=>	"1.3",
+										"user_ap_list"		=>	"1.3",
 										"all_users_ap"		=>	"1.3",
 										"exp_kml"			=>	"3.6.0",
 										"exp_vs1"			=>	"1.1.0",
@@ -58,29 +58,36 @@ $ver = array(
 #-------------------------------------------------------------------------------------#
 if(@$GLOBALS['screen_output'] != "CLI")
 {
-	global $theme, $full_path, $half_path;
-	if(!@include_once('config.inc.php'))
+	global $theme, $full_path, $half_path, $PATH;
+	
+	$apache_root = $_SERVER['DOCUMENT_ROOT'];
+	$exp =  explode(" ", php_uname());
+	if($exp[0] == "Windows")
 	{
-		$apache_root = $_SERVER['DOCUMENT_ROOT'];
-	#	echo $apache_root.'<BR>'.getcwd();
-		$server_name = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
-		$PATH = $server_name.str_replace($apache_root, '/', getcwd().'/' );
-		echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="http://'.$PATH.'install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
+		$cwd = str_replace('\\', '/', getcwd());
+	}
+	else
+	{
+		$cwd = getcwd();
+	}
+#	echo $apache_root.'<BR>'.$cwd."<BR>".$_SERVER['SCRIPT_FILENAME'];
+	$server_name = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
+	$PATH = "http://".$server_name.str_replace($apache_root, '/', $cwd );
+	
+	
+	if(!@include('config.inc.php'))
+	{
+		echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="'.$PATH.'install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
 		die();
 	}else
 	{
 		$sql = "SELECT `id` FROM `$db`.`$users_t`";
 		if(!@mysql_query($sql, $conn))
 		{
-			$apache_root = $_SERVER['DOCUMENT_ROOT'];
 			$cwd = getcwd().'/';
 			if($cwd != '/var/www/install/upgrade/')
 			{
-		#		echo $apache_root.'<BR>'.$cwd;
-		#		echo $_SERVER['SERVER_NAME']."<BR>".$_SERVER['SERVER_ADDR']."<BR>";
-				$server_name = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
-				$PATH = $server_name.str_replace($apache_root, '/', $cwd );
-				echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="http://'.$PATH.'install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
+				echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="'.$PATH.'install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
 				die();
 			}
 		}
@@ -170,16 +177,13 @@ if(@$GLOBALS['screen_output'] != "CLI")
 	
 	
 	
-	
-	if(PHP_OS == 'Linux'){ $div = '/';}
-	elseif(PHP_OS == 'WINNT'){ $div = '\\';}
-
+	$dim = DIRECTORY_SEPARATOR;
 	$path = getcwd();
-	$path_exp = explode($div, $path);
+	$path_exp = explode($dim, $path);
 	$path_count = count($path_exp);
 
 	include($wifidb_tools.'/daemon/config.inc.php');
-#	echo "Root: ".$root."<br>Path: ".$path."<br>Div: ".$div."<br>Path Count: ".$path_count;
+#	echo "Root: ".$root."<br>Path: ".$path."<br>Div: ".$dim."<br>Path Count: ".$path_count;
 	if($root == '' or $root == '/')
 	{
 		$half_path = $GLOBALS['wifidb_install'];
@@ -201,7 +205,7 @@ if(@$GLOBALS['screen_output'] != "CLI")
 			while($I!=($path_key+1))
 			{
 				
-				$half_path = $half_path.$path_exp[$I].$div;
+				$half_path = $half_path.$path_exp[$I].$dim;
 			#	echo "Half Path: ".$half_path."<br>";
 				$I++;
 			}
@@ -405,10 +409,10 @@ function check_install_folder()
 {
 	include('config.inc.php');
 	if(@$GLOBALS['bypass_check']){return 1;}
-	if(PHP_OS == 'Linux'){ $div = '/';}
-	if(PHP_OS == 'WINNT'){ $div = '\\';}
+	if(PHP_OS == 'Linux'){ $dim = '/';}
+	if(PHP_OS == 'WINNT'){ $dim = '\\';}
 	$path = getcwd();
-	$path_exp = explode($div, $path);
+	$path_exp = explode($dim , $path);
 	$path_count = count($path_exp);
 	foreach($path_exp as $key=>$val)
 	{
@@ -420,7 +424,7 @@ function check_install_folder()
 	{
 		while($I!=($path_key+1))
 		{
-			$full_path = $full_path.$path_exp[$I].$div;
+			$full_path = $full_path.$path_exp[$I].$dim ;
 			$I++;
 		}
 		$full_path = $full_path.'install';
@@ -762,11 +766,11 @@ function format_size($size, $round = 2)
 function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 {
 	if($ssid_frm_src_or_pnt_tbl == ''){$ssid_frm_src_or_pnt_tbl="UNNAMED";}
-	$ssids = $ssid_frm_src_or_pnt_tbl;
+	$ssids = addslashes($ssid_frm_src_or_pnt_tbl);
 	$ssid_safe_full_length = smart_quotes($ssids);
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char long.
 	$ssid_table_safe = $ssid_sized[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
-	$A = array(0=> $ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
+	$A = array(0=> $ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids);
 	return $A;
 }
 
@@ -3603,12 +3607,12 @@ class database
 				fclose( $fileappend );
 				if($no_gps < $total)
 				{
-					if(PHP_OS == 'Linux'){ $div = '/';}
-					elseif(PHP_OS == 'WINNT'){ $div = '\\';}
+					if(PHP_OS == 'Linux'){ $dim = '/';}
+					elseif(PHP_OS == 'WINNT'){ $dim = '\\';}
 
 					$path = getcwd();
 					#echo "Path: ".$path."<br>";
-					$path_exp = explode($div, $path);
+					$path_exp = explode($dim , $path);
 					$path_count = count($path_exp);
 
 					foreach($path_exp as $key=>$val)
@@ -3624,7 +3628,7 @@ class database
 						while($I!=($path_key+1))
 						{
 					#		echo "I: ".$I."<br>";
-							$half_path = $half_path.$path_exp[$I].$div;
+							$half_path = $half_path.$path_exp[$I].$dim ;
 					#		echo "Half Path: ".$half_path."<br>";
 							$I++;
 						}
@@ -3791,12 +3795,12 @@ class database
 				fclose( $fileappend );
 				if($no_gps < $total)
 				{
-					if(PHP_OS == 'Linux'){ $div = '/';}
-					elseif(PHP_OS == 'WINNT'){ $div = '\\';}
+					if(PHP_OS == 'Linux'){ $dim = '/';}
+					elseif(PHP_OS == 'WINNT'){ $dim = '\\';}
 
 					$path = getcwd();
 					#echo "Path: ".$path."<br>";
-					$path_exp = explode($div, $path);
+					$path_exp = explode($dim , $path);
 					$path_count = count($path_exp);
 
 					foreach($path_exp as $key=>$val)
@@ -3812,7 +3816,7 @@ class database
 						while($I!=($path_key+1))
 						{
 					#		echo "I: ".$I."<br>";
-							$half_path = $half_path.$path_exp[$I].$div;
+							$half_path = $half_path.$path_exp[$I].$dim ;
 					#		echo "Half Path: ".$half_path."<br>";
 							$I++;
 						}
@@ -4211,12 +4215,12 @@ class database
 				fclose( $fileappend );
 				if($no_gps < $total)
 				{
-					if(PHP_OS == 'Linux'){ $div = '/';}
-					elseif(PHP_OS == 'WINNT'){ $div = '\\';}
+					if(PHP_OS == 'Linux'){ $dim = '/';}
+					elseif(PHP_OS == 'WINNT'){ $dim = '\\';}
 
 					$path = getcwd();
 					#echo "Path: ".$path."<br>";
-					$path_exp = explode($div, $path);
+					$path_exp = explode($dim , $path);
 					$path_count = count($path_exp);
 
 					foreach($path_exp as $key=>$val)
@@ -4232,7 +4236,7 @@ class database
 						while($I!=($path_key+1))
 						{
 					#		echo "I: ".$I."<br>";
-							$half_path = $half_path.$path_exp[$I].$div;
+							$half_path = $half_path.$path_exp[$I].$dim ;
 					#		echo "Half Path: ".$half_path."<br>";
 							$I++;
 						}

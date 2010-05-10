@@ -26,10 +26,23 @@ $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
 $password		=	addslashes(strip_tags($_POST['wdb_admn_pass']));
 $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
+
 if(!@isset($timeout)){$timeout		=   "(86400 * 365)";}
 
-$count = strlen($hosturl);
-if($hosturl[$count-1] != '/'){$hosturl = $hosturl.'/';}
+if($hosturl == '')
+{
+	$hosturl = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
+}else
+{
+	$count = count($hosturl)-1;
+	if($hosturl[$count] != '/')
+	{
+		$hosturl = $hosturl.'/';
+	}
+}
+
+if($sqlhost == '')
+{$sqlhost = '127.0.0.1';}
 
 if(isset($_POST['daemon']))
 {
@@ -536,18 +549,23 @@ if(!@$login_seed)
 	$activatecode = $login_seed;
 }
 #Add last edit date and globals
-$CR_CF_FL_Re = fwrite($fileappend, "<?php\r\nglobal $"."header, $"."ads, $"."tracker, $"."hosturl, $"."admin_email;
-global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."db, $"."db_st, $"."wifidb_tools, $"."daemon, $"."root, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm;
-global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."console_log, $"."DB_stats_table, $"."daemon_perf_table;
-global $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."bypass_check, $"."config_fails, $"."login_seed, $"."collate, $"."engine, $"."char_set;\r\n
-\r\n$"."lastedit	=	'$date';\r\n
-\r\n#----------General Settings------------#
+$CR_CF_FL_Re = fwrite($fileappend, "<?php
+#COOKIE GLOBALS
+global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
+#SQL GLOBALS
+global $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
+#MISC GLOBALS
+global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check;
+
+$"."lastedit	=	'$date';
+
+#----------General Settings------------#
 $"."bypass_check	=	1;
 $"."wifidb_tools	=	'$toolsdir';
 $"."timezn			=	'UTC';
 $"."root			=	'$root';
 $"."hosturl		=	'$hosturl';
-$"."admin_email	=	'';
+$"."admin_email	=	'$email';
 $"."config_fails	=	3;
 $"."login_seed		=	'$activatecode';\r\n\r\n");
 

@@ -13,25 +13,15 @@ function pageheader($title, $output="detailed")
 	$db			=	$GLOBALS['db'];
 	$head		= 	$GLOBALS['header'];
 	$half_path	=	$GLOBALS['half_path'];
+	$PATH		=	$GLOBALS['PATH'];
+	
 	include_once($half_path.'/lib/database.inc.php');
 	include_once($half_path.'/lib/security.inc.php');
 	include_once($half_path.'/lib/config.inc.php');
-	if($root != '' or $root != '/')
-	{
-		$max = strlen($hosturl);
-		if($hosturl[$max-1] != '/')
-		{
-			$host_url = $hosturl.'/'.$root;
-	#		echo $hosturl."<BR>";
-		}
-		$host_url = $hosturl.$root;
-	#	echo $hosturl."<BR>";
-	}
-	else
-	{
-		$host_url = $hosturl;
-	}
-#	echo $host_url;
+	
+	$host_url = $PATH;
+	
+	#	echo $host_url;
 	
 	$sec = new security();
 	
