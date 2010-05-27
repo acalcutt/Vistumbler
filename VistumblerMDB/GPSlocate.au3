@@ -64,8 +64,10 @@ Func _SearchForPlaceMark($spath)
 					EndIf
 				Next
 				ConsoleWrite($PName  & ' - ' & $PCountryCode & ' - ' & $PCountryName & ' - ' & $PAreaName & ' - ' & $PLat & ' - ' & $Plon & ' - ' & $PDesc & @CRLF)
-				$query = "INSERT INTO KMLDATA(Name,Desc,Latitude,Longitude,CountryCode,CountryName,AreaName) VALUES ('" & $PName & "','" & $PDesc & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaName & "');"
-				_SQLite_Exec($DBhndl, $query)
+				If $PName <> "" Or $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Or $PDesc <> "" Then
+					$query = "INSERT INTO KMLDATA(Name,Desc,Latitude,Longitude,CountryCode,CountryName,AreaName) VALUES ('" & $PName & "','" & $PDesc & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaName & "');"
+					_SQLite_Exec($DBhndl, $query)
+				EndIf
 			EndIf
 		Next
 	EndIf
@@ -126,7 +128,7 @@ Func _GeonamesGetGpsLocation($gllat, $gllon)
 	$aResult[1] = StringReplace(StringReplace($CountryNameCode, ',', ''), '"', '')
 	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
 	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
-	ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
+	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
 	Return $aResult
 EndFunc
 
