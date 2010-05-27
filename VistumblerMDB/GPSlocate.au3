@@ -75,7 +75,6 @@ EndFunc
 
 
 Func _GoogleGetGpsLocation($gllat, $gllon)
-	Local $RequestSleepTime = 15000
 	Local $aResult[4]
 	Local $AdministrativeAreaName, $CountryName, $CountryNameCode
 	$googlelookupurl = "http://maps.google.com/maps/geo?q=" & $gllat & "," & $gllon
@@ -101,7 +100,7 @@ Func _GoogleGetGpsLocation($gllat, $gllon)
 	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
 	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
 	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
-	Sleep($RequestSleepTime);Sleep so when doing multiple requests (over 15,000) google does not block results
+	Sleep(15000);Sleep 15 seconds to prevent hitting 15,000 request/day limit
 	Return $aResult
 EndFunc
 
@@ -129,6 +128,7 @@ Func _GeonamesGetGpsLocation($gllat, $gllon)
 	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
 	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
 	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
+	Sleep(1000);Sleep 1 second to prevent hitting 5000 request/hr limit
 	Return $aResult
 EndFunc
 
