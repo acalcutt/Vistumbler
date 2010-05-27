@@ -39,11 +39,11 @@ Func _SearchForPlaceMark($spath)
 					If StringLower($PlacemarkNodes[$pma]) = "name" Then
 						$NamePath = $PlacemarkPath & "/*[" & $pma & "]"
 						$NameArray = _XMLGetValue($NamePath)
-						$PName = $NameArray[1]
+						$PName = StringReplace($NameArray[1], "'", "''")
 					ElseIf StringLower($PlacemarkNodes[$pma]) = "description" Then
 						$DeskPath = $PlacemarkPath & "/*[" & $pma & "]"
 						$DeskArray = _XMLGetValue($DeskPath)
-						$PDesc = $DeskArray[1]
+						$PDesc = StringReplace($DeskArray[1], "'", "''")
 					ElseIf StringLower($PlacemarkNodes[$pma]) = "point" Then
 						$PointPath = $PlacemarkPath & "/*[" & $pma & "]"
 						$PointNodes = _XMLGetChildNodes($PointPath)
@@ -63,8 +63,8 @@ Func _SearchForPlaceMark($spath)
 						Next
 					EndIf
 				Next
-				ConsoleWrite($PName  & ' - ' & $PCountryCode & ' - ' & $PCountryName & ' - ' & $PAreaName & ' - ' & $PLat & ' - ' & $Plon & ' - ' & $PDesc & @CRLF)
 				If $PName <> "" Or $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Or $PDesc <> "" Then
+					ConsoleWrite('"' & $PName  & '" - "' & $PCountryCode & '" - "' & $PCountryName & '" - "' & $PAreaName & '" - "' & $PLat & '" - "' & $Plon & '" - "' & $PDesc & '"' & @CRLF)
 					$query = "INSERT INTO KMLDATA(Name,Desc,Latitude,Longitude,CountryCode,CountryName,AreaName) VALUES ('" & $PName & "','" & $PDesc & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaName & "');"
 					_SQLite_Exec($DBhndl, $query)
 				EndIf
