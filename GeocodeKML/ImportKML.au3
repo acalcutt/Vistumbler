@@ -9,9 +9,9 @@ $ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON)
 $DB = $TmpDir & $ldatetimestamp & '.SDB'
 ConsoleWrite($DB & @CRLF)
 _SetUpDbTables($DB)
-_ImportGPX()
+_SearchKML()
 
-Func _ImportGPX()
+Func _SearchKML()
 	$GPXfile = FileOpenDialog("Import from GPX", '', "GPS eXchange Format" & ' (*.kml)', 1)
 	$result = _XMLFileOpen($GPXfile)
 	;ConsoleWrite(@error & @CRLF)
@@ -39,11 +39,11 @@ Func _SearchForPlaceMark($spath)
 					If StringLower($PlacemarkNodes[$pma]) = "name" Then
 						$NamePath = $PlacemarkPath & "/*[" & $pma & "]"
 						$NameArray = _XMLGetValue($NamePath)
-						$PName = $NameArray[1]
+						$PName = StringReplace($NameArray[1], "'", "''")
 					ElseIf StringLower($PlacemarkNodes[$pma]) = "description" Then
 						$DeskPath = $PlacemarkPath & "/*[" & $pma & "]"
 						$DeskArray = _XMLGetValue($DeskPath)
-						$PDesc = $DeskArray[1]
+						$PDesc = StringReplace($DeskArray[1], "'", "''")
 					ElseIf StringLower($PlacemarkNodes[$pma]) = "point" Then
 						$PointPath = $PlacemarkPath & "/*[" & $pma & "]"
 						$PointNodes = _XMLGetChildNodes($PointPath)
@@ -54,25 +54,27 @@ Func _SearchForPlaceMark($spath)
 								$LatLonArr = StringSplit($CordArray[1], ",")
 								$Plon = $LatLonArr[1]
 								$PLat = $LatLonArr[2]
-								$LocationArr = _GetGpsLocation($PLat, $Plon)
+								$LocationArr = _GeonamesGetGpsLocation($PLat, $Plon)
 								$PCountryCode = $LocationArr[1]
 								$PCountryName = $LocationArr[2]
 								$PAreaName = $LocationArr[3]
-								Sleep(75);sleep because google returns results better
+								;Sleep($RequestSleepTime);sleep because google returns results better
 							EndIf
 						Next
 					EndIf
 				Next
-				ConsoleWrite($PName & ' - ' & $PDesc & ' - ' & $PLat & ' - ' & $Plon & ' - ' & $PCountryCode & ' - ' & $PCountryName & ' - ' & $PAreaName & @CRLF)
-				$query = "INSERT INTO KMLDATA(Name,Desc,Latitude,Longitude,CountryCode,CountryName,AreaName) VALUES ('" & $PName & "','" & $PDesc & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaName & "');"
-				_SQLite_Exec($DBhndl, $query)
+				If $PName <> "" Or $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Or $PDesc <> "" Then
+					ConsoleWrite('"' & $PName  & '" - "' & $PCountryCode & '" - "' & $PCountryName & '" - "' & $PAreaName & '" - "' & $PLat & '" - "' & $Plon & '" - "' & $PDesc & '"' & @CRLF)
+					$query = "INSERT INTO KMLDATA(Name,Desc,Latitude,Longitude,CountryCode,CountryName,AreaName) VALUES ('" & $PName & "','" & $PDesc & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaName & "');"
+					_SQLite_Exec($DBhndl, $query)
+				EndIf
 			EndIf
 		Next
 	EndIf
 EndFunc
 
 
-Func _GetGpsLocation($gllat, $gllon)
+Func _GoogleGetGpsLocation($gllat, $gllon)
 	Local $aResult[4]
 	Local $AdministrativeAreaName, $CountryName, $CountryNameCode
 	$googlelookupurl = "http://maps.google.com/maps/geo?q=" & $gllat & "," & $gllon
@@ -98,6 +100,35 @@ Func _GetGpsLocation($gllat, $gllon)
 	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
 	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
 	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
+	Sleep(15000);Sleep 15 seconds to prevent hitting 15,000 request/day limit
+	Return $aResult
+EndFunc
+
+Func _GeonamesGetGpsLocation($gllat, $gllon)
+	Local $aResult[4]
+	Local $AdministrativeAreaName, $CountryName, $CountryNameCode
+	$geonameslookupurl = "http://ws.geonames.org/countrySubdivision?lat=" & $gllat & "&lng=" & $gllon
+	$webpagesource = _INetGetSource($geonameslookupurl)
+	$arr = StringSplit($webpagesource, @LF)
+	For $d=1 to $arr[0]
+		$gdline = $arr[$d]
+		If StringInStr($gdline, 'adminCode1') Then
+			$ts = StringSplit($gdline, ">")
+			$AdministrativeAreaName = StringReplace($ts[2], "</adminCode1", "")
+		ElseIf StringInStr($gdline, 'countryName') Then
+			$ts = StringSplit($gdline, ">")
+			$CountryName = StringReplace($ts[2], "</countryName", "")
+		ElseIf StringInStr($gdline, 'countryCode') Then
+			$ts = StringSplit($gdline, ">")
+			$CountryNameCode = StringReplace($ts[2], "</countryCode", "")
+		EndIf
+		If $AdministrativeAreaName <> "" And $CountryName <> "" And $CountryNameCode <> "" Then ExitLoop
+	Next
+	$aResult[1] = StringReplace(StringReplace($CountryNameCode, ',', ''), '"', '')
+	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
+	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
+	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
+	Sleep(1000);Sleep 1 second to prevent hitting 5000 request/hr limit
 	Return $aResult
 EndFunc
 
