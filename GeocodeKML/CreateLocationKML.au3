@@ -49,6 +49,16 @@ For $ek = 1 to $KmlDataSize
 		$CurrentFileName = $Filename
 		ConsoleWrite("New File: " & $FileName & @CRLF)
 		FileDelete($FileName)
+		Local $LatArray, $iRows, $iColumns, $iRval
+		$query = "SELECT Latitude FROM KMLDATA WHERE CountryCode='" & $kCountryCode & "' AND AreaName='" & $AreaName & "'ORDER BY Latitude DESC Limit 1"
+		$iRval = _SQLite_GetTable2d($DBhndl, $query, $LatArray, $iRows, $iColumns)
+		$MinLat = $LatArray[1][1]
+		Local $LatArray, $iRows, $iColumns, $iRval
+		$query = "SELECT Latitude FROM KMLDATA WHERE CountryCode='" & $kCountryCode & "' AND AreaName='" & $AreaName & "'ORDER BY Latitude ASC Limit 1"
+		$iRval = _SQLite_GetTable2d($DBhndl, $query, $LatArray, $iRows, $iColumns)
+		$MaxLat = $LatArray[1][1]
+		ConsoleWrite($MinLat & ' - ' & $MaxLat & @CRLF)
+
 		$kmlfile = '<?xml version="1.0" encoding="UTF-8"?>' & @CRLF _
 			 & '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">' & @CRLF _
 			 & '<Document>' & @CRLF _
