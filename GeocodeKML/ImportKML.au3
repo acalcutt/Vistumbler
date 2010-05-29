@@ -3,6 +3,7 @@
 #include <Array.au3>
 #include <INet.au3>
 #include <SQLite.au3>
+Dim $RetryAttempts = 5 ;Number of times to retry getting location
 Dim $DBhndl
 Dim $TmpDir = @ScriptDir & '\temp\'
 $ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
@@ -33,7 +34,7 @@ Func _SearchForPlaceMark($spath)
 			ElseIf StringLower($PathNodesArray[$spa]) = "placemark" Then
 				$PlacemarkPath = $spath & "/*[" & $spa & "]"
 				$PlacemarkNodes = _XMLGetChildNodes($PlacemarkPath)
-				Local $PName, $PDesc, $PLat, $Plon, $PCountryCode, $PCountryName, $PAreaName
+				Local $PName, $PDesc, $PStyle, $PLat, $Plon, $PCountryCode, $PCountryName, $PAreaName
 				For $pma = 1 to $PlacemarkNodes[0]
 					;ConsoleWrite($spa & '-' & $pma & ' : ')
 					If StringLower($PlacemarkNodes[$pma]) = "name" Then
@@ -44,6 +45,10 @@ Func _SearchForPlaceMark($spath)
 						$DeskPath = $PlacemarkPath & "/*[" & $pma & "]"
 						$DeskArray = _XMLGetValue($DeskPath)
 						$PDesc = StringReplace($DeskArray[1], "'", "''")
+					ElseIf StringLower($PlacemarkNodes[$pma]) = "styleUrl" Then
+						$StylePath = $PlacemarkPath & "/*[" & $pma & "]"
+						$StyleArray = _XMLGetValue($StylePath)
+						$PStyle = StringReplace(StringReplace(StringReplace($StyleArray[1], "openStyleDead", "openStyle"), "wepStyleDead", "wepStyle"), "secureStyleDead", "secureStyle")
 					ElseIf StringLower($PlacemarkNodes[$pma]) = "point" Then
 						$PointPath = $PlacemarkPath & "/*[" & $pma & "]"
 						$PointNodes = _XMLGetChildNodes($PointPath)
@@ -54,18 +59,28 @@ Func _SearchForPlaceMark($spath)
 								$LatLonArr = StringSplit($CordArray[1], ",")
 								$Plon = $LatLonArr[1]
 								$PLat = $LatLonArr[2]
-								$LocationArr = _GeonamesGetGpsLocation($PLat, $Plon)
-								$PCountryCode = $LocationArr[1]
-								$PCountryName = $LocationArr[2]
-								$PAreaName = $LocationArr[3]
+								For $gl = 1 to $RetryAttempts
+									$LocationArr = _GeonamesGetGpsLocation($PLat, $Plon)
+									$PCountryCode = $LocationArr[1]
+									$PCountryName = $LocationArr[2]
+									$PAreaName = $LocationArr[3]
+									If $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Then ExitLoop
+									$LocationArr = _GoogleGetGpsLocation($PLat, $Plon)
+									$PCountryCode = $LocationArr[1]
+									$PCountryName = StringReplace($LocationArr[2], "USA", "United States")
+									$PAreaName = $LocationArr[3]
+									If $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Then ExitLoop
+									;Sleep(5000)
+								Next
+								ConsoleWrite($PCountryCode &  ' - ' & $PCountryName &  ' - ' & $PAreaName & @CRLF)
 								;Sleep($RequestSleepTime);sleep because google returns results better
 							EndIf
 						Next
 					EndIf
 				Next
 				If $PName <> "" Or $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Or $PDesc <> "" Then
-					ConsoleWrite('"' & $PName  & '" - "' & $PCountryCode & '" - "' & $PCountryName & '" - "' & $PAreaName & '" - "' & $PLat & '" - "' & $Plon & '" - "' & $PDesc & '"' & @CRLF)
-					$query = "INSERT INTO KMLDATA(Name,Desc,Latitude,Longitude,CountryCode,CountryName,AreaName) VALUES ('" & $PName & "','" & $PDesc & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaName & "');"
+					ConsoleWrite('"' & $PName  & '" - "' & $PCountryCode & '" - "' & $PCountryName & '" - "' & $PAreaName & '" - "' & $PStyle & '" - "' & $PLat & '" - "' & $Plon & '" - "' & $PDesc & '"' & @CRLF)
+					$query = "INSERT INTO KMLDATA(Name,Desc,Style,Latitude,Longitude,CountryCode,CountryName,AreaName) VALUES ('" & $PName & "','" & $PDesc & "','" & $PStyle & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaName & "');"
 					_SQLite_Exec($DBhndl, $query)
 				EndIf
 			EndIf
@@ -80,6 +95,7 @@ Func _GoogleGetGpsLocation($gllat, $gllon)
 	$googlelookupurl = "http://maps.google.com/maps/geo?q=" & $gllat & "," & $gllon
 	$webpagesource = _INetGetSource($googlelookupurl)
 	;ConsoleWrite($webpagesource)
+	ConsoleWrite("Google" & @CRLF)
 	$arr = StringSplit($webpagesource, @LF)
 	For $d=1 to $arr[0]
 		$gdline = StringStripWS($arr[$d], 8)
@@ -100,7 +116,7 @@ Func _GoogleGetGpsLocation($gllat, $gllon)
 	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
 	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
 	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
-	Sleep(15000);Sleep 15 seconds to prevent hitting 15,000 request/day limit
+	Sleep(750);Sleep 15 seconds to prevent hitting 15,000 request/day limit
 	Return $aResult
 EndFunc
 
@@ -109,12 +125,14 @@ Func _GeonamesGetGpsLocation($gllat, $gllon)
 	Local $AdministrativeAreaName, $CountryName, $CountryNameCode
 	$geonameslookupurl = "http://ws.geonames.org/countrySubdivision?lat=" & $gllat & "&lng=" & $gllon
 	$webpagesource = _INetGetSource($geonameslookupurl)
+	;ConsoleWrite($webpagesource)
+	ConsoleWrite("Geonames" & @CRLF)
 	$arr = StringSplit($webpagesource, @LF)
 	For $d=1 to $arr[0]
 		$gdline = $arr[$d]
-		If StringInStr($gdline, 'adminCode1') Then
+		If StringInStr($gdline, 'code type="ISO3166-2"') Then
 			$ts = StringSplit($gdline, ">")
-			$AdministrativeAreaName = StringReplace($ts[2], "</adminCode1", "")
+			$AdministrativeAreaName = StringReplace($ts[2], "</code", "")
 		ElseIf StringInStr($gdline, 'countryName') Then
 			$ts = StringSplit($gdline, ">")
 			$CountryName = StringReplace($ts[2], "</countryName", "")
@@ -128,7 +146,7 @@ Func _GeonamesGetGpsLocation($gllat, $gllon)
 	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
 	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
 	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
-	Sleep(1000);Sleep 1 second to prevent hitting 5000 request/hr limit
+	Sleep(750);Sleep 500ms to prevent hitting 5000 request/hr limit
 	Return $aResult
 EndFunc
 
@@ -138,5 +156,5 @@ Func _SetUpDbTables($dbfile)
 	$DBhndl = _SQLite_Open($dbfile)
 	_SQLite_Exec($DBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
 	ConsoleWrite(@error & @CRLF)
-	_SQLite_Exec($DBhndl, "CREATE TABLE KMLDATA (Name,Desc,Latitude,Longitude,CountryCode,CountryName,AreaName)")
+	_SQLite_Exec($DBhndl, "CREATE TABLE KMLDATA (Name,Desc,Style,Latitude,Longitude,CountryCode,CountryName,AreaName)")
 EndFunc   ;==>_SetUpDbTables
