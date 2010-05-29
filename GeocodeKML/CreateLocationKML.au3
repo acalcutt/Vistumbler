@@ -6,14 +6,14 @@
 
 
 Dim $TmpDir = @ScriptDir & '\temp\'
-DIM $DB = $TmpDir & '2010-05-27 22-02-56.SDB'
+Dim $DB = FileOpenDialog("Import from SDB", $TmpDir, "SQLite Database" & ' (*.sdb)', 1)
 
 _SQLite_Startup()
 $DBhndl = _SQLite_Open($DB)
 _SQLite_Exec($DBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
 
 Local $KmlDataArray, $iRows, $iColumns, $iRval
-$query = "SELECT Name, Desc, Latitude, Longitude, CountryCode, CountryName, AreaName FROM KMLDATA ORDER BY CountryCode, AreaName"
+$query = "SELECT Name, Desc, Style, Latitude, Longitude, CountryCode, CountryName, AreaName FROM KMLDATA ORDER BY CountryCode, AreaName"
 $iRval = _SQLite_GetTable2d($DBhndl, $query, $KmlDataArray, $iRows, $iColumns)
 ;_ArrayDisplay($KmlDataArray)
 $KmlDataSize = $iRows
@@ -24,11 +24,12 @@ Dim $CurrentFileName
 For $ek = 1 to $KmlDataSize
 	$kName = $KmlDataArray[$ek][0]
 	$kDesc = $KmlDataArray[$ek][1]
-	$kLat = $KmlDataArray[$ek][2]
-	$kLon = $KmlDataArray[$ek][3]
-	$kCountryCode = $KmlDataArray[$ek][4]
-	$kCountryName = $KmlDataArray[$ek][5]
-	$AreaName = $KmlDataArray[$ek][6]
+	$kStyle = $KmlDataArray[$ek][2]
+	$kLat = $KmlDataArray[$ek][3]
+	$kLon = $KmlDataArray[$ek][4]
+	$kCountryCode = $KmlDataArray[$ek][5]
+	$kCountryName = $KmlDataArray[$ek][6]
+	$AreaName = $KmlDataArray[$ek][7]
 	;ConsoleWrite($kName & '-' & $AreaName & '-' & $kLat & '-' & $kLon & '-' & $kCountryCode & '-' & $kCountryName & '-' & $kDesc & @CRLF)
 	$CombinedName = 'vkml'
 	If $kCountryCode <> "" Then $CombinedName &= "-" & $kCountryCode
@@ -47,6 +48,7 @@ For $ek = 1 to $KmlDataSize
 		;Start New KML File
 		$CurrentFileName = $Filename
 		ConsoleWrite("New File: " & $FileName & @CRLF)
+		FileDelete($FileName)
 		$kmlfile = '<?xml version="1.0" encoding="UTF-8"?>' & @CRLF _
 			 & '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">' & @CRLF _
 			 & '<Document>' & @CRLF _
@@ -56,7 +58,7 @@ For $ek = 1 to $KmlDataSize
 			 & '		<IconStyle>' & @CRLF _
 			 & '			<scale>.5</scale>' & @CRLF _
 			 & '			<Icon>' & @CRLF _
-			 & '				<href>http://vistumbler.sourceforge.net/images/program-images/secure.png</href>' & @CRLF _
+			 & '				<href>http://vistumbler.sourceforge.net/images/program-images/open.png</href>' & @CRLF _
 			 & '			</Icon>' & @CRLF _
 			 & '		</IconStyle>' & @CRLF _
 			 & '	</Style>' & @CRLF _
@@ -68,11 +70,11 @@ For $ek = 1 to $KmlDataSize
 			 & '			</Icon>' & @CRLF _
 			 & '		</IconStyle>' & @CRLF _
 			 & '	</Style>' & @CRLF _
-			 & '	<Style id="openStyle">' & @CRLF _
+			 & '	<Style id="secureStyle">' & @CRLF _
 			 & '		<IconStyle>' & @CRLF _
 			 & '			<scale>.5</scale>' & @CRLF _
 			 & '			<Icon>' & @CRLF _
-			 & '				<href>http://vistumbler.sourceforge.net/images/program-images/open.png</href>' & @CRLF _
+			 & '				<href>http://vistumbler.sourceforge.net/images/program-images/secure.png</href>' & @CRLF _
 			 & '			</Icon>' & @CRLF _
 			 & '		</IconStyle>' & @CRLF _
 			 & '	</Style>' & @CRLF _
@@ -81,15 +83,9 @@ For $ek = 1 to $KmlDataSize
 	EndIf
 	$kmlfile &= '			<Placemark>' & @CRLF _
 			 & '				<name>' & $kName & '</name>' & @CRLF _
-			 & '				<description><![CDATA[' & $kDesc & ']]></description>' & @CRLF
-			;If $ExpSECTYPE = 1 Then
-			$kmlfile &= '				<styleUrl>#openStyle</styleUrl>' & @CRLF
-			;ElseIf $ExpSECTYPE = 2 Then
-			;	$kmlfile &= '				<styleUrl>#wepStyle</styleUrl>' & @CRLF
-			;ElseIf $ExpSECTYPE = 3 Then
-			;	$kmlfile &= '				<styleUrl>#secureStyle</styleUrl>' & @CRLF
-			;EndIf
-	$kmlfile &= '				<Point>' & @CRLF _
+			 & '				<description><![CDATA[' & $kDesc & ']]></description>' & @CRLF _
+			 & '				<styleUrl>' & $kStyle & '</styleUrl>' & @CRLF _
+			 & '				<Point>' & @CRLF _
 			 & '					<coordinates>' & $kLon & ',' & $kLat & ',0</coordinates>' & @CRLF _
 			 & '				</Point>' & @CRLF _
 			 & '			</Placemark>' & @CRLF

@@ -13,8 +13,8 @@ _SetUpDbTables($DB)
 _SearchKML()
 
 Func _SearchKML()
-	$GPXfile = FileOpenDialog("Import from GPX", '', "GPS eXchange Format" & ' (*.kml)', 1)
-	$result = _XMLFileOpen($GPXfile)
+	$KMLfile = FileOpenDialog("Import from KML", '', "Google Earth file" & ' (*.kml)', 1)
+	$result = _XMLFileOpen($KMLfile)
 	;ConsoleWrite(@error & @CRLF)
 	If @error then ConsoleWrite(@extended & @CRLF)
 	ConsoleWrite($result)
@@ -40,7 +40,7 @@ Func _SearchForPlaceMark($spath)
 					If StringLower($PlacemarkNodes[$pma]) = "name" Then
 						$NamePath = $PlacemarkPath & "/*[" & $pma & "]"
 						$NameArray = _XMLGetValue($NamePath)
-						$PName = StringReplace($NameArray[1], "'", "''")
+						$PName = StringReplace(StringReplace($NameArray[1], "'", "''"), "Location", "")
 					ElseIf StringLower($PlacemarkNodes[$pma]) = "description" Then
 						$DeskPath = $PlacemarkPath & "/*[" & $pma & "]"
 						$DeskArray = _XMLGetValue($DeskPath)
