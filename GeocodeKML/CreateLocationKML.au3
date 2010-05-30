@@ -49,21 +49,63 @@ For $ek = 1 to $KmlDataSize
 		$CurrentFileName = $Filename
 		ConsoleWrite("New File: " & $FileName & @CRLF)
 		FileDelete($FileName)
-		Local $LatArray, $iRows, $iColumns, $iRval
-		$query = "SELECT Latitude FROM KMLDATA WHERE CountryCode='" & $kCountryCode & "' AND AreaName='" & $AreaName & "'ORDER BY Latitude DESC Limit 1"
-		$iRval = _SQLite_GetTable2d($DBhndl, $query, $LatArray, $iRows, $iColumns)
-		$MinLat = $LatArray[1][1]
-		Local $LatArray, $iRows, $iColumns, $iRval
-		$query = "SELECT Latitude FROM KMLDATA WHERE CountryCode='" & $kCountryCode & "' AND AreaName='" & $AreaName & "'ORDER BY Latitude ASC Limit 1"
-		$iRval = _SQLite_GetTable2d($DBhndl, $query, $LatArray, $iRows, $iColumns)
-		$MaxLat = $LatArray[1][1]
-		ConsoleWrite($MinLat & ' - ' & $MaxLat & @CRLF)
+		;#comments-start
 
+		Local $LatArray, $iRows, $iColumns, $iRval
+		$query = "SELECT Latitude FROM KMLDATA WHERE CountryCode='" & $kCountryCode & "' AND AreaName='" & $AreaName & "' ORDER BY Latitude"
+		$iRval = _SQLite_GetTable2d($DBhndl, $query, $LatArray, $iRows, $iColumns)
+		Local $MinLat, $MaxLat
+		For $fhl = 1 to  $iRows ;ORDER BY was not handling +/- properly. go though and find highest and lowest latitude
+			$lval = ($LatArray[$fhl][0] - 0)
+			If $fhl = 1 Then
+				$MinLat = $lval
+			Else
+				If $lval < $MinLat Then $MinLat = $lval
+			EndIf
+			If $fhl = 1 Then
+				$MaxLat = $lval
+			Else
+				If $lval > $MaxLat Then $MaxLat = $lval
+			EndIf
+		Next
+
+		Local $LonArray, $iRows, $iColumns, $iRval
+		$query = "SELECT Longitude FROM KMLDATA WHERE CountryCode='" & $kCountryCode & "' AND AreaName='" & $AreaName & "' ORDER BY Longitude"
+		$iRval = _SQLite_GetTable2d($DBhndl, $query, $LonArray, $iRows, $iColumns)
+		Local $MinLon, $MaxLon
+		For $fhl = 1 to  $iRows ;ORDER BY was not handling +/- properly. go though and find highest and lowest longitude
+			$lval = ($LonArray[$fhl][0] - 0)
+			If $fhl = 1 Then
+				$MinLon = $lval
+			Else
+				If $lval < $MinLon Then $MinLon = $lval
+			EndIf
+			If $fhl = 1 Then
+				$MaxLon = $lval
+			Else
+				If $lval > $MaxLon Then $MaxLon = $lval
+			EndIf
+		Next
+
+		ConsoleWrite('"' & $MinLat & '" - "' & $MaxLat & '"      -      "' & $MinLon & '" - "' & $MaxLon & '"' & @CRLF)
+		;#comments-end
+
+	  ;<minAltitude>0</minAltitude>
+	  ;<maxAltitude>0</maxAltitude>
 		$kmlfile = '<?xml version="1.0" encoding="UTF-8"?>' & @CRLF _
 			 & '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">' & @CRLF _
 			 & '<Document>' & @CRLF _
 			 & '	<description>Geocoding data from GeoNames.org</description>' & @CRLF _
 			 & '	<name>' & $CombinedName & '</name>' & @CRLF _
+			 & '	<Region>' & @CRLF _
+			 & '		<LatLonAltBox>' & @CRLF _
+			 & '			<north>' & $MaxLat & '</north>' & @CRLF _
+			 & '			<south>' & $MinLat & '</south>' & @CRLF _
+			 & '		 	<east>' & $MaxLon & '</east>' & @CRLF _
+			 & '		 	<west>' & $MinLon & '</west>' & @CRLF _
+			 & '		</LatLonAltBox>' & @CRLF _
+			 & '		<minlodpixels>2000</minlodpixels>' & @CRLF _
+			 & '	</Region>' & @CRLF _
 			 & '	<Style id="openStyle">' & @CRLF _
 			 & '		<IconStyle>' & @CRLF _
 			 & '			<scale>.5</scale>' & @CRLF _
@@ -94,6 +136,14 @@ For $ek = 1 to $KmlDataSize
 	$kmlfile &= '			<Placemark>' & @CRLF _
 			 & '				<name>' & $kName & '</name>' & @CRLF _
 			 & '				<description><![CDATA[' & $kDesc & ']]></description>' & @CRLF _
+			 & '				<Region>' & @CRLF _
+			 & '					<LatLonAltBox>' & @CRLF _
+			 & '						<north>' & $kLat & '</north>' & @CRLF _
+			 & '					    <south>' & $kLat & '</south>' & @CRLF _
+			 & '		 				<east>' & $kLon & '</east>' & @CRLF _
+			 & '		 				<west>' & $kLon & '</west>' & @CRLF _
+			 & '					</LatLonAltBox>' & @CRLF _
+			 & '				</Region>' & @CRLF _
 			 & '				<styleUrl>' & $kStyle & '</styleUrl>' & @CRLF _
 			 & '				<Point>' & @CRLF _
 			 & '					<coordinates>' & $kLon & ',' & $kLat & ',0</coordinates>' & @CRLF _
