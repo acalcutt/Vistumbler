@@ -1,5 +1,5 @@
 #CS
-07/02/2010 - Version 3.2a
+31/05/2010 - Version 3.3a
 -----------------------------------------------------------------
 ----------------------NATIVE WIFI FUNCTIONS----------------------
 --------------------------For WinXP SP3--------------------------
@@ -8,7 +8,7 @@
 #CE
 #include-once
 
-Global	$a_iCall, $ErrorMessage, $WLANAPIDLL = DllOpen("wlanapi.dll"), $GLOBAL_hClientHandle, $GLOBAL_pGUID, $PTR_INFOLIST = 0, _
+Global $a_iCall, $ErrorMessage, $WLANAPIDLL = DllOpen("wlanapi.dll"), $GLOBAL_hClientHandle, $GLOBAL_pGUID, $PTR_INFOLIST = 0, _
 		$CallbackDisconnectCount = 0, $CallbackConnectCount = 0, $CallbackSSID, $ExtraGUIDs[1]
 
 Global Const _ ;Enumerations
@@ -84,6 +84,22 @@ Global Const $Elements_PEAP_End = 'msPeap:EnableQuarantineChecks|msPeap:RequireC
 Global Const $Elements_OneX_End = '-|ConfigBlob|-|-|-|'
 Global Const $Elements_Base_End = '-|-|-'
 
+Global Const $Elements_Creds_Base_Start = 'EapHostUserCredentials xmlns="http://www.microsoft.com/provisioning/EapHostUserCredentials"' & @CRLF & _
+'xmlns:eapCommon="http://www.microsoft.com/provisioning/EapCommon"' & @CRLF & _
+'xmlns:baseEap="http://www.microsoft.com/provisioning/BaseEapMethodUserCredentials"+|EapMethod+|eapCommon:Type|eapCommon:AuthorId|-|' & _
+'Credentials xmlns:eapUser="http://www.microsoft.com/provisioning/EapUserPropertiesV1"' & @CRLF & _
+'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"' & @CRLF & _
+'xmlns:baseEap="http://www.microsoft.com/provisioning/BaseEapUserPropertiesV1"' & @CRLF & _
+'xmlns:msPeap="http://www.microsoft.com/provisioning/MsPeapUserPropertiesV1"' & @CRLF & _
+'xmlns:eapTls="http://www.microsoft.com/provisioning/EapTlsUserPropertiesV1"' & @CRLF & _
+'xmlns:msChapV2="http://www.microsoft.com/provisioning/MsChapV2UserPropertiesV1"+|'
+Global Const $Elements_Creds_PEAP_Start = 'baseEap:Eap+|baseEap:Type|msPeap:EapType+|msPeap:RoutingIdentity|'
+Global Const $Elements_Creds_TLS = 'baseEap:Eap+|baseEap:Type|eapTls:EapType+|eapTls:Username|eapTls:UserCert|-|-|'
+Global Const $Elements_Creds_MSCHAP = 'baseEap:Eap+|baseEap:Type|msChapV2:EapType+|msChapV2:Username|msChapV2:Password|msChapV2:LogonDomain|-|-|'
+Global Const $Elements_Creds_PEAP_End = '-|-|'
+Global Const $Elements_Creds_Base_End = '-|-'
+
+
 Func _Wlan_OpenHandle()
 	Local $iVesion = 1
 	If @OSBuild == "WIN_VISTA" Or @OSBuild == "WIN_2008" Or @OSBuild == "WIN_7" Then $iVesion = 2
@@ -145,106 +161,107 @@ Func _Wlan_Scan($pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
 EndFunc
 
 Func _Wlan_GetAvailableNetworkList($dwFlag = 0, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
-    Local $NETWORK_LIST, $index, $pAvailableNetworkList, $NumberOfItems, $StructString, $ArrayDuplicateCount = 0, $ArrayTransferCount = 0
-    If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
+	Local $a_iCall, $tNetworkList, $tFilter, $iNumberOfItems, $tagInfoList, $tagCompareEntry
+	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
 	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
 	If $dwFlag == -1 Or $dwFlag == Default Then $dwFlag = 0
 
-    $a_iCall = DllCall($WLANAPIDLL, "dword", "WlanGetAvailableNetworkList", "hwnd", $hClientHandle, "ptr", $pGUID, "dword", $dwFlag, "ptr", 0, "ptr*", 0)
-	If @error Then Return SetError(4, 0, 0)
-	If $a_iCall[0] Then Return SetError(1, $a_iCall[0], _Wlan_GetErrorMessage($a_iCall[0]))
+	$a_iCall = DllCall($WLANAPIDLL, "dword", "WlanGetAvailableNetworkList", "hwnd", $hClientHandle, "ptr", $pGUID, "dword", $dwFlag, "ptr", 0, "ptr*", 0)
+	If @error Then Return SetError(4, @error, False)
+	If $a_iCall[0] Then Return SetError(1, 0, _Wlan_GetErrorMessage($a_iCall[0]))
 
-	$pAvailableNetworkList = $a_iCall[5]
+	$tNetworkList = DllStructCreate($WLAN_AVAILABLE_NETWORK_LIST, $a_iCall[5])
+	$iNumberOfItems = DllStructGetData($tNetworkList, "dwNumberOfItems")
+	If Not $iNumberOfItems Then Return SetError(2, 0, "")
 
-	$NETWORK_LIST = DllStructCreate($WLAN_AVAILABLE_NETWORK_LIST, $pAvailableNetworkList)
-	$NumberOfItems = DllStructGetData($NETWORK_LIST, "dwNumberOfItems")
-
-	If Not $NumberOfItems Then Return SetError(2, 0, 0)
-
-	$StructString = _Wlan_BuildListStructString($WLAN_AVAILABLE_NETWORK_LIST, $WLAN_AVAILABLE_NETWORK, $NumberOfItems)
-	$NETWORK_LIST = DllStructCreate($StructString, $pAvailableNetworkList)
-
-	Dim $AvailableNetworkArray[$NumberOfItems][8]
-
-	For $i = 0 To $NumberOfItems - 1
-		$AvailableNetworkArray[$i][0] = DllStructGetData($NETWORK_LIST, "ucSSID" & $index)
-		$AvailableNetworkArray[$i][1] = DllStructGetData($NETWORK_LIST, "DOT11BSSTYPE" & $index)
-		$AvailableNetworkArray[$i][2] = DllStructGetData($NETWORK_LIST, "bNetworkConnectable" & $index)
-		$AvailableNetworkArray[$i][3] = DllStructGetData($NETWORK_LIST, "WLANSIGNALQUALITY" & $index)
-		$AvailableNetworkArray[$i][4] = DllStructGetData($NETWORK_LIST, "DOT11AUTHALGORITHM" & $index)
-		$AvailableNetworkArray[$i][5] = DllStructGetData($NETWORK_LIST, "DOT11CIPHERALGORITHM" & $index)
-		$AvailableNetworkArray[$i][6] = DllStructGetData($NETWORK_LIST, "dwFlags" & $index)
-		$AvailableNetworkArray[$i][7] = DllStructGetData($NETWORK_LIST, "WLANREASONCODE" & $index)
-		$index += 1
-
-		If $AvailableNetworkArray[$i][1] == $dot11_BSS_type_infrastructure		Then $AvailableNetworkArray[$i][1] = "Infrastructure"
-		If $AvailableNetworkArray[$i][1] == $dot11_BSS_type_independent			Then $AvailableNetworkArray[$i][1] = "Ad Hoc"
-		If $AvailableNetworkArray[$i][2] == 1									Then $AvailableNetworkArray[$i][2] = "Connectable"
-		If $AvailableNetworkArray[$i][2] == 0									Then $AvailableNetworkArray[$i][2] = "Not Connectable"
-		If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_80211_OPEN			Then $AvailableNetworkArray[$i][4] = "Open"
-		If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_80211_SHARED_KEY 	Then $AvailableNetworkArray[$i][4] = "Shared Key"
-		If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_WPA 				Then $AvailableNetworkArray[$i][4] = "WPA"
-		If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_WPA_PSK 			Then $AvailableNetworkArray[$i][4] = "WPA-PSK"
-		If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_RSNA 				Then $AvailableNetworkArray[$i][4] = "WPA2"
-		If $AvailableNetworkArray[$i][4] == $DOT11_AUTH_ALGO_RSNA_PSK 			Then $AvailableNetworkArray[$i][4] = "WPA2-PSK"
-		If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_NONE				Then $AvailableNetworkArray[$i][5] = "Unencrypted"
-		If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_WEP40			Then $AvailableNetworkArray[$i][5] = "WEP-64"
-		If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_TKIP				Then $AvailableNetworkArray[$i][5] = "TKIP"
-		If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_CCMP				Then $AvailableNetworkArray[$i][5] = "AES"
-		If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_WEP104			Then $AvailableNetworkArray[$i][5] = "WEP-128"
-		If $AvailableNetworkArray[$i][5] == $DOT11_CIPHER_ALGO_WEP				Then $AvailableNetworkArray[$i][5] = "WEP"
-		If $AvailableNetworkArray[$i][6] == 3									Then $AvailableNetworkArray[$i][6] = "Connected"
-		If $AvailableNetworkArray[$i][6] == 2									Then $AvailableNetworkArray[$i][6] = "Profile"
-		If $AvailableNetworkArray[$i][6] == 0									Then $AvailableNetworkArray[$i][6] = "No Profile"
-		If $AvailableNetworkArray[$i][7] <> ""									Then $AvailableNetworkArray[$i][7] = _Wlan_ReasonCodeToString($AvailableNetworkArray[$i][7])
+	Local $avNetworks[$iNumberOfItems][20]
+	Local $avFilter[$iNumberOfItems][5]
+	For $i = 3 To $iNumberOfItems + 2
+		$tagInfoList &= $WLAN_AVAILABLE_NETWORK
+		$tagCompareEntry &= "wchar strProfileName" & $i - 2 & "[256]; byte NetInfo1" & $i - 2 & "[44]; byte Connectability" & $i - 2 & "[8]; byte NetInfo2" & $i - 2 & "[56]; dword dwFlags" & $i - 2 & "; dword dwReserved" & $i - 2
+		If $i <> $iNumberOfItems + 2 Then $tagInfoList &= "; "
+		If $i <> $iNumberOfItems + 2 Then $tagCompareEntry &= "; "
 	Next
 
-	_Wlan_FreeMemory($pAvailableNetworkList)
+	$tFilter = DllStructCreate($tagCompareEntry, $a_iCall[5] + 8)
+	$tNetworkList = DllStructCreate($tagInfoList, $a_iCall[5] + 8)
 
-	For $i = 0 To $NumberOfItems - 1
-		For $j = $i + 1 To $NumberOfItems - 1
-			If $AvailableNetworkArray[$i][0] == "" And $AvailableNetworkArray[$i][1] == "Ad Hoc" Then
-				$AvailableNetworkArray[$i][0] = "@"
-				$ArrayDuplicateCount += 1
+	Local $iIndex
+	For $i = 0 To $iNumberOfItems - 1
+		$avFilter[$i][0] = DllStructGetData($tFilter, "strProfileName" & $i + 1)
+		$avFilter[$i][1] = DllStructGetData($tFilter, "NetInfo1" & $i + 1)
+		$avFilter[$i][2] = DllStructGetData($tFilter, "NetInfo2" & $i + 1)
+		$avFilter[$i][3] = DllStructGetData($tFilter, "dwFlags" & $i + 1)
+		For $j = $i -1 To 0 Step -1
+			If $avFilter[$i][0] And $avFilter[$i][0] == $avFilter[$j][0] Then
+				If Dec(BinaryMid($avFilter[$i][1], 92, 4)) < Dec(BinaryMid($avFilter[$j][1], 92, 4)) Then
+					$avFilter[$i][4] = 1
+				Else
+					$avFilter[$j][4] = 1
+				EndIf
+				ContinueLoop
 			EndIf
-			If $AvailableNetworkArray[$i][0] == $AvailableNetworkArray[$j][0] And $AvailableNetworkArray[$i][1] == $AvailableNetworkArray[$j][1] Then
-				If $AvailableNetworkArray[$i][6] == "No Profile" And $AvailableNetworkArray[$i][0] <> "@" Then
-					$AvailableNetworkArray[$i][0] = "@"
-					$ArrayDuplicateCount += 1
-				ElseIf $AvailableNetworkArray[$j][6] == "No Profile" And $AvailableNetworkArray[$i][0] <> "@" Then
-					$AvailableNetworkArray[$j][0] = "@"
-					$ArrayDuplicateCount += 1
+			If Not StringCompare($avFilter[$i][1], $avFilter[$j][1]) And Not StringCompare($avFilter[$i][2], $avFilter[$j][2]) Then
+				If $avFilter[$i][3] < $avFilter[$j][3] Then
+					$avFilter[$i][4] = 1
+				Else
+					$avFilter[$j][4] = 1
 				EndIf
 			EndIf
 		Next
 	Next
 
-	Dim $AvailableNetworkArrayDuplicate[$NumberOfItems - $ArrayDuplicateCount][8]
-
-	For $i = 0 To $NumberOfItems - 1
-		If $AvailableNetworkArray[$i][0] <> "@" Then
-			For $j = 0 To 7
-				$AvailableNetworkArrayDuplicate[$ArrayTransferCount][$j] = $AvailableNetworkArray[$i][$j]
-			Next
-			$ArrayTransferCount += 1
+	For $i = 0 To $iNumberOfItems - 1
+		If $avFilter[$i][4] Then
+			Sleep(5)
+			ContinueLoop
 		EndIf
+		$avNetworks[$iIndex][1] = "Infrastructure"
+		If DllStructGetData($tNetworkList, 16 * $i + 4) == $DOT11_BSS_TYPE_INDEPENDENT Then $avNetworks[$iIndex][1] = "Ad Hoc"
+		$avNetworks[$iIndex][0] = DllStructGetData($tNetworkList, 16 * $i + 3)
+		If Not $avNetworks[$iIndex][0] Then
+			$avNetworks[$iIndex][0] = DllStructGetData($tNetworkList, 16 * $i + 1)
+			If $avNetworks[$iIndex][1] == "Ad Hoc" Then $avNetworks[$iIndex][0] = StringTrimRight($avNetworks[$iIndex][0], 6)
+		EndIf
+		$avNetworks[$iIndex][2] = "Connectable"
+		If Not DllStructGetData($tNetworkList, 16 * $i + 6) Then $avNetworks[$iIndex][2] = "Not Connectable"
+		$avNetworks[$iIndex][3] = DllStructGetData($tNetworkList, 16 * $i + 11)
+		$avNetworks[$iIndex][4] = _Wlan_GetStrAuth(DllStructGetData($tNetworkList, 16 * $i + 13))
+		$avNetworks[$iIndex][5] = _Wlan_GetStrEncr(DllStructGetData($tNetworkList, 16 * $i + 14))
+		$avNetworks[$iIndex][6] = DllStructGetData($tNetworkList, 16 * $i + 15)
+		If BitAND($avNetworks[$iIndex][6], 1) Then
+			$avNetworks[$iIndex][6] = "Connected"
+		ElseIf BitAND($avNetworks[$iIndex][6], 2) Then
+			$avNetworks[$iIndex][6] = "Profile"
+		ElseIf Not $avNetworks[$iIndex][6] Then
+			$avNetworks[$iIndex][6] = "No Profile"
+		EndIf
+		$avNetworks[$iIndex][7] = _Wlan_ReasonCodeToString(DllStructGetData($tNetworkList, 16 * $i + 7))
+		$iIndex += 1
 	Next
 
-	$AvailableNetworkArray = $AvailableNetworkArrayDuplicate
-	Return $AvailableNetworkArray
+	ReDim $avNetworks[$iIndex][8]
+
+	_Wlan_FreeMemory($a_iCall[5])
+
+	Return $avNetworks
 EndFunc
 
 Func _Wlan_Connect($SSID, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
-	Local $strProfile, $ConnectionParameters
+	Local $strProfile, $ConnectionParameters, $Profile, $BSSType = $dot11_BSS_type_infrastructure
 	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
 	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
+
+	$Profile = _Wlan_GetProfile($SSID, $pGUID, $hClientHandle)
+	If @error Then Return SetError(@error, @extended, $Profile)
+	If $Profile[1] == "Ad Hoc" Then  $BSSType = $dot11_BSS_type_independent
 
 	$strProfile = DllStructCreate("wchar strProfile[256]")
 	DllStructSetData($strProfile, "strProfile", $SSID)
 
 	$ConnectionParameters = DllStructCreate($WLAN_CONNECTION_PARAMETERS)
 	DllStructSetData($ConnectionParameters, "strProfile", DllStructGetPtr($strProfile))
-	DllStructSetData($ConnectionParameters, "DOT11BSSTYPE", 1)
+	DllStructSetData($ConnectionParameters, "DOT11BSSTYPE", $BSSType)
 
 	$a_iCall = DllCall($WLANAPIDLL, "dword", "WlanConnect", "hwnd", $hClientHandle, "ptr", $pGUID, "ptr", DllStructGetPtr($ConnectionParameters), "ptr", 0)
 	If @error Then Return SetError(4, 0, 0)
@@ -267,6 +284,7 @@ Func _Wlan_ConnectWait($SSID, $Timeout = 15, $pGUID = $GLOBAL_pGUID, $hClientHan
 	If $Timeout == -1 Or $Timeout == Default Then $Timeout = 15
 
 	$CallbackConnectCount = 0
+	$CallbackDisconnectCount = 0
 
 	$strProfile = DllStructCreate("wchar strProfile[256]")
 	DllStructSetData($strProfile, "strProfile", $SSID)
@@ -293,6 +311,9 @@ Func _Wlan_ConnectWait($SSID, $Timeout = 15, $pGUID = $GLOBAL_pGUID, $hClientHan
 				ExitLoop
 			Case $CallbackConnectCount == 3
 				ExitLoop
+			Case $CallbackDisconnectCount
+				If $CallbackConnectCount Then ExitLoop
+				$CallbackDisconnectCount = 0
 		EndSelect
 		Sleep(500)
 	WEnd
@@ -300,6 +321,7 @@ Func _Wlan_ConnectWait($SSID, $Timeout = 15, $pGUID = $GLOBAL_pGUID, $hClientHan
 	_Wlan_RegisterNotification($hClientHandle, 0)
 
 	If $Timeout = "Timeout" Then SetError(5, 0, 0)
+	If $CallbackDisconnectCount Then Return False
 	Return $CallbackSSID
 EndFunc
 
@@ -328,7 +350,7 @@ Func _Wlan_DisconnectWait($Timeout = 5, $pGUID = $GLOBAL_pGUID, $hClientHandle =
 			Case TimerDiff($Timer) > 1000 * $Timeout
 				$Timeout = "Timeout"
 				ExitLoop
-			Case $CallbackDisconnectCount
+			Case $CallbackDisconnectCount = 2
 				ExitLoop
 		EndSelect
 		Sleep(500)
@@ -465,6 +487,7 @@ Func _Wlan_GetProfile($SSID, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hC
 EndFunc
 
 Func _Wlan_GetProfileXML($SSID, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
+	Local $a_iCall
 	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
 	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
 
@@ -475,6 +498,7 @@ Func _Wlan_GetProfileXML($SSID, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL
 EndFunc
 
 Func _Wlan_SetProfileXML($Profile, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
+	Local $a_iCall
 	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
 	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
 	$a_iCall = DllCall($WLANAPIDLL, "dword", "WlanSetProfile", "hwnd", $hClientHandle, "ptr", $pGUID, "dword", 0, "wstr", $Profile, "ptr", 0, "int", 1, "ptr", 0, "dword*", 0)
@@ -483,19 +507,37 @@ Func _Wlan_SetProfileXML($Profile, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLO
 	If $a_iCall[0] Then Return SetError(1, $a_iCall[0], _Wlan_GetErrorMessage($a_iCall[0]))
 EndFunc
 
-Func _Wlan_SetProfile($Profile, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
+Func _Wlan_SetProfileUserDataXML($SSID, $UserData, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
+	Local $a_iCall
 	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
 	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
+	$a_iCall = DllCall($WLANAPIDLL, "dword", "WlanSetProfileEapXmlUserData", "hwnd", $hClientHandle, "ptr", $pGUID, "wstr", $SSID, "dword", 0, "wstr", $UserData, "ptr", 0)
+	If $a_iCall[0] Then Return SetError(1, $a_iCall[0], _Wlan_GetErrorMessage($a_iCall[0]))
+EndFunc
+
+Func _Wlan_SetProfile($Profile, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
 	Local $Return
+	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
+	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
 	$Return = _Wlan_GenerateXMLProfile($Profile)
 	If @error Then Return SetError(@error, @extended, $Return)
 	$Return = _Wlan_SetProfileXML($Return, $pGUID, $hClientHandle)
 	Return SetError(@error, @extended, $Return)
 EndFunc
 
+Func _Wlan_SetProfileUserData($SSID, $UserData, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
+	Local $a_iCall, $Return
+	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
+	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
+	$Return = _Wlan_GenerateXMLUserData($UserData)
+	If @error Then Return SetError(@error, @extended, $Return)
+	$Return = _Wlan_SetProfileUserDataXML($SSID, $Return, $hClientHandle, $pGUID)
+	Return SetError(@error, @extended, $Return)
+EndFunc
+
 Func _Wlan_GenerateXMLProfile($Profile)
 	Local $XMLElements_Start = $Elements_Base_Start, $XMLElements_End = $Elements_Base_End, _
-	$XMLProfile = '<?xml version="1.0"?>' & @CRLF, $XMLStack[1] = [-1], $XMLElements, $TMP
+	$XMLProfile = '<?xml version="1.0" ?>' & @CRLF, $XMLStack[1] = [-1], $XMLElements, $TMP
 
 	If UBound($Profile, 0) < 1 Or UBound($Profile, 0) > 2 Then Return SetError(3, 0, 0)
 	If UBound($Profile, 0) == 1 Then
@@ -554,6 +596,7 @@ Func _Wlan_GenerateXMLProfile($Profile)
 		$Profile[0][5] = "false"
 	EndIf
 
+	If Not $Profile[0][6] Then $Profile[0][6] = _Wlan_GetKeyType($Profile[0][3], $Profile[0][4], $Profile[0][7])
 	If $Profile[0][1] = "Infrastructure" Or Not $Profile[0][1] Then $Profile[0][1] = "ESS"
 	If $Profile[0][1] = "Ad Hoc" Then $Profile[0][1] = "IBSS"
 	If $Profile[0][2] = "Automatic" Or Not $Profile[0][2] Then $Profile[0][2] = "auto"
@@ -660,6 +703,65 @@ Func _Wlan_GenerateXMLProfile($Profile)
 	Return StringRegExpReplace($XMLProfile, "\n[^:]{0,}:ServerValidation>\r[[:space:]]{0,}[^:]{0,}:ServerValidation>\r", "")
 EndFunc
 
+Func _Wlan_GenerateXMLUserData($UserData)
+	Local $XMLElements_Start = $Elements_Creds_Base_Start, $XMLElements_End = $Elements_Creds_Base_End, _
+	$XMLUserData = '<?xml version="1.0" ?>' & @CRLF, $XMLStack[1] = [-1], $XMLElements
+	If UBound($UserData) < 4 Then Return SetError(3, 0, 0)
+
+	If StringInStr($UserData[0], "PEAP") Then
+		$XMLElements_Start &= $Elements_Creds_PEAP_Start
+		$XMLElements_End = $Elements_Creds_PEAP_End & $XMLElements_End
+	EndIf
+	If StringInStr($UserData[0], "TLS") Then $XMLElements_Start &= $Elements_Creds_TLS
+	If StringInStr($UserData[0], "MSCHAP") Then $XMLElements_Start &= $Elements_Creds_MSCHAP
+
+	$XMLElements = StringSplit($XMLElements_Start & $XMLElements_End, "|")
+	For $i = 1 To UBound($XMLElements) - 1
+		If StringInStr($XMLElements[$i], @CRLF) Then
+			For $j = 0 To $XMLStack[0]
+				$XMLElements[$i] = StringReplace($XMLElements[$i], @CRLF, @CRLF & @TAB)
+			Next
+		EndIf
+		If StringInStr($XMLElements[$i], "+") Then
+			$XMLUserData &= "<" & StringReplace($XMLElements[$i], "+", "") & ">" & @CRLF
+			Redim $XMLStack[Ubound($XMLStack) + 1]
+			$XMLStack[Ubound($XMLStack) - 1] = StringReplace($XMLElements[$i], "+", "")
+			$XMLStack[0] += 1
+		ElseIf $XMLElements[$i] == "-" Then
+			$XMLUserData &= "</" & StringRegExpReplace($XMLStack[Ubound($XMLStack) - 1], " [^>]{0,}", "") & ">" & @CRLF
+			Redim $XMLStack[Ubound($XMLStack) - 1]
+		Else
+			$XMLUserData &= "<" & $XMLElements[$i] & "></" & StringRegExpReplace($XMLElements[$i], " [^>]{0,}", "") & ">" & @CRLF
+		EndIf
+		If $i < UBound($XMLElements) - 1 And $XMLElements[$i + 1] == "-" Then $XMLStack[0] -= 1
+		For $j = 0 To $XMLStack[0]
+			$XMLUserData &= "	"
+		Next
+	Next
+
+	$XMLUserData = StringReplace($XMLUserData, "AuthorId><", "AuthorId>0<", 1)
+	If StringInStr($UserData[0], "PEAP") Then
+		$XMLUserData = StringReplace($XMLUserData, "Type><", "Type>25<", 2)
+		$XMLUserData = StringReplace($XMLUserData, "RoutingIdentity><", "RoutingIdentity>" & $UserData[2] & "<", 1)
+	EndIf
+	If StringInStr($UserData[0], "TLS") Then
+		$XMLUserData = StringReplace($XMLUserData, "Type><", "Type>13<")
+		If $UserData[1] Then
+			$XMLUserData = StringReplace($XMLUserData, "Username><", "Username>" & $UserData[1] & "\" & $UserData[2] & "<", 1)
+		Else
+			$XMLUserData = StringReplace($XMLUserData, "Username><", "Username>" & $UserData[2] & "<", 1)
+		EndIf
+		$XMLUserData = StringReplace($XMLUserData, "UserCert><", "UserCert>" & $UserData[3] & "<", 1)
+	EndIf
+	If StringInStr($UserData[0], "MSCHAP") Then
+		$XMLUserData = StringReplace($XMLUserData, "Type><", "Type>26<", 1)
+		$XMLUserData = StringReplace($XMLUserData, "Username><", "Username>" & $UserData[2] & "<", 1)
+		$XMLUserData = StringReplace($XMLUserData, "Password><", "Password>" & $UserData[3] & "<", 1)
+		$XMLUserData = StringReplace($XMLUserData, "LogonDomain><", "LogonDomain>" & $UserData[1] & "<", 1)
+	EndIf
+	Return StringRegExpReplace($XMLUserData, "(\n[^>]{0,})><[^\r]{0,}\r", "\1 />")
+EndFunc
+
 Func _Wlan_DeleteProfile($SSID, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLOBAL_hClientHandle)
 	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
 	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
@@ -735,20 +837,8 @@ Func _Wlan_QueryInterface($dwFlag, $pGUID = $GLOBAL_pGUID, $hClientHandle = $GLO
 		$Output[5] = DllStructGetData($ConnectionAttributes, "bOneXEnabled")
 			If $Output[5] == 1	Then $Output[5] = "802.1x Enabled"
 			If $Output[5] == 0	Then $Output[5] = "802.1x Disabled"
-		$Output[6] = DllStructGetData($ConnectionAttributes, "DOT11AUTHALGORITHM")
-			If $Output[6] == $DOT11_AUTH_ALGO_80211_OPEN		Then $Output[6] = "Open"
-			If $Output[6] == $DOT11_AUTH_ALGO_80211_SHARED_KEY	Then $Output[6] = "Shared Key"
-			If $Output[6] == $DOT11_AUTH_ALGO_WPA				Then $Output[6] = "WPA"
-			If $Output[6] == $DOT11_AUTH_ALGO_WPA_PSK			Then $Output[6] = "WPA-PSK"
-			If $Output[6] == $DOT11_AUTH_ALGO_RSNA				Then $Output[6] = "WPA2"
-			If $Output[6] == $DOT11_AUTH_ALGO_RSNA_PSK			Then $Output[6] = "WPA2-PSK"
-		$Output[7] = DllStructGetData($ConnectionAttributes, "DOT11CIPHERALGORITHM")
-			If $Output[7] == $DOT11_CIPHER_ALGO_NONE	Then $Output[7] = "Unencrypted"
-			If $Output[7] == $DOT11_CIPHER_ALGO_WEP40	Then $Output[7] = "WEP-64"
-			If $Output[7] == $DOT11_CIPHER_ALGO_TKIP	Then $Output[7] = "TKIP"
-			If $Output[7] == $DOT11_CIPHER_ALGO_CCMP	Then $Output[7] = "AES"
-			If $Output[7] == $DOT11_CIPHER_ALGO_WEP104	Then $Output[7] = "WEP-128"
-			If $Output[7] == $DOT11_CIPHER_ALGO_WEP		Then $Output[7] = "WEP"
+		$Output[6] = _Wlan_GetStrAuth(DllStructGetData($ConnectionAttributes, "DOT11AUTHALGORITHM"))
+		$Output[7] = _Wlan_GetStrEncr(DllStructGetData($ConnectionAttributes, "DOT11CIPHERALGORITHM"))
 		EndIf
 
 		_Wlan_FreeMemory($pData)
@@ -770,14 +860,14 @@ Func _Wlan_SetInterface($dwFlag, $strData, $pGUID = $GLOBAL_pGUID, $hClientHandl
 	$AutoConfigState = DllStructCreate("int bool")
 	If $dwFlag == $wlan_intf_opcode_autoconf_enabled Then
 		$Struct = DllStructCreate("int bool")
-		If $strData == "Auto Config Enabled"	Then $Input = 1
-		If $strData == "Auto Config Disabled"	Then $Input = 0
+		If $strData = "Auto Config Enabled"	Then $Input = 1
+		If $strData = "Auto Config Disabled"	Then $Input = 0
 		DllStructSetData($Struct, "bool", $Input)
-	ElseIf $dwFlag == $wlan_intf_opcode_bss_type Then
+	ElseIf $dwFlag = $wlan_intf_opcode_bss_type Then
 		$Struct = DllStructCreate("dword DOT11BSSTYPE")
-		If $strData == "Infrastructure Only"	Then $Input = $dot11_BSS_type_infrastructure
-		If $strData == "Ad Hoc Only"			Then $Input = $dot11_BSS_type_independent
-		If $strData == "Any Available Network"	Then $Input = $dot11_BSS_type_any
+		If $strData = "Infrastructure Only"	Then $Input = $dot11_BSS_type_infrastructure
+		If $strData = "Ad Hoc Only"			Then $Input = $dot11_BSS_type_independent
+		If $strData = "Any Available Network"	Then $Input = $dot11_BSS_type_any
 		DllStructSetData($Struct, "DOT11BSSTYPE", $Input)
 	EndIf
 
@@ -817,8 +907,8 @@ EndFunc
 Func _Wlan_SetGlobalConstants($pGUID, $hClientHandle = "")
 	If $hClientHandle == -1 Or $hClientHandle == Default Then $hClientHandle = $GLOBAL_hClientHandle
 	If $pGUID == -1 Or $pGUID == Default Then $pGUID = $GLOBAL_pGUID
-	If $hClientHandle Then Global $GLOBAL_hClientHandle = $hClientHandle
-	If $pGUID Then Global $GLOBAL_pGUID = $pGUID
+	If $hClientHandle Then $GLOBAL_hClientHandle = $hClientHandle
+	If $pGUID Then $GLOBAL_pGUID = $pGUID
 EndFunc
 
 Func _Wlan_StringTopGuid($strGUID)
@@ -867,6 +957,69 @@ Func _Wlan_ReasonCodeToString($ReasonCode)
 	Return(DllStructGetData($BUFFER, "BUFFER"))
 EndFunc
 
+Func _Wlan_GetStrAuth($iCode)
+	Switch $iCode
+		Case $DOT11_AUTH_ALGO_80211_OPEN
+			Return "Open"
+		Case $DOT11_AUTH_ALGO_80211_SHARED_KEY
+			Return "Shared Key"
+		Case $DOT11_AUTH_ALGO_WPA
+			Return "WPA"
+		Case $DOT11_AUTH_ALGO_WPA_PSK
+			Return "WPA-PSK"
+		Case $DOT11_AUTH_ALGO_WPA_NONE
+			Return "WPA-None"
+		Case $DOT11_AUTH_ALGO_RSNA
+			Return "WPA2"
+		Case $DOT11_AUTH_ALGO_RSNA_PSK
+			Return "WPA2-PSK"
+		Case Else
+			Return "Unknown Authentication"
+	EndSwitch
+EndFunc
+
+Func _Wlan_GetStrEncr($iCode)
+	Switch $iCode
+		Case $DOT11_CIPHER_ALGO_NONE
+			Return "Unencrypted"
+		Case $DOT11_CIPHER_ALGO_WEP40
+			Return "WEP (40-bit key)"
+		Case $DOT11_CIPHER_ALGO_TKIP
+			Return "TKIP"
+		Case $DOT11_CIPHER_ALGO_CCMP
+			Return "AES"
+		Case $DOT11_CIPHER_ALGO_WEP104
+			Return "WEP (104-bit key)"
+		Case $DOT11_CIPHER_ALGO_WEP
+			Return "WEP"
+		Case Else
+			Return "Unknown Encryption"
+	EndSwitch
+EndFunc
+
+Func _Wlan_GetKeyType($sAuthentication, $sEncryption, $sMaterial)
+	Local $KeyLength = StringLen($sMaterial)
+	If $sEncryption = "WEP" Or $sAuthentication = "Shared Key" Then
+		Switch $KeyLength
+			Case 5
+				If StringRegExp($sMaterial, "[[:ascii:]]{5}") Then Return "Network Key"
+			Case 13
+				If StringRegExp($sMaterial, "[[:ascii:]]{13}") Then Return "Network Key"
+			Case 10
+				If StringRegExp($sMaterial, "[[:xdigit:]]{10}") Then Return "Network Key"
+			Case 26
+				If StringRegExp($sMaterial, "[[:xdigit:]]{26}") Then Return "Network Key"
+		EndSwitch
+	ElseIf StringInStr($sAuthentication, "PSK") Then
+		If $KeyLength >= 8 And $KeyLength <= 63 Then
+			If StringRegExp($sMaterial, "([[:ascii:]]){8,63}") Then Return "Pass Phrase"
+		ElseIf $KeyLength == 64 Then
+			If StringRegExp($sMaterial, "[[:xdigit:]]{64}") Then Return "Network Key"
+		EndIf
+	EndIf
+	Return "No Key Material"
+EndFunc
+
 Func _Wlan_BuildListStructString($Header, $Data, $NumberOfItems)
 	Local $StructString, $StructElements, $StructElements2, $Buffer
 
@@ -885,8 +1038,8 @@ Func _Wlan_BuildListStructString($Header, $Data, $NumberOfItems)
 		For $j = $i To Ubound($StructElements2) -1
 			If $i <> $j And $StructElements[$i] == $StructElements2[$j] Then
 				If StringInStr($StructElements[$i], "[") <> 0 Then
-					$Buffer[$j] = StringRegExpReplace($StructElements[$i], "[^[]{0,1024}", "" )
-					$StructElements2[$j] = StringRegExpReplace($StructElements2[$j], "[[][[:digit:]]{0,9}[]]", "" )
+					$Buffer[$j] = StringRegExpReplace($StructElements[$i], "[^[]{0,1024}", "", 1)
+					$StructElements2[$j] = StringRegExpReplace($StructElements2[$j], "[[][[:digit:]]{0,9}[]]", "", 1)
 				Else
 					$Buffer[$j] = ""
 				EndIf
@@ -931,13 +1084,21 @@ Func _Wlan_RegisterNotification($hClientHandle, $Flag)
 EndFunc
 
 Func _WLAN_NOTIFICATION_CALLBACK($PTR1, $PTR2)
-	Local $NOTIFICATION, $pData, $Data
+	Local $NOTIFICATION, $pData, $Data, $iCode
 	$CallbackSSID = ""
 	$NOTIFICATION = DllStructCreate($WLAN_NOTIFICATION_DATA, $PTR1)
 	$pData = DllStructGetData($NOTIFICATION, "pData")
 	$Data = DllStructCreate($WLAN_CONNECTION_NOTIFICATION_DATA, $pData)
-	If DllStructGetData($NOTIFICATION, "NotificationCode") == 10 Then $CallbackConnectCount += 1
-	If DllStructGetData($NOTIFICATION, "NotificationCode") == 21 Then $CallbackDisconnectCount += 1
+	$iCode = DllStructGetData($NOTIFICATION, "NotificationCode")
 
+	If $GLOBAL_pGUID Then
+		If _Wlan_pGUIDToString($PTR1 + 8) = _Wlan_pGUIDToString($GLOBAL_pGUID) Then
+			If $iCode == 10 Then $CallbackConnectCount += 1
+			If $iCode == 21 Then $CallbackDisconnectCount += 1
+		EndIf
+	Else
+		If $iCode == 10 Then $CallbackConnectCount += 1
+		If $iCode == 21 Then $CallbackDisconnectCount += 1
+	EndIf
 	If $CallbackConnectCount = 3 Then $CallbackSSID = DllStructGetData($Data, "ucSSID")
 EndFunc
