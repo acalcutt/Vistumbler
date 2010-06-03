@@ -97,15 +97,6 @@ For $ek = 1 to $KmlDataSize
 			 & '<Document>' & @CRLF _
 			 & '	<description>Geocoding data from GeoNames.org</description>' & @CRLF _
 			 & '	<name>' & $CombinedName & '</name>' & @CRLF _
-			 & '	<Region>' & @CRLF _
-			 & '		<LatLonAltBox>' & @CRLF _
-			 & '			<north>' & $MaxLat & '</north>' & @CRLF _
-			 & '			<south>' & $MinLat & '</south>' & @CRLF _
-			 & '		 	<east>' & $MaxLon & '</east>' & @CRLF _
-			 & '		 	<west>' & $MinLon & '</west>' & @CRLF _
-			 & '		</LatLonAltBox>' & @CRLF _
-			 & '		<minlodpixels>2000</minlodpixels>' & @CRLF _
-			 & '	</Region>' & @CRLF _
 			 & '	<Style id="openStyle">' & @CRLF _
 			 & '		<IconStyle>' & @CRLF _
 			 & '			<scale>.5</scale>' & @CRLF _
@@ -131,19 +122,22 @@ For $ek = 1 to $KmlDataSize
 			 & '		</IconStyle>' & @CRLF _
 			 & '	</Style>' & @CRLF _
 			 & '	<Folder>' & @CRLF _
+			 & '		<Region>' & @CRLF _
+			 & '			<LatLonAltBox>' & @CRLF _
+			 & '				<north>' & $MaxLat & '</north>' & @CRLF _
+			 & '				<south>' & $MinLat & '</south>' & @CRLF _
+			 & '		 		<east>' & $MaxLon & '</east>' & @CRLF _
+			 & '		 		<west>' & $MinLon & '</west>' & @CRLF _
+			 & '			</LatLonAltBox>' & @CRLF _
+			 & '			<Lod>' & @CRLF _
+			 & '	        	<minLodPixels>128</minLodPixels>' & @CRLF _
+			 & '			</Lod>' & @CRLF _
+			 & '		</Region>' & @CRLF _
 			 & '		<name>Access Points</name>' & @CRLF
 	EndIf
 	$kmlfile &= '			<Placemark>' & @CRLF _
 			 & '				<name>' & $kName & '</name>' & @CRLF _
 			 & '				<description><![CDATA[' & $kDesc & ']]></description>' & @CRLF _
-			 & '				<Region>' & @CRLF _
-			 & '					<LatLonAltBox>' & @CRLF _
-			 & '						<north>' & $kLat & '</north>' & @CRLF _
-			 & '					    <south>' & $kLat & '</south>' & @CRLF _
-			 & '		 				<east>' & $kLon & '</east>' & @CRLF _
-			 & '		 				<west>' & $kLon & '</west>' & @CRLF _
-			 & '					</LatLonAltBox>' & @CRLF _
-			 & '				</Region>' & @CRLF _
 			 & '				<styleUrl>' & $kStyle & '</styleUrl>' & @CRLF _
 			 & '				<Point>' & @CRLF _
 			 & '					<coordinates>' & $kLon & ',' & $kLat & ',0</coordinates>' & @CRLF _
