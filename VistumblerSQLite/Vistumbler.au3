@@ -1,24 +1,24 @@
 #RequireAdmin
-#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=Icons\icon.ico
-#AutoIt3Wrapper_Outfile=Vistumbler.exe
-#AutoIt3Wrapper_UseX64=n
+#region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_icon=Icons\icon.ico
+#AutoIt3Wrapper_outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2010 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.0.0
+;AutoIt Version: v3.3.6.1
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'SQLite Alpha 1'
+$version = 'SQLite Alpha 2'
+If @AutoItX64 Then $version &= ' (x64)'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/05/28'
+$last_modified = '2010/06/02'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -33,7 +33,6 @@ $last_modified = '2010/05/28'
 #include <Misc.au3>
 #include <String.au3>
 #include <INet.au3>
-;#include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
 #include "UDFs\MD5.au3"
@@ -898,7 +897,7 @@ ConsoleWrite($VistumblerDB & @CRLF)
 If FileExists($VistumblerDB) Then
 	$Recover = 1
 	$APID = 0
-	$DBhndl = _SQLite_Open($VistumblerDB)
+	$DBhndl = _SQLite_Open($VistumblerDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 	_SQLite_Exec($DBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
 	Local $HistMatchArray, $iRows, $iColumns, $iRval
 	$query = "SELECT HistID FROM Hist"
@@ -916,10 +915,11 @@ EndIf
 
 ;Connect to manufacturer database
 If FileExists($ManuDB) Then
-	$ManuDBhndl = _SQLite_Open($ManuDB)
+	$ManuDBhndl = _SQLite_Open($ManuDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 Else
-	$ManuDBhndl = _SQLite_Open($ManuDB)
+	$ManuDBhndl = _SQLite_Open($ManuDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 	_SQLite_Exec($ManuDBhndl, "CREATE TABLE Manufacturers (BSSID,Manufacturer)")
+	_SQLite_Exec($ManuDBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
 EndIf
 ;Connect to label database
 If FileExists($LabDB) Then
@@ -2344,7 +2344,7 @@ EndFunc   ;==>_RecoverSDB
 
 Func _SetUpDbTables($dbfile)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetUpDbTables()') ;#Debug Display
-	$DBhndl = _SQLite_Open($dbfile)
+	$DBhndl = _SQLite_Open($dbfile, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 	_SQLite_Exec($DBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
 	_SQLite_Exec($DBhndl, "CREATE TABLE GPS (GPSID,Latitude,Longitude,NumOfSats,HorDilPitch,Alt,Geo,SpeedInMPH,SpeedInKmH,TrackAngle,Date1,Time1)")
 	_SQLite_Exec($DBhndl, "CREATE TABLE AP (ApID,ListRow,Active,BSSID,SSID,CHAN,AUTH,ENCR,SECTYPE,NETTYPE,RADTYPE,BTX,OTX,HighGpsHistId,LastGpsID,FirstHistID,LastHistID,MANU,LABEL,Signal)")
@@ -8327,15 +8327,17 @@ Func _ApplySettingsGUI();Applys settings
 	If $Apply_Manu = 1 Then
 		;Remove all current Mac address/manus in the array
 		$query = "DELETE FROM Manufacturers"
-		_SQLite_Exec($DBhndl, $query)
+		_SQLite_Exec($ManuDBhndl, $query)
 		;Rewrite Mac address/labels from listview into the array
 		$itemcount = _GUICtrlListView_GetItemCount($GUI_Manu_List) - 1; Get List Size
+		_SQLite_Exec($ManuDBhndl, "BEGIN;")
 		For $findloop = 0 To $itemcount
 			$o_manu_mac = StringUpper(StringReplace(_GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 0), '"', ''))
 			$o_manu = _GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 1)
-			$query = "INSERT INTO Manufacturers(BSSID,Manufacturer) VALUES ('" & $o_manu_mac & "','" & $o_manu & "');"
+			$query = "INSERT INTO Manufacturers(BSSID,Manufacturer) VALUES ('" & $o_manu_mac & "','" & StringReplace($o_manu, "'", "''") & "');"
 			_SQLite_Exec($ManuDBhndl, $query)
 		Next
+		_SQLite_Exec($ManuDBhndl, "COMMIT;")
 		;Reset Labels In List
 		_UpdateListMacLabels()
 	EndIf
