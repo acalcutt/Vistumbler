@@ -247,7 +247,7 @@ Dim $GUI_COPY, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy
 Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
 $NewVersionFile = @ScriptDir & '\temp\versions.ini'
-$VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
+$VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerSQLite/'
 
 Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
 		 & '		<IconStyle>' & @CRLF _
