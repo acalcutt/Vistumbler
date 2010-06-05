@@ -1,9 +1,9 @@
 #RequireAdmin
-#region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Icons\icon.ico
-#AutoIt3Wrapper_outfile=Vistumbler.exe
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2010 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -42,6 +42,8 @@ $last_modified = '2010/06/02'
 #include "UDFs\FileInUse.au3"
 #include "UDFs\WinGetPosEx.au3"
 #include <SQLite.au3>
+;VistumblerEXE-------------------------------------------
+$VistumblerEXE = StringReplace(@ScriptName, ".au3", ".exe")
 ;Set/Create Folders--------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
 Dim $DefaultSaveDir = @ScriptDir & '\Save\'
@@ -923,29 +925,27 @@ Else
 EndIf
 ;Connect to label database
 If FileExists($LabDB) Then
-	$LabDBhndl = _SQLite_Open($LabDB)
+	$LabDBhndl = _SQLite_Open($LabDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 Else
-	$LabDBhndl = _SQLite_Open($LabDB)
+	$LabDBhndl = _SQLite_Open($LabDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 	_SQLite_Exec($LabDBhndl, "CREATE TABLE Labels (BSSID,Label)")
 EndIf
 ;Connect to Instrument database
 If FileExists($InstDB) Then
-	$InstDBhndl = _SQLite_Open($InstDB)
+	$InstDBhndl = _SQLite_Open($InstDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 Else
-	$InstDBhndl = _SQLite_Open($InstDB)
+	$InstDBhndl = _SQLite_Open($InstDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 	_SQLite_Exec($InstDBhndl, "CREATE TABLE Instruments (INSTNUM,INSTTEXT)")
 EndIf
 ;Connect to Filter database
 If FileExists($FiltDB) Then
-	$FiltDBhndl = _SQLite_Open($FiltDB)
+	$FiltDBhndl = _SQLite_Open($FiltDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 	Local $FiltMatchArray, $iRows, $iColumns, $iRval
 	$query = "SELECT FiltID FROM Filters"
 	$iRval = _SQLite_GetTable2d($FiltDBhndl, $query, $FiltMatchArray, $iRows, $iColumns)
 	$FiltID = $iRows
-	$query = "DELETE FROM FiltMenu"
-	_SQLite_Exec($FiltDBhndl, $query)
 Else
-	$FiltDBhndl = _SQLite_Open($FiltDB)
+	$FiltDBhndl = _SQLite_Open($FiltDB, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
 	_SQLite_Exec($FiltDBhndl, "CREATE TABLE Filters (FiltID,FiltName,FiltDesc,SSID,BSSID,CHAN,AUTH,ENCR,RADTYPE,NETTYPE,Signal,BTX,OTX,ApID,Active)")
 	$FiltID = 0
 EndIf
@@ -9780,7 +9780,7 @@ Func _DeleteListviewRow($dapid)
 EndFunc   ;==>_DeleteListviewRow
 
 Func _NewSession()
-	Run(@ScriptDir & "\Vistumbler.exe")
+	Run(@ScriptDir & "\" & $VistumblerEXE)
 EndFunc   ;==>_NewSession
 
 Func _CleanupFiles($cDIR, $cTYPE)
