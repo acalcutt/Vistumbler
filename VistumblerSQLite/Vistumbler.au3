@@ -15,10 +15,10 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'SQLite Alpha 2'
+$version = 'SQLite Alpha 3'
 If @AutoItX64 Then $version &= ' (x64)'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/06/02'
+$last_modified = '2010/06/05'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -9103,8 +9103,13 @@ Func _CheckForUpdates()
 				$fversion = $fv[$i][1]
 				If IniRead($CurrentVersionFile, "FileVersions", $FileName, '0') <> $fversion Or FileExists(@ScriptDir & '\' & $FileName) = 0 Then
 					If $FileName = 'update.exe' Then
-						$getfile = InetGet($VIEWSVN_ROOT & $FileName & '?revision=' & $fversion, @ScriptDir & '\' & $FileName)
-						If $getfile = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $FileName, $fversion)
+						$getfileerror = 0
+						$dfile = InetGet($VIEWSVN_ROOT & $FileName & '?revision=' & $fversion, @ScriptDir & '\' & $FileName, 1, 1)
+						While InetGetInfo();While Download Active
+							Sleep(5)
+						WEnd
+						If InetGetInfo($dfile, 3) = False Then $getfileerror = 1
+						If $getfileerror = 0 And FileGetSize($FileName) <> 0 Then IniWrite($CurrentVersionFile, "FileVersions", $FileName, $fversion)
 					EndIf
 					$UpdatesAvalible = 1
 				EndIf
