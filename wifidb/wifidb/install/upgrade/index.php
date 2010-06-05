@@ -7,8 +7,10 @@ document.forms['WiFiDB_patch'].elements['httpdgrp'].disabled =! document.forms['
 </script>
 
 <?php
-include('../../lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title>';
+global $screen_output;
+$screen_output = 'CLI';
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].'--> Upgrade Page</title>';
 ?>
 <link rel="stylesheet" href="../../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" marginwidth="10" marginheight="10" onload="document.forms['WiFiDB_patch'].elements['toolsdir'].disabled=true; document.forms['WiFiDB_patch'].elements['httpduser'].disabled=true; document.forms['WiFiDB_patch'].elements['httpdgrp'].disabled=true;">
@@ -36,7 +38,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Upgrade Page</title
 
 <form name="WiFiDB_patch" action="patch.php" method="post" enctype="multipart/form-data">
   <h2>WiFiDB Settings for Upgrade</h2>
-  <h3>Upgrade DB for 0.16 Build 1 / 2 - 2.1 / 3 - 3.1 R2 / 4 and before <b>--></b> 0.20 Build 1</h3>
+  <h3>Upgrade DB for all 0.16 Builds <b>--></b> 0.20 Build 1</h3>
   <h4>Please Read <a class="links" target="_blank" href="notes.html">these notes</a> before installing the Wireless Database</h4>
 <?php
 
@@ -72,7 +74,16 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
     <td>Administrator User E-Mail</td><td>........................................</td>
     <td><input name="wdb_admn_emailadrs"></td></tr>
   <tr>
-    <td>WiFi DB name <font size="1">(Default `wifi` )</font></td><td>........................................</td>
+    <td>WiFiDB Email Updates </td><td>........................................</td>
+    <td><input type="checkbox" name="wdb_email_updates" value="FALSE"></td></tr>
+  <tr>
+    <td>Updates Sending Address</font></td><td>........................................</td>
+    <td><input name="wdb_from_emailadrs"></td></tr>
+  <tr>
+    <td>Sending Password</font></td><td>........................................</td>
+    <td><input name="wdb_from_pass"></td></tr>
+  <tr>
+   <td>WiFi DB name <font size="1">(Default `wifi` )</font></td><td>........................................</td>
     <td><input name="wifi"></td></tr>
   <tr>
     <td>WiFi Storage DB name <font size="1">(Default `wifi_st` )</font></td><td>........................................</td>

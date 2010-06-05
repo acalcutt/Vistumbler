@@ -6,8 +6,10 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 }
 </script>
 <?php
-#include('../lib/database.inc.php');
-#echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
+global $screen_output;
+$screen_output = 'CLI';
+include('../lib/database.inc.php');
+echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].' --> Install Page</title>';
 ?>
 <link rel="stylesheet" href="../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" marginwidth="10" marginheight="10" onload="document.forms['WiFiDB_Install'].elements['toolsdir'].disabled=true; document.forms['WiFiDB_Install'].elements['httpduser'].disabled=true; document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled=true;">
@@ -78,6 +80,15 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
   <tr>
     <td>WiFiDB Admin Email</td><td>........................................</td>
     <td><input name="wdb_admn_emailadrs"></td></tr>
+  <tr>
+    <td>WiFiDB Email Updates </td><td>........................................</td>
+    <td><input type="checkbox" name="wdb_email_updates" value="FALSE"></td></tr>
+  <tr>
+    <td>WiFiDB Sending Address</font></td><td>........................................</td>
+    <td><input name="wdb_from_emailadrs"></td></tr>
+  <tr>
+    <td>WiFiDB Sending Password</font></td><td>........................................</td>
+    <td><input name="wdb_from_pass"></td></tr>
   <tr>
     <td>WiFi DB name <font size="1">(Default `wifi` )</font></td><td>........................................</td>
     <td><input name="wifi"></td></tr>

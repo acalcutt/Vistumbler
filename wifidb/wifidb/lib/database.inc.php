@@ -3,7 +3,7 @@
 #		error_reporting(E_ALL);
 #		error_reporting(E_WARNING);
 #		error_reporting(E_ERROR);
-global $ver, $full_path, $half_path, $dim;
+global $ver, $full_path, $half_path, $dim, $theme, $UPATH;;
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.20 Build 1 {pre-release} ",
 			"codename"			=>	"Hyannis",
@@ -39,7 +39,7 @@ $ver = array(
 										"make_ssid"			=>	"1.0",
 										"verbosed"			=>	"1.2",
 										"logd"				=>	"1.2",
-										"mail_admin"		=>	"1.0",
+										"mail_users"		=>	"1.0",
 										"IFWC"				=>	"2.0",
 										"dump"				=>	"1.0",
 										"get_set"			=>	"1.0"
@@ -56,43 +56,81 @@ $ver = array(
 #-------------------------------------------------------------------------------------#
 #----------------------------------  Get/Set values  ---------------------------------#
 #-------------------------------------------------------------------------------------#
-if(@$GLOBALS['screen_output'] != "CLI")
+
+if(!@include('config.inc.php'))
 {
-	global $theme, $full_path, $half_path, $PATH;
-	
-	$apache_root = $_SERVER['DOCUMENT_ROOT'];
-	$exp =  explode(" ", php_uname());
-	if($exp[0] == "Windows")
+	echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="'.$PATH.'install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
+	die();
+}else
+{
+	$sql = "SELECT `id` FROM `$db`.`$users_t`";
+	if(!@mysql_query($sql, $conn))
 	{
-		$cwd = str_replace('\\', '/', getcwd());
-	}
-	else
-	{
-		$cwd = getcwd();
-	}
-#	echo $apache_root.'<BR>'.$cwd."<BR>".$_SERVER['SCRIPT_FILENAME'];
-	$server_name = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
-	$PATH = "http://".$server_name.str_replace($apache_root, '/', $cwd );
-	
-	
-	if(!@include('config.inc.php'))
-	{
-		echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="'.$PATH.'install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
-		die();
-	}else
-	{
-		$sql = "SELECT `id` FROM `$db`.`$users_t`";
-		if(!@mysql_query($sql, $conn))
+		$cwd = getcwd().'/';
+		if($cwd != $GLIBALS['wifidb_install'].'/'.$GLOBALS['root'].'/install/upgrade/')
 		{
-			$cwd = getcwd().'/';
-			if($cwd != '/var/www/install/upgrade/')
-			{
-				echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="'.$PATH.'install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
-				die();
-			}
+			echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="'.$PATH.'install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
+			die();
 		}
 	}
-	
+	#	echo $apache_root.'<BR>'.$cwd."<BR>".$_SERVER['SCRIPT_FILENAME'];
+	$server_name = (@$_SERVER['SERVER_NAME']!='' ? $_SERVER['SERVER_NAME'] : $_SERVER['HTTP_HOST']);
+	$UPATH = 'http://'.$server_name.'/'.$root;
+	#	echo "<BR>".$_SERVER['HTTP_HOST'];
+}
+
+$path = getcwd();
+$wifidb_tools = $GLOBALS['wifidb_tools'];
+$root = $GLOBALS['root'];
+
+$path_exp = explode($dim, $path);
+$path_count = count($path_exp);
+
+
+include($wifidb_tools.'/daemon/config.inc.php');
+#	echo "Root: ".$root."<br>Path: ".$path."<br>Div: ".$dim."<br>Path Count: ".$path_count;
+if($root == '' or $root == '/')
+{
+	$half_path = $GLOBALS['wifidb_install'];
+}
+else
+{
+	foreach($path_exp as $key=>$val)
+	{
+	#	echo $root."<br>";
+		if($val == $root){ $path_key = $key;}
+	#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
+	}
+
+	$half_path = '';
+	$I = 0;
+	if(isset($path_key))
+	{
+	#	echo "I: ".$I." - ".$path_key."<br>";
+		while($I!=($path_key+1))
+		{
+			
+			$half_path = $half_path.$path_exp[$I].$dim;
+		#	echo "Half Path: ".$half_path."<br>";
+			$I++;
+		}
+
+	}
+}
+
+$apache_root = $_SERVER['DOCUMENT_ROOT'];
+$exp =  explode(' ', php_uname());
+if($exp[0] == 'Windows')
+{
+	$cwd = str_replace('\\', '/', getcwd());
+}
+else
+{
+	$cwd = getcwd().'/';
+}
+####### HTTP ONLY ########
+if(@$GLOBALS['screen_output'] != "CLI")
+{	
 	if(!@isset($_COOKIE['wifidb_client_check']))
 	{
 	?>
@@ -174,53 +212,15 @@ if(@$GLOBALS['screen_output'] != "CLI")
 		<?php
 		die();
 	}
-	
-	
-	
-	$dim = DIRECTORY_SEPARATOR;
-	$path = getcwd();
-	$path_exp = explode($dim, $path);
-	$path_count = count($path_exp);
-
-	include($wifidb_tools.'/daemon/config.inc.php');
-#	echo "Root: ".$root."<br>Path: ".$path."<br>Div: ".$dim."<br>Path Count: ".$path_count;
-	if($root == '' or $root == '/')
-	{
-		$half_path = $GLOBALS['wifidb_install'];
-	}
-	else
-	{
-		foreach($path_exp as $key=>$val)
-		{
-		#	echo $root."<br>";
-			if($val == $root){ $path_key = $key;}
-		#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
-		}
-
-		$half_path = '';
-		$I = 0;
-		if(isset($path_key))
-		{
-		#	echo "I: ".$I." - ".$path_key."<br>";
-			while($I!=($path_key+1))
-			{
-				
-				$half_path = $half_path.$path_exp[$I].$dim;
-			#	echo "Half Path: ".$half_path."<br>";
-				$I++;
-			}
-
-		}
-	}
 	$full_path = $half_path.'/themes';
-#	echo "Default theme: ".$GLOBALS['default_theme']."<br>Cookie: ".$_COOKIE['wifidb_theme']."<BR>";
+	#	echo "Default theme: ".$GLOBALS['default_theme']."<br>Cookie: ".$_COOKIE['wifidb_theme']."<BR>";
 	$theme = (@$_COOKIE['wifidb_theme']!='' ? $_COOKIE['wifidb_theme'] : $GLOBALS['default_theme']);
 	if($theme == ''){$theme = 'wifidb';}
 	$full_path = $full_path."/".$theme."/";
 	if(!function_exists('pageheader'))
 	{require($full_path."header_footer.inc.php");}
-}
 
+}
 
 function convert($size)
 {
@@ -270,7 +270,7 @@ function getTZ($offset = '-5')
 #-------------------------------------------------------------------------------------#
 function redirect_page($return = "", $delay = 0, $msg = "no Message", $new_window = 0)
 {
-	if($return == ''){$return = $GLOBALS['hosturl'].''.$GLOBALS['root'];}
+	if($return == ''){$return = $GLOBALS['UPATH'];}
 	?>
 		<script type="text/javascript">
 			function reload()
@@ -283,7 +283,7 @@ function redirect_page($return = "", $delay = 0, $msg = "no Message", $new_windo
 				elseif($new_window == 2)
 				{ ?>
 					window.open('<?php echo $return;?>');
-					location.href = '<?php echo $GLOBALS['hosturl'].$GLOBALS["root"].'/';?>'; <?php
+					location.href = '<?php echo $GLOBALS['UPATH'].'/';?>'; <?php
 				}
 				elseif($new_window == 0)
 				{ ?>
@@ -295,6 +295,41 @@ function redirect_page($return = "", $delay = 0, $msg = "no Message", $new_windo
 			<body onload="setTimeout('reload()', <?php echo $delay;?>)"><?php echo $msg;?></body>
 	<?php
 }
+
+#-------------------------------------------------------------------------------------#
+#----------------------------------  Parse Arg values  -------------------------------#
+#-------------------------------------------------------------------------------------#
+function parseArgs($argv){
+    array_shift($argv);
+    $out = array();
+    foreach ($argv as $arg){
+        if (substr($arg,0,2) == '--'){
+            $eqPos = strpos($arg,'=');
+            if ($eqPos === false){
+                $key = substr($arg,2);
+                $out[$key] = isset($out[$key]) ? $out[$key] : true;
+            } else {
+                $key = substr($arg,2,$eqPos-2);
+                $out[$key] = substr($arg,$eqPos+1);
+            }
+        } else if (substr($arg,0,1) == '-'){
+            if (substr($arg,2,1) == '='){
+                $key = substr($arg,1,1);
+                $out[$key] = substr($arg,3);
+            } else {
+                $chars = str_split(substr($arg,1));
+                foreach ($chars as $char){
+                    $key = $char;
+                    $out[$key] = isset($out[$key]) ? $out[$key] : true;
+                }
+            }
+        } else {
+            $out[] = $arg;
+        }
+    }
+    return $out;
+}
+
 
 
 #-------------------------------------------------------------------------------------#
@@ -409,8 +444,6 @@ function check_install_folder()
 {
 	include('config.inc.php');
 	if(@$GLOBALS['bypass_check']){return 1;}
-	if(PHP_OS == 'Linux'){ $dim = '/';}
-	if(PHP_OS == 'WINNT'){ $dim = '\\';}
 	$path = getcwd();
 	$path_exp = explode($dim , $path);
 	$path_count = count($path_exp);
@@ -453,41 +486,161 @@ function check_install_folder()
 
 
 #========================================================================================================================#
-#											mail_admin (Emails the admins of the DB about updates)						 #
+#											mail_users (Emails the admins of the DB about updates)						 #
 #========================================================================================================================#
 
-function mail_admin($contents = '', $enable_f = 1, $error_f = 0)
+function mail_users($contents = '', $level = 0, $error_f = 0)
 {
-	if($enable_f)
+	if($GLOBALS['wifidb_email_updates'])
 	{
-		require('config.inc.php');
-		$conn			= 	$GLOBALS['conn'];
-		$db				= 	$GLOBALS['db'];
-		$db_st			= 	$GLOBALS['db_st'];
-		$wtable			=	$GLOBALS['wtable'];
-		$user_logins_table = $GLOBALS['user_logins_table'];
+		require_once('config.inc.php');
+		require_once('MAIL5.php');
 		
-		$user_s_ = array();
-		$sql10 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `disabled` != '1' AND `member` LIKE 'admins%'";
-	#	echo $sql10."<BR>";
-		$result10 = mysql_query($sql10, $conn);
-		while($users = mysql_fetch_array($result10))
+		$conn				= 	$GLOBALS['conn'];
+		$db					= 	$GLOBALS['db'];
+		$user_logins_table	=	$GLOBALS['user_logins_table'];
+		$from				=	$GLOBALS['admin_email'];
+		$wifidb_smtp		=	$GLOBALS['wifidb_smtp'];
+		$sender				=	$from;
+		$sender_pass		=	$GLOBALS['wifidb_from_pass'];
+		$to					=	array();
+		$mail				=	new MAIL5();
+		
+		switch($level)
 		{
-			$user_s[] = $users['username']." <".$users['email'].">";
+			case '0':
+				$sql = "SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `admins` = '1' AND `username` NOT LIKE 'admin%'";
+			break;
+			
+			case '1':
+				$sql = "SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `devs` = '1' AND `username` NOT LIKE 'admin%'";
+			break;
+			
+			case '2':
+				$sql = "SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `mods` = '1' AND `username` NOT LIKE 'admin%'";
+			break;
+			
+			case '3':
+				$sql = "SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `users` = '1' AND `username` NOT LIKE 'admin%'";
+			break;
 		}
-		$admin_emails = implode(",",$user_s);
+	#	echo $sql."<BR>";
+		$result = mysql_query($sql, $conn);
+		while($users = mysql_fetch_array($result))
+		{
+	#	echo "To: ".$users['email']."\r\n";
+			if($mail->addbcc($users['email']))
+			{continue;}else{die("Failed to add BCC".$users['email']."\r\n");}
+		}
+
+		if(!$mail->from($from))
+		{die("Failed to add From address\r\n");}
+		if(!$mail->addto($from))
+		{die("Failed to add Initial To address\r\n");}
 		
-		$host_exp = explode("//",$GLOBALS['hosturl']);
-		$domain = str_replace("/","",$host_exp[1]);
-		
-		$from_header = 'wfdb_app_automated@'.$domain."\r\n X-Mailer: PHP/".phpversion();
+	
 		$subject = "WifiDB Automated Updates";
-		if($error_f){$subject .= " ^*^*^*^ ERROR!!! ^*^*^*^";}
+		if($error_f){$subject .= " ^*^*^*^ ERROR! ^*^*^*^";}
+#	echo "subject: ".$subject."\r\n";
+		if(!$mail->subject($subject))
+		{die("Failed to add subject\r\n");}
 		
-	#	echo $admin_emails.' <- Emails<br>'.$subject.' &larr; Subject<BR>'.$contents.' &larr; Contents<BR>'.$from_header.' &larr; From_header';
-		mail($admin_emails, $subject, $contents, $from_header);
+#	echo "Contents: ".$contents."\r\n";
+		if(!$mail->text($contents))
+		{die("Failed to add message\r\n");}
+		
+#	echo "Trying to connect....\r\n";
+		$smtp_conn = $mail->connect($wifidb_smtp, 465, $sender, $sender_pass, 'tls', 10);
+		if ($smtp_conn)
+		{
+#	echo "Successfully connected !\r\n";
+			$smtp_send = $mail->send($smtp_conn);
+			if($smtp_send)
+			{
+			#	echo "Sent!\r\n";
+				return 1;
+			}
+			else
+			{
+			#	print_r($_RESULT);
+				return 0;
+			}
+		}else
+		{
+		#	print_r($_RESULT);
+			return 0;
+		}
+		$mail->disconnect();
 	}
 }
+
+###################
+################################################
+function mail_validation($to = '', $username = '')
+{
+	require_once('config.inc.php');
+	require_once('security.inc.php');
+	require_once('MAIL5.php');
+	
+	$conn				=	$GLOBALS['conn'];
+	$db					=	$GLOBALS['db'];
+	$validate_table		=	$GLOBALS['validate_table'];
+	$from				=	$GLOBALS['admin_email'];
+	$wifidb_smtp		=	$GLOBALS['wifidb_smtp'];
+	$sender				=	$from;
+	$sender_pass		=	$GLOBALS['wifidb_from_pass'];
+	$UPATH				=	$GLOBALS['UPATH'];
+	$mail				=	new MAIL5();
+	$sec				=	new security();
+	$date				=	date("Y-m-d H:i:s"); 
+	if(!$mail->from($from))
+	{die("Failed to add From address\r\n");}
+	if(!$mail->addto($to))
+	{die("Failed to add To address\r\n");}
+
+	$subject = "WifiDB New User Validation";
+	if(!$mail->subject($subject))
+	{die("Failed to add subject\r\n");}
+	
+	$validate_code = $sec->gen_keys(48);
+	
+	$contents = "The Administrator of This WiFiDB has enabled user validation before you can use your login.
+Your account: $username\r\n
+Validation Link: $UPATH/login.php?func=validate_user&validate_code=$validate_code
+
+-WiFiDB Service";
+	if(!$mail->text($contents))
+	{die("Failed to add message\r\n");}
+	
+	$smtp_conn = $mail->connect($wifidb_smtp, 465, $sender, $sender_pass, 'tls', 10);
+	if ($smtp_conn)
+	{
+		$smtp_send = $mail->send($smtp_conn);
+		if($smtp_send)
+		{
+			$insert = "INSERT INTO `$db`.`$validate_table` (`id`, `username`, `code`, `date`) VALUES ('', '$username', '$validate_code', '$date')";
+			echo $insert."<BR>";
+			if(mysql_query($insert, $conn))
+			{
+				return 1;
+			}else
+			{
+				return 0;
+			}
+		}
+		else
+		{
+			return 0;
+		}
+	}else
+	{
+		return 0;
+	}
+	$mail->disconnect();
+}
+
+
+
 
 #========================================================================================================================#
 #											verbose (Echos out a message to the screen or page)			        		 #
@@ -683,8 +836,9 @@ function smart_quotes($text="") // Used for SSID Sanatization
 					19=>"@", #
 					20=>"-", #
 					21=>"/", #
-					22=>"ÿ",
-					23=>""
+					22=>"\\", #
+					23=>"ÿ",
+					24=>""
 				);
 	$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
 	$text = str_replace($strip,"_",$text);
@@ -774,6 +928,10 @@ function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 	return $A;
 }
 
+
+#########################################
+#										#
+#########################################
 function top_ssids()
 {
 	$conn			= 	$GLOBALS['conn'];
@@ -824,6 +982,9 @@ function top_ssids()
 		return 0;
 	}
 }
+	
+	
+	
 	
 	#=========================================================================================================================#
 	#																							#
@@ -1255,6 +1416,18 @@ class database
 	
 	function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 1 , $out = "CLI")
 	{
+		function addslashesextended(&$arr_r)
+		{
+			if(is_array($arr_r))
+			{
+				foreach ($arr_r as &$val)
+					is_array($val) ? addslashesextended($val):$val=addslashes($val);
+				unset($val);
+			}
+			else
+				$arr_r=addslashes($arr_r);
+		}
+
 		#MESSAGES FOR CLI AND HTML INTERFACES#
 		$wrong_file_type_msg			= "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again.";
 		$Inserted_user_data_good_msg	= "Succesfully Inserted User data into Users table.";
@@ -1384,13 +1557,6 @@ class database
 		
 		foreach($return as $ret)
 		{
-#			if($file_row != $newArray['row'] AND $newArray['row'] != 0 AND $newArray['row'] >= $file_row )
-#			{
-#				continue;
-#			}else
-#			{
-#				$file_row++;
-#			}
 			if ($ret[0] == "#"){continue;}
 			
 			$retexp = explode("|",$ret);
@@ -1422,6 +1588,13 @@ class database
 					$SETFLAGTEST = TRUE;
 					$wifi = explode("|",$ret, 13);
 					if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
+					
+##############################################################
+##############################################################
+#					if($wifi[0] == '\\\\oo//'){continue;} ######
+##############################################################
+##############################################################
+					
 					$dbsize = mysql_query("SELECT `id` FROM `$db`.`$wtable` ORDER BY `id` DESC LIMIT 1", $GLOBALS['conn']);
 					$size1 = mysql_fetch_array($dbsize);
 					$size = $size1['id']+0;
@@ -1434,13 +1607,22 @@ class database
 					if($wifi[6] == ''){$wifi[6] = "u";}
 					if($wifi[7] == ''){$wifi[7] = "0";}
 					// sanitize wifi data to be used in table name
-				#	list($ssid_S ) = make_ssid($wifi[0]);
-					$ssids = filter_var($wifi[0], FILTER_SANITIZE_SPECIAL_CHARS);
+				#	var_dump($wifi[0]);
+				
+				#		$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids
+				
+				#	list($ssid_S, $sss, $ssss ) = make_ssid($wifi[0]);
+				#	var_dump(make_ssid($wifi[0]));
+				#	echo $wifi[0]."\r\n";
+					$ssids = addslashes($wifi[0]);
+				#	echo $ssids."\r\n";
 					$ssidss = smart_quotes($ssids);
+				#	echo $ssidss."\r\n";
 					$ssidsss = str_split($ssidss,25); //split SSID in two at is 25th char.
+					
 					$ssid_S = $ssidsss[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
 										  //the rest of the info will suffice for unique table names
-					
+				#	echo $ssid_S."\r\n";
 					if($out=="CLI")
 					{
 						$this_of_this = $FILENUM." / ".$count1;
@@ -2114,7 +2296,7 @@ class database
 							if (mysql_query($sqlp, $conn))
 							{
 								$user_aps[$user_n]="0,".$size.":1";
-								$sqlup = "UPDATE `$db`.`$settings_tb` SET `size` = '$size' WHERE `table` = '$wtable' LIMIT 1;";
+								$sqlup = "UPDATE `$db`.`$settings_tb` SET `size` = '$size' WHERE `table` = 'wifi0' LIMIT 1;";
 								if (mysql_query($sqlup, $conn))
 								{
 									logd($updating_stgs_good_msg."\r\n", $log_interval, 0,  $log_level);
@@ -2269,7 +2451,7 @@ class database
 		if($notes === ''){$notes="No Notes";}
 		$hash = hash_file('md5', $source);
 		$gdatacount = count($gdata);
-		if($user_ap_s != "")
+		if($user_ap_s != "" and $total_ap > 0)
 		{
 			$sqlu = "INSERT INTO `$db`.`$users_t` ( `id` , `username` , `points` ,  `notes`, `date`, `title` , `aps`, `gps`, `hash`) VALUES ( '', '$user', '$user_ap_s','$notes', '$times', '$title', '$total_ap', '$gdatacount', '$hash')";
 			if(!mysql_query($sqlu, $conn))
@@ -2549,7 +2731,7 @@ class database
 		else
 			{$radio = "802.11u";}
 		
-		list($ssid_ptb) = make_ssid($newArray["ssid"]);
+		$ssid_ptb = smart_quotes(addslashes($newArray["ssid"]));
 		$table		=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
 		$table_gps	=	$table.$gps_ext;
 		?>
@@ -3268,9 +3450,9 @@ class database
 				{
 					$man 		= database::manufactures($ap_array['mac']);
 					$id			= $ap_array['id'];
-					$ssid_ptb_ = $ap_array['ssid'];
-					$ssids_ptb = str_split($ssid_ptb_,25);
-					$ssid = smart_quotes($ssids_ptb[0]);
+					$ssid_ptb_  = addslashes($ap_array['ssid']);
+					$ssids_ptb  = str_split($ssid_ptb_,25);
+					$ssid		= smart_quotes($ssids_ptb[0]);
 					$mac		= $ap_array['mac'];
 					$sectype	= $ap_array['sectype'];
 					$radio		= $ap_array['radio'];
@@ -3501,7 +3683,7 @@ class database
 					$newArray = mysql_fetch_array($result0);
 					
 					$id = $newArray['id'];
-					$ssids_ptb = str_split(smart_quotes($newArray['ssid']),25);
+					$ssids_ptb = str_split(smart_quotes(addslashes($newArray['ssid'])),25);
 					$ssid = $ssids_ptb[0];
 					$mac = $newArray['mac'];
 					$man =& database::manufactures($mac);
@@ -3672,11 +3854,11 @@ class database
 				$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$row'";
 				$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$aparray = mysql_fetch_array($result);
-				
+				list() = make_ssid($aparray["ssid"]);
 				
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$aparray["ssid"].'</th></tr>';
 				
-				$temp_kml = '../tmp/'.$aparray['ssid'].'-'.$aparray['mac']."-".$aparray['sectype']."-".rand().'tmp.kml';
+				$temp_kml = '../tmp/'.$ssid_tbl.'-'.$aparray['mac']."-".$aparray['sectype']."-".rand().'tmp.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$fileappend = fopen($temp_kml, "a");
 				
@@ -5554,12 +5736,12 @@ class daemon
 					while($gps_table_first = mysql_fetch_array($result_1))
 					{
 						$lat_exp = explode(" ", $gps_table_first['lat']);
-						if($lat_exp[1])
+						if(@$lat_exp[1])
 						{
 							$test = $lat_exp[1]+0;
 						}else
 						{
-							$test = $lat_exp[0]+0;
+							$test = $gps_table_first['lat']+0;
 						}
 						if($test != TRUE)
 						{

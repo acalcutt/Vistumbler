@@ -1,6 +1,8 @@
 <?php
+global $screen_output;
+$screen_output = 'CLI';
 include('../lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
+echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].' --> Install Page</title>';
 ?>
 <link rel="stylesheet" href="../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">

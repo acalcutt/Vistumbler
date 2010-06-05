@@ -1,6 +1,6 @@
 <?php
 include('../../lib/database.inc.php');
-pageheader("Upgrade Page");
+pageheader("Upgrade Page", 0);
 
 include($half_path.'/lib/config.inc.php');
 ?>
@@ -8,7 +8,7 @@ include($half_path.'/lib/config.inc.php');
 <link rel="stylesheet" href="../../themes/wifidb/styles.css">
 <h3>If one of the steps shows "Duplicate column name '***'," you can ignore this error.</h3>
 <table border="1">
-<tr class="style4"><TH colspan="2">Upgrade DB for 0.16 Build 1 / 2 - 2.1 / 3 - 3.1 R2 <b>--></b> 0.16 Build 4</TH>
+<tr class="style4"><TH colspan="2">Upgrade DB for all 0.16 builds <b>--></b> 0.20 Build 1</TH>
 <tr class="style4"><th colspan="2">Upgrade Database Tables</th></tr>
 <tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
 
@@ -26,6 +26,9 @@ $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
 $password		=	addslashes(strip_tags($_POST['wdb_admn_pass']));
 $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
+$wifidb_email_updates	=	addslashes(strip_tags($_POST['wdb_email_updates']));
+$wifidb_from			=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
+$wifidb_from_pass		=	addslashes(strip_tags($_POST['wdb_from_pass']));
 
 if(!@isset($timeout)){$timeout		=   "(86400 * 365)";}
 
@@ -156,8 +159,6 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>EMPTY TABLE `links`;<br>".mysql_error($conn)."</td></tr>\r\n";}
 
 ####################
-
-
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`file` varchar(255) NOT NULL ,
@@ -179,7 +180,7 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Files table `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>\r\n";
 }
 
-
+######################
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files_tmp` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
 		`file` VARCHAR( 255 ) NOT NULL ,
@@ -201,7 +202,23 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Create tmp Files table `$wifi`.`files_tmp`;<br>".mysql_error($conn)."</td></tr>\r\n";
 }
+####################
+$sql1 = "CREATE TABLE `wifi`.`validate_table` (
+	`id` INT( 255 ) NOT NULL AUTO_INCREMENT,
+	`username` VARCHAR( 255 ) NOT NULL ,
+	`code` VARCHAR( 64 ) NOT NULL ,
+	`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+	UNIQUE (`username`)
+	INDEX ( `id` )
+	) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+$insert = mysql_query($sql1, $conn);
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Create email validation table <b>`$wifi`</b>.`validation_table`;</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Create email validation table <b>`$wifi`</b>.`validation_table`;<br>".mysql_error($conn)." </td></tr>";
+}
 
+####################
 $sql1 = "ALTER TABLE `$wifi`.`$wtable` CHANGE `ssid` `ssid` VARCHAR( 32 ), CHANGE `chan` `chan` VARCHAR( 3 ), CHANGE `id` `id` INT( 255 ) NOT NULL AUTO_INCREMENT";
 $insert = mysql_query($sql1, $conn);
 if($insert)
@@ -211,8 +228,24 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$wtable` to
 }
 
 
+$alter_sql = "ALTER TABLE `wifi0` 
+ADD `countrycode` VARCHAR( 5 ) NOT NULL ,
+ADD `countryname` VARCHAR( 64 ) NOT NULL ,
+ADD `admincode` VARCHAR( 5 ) NOT NULL ,
+ADD `adminname` VARCHAR( 64 ) NOT NULL ,
+ADD `iso3166-2` VARCHAR( 3 ) NOT NULL ,
+ADD `lat` VARCHAR( 32 ) NOT NULL DEFAULT 'N 0.0000' ,
+ADD `long` VARCHAR( 32 ) NOT NULL DEFAULT 'E 0.0000' ";
+$alter = mysql_query($alter_sql, $conn) or die(mysql_error());
+if($alter)
+{echo "<tr class=\"good\"><td>Success..........</td><td>To alter <b>`$wifi`</b>.`wtable` to add location filter data for KML's</td></tr>\r\n";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>To alter <b>`$wifi`</b>.`wtable` to add location filter data for KML's</td></tr>\r\n ";
+}
+#######################################
 
-####	ALTER $users_t TABLE
+
+################### ALTER $users_t TABLE
 $sql = "RENAME TABLE `$wifi`.`users` TO `$wifi`.`users_imports`";
 $insert = mysql_query($sql, $conn);
 if($insert)
@@ -220,7 +253,7 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`users` to new table name `user_imports;<br>".mysql_error($conn)."</td></tr>\r\n";
 }
-
+############################################
 $sql1 = "ALTER TABLE `$wifi`.`$users_t` ADD `hash` VARCHAR ( 255 ) NOT NULL";
 $insert = mysql_query($sql1, $conn);
 if($insert)
@@ -270,7 +303,7 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` `username` field to VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>\r\n";
 }
-
+####################################################################
 
 
 
@@ -310,6 +343,11 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (notes) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>\r\n";
 }
+#########################################################
+
+
+
+
 
 $sql1 = "ALTER TABLE `$wifi`.`files_tmp` CHANGE `title` `title` VARCHAR ( 255 ) NOT NULL, CHARSET=utf8";
 $insert = mysql_query($sql1, $conn);
@@ -337,7 +375,15 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files_tmp` CHANGE `file` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>\r\n";
 }
+###############################################
 
+
+
+
+
+
+
+################################
 $sql1 =  "ALTER TABLE `$wifi`.`settings` CHANGE `size` `size` VARCHAR( 255 ), CHARSET=utf8";
 $insert = mysql_query($sql1, $conn);
 if($insert)
@@ -387,6 +433,9 @@ if($insert_arry['table'] == 'theme')
 {
 	echo "<tr class=\"good\"><td>Success..........</td><td>'themes' Row from <b>`$wifi`</b>.`settings` did not exist, no need to remove</td></tr>\r\n";
 }
+############################################
+
+
 #############################################
 $sql = "CREATE TABLE IF NOT EXISTS `$wifi`.`share_waypoints` (
   `id` int(255) NOT NULL auto_increment,
@@ -413,6 +462,8 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>To create Shared Geocaches table <b>`$wifi`</b>.`share_waypoints`;</td></tr>\r\n ";
 }
+
+
 ############################################
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`daemon_perf_mon` (
   `id` int(255) NOT NULL auto_increment,
@@ -431,6 +482,8 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>To create Daemon Performance table <b>`$wifi`</b>.`daemon_perf_mon`;</td></tr>\r\n ";
 }
+
+
 
 ##########################################
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`DB_stats` (
@@ -481,7 +534,10 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>To create DB stats table <b>`$wifi`</b>.`DB_stats`;</td></tr>\r\n ";
 }
-##############
+######################################
+
+
+#####################################
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   `id` int(255) NOT NULL auto_increment,
   `username` varchar(32) NOT NULL,
@@ -489,6 +545,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   `help` varchar(255) NOT NULL,
   `uid` varchar(32) NOT NULL,
   `disabled` tinyint(1) NOT NULL,
+  `validated` tinyint(1) NOT NULL,
   `locked` tinyint(1) NOT NULL,
   `login_fails` int(255) NOT NULL,
   `admins` tinyint(1) NOT NULL,
@@ -517,7 +574,7 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>To create User Login Table table <b>`$wifi`</b>.`user_info`;</td></tr>\r\n ";
 }
 
-
+####################################
 
 	#========================================================================================================================#
 	#											Update the Config.inc.php file										   	     #
@@ -553,26 +610,30 @@ $CR_CF_FL_Re = fwrite($fileappend, "<?php
 #COOKIE GLOBALS
 global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
 #SQL GLOBALS
-global $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
+global $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
 #MISC GLOBALS
-global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check;
+global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from,$"."wifidb_from_pass;
 
 $"."lastedit	=	'$date';
 
 #----------General Settings------------#
-$"."bypass_check	=	1;
+$"."bypass_check	=	0;
 $"."wifidb_tools	=	'$toolsdir';
-$"."timezn			=	'UTC';
+$"."timezn			=	'$Local_tz';
 $"."root			=	'$root';
 $"."hosturl		=	'$hosturl';
+$"."dim			=	DIRECTORY_SEPARATOR;
 $"."admin_email	=	'$email';
 $"."config_fails	=	3;
-$"."login_seed		=	'$activatecode';\r\n\r\n");
+$"."login_seed		=	'$activatecode';
+$"."wifidb_from	=	'$wifidb_from';
+$"."wifidb_from_pass	=	'$wifidb_from_pass';
+$"."wifidb_smtp		=	'smtp.gmail.com';\r\n\r\n");
 
 if($CR_CF_FL_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add Global variables and general variables values.</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add Global variables and general variables values.</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Global variables and general variables values.</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Global variables and general variables values.</td></tr>";}
 
 
 #add default daemon values
@@ -584,46 +645,46 @@ $"."log_interval		=	0;
 $"."WiFiDB_LNZ_User 	=	'$httpduser';
 $"."apache_grp			=	'$httpdgrp';\r\n\r\n");
 if($AD_CF_DG_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add default daemon values</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default daemon values</td></tr>";}
 
 
 #add default theme values
 $AD_CF_DG_Re = fwrite($fileappend, "#-------------Themes Settings--------------#
-$"."default_theme	= '$theme';
+$"."default_theme		= '$theme';
 $"."default_refresh 	= 15;
 $"."default_timezone	= 0;
 $"."default_dst		= 0;
-$"."timeout		= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
+$"."timeout			= $timeout; #(86400 [seconds in a day] * 365 [days in a year]) \r\n\r\n");
 
 if($AD_CF_DG_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add default theme values</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add default theme values</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default theme values</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default theme values</td></tr>";}
 
 
 $AD_CF_DG_Re = fwrite($fileappend, "#-------------Console Viewer Settings--------------#
 $"."console_refresh	= 15;
-$"."console_scroll	= 1;
-$"."console_last5	= 1;
-$"."console_lines	= 10;
+$"."console_scroll		= 1;
+$"."console_last5		= 1;
+$"."console_lines		= 10;
 $"."console_log		= '/var/log/wifidb';\r\n\r\n");
 
 if($AD_CF_DG_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add default Console values</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add default Console values</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default Console values</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default Console values</td></tr>";}
 
 #add default debug values
-$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#\r\n
-$"."rebuild	=	0;\r\n
+$AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#
+$"."rebuild	=	0;
 $"."bench		=	0;\r\n\r\n");
 
 if($AD_CF_DG_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add default debug values</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add default debug values</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default debug values</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default debug values</td></tr>";}
 
 #add Table names
 $AD_CF_UR_Re = fwrite($fileappend, "#---------------- Tables ----------------#
@@ -632,6 +693,7 @@ $"."users_t			=	'users_imports';
 $"."links				=	'links';
 $"."wtable				=	'wifi0';
 $"."user_logins_table	=	'user_info';
+$"."validate_table		=	'validate_table';
 $"."share_cache		=	'share_waypoints';
 $"."files				=	'files';
 $"."files_tmp			=	'files_tmp';
@@ -641,35 +703,35 @@ $"."gps_ext			=	'_GPS';
 $"."sep				=	'-';\r\n\r\n");
 
 if($AD_CF_UR_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add Table variable values</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add Table variable values</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Table variable values</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Table variable values</td></tr>";}
 
 
 
 #add sql host info
 $AD_CF_DB_Re = fwrite($fileappend, "#---------------- DataBases ----------------#
 $"."db		=	'$wifi';
-$"."db_st		=	'$wifi_st';\r\n\r\n");
+$"."db_st	=	'$wifi_st';\r\n\r\n");
 if($AD_CF_DB_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add DataBase names</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add DataBase names</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding DataBase names</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding DataBase names</td></tr>";}
 
 #add sql info
 $AD_CF_SH_Re = fwrite($fileappend, "#---------------- SQL Info ----------------#
 $"."host		=	'$sqlhost';
 $"."db_user	=	'$sqlu';
-$"."db_pwd	=	'$sqlp';
+$"."db_pwd		=	'$sqlp';
 $"."conn		=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");
-$"."collate		=	'utf8_bin';
+$"."collate	=	'utf8_bin';
 $"."engine		=	'innodb';
 $"."char_set	=	'utf8';\r\n\r\n");
 
 if($AD_CF_SH_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add SQL Info</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add SQL Info</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Info</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding SQL Info</td></tr>";}
 
 
 $AD_CF_KM_Re = fwrite($fileappend, "#---------------- Export Info ----------------#
@@ -681,18 +743,18 @@ $"."kml_out		=	'../out/kml/';
 $"."vs1_out		=	'../out/vs1/';
 $"."daemon_out		=	'out/daemon/';
 $"."gpx_out		=	'../out/gpx/';\r\n\r\n");
-if($AD_CF_KM_Re){echo "<tr class=\"good\"><td>Success..........</td><td>Add KML Info</td></tr>\r\n";}
-else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td></tr>\r\n";}
+if($AD_CF_KM_Re){echo "<tr class=\"good\"><td>Success..........</td><td>Add KML Info</td></tr>";}
+else{echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding KML Info</td></tr>";}
 
 
 $AD_CF_FI_Re = fwrite($fileappend,"#---------------- Header and Footer Additional Info -----------------#
 $"."ads		= ''; # <-- put the code for your ads in here www.google.com/adsense
-$"."header	= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" /><meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />';
+$"."header		= '<meta name=\"description\" content=\"A Wireless Database based off of scans from Vistumbler.\" /><meta name=\"keywords\" content=\"WiFiDB, linux, windows, vistumbler, Wireless, database, db, php, mysql\" />';
 $"."tracker	= ''; # <-- put the code for the url tracker that you use here (ie - www.google.com/analytics )\r\n");
 if($AD_CF_FI_Re)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>\r\n";}
+{echo "<tr class=\"good\"><td>Success..........</td><td>Add Footer Information Info</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Footer Information </td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Adding Footer Information </td></tr>";}
 fclose($fileappend);
 fclose($filewrite);
 

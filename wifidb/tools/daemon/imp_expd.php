@@ -5,10 +5,10 @@
 //perpetually in the background. I dont think this is how php was 
 //intended to be used. I am hoping to get a C++ version working 
 //sometime soon, untill then I am using php.
-error_reporting(E_ALL|E_STRICT);
+#error_reporting(E_ALL|E_STRICT);
 global $screen_output, $dim, $COLORS, $daemon_ver;
 $screen_output = "CLI";
-
+error_reporting(E_ALL|E_STRICT);
 if(!(require_once 'config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
 if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
@@ -36,6 +36,8 @@ $console_line_limit		=	$GLOBALS['console_line_limit'];
 $time_interval_to_check =	$GLOBALS['time_interval_to_check'];
 $root					=	$GLOBALS['root'];
 $half_path				=	$GLOBALS['half_path'];
+$host_url 				=	$GLOBALS['host_url'];
+$UPATH	 				=	$GLOBALS['UPATH'];
 $console_trim_log		=	$GLOBALS['console_trim_log'];
 $console_line_limit		=	$GLOBALS['console_line_limit'];
 $date_format			=	"Y-m-d H:i:s.u";
@@ -133,12 +135,11 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			{
 				if(!popen("php ".$GLOBALS['wifidb_tools']."/rund.php restart", "w"))
 				{
-					mail_admin("Daemon_could_not_restart", 1, 1);
+					mail_users("Daemon_could_not_restart", 1, 1);
 				}
 			}
 		}
 	}
-	$mail = array();
 	$RUN_SQL = "SELECT `id` FROM `$db`.`$settings_tb` WHERE `table` = 'files'";
 	$RUNresult = mysql_query($RUN_SQL, $conn);
 	$next_run_id = mysql_fetch_array($RUNresult);
@@ -214,40 +215,45 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					$hash = hash_file('md5', $file);
 					$date = date("y-m-d H:i:s");
 					
-					$sql_insert_file = "INSERT INTO `$db`.`$files` (`id`, `file`, `date`, `size`, `aps`, `gps`, `hash`, `user_row`, `user`, `notes`, `title`) VALUES (NULL, '$file1', '$date', '$size', '$totalaps', '$totalgps', '$hash', '$user_row', '$user', '$notes', '$title')";
+					$sql_insert_file = "INSERT INTO `$db`.`$files` (`id`, `file`, `date`, `size`, `aps`, `gps`, `hash`, `user_row`, `user`, `notes`, `title`) VALUES ('', '$file1', '$date', '$size', '$totalaps', '$totalgps', '$hash', '$user_row', '$user', '$notes', '$title')";
 					if(mysql_query($sql_insert_file, $conn))
 					{
-						logd("Added ".$remove_file." to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
-						verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Added ".$remove_file." to the Files table.\n".$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
+						logd("Added $source ($remove_file) to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
+						verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Added $source ($remove_file) to the Files table.\n".$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
 						$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 						if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 						{
-							mail_admin("_error_removing_file_:".$remove_file, 1, 1);
-							logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
-							verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing ".$remove_file." from the Temp files table\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
+							mail_users("Error removing file: $source ($remove_file)", 0, 1);
+							logd("Error removing $source ($remove_file) from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
+							verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing $source ($remove_file) from the Temp files table\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
 						}else
 						{
-							$mail[] = $Remove_file;
-							logd("Removed ".$remove_file." from the Temp files table.", $log_interval, 0,  $GLOBALS['log_level']);
+							$sel_new = "SELECT `id` FROM `$db`.`$files` ORDER BY `id` DESC";
+							$res_new = mysql_query($sel_new, $conn);
+							$new_array = mysql_fetch_array($res_new);
+							$newrow = $new_array['id'];
+							$message = "File has finished importing.\r\nUser: $user\r\nTitle: $title\r\nFile: $source ($remove_file)\r\nLink: ".$UPATH."opt/userstats.php?func=useraplist&row=$newrow \r\n-WiFiDB Daemon.";
+							mail_users($message, 0, 0);   # http://192.168.1.27/opt/userstats.php?func=useraplist&row=645
+							logd("Removed $source ($remove_file) from the Temp files table.", $log_interval, 0,  $GLOBALS['log_level']);
 							verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Removed ".$remove_file." from the Temp files table.\n".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 						}
 					}else
 					{
-						mail_admin("_error_adding_file:".$remove_file, 1, 1);
-						logd("Error Adding ".$remove_file." to the Files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
-						verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error Adding ".$remove_file." to the Files table\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR],1, $screen_output, 1);
+						mail_users("Error Adding file to finished table: ".$source, 0, 1);
+						logd("Error Adding $source ($remove_file) to the Files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
+						verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error Adding $source ($remove_file) to the Files table\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR],1, $screen_output, 1);
 					}
 					$finished = 1;
 				}else
 				{
-					logd("File has already been successfully imported into the Database, skipping.\r\n\t\t\t".$files_array['file'], $log_interval, 0,  $GLOBALS['log_level']);
-					verbosed($GLOBALS['COLORS']['YELLOW']."File has already been successfully imported into the Database, skipping.\r\n\t\t\t".$files_array['file'].$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
+					logd("File has already been successfully imported into the Database, skipping.\r\n\t\t\t$source ($remove_file)", $log_interval, 0,  $GLOBALS['log_level']);
+					verbosed($GLOBALS['COLORS']['YELLOW']."File has already been successfully imported into the Database, skipping.\r\n\t\t\t$source ($remove_file)".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 					
 					$remove_file = $files_array['id'];
 					$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 					if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 					{
-						mail_admin("_error_removing_file_tmp:".$remove_file, 1, 1);
+						mail_users("_error_removing_file_tmp:".$remove_file, 1, 1);
 						logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
 						verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
 					}else
@@ -265,7 +271,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 				$del_file_tmp = "DELETE FROM `$db`.`$files_tmp` WHERE `id` = '$remove_file'";
 				if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 				{
-					mail_admin("_error_removing_file_tmp:".$remove_file, 1, 1);
+					mail_users("_error_removing_file_tmp:".$remove_file, 1, 1);
 					logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
 					verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR]."\n", 1, $screen_output, 1);
 				}else
@@ -282,13 +288,6 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		}
 		else
 		{
-			
-			$mesg = "Date / Time: ".date("Y-m-d H:i:s")."\r\nFinished Files:\r\n";
-			foreach($mail as $mesag)
-			{
-				$mesg .= $mesag."\r\n";
-			}
-			mail_admin($mesg, 1);
 			$result1 = mysql_query($daemon_sql, $conn);   //re-query after a file import to make sure that no one has imported something while im importing APS, so that they can be imported sooner then waiting another sleep loop to get imported.
 			$files_arra = mysql_fetch_array($result1);
 			if($files_arra['id'] != ''){continue;}
@@ -299,14 +298,6 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			daemon::daemon_kml($named = 0, $verbose);
 		}
 		
-	#	$date = date('Y-m-d');
-	#	$daily_folder = $GLOBALS['wifidb_install']."/out/daemon/".$date."/";
-	#	$temp_kml = $daily_folder.'full_db.kml';
-	#	$temp_kml_size =@ dos_filesize($temp_kml);
-	#	if(!file_exists($temp_kml))
-	#	{
-	#		daemon::daemon_kml($named = 0, $verbose);
-	#	}
 		$nextrun = date("Y-m-d H:i:s", (time()+$time_interval_to_check));
 		$sqlup2 = "UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'";
 		if (mysql_query($sqlup2, $conn))
@@ -315,7 +306,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Updated settings table with next run time: ".$nextrun.$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 		}else
 		{
-			mail_admin("_error_updating_settings_table:".$remove_file, 1, 1);
+			mail_users("_error_updating_settings_table:".$remove_file, 1, 1);
 			logd("ERROR!! COULD NOT Update settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
 			verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."ERROR!! COULD NOT Update settings table with next run time: ".$nextrun.$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 		}
@@ -324,7 +315,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		verbosed($GLOBALS['COLORS']['YELLOW'].$message.$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 	}else
 	{
-		mail_admin("_error_looking_for_files:", 1, 1);
+		mail_users("_error_looking_for_files:", 1, 1);
 		logd("There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn), $log_interval, 0,  $GLOBALS['log_level']);
 		verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 		die();

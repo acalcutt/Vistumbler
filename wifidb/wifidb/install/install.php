@@ -3,7 +3,7 @@ global $screen_output;
 $screen_output = 'CLI';
 
 include('../lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title>';
+echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].' --> Install Page</title>';
 ?>
 <link rel="stylesheet" href="../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
@@ -28,7 +28,7 @@ echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Install Page</title
 <td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center"><br>
 
 <table border="1">
-<tr class="style4"><TH colspan="2">Install WiFiDB 0.16 Build 4</TH></tr>
+<tr class="style4"><TH colspan="2">Install WiFiDB <?php echo $ver["wifidb"]; ?></TH></tr>
 <tr class="style4"><th>Status</th><th>Step of Install</th></tr>
 <?php
 
@@ -79,7 +79,11 @@ $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
 $password		=	addslashes(strip_tags($_POST['wdb_admn_pass']));
 $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
-$timeout		=   "(86400 * 365)";
+$wifidb_email_updates	=	addslashes(strip_tags($_POST['wdb_email_updates']));
+$wifidb_email			=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
+$wifidb_from_pass		=	addslashes(strip_tags($_POST['wdb_from_pass']));
+
+$timeout				=   "(86400 * 365)";
 if($hosturl == '')
 {
 	$hosturl = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
@@ -123,7 +127,7 @@ echo '<tr class="style4"><TH colspan="2">Database Install</TH></tr>';
 	#									and remove any existing databases and replace with empty ones						 #
 	#========================================================================================================================#
 $conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd);
-$ENG = "InnoDB";
+$ENG = "INNODB";
 ################################## drop exisiting db if it is there and create a new one [this is the install after all / not the upgrade]
 $sqls0 =	"DROP DATABASE IF EXISTS `$wifi_st`";
 $wifi_st_WF_drp = mysql_query($sqls0, $conn);
@@ -202,7 +206,7 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`settings` ("
 		."`size` varchar( 254 ) default NULL,"
 		."UNIQUE (`table`),"
 		."KEY `id` ( `id` )"
-		.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;";
+		.") ENGINE=$ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;";
 $CR_TB_SE_Re = mysql_query($sqls, $conn);
 
 
@@ -242,7 +246,7 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`users_imports` (
 		`aps` INT NOT NULL, 
 		`gps` INT NOT NULL,
 		`hash` VARCHAR( 255 ) NOT NULL,
-		INDEX ( `id` )) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+		INDEX ( `id` )) ENGINE=$ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 $CR_TB_US_Re = mysql_query($sqls, $conn);
 
 if($CR_TB_US_Re)
@@ -254,19 +258,24 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>CREATE TABLE <b>`$wifi`</b
 	#													Create WiFi Pointers table									   	     #
 	#========================================================================================================================#
 ########################## Create Wifi0 table (Pointers to *_ST tables)
-$sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`wifi0` ("
-  ."  id int(255) NOT NULL AUTO_INCREMENT PRIMARY KEY, "
-  ."  ssid varchar(32) NOT NULL,"
-  ."  mac varchar(25) NOT NULL,"
-  ."  chan varchar(3) NOT NULL,"
-  ."  sectype varchar(1) NOT NULL,"
-  ."  radio varchar(1) NOT NULL,"
-  ."  auth varchar(25) NOT NULL,"
-  ."  encry varchar(25) NOT NULL,"
-  ."  KEY id (id) "
-  .") ENGINE=InnoDB 
-  DEFAULT CHARSET=utf8 
-  AUTO_INCREMENT=1 ;";
+$sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`wifi0`
+(
+    `id` int(255) NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+    `ssid` varchar(32) NOT NULL,
+    `mac` varchar(25) NOT NULL,
+    `chan` varchar(3) NOT NULL,
+    `sectype` varchar(1) NOT NULL,
+    `radio` varchar(1) NOT NULL,
+    `auth` varchar(25) NOT NULL,
+    `encry` varchar(25) NOT NULL,
+	`countrycode` VARCHAR( 5 ) NOT NULL,
+	`countryname` VARCHAR( 64 ) NOT NULL,
+	`admincode` VARCHAR( 5 ) NOT NULL,
+	`adminname` VARCHAR( 64 ) NOT NULL,
+	`iso3166-2` VARCHAR( 3 ) NOT NULL,
+	`lat` VARCHAR( 32 ) NOT NULL DEFAULT 'N 0.0000',
+	`long` VARCHAR( 32 ) NOT NULL DEFAULT 'E 0.0000',
+	INDEX (`id`)) ENGINE=$ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $CR_TB_W0_Re = mysql_query($sqls, $conn);
 
 if($CR_TB_W0_Re)
@@ -282,7 +291,7 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`links` ("
 	."`ID` int(255) NOT NULL auto_increment,"
 	."`links` varchar(255) NOT NULL,"
 	."KEY `INDEX` (`ID`)"
-	.") ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
+	.") ENGINE=$ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;";
 $CR_TB_LN_Re = mysql_query($sqls, $conn);
 
 if($CR_TB_LN_Re)
@@ -340,7 +349,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc-comm` (
 		`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
 		PRIMARY KEY ( `id` ) ,
 		INDEX ( `id` )
-		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
+		) ENGINE = $ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 
 $insert = mysql_query($sql1, $conn);
 
@@ -360,13 +369,31 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`annunc` (
 		PRIMARY KEY ( `id` ) ,
 		INDEX ( `id` ) ,
 		UNIQUE ( `title` )
-		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
+		) ENGINE = $ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create Announcements table <b>`$wifi`</b>.`annunc`;</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Announcements table <b>`$wifi`</b>.`annunc`;<br>".mysql_error($conn)." </td></tr>";
 }
+
+
+#$################################################### Announce Table
+$sql1 = "CREATE TABLE `wifi`.`validate_table` (
+	`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
+	`username` VARCHAR( 255 ) NOT NULL ,
+	`code` VARCHAR( 64 ) NOT NULL ,
+	`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+	UNIQUE (`username`)
+	INDEX ( `id` )
+	) ENGINE = $ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+$insert = mysql_query($sql1, $conn);
+if($insert)
+{echo "<tr class=\"good\"><td>Success..........</td><td>Create email validation table <b>`$wifi`</b>.`validation_table`;</td></tr>";}
+else{
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Create email validation table <b>`$wifi`</b>.`validation_table`;<br>".mysql_error($conn)." </td></tr>";
+}
+
 ############################################## Finished Files Table
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
@@ -381,7 +408,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`notes` TEXT NOT NULL,
 		`title` VARCHAR ( 255 ) NOT NULL,
 		UNIQUE ( `file` )
-		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+		) ENGINE = $ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create Files table <b>`$wifi`</b>.`files`;</td></tr>";}
@@ -430,7 +457,7 @@ $sql = "CREATE TABLE IF NOT EXISTS `$wifi`.`share_waypoints` (
   `pvt_id` int(255) NOT NULL,
   `shared_by` varchar(255) NOT NULL,
   UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+) ENGINE=$ENG  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create Shared Geocaches table <b>`$wifi`</b>.`share_waypoints`;</td></tr>";}
@@ -448,7 +475,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`daemon_perf_mon` (
   `mesg` varchar(255) NOT NULL,
   UNIQUE KEY `timestamp` (`timestamp`),
   KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+) ENGINE=$ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create Daemon Performance table <b>`$wifi`</b>.`daemon_perf_mon`;</td></tr>";}
@@ -498,7 +525,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`DB_stats` (
 `geos` BLOB NOT NULL ,
 INDEX ( `id` ) ,
 UNIQUE (`timestamp`)
-) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+) ENGINE = $ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create DB stats table <b>`$wifi`</b>.`DB_stats`;</td></tr>";}
@@ -535,7 +562,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   UNIQUE KEY `uid` (`uid`),
   UNIQUE KEY `email` (`email`),
   KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+) ENGINE=$ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create User Login table <b>`$wifi`</b>.`user_info`;</td></tr>";}
@@ -582,22 +609,29 @@ if($filewrite)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Created Config file</td></tr>";}
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Creating Config file</td></tr>";}
-$base			=	'ABCDEFGHKLMNOPQRSTWXYZabcdefghjkmnpqrstwxyz123456789!@#$%^&*()_+-=';
-$max			=	strlen($base)-1;
-$seed_len_gen	=	32;
-$activatecode	=	'';
-mt_srand((double)microtime()*1000000);
-while (strlen($activatecode) < $seed_len_gen+1)
-{$activatecode.=$base{mt_rand(0,$max)};}
+
+function gen_key()
+{
+	$base			=	'ABCDEFGHKLMNOPQRSTWXYZabcdefghjkmnpqrstwxyz123456789!@#$%^&*()_+-=';
+	$max			=	strlen($base)-1;
+	$seed_len_gen	=	32;
+	$activatecode	=	'';
+	mt_srand((double)microtime()*1000000);
+	while (strlen($activatecode) < $seed_len_gen+1)
+	{$activatecode.=$base{mt_rand(0,$max)};}
+	return $activatecode;
+}
+
+$seed = gen_key();
 
 #Add last edit date and globals
 $CR_CF_FL_Re = fwrite($fileappend, "<?php
 #COOKIE GLOBALS
 global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
 #SQL GLOBALS
-global $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
+global $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
 #MISC GLOBALS
-global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check;
+global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from, $"."wifidb_from_pass;
 
 $"."lastedit	=	'$date';
 
@@ -607,9 +641,14 @@ $"."wifidb_tools	=	'$toolsdir';
 $"."timezn			=	'$Local_tz';
 $"."root			=	'$root';
 $"."hosturl		=	'$hosturl';
+$"."dim			=	DIRECTORY_SEPARATOR;
 $"."admin_email	=	'$email';
 $"."config_fails	=	3;
-$"."login_seed		=	'$activatecode';\r\n\r\n");
+$"."login_seed		=	'$seed';
+$"."wifidb_email_updates = '$wifidb_email_updates';
+$"."wifidb_from	=	'$wifidb_from';
+$"."wifidb_from_pass	=	'$wifidb_from_pass';
+$"."wifidb_smtp		=	'smtp.gmail.com';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Global variables and general variables values.</td></tr>";}
@@ -674,6 +713,7 @@ $"."users_t			=	'users_imports';
 $"."links				=	'links';
 $"."wtable				=	'wifi0';
 $"."user_logins_table	=	'user_info';
+$"."validate_table		=	'validate_table';
 $"."share_cache		=	'share_waypoints';
 $"."files				=	'files';
 $"."files_tmp			=	'files_tmp';
@@ -705,7 +745,7 @@ $"."db_user	=	'$sqlu';
 $"."db_pwd		=	'$sqlp';
 $"."conn		=	 mysql_pconnect($"."host, $"."db_user, $"."db_pwd) or die(\"Unable to connect to SQL server: $"."host\");
 $"."collate	=	'utf8_bin';
-$"."engine		=	'innodb';
+$"."engine		=	'$ENG';
 $"."char_set	=	'utf8';\r\n\r\n");
 
 if($AD_CF_SH_Re)

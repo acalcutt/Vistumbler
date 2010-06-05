@@ -342,7 +342,7 @@ if($login_check)
 							$pages = $pages-$pages_end;
 					#		echo $pages.' --- '.$pages_end.'<BR>';
 							$mid_page = ($from_/$inc)+1;
-							$pages_together = ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from=0&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">First</a>] - ';
+							$pages_together = ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from=0&to='.$inc.'&sort='.$sort.'&ord='.$ord.'">First</a>] - ';
 							for($I=0; $I<=$pages; $I++)
 							{
 								if($I >= ($mid_page - 6) AND $I <= ($mid_page + 4))
@@ -360,7 +360,7 @@ if($login_check)
 								$from=$from+$inc;
 								$page++;
 							}
-							$pages_together .= ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from='.(($pages)*$inc).'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">Last</a>]  ';
+							$pages_together .= ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from='.(($pages)*$inc).'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'">Last</a>]  ';
 							echo "<br>Page: < ".$pages_together." >";
 							?>
 							</CENTER>

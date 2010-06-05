@@ -3,7 +3,7 @@
 #											Header (writes the Headers for all pages)									 #
 #========================================================================================================================#
 
-function pageheader($title, $output="detailed")
+function pageheader($title, $output="detailed", $install=0)
 {
 	global $login_check, $host_url;
 	
@@ -13,29 +13,35 @@ function pageheader($title, $output="detailed")
 	$db			=	$GLOBALS['db'];
 	$head		= 	$GLOBALS['header'];
 	$half_path	=	$GLOBALS['half_path'];
-	$PATH		=	$GLOBALS['PATH'];
+	$host_url		=	$GLOBALS['UPATH'];
 	
 	include_once($half_path.'/lib/database.inc.php');
 	include_once($half_path.'/lib/security.inc.php');
 	include_once($half_path.'/lib/config.inc.php');
 	
-	$host_url = $PATH;
-	
 	#	echo $host_url;
-	
+	if(!$install)
+	{
+		$sec = new security();
+		
+		$login_check = $sec->login_check();
+		if(is_array($login_check) or $login_check == "No Cookie"){$login_check = 0;}
+	}else
+	{
+		$login_check = 0;
+	}
 	$sec = new security();
 	
-	echo "<html>\r\n<head>\r\n<title>Wireless DataBase".$GLOBALS['ver']['wifidb']." --> ".$title."</title>\r\n".$head."\r\n</head>\r\n";
-	check_install_folder();
 	if($output == "detailed")
 	{
-		$login_check = $sec->login_check();
-		if(is_array($login_check))
-		{
-			$login_check = 0;
-		}
+		
+		check_install_folder();
 		# START YOUR HTML EDITS HERE #
 		?>
+		<html>
+		<head>
+		<title>Wireless DataBase <?php echo $GLOBALS['ver']['wifidb']; ?> --> <?php echo $title; ?></title>
+		<?php echo $head; ?></head>
 		<link rel="stylesheet" href="<?php echo $host_url; ?>/themes/vistumbler/styles.css">
 			<body style="background-color: #145285">
 			<table style="width: 100%; " class="no_border" align="center">

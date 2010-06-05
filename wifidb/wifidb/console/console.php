@@ -16,7 +16,7 @@ $sig_num=0;
 $sig_line=0;
 $exp_num=0;
 $line_num=0;
-$console_log = $GLOBALS['console_log'].$dim.'imp_expd.log';
+$console_log = $GLOBALS['daemon_log_folder'].$dim.'imp_expd.log';
 
 $COLORS = array(
 				0	=>"/\033\[0;37m/",

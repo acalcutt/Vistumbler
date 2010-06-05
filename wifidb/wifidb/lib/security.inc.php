@@ -28,7 +28,7 @@ class security
 	function gen_keys($len = 12)
 	{
 		// http://snippets.dzone.com/posts/show/3123
-		$base			=	'ABCDEFGHKLMNOPQRSTWXYZabcdefghjkmnpqrstwxyz123456789!@#$%^&*()_+-=';
+		$base			=	'ABCDEFGHKLMNOPQRSTWXYZabcdefghjkmnpqrstwxyz123456789';
 		$max			=	strlen($base)-1;
 		$activatecode	=	'';
 		mt_srand((double)microtime()*1000000);
@@ -199,6 +199,10 @@ class security
 		{
 			return 'locked';
 		}
+		if($newArray['validated'] == 1)
+		{
+			return 'validate';
+		}
 		$id = $newArray['id'];
 		$db_pass = $newArray['password'];
 		$fails = $newArray['login_fails'];
@@ -275,7 +279,7 @@ class security
 		$user_cache = 'waypoints_'.$username;
 		$user_stats = 'stats_'.$username;
 		$pass_seed = md5($password.$seed);
-		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `admins` , `devs`, `mods`, `users` ,`last_login` ,`email`, `uid`, `join_date` )VALUES ( NULL , '$username', '$pass_seed', '$admin','$dev','$mod','$user', '$date', '$email', '$uid', '$date')";
+		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `admins` , `devs`, `mods`, `users` ,`last_login` ,`email`, `uid`, `join_date`, `validated` )VALUES ( NULL , '$username', '$pass_seed', '$admin','$dev','$mod','$user', '$date', '$email', '$uid', '$date', '1')";
 		if(mysql_query($insert_user, $conn))
 		{
 			$create_user_cache = "CREATE TABLE `$db`.`$user_cache` 

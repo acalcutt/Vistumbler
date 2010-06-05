@@ -80,7 +80,7 @@ switch(@$func)
 			}else
 			{
 				?>
-				<tr>
+				<tr class='light'>
 					<td colspan='5' align='center'>
 						<b>There are no Shared Geocaches. Go import some.</b>
 					</td>
@@ -88,7 +88,7 @@ switch(@$func)
 				<?php
 			}
 			?>
-			<tr>
+			<tr class="sub_head">
 				<td colspan="5"><CENTER>
 					<?php
 					$from_fwd=$from;
@@ -102,7 +102,7 @@ switch(@$func)
 					$pages = $pages-$pages_end;
 			#		echo $pages.' --- '.$pages_end.'<BR>';
 					$mid_page = ($from_/$inc)+1;
-					$pages_together = ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from=0&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">First</a>] - ';
+					$pages_together = ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from=0&to='.$inc.'&sort='.$sort.'&ord='.$ord.'">First</a>] - ';
 					for($I=0; $I<=$pages; $I++)
 					{
 						if($I >= ($mid_page - 6) AND $I <= ($mid_page + 4))
@@ -114,13 +114,13 @@ switch(@$func)
 								$pages_together .= ' <i><u>'.$page.'</u></i> - ';
 							}else
 							{
-								$pages_together .= ' <a class="links" href="?func=boeyes&boeye_func=list_all&from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">'.$page.'</a> - ';
+								$pages_together .= ' <a class="links" href="?func=boeyes&boeye_func=list_all&from='.$from.'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'">'.$page.'</a> - ';
 							}
 						}
 						$from=$from+$inc;
 						$page++;
 					}
-					$pages_together .= ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from='.(($pages)*$inc).'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'&token='.$_SESSION["token"].'">Last</a>]  ';
+					$pages_together .= ' [<a class="links" href="?func=boeyes&boeye_func=list_all&from='.(($pages)*$inc).'&to='.$inc.'&sort='.$sort.'&ord='.$ord.'">Last</a>]  ';
 					echo "<br>Page: < ".$pages_together." >";
 					?>
 				</CENTER></td>
@@ -129,7 +129,7 @@ switch(@$func)
 		}else
 		{
 			?>
-			<tr>
+			<tr class="light">
 				<td colspan="5"><CENTER>
 				There are no Caches in the share table, go share some if you have `em.
 				</CENTER></td>
