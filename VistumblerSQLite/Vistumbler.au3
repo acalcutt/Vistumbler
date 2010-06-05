@@ -1,9 +1,9 @@
 #RequireAdmin
-#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=Icons\icon.ico
-#AutoIt3Wrapper_Outfile=Vistumbler.exe
+#region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_icon=Icons\icon.ico
+#AutoIt3Wrapper_outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2010 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
