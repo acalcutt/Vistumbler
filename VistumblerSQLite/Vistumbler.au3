@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'SQLite Alpha 4'
+$version = 'SQLite Alpha 5'
 If @AutoItX64 Then $version &= ' (x64)'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2010/06/05'
@@ -9056,7 +9056,7 @@ Func _PlayMidiForActiveAPs()
 			$PlaySignals = ''
 			For $mp = 1 To $FoundTempHist
 				If $mp <> 1 Then $PlaySignals &= '-'
-				$PlaySignals &= $TempHistArray[$mp][1]
+				$PlaySignals &= $TempHistArray[$mp][0]
 			Next
 			If $PlaySignals <> '' Then
 				$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /ms=' & $PlaySignals & ' /t=4 /i=' & $Midi_Instument & ' /w=' & $Midi_PlayTime
