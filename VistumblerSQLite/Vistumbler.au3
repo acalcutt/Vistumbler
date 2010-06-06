@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'SQLite Alpha 3'
+$version = 'SQLite Alpha 4'
 If @AutoItX64 Then $version &= ' (x64)'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2010/06/05'
@@ -9012,7 +9012,7 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 				$FoundHistMatch = $iRows
 				If $FoundHistMatch <> 0 Then
 					If $ApIsActive = 1 Then
-						$say = $HistMatchArray[1][1]
+						$say = $HistMatchArray[1][0]
 					Else
 						$say = '0'
 					EndIf
