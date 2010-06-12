@@ -19,7 +19,7 @@ $Script_Function = 'A wireless network scanner for vista. This Program uses "net
 $version = 'SQLite Alpha 6'
 If @AutoItX64 Then $version &= ' (x64)'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/06/05'
+$last_modified = '2010/06/12'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
