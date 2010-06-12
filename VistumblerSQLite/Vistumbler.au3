@@ -2,6 +2,7 @@
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_icon=Icons\icon.ico
 #AutoIt3Wrapper_outfile=Vistumbler.exe
+#AutoIt3Wrapper_UseX64=n
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
@@ -15,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'SQLite Alpha 5'
+$version = 'SQLite Alpha 6'
 If @AutoItX64 Then $version &= ' (x64)'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2010/06/05'
@@ -3776,10 +3777,10 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 				Local $GraphData
 				Local $MaxNumberOfZeros = 0
 				For $gs = 1 To $HistSize ; Create Data Array
-					$ExpSig = $HistMatchArray[$gs][1]
-					$ExpApID = $HistMatchArray[$gs][2]
-					$ExpDate = $HistMatchArray[$gs][3]
-					$ExpTime = $HistMatchArray[$gs][4]
+					$ExpSig = $HistMatchArray[$gs][0]
+					$ExpApID = $HistMatchArray[$gs][1]
+					$ExpDate = $HistMatchArray[$gs][2]
+					$ExpTime = $HistMatchArray[$gs][3]
 					$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
 					$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + StringTrimRight($dts[3], 4) ;In seconds
 					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
@@ -6564,7 +6565,7 @@ Func SaveKML($kml, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSi
 				If $GpsRangeMap = 1 Then $file_rangedata &= '		<Folder>' & @CRLF & '			<name>Open Access Points</name>' & @CRLF
 				For $exp = 1 To $FoundApMatch
 					GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
-					$ExpApID = $ApMatchArray[$exp][1]
+					$ExpApID = $ApMatchArray[$exp][0]
 					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
 					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
 					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID)
@@ -6778,7 +6779,7 @@ Func _KmlPosMapAPID($APID)
 		Local $GpsMatchArray, $iRows, $iColumns, $iRval
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId = '" & $ExpGID & "'"
 		$iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $iRows, $iColumns)
-		$ExpLastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+		$ExpLastDateTime = $GpsMatchArray[1][0] & ' ' & $GpsMatchArray[1][1]
 
 		$file_data &= '			<Placemark>' & @CRLF _
 				 & '				<name></name>' & @CRLF _

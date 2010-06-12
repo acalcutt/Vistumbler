@@ -1,3 +1,6 @@
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_UseX64=n
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2009 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -79,6 +82,7 @@ Func _ReadManucaturerIniToDB($ini, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
 	$sectionstartline = 3; First line of the section in the ini
 	$startvalue = 1 ;Start number for GUI
 	$totallines = ($totallines - $sectionstartline) + $startvalue
+	_SQLite_Exec($TmpManuDBhndl, "BEGIN;")
 	While 1
 		$linein = FileReadLine($inifile, $sectionstartline)
 		If @error = -1 Then ExitLoop
@@ -93,5 +97,6 @@ Func _ReadManucaturerIniToDB($ini, ByRef $DB, ByRef $DBOBJ, $DBTABLE)
 		$sectionstartline += 1
 		$startvalue += 1
 	WEnd
+	_SQLite_Exec($TmpManuDBhndl, "COMMIT;")
 	FileClose($startvalue)
 EndFunc
