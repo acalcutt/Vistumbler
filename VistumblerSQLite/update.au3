@@ -7,14 +7,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.0.0
+;AutoIt Version: v3.3.6.1
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v4'
-$origional_date = '09/01/2008'
-$last_modified = '08/16/2009'
+$version = 'v5'
+$origional_date = '2010/09/01'
+$last_modified = '2010/06/05'
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
@@ -27,7 +27,7 @@ Dim $LoadVersionFile
 Dim $NewVersionFile = @ScriptDir & '\temp\versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
-Dim $VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
+Dim $VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerSQLite/'
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
@@ -130,17 +130,13 @@ If FileExists($NewVersionFile) Then
 						Next
 					EndIf
 						$getfileerror = 0
-						;$fDownload = InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename & '.tmp', 1, 1)
-						;While InetGetInfo()
-							;$txt = $Text_Updating & ' ' & $filename & '. ' & $Text_Downloaded & ' ' & InetGetInfo($fDownload, 0) / 1000 & 'kB'
-						InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename & '.tmp', 1, 1)
-						While @InetGetActive
-							$txt = 'Updating ' & $filename & '. Downloaded ' & @InetGetBytesRead / 1000 & 'kB'
+						$dfile = InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename & '.tmp', 1, 1)
+						While InetGetInfo();While Download Active
+							$txt = 'Updating ' & $filename & '. Downloaded ' & InetGetInfo($dfile, 0) / 1000 & 'kB'
 							GUICtrlSetData($datalabel, $txt)
 							Sleep(5)
 						Wend
-						;If InetGetInfo($fDownload, 3) = False Then $getfileerror = 1
-						If @InetGetBytesRead = -1 Then $getfileerror = 1
+						If InetGetInfo($dfile, 3) = False Then $getfileerror = 1
 						If $getfileerror = 0 And FileGetSize ($filename & '.tmp') <> 0 Then
 							$ExistingFile = 0
 							If FileExists(@ScriptDir & '\' & $filename) Then
