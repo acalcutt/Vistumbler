@@ -1,6 +1,4 @@
-<?php
-echo "<title>Vistumbler to PNG Signal Graph Version History - ---RanInt---</title>";
-?>
+<title>Vistumbler to PNG Signal Graph Version History - ---RanInt---</title>
 <link rel="stylesheet" href="/css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -178,6 +176,13 @@ urchinTracker();
 		<td width="285" height="23" style="border-style: solid; border-width: 1px">
 		Phillip Ferland</td>
 		<td height="23" style="border-style: solid; border-width: 1px">Added an option for a black background.<br>condensed some of the code and some simplifacations.
+    </tr>
+	 <tr>
+		<td width="67" height="23" style="border-style: solid; border-width: 1px">
+		Ver 2.0.5 (2010-June-13)</td>
+		<td width="285" height="23" style="border-style: solid; border-width: 1px">
+		Phillip Ferland</td>
+		<td height="23" style="border-style: solid; border-width: 1px">There was an issue with the background color nopt being set correctly along with the grid line color.
     </tr>
 	 </table>
 <br><br>

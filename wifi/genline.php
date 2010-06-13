@@ -5,12 +5,13 @@
 //  Started on: 10.14.07                                       //
 //  Purpose: To generate a PNG graph of a WAP's signals        //
 //           from URL driven data                              //
-//  Filename: genlineurl.php                                   //
+//  Filename: genlineurl.php								   //
+//	License: GLPv2			                                   //
 /////////////////////////////////////////////////////////////////
 include('functions.php');
-$lastedit="2009-Mar-15";
-echo '<title>Vistumbler to PNG Signal Graph '.$ver['wifi'].' Beta - ---RanInt---</title>';
+$lastedit="2010-June-13";
 ?>
+<title>Vistumbler to PNG Signal Graph <?php echo $ver['wifi']; ?> Beta - ---RanInt---</title>
 <link rel="stylesheet" href="/css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -20,7 +21,7 @@ echo '<title>Vistumbler to PNG Signal Graph '.$ver['wifi'].' Beta - ---RanInt---
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
 		Vistumbler to PNG Ver <?php echo $ver['wifi']." Beta"; ?> </font>
 		<font color="#FFFFFF" size="2">
-            <a href="/">[Root] </a>/ <a href="/wifi/apps.php">[WiFi Apps] </a>/
+            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifi/apps.php">[WiFi Apps] </a>/
 		</font></b>
 		</td>
 	</tr>
@@ -45,7 +46,7 @@ _uacct = "UA-1353860-1";
 urchinTracker();
 </script>
 <?php
-if($_POST['line']==='line')
+if($_POST['graph_type']==='line')
 {
 $date = date('mdHis');
 	$ssid = $_POST['ssid'];
@@ -66,6 +67,7 @@ $date = date('mdHis');
 	$sig = $_POST['sig'];
 	$text = $_POST['text'];
 	$linec = $_POST['linec'];
+	$bgc = $_POST['bgc'];
 	echo '<form action="genline.php" method="post" enctype="multipart/form-data">';
 	echo '<input name="ssid" type="hidden" value="'.$ssid.'"/>';
 	echo '<input name="mac" type="hidden" value="'.$mac.'"/>';
@@ -84,12 +86,12 @@ $date = date('mdHis');
 	echo '<input name="label" type="hidden" value="'.$label.'"/>';
 	echo '<input name="sig" type="hidden" value="'.$sig.'"/>';
 	echo '<input name="text" type="hidden" value="'.$text.'"/>';
+	echo '<input name="bgc" type="hidden" value="'.$bgc.'"/>';
 	echo '<input name="linec" type="hidden" value="'.$linec.'"/>';
-#	echo '<input name="date" type="hidden" value="'.$date.'"/>';
-	echo '<input name="line" type="hidden" value=""/>';
+	echo '<input name="graph_type" type="hidden" value=""/>';
 	echo '<input name="Genline" type="submit" value="Generate Bar Graph" />';
 	echo '</form>';
-	wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig, $date, $linec, $text );
+	wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig, $date, $linec, $text, $bgc );
 ?>
 You can find your Wifi Graph here -> <a href="tmp/<?php echo $date;?>v.png"><?php echo$date;?>v.png</a>
 <?php
@@ -113,6 +115,7 @@ $date = date('mdHis');
 	$label = $_POST['label'];
 	$sig = $_POST['sig'];
 	$text = $_POST['text'];
+	$bgc = $_POST['bgc'];
 	$linec = $_POST['linec'];
 	echo '<form action="genline.php" method="post" enctype="multipart/form-data">';
 	echo '<input name="ssid" type="hidden" value="'.$ssid.'"/>';
@@ -133,18 +136,22 @@ $date = date('mdHis');
 	echo '<input name="sig" type="hidden" value="'.$sig.'"/>';
 	echo '<input name="text" type="hidden" value="'.$text.'"/>';
 	echo '<input name="linec" type="hidden" value="'.$linec.'"/>';
-#	echo '<input name="date" type="hidden" value="'.$date.'"/>';
-	echo '<input name="line" type="hidden" value="line"/>';
+	echo '<input name="bgc" type="hidden" value="'.$bgc.'"/>';
+	echo '<input name="graph_type" type="hidden" value="line"/>';
 	echo '<input name="Genline" type="submit" value="Generate Line Graph" />';
 	echo '</form>';
-	wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig,$date, $linec, $text);
+	wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig, $date, $linec, $text, $bgc );
 ?>
 You can find your Wifi Graph here -> <a href="tmp/<?php echo $date;?>.png"><?php echo$date;?>.png</a>
 <?php
 	}
 ?>
-If your graph is coming up blank or missing data please go <a href="http://forum.techidiots.net/forum/viewthread.php?tid=7" targe="_blank">Here</a>
-<br>Your image will be available for aprox the next 30 min.<br />Source is right <a href="source/?source=source">here</a><br />You can view the Version History <a href="ver.php">here</a><br /><br /><font size="1">Please use Vistumbler to gather the data.<br />You can get it <a href="http://techidiots.net/project-pages/vistumbler/" target="_blank">here</a></font></td></tr>
+If your graph is coming up blank or missing data please go <a class="links" href="http://forum.techidiots.net/forum/viewthread.php?tid=7" targe="_blank">Here</a>
+<br>Your image will be available for aprox the next 30 min.<br />Source is right <a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifi">here</a><br />
+You can view the Version History <a class="links" href="ver.php">here</a><br />
+<br />
+<font size="1">Please use Vistumbler to gather the data.<br />
+You can get it <a class="links" href="http://techidiots.net/project-pages/vistumbler/" target="_blank">here</a></font></td></tr>
 <tr>
 <td bgcolor="#315573" height="23"><a href="/pictures/moon.png"><img border="0" src="/pictures/moon_tn.PNG"></a></td>
 <td bgcolor="#315573" width="0">

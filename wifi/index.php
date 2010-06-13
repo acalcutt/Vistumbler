@@ -1,17 +1,17 @@
 <?php
 /////////////////////////////////////////////////////////////////
-//  By: Phillip Ferland (Longbow486)                          			 //
-//  Email: longbow486@msn.com                                			  //
-//  Started on: 10.14.07                                       				//
-//  Purpose: To generate a PNG graph of a WAP's signals        		//
-//           from URL driven data                              				//
-//  Filename: genlineurl.php                                   				//
+//  By: Phillip Ferland (Longbow486)                           //
+//  Email: longbow486@msn.com                                  //
+//  Started on: 10.14.07                                       //
+//  Purpose: To generate a PNG graph of a WAP's signals        //
+//           from URL driven data                              //
+//  Filename: index.php								   //
+//	License: GLPv2			                                   //
 /////////////////////////////////////////////////////////////////
 include('functions.php');
-$lastedit="4.26.08";
-echo '<title>Vistumbler to PNG Signal Graph '.$ver['index'].' Beta - ---RanInt---</title>';
+$lastedit="2010-June-13";
 ?>
-
+<title>Vistumbler to PNG Signal Graph <?php echo $ver['wifi']; ?> Beta - ---RanInt---</title>
 <link rel="stylesheet" href="/css/site4.0.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 <div align="center">
@@ -21,7 +21,7 @@ echo '<title>Vistumbler to PNG Signal Graph '.$ver['index'].' Beta - ---RanInt--
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
 		Vistumbler to PNG Ver <?php echo $ver['wifi']." Beta"; ?> </font>
 		<font color="#FFFFFF" size="2">
-            <a href="/">[Root] </a>/ <a href="/wifi/apps.php">[WiFi Apps] </a>/
+            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifi/apps.php">[WiFi Apps] </a>/
 		</font></b>
 		</td>
 	</tr>
@@ -85,12 +85,10 @@ $sig = $_GET['Sig'];
 	echo '<input name="NT" type="hidden" value="'.$NT.'"/>';
 	echo '<input name="label" type="hidden" value="'.$label.'"/>';
 	echo '<input name="sig" type="hidden" value="'.$sig.'"/>';
-	#echo '<input name="date" type="hidden" value="'.$date.'"/>';
-
 	?>
 
 					Choose Graph Type: 
-					<select name="line" style="height: 22px; width: 139px">
+					<select name="graph_type" style="height: 22px; width: 139px">
 	<option value="">Bar (Vertical)</option>
 	<option value="line">Line (Horizontal)</option>
 	</select>
@@ -154,9 +152,9 @@ $sig = $_GET['Sig'];
 				</tr>
 			</table>
 <br>
-<a href="source/?source=source">Source</a><br>
-<a href="ver.php">Version History</a><br>
-<a href="http://forum.techidiots.net/forum/viewforum.php?f=22">Forum</a><br><font size="1">[located at Techidiots.net]</font><br>
+<a class="links" href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/wifi">Source</a><br>
+<a class="links" href="ver.php">Version History</a><br>
+<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=22">Forum</a><br><font size="1">[located at Techidiots.net]</font><br>
 
 
 			</td>

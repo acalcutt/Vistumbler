@@ -1,7 +1,7 @@
 <?php
 $ver=array(
-			"lastedit"	=>"2009-Mar-15",
-			"wifi"		=>"v2.0.4",
+			"lastedit"	=>"2010-June-13",
+			"wifi"		=>"v2.0.5",
 			"imagegrid" => "v1.0",
 		   );
 
@@ -30,7 +30,7 @@ function imagegrid($image, $w, $h, $s, $color)
 #													WiFi Graph Linegraph													         #
 #==============================================================================================================================================================#
 
-	function wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig, $date, $bgc, $linec="rand", $text="rand")
+	function wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig, $date, $linec='rand', $text='rand', $bgc='rand')
 	{
 		$n=0;
 		$nn=1;
@@ -62,6 +62,19 @@ function imagegrid($image, $w, $h, $s, $color)
 			$g=$line_color[1];
 			$b=$line_color[2];
 		}
+		if($bgc == 'rand')
+		{
+			$bgcr = rand(25, 220);
+			$bgcg = rand(25, 220);
+			$bgcb = rand(25, 220);
+		}else
+		{
+			$bgcc	= explode(":",$bgc);
+			$bgcr = $bgcc[0];
+			$bgcg = $bgcc[1];
+			$bgcb = $bgcc[2];
+		}
+		
 		if ($ssid==""or$ssid==" " )
 		{
 			$ssid="UNNAMED";
@@ -101,8 +114,7 @@ function imagegrid($image, $w, $h, $s, $color)
 			$Height = 480;
 		}
 		$img    = ImageCreateTrueColor($wid, $Height);
-		$bgcc	= explode(":",$bgc);
-		$bg     = imagecolorallocate($img, $bgcc[0], $bgcc[1], $bgcc[2]);
+		$bg     = imagecolorallocate($img, $bgcr, $bgcg, $bgcb);
 		if($bgc !== "000:000:000")
 		{
 			$grid   = imagecolorallocate($img,0,0,0);
@@ -131,7 +143,7 @@ function imagegrid($image, $w, $h, $s, $color)
 		$n=0;
 		$nn=1;
 		imagesetstyle($img,array($bg,$grid));
-		graphs::imagegrid($img,$wid,$Height,19.99,$grid);
+		imagegrid($img,$wid,$Height,19.99,$grid);
 		while($count>0)
 		{
 			if($nn==$counting+1){break;}
@@ -156,8 +168,9 @@ function imagegrid($image, $w, $h, $s, $color)
 #==============================================================================================================================================================#
 
 
-	function wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig, $date, $bgc, $linec="rand", $text="rand")
+	function wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig, $date, $linec='rand', $text='rand', $bgc='rand')
 	{
+		echo $linec."<br>".$text."<br>".$bgc."<br>";
 		$p=460;
 		$I=0;
 
@@ -184,6 +197,18 @@ function imagegrid($image, $w, $h, $s, $color)
 			$r=$line_color[0];
 			$g=$line_color[1];
 			$b=$line_color[2];
+		}
+		if($bgc == 'rand')
+		{
+			$bgcr = rand(25, 220);
+			$bgcg = rand(25, 220);
+			$bgcb = rand(25, 220);
+		}else
+		{
+			$bgcc	= explode(":",$bgc);
+			$bgcr = $bgcc[0];
+			$bgcg = $bgcc[1];
+			$bgcb = $bgcc[2];
 		}
 		if ($ssid==""or$ssid==" ")
 		{
@@ -224,14 +249,13 @@ function imagegrid($image, $w, $h, $s, $color)
 			$Height = 480;
 		}
 		$img    = ImageCreateTrueColor($wid, $Height);
-		$bgcc	= explode(":",$bgc);
-		$bg     = imagecolorallocate($img, $bgcc[0], $bgcc[1], $bgcc[2]);
-		if($bgc !== "000:000:000")
-		{
-			$grid   = imagecolorallocate($img,0,0,0);
-		}else
+		$bg     = imagecolorallocate($img, $bgcr, $bgcg, $bgcb);
+		if($bgc == "000:000:000")
 		{
 			$grid   = imagecolorallocate($img,255,255,255);
+		}else
+		{
+			$grid   = imagecolorallocate($img,0,0,0);
 		}
 		$tcolor = imagecolorallocate($img, $tr, $tg, $tb);
 		$col = imagecolorallocate($img, $r, $g, $b);
@@ -251,7 +275,7 @@ function imagegrid($image, $w, $h, $s, $color)
 		$X=20;
 		$n=0;
 		imagesetstyle($img,array($bg,$grid));
-		graphs::imagegrid($img,$wid,$Height,19.99,$grid);
+		imagegrid($img,$wid,$Height,19.99,$grid);
 		while($count>=0)
 		{
 			if($n==$count+1){break;}
