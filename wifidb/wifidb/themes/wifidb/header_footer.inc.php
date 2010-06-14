@@ -5,21 +5,24 @@
 
 function pageheader($title, $output="detailed", $install=0)
 {
-	global $login_check;
+	global $login_check, $install;
 	include_once($GLOBALS['half_path'].'/lib/database.inc.php');
 	include_once($GLOBALS['half_path'].'/lib/config.inc.php');
 	$head		= 	$GLOBALS['header'];
 	$half_path	=	$GLOBALS['half_path'];
-	if(!$install)
-	{
-		include_once($GLOBALS['half_path'].'/lib/security.inc.php');
-		$sec = new security();
-		$login_check = $sec->login_check();
-		if(is_array($login_check) or $login_check == "No Cookie"){$login_check = 0;}
-	}else{$login_check = 0;}
 	if($output == "detailed")
 	{
-		check_install_folder();
+		if(!$install)
+		{
+			include_once($GLOBALS['half_path'].'/lib/security.inc.php');
+			$sec = new security();
+			$login_check = $sec->login_check();
+			if(is_array($login_check) or $login_check == "No Cookie"){$login_check = 0;}
+			check_install_folder();
+		}else
+		{
+			$login_check = 0;
+		}
 		echo '<html><head><title>Wireless DataBase '.$GLOBALS["ver"]["wifidb"].' --> '.$title.'</title>'.$head.'</head>';
 		# START YOUR HTML EDITS HERE #
 		?>

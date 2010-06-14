@@ -9,9 +9,9 @@ document.forms['WiFiDB_patch'].elements['httpdgrp'].disabled =! document.forms['
 <?php
 global $screen_output;
 $screen_output = 'CLI';
-include('../lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].'--> Upgrade Page</title>';
+#include('../../lib/database.inc.php');
 ?>
+<title>Wireless DataBase *Alpha* --> Upgrade Page</title>
 <link rel="stylesheet" href="../../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" marginwidth="10" marginheight="10" onload="document.forms['WiFiDB_patch'].elements['toolsdir'].disabled=true; document.forms['WiFiDB_patch'].elements['httpduser'].disabled=true; document.forms['WiFiDB_patch'].elements['httpdgrp'].disabled=true;">
 <div align="center">
@@ -50,47 +50,47 @@ if(@class_exists('ZipArchive'))
 {echo '<table><tr class="style4"><td><b><font color=#00ff00>ZipArchive class is installed</font></b></td></tr></table>';}
 else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have the ZipArchive class installed, please install this or you will not beable to use the Export Feature or the Daemon Generated KML.</font></b></td></tr></table>';}
 ?>
-<table border="0" cellspacing="0" cellpadding="3">
-<tr><th colspan="3" class="style4">Basic WiFiDB Settings</th></tr>
+<table border="1" cellspacing="0" cellpadding="3">
+<tr><th colspan="2" class="style4">Basic WiFiDB Settings</th></tr>
   <tr>
-    <td width="100%">SQL root User <font size="1">(to create the WiFiDB user and DB's)</font></td><td>........................................</td>
+    <td width="100%">SQL root User <font size="1">(to create the WiFiDB user and DB's)</font></td>
     <td><input name="root_sql_user"></td></tr>
   <tr>
-    <td>SQL root user Password</td><td>........................................</td>
+    <td>SQL root user Password</td>
     <td><input TYPE=PASSWORD name="root_sql_pwd"></td></tr>
   <tr>
-    <td>MySQL Host <font size="1">(Default `localhost` )</font></td><td>........................................</td>
+    <td>MySQL Host <font size="1">(Default `localhost` )</font></td>
     <td><input name="sqlhost"></td></tr>
   <tr>
-    <td>WiFiDB SQL Username</td><td>........................................</td>
+    <td>WiFiDB SQL Username</td>
     <td><input name="sqlu"></td></tr>
   <tr>
-    <td>WiFiDB SQL Password</td><td>........................................</td>
+    <td>WiFiDB SQL Password</td>
     <td><input type=password name="sqlp"></td></tr>
   <tr>
-    <td>Administrator User Password</td><td>........................................</td>
+    <td>Administrator User Password</td>
     <td><input type=password name="wdb_admn_pass"></td></tr>
   <tr>
-    <td>Administrator User E-Mail</td><td>........................................</td>
+    <td>Administrator User E-Mail</td>
     <td><input name="wdb_admn_emailadrs"></td></tr>
   <tr>
-    <td>WiFiDB Email Updates </td><td>........................................</td>
+    <td>WiFiDB Email Updates </td>
     <td><input type="checkbox" name="wdb_email_updates" value="FALSE"></td></tr>
   <tr>
-    <td>Updates Sending Address</font></td><td>........................................</td>
+    <td>Updates Sending Address</font></td>
     <td><input name="wdb_from_emailadrs"></td></tr>
   <tr>
-    <td>Sending Password</font></td><td>........................................</td>
-    <td><input name="wdb_from_pass"></td></tr>
+    <td>Sending Password</font></td>
+    <td><input name="wdb_from_pass" type=PASSWORD></td></tr>
   <tr>
-   <td>WiFi DB name <font size="1">(Default `wifi` )</font></td><td>........................................</td>
+   <td>WiFi DB name <font size="1">(Default `wifi` )</font></td>
     <td><input name="wifi"></td></tr>
   <tr>
-    <td>WiFi Storage DB name <font size="1">(Default `wifi_st` )</font></td><td>........................................</td>
+    <td>WiFi Storage DB name <font size="1">(Default `wifi_st` )</font></td>
     <td><input name="wifist"></td>
 </TR>
   <tr>
-    <td>Default Theme</td><td>........................................</td>
+    <td>Default Theme</td>
     <td>
 		<select name="theme">
 		<OPTION selected VALUE=""> Select a Theme.
@@ -114,26 +114,28 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 		</select>
 	</td>
 </TR>
-<tr><th colspan="3" class="style4">WiFiDB Daemon Settings</th></tr>
+<tr><th colspan="2" class="style4">WiFiDB Daemon Settings</th></tr>
   <tr>
-    <td>Use Daemon?</td><td>........................................</td>
+    <td>Use Daemon?</td>
     <td><input type="checkbox" name="daemon" value="TRUE" <?php if($GLOBALS['daemon'] === 1){echo "checked";} ?> onchange="endisable()"></td>
 </TR>
   <tr>
-    <td>Tools Directory (if you are using the daemon)</td><td>........................................</td>
+    <td>Tools Directory (if you are using the daemon)</td>
     <td><input <?php if($GLOBALS['daemon'] === 1){echo 'value="'.$GLOBALS['wifidb_tools'].'"';} ?> name="toolsdir"></td>
 </TR>
 </TR>
   <tr>
-    <td>HTTPd User</td><td>........................................</td>
+    <td>HTTPd User</td>
     <td><input <?php if($GLOBALS['daemon'] === 1){echo 'value="'.$GLOBALS['WiFiDB_LNZ_User'].'"';} ?> name="httpduser"></td>
 </TR>
 </TR>
   <tr>
-    <td>HTTPd Group</td><td>........................................</td>
+    <td>HTTPd Group</td>
     <td><input <?php if($GLOBALS['daemon'] === 1){echo 'value="'.$GLOBALS['apache_grp'].'"';} ?> name="httpdgrp"></td>
 </TR>
-<TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
+<TR>
+<TD></TD>
+<TD>
 <INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">
 </TD>
 </TR>

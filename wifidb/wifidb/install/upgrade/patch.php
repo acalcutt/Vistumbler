@@ -1,6 +1,6 @@
 <?php
 include('../../lib/database.inc.php');
-pageheader("Upgrade Page", 0);
+pageheader("Upgrade Page", "detailed", 1);
 
 include($half_path.'/lib/config.inc.php');
 ?>

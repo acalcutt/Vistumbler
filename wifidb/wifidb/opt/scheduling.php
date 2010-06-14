@@ -55,7 +55,7 @@ if(is_string($func))
 				while ($newArray = mysql_fetch_array($result))
 				{
 					if($class_f){$class = "light"; $class_f =0;}else{$class = "dark"; $class_f =1;}
-					?><tr class="sub_header"><th>ID</th><th>Filename</th><th>Date</th><th>user</th><th>title</th></tr>
+					?><tr class="sub_head"><th>ID</th><th>Filename</th><th>Date</th><th>user</th><th>title</th></tr>
 					<tr class="<?php echo $class;?>"><td align="center">
 					<?php
 					echo $newArray['id'];
@@ -72,7 +72,7 @@ if(is_string($func))
 					<?php
 					echo $newArray['title'];
 					?></td></tr>
-					<tr><th></th><th class="sub_header">Total AP's</th><th class="sub_header">Total GPS</th><th class="sub_header">Size</th><th class="sub_header">Hash Sum</th></tr>
+					<tr><th></th><th class="sub_head">Total AP's</th><th class="sub_head">Total GPS</th><th class="sub_head">Size</th><th class="sub_head">Hash Sum</th></tr>
 					<tr><td></td><td class="<?php echo $class;?>" align="center">
 					<?php
 					echo $newArray['aps'];

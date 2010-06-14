@@ -3287,6 +3287,7 @@ $"."debug = $debug;\r\n?>";
 			
 			case "db_config_proc":
 				$wifidb_tools		=	addslashes(strip_tags($_POST['wifidb_tools']));
+				$wifidb_install		=	addslashes(strip_tags($_POST['wifidb_install']));
 				$root				=	addslashes(strip_tags($_POST['root']));
 				$hosturl			=	addslashes(strip_tags($_POST['hosturl']));
 				$admin_email		=	addslashes(strip_tags($_POST['admin_email']));
@@ -3311,6 +3312,7 @@ $"."debug = $debug;\r\n?>";
 				$links				=	addslashes(strip_tags($_POST['links']));
 				$wtable				=	addslashes(strip_tags($_POST['wtable']));
 				$user_logins_table	=	addslashes(strip_tags($_POST['user_logins_table']));
+				$validate_table		=	addslashes(strip_tags($_POST['validate_table']));
 				$share_cache		=	addslashes(strip_tags($_POST['share_cache']));
 				$files				=	addslashes(strip_tags($_POST['files']));
 				$files_tmp			=	addslashes(strip_tags($_POST['files_tmp']));
@@ -3339,21 +3341,30 @@ $"."debug = $debug;\r\n?>";
 				$tracker			= 	addslashes($_POST['tracker']);
 				echo $_POST['header'];
 				$DB_Config = "$"."lastedit	=	'".date('Y-M-d H:i:s')."';
-global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."admin_email;
-global $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."conn, $"."db, $"."db_st, $"."wifidb_tools, $"."daemon, $"."root, $"."users_t, $"."user_logins_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm;
-global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."console_lines, $"."console_log, $"."DB_stats_table, $"."daemon_perf_table;
-global $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."bypass_check, $"."config_fails, $"."login_seed, $"."collate, $"."engine, $"."char_set;
+#COOKIE GLOBALS
+global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
+#SQL GLOBALS
+global $"."wifidb_install, $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
+#MISC GLOBALS
+global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from, $"."wifidb_from_pass;
 
+$"."lastedit	=	'$date';
 
 #----------General Settings------------#
-$"."bypass_check		=	$bypass_check;
-$"."wifidb_tools		=	'$wifidb_tools';
-$"."timezn				=	'$timezn';
-$"."root				=	'$root';
-$"."hosturl			=	'$hosturl';
-$"."admin_email		=	'$admin_email';
-$"."config_fails		=	$config_fails;
-$"."login_seed			=	'$login_seed';
+$"."bypass_check	=	0;
+$"."wifidb_tools	=	'$toolsdir';
+$"."wifidb_install	=	'$wifidb_install';
+$"."timezn			=	'$Local_tz';
+$"."root			=	'$root';
+$"."hosturl		=	'$hosturl';
+$"."dim			=	DIRECTORY_SEPARATOR;
+$"."admin_email	=	'$email';
+$"."config_fails	=	3;
+$"."login_seed		=	'$seed';
+$"."wifidb_email_updates = '$wifidb_email_updates';
+$"."wifidb_from	=	'$wifidb_from';
+$"."wifidb_from_pass	=	'$wifidb_from_pass';
+$"."wifidb_smtp		=	'';
 
 #---------------- Daemon Info ----------------#
 $"."daemon				=	$daemon;
@@ -3387,6 +3398,7 @@ $"."users_t		=	'$users_t';
 $"."links			=	'$links';
 $"."wtable			=	'$wtable';
 $"."user_logins_table	=	'$user_logins_table';
+$"."validate_table		=	'$validate_table';
 $"."share_cache	=	'$share_cache';
 $"."files			=	'$files';
 $"."files_tmp		=	'$files_tmp';
@@ -3444,6 +3456,10 @@ $"."tracker	= '$tracker';";
 					<td >WiFiDB Tools Folder</td>
 					<td>
 					<input style="width: 96%" name="wifidb_tools" value="<?php echo $wifidb_tools; ?>"></td></tr>
+				  <tr class="dark">
+					<td >WiFiDB HTML Folder</td>
+					<td>
+					<input style="width: 96%" name="wifidb_install" value="<?php echo $wifidb_install; ?>"></td></tr>
 				  <tr class="dark">
 					<td >Root Folder</td>
 					<td>
@@ -3624,6 +3640,11 @@ $"."tracker	= '$tracker';";
 				<TD >Users Login Table</TD>
 					<td>
 						<input name="user_logins_table" value="<?php echo $user_logins_table; ?>" style="width: 205px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Users Validation Table</TD>
+					<td>
+						<input name="validate_table" value="<?php echo $validate_table; ?>" style="width: 215px"></td>
 				</tr>
 				<tr class="dark">
 				<TD >Geocache Shares Table</TD>

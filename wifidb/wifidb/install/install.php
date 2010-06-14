@@ -384,7 +384,7 @@ $sql1 = "CREATE TABLE `wifi`.`validate_table` (
 	`username` VARCHAR( 255 ) NOT NULL ,
 	`code` VARCHAR( 64 ) NOT NULL ,
 	`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-	UNIQUE (`username`)
+	UNIQUE (`username`),
 	INDEX ( `id` )
 	) ENGINE = $ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn);
@@ -639,7 +639,7 @@ $CR_CF_FL_Re = fwrite($fileappend, "<?php
 #COOKIE GLOBALS
 global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
 #SQL GLOBALS
-global $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
+global $"."wifidb_install, $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
 #MISC GLOBALS
 global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from, $"."wifidb_from_pass;
 
@@ -648,6 +648,7 @@ $"."lastedit	=	'$date';
 #----------General Settings------------#
 $"."bypass_check	=	0;
 $"."wifidb_tools	=	'$toolsdir';
+$"."wifidb_install	=	'".$_SERVER['DOCUMENT_ROOT']."
 $"."timezn			=	'$Local_tz';
 $"."root			=	'$root';
 $"."hosturl		=	'$hosturl';
@@ -658,7 +659,7 @@ $"."login_seed		=	'$seed';
 $"."wifidb_email_updates = '$wifidb_email_updates';
 $"."wifidb_from	=	'$wifidb_from';
 $"."wifidb_from_pass	=	'$wifidb_from_pass';
-$"."wifidb_smtp		=	'smtp.gmail.com';\r\n\r\n");
+$"."wifidb_smtp		=	'';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Global variables and general variables values.</td></tr>";}

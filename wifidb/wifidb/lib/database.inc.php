@@ -76,7 +76,9 @@ if(!@include('config.inc.php'))
 	if(!@mysql_query($sql, $conn))
 	{
 		$cwd = getcwd().'/';
-		if($cwd != $GLIBALS['wifidb_install'].'/'.$GLOBALS['root'].'/install/upgrade/')
+		echo $cwd."<BR>";
+		echo $GLOBALS['wifidb_install'].'/install/upgrade/<BR>';
+		if($cwd != $GLOBALS['wifidb_install'].'/install/upgrade/')
 		{
 			echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="'.$PATH.'install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
 			die();
@@ -311,6 +313,32 @@ function redirect_page($return = "", $delay = 0, $msg = "no Message", $new_windo
 }
 
 #-------------------------------------------------------------------------------------#
+#----------------------------------   Tar a file up    -------------------------------#
+#-------------------------------------------------------------------------------------#
+function tar_file($file)
+{
+	$start = microtime(1);
+	$filename_exp = explode( ".", $file);
+	$filename_strip = $filename_exp[0];
+
+	$script = "tar -czfv backups/$filename_strip.tar.gz $file";
+	$results = system($script,$retval);
+
+	if(!$results)
+	{
+		$stop = microtime(1);
+		$time = ($stop-$start);
+		$mbps = ((filesize($file)/1024)/1024)/$time;
+		$return = array( $results, $retval, $time, $mbps );
+		return $return;
+	}else
+	{
+		return 0;
+	}
+}
+
+
+#-------------------------------------------------------------------------------------#
 #----------------------------------  Parse Arg values  -------------------------------#
 #-------------------------------------------------------------------------------------#
 function parseArgs($argv){
@@ -477,15 +505,16 @@ function check_install_folder()
 		$full_path = $full_path.'install';
 		if(is_dir($full_path)){$install_folder_remove = '<p align="center"><font color="red" size="6">The install Folder is still there, remove it!</font></p>';}
 	}
-	$sql = "DESCRIBE `$db`.`files`";
-	$result1 = mysql_query($sql, $conn);
-	while ($test = mysql_fetch_array($result1))
-	{
-		if(($test['Field'] == "user" AND $test['Type'] != "varchar(255)") OR !$GLOBALS['default_theme'])
-		{
-			$upgrade_wdb = "<p align=\"center\"><font color=\"red\" size=\"4\">You need to <a class=\"upgrade\" href=\"".$GLOBALS['hosturl'].$GLOBALS['root']."/install/upgrade/\">upgrade</a> before you will be able to properly use WiFiDB ".$GLOBALS['ver']['wifidb'].".</p></font>";
-		}
-	}
+#	$sql = "DESCRIBE `$db`.`files`";
+#	$result1 = mysql_query($sql, $conn);
+#	while ($test = mysql_fetch_array($result1))
+#	{
+#		if(($test['Field'] == "user" AND $test['Type'] != "varchar(255)") AND !$GLOBALS['default_theme'])
+#		{
+#			$upgrade_wdb = "<p align=\"center\"><font color=\"red\" size=\"4\">You need to <a class=\"upgrade\" href=\"".$GLOBALS['hosturl'].$GLOBALS['root']."/install/upgrade/\">upgrade</a> 
+#			before you will be able to properly use WiFiDB ".$GLOBALS['ver']['wifidb'].".</p></font>";
+#		}
+#	}
 	
 	if(@!$upgrade_wdb)
 	{
@@ -732,46 +761,49 @@ function my_caches($theme = "wifidb", $out = 1)
 ###################################################
 function login_bar($theme = "wifidb", $out = 1)
 {
-	if($GLOBALS['login_check'])
+	if(!@$GLOBALS['install'])
 	{
-		$conn = $GLOBALS['conn'];
-		$db = $GLOBALS['db'];
-		$user_logins_table = $GLOBALS['user_logins_table'];
-		list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
-		$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
-		$result = mysql_query($sql0, $conn);
-		$newArray = mysql_fetch_array($result);
-		$last_login = $newArray['last_login'];
-		switch($theme)
+		if($GLOBALS['login_check'])
 		{
-			case "wifidb":
-				$return = '<td>Welcome, <a class="links" href="'.$GLOBALS["UPATH"].'/cp/">'.$username.'</a><font size="1"> (Last Login: '.$last_login.')</font></td> <td align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?func=logout_proc">Logout</a></td>';
-			break;
-			
-			case "vistumbler":
-				$return = '<td class="cell_top_mid" style="height: 20px" align="left">Welcome, <a class="links" href="'.$GLOBALS["UPATH"].'/cp/">'.$username.'</a><font size="1"> (Last Logon: '.$last_login.')</font></td><td class="cell_top_mid" style="height: 20px" align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?func=logout_proc">Logout</a></td>';
-			break;
-		}
-	}else
-	{
-		$filtered = filter_var($_SERVER['QUERY_STRING'],FILTER_SANITIZE_ENCODED);
-		$SELF = $_SERVER['PHP_SELF'];
-		if($SELF == $GLOBALS["root"].'/login.php')
+			$conn = $GLOBALS['conn'];
+			$db = $GLOBALS['db'];
+			$user_logins_table = $GLOBALS['user_logins_table'];
+			list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
+			$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+			$result = mysql_query($sql0, $conn);
+			$newArray = mysql_fetch_array($result);
+			$last_login = $newArray['last_login'];
+			switch($theme)
+			{
+				case "wifidb":
+					$return = '<td>Welcome, <a class="links" href="'.$GLOBALS["UPATH"].'/cp/">'.$username.'</a><font size="1"> (Last Login: '.$last_login.')</font></td> <td align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?func=logout_proc">Logout</a></td>';
+				break;
+				
+				case "vistumbler":
+					$return = '<td class="cell_top_mid" style="height: 20px" align="left">Welcome, <a class="links" href="'.$GLOBALS["UPATH"].'/cp/">'.$username.'</a><font size="1"> (Last Logon: '.$last_login.')</font></td><td class="cell_top_mid" style="height: 20px" align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?func=logout_proc">Logout</a></td>';
+				break;
+			}
+		}else
 		{
-			$SELF = "/".$GLOBALS["root"];
-			$filtered = '';
-		}
-		if($filtered != '')
-		{$SELF = $SELF.'?'.$filtered;}
-		switch($theme)
-		{
-			case "wifidb":
-				$return = '<td></td><td align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?return='.$SELF.'">Login</a></td>';
-			break;
-			
-			case "vistumbler":
-				$return = '<td class="cell_top_mid" style="height: 20px" align="left"></td><td class="cell_top_mid" style="height: 20px" align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?return='.$SELF.'">Login</a></td>';
-			break;
+			$filtered = filter_var($_SERVER['QUERY_STRING'],FILTER_SANITIZE_ENCODED);
+			$SELF = $_SERVER['PHP_SELF'];
+			if($SELF == $GLOBALS["root"].'/login.php')
+			{
+				$SELF = "/".$GLOBALS["root"];
+				$filtered = '';
+			}
+			if($filtered != '')
+			{$SELF = $SELF.'?'.$filtered;}
+			switch($theme)
+			{
+				case "wifidb":
+					$return = '<td></td><td align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?return='.$SELF.'">Login</a></td>';
+				break;
+				
+				case "vistumbler":
+					$return = '<td class="cell_top_mid" style="height: 20px" align="left"></td><td class="cell_top_mid" style="height: 20px" align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?return='.$SELF.'">Login</a></td>';
+				break;
+			}
 		}
 	}
 	if($out)
@@ -3451,13 +3483,13 @@ class database
 					</th>
 				</tr>
 				<tr class="sub_head">
-					<td><b>Title</b></td><td><?php echo $title; ?></td>
+					<td><i><b>Title</b></i></td><td><b><?php echo $title; ?></b></td>
 				</tr>
 				<tr class="sub_head">
-					<td><b>Imported On</b></td><td><?php echo $user_array["date"]; ?></td>
+					<td><i><b>Imported On</b></i></td><td><b><?php echo $user_array["date"]; ?></b></td>
 				</tr>
 				<tr class="sub_head">
-					<td><b>Total APs in List</b></td><td><?php echo $user_array["aps"]; ?></td>
+					<td><i><b>Total APs in List</b></i></td><td><b><?php echo $user_array["aps"]; ?></b></td>
 				</tr>
 			<table>
 			<br>
@@ -5999,12 +6031,12 @@ class daemon
 					return 1;
 				}else
 				{
-					if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php}
+					if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php }
 					return 0;
 				}
 			}else
 			{
-				if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php}
+				if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php }
 				return 0;
 			}
 		}elseif( $os[0] == 'W')
@@ -6093,16 +6125,16 @@ class daemon
 					</tr>
 					<?php
 					}
-					return = 1;
+					return 1;
 				}else
 				{
-					if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php}
-					return = 0;
+					if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php }
+					return 0;
 				}
 			}else
 			{
-				if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php}
-				return = 0;
+				if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php }
+				return 0;
 			}
 		}elseif( $os[0] == 'W')
 		{
@@ -6125,19 +6157,25 @@ class daemon
 					?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
 					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php
 					}
-					return = 0;
+					return 0;
 				}
 			}else
 			{
-				if($verbose){?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
-				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php}
-				return = 0;
+				if($verbose)
+				{
+				?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
+				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php
+				}
+				return 0;
 			}
 		}else
 		{
-			if($verbose){?><tr class="style4"><th colspan="4">Unkown OS Based Database Statistics Daemon</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Database Statistics Daemon is not running!</td><?php}
-			return = 0;
+			if($verbose)
+			{
+			?><tr class="style4"><th colspan="4">Unkown OS Based Database Statistics Daemon</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Database Statistics Daemon is not running!</td><?php
+			}
+			return 0;
 		}
 	}
 
@@ -6191,12 +6229,12 @@ class daemon
 					return 1;
 				}else
 				{
-					if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php}
+					if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php }
 					return 0;
 				}
 			}else
 			{
-				if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php}
+				if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php }
 				return 0;
 			}
 		}elseif( $os[0] == 'W')
@@ -6232,8 +6270,11 @@ class daemon
 			}
 		}else
 		{
-			if($verbose){?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Performance Monitor</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Performance Monitor is not running!</td><?php}
+			if($verbose)
+			{
+			?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Performance Monitor</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Performance Monitor is not running!</td><?php
+			}
 			return 0;
 		}
 	}
