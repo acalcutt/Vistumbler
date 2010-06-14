@@ -1,16 +1,16 @@
 body {
-	background:#123;
+	background:#112233;
 	margin:0;
 	text-align:center;
 	line-height: 1.5em;
-	color:#123;
+	color:#112233;
 	font-size/* */:/**/small; font-style:normal; font-variant:normal; font-weight:normal; font-family:Trebuchet MS
 }
 .content_head{
 				color: #A9C6FA;
 }
 
-.sub_header{
+.sub_head{
 	background-color:#508FAE;
 }
 
@@ -198,14 +198,10 @@ table.update ha {
 	text-align: center;
 }
 
-
-
 .dark {
 	background-color: #85ABCB;
 }
+
 .light {
 	background-color: #BAD0E2;
-}
-.sub_head {
-	background-color: #508FAE;
 }

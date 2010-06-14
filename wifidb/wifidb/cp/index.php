@@ -158,6 +158,15 @@ if($login_check)
 		
 		##-------------##
 		case 'pref':
+			?>
+			<script type="text/javascript">
+function endisable( ) {
+document.forms['WiFiDB_Install'].elements['toolsdir'].disabled =! document.forms['WiFiDB_Install'].elements['daemon'].checked;
+document.forms['WiFiDB_Install'].elements['httpduser'].disabled =! document.forms['WiFiDB_Install'].elements['daemon'].checked;
+document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms['WiFiDB_Install'].elements['daemon'].checked;
+}
+</script>
+			<?php
 			pageheader("User Control Panel --> Preferences");
 			$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
 			$result = mysql_query($sql0, $conn);
@@ -179,10 +188,52 @@ if($login_check)
 				<tr>
 					<td colspan="6" class="dark">
 					<form method="post" action="?func=update_user_pref">
-					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
+					<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Email me about updates</th>
 							<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['mail_updates']){echo 'checked';}?>></td>
+						</tr>
+						<tr>
+							<td colspan='2'>
+								<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
+									<tr>
+										<th width="30%" class="style3">Announcements</th>
+										<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+									<tr>
+										<th width="30%" class="style3">Announcement Comments</th>
+										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+									<tr>
+										<th width="30%" class="style3">New Public Geocaches</th>
+										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+									<tr>	
+										<th width="30%" class="style3">New Users</th>
+										<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+									<tr>
+										<th width="30%" class="style3">Scheduled Import</th>
+										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+									<tr>
+										<th width="30%" class="style3">Import Finished</th>
+										<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+									<tr>
+										<th width="30%" class="style3">New Full DB KML</th>
+										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+									<tr>
+										<th width="30%" class="style3">GeoNames Daemon</th>
+										<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+									<tr>
+										<th width="30%" class="style3">Performance Monitor</th>
+										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+									</tr>
+								</table>
+							</td>
 						</tr>
 						<tr>
 							<th width="30%" class="style3">Hide Login Status</th>
@@ -1383,7 +1434,7 @@ if($login_check)
 					<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=login_proc">
 					<table align="center">
 						<tr>
-							<td colspan="2"><p align="center"><img src="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>/themes/wifidb/img/logo.png"></p></td>
+							<td colspan="2"><p align="center"><img src="<?php echo $GLOBALS['UPATH']; ?>/themes/wifidb/img/logo.png"></p></td>
 						</tr>
 						<tr>
 							<td>Username <font size="1">(CaSeSenSiTivE)</font></td>

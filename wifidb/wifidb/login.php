@@ -275,7 +275,7 @@ switch($func)
 			{
 				$username = $v_array['username'];
 				$delete = "DELETE FROM `$db`.`$validate_table` WHERE `username` = '$username'";
-				echo $delete."<BR>";
+			#	echo $delete."<BR>";
 				if(mysql_query($delete, $conn))
 				{
 					echo "<font color='Grey'><h2>Username: ".$v_array['username']."\r\n<BR>Has been activated! Go login -></h2></font>";

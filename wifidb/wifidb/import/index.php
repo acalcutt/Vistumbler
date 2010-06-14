@@ -21,6 +21,8 @@ if(isset($_GET['func']))
 {
 	$func = '';
 }
+$type = "schedule";
+$subject = "New WiFiDB Import waiting...";
 //Switchboard for import file or index form to upload file
 switch($func)
 {
@@ -37,7 +39,7 @@ switch($func)
 			{
 				echo '<h2>You can only upload VS1 files<br><A class="links" HREF="javascript:history.go(-1)">Go back</a> and do it right!</h2>';
 				$message = "Non Supported File uploaded, my need to be removed from import/up/ folder.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
-				mail_admin($message, 0, 1);
+				mail_users($message, $subject, $type, 0, 1);
 				footer($_SERVER['SCRIPT_FILENAME']);
 				die();
 			}
@@ -59,7 +61,9 @@ switch($func)
 			$uploadfile = $uploadfolder.$rand.'_'.$filename;
 			$filename = str_replace( " ", "%20", $filename);
 			$return  = file($tmp);
+		#	echo "<h1>".$uploadfile."</h1>";
 			$count = count($return);
+		#	echo "<h1>".$count."</h1>";
 			if($count <= 8) 
 			{
 				echo '<br><br><h2>You cannot upload an empty VS1 file, at least scan for a few seconds to import some data. <A HREF="javascript:history.go(-1)"> [Go Back]</A></h2>';
@@ -70,7 +74,7 @@ switch($func)
 			{
 				echo 'Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.<BR>';
 				$message = "Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
-				mail_admin($message, 0, 1);
+				mail_users($message, $subject, $type, 0, 1);
 				
 				footer($_SERVER['SCRIPT_FILENAME']);
 				die();
@@ -113,19 +117,19 @@ switch($func)
 					{
 						echo "<h2>File has been inserted for importing at a scheduled time.</h2>";
 						$message = "File has been inserted for importing at a later time at a scheduled time.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/".$rand."_".$filename."\r\n".$UPATH."/opt/scheduling.php\r\n\r\n-WiFiDB Daemon.";
-						mail_admin($message, 0, 0);
+						mail_users($message, $subject, $type, 0, 0);
 					}else
 					{
 						echo "<h2>There was an error inserting file for scheduled import.</h2>".mysql_error($conn);
 						$message = "New Import Failed!\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
-						mail_admin($message, 0, 1);
+						mail_users($message, $subject, $type, 0, 1);
 					}
 				}else
 				{
 					if($database->import_vs1($uploadfile, $user, $notes, $title, $verbose = 1, $out = "CLI" ))
 					{
 						$message = "New Web based Import completed!\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.";
-						mail_admin($message, 0);
+						mail_users($message, $subject, $type, 0);
 					}
 				}
 			}else
@@ -135,7 +139,7 @@ switch($func)
 				die();
 			}
 			?>
-			<p><a class="links" href="<?php echo $PATH;?>/opt/scheduling.php">Go and check out your new Import</a>. Go on, you know you want to...</p>
+			<p><a class="links" href="<?php echo $UPATH;?>/opt/scheduling.php">Go and check out your new Import</a>. Go on, you know you want to...</p>
 			<?php
 			mysql_select_db($db,$conn);
 

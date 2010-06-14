@@ -5,38 +5,26 @@
 
 function pageheader($title, $output="detailed", $install=0)
 {
-	global $login_check,$host_url;
-	
-	$root		= 	$GLOBALS['root'];
-	$hosturl	= 	$GLOBALS['hosturl'];
-	$conn		=	$GLOBALS['conn'];
-	$db			=	$GLOBALS['db'];
+	global $login_check;
+	include_once($GLOBALS['half_path'].'/lib/database.inc.php');
+	include_once($GLOBALS['half_path'].'/lib/config.inc.php');
 	$head		= 	$GLOBALS['header'];
 	$half_path	=	$GLOBALS['half_path'];
-	$host_url	=	$GLOBALS['UPATH'];
-	
-	include_once($half_path.'/lib/database.inc.php');
-	include_once($half_path.'/lib/security.inc.php');
-	include_once($half_path.'/lib/config.inc.php');
-	
-	#	echo $host_url;
 	if(!$install)
 	{
+		include_once($GLOBALS['half_path'].'/lib/security.inc.php');
 		$sec = new security();
-		
 		$login_check = $sec->login_check();
 		if(is_array($login_check) or $login_check == "No Cookie"){$login_check = 0;}
-	}else
-	{
-		$login_check = 0;
-	}	
+	}else{$login_check = 0;}
 	if($output == "detailed")
 	{
 		check_install_folder();
+		echo '<html><head><title>Wireless DataBase '.$GLOBALS["ver"]["wifidb"].' --> '.$title.'</title>'.$head.'</head>';
 		# START YOUR HTML EDITS HERE #
 		?>
-		<html><head><title>Wireless DataBase <?php echo $GLOBALS['ver']['wifidb'];?> --> <?php echo $title;?></title><?php echo $head; ?></head>
-		<link rel="stylesheet" href="<?php echo $host_url;?>/themes/wifidb/styles.css">
+		
+		<link rel="stylesheet" href="<?php echo $GLOBALS['UPATH'];?>/themes/wifidb/styles.css">
 		<body>
 		<div align="center">
 		<table width="100%" border="0" cellspacing="5" cellpadding="2">
@@ -45,7 +33,7 @@ function pageheader($title, $output="detailed", $install=0)
 					<table>
 					<tr>
 							<td style="width: 215px">
-								<a href="<?php echo $host_url;?>"><img border="0" src="<?php echo $host_url; ?>/img/logo.png"></a>
+								<a href="<?php echo $GLOBALS['UPATH'];?>"><img border="0" src="<?php echo $GLOBALS['UPATH']; ?>/img/logo.png"></a>
 							</td>
 							<td width="100%" align="center">
 								<b>
@@ -63,68 +51,36 @@ function pageheader($title, $output="detailed", $install=0)
 				<td style="background-color: #304D80;width: 15%;vertical-align: top;">
 				<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" /><br>
 				<span class="content_head"><strong><em>[WiFIDB]</em></strong></span><br>
-				<a class="links" href="<?php echo $host_url;?>">Main Page</a><br>
-				<a class="links" href="<?php echo $host_url;?>/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a><br>
-				<a class="links" href="<?php echo $host_url;?>/import/">Import</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php">Files Waiting for Import</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?func=done">Files Already Imported</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/scheduling.php?func=daemon_kml">Daemon Generated KML</a><br>
-				<a class="links" href="<?php echo $host_url;?>/console/">Daemon Console</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/export.php?func=index">Export</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/search.php">Search</a><br>
-				<a class="links" href="<?php echo $host_url;?>/themes/">Themes</a><br>
-				<a class="links" href="<?php echo $host_url;?>/opt/userstats.php?func=allusers">View All Users</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>">Main Page</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/import/">Import</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/opt/scheduling.php">Files Waiting for Import</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/opt/scheduling.php?func=done">Files Already Imported</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/opt/scheduling.php?func=daemon_kml">Daemon Generated KML</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/console/">Daemon Console</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/opt/export.php?func=index">Export</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/opt/search.php">Search</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/themes/">Themes</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/opt/userstats.php?func=allusers">View All Users</a><br>
 				<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=47">Help / Support</a><br>
-				<a class="links" href="<?php echo $host_url;?>/ver.php">WiFiDB Versions</a><br>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/ver.php">WiFiDB Versions</a><br>
 				<br>
 				<span class="content_head"><strong><em>[Mysticache]</em></strong></span><br>
-				<a class="links" href="<?php if($root != '' or $root != '/'){echo $hosturl.$root;}else{echo $hosturl;}?>/caches.php">View shared Caches</a><br>
-				<?php
-				if($login_check)
-				{
-					?>
-					<a class="links" href="<?php if($root != '' or $root != '/'){echo $hosturl.$root;}else{echo $hosturl;}?>/cp/?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=0&to=100">List All My Caches</a>
-					<?php
-				}
-				?>
+				<a class="links" href="<?php echo $GLOBALS['UPATH'];?>/caches.php">View shared Caches</a><br>
+				<!---- User Mysicache Link ---->
+				<?php my_caches("wifidb") ?>
+				<!----------------------------->
 			</td>
 			<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
 			<table width="100%">
 				<tr>
-					<?php
-					if($login_check)
-					{
-						$user_logins_table = $GLOBALS['user_logins_table'];
-						list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
-						$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
-						$result = mysql_query($sql0, $conn);
-						$newArray = mysql_fetch_array($result);
-						$last_login = $newArray['last_login'];
-						?>
-						<td>Welcome, <a class="links" href="<?php echo $host_url;?>/cp/"><?php echo $username;?></a><font size="1"> (Last Login: <?php echo $last_login;?>)</font></td>
-						<td align="right"><a class="links" href="<?php  echo $host_url; ?>/login.php?func=logout_proc">Logout</a></td>
-						<?php
-					}else
-					{
-						$filtered = filter_var($_SERVER['QUERY_STRING'],FILTER_SANITIZE_ENCODED);
-						$SELF = $_SERVER['PHP_SELF'];
-						if($SELF == '/wifidb/login.php')
-						{
-							$SELF = "/$root/";
-							$filtered = '';
-						}
-						if($filtered != '')
-						{$SELF = $SELF.'?'.$filtered;}
-						?>
-						<td></td><td align="right"><a class="links" href="<?php  echo $host_url; ?>/login.php?return=<?php echo $SELF; ?>">Login</a></td>
-						<?php
-					}
-					?>
+					<!-------- WiFiDB Login Bar ------>
+					<?php login_bar("wifidb"); ?>
+					<!-------------------------------->
 				</tr>
 			</table>
 			<p align="center">
 			<br>
-		<!-- KEEP BELOW HERE -->
 		<?php
 	}
 }
@@ -175,15 +131,15 @@ function footer($filename = '', $output = "detailed")
 				$priv_name = $GLOBALS['priv_name'];
 				if($privs >= 1000)
 				{
-					?><a class="links" href="<?php echo $GLOBALS['host_url'];?>/cp/?func=admin_cp">Admin Control Panel</a>  |-|  <?php
+					?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/?func=admin_cp">Admin Control Panel</a>  |-|  <?php
 				}
 				if($privs >= 10)
 				{
-					?><a class="links" href="<?php echo $GLOBALS['host_url'];?>/cp/?func=mod_cp">Moderator Control Panel</a>  |-|  <?php
+					?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/?func=mod_cp">Moderator Control Panel</a>  |-|  <?php
 				}
 				if($privs >= 1)
 				{
-					?><a class="links" href="<?php echo $GLOBALS['host_url'];?>/cp/">User Control Panel</a><?php
+					?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/">User Control Panel</a><?php
 				}
 				?>
 				</b></font>

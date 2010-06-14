@@ -7,11 +7,11 @@ global $ver, $full_path, $half_path, $dim, $theme, $UPATH;;
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.20 Build 1 {pre-release} ",
 			"codename"			=>	"Hyannis",
-			"Last_Core_Edit" 	=> 	"2010-May-10",
+			"Last_Core_Edit" 	=> 	"2010-June-13",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.7.0",
-										"gps_check_array"	=>	"1.2",
+										"check_gps_array"	=>	"1.2",
 										"all_users"			=>	"1.3",
 										"users_lists"		=>	"1.3",
 										"user_ap_list"		=>	"1.3",
@@ -28,10 +28,16 @@ $ver = array(
 										),
 			"Daemon"			=>	array(
 										"daemon_kml"		=>	"1.0",
-										"daemon_imp_exp"	=>	"1.0"
+										"start"				=>	"1.0",	
+										"stop"				=>	"1.0",
+										"getdaemonstats"	=>	"1.1",
+										"getdbdaemonstats"	=>	"1.1",
+										"getperfdaemonstats"	=>	"1.1",
+										"daemon_full_db_exp"	=>	"1.0",
+										"daemon_daily_db_exp"	=>	"1.0"
 										),
 			"Misc"				=>	array(
-										"breadcrumbs"		=>	"1.1",
+										"breadcrumb"		=>	"1.1",
 										"smart_quotes"		=> 	"1.0",
 										"smart"				=> 	"1.0",
 										"Manufactures-list"	=> 	"2.0",
@@ -39,10 +45,13 @@ $ver = array(
 										"make_ssid"			=>	"1.0",
 										"verbosed"			=>	"1.2",
 										"logd"				=>	"1.2",
+										"sql_type_mail_filter" => "1.0",
+										"mail_validation"	=>	"1.0",
 										"mail_users"		=>	"1.0",
-										"IFWC"				=>	"2.0",
 										"dump"				=>	"1.0",
-										"get_set"			=>	"1.0"
+										"get_set"			=>	"1.0",
+										"getTZ"				=>	"1.0",
+										"parseArgs"			=>	"1.0"
 										),
 			"Themes"			=>	array(
 										"pageheader"		=>  "1.2",
@@ -74,7 +83,7 @@ if(!@include('config.inc.php'))
 		}
 	}
 	#	echo $apache_root.'<BR>'.$cwd."<BR>".$_SERVER['SCRIPT_FILENAME'];
-	$server_name = (@$_SERVER['SERVER_NAME']!='' ? $_SERVER['SERVER_NAME'] : $_SERVER['HTTP_HOST']);
+	$server_name = str_replace("http://", "", (@$_SERVER['SERVER_NAME']!='' ? $_SERVER['SERVER_NAME'] : $GLOBALS['hosturl']));
 	$UPATH = 'http://'.$server_name.'/'.$root;
 	#	echo "<BR>".$_SERVER['HTTP_HOST'];
 }
@@ -222,6 +231,10 @@ if(@$GLOBALS['screen_output'] != "CLI")
 
 }
 
+############################################################
+############################################################
+############################################################
+
 function convert($size)
 {
 	$unit=array('B','KB','MB','GB','TB','PB');
@@ -271,6 +284,7 @@ function getTZ($offset = '-5')
 function redirect_page($return = "", $delay = 0, $msg = "no Message", $new_window = 0)
 {
 	if($return == ''){$return = $GLOBALS['UPATH'];}
+	echo $return."<br>";
 	?>
 		<script type="text/javascript">
 			function reload()
@@ -352,7 +366,7 @@ function get_set($table,$column)
 #-------------------------------------------------------------------------------------#
 #--------------------------------DUMP VAR TO HTML -----------------------------#
 #-------------------------------------------------------------------------------------#
-function dump($value,$level=0)
+function dump($value="" , $level=0)
 {
   if ($level==-1)
   {
@@ -480,97 +494,145 @@ function check_install_folder()
 	{
 		echo @$upgrade_wdb;
 	}
-
+	return 1;
 }
 
-
+function sql_type_mail_filter($sql = '', $type = 'none')
+{
+	switch($type)
+	{
+		case "schedule":
+			$sql .= " AND `schedule` = '1'";
+		break;
+		
+		case "import":
+			$sql .= " AND `imports` = '1'";
+		break;
+		
+		case "kmz":
+			$sql .= " AND `kmz` = '1'";
+		break;
+		
+		case "new_users":
+			$sql .= "AND `new_users` = '1'";
+		break;
+		
+		case "statistics":
+			$sql .= " AND `statistics` = '1'";
+		break;
+		
+		case "perfmon":
+			$sql .= " AND `perfmon` = '1'";
+		break;
+		
+		case "announcements":
+			$sql .= " AND `announcements` = '1'";
+		break;
+		
+		case "announce_comment":
+			$sql .= " AND `announce_comment` = '1'";
+		break;
+		
+		case "none":
+			$sql = '';
+		break;
+	}
+	return $sql;
+}
 
 #========================================================================================================================#
 #											mail_users (Emails the admins of the DB about updates)						 #
 #========================================================================================================================#
 
-function mail_users($contents = '', $level = 0, $error_f = 0)
+function mail_users($contents = '', $subject = "WifiDB Notifications", $type = "none", $level = 0, $error_f = 0)
 {
-	if($GLOBALS['wifidb_email_updates'])
+	if($type != 'none' or $type != '')
 	{
-		require_once('config.inc.php');
-		require_once('MAIL5.php');
-		
-		$conn				= 	$GLOBALS['conn'];
-		$db					= 	$GLOBALS['db'];
-		$user_logins_table	=	$GLOBALS['user_logins_table'];
-		$from				=	$GLOBALS['admin_email'];
-		$wifidb_smtp		=	$GLOBALS['wifidb_smtp'];
-		$sender				=	$from;
-		$sender_pass		=	$GLOBALS['wifidb_from_pass'];
-		$to					=	array();
-		$mail				=	new MAIL5();
-		
-		switch($level)
+		if($GLOBALS['wifidb_email_updates'])
 		{
-			case '0':
-				$sql = "SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `admins` = '1' AND `username` NOT LIKE 'admin%'";
-			break;
+			require_once('config.inc.php');
+			require_once('MAIL5.php');
 			
-			case '1':
-				$sql = "SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `devs` = '1' AND `username` NOT LIKE 'admin%'";
-			break;
-			
-			case '2':
-				$sql = "SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `mods` = '1' AND `username` NOT LIKE 'admin%'";
-			break;
-			
-			case '3':
-				$sql = "SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `users` = '1' AND `username` NOT LIKE 'admin%'";
-			break;
-		}
-	#	echo $sql."<BR>";
-		$result = mysql_query($sql, $conn);
-		while($users = mysql_fetch_array($result))
-		{
-	#	echo "To: ".$users['email']."\r\n";
-			if($mail->addbcc($users['email']))
-			{continue;}else{die("Failed to add BCC".$users['email']."\r\n");}
-		}
-
-		if(!$mail->from($from))
-		{die("Failed to add From address\r\n");}
-		if(!$mail->addto($from))
-		{die("Failed to add Initial To address\r\n");}
-		
-	
-		$subject = "WifiDB Automated Updates";
-		if($error_f){$subject .= " ^*^*^*^ ERROR! ^*^*^*^";}
-#	echo "subject: ".$subject."\r\n";
-		if(!$mail->subject($subject))
-		{die("Failed to add subject\r\n");}
-		
-#	echo "Contents: ".$contents."\r\n";
-		if(!$mail->text($contents))
-		{die("Failed to add message\r\n");}
-		
-#	echo "Trying to connect....\r\n";
-		$smtp_conn = $mail->connect($wifidb_smtp, 465, $sender, $sender_pass, 'tls', 10);
-		if ($smtp_conn)
-		{
-#	echo "Successfully connected !\r\n";
-			$smtp_send = $mail->send($smtp_conn);
-			if($smtp_send)
+			$conn				= 	$GLOBALS['conn'];
+			$db					= 	$GLOBALS['db'];
+			$user_logins_table	=	$GLOBALS['user_logins_table'];
+			$from				=	$GLOBALS['admin_email'];
+			$wifidb_smtp		=	$GLOBALS['wifidb_smtp'];
+			$sender				=	$from;
+			$sender_pass		=	$GLOBALS['wifidb_from_pass'];
+			$to					=	array();
+			$mail				=	new MAIL5();
+			$sql				=	"SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `validated` = '0'";
+	#		echo $sql."<BR>";
+			switch($level)
 			{
-			#	echo "Sent!\r\n";
-				return 1;
+				case '0':
+					$sql .= sql_type_mail_filter(" AND `admins` = '1'", $type);
+				break;
+				
+				case '1':
+					$sql .= sql_type_mail_filter(" AND `devs` = '1'", $type);
+				break;
+				
+				case '2':
+					$sql .= sql_type_mail_filter(" AND `mods` = '1'", $type);
+				break;
+				
+				case '3':
+					$sql .= sql_type_mail_filter(" AND `users` = '1'", $type);
+				break;
 			}
-			else
+	#		echo $sql."<BR>";
+			$sql .= " AND `username` NOT LIKE 'admin%'";
+	#		echo $sql."<BR>";
+			$result = mysql_query($sql, $conn);
+			while($users = mysql_fetch_array($result))
+			{
+		#	echo "To: ".$users['email']."\r\n";
+				if($mail->addbcc($users['email']))
+				{continue;}else{die("Failed to add BCC".$users['email']."\r\n");}
+			}
+
+			if(!$mail->from($from))
+			{die("Failed to add From address\r\n");}
+			if(!$mail->addto($from))
+			{die("Failed to add Initial To address\r\n");}
+			
+			if($error_f){$subject .= " ^*^*^*^ ERROR! ^*^*^*^";}
+	#	echo "subject: ".$subject."\r\n";
+			if(!$mail->subject($subject))
+			{die("Failed to add subject\r\n");}
+			
+	#	echo "Contents: ".$contents."\r\n";
+			if(!$mail->text($contents))
+			{die("Failed to add message\r\n");}
+			
+	#	echo "Trying to connect....\r\n";
+			$smtp_conn = $mail->connect($wifidb_smtp, 465, $sender, $sender_pass, 'tls', 10);
+			if ($smtp_conn)
+			{
+	#	echo "Successfully connected !\r\n";
+				$smtp_send = $mail->send($smtp_conn);
+				if($smtp_send)
+				{
+				#	echo "Sent!\r\n";
+					return 1;
+				}
+				else
+				{
+				#	print_r($_RESULT);
+					return 0;
+				}
+			}else
 			{
 			#	print_r($_RESULT);
 				return 0;
 			}
-		}else
-		{
-		#	print_r($_RESULT);
-			return 0;
+			$mail->disconnect();
 		}
-		$mail->disconnect();
+	}else
+	{
+		echo "$"."type var is not set, check your code.<br>\r\n";
 	}
 }
 
@@ -619,7 +681,7 @@ Validation Link: $UPATH/login.php?func=validate_user&validate_code=$validate_cod
 		if($smtp_send)
 		{
 			$insert = "INSERT INTO `$db`.`$validate_table` (`id`, `username`, `code`, `date`) VALUES ('', '$username', '$validate_code', '$date')";
-			echo $insert."<BR>";
+#			echo $insert."<BR>";
 			if(mysql_query($insert, $conn))
 			{
 				return 1;
@@ -640,16 +702,92 @@ Validation Link: $UPATH/login.php?func=validate_user&validate_code=$validate_cod
 }
 
 
+###################################################
+###			My Mysticache link					###
+###												###
+###################################################
+function my_caches($theme = "wifidb", $out = 1)
+{
+	if($GLOBALS['login_check'])
+	{
+		switch($theme)
+		{
+			case "wifidb":
+				$return = '<a class="links" href="'.$GLOBALS["UPATH"].'/cp/?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=0&to=100">List All My Caches</a>';
+			break;
+			
+			case "vistumbler":
+				$return = '<div class="inside_text_bold"><a class="links" href="'.$GLOBALS["UPATH"].'/cp/?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=0&to=100">List All My Caches</a></div>';
+			break;
+		}
+	}
+	if($out)
+	{echo $return;return 1;}
+	else{return $return;}
+}
+
+###################################################
+###				Login bar generator				###
+###												###
+###################################################
+function login_bar($theme = "wifidb", $out = 1)
+{
+	if($GLOBALS['login_check'])
+	{
+		$conn = $GLOBALS['conn'];
+		$db = $GLOBALS['db'];
+		$user_logins_table = $GLOBALS['user_logins_table'];
+		list($cookie_pass_seed, $username) = explode(':', $_COOKIE['WiFiDB_login_yes']);
+		$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+		$result = mysql_query($sql0, $conn);
+		$newArray = mysql_fetch_array($result);
+		$last_login = $newArray['last_login'];
+		switch($theme)
+		{
+			case "wifidb":
+				$return = '<td>Welcome, <a class="links" href="'.$GLOBALS["UPATH"].'/cp/">'.$username.'</a><font size="1"> (Last Login: '.$last_login.')</font></td> <td align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?func=logout_proc">Logout</a></td>';
+			break;
+			
+			case "vistumbler":
+				$return = '<td class="cell_top_mid" style="height: 20px" align="left">Welcome, <a class="links" href="'.$GLOBALS["UPATH"].'/cp/">'.$username.'</a><font size="1"> (Last Logon: '.$last_login.')</font></td><td class="cell_top_mid" style="height: 20px" align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?func=logout_proc">Logout</a></td>';
+			break;
+		}
+	}else
+	{
+		$filtered = filter_var($_SERVER['QUERY_STRING'],FILTER_SANITIZE_ENCODED);
+		$SELF = $_SERVER['PHP_SELF'];
+		if($SELF == $GLOBALS["root"].'/login.php')
+		{
+			$SELF = "/".$GLOBALS["root"];
+			$filtered = '';
+		}
+		if($filtered != '')
+		{$SELF = $SELF.'?'.$filtered;}
+		switch($theme)
+		{
+			case "wifidb":
+				$return = '<td></td><td align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?return='.$SELF.'">Login</a></td>';
+			break;
+			
+			case "vistumbler":
+				$return = '<td class="cell_top_mid" style="height: 20px" align="left"></td><td class="cell_top_mid" style="height: 20px" align="right"><a class="links" href="'.$GLOBALS["UPATH"].'/login.php?return='.$SELF.'">Login</a></td>';
+			break;
+		}
+	}
+	if($out)
+	{echo $return; return 1;}
+	else{return $return;}
+}
 
 
 #========================================================================================================================#
 #											verbose (Echos out a message to the screen or page)			        		 #
 #========================================================================================================================#
 
-function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
+function logd($message = '', $log_interval = 0, $details = "",  $log_level = 0)
 {
 	require('config.inc.php');
-	if($log_level != 0)
+	if(!$log_level)
 	{
 		if($message == ''){echo "Logd was told to write a blank string.\nThis has NOT been logged.\nThis will NOT be allowed!\n"; continue;}
 		$date = date("y-m-d");
@@ -660,7 +798,7 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 		if($log_interval==1)
 		{
 			$cidir = getcwd();
-			$filename = '/CLI/log/wifidbd_log.log';
+			$filename = $GLOBALS['wifidb_tools'].'/log/wifidbd_log.log';
 			if(!is_file($filename))
 			{
 				fopen($filename, "w");
@@ -669,14 +807,14 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 			if($log_level == 2 && $details == 0){$log_level = 1;}
 			if($log_level == 2)
 			{
-				$message = $message."\n==Details==\n".$detail."\n===========\n";
+				$message = $message."\n==Details==\n".var_dump($details)."\n===========\n";
 			}
 			$write_message = fwrite($fileappend, $message);
 			if(!$write_message){die("Could not write message to the file, thats not good...");}
-		}elseif($log_interval==1)
+		}elseif($log_interval==2)
 		{
 			$cidir = getcwd();
-			$filename = '/CLI/log/wifidbd_'.$date.'_log.log';
+			$filename = $GLOBALS['wifidb_tools'].'/log/wifidbd_'.$date.'_log.log';
 			if(!is_file($filename))
 			{
 				fopen($filename, "w");
@@ -685,7 +823,7 @@ function logd($message = '', $log_interval = 0, $details = 0,  $log_level = 0)
 			if($log_level == 2 && $details == 0){$log_level = 1;}
 			if($log_level == 1)
 			{
-				$message = $message."\n==Details==\n".$detail."\n===========\n";
+				$message = $message."\n==Details==\n".var_dump($details)."\n===========\n";
 			}
 			$write_message = fwrite($fileappend, $message);
 			if(!$write_message){die("Could not write message to the file, thats not good...");}
@@ -730,29 +868,6 @@ function verbosed($message = "", $level = 0, $out="CLI", $header = 0)
 			echo "Verbose was told to write a blank string";
 		}
 	}
-}
-
-
-
-
-#========================================================================================================================#
-#											regenerateSession (regens Token for a session)								 #
-#========================================================================================================================#
-
-function session_starter()
-{
-	global $token;
-	session_start();
-	if(!@$_COOKIE['PHPSESSID'])
-	{
-		$token = md5(uniqid(rand(), true));
-		$_SESSION['token'] = $token;
-	}else
-	{
-		$token = $_COOKIE['PHPSESSID'];
-		$_SESSION['token'] = $token;
-	}
-	return $token;
 }
 
 
@@ -822,7 +937,6 @@ function smart_quotes($text="") // Used for SSID Sanatization
 					5=>'"',
 					6=>"'",
 					7=>"$", #
-					8=>"?>",
 					9=>";",
 					10=>"#", #
 					11=>"&", #
@@ -877,7 +991,7 @@ function smart($text="") // Used for GPS
 #							dos_filesize (gives file size for either windows or linux machines)				 			 #
 #========================================================================================================================#
 
-function dos_filesize($fn) 
+function dos_filesize($fn = "") 
 {
 	if(PHP_OS == "WINNT")
 	{
@@ -1000,7 +1114,7 @@ class database
 	#										table_exists (Check to see if a table is in the DB before trying to read from it) #
 	#=========================================================================================================================#
 
-	function table_exists($table, $db)
+	function table_exists($table="", $db="")
 	{ 
 		$tables = mysql_list_tables($db); 
 		while($temp = mysql_fetch_array($tables))
@@ -1020,8 +1134,9 @@ class database
 	#										gen_gps (generate GPS cords from a VS1 file to Array)				 	#
 	#=========================================================================================================================#
 
-	function gen_gps($retexp = array(), $gpscount = 0)
+	function gen_gps($retexp = array())
 	{
+		$gpscount = 0;
 		$ret_len = count($retexp);
 		switch ($ret_len)
 		{
@@ -1046,13 +1161,13 @@ class database
 				$gdata = array(
 											"lat"=>$ret_lat,
 											"long"=>$ret_long,
-											"sats"=>$ret_sats,
-											"hdp"=>'0.0',
-											"alt"=>'0.0',
-											"geo"=>'-0.0',
-											"kmh"=>'0.0',
-											"mph"=>'0.0',
-											"track"=>'0.0',
+											"sats"=>$ret_sats+0,
+											"hdp"=> '0.0',
+											"alt"=> '0.0',
+											"geo"=> '-0.0',
+											"kmh"=> '0.0',
+											"mph"=> '0.0',
+											"track"=> '0.0',
 											"date"=>$gpsdate,
 											"time"=>$ret_time
 											);
@@ -1504,7 +1619,6 @@ class database
 		$user_n	 = 0;
 		$N		 = 0;
 		$n		 = 0;
-		$gpscount= 0;
 		$co		 = 0;
 		$cco	 = 0;
 		$updated = 0;
@@ -1564,7 +1678,7 @@ class database
 			
 			if ($ret_len == 12 or $ret_len == 6)
 			{
-				list($gdata[$retexp[0]], $gpscount) = database::gen_gps($retexp, $gpscount);
+				list($gdata[$retexp[0]], $gpscount) = database::gen_gps($retexp);
 			}elseif($ret_len == 13)
 			{
 					if(!isset($SETFLAGTEST))
@@ -4772,12 +4886,12 @@ class database
 					$file_data .= "</trkseg>\r\n</trk></gpx>";
 				}else
 				{
-					echo "Failed to write KML File, Check the permissions on the wifidb folder, and make sure that Apache (or what ever HTTP server you are using) has permissions to write";
+					echo "Failed to write GPX File, Check the permissions on the wifidb folder, and make sure that Apache (or the HTTP server you are using) has permissions to write";
 				}
 				$fileappend = fopen($filename, "a");
 				fwrite($fileappend, $file_data);
 				fclose( $fileappend );
-				echo '<tr class="style4"><td style="border-style: solid; border-width: 1px">Your Google Earth KML file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
+				echo '<tr class="style4"><td style="border-style: solid; border-width: 1px">Your GPX file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td></tr></table>';
 				
 				mysql_close($conn);
 				$end = microtime(true);
@@ -5155,6 +5269,7 @@ class daemon
 		$gps_ext = $GLOBALS['gps_ext'];
 		$root = $GLOBALS['root'];
 		$hosturl = $GLOBALS['hosturl'];
+	#	$UPATH = $GLOBALS['UPATH'];
 		$open_loc 	=	$GLOBALS['open_loc'];
 		$WEP_loc 	=	$GLOBALS['WEP_loc'];
 		$WPA_loc 	=	$GLOBALS['WPA_loc'];
@@ -5288,7 +5403,7 @@ class daemon
 		copy($filename, $filename_copy);
 
 		######## The Network Link KML file
-		$daemon_KMZ_folder = $GLOBALS['hosturl'].$GLOBALS['root']."/out/daemon/";
+		$daemon_KMZ_folder = $GLOBALS['hosturl'].'/'.$GLOBALS['root']."/out/daemon/";
 		
 		$Network_link_KML = $daemon_KMZ_folder."update.kml";
 		
@@ -5356,7 +5471,7 @@ class daemon
 
 
 
-	function daemon_full_db_exp($temp_kml=NULL, $temp_kml_label=NULL, $verbose = 0)
+	function daemon_full_db_exp($temp_kml="", $temp_kml_label="", $verbose = 0)
 	{
 		require_once "config.inc.php";
 		require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
@@ -5523,9 +5638,9 @@ class daemon
 			unset($gps_table_first["long"]);
 			if($verbose)
 			{
-				echo chr(27)."[H".chr(27)."[2J";
+				#echo chr(27)."[H".chr(27)."[2J";
 				$memUse = convert(memory_get_usage());
-				echo "ID: $id \nMemory Usage: $memUse";
+				echo "ID: $id \r\nMemory Usage: $memUse\r\n";
 			}
 		}
 		if($verbose){echo"\n";}
@@ -5835,7 +5950,7 @@ class daemon
 
 
 ####################
-	function getdaemonstats()
+	function getdaemonstats( $verbose = 1 )
 	{
 		$return =0;
 		$WFDBD_PID = $GLOBALS['pid_file_loc'].'imp_expd.pid';
@@ -5850,6 +5965,7 @@ class daemon
 				exec('ps vp '.$pid_open[0] , $output, $sta);
 				if(isset($output[1]))
 				{
+					if($verbose){
 					$start = trim($output[1], " ");
 					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
 					$mem = $match[0][0];
@@ -5879,15 +5995,16 @@ class daemon
 						<td><?php echo $CMD;?></td>
 					</tr>
 					<?php
+					}
 					return 1;
 				}else
 				{
-					?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php
+					if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php}
 					return 0;
 				}
 			}else
 			{
-				?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php
+				if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php}
 				return 0;
 			}
 		}elseif( $os[0] == 'W')
@@ -5899,32 +6016,40 @@ class daemon
 				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
 				if(isset($output[2]))
 				{
+					if($verbose){
 					?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
 					$ps_stats = explode("," , $output[2]);
 					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+					}
 					return 1;
 				}else
 				{
+					if($verbose){
 					?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr>
 					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Daemon is not running!</td><?php
+					}
 					return 0;
 				}
 			}else
 			{
+				if($verbose){
 				?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr>
 				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Daemon is not running!</td><?php
+				}
 				return 0;
 			}
 		}else
 		{
+			if($verbose){
 			?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Daemon</th></tr>
 			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Daemon is not running!</td><?php
+			}
 			return 0;
 		}
 	}
 	
 ####################
-	function getdbdaemonstats()
+	function getdbdaemonstats( $verbose = 1 )
 	{
 		$return =0;
 		$WFDBD_PID = $GLOBALS['pid_file_loc'].'dbstatsd.pid';
@@ -5938,6 +6063,7 @@ class daemon
 				exec('ps vp '.$pid_open[0] , $output, $sta);
 				if(isset($output[1]))
 				{
+					if($verbose){
 					$start = trim($output[1], " ");
 					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
 					$mem = $match[0][0];
@@ -5966,14 +6092,17 @@ class daemon
 						<td><?php echo $CMD;?></td>
 					</tr>
 					<?php
-					$return =1;
+					}
+					return = 1;
 				}else
 				{
-					?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php
+					if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php}
+					return = 0;
 				}
 			}else
 			{
-				?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php
+				if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php}
+				return = 0;
 			}
 		}elseif( $os[0] == 'W')
 		{
@@ -5982,33 +6111,39 @@ class daemon
 			{
 				$pid_open = file($WFDBD_PID);
 				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
-				$return =1;
 				if(isset($output[2]))
 				{
+					if($verbose){
 					?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
 					$ps_stats = explode("," , $output[2]);
 					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+					}
+					return 1;
 				}else
 				{
+					if($verbose){
 					?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
 					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php
+					}
+					return = 0;
 				}
 			}else
 			{
-				?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
-				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php
+				if($verbose){?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
+				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php}
+				return = 0;
 			}
 		}else
 		{
-			?><tr class="style4"><th colspan="4">Unkown OS Based Database Statistics Daemon</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Database Statistics Daemon is not running!</td><?php
+			if($verbose){?><tr class="style4"><th colspan="4">Unkown OS Based Database Statistics Daemon</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Database Statistics Daemon is not running!</td><?php}
+			return = 0;
 		}
-		return $return;
 	}
 
 	
 ####################
-	function getperfdaemonstats()
+	function getperfdaemonstats( $verbose = 1)
 	{
 		$return =0;
 		$WFDBD_PID = $GLOBALS['pid_file_loc'].'daemonperfd.pid';
@@ -6022,6 +6157,7 @@ class daemon
 				exec('ps vp '.$pid_open[0] , $output, $sta);
 				if(isset($output[1]))
 				{
+					if($verbose){
 					$start = trim($output[1], " ");
 					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
 					$mem = $match[0][0];
@@ -6051,13 +6187,17 @@ class daemon
 						<td><?php echo $CMD;?></td>
 					</tr>
 					<?php
+					}
+					return 1;
 				}else
 				{
-					?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php
+					if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php}
+					return 0;
 				}
 			}else
 			{
-				?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php
+				if($verbose){?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php}
+				return 0;
 			}
 		}elseif( $os[0] == 'W')
 		{
@@ -6068,26 +6208,34 @@ class daemon
 				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
 				if(isset($output[2]))
 				{
+					if($verbose){
 					?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
 					$ps_stats = explode("," , $output[2]);
 					$return =1;
 					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
+					}
+					return 1;
 				}else
 				{
+					if($verbose){
 					?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr>
 					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Performance Monitor is not running!</td><?php
+					}
+					return 0;
 				}
 			}else
 			{
-				?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr>
+				if($verbose){?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr>
 				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Performance Monitor is not running!</td><?php
+				}
+				return 0;
 			}
 		}else
 		{
-			?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Performance Monitor</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Performance Monitor is not running!</td><?php
+			if($verbose){?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Performance Monitor</th></tr>
+			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Performance Monitor is not running!</td><?php}
+			return 0;
 		}
-		return $return;
 	}
 #########################################
 

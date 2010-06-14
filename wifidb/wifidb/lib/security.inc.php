@@ -260,9 +260,11 @@ class security
 	function create_user($username="", $password="", $email="local@localhost.local", $user_array=array(0,0,0,1), $seed="")
 	{
 		include('config.inc.php');
-		$user_logins_table = $GLOBALS['user_logins_table'];
-		$db = $GLOBALS['db'];
 		$conn = $GLOBALS['conn'];
+		$db = $GLOBALS['db'];
+		$user_logins_table = $GLOBALS['user_logins_table'];
+		$subject = "New WiFiDB User ";
+		$type = "new_users";
 		$date = date("Y-m-d G:i:s");
 		
 		$admin = $user_array[0];
@@ -315,18 +317,22 @@ class security
 							) ENGINE=INNODB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0";
 				if(mysql_query($create_user_cache, $conn))
 				{
+					mail_users("New user has been created!\r\nUsername: $username\r\nDate: $date\r\nLink to Users' info: ".$UPATH."/opt/userstats.php?func=alluserlists&user=$username", $subject, $type, 0, 0);
 					return 1;
 				}else
 				{
+					mail_users("Failed to create new user statistics table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n".mysql_error($conn), $subject, $type, 1, 1);
 					return array("create_wpt", mysql_error($conn));
 				}
 			}else
 			{
+				mail_users("Failed to create new user Geocache table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n".mysql_error($conn), $subject, $type, 1, 1);
 				return array("create_wpt", mysql_error($conn));
 			}
 		}
 		else
 		{
+			mail_users("Failed to create new user. Duplicate username or email already exists in database. ($date)\r\n Username: $username\r\n Email: $email\r\n MySQL Error:\r\n".mysql_error($conn), $subject, $type, 1, 1);
 			return array("dup_u", mysql_error($conn));
 		}
 	}

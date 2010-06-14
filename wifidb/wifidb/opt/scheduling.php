@@ -61,7 +61,7 @@ if(is_string($func))
 					echo $newArray['id'];
 					?>
 					</td><td align="center">
-					<a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $newArray["user_row"];?>"><?php echo $newArray['file'];?></a>
+					<a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $newArray["user_row"];?>"><?php echo html_entity_decode($newArray['file']);?></a>
 					</td><td align="center">
 					<?php
 					echo $newArray['date'];
@@ -324,7 +324,7 @@ if(is_string($func))
 			?>
 			<br>
 			<table border="1" width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr><?php
-			$sql = "SELECT * FROM `$db`.`files_tmp` ORDER BY `id` ASC LIMIT 0, 10";
+			$sql = "SELECT * FROM `$db`.`files_tmp` ORDER BY `id`";
 			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 			if($total_rows === 0)
 			{
@@ -351,7 +351,7 @@ if(is_string($func))
 					?>
 					</td><td align="center">
 					<?php
-					echo $newArray['file'];
+					echo html_entity_decode($newArray['file']);
 					?>
 					</td><td align="center">
 					<?php

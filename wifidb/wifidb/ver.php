@@ -6,7 +6,6 @@ pageheader("Version Page");
 <font face="Courier New">
 		<div align="left">
 		<p align="center"><font size="7"><b>WiFiDB Version History</b></font></p>
-		
 		<table border="0" cellpadding="4" width="100%" border="2" id="details">
 			<tr class="dark">
 				<td>Project Name...</td><td><b>WiFiDB <?php echo $ver['wifidb'];?></b></td>
@@ -38,7 +37,7 @@ pageheader("Version Page");
 					<LI>Added XML Support. </LI>
 					<LI>Fixed a bug with GPS conversions. If one of the Cords has only 2 digits before the decimal the geo-cord was converted wrong. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=48&t=478">KB478</a></LI>
 					<LI>Fixed in Index and Import page. (This is only ever seen on my domains) Apparently I didn't know how to spell "Environment". </LI>
-					<LI>Changed the name of the User Imports lists table from `users` to `users_imports`. (I was getting confused with the other new user’s tables.)</LI>
+					<LI>Changed the name of the User Imports lists table from `users` to `users_imports`. (I was getting confused with the other new user's tables.)</LI>
 					<LI>Added Administrator Panel. More info: <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=475">KB475</a></LI>
 						<UL>
 							<LI>Overview</LI>
@@ -65,20 +64,19 @@ pageheader("Version Page");
 							</UL>
 							<LI>System</LI>
 							<UL>
-								<LI>Daemon Control *WIP*</LI>
-								<LI>Edit daemon configuration</LI>
+								<LI>Edit Daemon configuration</LI>
 								<LI>Edit Front end configuration</LI>
-								<LI>Check for Updates *WIP*</LI>
 							</UL>
 						</UL>
-					<LI>Fixed, Forgot to add the '@' before $lat_exp[1] on line 5583 in database.inc.php. This was causing an unknown variable warning error. </LI>
+					<LI>Fixed, Forgot to add the '@' before $lat_exp[1] on line 5583 in database.inc.php. This was causing an unknown variable warning. </LI>
 					<LI>Fixed, There was a problem with importing SSID's that have backslashes (\). This would then parse to read from MySQL and wouldn't find the table. <a class="links" href="http://forum.techidiots.net/forum/viewtopic.php?f=11&t=511">KB511</a></LI> 
 					<LI>Changed the Install and Upgrade scripts, cleaned up and improved the code layout a little more. </LI>
 					<LI>Added alternating colors to the rows in most if not all tables. This is based per-theme with the .dark, .light, .sub_head, .style4[ha,td] in themes/[theme]/sytles.css</LI>
-					<LI>Added mail_users() function, So Administrators and other users can be updated with new imports and other updates. </LI>
-					<UL>Added another Daemon called 'geonamed.php'
-						<LI>Geonaming of Country and Administrative Names of Access Points with GPS. </LI>
-						<LI><a href="http://www.geonames.org/" target="_blank" >GeoNames.org</a></LI>
+					<LI>Changed mail_admin() function to `mail_users(), So Administrators and other users can be updated with new imports and other updates. Based off of <a class="links" href="http://www.XpertMailer.com" target="_blank">XpertMailer</a></LI>
+					<LI>Added another Daemon called 'geonamed.php'</LI>
+						<UL><LI>Geonaming of Country and Administrative Names of Access Points with GPS. </LI>
+						<LI>Data gathered from this page: http://ws.geonames.org/countrySubdivision?lat=43.5762033&lng=7.02199666</LI>
+						<LI><a class="links" href="http://www.geonames.org/" target="_blank" >GeoNames.org</a></LI></UL>
 					</UL>
 				</OL>
 			</td></tr>
