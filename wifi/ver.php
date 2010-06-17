@@ -182,7 +182,7 @@ urchinTracker();
 		Ver 2.0.5 (2010-June-13)</td>
 		<td width="285" height="23" style="border-style: solid; border-width: 1px">
 		Phillip Ferland</td>
-		<td height="23" style="border-style: solid; border-width: 1px">There was an issue with the background color nopt being set correctly along with the grid line color.
+		<td height="23" style="border-style: solid; border-width: 1px">There was an issue with the background color not being set correctly along with the grid line color.
     </tr>
 	 </table>
 <br><br>
