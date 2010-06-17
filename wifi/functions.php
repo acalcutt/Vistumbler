@@ -170,7 +170,6 @@ function imagegrid($image, $w, $h, $s, $color)
 
 	function wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $BTx, $OTx, $FA, $LU, $NT, $label, $sig, $date, $linec='rand', $text='rand', $bgc='rand')
 	{
-		echo $linec."<br>".$text."<br>".$bgc."<br>";
 		$p=460;
 		$I=0;
 
