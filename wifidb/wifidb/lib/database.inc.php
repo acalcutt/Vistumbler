@@ -4,6 +4,7 @@
 #		error_reporting(E_WARNING);
 #		error_reporting(E_ERROR);
 global $ver, $full_path, $half_path, $dim, $theme, $UPATH;;
+$dim = DIRECTORY_SEPARATOR;
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.20 Build 1 {pre-release} ",
 			"codename"			=>	"Hyannis",
@@ -59,8 +60,6 @@ $ver = array(
 										),
 			);
 			
-			
-
 
 #-------------------------------------------------------------------------------------#
 #----------------------------------  Get/Set values  ---------------------------------#
@@ -76,18 +75,22 @@ if(!@include('config.inc.php'))
 	if(!@mysql_query($sql, $conn))
 	{
 		$cwd = getcwd().'/';
-		echo $cwd."<BR>";
-		echo $GLOBALS['wifidb_install'].'/install/upgrade/<BR>';
-		if($cwd != $GLOBALS['wifidb_install'].'/install/upgrade/')
+		$gen_cwd = $_SERVER['DOCUMENT_ROOT'].$root.'/install/upgrade/';
+		echo $gen_cwd."<BR>".$cwd."<BR>";
+		if($cwd != $gen_cwd)
 		{
 			echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="'.$PATH.'install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
 			die();
 		}
 	}
-	#	echo $apache_root.'<BR>'.$cwd."<BR>".$_SERVER['SCRIPT_FILENAME'];
 	$server_name = str_replace("http://", "", (@$_SERVER['SERVER_NAME']!='' ? $_SERVER['SERVER_NAME'] : $GLOBALS['hosturl']));
-	$UPATH = 'http://'.$server_name.'/'.$root;
-	#	echo "<BR>".$_SERVER['HTTP_HOST'];
+	if($GLOBALS['root'] == '' or $GLOBALS['root'] == '/')
+	{
+		$UPATH = 'http://'.$server_name;
+	}else
+	{
+		$UPATH = 'http://'.$server_name.'/'.$root;
+	}
 }
 
 $path = getcwd();
@@ -612,7 +615,7 @@ function mail_users($contents = '', $subject = "WifiDB Notifications", $type = "
 				break;
 			}
 	#		echo $sql."<BR>";
-			$sql .= " AND `username` NOT LIKE 'admin%'";
+	#		$sql .= " AND `username` NOT LIKE 'admin%'";
 	#		echo $sql."<BR>";
 			$result = mysql_query($sql, $conn);
 			while($users = mysql_fetch_array($result))
@@ -737,6 +740,7 @@ Validation Link: $UPATH/login.php?func=validate_user&validate_code=$validate_cod
 ###################################################
 function my_caches($theme = "wifidb", $out = 1)
 {
+	$return = '';
 	if($GLOBALS['login_check'])
 	{
 		switch($theme)
@@ -751,7 +755,7 @@ function my_caches($theme = "wifidb", $out = 1)
 		}
 	}
 	if($out)
-	{echo $return;return 1;}
+	{echo $return; return 1;}
 	else{return $return;}
 }
 
@@ -1772,6 +1776,7 @@ class database
 					if($out=="CLI")
 					{
 						$this_of_this = $FILENUM." / ".$count1;
+						$ssids = addslashes($ssids);
 						$sqlup = "UPDATE `files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `file` = '$file1';";
 						if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 						{
@@ -3385,79 +3390,89 @@ class database
 			$total_aps[] = $pts_count;
 		}
 		$total = 0;
-		foreach($total_aps as $totals)
+		if(count(@$total_aps))
 		{
-			$total += $totals;
-		}
-		?>
-		<table width="90%" border="1" align="center">
-		<tr class="style4">
-			<th colspan="4">Stats for : <?php echo $username;?></th>
-		</tr>
-		<tr class="sub_head">
-			<th>ID</th><th>Total APs</th><th>First Import</th><th>Last Import</th>
-		</tr>
-		<tr class="dark">
-			<td><?php echo $user_ID;?></td><td><a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $username?>"><?php echo $total;?></a></td><td><?php echo $first_import_date;?></td><td><?php echo $last_import_date;?></td>
-		</tr>
-		</table>
-		<br>
-
-		<table width="90%" border="1" align="center">
-		<tr class="style4">
-			<th colspan="4">Last Import Details</th>
-		</tr>
-		<tr class="sub_head">
-			<th>ID</th><th colspan="3">Title</th>
-		</tr>
-		<tr class="dark">
-			<td align="center"><?php echo $last_import_id;?></td><td colspan="4" align="center"><a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $last_import_id;?>"><?php echo $last_import_title;?></a></td>
-		</tr>
-		<tr class="sub_head">
-			<th colspan="2">Date</th><th>Total APs</th><th>Total GPS</th>
-		</tr>
-		<tr class="dark">
-			<td colspan="2" align="center"><?php echo $last_import_date;?></td><td align="center"><?php echo $user_aps; ?></td><td align="center"><?php echo $user_gps;?></td>
-		</tr>
-		</table>
-		<br>
-		
-		<table width="90%" border="1" align="center">
-		<tr class="style4">
-			<th colspan="4">All Previous Imports</th>
-		</tr>
-		<tr class="sub_head">
-			<th>ID</th><th>Title</th><th>Total APs</th><th>Date</th>
-		</tr>
-		
-		<?php
-		$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' AND `id` != '$last_import_id' ORDER BY `id` DESC";
-		$other_imports = mysql_query($sql, $conn) or die(mysql_error($conn));
-		$other_rows = mysql_num_rows($other_imports);
-		if(@$others_rows != "0")
-		{
-			$flip = 0;
-			while($imports = mysql_fetch_array($other_imports))
+			foreach($total_aps as $totals)
 			{
-				if($imports['points'] == ""){continue;}
-				if($flip){$style = "dark";$flip=0;}else{$style="light";$flip=1;}
-				$import_id = $imports['id'];
-				$import_title = $imports['title'];
-				$import_date = $imports['date'];
-				$import_ap = $imports['aps'];
+				$total += $totals;
+			}
+			?>
+			<table width="90%" border="1" align="center">
+			<tr class="style4">
+				<th colspan="4">Stats for : <?php echo $username;?></th>
+			</tr>
+			<tr class="sub_head">
+				<th>ID</th><th>Total APs</th><th>First Import</th><th>Last Import</th>
+			</tr>
+			<tr class="dark">
+				<td><?php echo $user_ID;?></td><td><a class="links" href="../opt/userstats.php?func=allap&user=<?php echo $username?>"><?php echo $total;?></a></td><td><?php echo $first_import_date;?></td><td><?php echo $last_import_date;?></td>
+			</tr>
+			</table>
+			<br>
+
+			<table width="90%" border="1" align="center">
+			<tr class="style4">
+				<th colspan="4">Last Import Details</th>
+			</tr>
+			<tr class="sub_head">
+				<th>ID</th><th colspan="3">Title</th>
+			</tr>
+			<tr class="dark">
+				<td align="center"><?php echo $last_import_id;?></td><td colspan="4" align="center"><a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $last_import_id;?>"><?php echo $last_import_title;?></a></td>
+			</tr>
+			<tr class="sub_head">
+				<th colspan="2">Date</th><th>Total APs</th><th>Total GPS</th>
+			</tr>
+			<tr class="dark">
+				<td colspan="2" align="center"><?php echo $last_import_date;?></td><td align="center"><?php echo $user_aps; ?></td><td align="center"><?php echo $user_gps;?></td>
+			</tr>
+			</table>
+			<br>
+			
+			<table width="90%" border="1" align="center">
+			<tr class="style4">
+				<th colspan="4">All Previous Imports</th>
+			</tr>
+			<tr class="sub_head">
+				<th>ID</th><th>Title</th><th>Total APs</th><th>Date</th>
+			</tr>
+			
+			<?php
+			$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' AND `id` != '$last_import_id' ORDER BY `id` DESC";
+			$other_imports = mysql_query($sql, $conn) or die(mysql_error($conn));
+			$other_rows = mysql_num_rows($other_imports);
+			if(@$others_rows != "0")
+			{
+				$flip = 0;
+				while($imports = mysql_fetch_array($other_imports))
+				{
+					if($imports['points'] == ""){continue;}
+					if($flip){$style = "dark";$flip=0;}else{$style="light";$flip=1;}
+					$import_id = $imports['id'];
+					$import_title = $imports['title'];
+					$import_date = $imports['date'];
+					$import_ap = $imports['aps'];
+					?>
+					<tr class="<?php echo $style; ?>"><td><?php echo $import_id;?></td><td><a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $import_id;?>"><?php echo $import_title;?></a></td><td><?php echo $import_ap;?></td><td><?php echo $import_date;?></td></tr>
+					<?php
+				}
+			}else
+			{
 				?>
-				<tr class="<?php echo $style; ?>"><td><?php echo $import_id;?></td><td><a class="links" href="../opt/userstats.php?func=useraplist&row=<?php echo $import_id;?>"><?php echo $import_title;?></a></td><td><?php echo $import_ap;?></td><td><?php echo $import_date;?></td></tr>
+					<tr class="light"><td colspan="4" align="center">There are no other Imports. Go get some.</td></tr>
 				<?php
 			}
+			?>
+			</table>
+			<?php
 		}else
 		{
 			?>
-				<tr class="light"><td colspan="4" align="center">There are no other Imports. Go get some.</td></tr>
+			<table width="90%" border="1" align="center">
+				<tr class="light"><td colspan="4" align="center">There are no Imports for this user. Make them go get some.</td></tr>
+			</table>
 			<?php
 		}
-		?>
-		</table>
-		<?php
 	}
 	
 	#========================================================================================================================#
@@ -5671,8 +5686,8 @@ class daemon
 			if($verbose)
 			{
 				#echo chr(27)."[H".chr(27)."[2J";
-				$memUse = convert(memory_get_usage());
-				echo "ID: $id \r\nMemory Usage: $memUse\r\n";
+				#$memUse = convert(memory_get_usage());
+				echo "ID: $id \r\n";#Memory Usage: $memUse\r\n";
 			}
 		}
 		if($verbose){echo"\n";}

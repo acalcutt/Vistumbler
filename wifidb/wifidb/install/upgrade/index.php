@@ -9,7 +9,7 @@ document.forms['WiFiDB_patch'].elements['httpdgrp'].disabled =! document.forms['
 <?php
 global $screen_output;
 $screen_output = 'CLI';
-#include('../../lib/database.inc.php');
+include('../../lib/config.inc.php');
 ?>
 <title>Wireless DataBase *Alpha* --> Upgrade Page</title>
 <link rel="stylesheet" href="../../themes/wifidb/styles.css">
@@ -82,6 +82,9 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
   <tr>
     <td>Sending Password</font></td>
     <td><input name="wdb_from_pass" type=PASSWORD></td></tr>
+  <tr>
+    <td>SMTP Server</font></td>
+    <td><input name="wdb_smtp"></td></tr>
   <tr>
    <td>WiFi DB name <font size="1">(Default `wifi` )</font></td>
     <td><input name="wifi"></td></tr>

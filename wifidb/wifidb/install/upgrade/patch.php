@@ -4,15 +4,14 @@ pageheader("Upgrade Page", "detailed", 1);
 
 include($half_path.'/lib/config.inc.php');
 ?>
-
-<link rel="stylesheet" href="../../themes/wifidb/styles.css">
 <h3>If one of the steps shows "Duplicate column name '***'," you can ignore this error.</h3>
 <table border="1">
-<tr class="style4"><TH colspan="2">Upgrade DB for all 0.16 builds <b>--></b> 0.20 Build 1</TH>
+<tr class="style4"><TH colspan="2">Upgrade DB for all versions <b>--></b> 0.20 Build 1</TH>
 <tr class="style4"><th colspan="2">Upgrade Database Tables</th></tr>
 <tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
 
 <?php
+global $wifidb_smtp;
 $ENG = "InnoDB";
 $date = date("Y-m-d");
 
@@ -29,19 +28,13 @@ $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
 $wifidb_email_updates	=	addslashes(strip_tags($_POST['wdb_email_updates']));
 $wifidb_from			=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
 $wifidb_from_pass		=	addslashes(strip_tags($_POST['wdb_from_pass']));
+$wifidb_smtp			=	addslashes(strip_tags($_POST['wdb_smtp']));
 
 if(!@isset($timeout)){$timeout		=   "(86400 * 365)";}
 
 if($hosturl == '')
 {
 	$hosturl = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
-}else
-{
-	$count = count($hosturl)-1;
-	if($hosturl[$count] != '/')
-	{
-		$hosturl = $hosturl.'/';
-	}
 }
 
 if($sqlhost == '')
@@ -203,12 +196,12 @@ else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Create tmp Files table `$wifi`.`files_tmp`;<br>".mysql_error($conn)."</td></tr>\r\n";
 }
 ####################
-$sql1 = "CREATE TABLE `wifi`.`validate_table` (
+$sql1 = "CREATE TABLE `$wifi`.`validate_table` (
 	`id` INT( 255 ) NOT NULL AUTO_INCREMENT,
 	`username` VARCHAR( 255 ) NOT NULL ,
 	`code` VARCHAR( 64 ) NOT NULL ,
 	`date` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-	UNIQUE (`username`)
+	UNIQUE (`username`),
 	INDEX ( `id` )
 	) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $insert = mysql_query($sql1, $conn);
@@ -228,7 +221,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$wtable` to
 }
 
 
-$alter_sql = "ALTER TABLE `wifi0` 
+$alter_sql = "ALTER TABLE `$wifi`.`wifi0` 
 ADD `countrycode` VARCHAR( 5 ) NOT NULL ,
 ADD `countryname` VARCHAR( 64 ) NOT NULL ,
 ADD `admincode` VARCHAR( 5 ) NOT NULL ,
@@ -236,7 +229,7 @@ ADD `adminname` VARCHAR( 64 ) NOT NULL ,
 ADD `iso3166-2` VARCHAR( 3 ) NOT NULL ,
 ADD `lat` VARCHAR( 32 ) NOT NULL DEFAULT 'N 0.0000' ,
 ADD `long` VARCHAR( 32 ) NOT NULL DEFAULT 'E 0.0000' ";
-$alter = mysql_query($alter_sql, $conn) or die(mysql_error());
+$alter = mysql_query($alter_sql, $conn);
 if($alter)
 {echo "<tr class=\"good\"><td>Success..........</td><td>To alter <b>`$wifi`</b>.`wtable` to add location filter data for KML's</td></tr>\r\n";}
 else{
@@ -384,14 +377,6 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files_tmp
 
 
 ################################
-$sql1 =  "ALTER TABLE `$wifi`.`settings` CHANGE `size` `size` VARCHAR( 255 ), CHARSET=utf8";
-$insert = mysql_query($sql1, $conn);
-if($insert)
-{echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );</td></tr>\r\n";}
-else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>\r\n";
-}
-
 $sql1 =  "ALTER TABLE `$wifi`.`settings` CHANGE `size` `size` VARCHAR( 255 ), CHARSET=utf8";
 $insert = mysql_query($sql1, $conn);
 if($insert)
@@ -555,15 +540,15 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   `last_login` datetime NOT NULL,
   `last_active` datetime NOT NULL,
   `email` varchar(255) NOT NULL,
-  `schedule` TINYINT( 1 ) NOT NULL,
-  `imports` TINYINT( 1 ) NOT NULL,
-  `kmz` TINYINT( 1 ) NOT NULL ,
-  `new_users` TINYINT( 1 ) NOT NULL ,
-  `statistics` TINYINT( 1 ) NOT NULL ,
-  `announcements` TINYINT( 1 ) NOT NULL ,
-  `announce_comment` TINYINT( 1 ) NOT NULL,
-  `geonamed` TINYINT( 1 ) NOT NULL,
-  `pub_geocache` TINYINT( 1 ) NOT NULL,
+  `schedule` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `imports` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `kmz` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `new_users` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `statistics` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `announcements` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `announce_comment` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `geonamed` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `pub_geocache` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `h_email` tinyint(1) NOT NULL,
   `join_date` datetime NOT NULL,
   `friends` text NOT NULL,
@@ -619,7 +604,7 @@ $CR_CF_FL_Re = fwrite($fileappend, "<?php
 #COOKIE GLOBALS
 global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
 #SQL GLOBALS
-global $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
+global $"."wifidb_install, $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
 #MISC GLOBALS
 global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from,$"."wifidb_from_pass;
 
@@ -628,7 +613,8 @@ $"."lastedit	=	'$date';
 #----------General Settings------------#
 $"."bypass_check	=	0;
 $"."wifidb_tools	=	'$toolsdir';
-$"."timezn			=	'$Local_tz';
+$"."wifidb_install	=	'".$_SERVER['DOCUMENT_ROOT']."';
+$"."timezn			=	'UTC';
 $"."root			=	'$root';
 $"."hosturl		=	'$hosturl';
 $"."dim			=	DIRECTORY_SEPARATOR;
@@ -637,7 +623,7 @@ $"."config_fails	=	3;
 $"."login_seed		=	'$activatecode';
 $"."wifidb_from	=	'$wifidb_from';
 $"."wifidb_from_pass	=	'$wifidb_from_pass';
-$"."wifidb_smtp		=	'smtp.gmail.com';\r\n\r\n");
+$"."wifidb_smtp		=	'$wifidb_smtp';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Global variables and general variables values.</td></tr>";}
@@ -772,7 +758,7 @@ fclose($filewrite);
 	#========================================================================================================================#
 require_once("../../lib/security.inc.php");
 $sec = new security();
-$create = $sec->create_user('Admin', $password, $email, $user_array=array(1,0,0,1), $activatecode);
+$create = $sec->create_user('Admin', $password, $email, $user_array=array(1,0,0,1), $activatecode, 0);
 switch($create)
 {
 	case 1:
@@ -793,64 +779,11 @@ switch($create)
 		}
 	break;
 }
-
-echo "</table>";
-echo "<h2>Install is Finished, if all was Successfull you may now remove the Install Folder</h2>";
-$timezn = 'Etc/GMT+5';
-date_default_timezone_set($timezn);
-$filename = $_SERVER['SCRIPT_FILENAME'];
-$file_ex = explode("/", $filename);
-$count = count($file_ex);
-$file = $file_ex[($count)-1];
-if($GLOBALS['theme'] == 'vistumbler')
-{
-	?>
-							</div>
-							<br>
-							</td>
-							<td class="cell_side_right">&nbsp;</td>
-						</tr>
-						<tr>
-							<td class="cell_bot_left">&nbsp;</td>
-							<td class="cell_bot_mid" colspan="2">&nbsp;</td>
-							<td class="cell_bot_right">&nbsp;</td>
-						</tr>
-					</table>
-				<div class="inside_text_center" align=center><strong>
-				Random Intervals Wireless DataBase<?php echo $GLOBALS['ver']['wifidb'].'<br />'; ?></strong></div>
-				<br />
-				<?php
-				echo $GLOBALS['tracker'];
-				echo $GLOBALS['ads']; 
-				?>
-				</td>
-			</tr>
-		</table>
-	</body>
-	</html>
-	<?php
-}else
-{
-	?>
-	</p>
-	</td>
-	</tr>
-	<tr>
-	<td bgcolor="#315573" height="23"><a href="../img/moon.png"><img border="0" src="../../img/moon_tn.png"></a></td>
-	<td bgcolor="#315573" width="0" align="center">
-	<?php
-	if (file_exists($filename)) 
-	{
-		?>
-		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
-		<?php
-	}
-	?>
-	</td>
-	</tr>
-	</table>
-	<?php
-}
 ?>
-</body>
-</html>
+</table>
+<h2>Install is Finished, if all was Successfull you may now remove the Install Folder</h2>
+
+<?php
+footer($_SERVER['SCRIPT_FILENAME']);
+?>
+

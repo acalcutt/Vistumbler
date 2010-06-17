@@ -3,9 +3,9 @@
 # Last Edit: 2009-Aug-28
 # http://www.randomintervals.com/wifidb/
 #
-#	WARNING: This script Drops both the `wifi_st` (Storage Database) and `wifi` (Main Database, holds pointers and other info) DB's,
-#			if you do not want to loose all your data, back it
-#			up and then run this scrip.
+#	WARNING: This script assumes that you have dropsped both the `wifi_st`
+#			(Storage Database) and `wifi` (Main Database, holds pointers and other info) DB's,
+#			If you do not know what you are doing, dont use this script.
 #
 #
 ##############################################################
@@ -100,14 +100,14 @@ CREATE TABLE IF NOT EXISTS `links` (
 
 
 INSERT INTO `links` (`ID`, `links`) VALUES
-(1, '<a class="links" href="http://192.168.1.25//wifidb/">Main Page</a>'),
-(2, '<a class="links" href="http://192.168.1.25//wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a>'),
-(3, '<a class="links" href="http://192.168.1.25//wifidb/import/">Import</a>'),
-(4, '<a class="links" href="http://192.168.1.25//wifidb/opt/export.php?func=index">Export</a>'),
-(5, '<a class="links" href="http://192.168.1.25//wifidb/opt/search.php">Search</a>'),
-(6, '<a class="links" href="http://192.168.1.25//wifidb/opt/userstats.php?func=allusers">View All Users</a>'),
-(7, '<a class="links" href="http://192.168.1.25//wifidb/ver.php">WiFiDB Version</a>'),
-(8, '<a class="links" href="http://192.168.1.25//wifidb/announce.php?func=allusers">Announcements</a>');
+(1, '<a class="links" href="/wifidb/">Main Page</a>'),
+(2, '<a class="links" href="/wifidb/all.php?sort=SSID&ord=ASC&from=0&to=100">View All APs</a>'),
+(3, '<a class="links" href="/wifidb/import/">Import</a>'),
+(4, '<a class="links" href="/wifidb/opt/export.php?func=index">Export</a>'),
+(5, '<a class="links" href="/wifidb/opt/search.php">Search</a>'),
+(6, '<a class="links" href="/wifidb/opt/userstats.php?func=allusers">View All Users</a>'),
+(7, '<a class="links" href="/wifidb/ver.php">WiFiDB Version</a>'),
+(8, '<a class="links" href="/wifidb/announce.php?func=allusers">Announcements</a>');
 
 
 
@@ -122,8 +122,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 
 INSERT INTO `settings` (`id`, `table`, `size`) VALUES
 (1, 'files', '2009-09-29 02:42:01'),
-(2, 'theme', 'wifidb'),
-(1, 'wifi0', '2009-09-29 02:42:01');
+(2, 'wifi0', '2009-09-29 02:42:01');
 
 
 

@@ -26,7 +26,7 @@ function pageheader($title, $output="detailed", $install=0)
 		
 		<link rel="stylesheet" href="<?php echo $GLOBALS['UPATH']; ?>/themes/vistumbler/styles.css">
 			<body style="background-color: #145285">
-			<table style="width: 100%; " class="no_border" align="center">
+			<table style="width: 90%" align="center">
 				<tr>
 					<td>
 						<table>
@@ -38,8 +38,6 @@ function pageheader($title, $output="detailed", $install=0)
 						</table>
 					</td>
 				</tr>
-			</table>
-			<table style="width: 90%" align="center">
 				<tr>
 					<td style="width: 165px; height: 114px" valign="top">
 						<table style="width: 100%" cellpadding="0" cellspacing="0">

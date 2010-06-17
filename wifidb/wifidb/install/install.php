@@ -1,5 +1,5 @@
 <?php
-global $screen_output;
+global $screen_output, $wifidb_smtp;
 $screen_output = 'CLI';
 
 include('../lib/database.inc.php');
@@ -82,7 +82,7 @@ $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
 $wifidb_email_updates	=	addslashes(strip_tags($_POST['wdb_email_updates']));
 $wifidb_email			=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
 $wifidb_from_pass		=	addslashes(strip_tags($_POST['wdb_from_pass']));
-
+$wifidb_smtp		=	addslashes(strip_tags($_POST['wdb_smtp']));
 $timeout				=   "(86400 * 365)";
 if($hosturl == '')
 {
@@ -552,15 +552,15 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   `last_login` datetime NOT NULL,
   `last_active` datetime NOT NULL,
   `email` varchar(255) NOT NULL,
-  `schedule` TINYINT( 1 ) NOT NULL,
-  `imports` TINYINT( 1 ) NOT NULL,
-  `kmz` TINYINT( 1 ) NOT NULL ,
-  `new_users` TINYINT( 1 ) NOT NULL ,
-  `statistics` TINYINT( 1 ) NOT NULL ,
-  `announcements` TINYINT( 1 ) NOT NULL ,
-  `announce_comment` TINYINT( 1 ) NOT NULL,
-  `geonamed` TINYINT( 1 ) NOT NULL,
-  `pub_geocache` TINYINT( 1 ) NOT NULL,
+  `schedule` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `imports` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `kmz` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `new_users` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `statistics` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `announcements` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `announce_comment` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `geonamed` TINYINT( 1 ) NOT NULL DEFAULT '1',
+  `pub_geocache` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `h_email` tinyint(1) NOT NULL,
   `join_date` datetime NOT NULL,
   `friends` text NOT NULL,
@@ -670,7 +670,6 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Global variables and g
 #add default daemon values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#
 $"."daemon				=	$daemon;
-$"."debug				=	0;
 $"."log_level			=	0;
 $"."log_interval		=	0;
 $"."WiFiDB_LNZ_User 	=	'$httpduser';
@@ -710,7 +709,8 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default Console values
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#
 $"."rebuild	=	0;
-$"."bench		=	0;\r\n\r\n");
+$"."bench		=	0;
+$"."debug		=	0;\r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default debug values</td></tr>";}
@@ -825,30 +825,31 @@ switch($create)
 	#========================================================================================================================#
 
 
-echo "</table>";
-echo "<h2>Install is Finished, if all was Successfull you may now remove the Install Folder</h2>";
+?>
+</table>
+<h2>Install is Finished, if all was Successfull you may now remove the Install Folder</h2>
+<?php
 $timezn = 'Etc/GMT+5';
 date_default_timezone_set($timezn);
-
-	$filename = $_SERVER['SCRIPT_FILENAME'];
-	$file_ex = explode("/", $filename);
-	$count = count($file_ex);
-	$file = $file_ex[($count)-1];
-	?>
-	</p>
-	</td>
-	</tr>
-	<tr>
-	<td bgcolor="#315573" height="23"><a href="../img/moon.png"><img border="0" src="../img/moon_tn.png"></a></td>
-	<td bgcolor="#315573" width="0" align="center">
-	<?php
-	if (file_exists($filename)) {?>
-		<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
-	<?php
-	}
-	?>
-	</td>
-	</tr>
-	</table>
-	</body>
-	</html>
+$filename = $_SERVER['SCRIPT_FILENAME'];
+$file_ex = explode("/", $filename);
+$count = count($file_ex);
+$file = $file_ex[($count)-1];
+?>
+</p>
+</td>
+</tr>
+<tr>
+<td bgcolor="#315573" height="23"><a href="../img/moon.png"><img border="0" src="../img/moon_tn.png"></a></td>
+<td bgcolor="#315573" width="0" align="center">
+<?php
+if (file_exists($filename)) {?>
+	<h6><i><u><?php echo $file;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", filemtime($filename));?></h6>
+<?php
+}
+?>
+</td>
+</tr>
+</table>
+</body>
+</html>

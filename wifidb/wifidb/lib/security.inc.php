@@ -257,12 +257,13 @@ class security
 
 
 	#######################################
-	function create_user($username="", $password="", $email="local@localhost.local", $user_array=array(0,0,0,1), $seed="")
+	function create_user($username="", $password="", $email="local@localhost.local", $user_array=array(0,0,0,1), $seed="", $validate_user_flag = 1)
 	{
 		include('config.inc.php');
 		$conn = $GLOBALS['conn'];
 		$db = $GLOBALS['db'];
 		$user_logins_table = $GLOBALS['user_logins_table'];
+		$UPATH	=	$GLOBALS['UPATH'];
 		$subject = "New WiFiDB User ";
 		$type = "new_users";
 		$date = date("Y-m-d G:i:s");
@@ -281,7 +282,7 @@ class security
 		$user_cache = 'waypoints_'.$username;
 		$user_stats = 'stats_'.$username;
 		$pass_seed = md5($password.$seed);
-		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `admins` , `devs`, `mods`, `users` ,`last_login` ,`email`, `uid`, `join_date`, `validated` )VALUES ( NULL , '$username', '$pass_seed', '$admin','$dev','$mod','$user', '$date', '$email', '$uid', '$date', '1')";
+		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `admins` , `devs`, `mods`, `users` ,`last_login` ,`email`, `uid`, `join_date`, `validated` )VALUES ( NULL , '$username', '$pass_seed', '$admin','$dev','$mod','$user', '$date', '$email', '$uid', '$date', '$validate_user_flag')";
 		if(mysql_query($insert_user, $conn))
 		{
 			$create_user_cache = "CREATE TABLE `$db`.`$user_cache` 

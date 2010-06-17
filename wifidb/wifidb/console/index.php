@@ -2,35 +2,33 @@
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
 $func			= '';
-$root = $GLOBALS['root'];
-$hosturl = $GLOBALS['hosturl'];
 if( !isset($_GET['func']) ) { $_GET['func'] = ""; }
 $func = strip_tags(addslashes($_GET['func']));
-
+if($GLOBALS['root'] != "" or $GLOBALS['root'] != "/"){$cookie_path = "/$root/console/";}else{$cookie_path = "/console/";}
 switch($func)
 {
 	case 'refresh':
 		if( (!isset($_POST['console_refresh'])) or $_POST['console_refresh']=='' ) { $_POST['console_refresh'] = "15"; }
-		setcookie( 'console_refresh' , strip_tags(addslashes($_POST['console_refresh'])) , (time()+$timeout), "/".$root."/console/" ); // 86400 = 1 day
-		header('Location: '.$hosturl.$root.'/console/');
+		setcookie( 'console_refresh' , strip_tags(addslashes($_POST['console_refresh'])) , (time()+$timeout), $cookie_path ); // 86400 = 1 day
+		header('Location: '.$GLOBALS["UPATH"].'/console/');
 	break;
 	
 	case 'console_scroll':
 		if( (!isset($_POST['console_scroll'])) or $_POST['console_scroll']=='' ) { $_POST['console_scroll'] = "1"; }
-		setcookie( 'console_scroll' , strip_tags(addslashes($_POST['console_scroll'])) , (time()+$timeout), "/".$root."/console/" ); // 86400 = 1 day
-		header('Location: /'.$root.'/console/');
+		setcookie( 'console_scroll' , strip_tags(addslashes($_POST['console_scroll'])) , (time()+$timeout), $cookie_path ); // 86400 = 1 day
+		header('Location: '.$GLOBALS["UPATH"].'/console/');
 	break;
 		
 	case 'console_last5':
 		if( (!isset($_POST['console_last5'])) or $_POST['console_last5']=='' ) { $_POST['console_last5'] = "1"; }
-		setcookie( 'console_last5' , strip_tags(addslashes($_POST['console_last5'])) , (time()+$timeout), "/".$root."/console/" ); // 86400 = 1 day
-		header('Location: /'.$root.'/console/');
+		setcookie( 'console_last5' , strip_tags(addslashes($_POST['console_last5'])) , (time()+$timeout), $cookie_path ); // 86400 = 1 day
+		header('Location: '.$GLOBALS["UPATH"].'/console/');
 	break;
 			
 	case 'console_lines':
 		if( (!isset($_POST['console_lines'])) or $_POST['console_lines']=='' ) { $_POST['console_lines'] = "1"; }
-		setcookie( 'console_lines' , strip_tags(addslashes($_POST['console_lines'])) , (time()+$timeout), "/".$root."/console/" ); // 86400 = 1 day
-		header('Location: /'.$root.'/console/');
+		setcookie( 'console_lines' , strip_tags(addslashes($_POST['console_lines'])) , (time()+$timeout), $cookie_path ); // 86400 = 1 day
+		header('Location: '.$GLOBALS["UPATH"].'/console/');
 	break;
 }
 
@@ -42,8 +40,8 @@ $theme = (@$_COOKIE['wifidb_theme']!='' ? @$_COOKIE['wifidb_theme'] : $GLOBALS['
 
 if($refresh < 5 && !$last5)
 {
-	setcookie( 'console_refresh' , 5 , (time()+$timeout), "/".$root."/console/" );
-	header('Location: /'.$root.'/console/');
+	setcookie( 'console_refresh' , 5 , (time()+$timeout), $GLOBALS['UPATH']."/console/" );
+	header('Location: '.$GLOBALS["UPATH"].'/console/');
 }
 
 pageheader("Daemon Console Viewer");
@@ -52,7 +50,7 @@ pageheader("Daemon Console Viewer");
 <table style="width: 100%">
 	<tr>
 		<td>
-		<img src="<?php if($root != ''){echo '/'.$root;}?>/themes/<?php echo $theme; ?>/img/1x1_transparent.gif" width="1" height="480" />
+		<img src="<?php echo $GLOBALS['UPATH']; ?>/themes/<?php echo $theme; ?>/img/1x1_transparent.gif" width="1" height="480" />
 		</td>
 		<td>
 			<iframe name="daemon_console" src="console.php" style="width: 100%; height: 373px">
@@ -117,6 +115,5 @@ pageheader("Daemon Console Viewer");
 	</tr>
 </table>
 <?php
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);
+footer($_SERVER['SCRIPT_FILENAME']);
 ?>

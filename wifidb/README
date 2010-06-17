@@ -1,10 +1,9 @@
-RanInt -> WiFiDB -> Readme
+RanInt -> WiFiDB -> Read-me
 ===================
 
   A set of PHP-scripts to manage a MySQL based Wireless Database over the web.
 
   Project Phase: Alpha
-  Version: 0.16 Build 3.1
   --------------
   http://www.randomintervals.com/
 
@@ -41,7 +40,7 @@ RanInt -> WiFiDB -> Readme
 		Go to /[WiFiDB Path]/install/ 
 		Or [WiFiDB Path]/upgrade/
 		If you are upgrading
-		and fallow the steps, please read the notes beforehand at /[WiFiDB Path]/install/notes.html or /[WiFiDB Path]/upgrade/notes.php.
+		and follow the steps, please read the notes beforehand at /[WiFiDB Path]/install/notes.html or /[WiFiDB Path]/upgrade/notes.php.
 		The reset.sql file is a database reset script, mostly for advanced users, it basically drops all the DB's and re-creates them - use at your own risk
 		
   Tools Directory
@@ -50,7 +49,7 @@ RanInt -> WiFiDB -> Readme
   Change Log:
 		/[WiFiDB Path]/ver.php
   Support:
-		Go to the Randomintervals section of these forums http://forum.techidiots.net/forum/
+		Go to the Random Intervals section of these forums http://forum.techidiots.net/forum/
 		
     Enjoy!
         The RanInt Dev team

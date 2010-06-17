@@ -84,16 +84,19 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
     <td>WiFiDB Email Updates </td>
     <td><input type="checkbox" name="wdb_email_updates" value="FALSE"></td></tr>
   <tr>
-    <td>WiFiDB Sending Address</font></td>
+    <td>WiFiDB Sending Address</td>
     <td><input name="wdb_from_emailadrs"></td></tr>
   <tr>
-    <td>WiFiDB Sending Password</font></td>
+    <td>WiFiDB Sending Password</td>
     <td><input name="wdb_from_pass" type=PASSWORD></td></tr>
   <tr>
-    <td>WiFi DB name <font size="1">(Default `wifi` )</font></td>
+    <td>SMTP Server<font size="1">(Example: smtp.gmail.com )</font></td>
+    <td><input name="wdb_smtp"></td></tr>
+  <tr>
+    <td>WiFi DB name <font size="1">(Default: `wifi` )</font></td>
     <td><input name="wifi"></td></tr>
   <tr>
-    <td>WiFi Storage DB name <font size="1">(Default `wifi_st` )</font></td>
+    <td>WiFi Storage DB name <font size="1">(Default: `wifi_st` )</font></td>
     <td><input name="wifist"></td>
 </TR>
 </TR>

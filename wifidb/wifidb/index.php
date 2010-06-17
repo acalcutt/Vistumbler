@@ -1,8 +1,9 @@
 <?php
 include('lib/database.inc.php');
+include('lib/config.inc.php');
 pageheader("Main Page");
 $usersa =  array();
-$sql = "SELECT `id` FROM `$db`.`wifi0`";
+$sql = "SELECT `id` FROM `$db`.`$wtable`";
 $result0 = mysql_query($sql, $conn);
 $rows = mysql_num_rows($result0);
 
@@ -21,9 +22,8 @@ $result4 = mysql_query($sql, $conn);
 $sql = "SELECT `username` FROM `$db`.`$users_t`";
 $result5 = mysql_query($sql, $conn);
 
-#
-$row_users = mysql_num_rows($result5);
-while($user_array = mysql_fetch_array($result5))
+$row_users = @mysql_num_rows($result5);
+while($user_array = @mysql_fetch_array($result5))
 {
 	$usersa[]=$user_array['username'];
 }
@@ -50,7 +50,7 @@ $lastap_array = mysql_fetch_array($result4);
 $lastap_id = $lastap_array['id'];
 $lastap_ssid = $lastap_array['ssid'];
 #
-$lastuser = mysql_fetch_array($result6);
+$lastuser = @mysql_fetch_array($result6);
 if(!$result0 OR !$result1 OR !$result2 OR !$result3 OR !$result4 OR !$result5 or !$result6)
 {
 	echo "<br /><p><h2>There is a serious error trying to get data from the Database, check it out.<br />You may need to reinstall.</h2></p>";

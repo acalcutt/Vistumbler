@@ -21,8 +21,8 @@ $enable_mail_admin = 0;
 date_default_timezone_set("UTC");
 
 $CT_daemon_ver	= "1.0.0";
-$CT_start_date = "2009-12-07";
-$CT_last_edit = "2009-12-11";
+$CT_start_date = "2009-Dec-07";
+$CT_last_edit = "2010-June-07";
 
 $date_format					=	"Y-m-d H:i:s.u";
 $BAD_CLI_COLOR					=	$GLOBALS['BAD_CT_COLOR'];
@@ -146,7 +146,24 @@ PID: [ $PID ]
 #
 ##
 ###
-#####################
+verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Attempting to start The GeoNames Daemon:".$GLOBALS['COLORS'][$OTHER_CLI_COLOR]."\n\n", $verbose, $screen_output,1);
+$ret = $daemon->start("daemon_geo");
+if($ret == 1)
+{
+	sleep(2);
+	$pidfile = file($GLOBALS['pid_file_loc'].'geonamed.pid');
+	$PID =  $pidfile[0];
+	verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."STARTED! :-]
+WiFiDB 'GeoNames Daemon'
+Version: 1.0.0
+\t( /tools/daemon/geonamed.php )
+
+PID: [ $PID ]
+".$GLOBALS['COLORS'][$OTHER_CLI_COLOR]."\n\n", $verbose, $screen_output, 1);
+}else
+{
+	verbosed($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Failed to start the GeoNames Daemon :-[".$GLOBALS['COLORS'][$OTHER_CLI_COLOR]."\n\n", $verbose, $screen_output,1);
+}
 
 ######################
 ?>

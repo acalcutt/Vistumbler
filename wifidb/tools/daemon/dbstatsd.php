@@ -39,6 +39,8 @@ $date_format					=	"Y-m-d H:i:s.u";
 $BAD_CLI_COLOR					=	$GLOBALS['BAD_DBS_COLOR'];
 $GOOD_CLI_COLOR					=	$GLOBALS['GOOD_DBS_COLOR'];
 $OTHER_CLI_COLOR				=	$GLOBALS['OTHER_DBS_COLOR'];
+$subject						=	"WiFiDB Statistics Daemon";
+$type							=	"statistics";
 #####################
 if($GLOBALS['colors_setting'] == 0 or $OS == "W")
 {
@@ -461,11 +463,12 @@ verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting Users Statistics.".$GLOBA
 		$insert_user = "INSERT INTO `$db`.`stats_$user` (`id`, `newest`, `largest`) VALUES ('', '$newest', '$largest')";
 		if(!mysql_query($insert_user, $conn))
 		{
-			mail_admin("There was an error inserting the Database Statistics data. :-(\r\n\r\n".mysql_error($conn), $enable_mail_admin, 1);
+			mail_users"There was an error inserting the Database Statistics data. :-(\r\n\r\n".mysql_error($conn), $subject, $type, 1, 1); 
 			verbosed($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Failed to Insert Data into The Database.".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 		}else
 		{
-			verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Inserted Statistics Data for User: $user.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
+			mail_users("New Statistics have been ran, go check them out!\r\nLink: ".$UPATH."\r\nLogin and go to the admin panel\r\n-WiFiDB Service", $subject, $type, 1, 0); 
+			verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Email Updates sent!\r\nInserted Statistics Data for User: $user.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 		}
 		verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Finished for user: $user\r\n.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 	}

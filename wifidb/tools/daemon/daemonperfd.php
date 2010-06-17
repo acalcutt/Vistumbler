@@ -28,13 +28,15 @@ $WFDBD_PID						=	$GLOBALS['pid_file_loc'].'imp_expd.pid';
 $verbose						=	$GLOBALS['verbose'];
 $screen_output					=	$GLOBALS['screen_output'];
 $PERF_time_interval_to_check	=	$GLOBALS['PERF_time_interval_to_check'];
-$enable_mail_admin				=	0;
+$enable_mail_users				=	0;
 $pid_file						=	$GLOBALS['pid_file_loc'].'daemonperfd.pid';
 $This_is_me 					=	getmypid();
 $date_format					=	"Y-m-d H:i:s.u";
 $BAD_CLI_COLOR					=	$GLOBALS['BAD_DPM_COLOR'];
 $GOOD_CLI_COLOR					=	$GLOBALS['GOOD_DPM_COLOR'];
 $OTHER_CLI_COLOR				=	$GLOBALS['OTHER_DPM_COLOR'];
+$subject						=	"WiFiDB Daemon Performance Monitor Updates";
+$type							=	"perfmon";
 ###########################
 if($GLOBALS['colors_setting'] == 0 or $OS == "W")
 {
@@ -120,7 +122,7 @@ while(TRUE)
 			#	echo $insert."\r\n";
 				if(!$result = mysql_query($insert, $conn))
 				{
-					mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);echo "FAILURE!\r\n";
+					mail_users("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. :-(\r\n".mysql_error($conn), $subject, $type, 1, 1); ;echo "FAILURE!\r\n";
 				}else{
 					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Success!".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}
@@ -130,34 +132,31 @@ while(TRUE)
 			#	echo $insert."\r\n";
 				if(!$result = mysql_query($insert, $conn))
 				{
-					mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
-Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
+					mail_users("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
+Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $subject, $type, 1, 1); ;
 					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}else{
-					mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(",$enable_mail_admin, 1);
+					mail_users("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(",$enable_mail_users, 1);
 					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Success!".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}
 			}
-			$output = `top -p 5449; q`;
-			if($output)
-			{
-				echo $output."\r\n";
-			}else
-			{
-				
-			}
+		#	$output = `top -p $pid_open[0]; q`;
+		#	if($output)
+		#	{
+		#		echo $output."\r\n";
+		#	}
 		}else
 		{
 			$insert = "INSERT INTO `$db`.`daemon_perf_mon` (`id`, `timestamp`, `pid`, `uptime`, `CMD`, `mem`, `mesg`) VALUES ('', '$date', '00000', '0', '', '0.00', 'NOT RUNNING!')";
 		#	echo $insert."\r\n";
 			if(!$result = mysql_query($insert, $conn))
 			{
-				mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
-Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
+				mail_users("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
+Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $subject, $type, 1, 1); 
 				verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 			}
 			else{
-				mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $enable_mail_admin, 1);
+				mail_users("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $subject, $type, 1, 1);
 				verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Success!".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 			}
 		}
@@ -180,7 +179,7 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 				$insert = "INSERT INTO `$db`.`daemon_perf_mon` (`id`, `timestamp`, `pid`, `uptime`, `CMD`, `mem`, `mesg`) VALUES ('', '$date', '$pid', '$time', '$proc', '$mem', '')";
 				if(!$result = mysql_query($insert, $conn))
 				{
-					mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
+					mail_users("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. :-(\r\n".mysql_error($conn), $subject, $type, 1, 1); 
 					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}				
 			}else
@@ -188,11 +187,11 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 				$insert = "INSERT INTO `$db`.`daemon_perf_mon` (`id`, `timestamp`, `pid`, `uptime`, `CMD`, `mem`, `mesg`) VALUES ('', '', '00000', '0', '', '0.00', 'NOT RUNNING!')";
 				if(!$result = mysql_query($insert, $conn))
 				{
-					mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
-Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
+					mail_users("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
+Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $subject, $type, 1, 1); 
 					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}else{
-					mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $enable_mail_admin, 1);
+					mail_users("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $subject, $type, 1, 1); 
 					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}
 			}
@@ -201,11 +200,11 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 			$insert = "INSERT INTO `$db`.`daemon_perf_mon` (`id`, `timestamp`, `pid`, `uptime`, `CMD`, `mem`, `mesg`) VALUES ('', '', '00000', '0', '', '0.00', 'NOT RUNNING!')";
 			if(!$result = mysql_query($insert, $conn))
 			{
-				mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
-Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
+				mail_users("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
+Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $subject, $type, 1, 1); 
 				verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 			}else{
-				mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $enable_mail_admin, 1);
+				mail_users("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $subject, $type, 1, 1); 
 				verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 			}
 		}
@@ -214,11 +213,11 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 		$insert = "INSERT INTO `$db`.`daemon_perf_mon` (`id`, `timestamp`, `pid`, `uptime`, `CMD`, `mem`, `mesg`) VALUES ('', '', '00000', '0', '', '0.00', 'NOT RUNNING!')";
 		if(!$result = mysql_query($insert, $conn))
 		{
-			mail_admin("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
-Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $enable_mail_admin, 1);
+			mail_users("There was an error inserting the Daemon Performance data into the `daemon_perf_mon` table. 
+Also, The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(\r\n".mysql_error($conn), $subject, $type, 1, 1); 
 			verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 		}else{
-			mail_admin("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $enable_mail_admin, 1);
+			mail_users("The Daemon is configured to run, but is not!. Fix it quick before imports start to pile up on the lawn. :-(", $subject, $type, 1, 1); 
 			verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."DAEMON NOT RUNNING FAILURE!\r\n".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 		}
 	}

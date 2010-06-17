@@ -8,11 +8,10 @@ error_reporting(E_ALL|E_STRICT);
 
 require('daemon/config.inc.php');
 
-if(PHP_OS == 'WINNT'){$GLOBALS['dim'] = '\\';}
-if(PHP_OS == 'Linux'){$GLOBALS['dim'] = '/';}
+$dim = DIRECTORY_SEPARATOR;
 
-require_once($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
-require_once($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'database.inc.php');
+require_once($GLOBALS['wifidb_install'].$dim.$root.$dim.'lib'.$dim.'config.inc.php');
+require_once($GLOBALS['wifidb_install'].$dim.$root.$dim.'lib'.$dim.'database.inc.php');
 
 #echo $GLOBALS['wifidb_tools']."\n";
 if(isset($argv[1]))

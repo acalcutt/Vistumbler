@@ -2,23 +2,23 @@
 //Now this is not what I would call a 'true' 'daemon' by any sorts,
 //I mean it does have a php script (/tools/rund.php) that can turn 
 //the daemon on and off. But it is a php script that is running 
-//perpetually in the background. I dont think this is how php was 
-//intended to be used. I am hoping to get a C++ version working 
-//sometime soon, untill then I am using php.
-#error_reporting(E_ALL|E_STRICT);
+//perpetually in the background. I am hoping to get a C++ version working 
+//sometime soon, until then I am using php.
+
+error_reporting(E_ALL|E_STRICT);
+
 global $screen_output, $dim, $COLORS, $daemon_ver;
 $screen_output = "CLI";
-error_reporting(E_ALL|E_STRICT);
+
 if(!(require_once 'config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
 if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
-if(PHP_OS == "WINNT"){$dim = "\\";}else{$dim = "/";}
 
+$dim = DIRECTORY_SEPERATOR;
 
 date_default_timezone_set("UTC");
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
-#error_reporting(E_ALL); //show all erorrs with strict santex, come on now, we want to know whats going on
 
 $conn					= 	$GLOBALS['conn'];
 $db						= 	$GLOBALS['db'];
@@ -36,7 +36,7 @@ $console_line_limit		=	$GLOBALS['console_line_limit'];
 $time_interval_to_check =	$GLOBALS['time_interval_to_check'];
 $root					=	$GLOBALS['root'];
 $half_path				=	$GLOBALS['half_path'];
-$host_url 				=	$GLOBALS['host_url'];
+$host_url 				=	$GLOBALS['hosturl'];
 $UPATH	 				=	$GLOBALS['UPATH'];
 $console_trim_log		=	$GLOBALS['console_trim_log'];
 $console_line_limit		=	$GLOBALS['console_line_limit'];
@@ -47,6 +47,7 @@ $OTHER_IED_COLOR		=	$GLOBALS['OTHER_IED_COLOR'];
 $This_is_me				=	getmypid();
 $PHP_OS					=	PHP_OS;
 $OS						=	$PHP_OS[0];
+$subject				=	"WiFiDB Import / Export Daemon";
 
 if($GLOBALS['colors_setting'] == 0 or $OS == "W")
 {
@@ -85,7 +86,7 @@ WiFiDB 'Import/Export Daemon'
 Version: 2.0.0
  - Daemon Start: 2009-April-23
  - Last Daemon File Edit: 2010-01-08
- \t(/tools/daemon/imp_expd.php)
+	(/tools/daemon/imp_expd.php)
  - By: Phillip Ferland ( pferland@randomintervals.com )
  - http://www.randomintervals.com
 
@@ -102,15 +103,14 @@ if($time_interval_to_check < '30'){$time_interval_to_check = '30';} //its really
 																	//importing something it is probably going to take more then that to imort the file
 																	
 $finished = 0;
-//Main loop
 
 $database	=	new database;
 $daemon		=	new daemon;
 
+//Main loop
 while(1) //while my pid file is still in the /var/run/ folder i will still run, this is for the init.d script or crash override
 {
 	$console_log_moved = $GLOBALS['wifidb_tools']."/backups/logs/console_wifidbd_".date('Y-m-d H:i:s').".log";
-	$console_log = $console_log."/imp_expd.log"; 
 	
 	if(@file_exists($console_log))
 	{
@@ -123,8 +123,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		$console_log_array = file($console_log);
 		
 		verbosed($GLOBALS['COLORS'][$OTHER_IED_COLOR]."Wrote placer Log File because it didnt exist.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-	}
-	
+	}	
 	$console_lines = count($console_log_array);
 	verbosed($GLOBALS['COLORS'][$OTHER_IED_COLOR]."File: ".$console_log." ".$console_lines." limit: ".$console_line_limit.$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 	if($console_trim_log)
@@ -140,6 +139,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			}
 		}
 	}
+	
 	$RUN_SQL = "SELECT `id` FROM `$db`.`$settings_tb` WHERE `table` = 'files'";
 	$RUNresult = mysql_query($RUN_SQL, $conn);
 	$next_run_id = mysql_fetch_array($RUNresult);
@@ -152,7 +152,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		while ($files_array = mysql_fetch_array($result))
 		{
 			$result_update = mysql_query("UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'", $conn);
-			$source = $GLOBALS['wifidb_install'].'/import/up/'.$files_array['file'];
+			$source = $GLOBALS['wifidb_install'].'/import/up/'.str_replace("%20", " ", $files_array['file']);
 #			echo $source."\n";
 			$return  = file($source);
 			$count = count($return);
@@ -192,7 +192,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					logd("Start Import of :(".$files_array['id'].") ".$files_array['file'], 2, $details,  $GLOBALS['log_level']); //write the details array to the log if the level is 2 /this one is hard coded, beuase i wanted to show an example.
 					verbosed("Start Import of : (".$files_array['id'].") ".$files_array['file'], $verbose, $screen_output, 1); //default verbise is 0 or none, or STFU, IE dont do shit.
 					
-					$tmp = $database->import_vs1($source, $files_array['user'], $files_array['notes'], $files_array['title'], $verbose, $screen_output, 1);
+					$tmp = $database->import_vs1($source, $files_array['user'], $files_array['notes'], $files_array['title'], $verbose, $screen_output);
 					$temp = $files_array['file']." | ".$tmp['aps']." - ".$tmp['gps'];
 					logd("Finished Import of : ".$files_array['file'] , 2 , $temp ,  $GLOBALS['log_level']); //same thing here, hard coded as log_lev 2
 					verbosed("Finished Import of :".$files_array['file'] , $verbose, $screen_output);
@@ -223,7 +223,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 						$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 						if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 						{
-							mail_users("Error removing file: $source ($remove_file)", 0, 1);
+							mail_users("Error removing file: $source ($remove_file)", $subject, "import", 1, 1);
 							logd("Error removing $source ($remove_file) from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
 							verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing $source ($remove_file) from the Temp files table\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
 						}else
@@ -232,14 +232,14 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 							$res_new = mysql_query($sel_new, $conn);
 							$new_array = mysql_fetch_array($res_new);
 							$newrow = $new_array['id'];
-							$message = "File has finished importing.\r\nUser: $user\r\nTitle: $title\r\nFile: $source ($remove_file)\r\nLink: ".$UPATH."opt/userstats.php?func=useraplist&row=$newrow \r\n-WiFiDB Daemon.";
-							mail_users($message, 0, 0);   # http://192.168.1.27/opt/userstats.php?func=useraplist&row=645
+							$message = "File has finished importing.\r\nUser: $user\r\nTitle: $title\r\nFile: $source ($remove_file)\r\nLink: ".$UPATH."/opt/userstats.php?func=useraplist&row=$newrow \r\n-WiFiDB Daemon.";
+							mail_users($message, $subject, "import", 0, 0);
 							logd("Removed $source ($remove_file) from the Temp files table.", $log_interval, 0,  $GLOBALS['log_level']);
 							verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Removed ".$remove_file." from the Temp files table.\n".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 						}
 					}else
 					{
-						mail_users("Error Adding file to finished table: ".$source, 0, 1);
+						mail_users("Error Adding file to finished table: ".$source, $subject, "import", 1, 1);
 						logd("Error Adding $source ($remove_file) to the Files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
 						verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error Adding $source ($remove_file) to the Files table\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR],1, $screen_output, 1);
 					}
@@ -253,7 +253,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					$del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
 					if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 					{
-						mail_users("_error_removing_file_tmp:".$remove_file, 1, 1);
+						mail_users("_error_removing_file_tmp:".$remove_file, $subject, "import", 1, 1);
 						logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
 						verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
 					}else
@@ -271,7 +271,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 				$del_file_tmp = "DELETE FROM `$db`.`$files_tmp` WHERE `id` = '$remove_file'";
 				if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
 				{
-					mail_users("_error_removing_file_tmp:".$remove_file, 1, 1);
+					mail_users("_error_removing_file_tmp:".$remove_file, $subject, "import", 1, 1);
 					logd("Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']), $log_interval, 0,  $GLOBALS['log_level']);
 					verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing ".$remove_file." from the Temp files table\r\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR]."\n", 1, $screen_output, 1);
 				}else
@@ -295,7 +295,8 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			$message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
 			logd("Starting Automated KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
 			verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Starting Automated KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-			daemon::daemon_kml($named = 0, $verbose);
+			$daemon->daemon_kml($named = 0, $verbose);
+			mail_users("Generation of Full Database KML File.\r\n".$host_url."/".$root."/out/daemon/update.kml\r\n\r\n-WiFiDB Service", $subject, "kml", 0, 0);
 		}
 		
 		$nextrun = date("Y-m-d H:i:s", (time()+$time_interval_to_check));
@@ -306,7 +307,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Updated settings table with next run time: ".$nextrun.$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 		}else
 		{
-			mail_users("_error_updating_settings_table:".$remove_file, 1, 1);
+			mail_users("_error_updating_settings_table:".$remove_file, $subject, "import", 1, 1);
 			logd("ERROR!! COULD NOT Update settings table with next run time: ".$nextrun, $log_interval, 0,  $GLOBALS['log_level']);
 			verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."ERROR!! COULD NOT Update settings table with next run time: ".$nextrun.$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 		}
@@ -315,7 +316,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		verbosed($GLOBALS['COLORS']['YELLOW'].$message.$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 	}else
 	{
-		mail_users("_error_looking_for_files:", 1, 1);
+		mail_users("_error_looking_for_files:", $subject, "import", 1, 1);
 		logd("There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn), $log_interval, 0,  $GLOBALS['log_level']);
 		verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."There was an error trying to look into the files_tmp table.\r\n\t".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 		die();

@@ -11,7 +11,7 @@ $users_t	= $GLOBALS['users_t'];
 $user_logins_table = $GLOBALS['user_logins_table'];
 $files_tmp	= $GLOBALS['files_tmp'];
 $global_loggedin = $GLOBALS['login_check'];
-$PATH = $GLOBALS['PATH'];
+$UPATH = $GLOBALS['UPATH'];
 if(isset($_GET['func']))
 {
 	if($_GET['func'] == 'import')
