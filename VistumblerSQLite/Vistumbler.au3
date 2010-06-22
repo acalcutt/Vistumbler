@@ -2,7 +2,6 @@
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_icon=Icons\icon.ico
 #AutoIt3Wrapper_outfile=Vistumbler.exe
-#AutoIt3Wrapper_UseX64=n
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
@@ -16,10 +15,10 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'SQLite Alpha 6'
+$version = 'SQLite Alpha 7'
 If @AutoItX64 Then $version &= ' (x64)'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/06/12'
+$last_modified = '2010/06/22'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -3061,13 +3060,24 @@ Func _GPGGA($data);Strips data from a gps $GPGGA data string
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GPGGA()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $data)
 	If _CheckGpsChecksum($data) = 1 Then
+		ConsoleWrite($data & @CRLF)
 		$GPGGA_Split = StringSplit($data, ",");
 		If $GPGGA_Split[0] >= 14 Then
 			$Temp_Quality = $GPGGA_Split[7]
 			If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then
+				;Start BlueNMEA fixes...WTF
+				If StringInStr($GPGGA_Split[3], "-") Then ;Fix latitude
+					$GPGGA_Split[3] = StringReplace($GPGGA_Split[3], "-", "")
+					$GPGGA_Split[4] = "S"
+				EndIf
+				If StringInStr($GPGGA_Split[5], "-") Then ;Fix longitude
+					$GPGGA_Split[5] = StringReplace($GPGGA_Split[5], "-", "")
+					$GPGGA_Split[6] = "W"
+				EndIf
+				;End BlueNMEA fixes
 				$Temp_FixTime = _FormatGpsTime($GPGGA_Split[2])
-				$Temp_Lat = $GPGGA_Split[4] & " " & StringFormat('%0.4f', $GPGGA_Split[3]);_FormatLatLon($GPGGA_Split[3], $GPGGA_Split[4])
-				$Temp_Lon = $GPGGA_Split[6] & " " & StringFormat('%0.4f', $GPGGA_Split[5]);_FormatLatLon($GPGGA_Split[5], $GPGGA_Split[6])
+				$Temp_Lat = $GPGGA_Split[4] & " " & StringFormat('%0.4f', $GPGGA_Split[3])
+				$Temp_Lon = $GPGGA_Split[6] & " " & StringFormat('%0.4f', $GPGGA_Split[5])
 				$Temp_NumberOfSatalites = $GPGGA_Split[8]
 				$Temp_HorDilPitch = $GPGGA_Split[9]
 				$Temp_Alt = $GPGGA_Split[10] * 3.2808399
@@ -3083,13 +3093,24 @@ Func _GPRMC($data);Strips data from a gps $GPRMC data string
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GPRMC()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $data)
 	If _CheckGpsChecksum($data) = 1 Then
+		ConsoleWrite($data & @CRLF)
 		$GPRMC_Split = StringSplit($data, ",")
 		If $GPRMC_Split[0] >= 11 Then
 			$Temp_Status = $GPRMC_Split[3]
 			If $Temp_Status = "A" Then
+				;Start BlueNMEA fixes...WTF
+				If StringInStr($GPRMC_Split[4], "-") Then ;Fix latitude
+					$GPRMC_Split[4] = StringReplace($GPRMC_Split[4], "-", "")
+					$GPRMC_Split[5] = "S"
+				EndIf
+				If StringInStr($GPRMC_Split[6], "-") Then ;Fix longitude
+					$GPRMC_Split[6] = StringReplace($GPRMC_Split[6], "-", "")
+					$GPRMC_Split[7] = "W"
+				EndIf
+				;End BlueNMEA fixes
 				$Temp_FixTime2 = _FormatGpsTime($GPRMC_Split[2])
-				$Temp_Lat2 = $GPRMC_Split[5] & ' ' & StringFormat('%0.4f', $GPRMC_Split[4]) ;_FormatLatLon($GPRMC_Split[4], $GPRMC_Split[5])
-				$Temp_Lon2 = $GPRMC_Split[7] & ' ' & StringFormat('%0.4f', $GPRMC_Split[6]) ;_FormatLatLon($GPRMC_Split[6], $GPRMC_Split[7])
+				$Temp_Lat2 = $GPRMC_Split[5] & ' ' & StringFormat('%0.4f', $GPRMC_Split[4])
+				$Temp_Lon2 = $GPRMC_Split[7] & ' ' & StringFormat('%0.4f', $GPRMC_Split[6])
 				$Temp_SpeedInKnots = $GPRMC_Split[8]
 				$Temp_SpeedInMPH = Round($GPRMC_Split[8] * 1.15, 2)
 				$Temp_SpeedInKmH = Round($GPRMC_Split[8] * 1.85200, 2)
