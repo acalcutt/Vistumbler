@@ -3132,8 +3132,8 @@ Func _GPGGA($data);Strips data from a gps $GPGGA data string
 				EndIf
 				;End BlueNMEA fixes
 				$Temp_FixTime = _FormatGpsTime($GPGGA_Split[2])
-				$Temp_Lat = $GPGGA_Split[4] & " " & StringFormat('%0.4f', $GPGGA_Split[3]);_FormatLatLon($GPGGA_Split[3], $GPGGA_Split[4])
-				$Temp_Lon = $GPGGA_Split[6] & " " & StringFormat('%0.4f', $GPGGA_Split[5]);_FormatLatLon($GPGGA_Split[5], $GPGGA_Split[6])
+				$Temp_Lat = $GPGGA_Split[4] & " " & StringFormat('%0.4f', $GPGGA_Split[3])
+				$Temp_Lon = $GPGGA_Split[6] & " " & StringFormat('%0.4f', $GPGGA_Split[5])
 				$Temp_NumberOfSatalites = $GPGGA_Split[8]
 				$Temp_HorDilPitch = $GPGGA_Split[9]
 				$Temp_Alt = $GPGGA_Split[10] * 3.2808399
@@ -3159,14 +3159,14 @@ Func _GPRMC($data);Strips data from a gps $GPRMC data string
 					$GPRMC_Split[4] = StringReplace($GPRMC_Split[4], "-", "")
 					$GPRMC_Split[5] = "S"
 				EndIf
-				If StringInStr($GPRMC_Split[5], "-") Then ;Fix longitude
+				If StringInStr($GPRMC_Split[6], "-") Then ;Fix longitude
 					$GPRMC_Split[6] = StringReplace($GPRMC_Split[6], "-", "")
 					$GPRMC_Split[7] = "W"
 				EndIf
 				;End BlueNMEA fixes
 				$Temp_FixTime2 = _FormatGpsTime($GPRMC_Split[2])
-				$Temp_Lat2 = $GPRMC_Split[5] & ' ' & StringFormat('%0.4f', $GPRMC_Split[4]) ;_FormatLatLon($GPRMC_Split[4], $GPRMC_Split[5])
-				$Temp_Lon2 = $GPRMC_Split[7] & ' ' & StringFormat('%0.4f', $GPRMC_Split[6]) ;_FormatLatLon($GPRMC_Split[6], $GPRMC_Split[7])
+				$Temp_Lat2 = $GPRMC_Split[5] & ' ' & StringFormat('%0.4f', $GPRMC_Split[4])
+				$Temp_Lon2 = $GPRMC_Split[7] & ' ' & StringFormat('%0.4f', $GPRMC_Split[6])
 				$Temp_SpeedInKnots = $GPRMC_Split[8]
 				$Temp_SpeedInMPH = Round($GPRMC_Split[8] * 1.15, 2)
 				$Temp_SpeedInKmH = Round($GPRMC_Split[8] * 1.85200, 2)
