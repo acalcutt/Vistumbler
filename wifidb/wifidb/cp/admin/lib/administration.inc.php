@@ -279,7 +279,7 @@ function set_flow($func, $mode)
 	$mode = addslashes(strtolower($mode));
 	?>
 	<tr>
-		<td colspan="1" class="<?php if($func == 'overview' or $func == ''){echo 'cp_select_coloum';}else{echo "light";}?>">
+		<td colspan="1" class="<?php if($func == 'overview' or $func == ''){echo 'cp_select_column';}else{echo "light";}?>">
 			<font size="2">
 				<a class="links<?php if(($mode == 'aps' or $mode == 'apstats' or $mode == 'aphdata') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=aps">Access Points</a> -
 				<a class="links<?php if(($mode == 'geo' or $mode == 'mcstats' or $mode == 'mchdata') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=geo">Geocaches</a><br>
@@ -287,21 +287,21 @@ function set_flow($func, $mode)
 				<a class="links<?php if(($mode == 'daemon' or $mode == 'daemon_hist') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=daemon">Daemon Stats</a><br>
 				<a class="links<?php if(($mode == 'graphs') and $func == 'overview'){echo '_s';} ?>" href="?func=overview&mode=graphs">Graphs</a>
 		</td>
-		<td colspan="1" class="<?php if($func == 'uandp'){echo 'cp_select_coloum';}else{echo "light";}?>">
+		<td colspan="1" class="<?php if($func == 'uandp'){echo 'cp_select_column';}else{echo "light";}?>">
 			<font size="2">
-				<a class="links<?php if(($mode == 'man_users' or $mode == 'man_user_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_users">Users</a> - 
+				<a class="links<?php if(($mode == 'man_users' or $mode == 'man_users_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_users">Users</a> - 
 				<a class="links<?php if(($mode == 'man_groups' or $mode == 'man_grp_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_groups">Groups</a> - 
 				<a class="links<?php if(($mode == 'man_titles' or $mode == 'man_titles_edit') and $func == 'uandp'){echo '_s';} ?>" href="?func=uandp&mode=man_titles">Titles</a>
 			</font>
 		</td>
-		<td colspan="1" class="<?php if($func == 'maint'){echo 'cp_select_coloum';}else{echo "light";}?>">
+		<td colspan="1" class="<?php if($func == 'maint'){echo 'cp_select_column';}else{echo "light";}?>">
 			<font size="2">
 				<a class="links<?php if(($mode == 'clean_tmp' or $mode == 'clean_tmp_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_tmp">Temp Folder</a> - 
 				<a class="links<?php if(($mode == 'clean_upload' or $mode == 'clean_upload_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_upload">Upload Folder</a><br>
 				<a class="links<?php if(($mode == 'clean_signal' or $mode == 'clean_signal_proc') and $func == 'maint'){echo '_s';} ?>" href="?func=maint&mode=clean_signal">Graphs Folder</a>
 			</font>
 		</td>
-		<td colspan="1" class="<?php if($func == 'system'){echo 'cp_select_coloum';}else{echo "light";}?>">
+		<td colspan="1" class="<?php if($func == 'system'){echo 'cp_select_column';}else{echo "light";}?>">
 			<font size="2">
 				<a class="links<?php if(($mode == 'daemon' or $mode == 'daemon_proc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=daemon">Daemon Ctl</a> - 
 				<a class="links<?php if(($mode == 'daemon_config' or $mode == 'daemon_cfgproc') and $func == 'system'){echo '_s';} ?>" href="?func=system&mode=daemon_config">Daemon Cfg</a><br>
@@ -1141,7 +1141,6 @@ class admin
 				$locked			=	$_POST['locked'];
 				#dump($HTTP_POST_VARS['login_fails_submit']);
 				if(@$HTTP_POST_VARS['login_fails_submit']){$login_fails = 0;}else{$login_fails = $_POST['login_fails'];}
-				$member 		=	$_POST['member'];
 				$website 		=	$_POST['website'];
 				$Vis_ver 		=	$_POST['Vis_ver'];
 				$sec_token 		=	$_POST['sec_token'];
@@ -1149,7 +1148,7 @@ class admin
 			#	echo $sql1;
 				if(mysql_query($sql1, $conn))
 				{					
-					redirect_page('?func=uandp&mode=man_users&data='.$username, 2000, 'Update User Successful!');
+					redirect_page('?func=uandp&mode=man_users&data='.$username, 2000, '<table><tr class="sub_head"><td>Update User Successful!</tr></td></table>');
 				}
 			
 			break;
@@ -1162,7 +1161,7 @@ class admin
 				?>
 				<table WIDTH=85% BORDER=1 CELLPADDING=2 CELLSPACING=0>
 					<tr>
-						<th colspan="25" class="style4"><strong><em>Database Historical Statistics</em></strong></th>
+						<th colspan="25" class="style4"><strong><em>Manage Database Users</em></strong></th>
 					</tr>
 					
 				<?php
@@ -1230,7 +1229,7 @@ class admin
 											<input type="text" name="login_fails" size="3" value="<?php echo $users['login_fails']; ?>">
 										</td>
 										<td>
-											<input type="button" name="login_fails_submit" value="Reset" onClick="document.edit_user_values_form.action='?func=uandp&mode=man_users_edit'; document.edit_user_values_form.submit();" />
+											To clear set to zero ( 0 )
 										</td>
 									</tr>
 									<tr class="dark">
@@ -1320,11 +1319,11 @@ class admin
 			#	dump($_POST['admingrp']);
 			#	dump($_POST['nonadmingrp']);
 				
-				$data = addslashes(strtolower($_GET['data']));
+				$data = addslashes(strtolower(@$_GET['data']));
 				#dump($data);
-				$todo = addslashes(strtolower($_GET['todo']));
-				$in = $_POST['in_grp'];
-				$not_in = $_POST['not_in_grp'];
+				$todo = addslashes(strtolower(@$_GET['todo']));
+				$in = @$_POST['in_grp'];
+				$not_in = @$_POST['not_in_grp'];
 				if(@$in){$users = $in;}else{$users = $not_in;}
 				if($todo === 'r'){$td=0;}elseif($todo==='a'){$td=1;}
 				foreach($users as $user_id)
@@ -1351,10 +1350,10 @@ class admin
 					$result = mysql_query($sql1, $conn);
 					if(@$result)
 					{					
-						echo "Updated user ($user_id) to ";if(@$in){echo "remove ";}else{echo "have ";} echo "`$data group` permissions<br>\r\n";
+						echo "<table><tr class='sub_head'><td>Updated user ($user_id) to ";if(@$in){echo "remove ";}else{echo "have ";} echo "`$data group` permissions</tr></td></table>";
 					}else
 					{
-						echo "There was a serious error: ".mysql_error($conn)."<br>";
+						echo "<table><tr class='sub_head'><td>There was a serious error: ".mysql_error($conn)."</tr></td></table>";
 						die();
 					}
 				}
@@ -1629,16 +1628,16 @@ class admin
 					$result = mysql_query($sql1, $conn);
 					if(@$result)
 					{					
-						echo "Updated user ($user_id) with new Custom Rank\r\n<br>";
+						echo "<table><tr class='sub_head'><td>Updated user ($user_id) with new Custom Rank</td></tr></table>";
 					}else
 					{
-						echo "There was a serious error: ".mysql_error($conn)."<br>";
+						echo "<table><tr class='sub_head'><td>There was a serious error: ".mysql_error($conn)."</tr></td></table>";
 						die();
 					}
 					redirect_page('?func=uandp&mode=man_titles&data='.$data, 2000, 'Update User Successful!');
 				}else
 				{
-					Echo "User ID's did not match, there was an error, contact the support forums for more help";
+					Echo "<table><tr class='sub_head'><td>User ID's did not match, there was an error, contact the support forums for more help.</tr></td></table>";
 				}
 			break;
 			
@@ -1716,7 +1715,30 @@ class admin
 			break;
 			
 			default:
-				echo "Users and Permissions, Overview";
+				?>
+				<table>
+					<tr>
+						<td>
+						In this area you have the ability to manage users and their permissions.<br>
+						<ul>Users
+							<li>Change email address of users</li>
+							<li>Hide email from other users</li>
+							<lI>Reset their login fails/unlock users</li>
+							<li>Disable users</li>
+						</ul>
+						<br>
+						<ul>Groups
+							<li>Add / remove users from groups</li>
+							<li>Choices between Administrators / Moderators / Developers and Users</LI>
+						</ul>
+						<br>
+						<ul>Titles
+							<li>Change the Custom Titles for each user.</li>
+						</ul>
+						</td>
+					</tr>
+				</table>
+				<?php
 			break;
 		}
 	}
@@ -1754,27 +1776,24 @@ class admin
 						<th>Temporary Folder Clean Up Status...</th>
 					</tr>
 				<?php
-				$farc = 'out/archive/tmp_folder_archive_'.rand().'.zip';
+				$farc = '/out/archive/tmp_folder_archive_'.date("Y-m-d_H-i-s").'.zip';
 				$filearc = $half_path.$farc;
-				$home = $half_path.'tmp/';
-			#	echo $filearc.'<br><br>$_POST["arc_file"]';
+				$home = $half_path.'/tmp/';
+			#	echo $filearc.'<br><br>';
+			#	echo $home.'<br><br>';
 				$row = 0;
 				$zip = new ZipArchive;
-				if (!$zip->open($filearc, ZipArchive::CREATE))
+				if ($zip->open($filearc, ZipArchive::CREATE) !== TRUE)
 				{die("Could not create Archive file ($filearc)");}
 			#	dump($_POST['arc_file']);
-				if(count($_POST['arc_file']) > 0)
+				if(count(@$_POST['arc_file']) > 0)
 				{
-					?>
-					<tr class="style4">
-						<th>Archive Temp Folder Files</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Archive Temp Folder Files</th>	</tr><?php
 					$arc_file_flag = 1;
-					foreach($_POST['arc_file'] as $arc_file)
+					foreach(@$_POST['arc_file'] as $arc_file)
 					{
-					#	echo $half_path.'tmp/'.$arc_file.'<br>';
-						if($zip->addFile($half_path.'tmp/'.$arc_file, $arc_file))
+					#	echo $home.$arc_file.'<br>';
+						if($zip->addFile($home.$arc_file, $arc_file))
 						{
 							if($row){$style="light";$row=0;}else{$style="dark";$row=1;}
 							?>
@@ -1810,16 +1829,12 @@ class admin
 				
 			#	echo '<br><br>$_POST["del_file"]';
 			#	dump($_POST['del_file']);
-				if(count($_POST['del_file']) > 0 and $arc_file_flag === 1)
+				if(count(@$_POST['del_file']) > 0 and $arc_file_flag === 1)
 				{
-					?>
-					<tr class="style4">
-						<th>Delete Temp Folder Files</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Delete Temp Folder Files</th></tr><?php
 					$del_no=0;
 					$del_yes=0;
-					foreach($_POST['del_file'] as $del_file)
+					foreach(@$_POST['del_file'] as $del_file)
 					{
 						if(unlink($home.$del_file))
 						{
@@ -1867,15 +1882,11 @@ class admin
 				#################################
 			#	echo '<br><br>$_POST["arc_dir"]';
 			#	dump($_POST['arc_dir']);
-				if(count($_POST['arc_dir']) > 0 )
+				if(is_array(@$_POST['arc_dir']))
 				{
-					?>
-					<tr class="style4">
-						<th>Archive Folder in Temp Folder</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Archive Folder in Temp Folder</th></tr><?php
 					$arc_dir_flag = 1;
-					foreach($_POST['arc_dir'] as $arc_file)
+					foreach(@$_POST['arc_dir'] as $arc_file)
 					{
 					#	echo $half_path.'tmp/'.$arc_file.'<br>';
 						?>
@@ -1891,7 +1902,7 @@ class admin
 							if($row){$style="light";$row=0;}else{$style="dark";$row=1;}
 						#	echo filetype($Folder.'/'.$file)."<br>";
 							if(filetype($Folder.'/'.$file) == 'dir'){continue;}
-							if($zip->addFile($half_path.'tmp/'.$arc_file.'/'.$file, $arc_file.'/'.$file))
+							if($zip->addFile($home.$arc_file.'/'.$file, $arc_file.'/'.$file))
 							{
 								?>
 								<tr class="<?php echo $style;?>">
@@ -1932,15 +1943,11 @@ class admin
 				
 			#	echo '<br><br>$_POST["del_dir"]';
 			#	dump($_POST['del_dir']);
-				if(count($_POST['del_dir']) > 0 and $arc_dir_flag === 1)
+				if(count(@$_POST['del_dir']) > 0 and $arc_dir_flag === 1)
 				{
-					?>
-					<tr class="style4">
-						<th>Deleting Folders in Temp</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Deleting Folders in Temp</th></tr><?php
 					$del_dir_flag = 1;
-					foreach($_POST['del_dir'] as $del_dir)
+					foreach(@$_POST['del_dir'] as $del_dir)
 					{
 						recur_del_dir($home.$del_dir);
 					}
@@ -1960,7 +1967,7 @@ class admin
 				$zip->close();
 				?>
 					<tr class="style4">
-						<th><a href="/<?php echo $root.'/'.$farc;?>" class="links">Temp Folder Archive</a> is ready.<br>( <?php echo $farc;?> )</th>
+						<th><a href="<?php echo $GLOBALS['UPATH'].$farc;?>" class="links">Temp Folder Archive</a> is ready.<br>( <?php echo $farc;?> )</th>
 					</tr>
 				</table><?php
 			break;
@@ -2093,9 +2100,9 @@ class admin
 						<th>Upload Folder Clean Up Status...</th>
 					</tr>
 				<?php
-				$farc = 'out/archive/upload_folder_archive_'.rand().'.zip';
+				$farc = '/out/archive/upload_folder_archive_'.rand().'.zip';
 				$filearc = $half_path.$farc;
-				$part = 'import/up/';
+				$part = '/import/up/';
 				$home = $half_path.$part;
 			#	echo $filearc.'<br><br>$_POST["arc_file"]';
 				$row = 0;
@@ -2103,18 +2110,14 @@ class admin
 				if (!$zip->open($filearc, ZipArchive::CREATE))
 				{die("Could not create Archive file ($filearc)");}
 			#	dump($_POST['arc_file']);
-				if(count($_POST['arc_file']) > 0)
+				if(count(@$_POST['arc_file']) > 0)
 				{
-					?>
-					<tr class="style4">
-						<th>Archive Upload Folder Files</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Archive Upload Folder Files</th></tr><?php
 					$arc_file_flag = 1;
 					foreach($_POST['arc_file'] as $arc_file)
 					{
 					#	echo $half_path.'tmp/'.$arc_file.'<br>';
-						if($zip->addFile($half_path.$part.$arc_file, $arc_file))
+						if($zip->addFile($home.$arc_file, $arc_file))
 						{
 							if($row){$style="light";$row=0;}else{$style="dark";$row=1;}
 							?>
@@ -2150,13 +2153,9 @@ class admin
 				
 			#	echo '<br><br>$_POST["del_file"]';
 			#	dump($_POST['del_file']);
-				if(count($_POST['del_file']) > 0 and $arc_file_flag === 1)
+				if(count(@$_POST['del_file']) > 0 and $arc_file_flag === 1)
 				{
-					?>
-					<tr class="style4">
-						<th>Delete Temp Folder Files</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Delete Temp Folder Files</th></tr><?php
 					$del_no=0;
 					$del_yes=0;
 					foreach($_POST['del_file'] as $del_file)
@@ -2207,15 +2206,11 @@ class admin
 				#################################
 			#	echo '<br><br>$_POST["arc_dir"]';
 			#	dump($_POST['arc_dir']);
-				if(count($_POST['arc_dir']) > 0 )
+				if(count(@$_POST['arc_dir']) > 0 )
 				{
-					?>
-					<tr class="style4">
-						<th>Archive Folder in Upload Folder</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Archive Folder in Upload Folder</th></tr><?php
 					$arc_dir_flag = 1;
-					foreach($_POST['arc_dir'] as $arc_file)
+					foreach(@$_POST['arc_dir'] as $arc_file)
 					{
 					#	echo $half_path.'tmp/'.$arc_file.'<br>';
 						?>
@@ -2223,7 +2218,7 @@ class admin
 							<th><?php echo "Archiving Folder: ".$arc_file; ?></th>
 						</tr>
 						<?php
-						$Folder = $half_path.$part.$arc_file;
+						$Folder = $home.$arc_file;
 					#	$zip->addEmptyDir($arc_file);
 						$dh	= opendir($Folder) or die("couldn't open directory");
 						while(!(($file = readdir($dh)) == false))
@@ -2231,7 +2226,7 @@ class admin
 							if($row){$style="light";$row=0;}else{$style="dark";$row=1;}
 						#	echo filetype($Folder.'/'.$file)."<br>";
 							if(filetype($Folder.'/'.$file) == 'dir'){continue;}
-							if($zip->addFile($half_path.$part.$arc_file.'/'.$file, $arc_file.'/'.$file))
+							if($zip->addFile($home.$arc_file.'/'.$file, $arc_file.'/'.$file))
 							{
 								?>
 								<tr class="<?php echo $style;?>">
@@ -2272,13 +2267,9 @@ class admin
 				
 			#	echo '<br><br>$_POST["del_dir"]';
 			#	dump($_POST['del_dir']);
-				if(count($_POST['del_dir']) > 0 and $arc_dir_flag === 1)
+				if(count(@$_POST['del_dir']) > 0 and $arc_dir_flag === 1)
 				{
-					?>
-					<tr class="style4">
-						<th>Deleting Folders in Upload</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Deleting Folders in Upload</th></tr><?php
 					$del_dir_flag = 1;
 					foreach($_POST['del_dir'] as $del_dir)
 					{
@@ -2300,7 +2291,7 @@ class admin
 				$zip->close();
 				?>
 					<tr class="style4">
-						<th><a href="/<?php echo $root.'/'.$farc;?>" class="links">Upload Folder Archive</a> is ready.<br>( <?php echo $farc;?> )</th>
+						<th><a href="<?php echo $GLOBALS['UPATH'].$farc;?>" class="links">Upload Folder Archive</a> is ready.<br>( <?php echo $farc;?> )</th>
 					</tr>
 				</table><?php
 			break;
@@ -2434,9 +2425,9 @@ class admin
 						<th>Graph Folder Clean Up Status...</th>
 					</tr>
 				<?php
-				$farc = 'out/archive/graphs_folder_archive_'.rand().'.zip';
+				$farc = '/out/archive/graphs_folder_archive_'.rand().'.zip';
 				$filearc = $half_path.$farc;
-				$part = 'out/graph/';
+				$part = '/out/graph/';
 				$home = $half_path.$part;
 			#	echo $filearc.'<br><br>$_POST["arc_file"]';
 				$row = 0;
@@ -2444,18 +2435,14 @@ class admin
 				if (!$zip->open($filearc, ZipArchive::CREATE))
 				{die("Could not create Archive file ($filearc)");}
 			#	dump($_POST['arc_file']);
-				if(count($_POST['arc_file']) > 0)
+				if(count(@$_POST['arc_file']) > 0)
 				{
-					?>
-					<tr class="style4">
-						<th>Archive Graph Folder Files</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Archive Graph Folder Files</th></tr><?php
 					$arc_file_flag = 1;
 					foreach($_POST['arc_file'] as $arc_file)
 					{
 					#	echo $half_path.'tmp/'.$arc_file.'<br>';
-						if($zip->addFile($half_path.$part.$arc_file, $arc_file))
+						if($zip->addFile($home.$arc_file, $arc_file))
 						{
 							if($row){$style="light";$row=0;}else{$style="dark";$row=1;}
 							?>
@@ -2491,13 +2478,9 @@ class admin
 				
 			#	echo '<br><br>$_POST["del_file"]';
 			#	dump($_POST['del_file']);
-				if(count($_POST['del_file']) > 0 and $arc_file_flag === 1)
+				if(count(@$_POST['del_file']) > 0 and $arc_file_flag === 1)
 				{
-					?>
-					<tr class="style4">
-						<th>Delete Graph Folder Files</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Delete Graph Folder Files</th></tr><?php
 					$del_no=0;
 					$del_yes=0;
 					foreach($_POST['del_file'] as $del_file)
@@ -2548,13 +2531,9 @@ class admin
 				#################################
 			#	echo '<br><br>$_POST["arc_dir"]';
 			#	dump($_POST['arc_dir']);
-				if(count($_POST['arc_dir']) > 0 )
+				if(count(@$_POST['arc_dir']) > 0 )
 				{
-					?>
-					<tr class="style4">
-						<th>Archive Folder in Graph Folder</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Archive Folder in Graph Folder</th></tr><?php
 					$arc_dir_flag = 1;
 					foreach($_POST['arc_dir'] as $arc_file)
 					{
@@ -2564,7 +2543,7 @@ class admin
 							<th><?php echo "Archiving Folder: ".$arc_file; ?></th>
 						</tr>
 						<?php
-						$Folder = $half_path.$part.$arc_file;
+						$Folder = $home.$arc_file;
 					#	$zip->addEmptyDir($arc_file);
 						$dh	= opendir($Folder) or die("couldn't open directory");
 						while(!(($file = readdir($dh)) == false))
@@ -2572,7 +2551,7 @@ class admin
 							if($row){$style="light";$row=0;}else{$style="dark";$row=1;}
 						#	echo filetype($Folder.'/'.$file)."<br>";
 							if(filetype($Folder.'/'.$file) == 'dir'){continue;}
-							if($zip->addFile($half_path.$part.$arc_file.'/'.$file, $arc_file.'/'.$file))
+							if($zip->addFile($home.$arc_file.'/'.$file, $arc_file.'/'.$file))
 							{
 								?>
 								<tr class="<?php echo $style;?>">
@@ -2613,13 +2592,9 @@ class admin
 				
 			#	echo '<br><br>$_POST["del_dir"]';
 			#	dump($_POST['del_dir']);
-				if(count($_POST['del_dir']) > 0 and $arc_dir_flag === 1)
+				if(count(@$_POST['del_dir']) > 0 and $arc_dir_flag === 1)
 				{
-					?>
-					<tr class="style4">
-						<th>Deleting Folders in Graph</th>
-					</tr>
-					<?php
+					?><tr class="style4"><th>Deleting Folders in Graph</th></tr><?php
 					$del_dir_flag = 1;
 					foreach($_POST['del_dir'] as $del_dir)
 					{
@@ -2641,7 +2616,7 @@ class admin
 				$zip->close();
 				?>
 					<tr class="style4">
-						<th><a href="/<?php echo $root.'/'.$farc;?>" class="links">Graph Folder Archive</a> is ready.<br>( <?php echo $farc;?> )</th>
+						<th><a href="<?php echo $GLOBALS['UPATH'].$farc;?>" class="links">Graph Folder Archive</a> is ready.<br>( <?php echo $farc;?> )</th>
 					</tr>
 				</table><?php
 			break;
@@ -2761,7 +2736,22 @@ class admin
 			break;
 			
 			default:
-				echo "Maintenance, Overview";
+				?>
+				<table>
+					<tr>
+						<td>
+							<ul>In this area you can clean up various folders in the database, so they dont get large and bloated
+								<li>The tmp folder really shouldnt have much in it<br>
+									sometimes an export will fail or something odd will happen.</li>
+								<li>The upload folder is good to keep around, you can archive it<br>
+									for recovery or other uses, but its not really needed.</li>
+								<li>The Graphing folder can be cleaned whenever you feel like it,<br>
+									since once the person has generated it, the graph is no longer needed.</li>
+							</ul>
+						</td>
+					</tr>
+				</table>
+				<?php
 			break;
 		}
 	}
@@ -3291,6 +3281,12 @@ $"."debug = $debug;\r\n?>";
 				$root				=	addslashes(strip_tags($_POST['root']));
 				$hosturl			=	addslashes(strip_tags($_POST['hosturl']));
 				$admin_email		=	addslashes(strip_tags($_POST['admin_email']));
+				$wifidb_email_updates = addslashes(strip_tags($_POST['wifidb_email_updates']));
+				$wifidb_from		=	addslashes(strip_tags($_POST['wifidb_from']));
+				$wifidb_from_pass	=	addslashes(strip_tags($_POST['wifidb_from_pass']));
+				$wifidb_smtp		=	addslashes(strip_tags($_POST['wifidb_smtp']));
+				$email_validation	=	addslashes(strip_tags($_POST['email_validation']));
+				$reserved_users		=	addslashes(strip_tags($_POST['reserved_users']));
 				$config_fails		=	addslashes(strip_tags($_POST['config_fails']));
 				$daemon				=	addslashes(strip_tags($_POST['daemon']));
 				$WiFiDB_LNZ_User 	=	addslashes(strip_tags($_POST['WiFiDB_LNZ_User']));
@@ -3351,7 +3347,6 @@ global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, 
 $"."lastedit	=	'$date';
 
 #----------General Settings------------#
-$"."bypass_check	=	0;
 $"."wifidb_tools	=	'$toolsdir';
 $"."wifidb_install	=	'$wifidb_install';
 $"."timezn			=	'$Local_tz';
@@ -3364,7 +3359,9 @@ $"."login_seed		=	'$seed';
 $"."wifidb_email_updates = '$wifidb_email_updates';
 $"."wifidb_from	=	'$wifidb_from';
 $"."wifidb_from_pass	=	'$wifidb_from_pass';
-$"."wifidb_smtp		=	'';
+$"."wifidb_smtp		=	'$wifidb_smtp';
+$"."email_validation	=	'$email_validation';
+$"."reserved_users		=	'$reserved_users';
 
 #---------------- Daemon Info ----------------#
 $"."daemon				=	$daemon;
@@ -3388,6 +3385,7 @@ $"."console_lines		= $console_lines;
 $"."console_log		= '$console_log';
 
 #---------------- Debug Info ----------------#
+$"."bypass_check	=	$bypass_check;
 $"."rebuild	=	$rebuild;
 $"."bench		=	$bench;
 $"."debug		=	$debug;
@@ -3475,6 +3473,17 @@ $"."tracker	= '$tracker';";
 				  <tr class="dark">
 					<td >Max Login Fails before Lock</td>
 					<td ><input style="width: 25%" name="config_fails" value="<?php echo $config_fails; ?>"></td></tr>
+				  <tr class="dark">
+					<td>WiFiDB Email Updates</td>
+					<td>
+					<input style="width: 96%" name="wifidb_email_updates" value="<?php echo $wifidb_email_updates; ?>"></td></tr>
+				  <tr class="dark">
+					<td> WiFiDB Sending Email</td>
+					<td>
+					<input style="width: 84%" name="wifidb_from_email" value="<?php echo $wifidb_from_email; ?>"></td></tr>
+				  <tr class="dark">
+					<td >WiFiDB Sending Pass</td>
+					<td ><input style="width: 25%" name="wifidb_from_pass" type=PASSWORD value="<?php echo $wifidb_from_pass; ?>"></td></tr>
 				  <tr>
 					<th colspan="2" class="style4">Daemon Settings</th>
 				</tr>
@@ -3586,7 +3595,7 @@ $"."tracker	= '$tracker';";
 				<tr class="dark">
 					<TD>WiFiDB SQL Password</TD>
 					<td>
-						<input style="width: 49%" name="db_pwd" value="<?php echo $db_pwd; ?>"></td>
+						<input style="width: 49%" name="db_pwd" type=PASSWORD value="<?php echo $db_pwd; ?>"></td>
 				</tr>
 				<tr class="dark">
 					<TD>SQL Collate</TD>
@@ -3746,11 +3755,13 @@ $"."tracker	= '$tracker';";
 			break;
 			
 			default:
-				
-				
-				
-				
-				
+				?>
+				<ul>This area does the background controls and configuration for the database.
+					<li>The Daemon Control page does not work yet, its still *WIP*.</li>
+					<li>The Daemon Config page is pretty self explanitory, it edits the daemons config file.</li>
+					<li>The Database Config page changes settings for the web front end of the database.</li>
+				</ul>
+				<?php
 			break;
 		}
 	}

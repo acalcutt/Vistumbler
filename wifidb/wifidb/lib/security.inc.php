@@ -21,6 +21,43 @@ function ff_exists($string, $array)
 }
 
 
+function checkEmail($email)
+{
+	// First, we check that there's one @ symbol, and that the lengths are right 
+	if (!ereg("^[^@]{1,64}@[^@]{1,255}$", $email)) 
+	{
+		// Email invalid because wrong number of characters in one section, or wrong number of @ symbols. 
+		return false; 
+	}
+	// Split it into sections to make life easier 
+	$email_array = explode("@", $email); 
+	$local_array = explode(".", $email_array[0]); 
+	for ($i = 0; $i < sizeof($local_array); $i++) 
+	{
+		if (!ereg("^(([A-Za-z0-9!#$%&'*+/=?^_`{|}~-][A-Za-z0-9!#$%&'*+/=?^_`{|}~\.-]{0,63})|(\"[^(\\|\")]{0,62}\"))$", $local_array[$i])) 
+		{
+			return false; 
+		} 
+	}
+	if (!ereg("^\[?[0-9\.]+\]?$", $email_array[1])) 
+	{
+		// Check if domain is IP. If not, it should be valid domain name 
+		$domain_array = explode(".", $email_array[1]);
+		if (sizeof($domain_array) < 2) 
+		{
+			return false; // Not enough parts to domain 
+		} 
+		for ($i = 0; $i < sizeof($domain_array); $i++) 
+		{ 
+			if (!ereg("^(([A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9])|([A-Za-z0-9]+))$", $domain_array[$i]))
+			{ 
+				return false; 
+			} 
+		} 
+	} 
+	return true; 
+}
+
 
 class security
 {
@@ -254,12 +291,63 @@ class security
 		}
 	}
 
-
-
+	function check_user_reserved($username = '')
+	{
+		if($username == ''){return -1;}
+		include('config.inc.php');
+		$reserved = explode(":", $GLOBALS['reserved_users']);
+		foreach($reserved as $resv)
+		{
+			if($username == $resv)
+			{return 1;}
+		}
+		return 0;
+	}
+	
+	
+	function user_create_form($username = '', $email = '')
+	{
+		?>
+		<form method="post" action="<?php echo $_SERVER['PHP_SELF'];?>?func=create_user_proc">
+			<table align="center">
+				<tr>
+					<td colspan="2"><p align="center"><img src="themes/wifidb/img/logo.png"></p></td>
+				</tr>
+				<tr>
+					<td>Username</td>
+					<td><input type="text" name="time_user" value="<?php echo $username;?>"></td>
+				</tr>
+				<tr>
+					<td>Password</td>
+					<td><input type="password" name="time_pass"></td>
+				</tr>
+				<tr>
+					<td>Password (again)</td>
+					<td><input type="password" name="time_pass2"></td>
+				</tr>
+				<tr>
+					<td>Email</td>
+					<td><input type="text" name="time_email" value="<?php echo $email;?>"></td>
+				</tr>
+				<tr>
+					<td colspan="2"><p align="center"><input type="submit" value="Create Me!"></p></td>
+				</tr>
+			</table>
+		</form>
+		<?php
+	}
+	
+	
 	#######################################
 	function create_user($username="", $password="", $email="local@localhost.local", $user_array=array(0,0,0,1), $seed="", $validate_user_flag = 1)
 	{
+		if($username == ""){$return = array("un_err", "Username is blank"); return $return;}
+		if($password == ""){$return = array("pw_err", "Password is blank"); return $return;}
+		if(security::check_user_reserved($username) == 1){$return = array("dup_u", "Reserved user"); return $return;}
+		if(!checkEmail($email)){$return = array("err_email", "Invalid Email address.");return $return;}
+		
 		include('config.inc.php');
+		
 		$conn = $GLOBALS['conn'];
 		$db = $GLOBALS['db'];
 		$user_logins_table = $GLOBALS['user_logins_table'];
@@ -272,9 +360,12 @@ class security
 		$dev = $user_array[1];
 		$mod = $user_array[2];
 		$user = $user_array[3];
+		
 		if($seed == ''){$seed = $GLOBALS['seed'];}
 		if($seed == ''){$seed = "PIECAVE!";}
+		
 		if($username == '' or $password == ''){die("Username and/or password cannot be blank.");}
+		
 		$uid_b = md5($date.$username.$seed);
 		$uid_exp = str_split($uid_b, 6);
 		$uid = implode("-", $uid_exp);
@@ -318,23 +409,31 @@ class security
 							) ENGINE=INNODB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0";
 				if(mysql_query($create_user_cache, $conn))
 				{
-					mail_users("New user has been created!\r\nUsername: $username\r\nDate: $date\r\nLink to Users' info: ".$UPATH."/opt/userstats.php?func=alluserlists&user=$username", $subject, $type, 0, 0);
+					$msg = "New user has been created!\r\nUsername: $username\r\nDate: $date\r\nLink to Users' info: ".$UPATH."/opt/userstats.php?func=alluserlists&user=$username";
+					mail_users($msg, $subject, $type, 0);
 					return 1;
 				}else
 				{
-					mail_users("Failed to create new user statistics table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n".mysql_error($conn), $subject, $type, 1, 1);
-					return array("create_wpt", mysql_error($conn));
+					$msg = "Failed to create new user statistics table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n$err";
+					mail_users($msg, $subject, $type, 1);
+					$return = array("create_tb", $msg);
+					return $return;
 				}
 			}else
 			{
-				mail_users("Failed to create new user Geocache table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n".mysql_error($conn), $subject, $type, 1, 1);
-				return array("create_wpt", mysql_error($conn));
+				$msg = "Failed to create new user Geocache table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n$err";
+				mail_users($msg, $subject, $type, 1);
+				$return = array("create_tb", $msg);
+				return $return;
 			}
 		}
 		else
 		{
-			mail_users("Failed to create new user. Duplicate username or email already exists in database. ($date)\r\n Username: $username\r\n Email: $email\r\n MySQL Error:\r\n".mysql_error($conn), $subject, $type, 1, 1);
-			return array("dup_u", mysql_error($conn));
+			$err = mysql_error($conn);
+			$msg = "Failed to create new user. Duplicate username or email already exists in database. ($date)\r\n Username: $username\r\n Email: $email\r\n MySQL Error:\r\n$err";
+			mail_users($msg, $subject, $type, 1);
+			$return = array("dup_u", $err);
+			return $return;
 		}
 	}
 }

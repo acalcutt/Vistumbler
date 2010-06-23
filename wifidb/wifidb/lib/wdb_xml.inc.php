@@ -111,7 +111,8 @@ class WDB_XML
 		$User = $sec->login_check();
 		if($User)
 		{
-			$User_cache = $User."_waypoints";
+			$User_cache = "waypoints_".$User;
+			echo $User_cache."<BR>";
 			$file_exp = explode(".", $xml_file);
 			$ext = strtolower($file_exp[1]);
 			switch($ext)
@@ -119,9 +120,10 @@ class WDB_XML
 				##########################################################
 				case "gpx":
 					$buffer = file_get_contents($xml_file);
+					
 					$edit = preg_replace("/[\r\n\r\n]/","",$buffer);
 					$xml=WDB_XML::xml2ary($edit);
-
+				#	dump($xml);
 					$count_gpx = count($xml['gpx']['_c']['wpt'])-1;
 					
 					if($count_gpx > 0)
@@ -135,14 +137,19 @@ class WDB_XML
 							$u_date = "0000-00-00 00:00:00";
 							
 		#					?Traditional?Cache?(1.5/1.5)
-
-							$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
-							$desc_exp2 = explode(", ",$desc_exp[1]);
+						#	echo $wpt['_c']['desc']['_v']."<BR>";
 							
-							$desc_exp3 = explode("(", $desc_exp2[1]);
-							$replace = str_ireplace(")", "", $desc_exp3[1]);
-							$desc_exp4 = explode("/", $replace);
-							if($wpt['_c']['author']['_v'] == '')
+							$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
+							if(count($desc_exp) > 2)
+							{
+								$by_a = array($desc_exp[1], $desc_exp[2]);
+								$desc_exp[1] = implode(" by ", $by_a);
+								unset($desc_exp[2]);
+							}
+							dump($desc_exp);
+							$desc_exp2 = explode(", ",$desc_exp[1]);
+							dump($desc_exp2);
+							if(@$wpt['_c']['author']['_v'] == '')
 							{
 								$author = addslashes($desc_exp2[0]);
 							}else
@@ -150,7 +157,11 @@ class WDB_XML
 								$author = addslashes($wpt['_c']['author']['_v']);
 							}
 							
-							if($wpt['_c']['Difficulty']['_v'] == '' or $wpt['_c']['Terrain']['_v'] == '' or $wpt['_c']['Cache Type']['_v'] == '')
+							$desc_exp3 = explode(" (", $desc_exp2[1]);
+							
+							$replace = str_ireplace(")", "", $desc_exp3[1]);
+							$desc_exp4 = explode("/", $replace);
+							if(@$wpt['_c']['Difficulty']['_v'] == '' or @$wpt['_c']['Terrain']['_v'] == '' or @$wpt['_c']['Cache Type']['_v'] == '')
 							{
 								$diff = addslashes($desc_exp4[0]);
 								$terain = addslashes($desc_exp4[1]);
@@ -162,12 +173,12 @@ class WDB_XML
 								$type = addslashes($wpt['_c']['Cache Type']['_v']);
 							}
 							
-							if($wpt['_c']['Terrain']['_v'] == '')
+							if(@$wpt['_c']['Terrain']['_v'] == '')
 							{
 								$desc_exp = explode(" by ", $wpt['_c']['desc']['_v']);
 								$desc_exp2 = explode(", ",$desc_exp[1]);
 								$diff = addslashes($desc_exp2[0]);
-								$terain = $wpt['_c']['Terrain']['_v'];
+								$terain = addslashes($desc_exp4[0]);
 							}else
 							{
 								$terain = addslashes($wpt['_c']['Terrain']['_v']);
@@ -187,10 +198,10 @@ class WDB_XML
 							$link = addslashes($wpt['_c']['url']['_v']);
 							
 							$sql0 = "INSERT INTO `$db`.`$User_cache` (`id`, `name`, `author`, `gcid`, `notes`, `cat`, `type`, `diff`, `terain`, `lat`, `long`, `link`, `share`, `share_id`, `c_date`, `u_date`) VALUES ('', '$name', '$author', '$gcid', '$notes', '$cat', '$type','$diff', '$terain', '$lat', '$long', '$link', '$share', '$share_id', '$c_date', '$u_date')";
-					#	echo $sql0."<BR>";
+						#	echo $sql0."<BR>";
 							if(mysql_query($sql0, $conn))
 							{
-					#			echo "Inserted!<BR>\r\n";
+						#		echo "Inserted!<BR>\r\n";
 							}else
 							{
 								$error .= mysql_error($conn)."\r\n";

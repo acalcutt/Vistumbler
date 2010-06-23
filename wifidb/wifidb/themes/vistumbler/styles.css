@@ -270,7 +270,12 @@ table.asscotable {
 	text-align: center;
 }
 
-
+.cp_select_coloum {
+	border-style: none;
+	border-color: inherit;
+	border-width: 1px;
+	background-color: #315573;
+}
 
 .dark {
 	background-color: #85ABCB;

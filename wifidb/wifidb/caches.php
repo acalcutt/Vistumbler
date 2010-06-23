@@ -25,16 +25,16 @@ switch(@$func)
 		<b><font size='6'>Shared Geocaches </font></b><br>
 		<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
 			<tr>
-				<th class="style3">ID<a href="?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/down.png"></a>
-				<a href="?func=boeyes&boeye_func=list_all&sort=id&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/up.png"></a></th>
-				<th class="style3">Name<a href="?func=boeyes&boeye_func=list_all&sort=name&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/down.png"></a>
-				<a href="?func=boeyes&boeye_func=list_all&sort=name&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/up.png"></a></th>
-				<th class="style3">Lat<a href="?func=boeyes&boeye_func=list_all&sort=lat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/down.png"></a>
-				<a href="?func=boeyes&boeye_func=list_all&sort=lat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/up.png"></a></th>
-				<th class="style3">Long<a href="?func=boeyes&boeye_func=list_all&sort=long&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/down.png"></a>
-				<a href="?func=boeyes&boeye_func=list_all&sort=long&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/up.png"></a></th>
-				<th class="style3">Catagory<a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/down.png"></a>
-				<a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['host_url'];?>themes/<?php echo $theme;?>/img/up.png"></a></th>
+				<th class="style3">ID<a href="?func=boeyes&boeye_func=list_all&sort=id&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/down.png"></a>
+				<a href="?func=boeyes&boeye_func=list_all&sort=id&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/up.png"></a></th>
+				<th class="style3">Name<a href="?func=boeyes&boeye_func=list_all&sort=name&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/down.png"></a>
+				<a href="?func=boeyes&boeye_func=list_all&sort=name&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/up.png"></a></th>
+				<th class="style3">Lat<a href="?func=boeyes&boeye_func=list_all&sort=lat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/down.png"></a>
+				<a href="?func=boeyes&boeye_func=list_all&sort=lat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/up.png"></a></th>
+				<th class="style3">Long<a href="?func=boeyes&boeye_func=list_all&sort=long&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/down.png"></a>
+				<a href="?func=boeyes&boeye_func=list_all&sort=long&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/up.png"></a></th>
+				<th class="style3">Catagory<a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=ASC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/down.png"></a>
+				<a href="?func=boeyes&boeye_func=list_all&sort=cat&ord=DESC&from=<?php echo $from;?>&to=<?php echo $inc;?>"><img height="15" width="15" border="0"border="0" src="<?php echo $GLOBALS['UPATH'];?>/themes/<?php echo $theme;?>/img/up.png"></a></th>
 			</tr>
 			<?php
 		

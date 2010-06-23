@@ -6,6 +6,7 @@ body {
 	color:#112233;
 	font-size/* */:/**/small; font-style:normal; font-variant:normal; font-weight:normal; font-family:Trebuchet MS
 }
+
 .content_head{
 				color: #A9C6FA;
 }
@@ -49,6 +50,7 @@ height: 400px;
 .active-box-resize {
 	display: none;
 }
+
 .good{
 	background-color: #0F0;
 }
@@ -58,6 +60,7 @@ height: 400px;
 	background-color: #F00;
 
 }
+
 .style1 {
 	font-family: "Courier New", Courier, monospace;
 	background-color: #477DA9;
@@ -67,17 +70,20 @@ height: 400px;
 	text-align: center;
 	border-width: 1;
 }
+
 .style3 {
 
 	border: 1;
 	background-color: #477DA9;
 }
+
 .style4
 {
 	text-align: center;
 	border-width: 1; 
 	background-color: #477DA9;
 }
+
 .style4.ha
 {
 	border-width: 1px;
@@ -85,11 +91,19 @@ height: 400px;
 	border-style: inset;
 	background-color: #477DA9;
 }
+
 .style4.td
 {
 	text-align: center;
 	border-width: 1; 
 	background-color: #477DA9;
+}
+
+.cp_select_column {
+	border-style: none;
+	border-color: inherit;
+	border-width: 1px;
+	background-color: #315573;
 }
 
 .tree {
@@ -108,18 +122,22 @@ a.links {
 	font-weight: bold; 
 	color: #123;
 }
+
 a.links_s {
 	font-weight: bold; 
 	color: #CCC;
 }
+
 a.links_sa{
 	font-weight: bold; 
 	color: #05F;
 }
+
 a.upgrade {
 	font-weight: bold; 
 	color: #0F0;
 }
+
 a.email {
 	font-weight: bold; 
 	color: #128;
@@ -138,6 +156,7 @@ table.new
 	border-color: #0F0;
 	width: "90%";
 }
+
 table.new ha {
 	border-width: 1px;
 	padding: 1px;
@@ -145,6 +164,7 @@ table.new ha {
 	border-color: #0F0;
 	background-color: #477DA9;
 }
+
 table.new td {
 	border-width: 1px;
 	padding: 1px;
@@ -152,6 +172,7 @@ table.new td {
 	border-color: #0F0;
 	background-color: #0F0;
 }
+
 table.update
 { 
 	border-width: 1;
@@ -181,6 +202,7 @@ table.update ha {
 	font-family: Arial;
 	color: #FFFFFF;
 }
+
 .title_pane.td{
 	background-color: #315573;
 }

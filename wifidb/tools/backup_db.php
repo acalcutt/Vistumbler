@@ -5,7 +5,7 @@ $ver = array(
 IE: wifidb-sql:/opt/wifidb/tools/# php backup_db.php may_2010_backup.sql
 The backup script will dump all the tables from the `wifi` and `wifi_st` databases
 \tto a SQL file /opt/wifidb/tools/may_2010_backup.sql'
-			);
+);
 error_reporting(E_ALL|E_STRICT);
 global $screen_output, $dim, $COLORS, $daemon_ver;
 $screen_output = "CLI";

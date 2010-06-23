@@ -5,7 +5,6 @@ include('../lib/database.inc.php');
 
 include_once($GLOBALS['half_path'].'/lib/security.inc.php');
 
-$seed	=	$GLOBALS['login_seed'];
 $theme = $GLOBALS['theme'];
 $func = '';
 $func = filter_input(INPUT_GET, 'func', FILTER_SANITIZE_SPECIAL_CHARS);
@@ -42,7 +41,7 @@ if($login_check)
 					<th class="cp_select_coloum"><a class="links_s" href="index.php?func=profile">Profile</a></th>
 					<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
 					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-					<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 				</tr>
 				<tr class="light">
 					<td colspan="6">&nbsp; </td>
@@ -83,7 +82,22 @@ if($login_check)
 		
 		case "update_user_profile":
 			pageheader("User Control Panel --> Profile");
-			
+			?>
+			<b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
+			<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+				<tr>
+					<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+					<th class="cp_select_coloum"><a class="links_s" href="index.php?func=profile">Profile</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
+				</tr>
+				<tr class="light">
+					<td colspan="6">&nbsp; </td>
+				</tr>
+				<tr>
+					<td colspan="6" class="dark" align='center'>
+			<?php
 			$username = addslashes(strtolower($_POST['username']));
 			$user_id = addslashes(strtolower($_POST['user_id']));
 			
@@ -103,7 +117,7 @@ if($login_check)
 				$result = mysql_query($sql1, $conn);
 				if(@$result)
 				{					
-					echo "Updated user ($user_id) with new Custom Rank\r\n<br>";
+					echo "Updated user ($user_id) Profile\r\n<br>";
 				}else
 				{
 					echo "There was a serious error: ".mysql_error($conn)."<br>";
@@ -114,38 +128,60 @@ if($login_check)
 			{
 				Echo "User ID's did not match, there was an error, contact the support forums for more help";
 			}
+			?>
+					</td>
+				</tr>
+			</table>
+			<?php
 			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 		
 		
 		##-------------##
 		case 'update_user_pref':
-			pageheader("User Control Panel --> Profile");
+			pageheader("User Control Panel --> Update Preferences");
 			$username = addslashes(strtolower($_POST['username']));
 			$user_id = addslashes(strtolower($_POST['user_id']));
 			
-			$mail_updates = addslashes($_POST['mail_updates']);
-			if($mail_updates == "on"){$mail_updates = 1;}else{$mail_updates = 0;}
-			
-			$h_status = addslashes($_POST['h_status']);
-			if($h_status == "on"){$h_status = 1;}else{$h_status = 0;}
+			$mail_updates = ((@$_POST['mail_updates']) == 'on' ? 1 : 0);
+			$imports = ((@$_POST['imports']) == 'on' ? 1 : 0);
+			$kmz = ((@$_POST['kmz']) == 'on' ? 1 : 0);
+			$new_users = ((@$_POST['new_users']) == 'on' ? 1 : 0);
+			$statistics = ((@$_POST['statistics']) == 'on' ? 1 : 0);
+			$announcements = ((@$_POST['announcements']) == 'on' ? 1 : 0);
+			$announce_comment = ((@$_POST['announce_comment']) == 'on' ? 1 : 0);
+			$geonamed = ((@$_POST['geonamed']) == 'on' ? 1 : 0);
+			$pub_geocache = ((@$_POST['pub_geocache']) == 'on' ? 1 : 0);
+			$schedule = ((@$_POST['schedule']) == 'on' ? 1 : 0);
 			
 			$sql0 = "SELECT `id` FROM `$db`.`$user_logins_table` WHERE `username` LIKE '".$username."%'";
 			$result = mysql_query($sql0, $conn);
 			$array = mysql_fetch_array($result);
 			if($array['id']+0 === $user_id+0)
 			{
-				$sql1 = "UPDATE `$db`.`$user_logins_table` SET `mail_updates` = '$mail_updates', `h_status` = '$h_status' WHERE `id` = '$user_id' LIMIT 1";
+				$sql1 = "UPDATE `$db`.`$user_logins_table` SET 
+															`mail_updates` = '$mail_updates',
+															`schedule`	=	'$schedule',
+															`imports` = '$imports', 
+															`kmz` = '$kmz', 
+															`new_users` = '$new_users', 
+															`statistics` = '$statistics', 
+															`announcements` = '$announcements', 
+															`announce_comment` = '$announce_comment', 
+															`geonamed` = '$geonamed', 
+															`pub_geocache` = '$pub_geocache'
+															WHERE `id` = '$user_id' LIMIT 1";
+				echo $sql1."<br>";
 				$result = mysql_query($sql1, $conn);
 				if(@$result)
 				{					
-					echo "Updated $username ($user_id) Preferances\r\n<br>";
+					echo "Updated $username ($user_id) Preferences\r\n<br>";
 				}else
 				{
 					echo "There was a serious error: ".mysql_error($conn)."<br>";
 					die();
 				}
-				redirect_page('?func=pref', 2000, 'Update User Successful!');
+				redirect_page('?func=pref', 2000, 'Update User Preferences Successful!');
 			}else
 			{
 				Echo "User ID's did not match, there was an error, contact the <a href='http://forum.techidiots.net/forum/viewforum.php?f=47'>support forums</a> for more help.";
@@ -178,9 +214,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 					<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 					<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 					<th class="cp_select_coloum"><a class="links_s" href="index.php?func=pref">Preferences</a></th>
-					
 					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-					<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 				</tr>
 				<tr class="light">
 					<td colspan="6">&nbsp;</td>
@@ -191,53 +226,49 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 					<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 						<tr>
 							<th width="30%" class="style3">Email me about updates</th>
-							<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['mail_updates']){echo 'checked';}?>></td>
+							<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['mail_updates']){echo 'checked';}?>></td>
 						</tr>
 						<tr>
 							<td colspan='2'>
 								<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
 									<tr>
 										<th width="30%" class="style3">Announcements</th>
-										<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<td align="center" class="light"><input name="announcements" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
 									</tr>
 									<tr>
 										<th width="30%" class="style3">Announcement Comments</th>
-										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<td align="center" class="dark"><input name="announce_comment" type="checkbox" <?php if($newArray['announce_comment']){echo 'checked';}?>></td></td>
 									</tr>
 									<tr>
 										<th width="30%" class="style3">New Public Geocaches</th>
-										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<td align="center" class="light"><input name="pub_geocache" type="checkbox" <?php if($newArray['pub_geocache']){echo 'checked';}?>></td></td>
 									</tr>
 									<tr>	
 										<th width="30%" class="style3">New Users</th>
-										<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<td align="center" class="dark"><input name="new_users" type="checkbox" <?php if($newArray['new_users']){echo 'checked';}?>></td></td>
 									</tr>
 									<tr>
 										<th width="30%" class="style3">Scheduled Import</th>
-										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<td align="center" class="light"><input name="schedule" type="checkbox" <?php if($newArray['schedule']){echo 'checked';}?>></td></td>
 									</tr>
 									<tr>
 										<th width="30%" class="style3">Import Finished</th>
-										<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<td align="center" class="dark"><input name="imports" type="checkbox" <?php if($newArray['imports']){echo 'checked';}?>></td></td>
 									</tr>
 									<tr>
 										<th width="30%" class="style3">New Full DB KML</th>
-										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<td align="center" class="light"><input name="kmz" type="checkbox" <?php if($newArray['kmz']){echo 'checked';}?>></td></td>
 									</tr>
 									<tr>
 										<th width="30%" class="style3">GeoNames Daemon</th>
-										<td align="center" class="dark"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<td align="center" class="dark"><input name="geonamed" type="checkbox" <?php if($newArray['geonamed']){echo 'checked';}?>></td></td>
 									</tr>
 									<tr>
-										<th width="30%" class="style3">Performance Monitor</th>
-										<td align="center" class="light"><input name="mail_updates" type="checkbox" <?php if($newArray['announcements']){echo 'checked';}?>></td></td>
+										<th width="30%" class="style3">Database Statistics Daemon</th>
+										<td align="center" class="light"><input name="statisticsd" type="checkbox" <?php if($newArray['statistics']){echo 'checked';}?>></td></td>
 									</tr>
 								</table>
 							</td>
-						</tr>
-						<tr>
-							<th width="30%" class="style3">Hide Login Status</th>
-							<td align="center" class="light"><input name="h_status" type="checkbox" <?php if($newArray['h_status']){echo 'checked';}?>></td>
 						</tr>
 						<tr>
 							<td colspan="2">
@@ -261,13 +292,147 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 		##-------------##
 		case 'boeyes':
 			pageheader("User Control Panel --> Mysticache");
-			?><b><font size="6"><?php echo $username; ?>'s Control Panel</font></b><?php
+			?>
+			<b><font size="6"><?php echo $username; ?>'s Control Panel</font></b><?php
 			$boeye_func = '';
 			$boeye_func = filter_input(INPUT_GET, 'boeye_func', FILTER_SANITIZE_SPECIAL_CHARS);
 			switch($boeye_func)
 			{
 				case "fetch_wpt":
-					
+					$id = $_GET['id']+0;
+					$user_cache = 'waypoints_'.$username;
+					$sql0 = "SELECT * FROM `$db`.`$user_cache`WHERE `id` = '$id'";
+					$result = mysql_query($sql0, $conn);
+					$geo_array = mysql_fetch_array($result);
+					$author = $geo_array['author'];
+					$name = $geo_array['name'];
+					$gcid = $geo_array['gcid'];
+					$cat =$geo_array['cat'];
+					$type = $geo_array['type'];
+					$diff = $geo_array['diff'];
+					$terain = $geo_array['terain'];
+					$lat = $geo_array['lat'];
+					$long = $geo_array['long'];
+					$notes = $geo_array['notes'];
+					$created = $geo_array['c_date'];
+					$updated = $geo_array['u_date'];
+					?>
+					<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+					<script type="text/javascript">
+
+					function initialize() {
+					  if (GBrowserIsCompatible()) {
+						var map = new GMap2(document.getElementById("map_canvas"));
+						map.setCenter(new GLatLng(<?php echo $lat.", ".$long; ?>), 13);
+						map.addControl(new GSmallMapControl());
+						map.addControl(new GMapTypeControl());
+
+						// Create our "tiny" marker icon
+						var blueIcon = new GIcon(G_DEFAULT_ICON);
+						blueIcon.image = "http://gmaps-samples.googlecode.com/svn/trunk/markers/blue/blank.png";
+
+						// Set up our GMarkerOptions object
+						markerOptions = { icon:blueIcon };
+
+						// Add 10 markers to the map at random locations
+						var bounds = map.getBounds();
+						var southWest = bounds.getSouthWest();
+						var northEast = bounds.getNorthEast();
+						var lngSpan = northEast.lng() - southWest.lng();
+						var latSpan = northEast.lat() - southWest.lat();
+						for (var i = 0; i < 10; i++) {
+						  var latlng = new GLatLng(southWest.lat() + latSpan * Math.random(),
+												  southWest.lng() + lngSpan * Math.random());
+						  map.addOverlay(new GMarker(latlng, markerOptions));
+						}
+					  }
+					}
+
+					</script>
+					<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+						<tr>
+							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
+						</tr>
+						<tr>
+							<td class="light" colspan="3"></td>
+							<td colspan="2" class="cp_select_coloum"><font size="2"><a class="links_s" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
+						<tr>
+							<td colspan="6" class="dark">
+							<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
+								<tr>
+									<td align="center">
+										<table width="80%" BORDER=1 CELLPADDING=0 CELLSPACING=0>
+											<tr class="style4">
+												<th colspan="2"><?php echo $name; ?></th>
+											</tr>
+											<tr class="sub_head">
+												<th>Author</th>
+												<td><?php echo $author; ?></td>
+											</tr>
+											<tr>
+												<th class="style4">GCID</th>
+												<td class="light"><?php echo $gcid; ?></td>
+											</tr>
+											<tr>
+												<th class="style4">cat</th>
+												<td class="dark"><?php echo $cat; ?></td>
+											</tr>
+											<tr>
+												<th class="style4">type</th>
+												<td class="light"><?php echo $type; ?></td>
+											</tr>
+											<tr>
+												<th class="style4">diff</th>
+												<td class="dark"><?php echo $diff; ?></td>
+											</tr>
+											<tr>
+												<th class="style4">terain</th>
+												<td class="light"><?php echo $terain; ?></td>
+											</tr>
+											<tr>
+												<th class="style4">Latitude</th>
+												<td class="dark"><?php echo $lat; ?></td>
+											</tr>
+											<tr>
+												<th class="style4">Longitude</th>
+												<td class="light"><?php echo $long; ?></td>
+											</tr>
+											<tr class="sub_head">
+												<th>Notes</th><th>Map</th>
+											</tr>
+											<tr>
+												<td class="dark">
+													<?php echo $notes; ?>
+												</td>
+												<td class="dark">
+													<body onload="initialize()" onunload="GUnload()">
+														<div id="map_canvas" style="width: 250px; height: 250px"></div>
+													</body>
+												</td>
+											</tr>
+											<tr  class="sub_head">
+												<th>Created</th><th>Last Updated</th>
+											</tr>
+											<tr  class="light">
+												<td>
+													<?php echo $created; ?>
+												</td>
+												<td>
+													<?php echo $updated; ?>
+												</td>
+											</tr>
+										</table>
+									</td>
+								</tr>
+							</table>
+							</td>
+						</tr>
+					</table>
+					<?php
 				break;
 				
 				case "list_all":
@@ -293,7 +458,7 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td class="light" colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links_s" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -432,9 +597,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td class="light" colspan="3"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -480,9 +644,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -520,7 +683,6 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 				break;
 				
 				case "share_wpt_proc":
-				
 					include('../lib/geocache.inc.php');
 					$myscache = new geocache();
 					?>
@@ -529,9 +691,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -580,9 +741,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum"><a class="links_s" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -594,13 +754,13 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 										<tr >
 											<td  align="center" style="width: 20%" class="dark">Name</td>
 											<td class="dark">
-												<input type="text" name="name" value="<?php echo $pri_wpt['name'];?>" size="40" class="textfield" tabindex="4"/>
+												<input type="text" name="name" value="<?php echo $pri_wpt['name'];?>" size="40"/>
 											</td>
 										</tr>
 										<tr class="odd">
 											<td  align="center" style="width: 20%" class="light">GCID</td>
 											<td class="light">
-												<input type="text" name="gcid" value="<?php echo $pri_wpt['gcid'];?>" size="40" class="textfield" tabindex="7" />
+												<input type="text" name="gcid" value="<?php echo $pri_wpt['gcid'];?>" size="40"/>
 											</td>
 										</tr>
 										<tr >
@@ -612,48 +772,43 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 										<tr class="odd">
 											<td  align="center" class="light">Catagory</td>
 											<td class="light">
-												<select name="cat" size="4" multiple="multiple" tabindex="13">
-												<?php
-												foreach(get_set("`".$db."`.`".$share_cache."`",$column) as $set)
-												{
-													if($pri_wpt['cat'] == $set)
-													{
-														?>
-														<option value="<?php echo $set;?>" SELECTED><?php echo $set;?></option>
-														<?php
-													}else
-													{
-														?>
-														<option value="<?php echo $set;?>"><?php echo $set;?></option>
-														<?php
-													}
-												}
-												?>
-												</select>
+												<input type="text" name="cat" value="<?php echo $pri_wpt['type'];?>"style="width: 335px" />
 											</td>
 										</tr>
 										<tr >
-											<td  align="center" class="dark">Type:::Symbol</td>
+											<td  align="center" class="dark">Type</td>
 											<td class="dark">
-												<input type="text" name="type" value="<?php echo $pri_wpt['type'];?>" size="40" class="textfield" tabindex="16" style="width: 335px" />
+												<input type="text" name="type" value="<?php echo $pri_wpt['type'];?>"style="width: 335px" />
+											</td>
+											</tr>
+										<tr >
+											<td  align="center" class="dark">Difficulty</td>
+											<td class="dark">
+												<input type="text" name="diff" value="<?php echo $pri_wpt['diff'];?>"style="width: 335px" />
+											</td>
+											</tr>
+										<tr >
+											<td align="center" class="dark">Terain</td>
+											<td class="dark">
+												<input type="text" name="terain" value="<?php echo $pri_wpt['terain'];?>"style="width: 335px" />
 											</td>
 											</tr>
 										<tr class="odd">
 											<td  align="center" class="light">Lat</td>
 											<td class="light">
-												<input type="text" name="lat" value="<?php echo $pri_wpt['lat'];?>" size="40" class="textfield" tabindex="19" style="width: 100px"/>
+												<input type="text" name="lat" value="<?php echo $pri_wpt['lat'];?>" style="width: 100px"/>
 											</td>
 										</tr>
 										<tr >
 											<td  align="center" class="dark">Long</td>
 											<td class="dark">
-												<input type="text" name="long" value="<?php echo $pri_wpt['long'];?>" size="40" class="textfield" tabindex="22" style="width: 100px"/>
+												<input type="text" name="long" value="<?php echo $pri_wpt['long'];?>" style="width: 100px"/>
 											</td>
 										</tr>
 										<tr class="odd">
 											<td  align="center" class="light">Link</td>
 											<td class="dark">
-												<input type="text" name="link" value="<?php echo $pri_wpt['link'];?>" size="40" class="textfield" tabindex="25" style="width: 476px" />
+												<input type="text" name="link" value="<?php echo $pri_wpt['link'];?>" style="width: 476px" />
 											</td>
 										</tr>
 										<tr>
@@ -681,6 +836,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 					$notes = filter_input(INPUT_POST, 'notes', FILTER_SANITIZE_SPECIAL_CHARS);
 					$cat = filter_input(INPUT_POST, 'cat', FILTER_SANITIZE_SPECIAL_CHARS);
 					$type = filter_input(INPUT_POST, 'type', FILTER_SANITIZE_SPECIAL_CHARS);
+					$terain = filter_input(INPUT_POST, 'terain', FILTER_SANITIZE_SPECIAL_CHARS);
+					$diff = filter_input(INPUT_POST, 'diff', FILTER_SANITIZE_SPECIAL_CHARS);
 					$lat = filter_input(INPUT_POST, 'lat', FILTER_SANITIZE_SPECIAL_CHARS);
 					$long = filter_input(INPUT_POST, 'long', FILTER_SANITIZE_SPECIAL_CHARS);
 					$link = filter_input(INPUT_POST, 'link', FILTER_SANITIZE_SPECIAL_CHARS);
@@ -690,16 +847,15 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum"><a class="links_s" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
 							<td colspan="6" class="dark">
 								<CENTER>
 								<?php
-								$update = $myscache->update_wpt($id = 0, $name, $gcid, $notes, $cat, $type, $lat, $long, $link);
+								$update = $myscache->update_wpt($id = 0, $name, $gcid, $notes, $cat, $type, $terain, $diff, $lat, $long, $link);
 							#	dump($update);
 								switch($update)
 								{
@@ -732,9 +888,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links_s" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -764,9 +919,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -826,9 +980,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -837,9 +990,6 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 					include('../lib/wdb_xml.inc.php');
 					$wdbxml = new WDB_XML();
 					
-					if($_POST["user"] !== ''){$user = addslashes($_POST["user"]);}else{$user="Unknown";}
-					if($_POST["notes"] !== ''){$notes = addslashes($_POST["notes"]);}else{$notes="No Notes";}
-					if($_POST['title'] !== ''){$title = addslashes($_POST['title']);}else{$title="Untitled";}
 					
 					$userfolder = getcwd().'/up/'.$username;
 					$uploadfolder = $userfolder."/gpx";
@@ -880,7 +1030,7 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 						}
 					}else
 					{
-						echo "Could not copy";
+						echo "Could not copy, you either did not provide a file, or there is a problem on the server.";
 					}
 					?>
 								</CENTER>
@@ -899,7 +1049,7 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links_s" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -952,9 +1102,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links_s" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -1033,9 +1182,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links_s" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -1116,9 +1264,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
 							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-							
 							<th class="cp_select_coloum"><a class="links_s" href="index.php?func=boeyes">Mysticache</a></th>
-							<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
 						<tr><td colspan="3" class="light"></td><td colspan="2" class="cp_select_coloum"><font size="2"><a class="links" href="?func=boeyes&boeye_func=list_all">List All</a> <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=import_switch">Import</a> (<a class="links" href="?func=boeyes&boeye_func=import_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=import_loc">LOC</a>) <font color="white">|-|</font> <a class="links" href="?func=boeyes&boeye_func=export_switch">Export</a> (<a class="links" href="?func=boeyes&boeye_func=export_gpx">GPX</a>) (<a class="links" href="?func=boeyes&boeye_func=export_loc">LOC</a>)</font></td></tr>
 						<tr>
@@ -1158,51 +1305,434 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 		
 		
 		##-------------##
-		case 'foes':
+		case 'fandf':
 			pageheader("User Control Panel --> Friends and Foes");
-			?>
-			<b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
-			<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
-				<tr>
-					<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
-					<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
-					<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-					
-					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-					<th class="cp_select_coloum"><a class="links_s" href="index.php?func=foes">Friends / Foes</a></th>
-				</tr>
-				<tr class="light">
-					<td colspan="6">&nbsp; 
-					</td>
-				</tr>
-				<tr>
-					<td colspan="6" class="dark">
-					<CENTER>
-					<?php
+			$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+			$result = mysql_query($sql0, $conn);
+			$newArray = mysql_fetch_array($result);
+			$friends = explode(":", $newArray['friends']);
+			$foes = explode(":", $newArray['foes']);
+			$type = htmlentities(@$_GET['type'], ENT_QUOTES);
+			switch($type)
+			{
+				case "friends":
+					$mode = htmlentities(@$_GET['mode'], ENT_QUOTES);
+					switch($mode)
+					{
+						case "del":
+							?><b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
+							<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+								<tr>
+									<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+									<th class="cp_select_coloum"><a class="links_s" href="index.php?func=fandf">Friends / Foes</a></th>
+								</tr>
+								<tr class="light">
+									<td colspan="6">&nbsp; 
+									</td>
+								</tr>
+								<tr>
+									<td colspan="5">
+									<?php
+							$sql0 = "SELECT `friends` FROM `$db`.`$user_logins_table` WHERE `username` = '$username'";
+							$result = mysql_query($sql0, $conn);
+							$friends_array = mysql_fetch_array($result);
+							$frnd_array = explode(":", $friends_array['friends']);
+							
+							$del_array = $_POST['del'];
+							foreach($del_array as $key=>$del)
+							{$del = htmlentities($del, ENT_QUOTES);$del_array[$key] = $del;}
+							
+							foreach($del_array as $del)
+							{
+								foreach($frnd_array as $key=>$frnd)
+								{
+									if($frnd == $del)
+									{
+										unset($frnd_array[$key]);
+									}
+								}
+							}
+							$deled = implode(":", $frnd_array);
+							
+							$update_frnd = "UPDATE `$db`.`$user_logins_table` SET `friends` = '$deled' WHERE `username`='$username'";
+							if(mysql_query($update_frnd, $conn))
+							{
+								redirect_page("?func=fandf&type=friends", 5000, "<CENTER><table><tr class='sub_head'><td>Friends list updated!</td></tr></table></CENTER>", 0);
+							}else
+							{
+								echo "<CENTER><table><tr class='sub_head'><td>Failed to update the users Friends List...<br>Mysql Error: ".mysql_error($conn)."</td></tr></table></CENTER>";
+							}
+							?></td>
+							</tr>
+						</table><?php
+						break;
+						
+						case "add":
+							?><b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
+							<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+								<tr>
+									<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+									<th class="cp_select_coloum"><a class="links_s" href="index.php?func=fandf">Friends / Foes</a></th>
+								</tr>
+								<tr class="light">
+									<td colspan="6">&nbsp; 
+									</td>
+								</tr>
+								<tr>
+									<td colspan="5">
+									<?php
+							$sql0 = "SELECT `friends` FROM `$db`.`$user_logins_table` WHERE `username` = '$username'";
+						#	echo $sql0;
+							$result = mysql_query($sql0, $conn);
+							$friends_array = mysql_fetch_array($result);
+							
+							$add_array = $_POST['add'];
+							foreach($add_array as $key=>$add)
+							{$add = htmlentities($add, ENT_QUOTES);$add_array[$key] = $add;}
+							if($friends_array['friends'] != '')
+							{$added = $friends_array['friends'].":".implode(":", $add_array);}
+							else{$added = implode(":", $add_array);}
+							
+						#	echo $added;
+							
+							$update_frnd = "UPDATE `$db`.`$user_logins_table` SET `friends` = '$added' WHERE `username`='$username'";
+							if(mysql_query($update_frnd, $conn))
+							{
+								redirect_page("?func=fandf&type=friends", 5000, "<CENTER><table><tr class='sub_head'><td>Freinds list updated!</td></tr></table></CENTER>", 0);
+							}else
+							{
+								echo "<CENTER><table><tr class='sub_head'><td>Failed to update the users Friends List...<br>Mysql Error: ".mysql_error($conn)."</td></tr></table></CENTER>";
+							}
+							?></td>
+							</tr>
+						</table><?php
+						break;
+						
+						default:
+							$sql0 = "SELECT `friends`, `foes` FROM `$db`.`$user_logins_table` WHERE `username` = '$username'";
+							$result = mysql_query($sql0, $conn);
+							$friends_array = mysql_fetch_array($result);
+							$frnd_array = explode(":", $friends_array['friends']);
+							$foe_array = explode(":", $friends_array['foes']);
+							$inside = array();
+							$outside = array();
+							$sql0 = "SELECT `username` FROM `$db`.`$user_logins_table` WHERE `username` NOT LIKE 'admin%'";
+							$result = mysql_query($sql0, $conn);
+							while($users = mysql_fetch_array($result))
+							{
+								if($users['username'] == $username){continue;}
+								foreach($foe_array as $foe){if($foe == $users['username']){continue 2;}}
+								
+								foreach($frnd_array as $frnd)
+								{
+									if($frnd == $users['username'])
+									{
+										$inside[] = $users['username'];
+										continue 2;
+									}
+								}
+								$outside[] = $users['username'];
+							}
+							?>
+							<b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
+							<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+								<tr>
+									<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+									<th class="cp_select_coloum"><a class="links_s" href="index.php?func=fandf">Friends / Foes</a></th>
+								</tr>
+								<tr class="light">
+									<td colspan="6">&nbsp; 
+									</td>
+								</tr>
+								<tr>
+									<td colspan="5">
+									<table width="100%" border="1">
+										<tr class="style4">
+											<th>Users currently in Friends:</th>
+											<th>Users Not In Friends:</th>
+										</tr>
+										<tr>	
+											<td class="light" align="center" width="50%">
+											<form method="post" action="" name="remove_from_friends_group"  enctype="multipart/form-data">
+												<select name="del[]" multiple size="10" style="width: 100%;">
+												<?php
+												foreach($inside as $in)
+												{
+													echo "<option value='".$in."'>".$in."</option>\r\n";
+												}
+												?>
+												</select>
+												<br>
+												<input type="button" name="remove_friend_submit" value="Remove Selected User(s)" onClick="document.remove_from_friends_group.action='?func=fandf&type=friends&mode=del'; document.remove_from_friends_group.submit();" />
+												</form>
+											</td>
+											<!--#####################-->
+											<td class="light" align="center">
+											<form method="post" action="" name="add_to_friends_group" enctype="multipart/form-data">
+												<select name="add[]" multiple size="10" style="width: 100%;">
+												<?php
+												foreach($outside as $out)
+												{
+													echo "<option value='".$out."'>".$out."</option>\r\n";
+												}
+												?>
+												</select>
+												<br>
+												<input type="button" name="add_friend_submit" value="Add Selected User(s)" onClick="document.add_to_friends_group.action='?func=fandf&type=friends&mode=add'; document.add_to_friends_group.submit();" />
+											</form>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table
+						<?php
+						break;
+					}
+				break;
+				
+				case "foes":
+					$mode = htmlentities(@$_GET['mode'], ENT_QUOTES);
+					switch($mode)
+					{
+						case "del":
+							?><b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
+							<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+								<tr>
+									<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+									<th class="cp_select_coloum"><a class="links_s" href="index.php?func=fandf">Friends / Foes</a></th>
+								</tr>
+								<tr class="light">
+									<td colspan="6">&nbsp; 
+									</td>
+								</tr>
+								<tr>
+									<td colspan="5">
+									<?php
+							$sql0 = "SELECT `foes` FROM `$db`.`$user_logins_table` WHERE `username` = '$username'";
+							$result = mysql_query($sql0, $conn);
+							$foes_array = mysql_fetch_array($result);
+							$foe_array = explode(":", $foes_array['foes']);
+							
+							$del_array = $_POST['del'];
+							foreach($del_array as $key=>$del)
+							{$del = htmlentities($del, ENT_QUOTES);$del_array[$key] = $del;}
+							
+							foreach($del_array as $del)
+							{
+								foreach($foe_array as $key=>$foe)
+								{
+									if($foe == $del)
+									{
+										unset($foe_array[$key]);
+									}
+								}
+							}
+							$deled = implode(":", $foe_array);
+							
+							$update_foe = "UPDATE `$db`.`$user_logins_table` SET `foes` = '$deled' WHERE `username`='$username'";
+							if(mysql_query($update_foe, $conn))
+							{
+								redirect_page("?func=fandf&type=foes", 5000, "<CENTER><table><tr class='sub_head'><td> Foes list updated!</td></tr></table></CENTER>", 0);
+							}else
+							{
+								echo "<CENTER><table><tr class='sub_head'><td>Failed to update the users Foes List...<br>Mysql Error: ".mysql_error($conn)."</td></tr></table></CENTER>";
+							}
+							?></td>
+							</tr>
+						</table><?php
+						break;
+						
+						case "add":
+							?><b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
+							<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+								<tr>
+									<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+									<th class="cp_select_coloum"><a class="links_s" href="index.php?func=fandf">Friends / Foes</a></th>
+								</tr>
+								<tr class="light">
+									<td colspan="6">&nbsp; 
+									</td>
+								</tr>
+								<tr>
+									<td colspan="5">
+									<?php
+							$sql0 = "SELECT `foes` FROM `$db`.`$user_logins_table` WHERE `username` = '$username'";
+						#	echo $sql0;
+							$result = mysql_query($sql0, $conn);
+							$foes_array = mysql_fetch_array($result);
+							
+							$add_array = $_POST['add'];
+							foreach($add_array as $key=>$add)
+							{$add = htmlentities($add, ENT_QUOTES);$add_array[$key] = $add;}
+							if($foes_array['foes'] != '')
+							{$added = $foes_array['foes'].":".implode(":", $add_array);}
+							else{$added = implode(":", $add_array);}
+							
+						#	echo $added;
+							
+							$update_foe = "UPDATE `$db`.`$user_logins_table` SET `foes` = '$added' WHERE `username`='$username'";
+							if(mysql_query($update_foe, $conn))
+							{
+								redirect_page("?func=fandf&type=foes", 5000, "<CENTER><table><tr class='sub_head'><td>Foes list updated!</td></tr></table></CENTER>", 0);
+							}else
+							{
+								echo "<CENTER><table><tr class='sub_head'><td>Failed to update the users Foes List...<br>Mysql Error: ".mysql_error($conn)."</td></tr></table></CENTER>";
+							}
+							?></td>
+							</tr>
+						</table><?php
+						break;
+						
+						default:
+							$sql0 = "SELECT `friends`, `foes` FROM `$db`.`$user_logins_table` WHERE `username` = '$username'";
+							$result = mysql_query($sql0, $conn);
+							$foes_array = mysql_fetch_array($result);
+							
+							$frnd_array = explode(":", $foes_array['friends']);
+							$foe_array = explode(":", $foes_array['foes']);
+							
+							$inside = array();
+							$outside = array();
+							
+							$sql0 = "SELECT `username` FROM `$db`.`$user_logins_table` WHERE `username` NOT LIKE 'admin%'";
+							$result = mysql_query($sql0, $conn);
+							while($users = mysql_fetch_array($result))
+							{
+								if($users['username'] == $username){continue;}
+								foreach($frnd_array as $frnd){if($frnd == $users['username']){continue 2;}}
+								
+								foreach($foe_array as $foe)
+								{
+									if($foe == $users['username'])
+									{
+										$inside[] = $users['username'];
+										continue 2;
+									}
+								}
+								$outside[] = $users['username'];
+							}
+							?>
+							<b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
+							<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+								<tr>
+									<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+									<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+									<th class="cp_select_coloum"><a class="links_s" href="index.php?func=fandf">Friends / Foes</a></th>
+								</tr>
+								<tr class="light">
+									<td colspan="6">&nbsp; 
+									</td>
+								</tr>
+								<tr>
+									<td colspan="5">
+									<table width="100%" border="1">
+										<tr class="style4">
+											<th>Users currently in Foes:</th>
+											<th>Users Not In Foes:</th>
+										</tr>
+										<tr>	
+											<td class="light" align="center" width="50%">
+											<form method="post" action="" name="remove_from_foes_group"  enctype="multipart/form-data">
+												<select name="del[]" multiple size="10" style="width: 100%;">
+												<?php
+												foreach($inside as $in)
+												{
+													echo "<option value='".$in."'>".$in."</option>\r\n";
+												}
+												?>
+												</select>
+												<br>
+												<input type="button" name="remove_friend_submit" value="Remove Selected User(s)" onClick="document.remove_from_foes_group.action='?func=fandf&type=foes&mode=del'; document.remove_from_foes_group.submit();" />
+												</form>
+											</td>
+											<!--#####################-->
+											<td class="light" align="center">
+											<form method="post" action="" name="add_to_foes_group" enctype="multipart/form-data">
+												<select name="add[]" multiple size="10" style="width: 100%;">
+												<?php
+												foreach($outside as $out)
+												{
+													echo "<option value='".$out."'>".$out."</option>\r\n";
+												}
+												?>
+												</select>
+												<br>
+												<input type="button" name="add_friend_submit" value="Add Selected User(s)" onClick="document.add_to_foes_group.action='?func=fandf&type=foes&mode=add'; document.add_to_foes_group.submit();" />
+											</form>
+											</td>
+										</tr>
+									</table>
+								</td>
+							</tr>
+						</table>
+						<?php
+						break;
+					}
+				break;
+				
+				default:
 					?>
-					<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 50%">
+					<b><font size="6"><?php echo $username; ?>'s Control Panel</font></b>
+					<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
 						<tr>
-							<th class="style3" colspan="2">Select some freinds, and block some foes</th>
+							<th class="style3" width="20%"><a class="links" href="index.php">Overview</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+							<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+							<th class="cp_select_coloum"><a class="links_s" href="index.php?func=fandf">Friends / Foes</a></th>
 						</tr>
-						<tr>
-							<th width="30%" class="style3">Friends</th>
-							<td>
-								<CENTER><a class="links" target="_new" href="./aande.php?func=update&type=friends">Manage Friends</a></CENTER>
+						<tr class="light">
+							<td colspan="6">&nbsp; 
 							</td>
 						</tr>
 						<tr>
-							<th width="30%" class="style3">Foes</th>
-							<td>
-								<CENTER><a class="links" target="_new" href="./aande.php?func=update&type=foes">Manage Foes</a></CENTER>
+							<td colspan="6" class="dark">
+							<CENTER>
+							<?php
+							?>
+							<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 50%">
+								<tr>
+									<th class="style3" colspan="2">Select some freinds, and block some Foes</th>
+								</tr>
+								<tr>
+									<th width="30%" class="style3">Friends</th>
+									<td>
+										<CENTER><a class="links" href="?func=fandf&type=friends">Manage Friends</a></CENTER>
+									</td>
+								</tr>
+								<tr>
+									<th width="30%" class="style3">Foes</th>
+									<td>
+										<CENTER><a class="links" href="?func=fandf&type=foes">Manage Foes</a></CENTER>
+									</td>
+								</tr>
+							</table>
+							</CENTER>
+							</form>
 							</td>
 						</tr>
 					</table>
-					</CENTER>
-					</form>
-					</td>
-				</tr>
-			</table>
-			<?php
+					<?php
+				break;
+			}
 			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
 		
@@ -1292,96 +1822,6 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 		break;
 		
 		
-		##-------------##
-		default:
-			pageheader("User Control Panel --> Overview");
-			?><b><font size="6"><?php echo $username; ?>'s Control Panel</font></b><?php
-			$privs_a = $GLOBALS['privs_a'];
-			list($privs, $priv_name) = $privs_a;
-			
-			$username = $GLOBALS['username'];
-			################
-			$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
-			$result = mysql_query($sql0, $conn);
-			$newArray = mysql_fetch_array($result);
-			$last_login = $newArray['last_login'];
-			$join_date = $newArray['join_date'];
-			
-			###############3
-			$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `id` DESC LIMIT 1";
-			$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
-			$user_last = mysql_fetch_array($user_query);
-			
-			$last_import_id = $user_last['id'];
-			$user_aps = $user_last['aps'];
-			$user_gps = $user_last['gps'];
-			
-			$last_import_title = $user_last['title'];
-			$last_import_date = $user_last['date'];
-			
-			###########
-			$sql = "SELECT `title` FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `aps` DESC LIMIT 1";
-			$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
-			$user_largest = mysql_fetch_array($user_query);
-			$large_import_title = $user_last['title'];
-			
-			if(@$new_ssid == ''){$new_ssid = "No New APs, all are updates";}
-			if(@$last_import_title == ''){$last_import_title = "No imports";}
-			if(@$large_import_title == ''){$large_import_title = "No imports";}
-			if(@$max_ssid == ''){$max_ssid = "No APs";}
-			?>
-			<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
-				<tr>
-					<th class="cp_select_coloum"><a class="links_s" href="index.php">Overview</a></th>
-					<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
-					<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
-					
-					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
-					<th class="style3" width="20%"><a class="links" href="index.php?func=foes">Friends / Foes</a></th>
-				</tr>
-				<tr class="light">
-					<td colspan="6">&nbsp; 
-					</td>
-				</tr>
-				<tr>
-					<td colspan="6" class="dark">
-					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
-						<tr>
-							<th width="30%" class="style3">Privledge Level</th>
-							<td align="center" class="light"><?php echo $priv_name;?></td>
-						</tr>
-						<tr>
-							<th width="30%" class="style3">Largest Import</th>
-							<td align="center" class="light"><?php echo $large_import_title;?></td>
-						</tr>
-						<tr>
-							<th width="30%" class="style3">Last Import</th>
-							<td align="center" class="light"><?php echo $last_import_title;?></td>
-						</tr>
-						<tr>
-							<th width="30%" class="style3">AP with most GPS</th>
-							<td align="center" class="light"><?php echo $max_ssid;?></td>
-						</tr>
-						<tr>
-							<th width="30%" class="style3">Last New AP</th>
-							<td align="center" class="light"><?php echo $new_ssid;?></td>
-						</tr>
-						<tr>
-							<th width="30%" class="style3">Last Login</th>
-							<td align="center" class="light"><?php echo $last_login;?></td>
-						</tr>
-						<tr>
-							<th width="30%" class="style3">Join Date</th>
-							<td align="center" class="light"><?php echo $join_date;?></td>
-						</tr>
-					</table>
-					</td>
-				</tr>
-			</table>
-			<?php
-			footer($_SERVER['SCRIPT_FILENAME']);
-		break;
-
 		case "admin_cp":
 			pageheader("Administrator Control Panel --> Re-login");
 			?>
@@ -1410,13 +1850,14 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 		
 		case "admin_cp_proc":
 			include_once('../lib/security.inc.php');
+			
 			$username = filter_input(INPUT_POST, 'admin_user', FILTER_SANITIZE_SPECIAL_CHARS);
 			$password = filter_input(INPUT_POST, 'admin_pass', FILTER_SANITIZE_SPECIAL_CHARS);
+			
 			$sec = new security();
-			$login = $sec->login($username, $password, $seed, 1);
+			$login = $sec->login($username, $password, $GLOBALS['login_seed'], 1);
 			
 			pageheader("Administrator Control Panel --> Re-login");
-			
 		#	dump($_POST['return']);
 			switch($login)
 			{
@@ -1464,7 +1905,7 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 				break;
 				
 				case "good":
-					redirect_page($GLOBALS['hosturl'].$root.'cp/admin/', 2000, 'Login Successful!', 2);
+					redirect_page($GLOBALS['UPATH'].'/cp/admin/', 2000, 'Login Successful!', 2);
 				break;
 				
 				case "cookie_fail":
@@ -1477,7 +1918,118 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 			}
 			footer($_SERVER['SCRIPT_FILENAME']);
 		break;
+		
+		##-------------##
+		default:
+			pageheader("User Control Panel --> Overview");
+			?><b><font size="6"><?php echo $username; ?>'s Control Panel</font></b><?php
+			$privs_a = $GLOBALS['privs_a'];
+			list($privs, $priv_name) = $privs_a;
+			$conn = $GLOBALS['conn'];
+			$username = $GLOBALS['username'];
+			################
+			$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` = '$username' LIMIT 1";
+			$result = mysql_query($sql0, $conn);
+			$newArray = mysql_fetch_array($result);
+			$last_login = $newArray['last_login'];
+			$join_date = $newArray['join_date'];
+			
+			################
+			$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `id` DESC LIMIT 1";
+			$user_query = mysql_query($sql, $conn) or die(mysql_error($conn));
+			$user_last = mysql_fetch_array($user_query);
+			
+			$last_import_id = $user_last['id'];
+			$user_aps = $user_last['aps'];
+			$user_gps = $user_last['gps'];
+			
+			$last_import_title = $user_last['title'];
+			$last_import_date = $user_last['date'];
+			
+			###########
+			$sql2 = "SELECT * FROM `$db`.`stats_$username` ORDER BY `id` DESC LIMIT 1";
+			#echo $sql2."<br>";
+			$max_gps_query = mysql_query($sql2, $conn) or die(mysql_error($conn));
+			$max_gps_array = mysql_fetch_array($user_query);
+			$max_ssid_id = $max_gps_array['largest'];
+			
+			if($max_gps_array['largest'] != '' && $max_gps_array['newest'] != '')
+			{
+				$max_ssid_ = explode(" - ", $max_gps_array['largest']);
+				$newest_ = explode(" - ", $max_gps_array['newest']);
+				$max_ssid = '<a href="'.$GLOBALS['UPATH'].'opt/fetch.php?id='.$max_ssid_[1].'">'.$max_ssid_[0].'</a> ('.$max_ssid_[2].')';
+				$newest = '<a href="'.$GLOBALS['UPATH'].'opt/fetch.php?id='.$newest_[1].'">'.$newest[0].'</a> ('.$newest_[2].')';
+				
+			}else
+			{
+				$max_ssid = "No Max AP yet.";
+				$newest = "No Newset AP yet.";
+			}
+			
+			
+			###########
+			$sql4 = "SELECT * FROM `$db`.`$users_t` WHERE `username` LIKE '$username' ORDER BY `aps` DESC LIMIT 1";
+		#	echo $sql4."<BR>";
+			$user_query = mysql_query($sql4, $conn) or die(mysql_error($conn));
+			$user_largest = mysql_fetch_array($user_query);
+			$large_import_title = $user_last['title'];
+			
+			
+			if(@$last_import_title == ''){$last_import_title = "No imports";}
+			if(@$large_import_title == ''){$large_import_title = "No imports";}		
+			?>
+			<table BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 95%">
+				<tr>
+					<th class="cp_select_coloum"><a class="links_s" href="index.php">Overview</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=profile">Profile</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=pref">Preferences</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=boeyes">Mysticache</a></th>
+					<th class="style3" width="20%"><a class="links" href="index.php?func=fandf">Friends / Foes</a></th>
+				</tr>
+				<tr class="light">
+					<td colspan="6">&nbsp; 
+					</td>
+				</tr>
+				<tr>
+					<td colspan="6" class="dark">
+					<table  BORDER=1 CELLPADDING=2 CELLSPACING=0 style="width: 100%">
+						<tr>
+							<th width="30%" class="style3">Privledge Level</th>
+							<td align="center" class="light"><?php echo $priv_name; if($newArray['rank'] != ''){echo " ( ".$newArray['rank']." )";}?></td>
+						</tr>
+						<tr>
+							<th width="30%" class="style3">Largest Import</th>
+							<td align="center" class="light"><?php echo $large_import_title;?></td>
+						</tr>
+						<tr>
+							<th width="30%" class="style3">Last Import</th>
+							<td align="center" class="light"><?php echo $last_import_title;?></td>
+						</tr>
+						<tr>
+							<th width="30%" class="style3">AP with most GPS</th>
+							<td align="center" class="light"><?php echo $max_ssid;?></td>
+						</tr>
+						<tr>
+							<th width="30%" class="style3">Newest AP</th>
+							<td align="center" class="light"><?php echo $newest;?></td>
+						</tr>
+						<tr>
+							<th width="30%" class="style3">Last Login</th>
+							<td align="center" class="light"><?php echo $last_login;?></td>
+						</tr>
+						<tr>
+							<th width="30%" class="style3">Join Date</th>
+							<td align="center" class="light"><?php echo $join_date;?></td>
+						</tr>
+					</table>
+					</td>
+				</tr>
+			</table>
+			<?php
+			footer($_SERVER['SCRIPT_FILENAME']);
+		break;
 	}
+	
 }else
 {
 	redirect_page('/'.$root.'/', 'Not Logged in!');

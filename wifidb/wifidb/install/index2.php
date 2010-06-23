@@ -82,7 +82,10 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
     <td><input name="wdb_admn_emailadrs"></td></tr>
   <tr>
     <td>WiFiDB Email Updates </td>
-    <td><input type="checkbox" name="wdb_email_updates" value="FALSE"></td></tr>
+    <td><input type="checkbox" name="wdb_email_updates"></td></tr>
+  <tr>
+    <td>WiFiDB Email User Validation </td>
+    <td><input type="checkbox" name="email_validation"></td></tr>
   <tr>
     <td>WiFiDB Sending Address</td>
     <td><input name="wdb_from_emailadrs"></td></tr>
@@ -124,7 +127,7 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 <tr><th colspan="2" class="style4">WiFiDB Daemon Settings</th></tr>
   <tr>
     <td>Use Daemon?</td>
-    <td><input type="checkbox" name="daemon" value="TRUE" onchange="endisable()"></td>
+    <td><input type="checkbox" name="daemon" onchange="endisable()"></td>
 </TR>
   <tr>
     <td>Tools Directory (if you are using the daemon)</td>

@@ -84,10 +84,10 @@ verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."
 WiFiDB 'Database Statistics Daemon'
 Version: 1.0.0
 - Daemon Start: 2009-12-07
-- Last Daemon File Edit: 2010-04-13
-( /tools/daemon/wifidbd.php -> daemon_stats() )
+- Last Daemon File Edit: 2010-06-22
+( /tools/daemon/dbstatsd.php )
 - By: Phillip Ferland ( pferland@randomintervals.com )
-- http://www.randomintervals.com
+- http://www.randomintervals.com/wifidb/
 
 PID: [ $This_is_me ]
 ".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], 1, $screen_output, 1);
@@ -419,9 +419,7 @@ verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting Users Statistics.".$GLOBA
 				$ap_qry = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$ap_ary = mysql_fetch_array($ap_qry);
 				$id = $ap_ary['id'];
-				$ssid_ptb_ = $ap_ary["ssid"];
-				$ssids_ptb = str_split($ap_ary['ssid'],25);
-				$ssid_ptb = smart_quotes($ssids_ptb[0]);
+				list($ssid_ptb = make_ssid($ap_ary["ssid"]);
 				$table		=	$ssid_ptb.'-'.$ap_ary["mac"].'-'.$ap_ary["sectype"].'-'.$ap_ary["radio"].'-'.$ap_ary['chan'];
 				$table_gps	=	$table.$gps_ext;
 				
@@ -430,9 +428,10 @@ verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting Users Statistics.".$GLOBA
 				$rows = @mysql_num_rows($ap_qry);
 				if($rows == 0){continue;}
 #				echo $rows."<br>";
-				if($rows > $max){$max = $rows; $largest = $ap_ary['ssid']."( ".$rows." )";}
+				if($rows > $max){$max = $rows; $largest = $ap_ary['ssid']." - ".$pnt_id." - ".$rows;}
 			}
 		}
+		
 		verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Finished AP With Most GPS Points.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 #############
 		verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Finding The Newest AP.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
@@ -456,7 +455,7 @@ verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting Users Statistics.".$GLOBA
 	#		echo $sql."<BR>";
 			$ap_qry = mysql_query($sql, $conn) or die(mysql_error($conn));
 			$ap_ary = mysql_fetch_array($ap_qry);
-			$newest = $ap_ary["ssid"]." ( $pnt_id )";
+			$newest = $ap_ary["ssid"]." - ( $pnt_id )";
 #				echo $new_ssid."<BR>";
 			break;
 		}

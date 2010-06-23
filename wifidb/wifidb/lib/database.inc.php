@@ -132,16 +132,6 @@ else
 	}
 }
 
-$apache_root = $_SERVER['DOCUMENT_ROOT'];
-$exp =  explode(' ', php_uname());
-if($exp[0] == 'Windows')
-{
-	$cwd = str_replace('\\', '/', getcwd());
-}
-else
-{
-	$cwd = getcwd().'/';
-}
 ####### HTTP ONLY ########
 if(@$GLOBALS['screen_output'] != "CLI")
 {	
@@ -183,7 +173,7 @@ if(@$GLOBALS['screen_output'] != "CLI")
 				document.cookie="wifidb_client_check" + "=" +escape("1")+
 				((expiredays==null) ? "" : ";expires=" +exdate.toUTCString());
 		   }
-		   location.href = '<?php echo $_SERVER['PHP_SELF'];?>';
+		   location.href = '<?php echo $_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING'];?>';
 		}
 		</script>
 		<body onload = "checkTimeZone();" ></body>
@@ -219,7 +209,7 @@ if(@$GLOBALS['screen_output'] != "CLI")
 				exdate.setDate(exdate.getDate()+expiredays);
 				document.cookie="wifidb_client_timezone=" +escape(hoursDiffStdTime)+((expiredays==null) ? "" : ";expires=" +exdate.toUTCString());
 		   }
-		   location.href = '<?php echo $_SERVER['PHP_SELF'];?>';
+		   location.href = '<?php echo $_SERVER['PHP_SELF'].'?'.$_SERVER['QUERY_STRING'];?>';
 		}
 		</script>
 		<body onload = "checkTimeZone();" ></body>
@@ -289,7 +279,7 @@ function getTZ($offset = '-5')
 function redirect_page($return = "", $delay = 0, $msg = "no Message", $new_window = 0)
 {
 	if($return == ''){$return = $GLOBALS['UPATH'];}
-	echo $return."<br>";
+	#echo $return."<br>";
 	?>
 		<script type="text/javascript">
 			function reload()
@@ -529,40 +519,48 @@ function check_install_folder()
 	return 1;
 }
 
-function sql_type_mail_filter($sql = '', $type = 'none')
+function sql_type_mail_filter($type = 'none')
 {
 	switch($type)
 	{
 		case "schedule":
-			$sql .= " AND `schedule` = '1'";
+			$sql = " AND `schedule` = '1'";
 		break;
 		
 		case "import":
-			$sql .= " AND `imports` = '1'";
+			$sql = " AND `imports` = '1'";
 		break;
 		
 		case "kmz":
-			$sql .= " AND `kmz` = '1'";
+			$sql = " AND `kmz` = '1'";
 		break;
 		
 		case "new_users":
-			$sql .= "AND `new_users` = '1'";
+			$sql = "AND `new_users` = '1'";
 		break;
 		
 		case "statistics":
-			$sql .= " AND `statistics` = '1'";
+			$sql = " AND `statistics` = '1'";
 		break;
 		
 		case "perfmon":
-			$sql .= " AND `perfmon` = '1'";
+			$sql = " AND `perfmon` = '1'";
 		break;
 		
 		case "announcements":
-			$sql .= " AND `announcements` = '1'";
+			$sql = " AND `announcements` = '1'";
 		break;
 		
 		case "announce_comment":
-			$sql .= " AND `announce_comment` = '1'";
+			$sql = " AND `announce_comment` = '1'";
+		break;
+		
+		case "pub_geocache":
+			$sql = " AND `pub_geocache` = '1'";
+		break;
+		
+		case "geonamed":
+			$sql = " AND `geonamed` = '1'";
 		break;
 		
 		case "none":
@@ -576,10 +574,11 @@ function sql_type_mail_filter($sql = '', $type = 'none')
 #											mail_users (Emails the admins of the DB about updates)						 #
 #========================================================================================================================#
 
-function mail_users($contents = '', $subject = "WifiDB Notifications", $type = "none", $level = 0, $error_f = 0)
+function mail_users($contents = '', $subject = "WifiDB Notifications", $type = "none", $error_f = 0)
 {
 	if($type != 'none' or $type != '')
 	{
+	#	echo $GLOBALS['wifidb_email_updates'];
 		if($GLOBALS['wifidb_email_updates'])
 		{
 			require_once('config.inc.php');
@@ -596,26 +595,13 @@ function mail_users($contents = '', $subject = "WifiDB Notifications", $type = "
 			$mail				=	new MAIL5();
 			$sql				=	"SELECT `email`, `username` FROM `$db`.`$user_logins_table` WHERE `disabled` = '0' AND `validated` = '0'";
 	#		echo $sql."<BR>";
-			switch($level)
+			$sql .= sql_type_mail_filter($type);
+			if($error_f)
 			{
-				case '0':
-					$sql .= sql_type_mail_filter(" AND `admins` = '1'", $type);
-				break;
-				
-				case '1':
-					$sql .= sql_type_mail_filter(" AND `devs` = '1'", $type);
-				break;
-				
-				case '2':
-					$sql .= sql_type_mail_filter(" AND `mods` = '1'", $type);
-				break;
-				
-				case '3':
-					$sql .= sql_type_mail_filter(" AND `users` = '1'", $type);
-				break;
+				$sql .= " AND `admins` = '1'";
 			}
 	#		echo $sql."<BR>";
-	#		$sql .= " AND `username` NOT LIKE 'admin%'";
+			if(!$error_f){$sql .= " AND `username` NOT LIKE 'admin%'";}
 	#		echo $sql."<BR>";
 			$result = mysql_query($sql, $conn);
 			while($users = mysql_fetch_array($result))
@@ -661,10 +647,16 @@ function mail_users($contents = '', $subject = "WifiDB Notifications", $type = "
 				return 0;
 			}
 			$mail->disconnect();
+		}else
+		{
+			echo $GLOBALS['wifidb_email_updates'];
+			echo "Mail updates is turned off.";
+			return 0;
 		}
 	}else
 	{
 		echo "$"."type var is not set, check your code.<br>\r\n";
+		return 0;
 	}
 }
 
@@ -689,6 +681,7 @@ function mail_validation($to = '', $username = '')
 	$date				=	date("Y-m-d H:i:s"); 
 	if(!$mail->from($from))
 	{die("Failed to add From address\r\n");}
+	
 	if(!$mail->addto($to))
 	{die("Failed to add To address\r\n");}
 
@@ -704,7 +697,7 @@ Validation Link: $UPATH/login.php?func=validate_user&validate_code=$validate_cod
 
 -WiFiDB Service";
 	if(!$mail->text($contents))
-	{die("Failed to add message\r\n");}
+	{echo "Failed to add Message"; return 0;}
 	
 	$smtp_conn = $mail->connect($wifidb_smtp, 465, $sender, $sender_pass, 'tls', 10);
 	if ($smtp_conn)
@@ -713,24 +706,38 @@ Validation Link: $UPATH/login.php?func=validate_user&validate_code=$validate_cod
 		if($smtp_send)
 		{
 			$insert = "INSERT INTO `$db`.`$validate_table` (`id`, `username`, `code`, `date`) VALUES ('', '$username', '$validate_code', '$date')";
-#			echo $insert."<BR>";
+		#	echo $insert."<BR>";
 			if(mysql_query($insert, $conn))
 			{
-				return 1;
+				$return =1;
+			#	echo "Message sent and inserted into DB.";
 			}else
 			{
-				return 0;
+				$insert = "UPDATE `$db`.`$validate_table` SET `code` = '$validate_code', `date` = '$date' WHERE `username` LIKE '$username' LIMIT 1";
+			#	echo $insert."<BR>";
+				if(mysql_query($insert, $conn))
+				{
+					$return =1;
+				#	echo "Message sent and Updated to newest data.";
+				}else
+				{
+					$return = 0;
+					echo "Message sent, but insert into table failed.";
+				}
 			}
 		}
 		else
 		{
-			return 0;
+			$return = 0;
+			echo "Failed to send message.";
 		}
 	}else
 	{
-		return 0;
+		$return = 0;
+		echo "Failed to connect to SMTP server";
 	}
 	$mail->disconnect();
+	return $return;
 }
 
 
@@ -990,7 +997,7 @@ function smart_quotes($text="") // Used for SSID Sanatization
 					23=>"ÿ",
 					24=>""
 				);
-	$text = preg_replace($pattern,"&#147;\\1&#148;",stripslashes($text));
+	$text = preg_replace($pattern,"&#147;\\1&#148;",$text);
 	$text = str_replace($strip,"_",$text);
 	return $text;
 }
@@ -1070,11 +1077,11 @@ function format_size($size, $round = 2)
 function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 {
 	if($ssid_frm_src_or_pnt_tbl == ''){$ssid_frm_src_or_pnt_tbl="UNNAMED";}
-	$ssids = addslashes($ssid_frm_src_or_pnt_tbl);
+	$ssids = $ssid_frm_src_or_pnt_tbl;
 	$ssid_safe_full_length = smart_quotes($ssids);
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char long.
 	$ssid_table_safe = $ssid_sized[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
-	$A = array(0=> $ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids);
+	$A = array(0=> $ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
 	return $A;
 }
 
@@ -1720,6 +1727,7 @@ class database
 					if(!isset($SETFLAGTEST))
 					{
 						$count1 = $count - $gpscount;
+						echo $gpscount." - - ".$count."\r\n";
 						$count1 = $count1 - 8;
 						if($count1 == 0) 
 						{
@@ -1747,8 +1755,7 @@ class database
 					
 					$dbsize = mysql_query("SELECT `id` FROM `$db`.`$wtable` ORDER BY `id` DESC LIMIT 1", $GLOBALS['conn']);
 					$size1 = mysql_fetch_array($dbsize);
-					$size = $size1['id']+0;
-					$size++;
+					$size = ($size1['id']+0)+1;
 					
 					//You cant have any blank data, thats just rude...
 					if($wifi[0] == ''){$wifi[0]="UNNAMED";}
@@ -1761,23 +1768,24 @@ class database
 				
 				#		$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids
 				
-				#	list($ssid_S, $sss, $ssss ) = make_ssid($wifi[0]);
+					list($ssid_S, $ssids, $ssidss ) = make_ssid($wifi[0]);
 				#	var_dump(make_ssid($wifi[0]));
 				#	echo $wifi[0]."\r\n";
-					$ssids = addslashes($wifi[0]);
-				#	echo $ssids."\r\n";
-					$ssidss = smart_quotes($ssids);
+				#	$ssids = htmlentities($wifi[0], ENT_QUOTES);
 				#	echo $ssidss."\r\n";
-					$ssidsss = str_split($ssidss,25); //split SSID in two at is 25th char.
+				#	$ssidss = smart_quotes($ssids);
+				#	echo $ssidss."\r\n";
+				#	$ssidsss = str_split($ssids,25); //split SSID in two at is 25th char.
 					
-					$ssid_S = $ssidsss[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
+				#	$ssid_S = $ssidsss[0]; //Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, 
 										  //the rest of the info will suffice for unique table names
 				#	echo $ssid_S."\r\n";
 					if($out=="CLI")
 					{
 						$this_of_this = $FILENUM." / ".$count1;
-						$ssids = addslashes($ssids);
-						$sqlup = "UPDATE `files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `file` = '$file1';";
+						$file1 = str_replace(" ", "%20", $file1);
+						$sqlup = "UPDATE `files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `file` LIKE '$file1';";
+					#	echo $sqlup."\r\n";
 						if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 						{
 							logd($updated_tmp_table_msg."\r\n", $log_interval, 0,  $log_level);
@@ -1787,16 +1795,16 @@ class database
 					$mac1 = explode(':', $wifi[1]);
 					$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5]; //the APs table doesnt need :'s in its name, nor does the Pointers table, well it could I just dont want to
 					
-					$auth		=	filter_var($wifi[3], FILTER_SANITIZE_SPECIAL_CHARS);
-					$encry		=	filter_var($wifi[4], FILTER_SANITIZE_SPECIAL_CHARS);
-					$sectype	=	filter_var($wifi[5], FILTER_SANITIZE_SPECIAL_CHARS);
-					$chan		=	filter_var($wifi[7], FILTER_SANITIZE_SPECIAL_CHARS);
+					$auth		=	htmlentities($wifi[3], ENT_QUOTES);
+					$encry		=	htmlentities($wifi[4], ENT_QUOTES);
+					$sectype	=	htmlentities($wifi[5], ENT_QUOTES);
+					$chan		=	htmlentities($wifi[7], ENT_QUOTES);
 					$chan		=	$chan+0;
-					$btx		=	filter_var($wifi[8], FILTER_SANITIZE_SPECIAL_CHARS);
-					$otx		=	filter_var($wifi[9], FILTER_SANITIZE_SPECIAL_CHARS);
-					$nt			=	filter_var($wifi[10], FILTER_SANITIZE_SPECIAL_CHARS);
-					$label		=	filter_var($wifi[11], FILTER_SANITIZE_SPECIAL_CHARS);
-					$san_sig	=	filter_var($wifi[12], FILTER_SANITIZE_SPECIAL_CHARS);
+					$btx		=	htmlentities($wifi[8], ENT_QUOTES);
+					$otx		=	htmlentities($wifi[9], ENT_QUOTES);
+					$nt			=	htmlentities($wifi[10], ENT_QUOTES);
+					$label		=	htmlentities($wifi[11], ENT_QUOTES);
+					$san_sig	=	htmlentities($wifi[12], ENT_QUOTES);
 					
 					$san_sig	=	str_replace("&#13;&#10;","",$san_sig);
 					$NUM_SIG = explode("-",$san_sig);
@@ -1845,7 +1853,7 @@ class database
 						{$radios = "U";}
 					
 					$conn = mysql_connect($host, $db_user, $db_pwd);
-					$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssidss' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios' LIMIT 1", $conn) or die(mysql_error($conn));
+					$result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs' AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios' LIMIT 1", $conn) or die(mysql_error($conn));
 					$rows = mysql_num_rows($result);
 					$newArray = mysql_fetch_array($result);
 					$APid = $newArray['id'];
@@ -2207,6 +2215,7 @@ class database
 						}
 
 					#	echo $wifi[12]."\n";
+					#	echo "SELECT * FROM `$db_st`.`$gps_table`\r\n";
 						$DB_result = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
 						$gpstableid = mysql_num_rows($DB_result);
 						
@@ -2881,8 +2890,8 @@ class database
 			{$radio = "802.11n";}
 		else
 			{$radio = "802.11u";}
-		
-		$ssid_ptb = smart_quotes(addslashes($newArray["ssid"]));
+
+		list($ssid_ptb) = make_ssid($newArray["ssid"]);
 		$table		=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
 		$table_gps	=	$table.$gps_ext;
 		?>
@@ -5345,17 +5354,16 @@ class daemon
 		$temp_kml_label = $daily_folder.'full_db_label.kml';
 		$filename = $daemon_folder.'fulldb.kmz';
 		$filename_copy = $daily_folder.'fulldb.kmz';
-		# do a full Db export for the day if needed
 		
+		daemon::daemon_daily_db_exp($temp_daily_kml, $temp_dailyL_kml, $verbose);
+		
+		# do a full Db export for the day if needed
 		$temp_kml_size = dos_filesize($temp_kml);
 		if(!file_exists($temp_kml) or $temp_kml_size == '0' )
 		{
 		daemon::daemon_full_db_exp($temp_kml, $temp_kml_label, $verbose);
 		}
 		else{verbosed($GLOBALS['COLORS']['RED']."File already exists, no need to export full DB.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");}
-		
-		daemon::daemon_daily_db_exp($temp_daily_kml, $temp_dailyL_kml, $verbose);
-
 		
 		verbosed($GLOBALS['COLORS']['LIGHTGRAY']."Writing Index KML for KMZ file.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
 		
@@ -5687,7 +5695,8 @@ class daemon
 			{
 				#echo chr(27)."[H".chr(27)."[2J";
 				#$memUse = convert(memory_get_usage());
-				echo "ID: $id \r\n";#Memory Usage: $memUse\r\n";
+				#echo "ID: $id \r\nMemory Usage: $memUse\r\n";
+				echo ".";
 			}
 		}
 		if($verbose){echo"\n";}

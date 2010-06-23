@@ -37,7 +37,6 @@ if($login_check == 1 and $priv_s1 >= 1000)
 		case "uandp":
 			admin_pageheader("Users and Permissions");
 			$admin->uandp($mode);
-			echo $priv_name1;
 		break;
 		
 		case "maint":

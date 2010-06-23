@@ -100,13 +100,10 @@ function footer($filename = '', $output = "detailed")
 	include_once($half_path.'/lib/security.inc.php');
 	include_once($half_path.'/lib/database.inc.php');
 	include_once($half_path.'/lib/config.inc.php');
-
+	$filename = str_replace($GLOBALS['half_path'], "", $filename);
 	$root = $GLOBALS['root'];
 	$tracker = $GLOBALS['tracker'];
 	$ads = $GLOBALS['ads'];
-	$file_ex = explode("/", $filename);
-	$count = count($file_ex);
-	$filename_1 = $file_ex[($count)-1];
 	if($output == "detailed")
 	{
 		?>
@@ -117,37 +114,31 @@ function footer($filename = '', $output = "detailed")
 		<tr>
 		<td bgcolor="#315573" height="23"></td>
 		<td bgcolor="#315573" width="0" align="center">
+		<h6><i><u><?php echo $filename;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", getlastmod());?></h6>
 		<?php
-		if (file_exists($filename_1)) 
+#		echo $GLOBALS['privs'];
+		if(@$GLOBALS['login_check'])
 		{
-		?>
-			<h6><i><u><?php echo $filename_1;?></u></i> was last modified:  <?php echo date ("Y F d @ H:i:s", getlastmod());?></h6>
-			
+			?>
+			<font size="2"><b>
 			<?php
-	#		echo $GLOBALS['privs'];
-			if($GLOBALS['login_check'])
+			$privs = $GLOBALS['privs'];
+			$priv_name = $GLOBALS['priv_name'];
+			if($privs >= 1000)
 			{
-				?>
-				<font size="2"><b>
-				<?php
-				$privs = $GLOBALS['privs'];
-				$priv_name = $GLOBALS['priv_name'];
-				if($privs >= 1000)
-				{
-					?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/?func=admin_cp">Admin Control Panel</a>  |-|  <?php
-				}
-				if($privs >= 10)
-				{
-					?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/?func=mod_cp">Moderator Control Panel</a>  |-|  <?php
-				}
-				if($privs >= 1)
-				{
-					?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/">User Control Panel</a><?php
-				}
-				?>
-				</b></font>
-				<?php
+				?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/?func=admin_cp">Admin Control Panel</a>  |-|  <?php
 			}
+			if($privs >= 10)
+			{
+				?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/?func=mod_cp">Moderator Control Panel</a>  |-|  <?php
+			}
+			if($privs >= 1)
+			{
+				?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/">User Control Panel</a><?php
+			}
+			?>
+			</b></font>
+			<?php
 		}
 		?>
 		</td>

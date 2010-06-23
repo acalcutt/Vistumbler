@@ -11,7 +11,7 @@ include($half_path.'/lib/config.inc.php');
 <tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
 
 <?php
-global $wifidb_smtp;
+global $wifidb_smtp, $wifidb_email_updates;
 $ENG = "InnoDB";
 $date = date("Y-m-d");
 
@@ -25,10 +25,25 @@ $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
 $password		=	addslashes(strip_tags($_POST['wdb_admn_pass']));
 $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
-$wifidb_email_updates	=	addslashes(strip_tags($_POST['wdb_email_updates']));
 $wifidb_from			=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
 $wifidb_from_pass		=	addslashes(strip_tags($_POST['wdb_from_pass']));
 $wifidb_smtp			=	addslashes(strip_tags($_POST['wdb_smtp']));
+
+if($_POST['email_validation'] == 'on')
+{
+	$email_validation	=	1;
+}else
+{
+	$email_validation	=	0;
+}
+echo $_POST['wdb_email_updates'];
+if($_POST['wdb_email_updates'] == 'on')
+{
+	$wifidb_email_updates	=	1;
+}else
+{
+	$wifidb_email_updates	=	0;
+}
 
 if(!@isset($timeout)){$timeout		=   "(86400 * 365)";}
 
@@ -67,24 +82,24 @@ if ($sqlhost !== 'localhost' or $sqlhost !== "127.0.0.1")
 else{$phphost	=	$_SERVER['SERVER_ADDR'];}
 
 #Connect with Root priv
-$conn = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd) or die("</table>Could not create MySQL Connection".footer($_SERVER['SCRIPT_FILENAME']));
+$conn1 = mysql_connect($sqlhost, $root_sql_user, $root_sql_pwd) or die("</table>Could not create MySQL Connection".footer($_SERVER['SCRIPT_FILENAME']));
 
 
 $sqls =	"REVOKE GRANT OPTION ON  `$wifi` . * FROM  '$sqlu'@'$phphost'";
-$GR_US_WF_Re = mysql_query($sqls, $conn);
+$GR_US_WF_Re = mysql_query($sqls, $conn1);
 if($GR_US_WF_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Alter user: $sqlu @ $phphost for $wifi</td></tr>\r\n\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi;<br>".mysql_error($conn)."</td></tr>\r\n\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi;<br>".mysql_error($conn1)."</td></tr>\r\n\r\n";
 }
 
 
 $sqls =	"REVOKE ALL PRIVILEGES ON  `$wifi` . * FROM  '$sqlu'@'$phphost'";
-$GR_US_WF_Re = mysql_query($sqls, $conn);
+$GR_US_WF_Re = mysql_query($sqls, $conn1);
 if($GR_US_WF_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Alter user: $sqlu @ $phphost for $wifi</td></tr>\r\n\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi;<br>".mysql_error($conn)."</td></tr>\r\n\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi;<br>".mysql_error($conn1)."</td></tr>\r\n\r\n";
 }
 
 
@@ -99,29 +114,29 @@ INDEX ,
 ALTER ,
 LOCK TABLES ,
 SHOW VIEW ON  `$wifi` . * TO  '$sqlu'@'$phphost'";
-$GR_US_WF_Re = mysql_query($sqls, $conn) or die(mysql_error($conn));
+$GR_US_WF_Re = mysql_query($sqls, $conn1) or die(mysql_error($conn1));
 if($GR_US_WF_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Alter user: $sqlu @ $phphost for $wifi</td></tr>\r\n\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi;<br>".mysql_error($conn)."</td></tr>\r\n\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi;<br>".mysql_error($conn1)."</td></tr>\r\n\r\n";
 }
 
 
 $sqls =	"REVOKE GRANT OPTION ON  `$wifi_st` . * FROM  '$sqlu'@'$phphost'";
-$GR_US_WF_Re = mysql_query($sqls, $conn);
+$GR_US_WF_Re = mysql_query($sqls, $conn1);
 if($GR_US_WF_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st</td></tr>\r\n\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 
 $sqls =	"REVOKE ALL PRIVILEGES ON  `$wifi_st` . * FROM  '$sqlu'@'$phphost'";
-$GR_US_WF_Re = mysql_query($sqls, $conn);
+$GR_US_WF_Re = mysql_query($sqls, $conn1);
 if($GR_US_WF_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 
@@ -136,20 +151,20 @@ INDEX ,
 ALTER ,
 LOCK TABLES ,
 SHOW VIEW ON  `$wifi_st` . * TO  '$sqlu'@'$phphost'";
-$GR_US_WF_Re = mysql_query($sqls, $conn);
+$GR_US_WF_Re = mysql_query($sqls, $conn1);
 if($GR_US_WF_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter user: $sqlu @ $phphost for $wifi_st;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 #######################
 $sql = "TRUNCATE TABLE `$wifi`.`links`";
-$drop = mysql_query($sql, $conn);
+$drop = mysql_query($sql, $conn1);
 if($drop)
 {echo "<tr class=\"good\"><td>Success..........</td><td>EMPTY TABLE `links`</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>EMPTY TABLE `links`;<br>".mysql_error($conn)."</td></tr>\r\n";}
+echo "<tr class=\"bad\"><td>Failure..........</td><td>EMPTY TABLE `links`;<br>".mysql_error($conn1)."</td></tr>\r\n";}
 
 ####################
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
@@ -166,11 +181,11 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files` (
 		`user_row` INT NOT NULL ,
 		UNIQUE ( `file` )
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create Files table `$wifi`.`files`;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Files table `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Create Files table `$wifi`.`files`;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 ######################
@@ -189,11 +204,11 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`files_tmp` (
 		`file_row` INT ( 255 ) NOT NULL,
 		UNIQUE ( `file` )	
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create tmp File table `$wifi`.`files_tmp`;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Create tmp Files table `$wifi`.`files_tmp`;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Create tmp Files table `$wifi`.`files_tmp`;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 ####################
 $sql1 = "CREATE TABLE `$wifi`.`validate_table` (
@@ -204,20 +219,20 @@ $sql1 = "CREATE TABLE `$wifi`.`validate_table` (
 	UNIQUE (`username`),
 	INDEX ( `id` )
 	) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create email validation table <b>`$wifi`</b>.`validation_table`;</td></tr>";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Create email validation table <b>`$wifi`</b>.`validation_table`;<br>".mysql_error($conn)." </td></tr>";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Create email validation table <b>`$wifi`</b>.`validation_table`;<br>".mysql_error($conn1)." </td></tr>";
 }
 
 ####################
 $sql1 = "ALTER TABLE `$wifi`.`$wtable` CHANGE `ssid` `ssid` VARCHAR( 32 ), CHANGE `chan` `chan` VARCHAR( 3 ), CHANGE `id` `id` INT( 255 ) NOT NULL AUTO_INCREMENT";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`$wtable` to change ssid( 32 char max), chan(3 char max), id (numeric 255 not null, auto increment) fields;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$wtable` to change SSID (32 char max), Chan(3 char max), ID (numeric 255 not null, auto increment) fields;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$wtable` to change SSID (32 char max), Chan(3 char max), ID (numeric 255 not null, auto increment) fields;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 
@@ -229,7 +244,7 @@ ADD `adminname` VARCHAR( 64 ) NOT NULL ,
 ADD `iso3166-2` VARCHAR( 3 ) NOT NULL ,
 ADD `lat` VARCHAR( 32 ) NOT NULL DEFAULT 'N 0.0000' ,
 ADD `long` VARCHAR( 32 ) NOT NULL DEFAULT 'E 0.0000' ";
-$alter = mysql_query($alter_sql, $conn);
+$alter = mysql_query($alter_sql, $conn1);
 if($alter)
 {echo "<tr class=\"good\"><td>Success..........</td><td>To alter <b>`$wifi`</b>.`wtable` to add location filter data for KML's</td></tr>\r\n";}
 else{
@@ -240,61 +255,61 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>To alter <b>`$wifi`</b>.`w
 
 ################### ALTER $users_t TABLE
 $sql = "RENAME TABLE `$wifi`.`users` TO `$wifi`.`users_imports`";
-$insert = mysql_query($sql, $conn);
+$insert = mysql_query($sql, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`users` to new table name `user_imports;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`users` to new table name `user_imports;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`users` to new table name `user_imports;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 ############################################
 $sql1 = "ALTER TABLE `$wifi`.`$users_t` ADD `hash` VARCHAR ( 255 ) NOT NULL";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`$users_t` to add file hash field;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to add file hash field;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to add file hash field;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 $sql1 = "ALTER TABLE `$wifi`.`$users_t` ADD `aps` INT NOT NULL, 
 CHANGE `username` `username` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL ,
 CHANGE `title` `title` VARCHAR( 255 ) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`$users_t` to add aps field;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to add aps field;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to add aps field;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 $sql1 = "ALTER TABLE `$wifi`.`$users_t` ADD `gps` INT NOT NULL";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`$users_t` to add gps field;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to add gps field;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to add gps field;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 $sql1 = "ALTER TABLE `$wifi`.`$users_t` CHANGE `title` `title` VARCHAR ( 255 ) NOT NULL";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`$users_t` to change title field to 255 chars;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to change title field to 255 chars;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to change title field to 255 chars;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 $sql1 = "ALTER TABLE `$wifi`.`$users_t` ADD `notes` TEXT NOT NULL";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`$users_t` to add notes field;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to add notes field;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` to add notes field;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 $sql1 = "ALTER TABLE `$wifi`.`$users_t` CHANGE `username` `username` VARCHAR ( 255 ) NOT NULL";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`$users_t` `username` field to VARCHAR( 255 );</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` `username` field to VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` `username` field to VARCHAR( 255 );<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 ####################################################################
 
@@ -302,39 +317,39 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Alter `$wifi`.`$users_t` `
 
 ####	ALTER FILES TABLE WITH NEW FIELDS
 $sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `size` `size` VARCHAR( 14 )";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Changed `$wifi`.`files` `size` field, from float to varchar(14);</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Change `$wifi`.`files` `size` field, from float to varchar(14);<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change `$wifi`.`files` `size` field, from float to varchar(14);<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 $sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `file` `file` VARCHAR( 255 )";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Changed `$wifi`.`files` `file` VARCHAR( 255 );</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Change `$wifi`.`files` `file` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change `$wifi`.`files` `file` VARCHAR( 255 );<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 $sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `title` `title` VARCHAR ( 255 ) NOT NULL, CHARSET=utf8";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Changed field (Title) to `$wifi`.`files`;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (Title) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (Title) to `$wifi`.`files`;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 $sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `user` `user` VARCHAR ( 255 ) NOT NULL, CHARSET=utf8";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Added field (user) to `$wifi`.`files`;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Added field (user) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Added field (user) to `$wifi`.`files`;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 $sql1 = "ALTER TABLE `$wifi`.`files` CHANGE `notes` `notes` TEXT NOT NULL, CHARSET=utf8";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Changed field (notes) to `$wifi`.`files`;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (notes) to `$wifi`.`files`;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (notes) to `$wifi`.`files`;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 #########################################################
 
@@ -343,11 +358,11 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (notes) to `$
 
 
 $sql1 = "ALTER TABLE `$wifi`.`files_tmp` CHANGE `title` `title` VARCHAR ( 255 ) NOT NULL, CHARSET=utf8";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Changed field (Title) to `$wifi`.`files_tmp`;</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (Title) to `$wifi`.`files_tmp`;<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (Title) to `$wifi`.`files_tmp`;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 
@@ -355,18 +370,18 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Change field (Title) to `$
 
 ####	ALTER FILES_TMP TABLE WITH NEW FIELDS
 $sql1 = "ALTER TABLE `$wifi`.`files_tmp` CHANGE `size` `size` VARCHAR( 12 ), CHARSET=utf8";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`files_tmp` `size` fields, from float to varchar(12);</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files_tmp` `size` fields, from float to varchar(12);<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files_tmp` `size` fields, from float to varchar(12);<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 $sql1 =  "ALTER TABLE `$wifi`.`files_tmp` CHANGE `file` `file` VARCHAR( 255 ), CHARSET=utf8";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`files_tmp` CHANGE `file` VARCHAR( 255 );</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files_tmp` CHANGE `file` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files_tmp` CHANGE `file` VARCHAR( 255 );<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 ###############################################
 
@@ -378,24 +393,24 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`files_tmp
 
 ################################
 $sql1 =  "ALTER TABLE `$wifi`.`settings` CHANGE `size` `size` VARCHAR( 255 ), CHARSET=utf8";
-$insert = mysql_query($sql1, $conn);
+$insert = mysql_query($sql1, $conn1);
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );</td></tr>\r\n";}
 else{
-echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );<br>".mysql_error($conn)."</td></tr>\r\n";
+echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`settings` CHANGE `size` VARCHAR( 255 );<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
 
 $sql_test = "SELECT * FROM `$wifi`.`settings` WHERE `table` LIKE 'files'";
-$insert = mysql_query($sql_test, $conn);
+$insert = mysql_query($sql_test, $conn1);
 $insert_arry = mysql_fetch_array($insert);
 if($insert_arry['table'] != 'files')
 {
 	$sql1 =  "INSERT INTO `$wifi`.`settings` ( `id`, `table`, `size`) VALUES ( '1', 'files', '')";
-	$insert = mysql_query($sql1, $conn);
+	$insert = mysql_query($sql1, $conn1);
 	if($insert)
 	{echo "<tr class=\"good\"><td>Success..........</td><td>INSERT wifidb Size holder INTO <b>`$wifi`</b>.`settings`, not really used, just like to have it here.</td></tr>\r\n";}
 	else{
-	echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT wifidb Size holder INTO <b>`$wifi`</b>.`settings`<br>".mysql_error($conn)."</td></tr>\r\n";
+	echo "<tr class=\"bad\"><td>Failure..........</td><td>INSERT wifidb Size holder INTO <b>`$wifi`</b>.`settings`<br>".mysql_error($conn1)."</td></tr>\r\n";
 	}
 }else
 {
@@ -403,16 +418,16 @@ if($insert_arry['table'] != 'files')
 }
 
 $sql_test = "SELECT * FROM `$wifi`.`settings` WHERE `table` = 'theme'";
-$insert = mysql_query($sql_test, $conn);
+$insert = mysql_query($sql_test, $conn1);
 $insert_arry = mysql_fetch_array($insert);
 if($insert_arry['table'] == 'theme')
 {
 	$sql1 =  "DELETE FROM `$wifi`.`settings` WHERE `table` = 'theme'";
-	$insert = mysql_query($sql1, $conn);
+	$insert = mysql_query($sql1, $conn1);
 	if($insert)
 	{echo "<tr class=\"good\"><td>Success..........</td><td>Deleted 'themes' Row from <b>`$wifi`</b>.`settings`</td></tr>\r\n";}
 	else{
-	echo "<tr class=\"bad\"><td>Failure..........</td><td>Failed to deleted 'themes' Row from <b>`$wifi`</b>.`settings`<br>".mysql_error($conn)."</td></tr>\r\n";
+	echo "<tr class=\"bad\"><td>Failure..........</td><td>Failed to deleted 'themes' Row from <b>`$wifi`</b>.`settings`<br>".mysql_error($conn1)."</td></tr>\r\n";
 	}
 }else
 {
@@ -441,7 +456,7 @@ $sql = "CREATE TABLE IF NOT EXISTS `$wifi`.`share_waypoints` (
   `shared_by` varchar(255) NOT NULL,
   UNIQUE KEY `id` (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-$insert = mysql_query($sql, $conn) or die(mysql_error());
+$insert = mysql_query($sql, $conn1) or die(mysql_error());
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create Shared Geocaches table <b>`$wifi`</b>.`share_waypoints`;</td></tr>\r\n";}
 else{
@@ -461,7 +476,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`daemon_perf_mon` (
   UNIQUE KEY `timestamp` (`timestamp`),
   KEY `id` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-$insert = mysql_query($sql1, $conn) or die(mysql_error());
+$insert = mysql_query($sql1, $conn1) or die(mysql_error());
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create Daemon Performance table <b>`$wifi`</b>.`daemon_perf_mon`;</td></tr>\r\n";}
 else{
@@ -513,7 +528,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`DB_stats` (
 INDEX ( `id` ) ,
 UNIQUE (`timestamp`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-$insert = mysql_query($sql1, $conn) or die(mysql_error());
+$insert = mysql_query($sql1, $conn1) or die(mysql_error());
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create DB stats table <b>`$wifi`</b>.`DB_stats`;</td></tr>\r\n";}
 else{
@@ -540,6 +555,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   `last_login` datetime NOT NULL,
   `last_active` datetime NOT NULL,
   `email` varchar(255) NOT NULL,
+  `mail_updates` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `schedule` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `imports` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `kmz` TINYINT( 1 ) NOT NULL DEFAULT '1',
@@ -549,7 +565,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   `announce_comment` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `geonamed` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `pub_geocache` TINYINT( 1 ) NOT NULL DEFAULT '1',
-  `h_email` tinyint(1) NOT NULL,
+  `h_email` tinyint(1) NOT NULL DEFAULT '1',
   `join_date` datetime NOT NULL,
   `friends` text NOT NULL,
   `foes` text NOT NULL,
@@ -561,7 +577,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   UNIQUE KEY `email` (`email`),
   KEY `id` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
-$insert = mysql_query($sql1, $conn) or die(mysql_error());
+$insert = mysql_query($sql1, $conn1) or die(mysql_error());
 if($insert)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Create User Login Table table <b>`$wifi`</b>.`user_info`;</td></tr>\r\n";}
 else{
@@ -606,12 +622,11 @@ global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_t
 #SQL GLOBALS
 global $"."wifidb_install, $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
 #MISC GLOBALS
-global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from,$"."wifidb_from_pass;
+global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."email_validation, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from,$"."wifidb_from_pass;
 
 $"."lastedit	=	'$date';
 
 #----------General Settings------------#
-$"."bypass_check	=	0;
 $"."wifidb_tools	=	'$toolsdir';
 $"."wifidb_install	=	'".$_SERVER['DOCUMENT_ROOT']."';
 $"."timezn			=	'UTC';
@@ -623,7 +638,10 @@ $"."config_fails	=	3;
 $"."login_seed		=	'$activatecode';
 $"."wifidb_from	=	'$wifidb_from';
 $"."wifidb_from_pass	=	'$wifidb_from_pass';
-$"."wifidb_smtp		=	'$wifidb_smtp';\r\n\r\n");
+$"."wifidb_smtp		=	'$wifidb_smtp';
+$"."email_validation =	$email_validation;
+$"."wifidb_email_updates = $wifidb_email_updates;
+$"."reserved_users		=	'WiFiDB:Recovery';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Global variables and general variables values.</td></tr>";}
@@ -634,7 +652,6 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add Global variables and g
 #add default daemon values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Daemon Info ----------------#
 $"."daemon				=	$daemon;
-$"."debug				=	0;
 $"."log_level			=	0;
 $"."log_interval		=	0;
 $"."WiFiDB_LNZ_User 	=	'$httpduser';
@@ -664,7 +681,7 @@ $"."console_refresh	= 15;
 $"."console_scroll		= 1;
 $"."console_last5		= 1;
 $"."console_lines		= 10;
-$"."console_log		= '/var/log/wifidb';\r\n\r\n");
+$"."console_log		= '/var/log/wifidbd';\r\n\r\n");
 
 if($AD_CF_DG_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add default Console values</td></tr>";}
@@ -673,7 +690,9 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>Add default Console values
 
 #add default debug values
 $AD_CF_DG_Re = fwrite($fileappend, "#---------------- Debug Info ----------------#
-$"."rebuild	=	0;
+$"."bypass_check	=	0;
+$"."rebuild		=	0;
+$"."debug		=	0;
 $"."bench		=	0;\r\n\r\n");
 
 if($AD_CF_DG_Re)
@@ -774,7 +793,11 @@ switch($create)
 			break;
 			
 			case "dup_u":
-				echo '<tr class="bad"><td>Failure..........</td><td>To create Wifidb Admin User. :-(<br>MySQl Error: '.$msg.'<br><h1>Do`h!</h1></td></tr>';
+				echo '<tr class="bad"><td>Failure..........</td><td>To create Wifidb Admin User. :-(<br>MySQL Error: '.$msg.'<br><h1>Do`h!</h1></td></tr>';
+			break;
+			
+			case "err_email":
+				echo '<tr class="bad"><td>Failure..........</td><td>To create Wifidb Admin User. :-(<br>Email Error: '.$msg.'<br><h1>Do`h!</h1></td></tr>';
 			break;
 		}
 	break;

@@ -13,8 +13,6 @@ function admin_pageheader($page = '')
 	$mode = $GLOBALS['mode'];
 	$func = $GLOBALS['func'];
 	
-	$token = session_starter();
-	
 	include_once($half_path.'/lib/database.inc.php');
 	include_once($half_path.'/lib/security.inc.php');
 	include_once($half_path.'/lib/config.inc.php');	
@@ -41,7 +39,7 @@ function admin_pageheader($page = '')
 	if($filtered != '')
 	{$SELF = $SELF.'?'.$filtered;}
 	?>
-	<link rel="stylesheet" href="<?php if($root != ''){echo $hosturl.$root;}else{echo $root;}?>/themes/wifidb/styles.css">
+	<link rel="stylesheet" href="<?php echo $GLOBALS['UPATH']; ?>/themes/wifidb/styles.css">
 	<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
 	<div align="center">
 	<table border="0" width="100%" cellspacing="5" cellpadding="2">
@@ -63,9 +61,9 @@ function admin_pageheader($page = '')
 		</td></tr>
 		<tr>
 			<td style="background-color: #304D80;width: 15%;vertical-align: top;">
-			<img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" /><br>
-			<span class="content_head"><strong><em><a class="links_s" href="<?php echo $hosturl.$root; ?>/">[WiFIDB]</a></em></strong></span><br>
-			<span class="content_head"><strong><em><a class="links_s" href="<?php echo $hosturl.$root;?>/caches.php">[Mytsticache]</a></em></strong></span><br>
+			<img alt="" src="<?php echo $GLOBALS['UPATH']; ?>/themes/wifidb/img/1x1_transparent.gif" width="185" height="1" /><br>
+			<span class="content_head"><strong><em><a class="links_s" href="<?php echo $GLOBALS['UPATH']; ?>/">[WiFIDB]</a></em></strong></span><br>
+			<span class="content_head"><strong><em><a class="links_s" href="<?php echo $GLOBALS['UPATH']; ?>/caches.php">[Mytsticache]</a></em></strong></span><br>
 		</td>
 		<td style="background-color: #A9C6FA;width: 80%;vertical-align: top;" align="center">
 		<table width="100%">
@@ -80,15 +78,15 @@ function admin_pageheader($page = '')
 				
 				?>
 				<td>Welcome, <a class="links" href="javascript:confirmation()"><?php echo $username;?></a><font size="1"> (Last Login: <?php echo $last_login;?>)</font></td>
-				<td align="right"><a class="links" href="<?php echo $hosturl.$root; ?>/login.php?func=logout_proc&a_c=1">Logout</a></td>
+				<td align="right"><a class="links" href="<?php echo $GLOBALS['UPATH']; ?>/login.php?func=logout_proc&a_c=1">Logout</a></td>
 			</tr>
 		</table>
 		<table width="100%" align="center" border='1'>
 			<tr class="sub_header">
-				<td align="center" width="25%" <?php if($func == 'overview' or $func == ''){echo 'class="cp_select_coloum"';} ?> >&nbsp;&nbsp;<a class="links<?php if($func == 'overview' or $func == ''){echo '_s';}?>" href="?func=overview">Overview</a>&nbsp;&nbsp;</td>
-				<td align="center" width="25%" <?php if($func == 'uandp'){echo 'class="cp_select_coloum"';} ?> >&nbsp;&nbsp;<a class="links<?php if($func == 'uandp'){echo '_s';}?>" href="?func=uandp">Users and Permissions</a>&nbsp;&nbsp;</td>
-				<td align="center" width="25%" <?php if($func == 'maint'){echo 'class="cp_select_coloum"';} ?> >&nbsp;&nbsp;<a class="links<?php if($func == 'maint'){echo '_s';}?>" href="?func=maint">Maintenance</a>&nbsp;&nbsp;</td>
-				<td align="center" width="25%" <?php if($func == 'system'){echo 'class="cp_select_coloum"';} ?> >&nbsp;&nbsp;<a class="links<?php if($func == 'system'){echo '_s';}?>" href="?func=system">System</a>&nbsp;&nbsp;</td>
+				<td align="center" width="25%" class="<?php if($func == 'overview' or $func == ''){echo 'cp_select_column';}else{echo 'dark';} ?>" >&nbsp;&nbsp;<a class="links<?php if($func == 'overview' or $func == ''){echo '_s';}?>" href="?func=overview">Overview</a>&nbsp;&nbsp;</td>
+				<td align="center" width="25%" class="<?php if($func == 'uandp'){echo 'cp_select_column';}else{echo 'dark';} ?>" >&nbsp;&nbsp;<a class="links<?php if($func == 'uandp'){echo '_s';}?>" href="?func=uandp">Users and Permissions</a>&nbsp;&nbsp;</td>
+				<td align="center" width="25%" class="<?php if($func == 'maint'){echo 'cp_select_column"';}else{echo 'dark';} ?>" >&nbsp;&nbsp;<a class="links<?php if($func == 'maint'){echo '_s';}?>" href="?func=maint">Maintenance</a>&nbsp;&nbsp;</td>
+				<td align="center" width="25%" class="<?php if($func == 'system'){echo 'cp_select_column';}else{echo 'dark';} ?>" >&nbsp;&nbsp;<a class="links<?php if($func == 'system'){echo '_s';}?>" href="?func=system">System</a>&nbsp;&nbsp;</td>
 			</tr>
 			<?php
 			$mode = strtolower($mode);

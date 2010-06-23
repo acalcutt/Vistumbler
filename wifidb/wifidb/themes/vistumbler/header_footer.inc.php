@@ -137,8 +137,39 @@ function footer($filename = '')
 							<td class="cell_side_right">&nbsp;</td>
 						</tr>
 						<tr>
+							<td class="cell_side_left">&nbsp;</td>
+							<td colspan="2" class="cell_color_centered">
+														<?php
+							if(@$GLOBALS['login_check'])
+							{
+								?>
+								<font size="2"><b>
+								<?php
+								$privs = $GLOBALS['privs'];
+								$priv_name = $GLOBALS['priv_name'];
+								if($privs >= 1000)
+								{
+									?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/?func=admin_cp">Admin Control Panel</a>  |-|  <?php
+								}
+								if($privs >= 10)
+								{
+									?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/?func=mod_cp">Moderator Control Panel</a>  |-|  <?php
+								}
+								if($privs >= 1)
+								{
+									?><a class="links" href="<?php echo $GLOBALS['UPATH'];?>/cp/">User Control Panel</a><?php
+								}
+								?>
+								</b></font>
+								<?php
+							}
+							?>
+							</td>
+							<td class="cell_side_right">&nbsp;</td>
+						</tr>
+						<tr>
 							<td class="cell_bot_left">&nbsp;</td>
-							<td class="cell_bot_mid" colspan="2">&nbsp;</td>
+							<td class="cell_bot_mid" colspan="2" align="center">&nbsp;</td>
 							<td class="cell_bot_right">&nbsp;</td>
 						</tr>
 					</table>

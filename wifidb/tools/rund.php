@@ -6,14 +6,13 @@ global $screen_output;
 $screen_output = "CLI";
 error_reporting(E_ALL|E_STRICT);
 
-require('daemon/config.inc.php');
-
 $dim = DIRECTORY_SEPARATOR;
 
-require_once($GLOBALS['wifidb_install'].$dim.$root.$dim.'lib'.$dim.'config.inc.php');
-require_once($GLOBALS['wifidb_install'].$dim.$root.$dim.'lib'.$dim.'database.inc.php');
+if(!(require_once 'daemon/config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
+if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
+require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
+require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
 
-#echo $GLOBALS['wifidb_tools']."\n";
 if(isset($argv[1]))
 {$command = $argv[1];}
 else
@@ -205,7 +204,7 @@ function stop($command = '')
 			}
 			else
 			{
-				unlink($GLOBALS['pid_file_loc']);
+				unlink($pid);
 			#	return 1;
 			}
 		}else
@@ -265,7 +264,7 @@ function stop($command = '')
 			}
 			else
 			{
-				unlink($GLOBALS['pid_file_loc']);
+				unlink($pid);
 			#	return 1;
 			}
 		}else
@@ -299,7 +298,7 @@ function stop($command = '')
 		}
 		else
 		{
-			unlink($GLOBALS['pid_file_loc']);
+			unlink($pid);
 			return 1;
 		}
 	}else

@@ -138,7 +138,7 @@ class geocache
 		}
 	}
 	
-	function update_wpt($id = 0, $name = '', $gcid = '', $notes = '', $cat = '', $type = '' , $lat = '', $long = '', $link = '')
+	function update_wpt($id = 0, $name = '', $gcid = '', $notes = '', $cat = '', $type = '', $terain = '', $diff = '' , $lat = '', $long = '', $link = '')
 	{
 		include_once($GLOBALS['half_path'].'/lib/security.inc.php');
 		$sec = new security();
@@ -152,8 +152,8 @@ class geocache
 	#	echo $User." <-----";
 		if($User)
 		{
-			$User_cache = $User."_waypoints";
-			$sql0 = "UPDATE `$db`.`$User_cache` SET `name` = '$name', `gcid` = '$gcid', `notes` = '$notes', `cat` = '$cat', `type` = '$type', `lat` = '$lat', `long` = '$long', `link` = '$link', `u_date` = '$u_date' WHERE `$User_cache`.`id` = '$id' LIMIT 1";
+			$User_cache = "waypoints_".$User;
+			$sql0 = "UPDATE `$db`.`$User_cache` SET `name` = '$name', `gcid` = '$gcid', `notes` = '$notes', `cat` = '$cat', `type` = '$type', `terain` = '$terain', `diff` = '$diff', `lat` = '$lat', `long` = '$long', `link` = '$link', `u_date` = '$u_date' WHERE `$User_cache`.`id` = '$id' LIMIT 1";
 			if(mysql_query($sql0, $conn))
 			{
 				$select = "SELECT `share`, `share_id` FROM `$db`.`$User_cache` WHERE `id` = '$id'";

@@ -74,7 +74,7 @@ switch($func)
 			{
 				echo 'Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.<BR>';
 				$message = "Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
-				mail_users($message, $subject, $type, 0, 1);
+				mail_users($message, $subject, $type, 1);
 				
 				footer($_SERVER['SCRIPT_FILENAME']);
 				die();
@@ -117,12 +117,18 @@ switch($func)
 					{
 						echo "<h2>File has been inserted for importing at a scheduled time.</h2>";
 						$message = "File has been inserted for importing at a later time at a scheduled time.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/".$rand."_".$filename."\r\n".$UPATH."/opt/scheduling.php\r\n\r\n-WiFiDB Daemon.";
-						mail_users($message, $subject, $type, 0, 0);
+						if(mail_users($message, $subject, $type, 0))
+						{
+							echo "mailed";
+						}else
+						{
+							echo "Failed to Mail";
+						}
 					}else
 					{
 						echo "<h2>There was an error inserting file for scheduled import.</h2>".mysql_error($conn);
 						$message = "New Import Failed!\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
-						mail_users($message, $subject, $type, 0, 1);
+						mail_users($message, $subject, $type, 1);
 					}
 				}else
 				{

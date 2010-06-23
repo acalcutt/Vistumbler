@@ -1,5 +1,5 @@
 <?php
-global $screen_output, $wifidb_smtp;
+global $screen_output, $wifidb_smtp, $wifidb_email_updates;
 $screen_output = 'CLI';
 
 include('../lib/database.inc.php');
@@ -79,11 +79,27 @@ $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
 $password		=	addslashes(strip_tags($_POST['wdb_admn_pass']));
 $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
-$wifidb_email_updates	=	addslashes(strip_tags($_POST['wdb_email_updates']));
 $wifidb_email			=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
 $wifidb_from_pass		=	addslashes(strip_tags($_POST['wdb_from_pass']));
 $wifidb_smtp		=	addslashes(strip_tags($_POST['wdb_smtp']));
 $timeout				=   "(86400 * 365)";
+
+if($_POST['email_validation'] == 'on')
+{
+	$email_validation	=	1;
+}else
+{
+	$email_validation	=	0;
+}
+
+if($_POST['wdb_email_updates'] == 'on')
+{
+	$wifidb_email_updates	=	1;
+}else
+{
+	$wifidb_email_updates	=	0;
+}
+
 if($hosturl == '')
 {
 	$hosturl = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);
@@ -552,6 +568,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   `last_login` datetime NOT NULL,
   `last_active` datetime NOT NULL,
   `email` varchar(255) NOT NULL,
+  `mail_updates` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `schedule` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `imports` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `kmz` TINYINT( 1 ) NOT NULL DEFAULT '1',
@@ -561,7 +578,7 @@ $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`user_info` (
   `announce_comment` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `geonamed` TINYINT( 1 ) NOT NULL DEFAULT '1',
   `pub_geocache` TINYINT( 1 ) NOT NULL DEFAULT '1',
-  `h_email` tinyint(1) NOT NULL,
+  `h_email` tinyint(1) NOT NULL DEFAULT '1',
   `join_date` datetime NOT NULL,
   `friends` text NOT NULL,
   `foes` text NOT NULL,
@@ -641,7 +658,7 @@ global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_t
 #SQL GLOBALS
 global $"."wifidb_install, $"."conn, $"."db, $"."db_st, $"."DB_stats_table, $"."daemon_perf_table, $"."users_t, $"."user_logins_table, $"."validate_table, $"."files, $"."files_tmp, $"."annunc, $"."annunc_comm, $"."collate, $"."engine, $"."char_set;
 #MISC GLOBALS
-global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from, $"."wifidb_from_pass;
+global $"."header, $"."ads, $"."tracker, $"."hosturl, $"."dim, $"."admin_email, $"."email_validation, $"."WiFiDB_LNZ_User, $"."apache_grp, $"."div, $"."wifidb_tools, $"."daemon, $"."root, $"."console_lines, $"."console_log, $"."bypass_check, $"."wifidb_email_updates, $"."wifidb_from, $"."wifidb_from_pass;
 
 $"."lastedit	=	'$date';
 
@@ -659,7 +676,9 @@ $"."login_seed		=	'$seed';
 $"."wifidb_email_updates = '$wifidb_email_updates';
 $"."wifidb_from	=	'$wifidb_from';
 $"."wifidb_from_pass	=	'$wifidb_from_pass';
-$"."wifidb_smtp		=	'';\r\n\r\n");
+$"."wifidb_smtp		=	'';
+$"."email_validation =	'$email_validation';
+$"."reserved_users		=	'WiFiDB:Recovery';\r\n\r\n");
 
 if($CR_CF_FL_Re)
 {echo "<tr class=\"good\"><td>Success..........</td><td>Add Global variables and general variables values.</td></tr>";}

@@ -25,12 +25,13 @@ $user_logins_table				=	$GLOBALS['user_logins_table'];
 $root							= 	$GLOBALS['root'];
 $half_path						=	$GLOBALS['half_path'];
 $WFDBD_PID						=	$GLOBALS['pid_file_loc'].'imp_expd.pid';
+$WFDBD_STATS_PID				=	$GLOBALS['pid_file_loc'].'dbstatsd.pid';
+$pid_file						=	$GLOBALS['pid_file_loc'].'daemonperfd.pid';
+$This_is_me 					=	getmypid();
 $verbose						=	$GLOBALS['verbose'];
 $screen_output					=	$GLOBALS['screen_output'];
 $PERF_time_interval_to_check	=	$GLOBALS['PERF_time_interval_to_check'];
 $enable_mail_users				=	0;
-$pid_file						=	$GLOBALS['pid_file_loc'].'daemonperfd.pid';
-$This_is_me 					=	getmypid();
 $date_format					=	"Y-m-d H:i:s.u";
 $BAD_CLI_COLOR					=	$GLOBALS['BAD_DPM_COLOR'];
 $GOOD_CLI_COLOR					=	$GLOBALS['GOOD_DPM_COLOR'];
@@ -80,10 +81,10 @@ verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."
 WiFiDB 'Daemon Performance Montitor'
 Version: 1.0.0
 - Daemon Start: 2009-12-07
-- Last Daemon File Edit: 2010-01-08
-( /tools/daemon/wifidbd.php -> daemon_perf() )
+- Last Daemon File Edit: 2010-06-22
+( /tools/daemon/daemonperfd.php )
 - By: Phillip Ferland ( pferland@randomintervals.com )
-- http://www.randomintervals.com
+- http://www.randomintervals.com/wifidb/
 
 PID: [ $This_is_me ]
 ".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
@@ -140,11 +141,6 @@ Also, The Daemon is configured to run, but is not!. Fix it quick before imports 
 					verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Success!".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 				}
 			}
-		#	$output = `top -p $pid_open[0]; q`;
-		#	if($output)
-		#	{
-		#		echo $output."\r\n";
-		#	}
 		}else
 		{
 			$insert = "INSERT INTO `$db`.`daemon_perf_mon` (`id`, `timestamp`, `pid`, `uptime`, `CMD`, `mem`, `mesg`) VALUES ('', '$date', '00000', '0', '', '0.00', 'NOT RUNNING!')";
