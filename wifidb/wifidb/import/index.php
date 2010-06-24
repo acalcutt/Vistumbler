@@ -30,25 +30,13 @@ switch($func)
 			if($_POST["user"] !== ''){$user = addslashes($_POST["user"]);}else{$user="Unknown";}
 			if($_POST["notes"] !== ''){$notes = addslashes($_POST["notes"]);}else{$notes="No Notes";}
 			if($_POST['title'] !== ''){$title = addslashes($_POST['title']);}else{$title="Untitled";}
-			
-			$tmp	=	$_FILES['file']['tmp_name'];
-			$filename	=	$_FILES['file']['name'];
-			$file_ext = explode('.', $filename);
-			$ext = strtolower($file_ext[1]);
-			if($ext != 'vs1')
-			{
-				echo '<h2>You can only upload VS1 files<br><A class="links" HREF="javascript:history.go(-1)">Go back</a> and do it right!</h2>';
-				$message = "Non Supported File uploaded, my need to be removed from import/up/ folder.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
-				mail_users($message, $subject, $type, 0, 1);
-				footer($_SERVER['SCRIPT_FILENAME']);
-				die();
-			}
 			$rand	=	rand(); //generate a random number to be added to the new filename so there is not a chance of being a duplicate name.
-			
 			$user = filter_var($user, FILTER_SANITIZE_SPECIAL_CHARS);
 			$notes = filter_var($notes, FILTER_SANITIZE_SPECIAL_CHARS);
 			$title = filter_var($title, FILTER_SANITIZE_SPECIAL_CHARS);
+			############
 			
+			###########
 			$sql = "SELECT `username` FROM `$db`.`$user_logins_table` WHERE `username` LIKE '$user'";
 			$result = mysql_query( $sql , $conn);
 			$array = mysql_fetch_array($result);
@@ -57,55 +45,145 @@ switch($func)
 				echo "<h2>You need to be logged in to import to a user that has a login.<br> Go <a class='links' href='".$GLOBALS['hosturl']."login.php?return=/import/'>login</a> and then import again.</h2>";
 				die(footer($_SERVER['SCRIPT_FILENAME']));
 			}
+			
+			$tmp	=	$_FILES['file']['tmp_name'];
+			$filename	=	$_FILES['file']['name'];
+			$file_ext = explode('.', $filename);
+			$ext = strtolower($file_ext[1]);
+			
 			$uploadfolder = getcwd().'/up/';
 			$uploadfile = $uploadfolder.$rand.'_'.$filename;
 			$filename = str_replace( " ", "%20", $filename);
-			$return  = file($tmp);
-		#	echo "<h1>".$uploadfile."</h1>";
-			$count = count($return);
-		#	echo "<h1>".$count."</h1>";
-			if($count <= 8) 
+			
+			echo $ext."<BR>";
+			
+			switch($ext)
 			{
-				echo '<br><br><h2>You cannot upload an empty VS1 file, at least scan for a few seconds to import some data. <A HREF="javascript:history.go(-1)"> [Go Back]</A></h2>';
-				footer($_SERVER['SCRIPT_FILENAME']);
-				die();
+				case "vs1":
+					$ext_fail = 0;
+					$task = "vs1";
+				break;
+				case "txt":
+					$ext_fail = 0;
+					$task = "convert";
+				break;
+				case "tmp":
+					$ext_fail = 0;
+					$task = "convert";
+				break;
+				case "db3":
+					$ext_fail = 0;
+					$task = "convert";
+				break;
+				default:
+					echo '<h2>You can only upload supported files. (VS1, Txt, or DB3)<br><A class="links" HREF="javascript:history.go(-1)">Go back</a> and do it right!</h2>';
+					$message = "Non Supported File uploaded, my need to be removed from import/up/ folder.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
+					mail_users($message, $subject, $type, 0, 1);
+					footer($_SERVER['SCRIPT_FILENAME']);
+					die();
+				break;
 			}
-			if (!copy($tmp, $uploadfile))
+			
+			$database = new database();
+			
+			switch($task)
 			{
-				echo 'Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.<BR>';
-				$message = "Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
-				mail_users($message, $subject, $type, 1);
-				
-				footer($_SERVER['SCRIPT_FILENAME']);
-				die();
-			}
-			chmod($uploadfile, 0600);
-			$hash = hash_file('md5', $uploadfile);
+				case "vs1":
+					$return  = file($tmp);
+				#	echo "<h1>".$uploadfile."</h1>";
+					$count = count($return);
+				#	echo "<h1>".$count."</h1>";
+					if($count <= 8) 
+					{
+						echo '<br><br><h2>You cannot upload an empty VS1 file, at least scan for a few seconds to import some data. <A HREF="javascript:history.go(-1)"> [Go Back]</A></h2>';
+						footer($_SERVER['SCRIPT_FILENAME']);
+						die();
+					}
+					if (!copy($tmp, $uploadfile))
+					{
+						echo 'Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.<BR>';
+						$message = "Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
+						mail_users($message, $subject, $type, 1);
+						
+						footer($_SERVER['SCRIPT_FILENAME']);
+						die();
+					}
+					chmod($uploadfile, 0600);
+					$hash = hash_file('md5', $uploadfile);
 
-			$size1 = format_size(dos_filesize($uploadfile));
-							
-			$return  = file($tmp);
-			
-			$VS1Test = str_split($return[0], 12);
-			$file_e = explode('.',$filename);
-			$file_max = count($file_e);
-			
-			//What file are we tring to import, a VS1 or a GPX file?
-			if($file_e[$file_max-1] == 'gpx' )
-			{
-				echo "<h2>Importing GPX File</h2><h1>Imported By: ".$user."<BR></h1>";
-				echo "<h2>With Title: ".$title."</h2>";
-				$database = new database();
-				$database->import_gpx($uploadfile, $user, $notes, $title );
-			}
-			elseif($VS1Test[0] == "# Vistumbler" )
-			{
-				echo "<h2>Importing VS1 File</h2><h1>Imported By: ".$user."<BR></h1>";
-				echo "<h2>With Title: ".$title."</h2>";
-				
-				$database = new database();
-				if($GLOBALS['daemon']==1)
-				{	
+					$size1 = format_size(dos_filesize($uploadfile));
+									
+					$return  = file($tmp);
+					
+					$VS1Test = str_split($return[0], 12);
+					$file_e = explode('.',$filename);
+					$file_max = count($file_e);
+					
+					//What file are we tring to import, a VS1 or a GPX file?
+					if($VS1Test[0] == "# Vistumbler" )
+					{
+						echo "<h2>Importing VS1 File</h2><h1>Imported By: ".$user."<BR></h1>";
+						echo "<h2>With Title: ".$title."</h2>";
+						
+						$database = new database();
+						if($GLOBALS['daemon']==1)
+						{	
+							//lets try a scheduled import table that has a cron job
+							//that runs and imports all of them at once into the DB 
+							//in order that they where uploaded
+							$imp_file = $rand.'_'.$filename;
+							$date = date("y-m-d H:i:s");
+							$sql = "INSERT INTO `$db`.`$files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) VALUES ( '', '$imp_file', '$date', '$user', '$notes', '$title', '$size1', '$hash')";
+							$result = mysql_query( $sql , $conn);
+							if($result)
+							{
+								echo "<h2>File has been inserted for importing at a scheduled time.</h2>";
+								$message = "File has been inserted for importing at a later time at a scheduled time.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/".$rand."_".$filename."\r\n".$UPATH."/opt/scheduling.php\r\n\r\n-WiFiDB Daemon.";
+								if(mail_users($message, $subject, $type, 0))
+								{
+								#	echo "mailed";
+								}else
+								{
+								#	echo "Failed to Mail";
+								}
+							}else
+							{
+								echo "<h2>There was an error inserting file for scheduled import.</h2>".mysql_error($conn);
+								$message = "New Import Failed!\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
+								mail_users($message, $subject, $type, 1);
+							}
+						}else
+						{
+							if($database->import_vs1($uploadfile, $user, $notes, $title, $verbose = 1, $out = "CLI" ))
+							{
+								$message = "New Web based Import completed!\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.";
+								mail_users($message, $subject, $type, 0);
+							}
+						}
+					}else
+					{
+						echo '<H1>Hey! You have to upload a valid VS1 or GPX File <A HREF="javascript:history.go(-1)"> [Go Back]</A> and do it again the right way.</h1>';
+						footer($_SERVER['SCRIPT_FILENAME']);
+						die();
+					}
+				break;
+		#############################################################################################
+				case "convert":
+					if (!copy($tmp, $uploadfile))
+					{
+						echo 'Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.<BR>';
+						$message = "Failure to Move file to Upload Dir ('.$uploadfolder.'), check the folder permisions if you are using Linux.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
+						mail_users($message, $subject, $type, 1);
+						
+						footer($_SERVER['SCRIPT_FILENAME']);
+						die();
+					}
+					chmod($uploadfile, 0600);
+					$hash = hash_file('md5', $uploadfile);
+
+					$size1 = format_size(dos_filesize($uploadfile));
+					echo "<h2>Importing ".strtoupper($ext)." File</h2><h1>Imported By: ".$user."<BR></h1>";
+					echo "<h2>With Title: ".$title."</h2>";
 					//lets try a scheduled import table that has a cron job
 					//that runs and imports all of them at once into the DB 
 					//in order that they where uploaded
@@ -119,10 +197,10 @@ switch($func)
 						$message = "File has been inserted for importing at a later time at a scheduled time.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/".$rand."_".$filename."\r\n".$UPATH."/opt/scheduling.php\r\n\r\n-WiFiDB Daemon.";
 						if(mail_users($message, $subject, $type, 0))
 						{
-							echo "mailed";
+						#	echo "mailed";
 						}else
 						{
-							echo "Failed to Mail";
+						#	echo "Failed to Mail";
 						}
 					}else
 					{
@@ -130,19 +208,11 @@ switch($func)
 						$message = "New Import Failed!\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
 						mail_users($message, $subject, $type, 1);
 					}
-				}else
-				{
-					if($database->import_vs1($uploadfile, $user, $notes, $title, $verbose = 1, $out = "CLI" ))
-					{
-						$message = "New Web based Import completed!\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."/import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.";
-						mail_users($message, $subject, $type, 0);
-					}
-				}
-			}else
-			{
-				echo '<H1>Hey! You have to upload a valid VS1 or GPX File <A HREF="javascript:history.go(-1)"> [Go Back]</A> and do it again the right way.</h1>';
-				footer($_SERVER['SCRIPT_FILENAME']);
-				die();
+				break;
+				#######
+				default:
+					echo "Failure....";
+				break;
 			}
 			?>
 			<p><a class="links" href="<?php echo $UPATH;?>/opt/scheduling.php">Go and check out your new Import</a>. Go on, you know you want to...</p>

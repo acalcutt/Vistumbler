@@ -1,11 +1,12 @@
 <?php
 include('lib/database.inc.php');
-	pageheader("Show All Shared GeoCaches");
 include('lib/config.inc.php');
 $theme = $GLOBALS['theme'];
+$func	=	addslashes(@$_GET['func']);
 switch(@$func)
 {
 	default:
+		pageheader("Show All Shared GeoCaches");
 		$ord	=	addslashes(@$_GET['ord']);
 		$sort	=	addslashes(@$_GET['sort']);
 		$from	=	addslashes(@$_GET['from']);
@@ -142,7 +143,10 @@ switch(@$func)
 	break;
 	
 	case "fetch_wpt":
-		
+		include('lib/geocache.inc.php');
+		$id = $_GET['id']+0;
+		$myscache = new geocache();
+		$myscache->wptfetch($id);
 	break;
 }
 footer($_SERVER['SCRIPT_FILENAME']);

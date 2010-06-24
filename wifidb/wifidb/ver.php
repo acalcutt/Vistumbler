@@ -22,7 +22,7 @@ pageheader("Version Page");
 		<BR><H2>Change Log</H2>
 		<table class="light" width="100%" border="2" id="16b4">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-June-03</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-June-23</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -78,6 +78,17 @@ pageheader("Version Page");
 						<LI>Data gathered from this page: http://ws.geonames.org/countrySubdivision?lat=43.5762033&lng=7.02199666</LI>
 						<LI><a class="links" href="http://www.geonames.org/" target="_blank" >GeoNames.org</a></LI></UL>
 					</UL>
+					<LI>Support for <a class="links" href="http://code.google.com/p/wardrive-android/">Wardrive</a> on android.
+						<UL>
+							<LI>
+								The wardriving application stores the database as "Wardrive.db3" on the root of your phones sd card.
+							</LI>
+							<LI>
+								Contact me and I'll add your app in.
+							</LI>
+						</UL>
+					</LI>
+
 				</OL>
 			</td></tr>
 		</table>

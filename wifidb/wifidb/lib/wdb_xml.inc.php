@@ -291,11 +291,6 @@ class WDB_XML
 						return 0;
 					}
 				break;
-				
-				################################################
-				case "csv":
-				
-				break;
 			}
 		}else
 		{
@@ -332,7 +327,7 @@ class WDB_XML
 						case "CSV":
 							$count_gpx = count($xml['gpx']['_c']['wpt'])-1;
 						#	echo $count."<BR>";
-							$User_cache = $User."_waypoints";
+							$User_cache = "waypoints_".$User;
 							if($count_gpx > 0)
 							{
 								$cnt_wpt = 0;

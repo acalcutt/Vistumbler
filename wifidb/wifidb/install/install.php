@@ -461,10 +461,10 @@ $sql = "CREATE TABLE IF NOT EXISTS `$wifi`.`share_waypoints` (
   `name` varchar(255) NOT NULL,
   `gcid` varchar(255) NOT NULL,
   `notes` text NOT NULL,
-  `cat` set('home','family','medical','police','fire','fastfood','finefood','gas','geocache','think of more...') NOT NULL,
+  `cat` varchar(255) NOT NULL,
   `type` varchar(255) NOT NULL,
-  `diff` varchar(4) NOT NULL,
-  `terain` varchar(4) NOT NULL,
+  `diff` double(3,2) NOT NULL,
+  `terain` double(3,2) NOT NULL,
   `lat` varchar(255) NOT NULL,
   `long` varchar(255) NOT NULL,
   `link` varchar(255) NOT NULL,
@@ -743,6 +743,7 @@ $"."users_t			=	'users_imports';
 $"."links				=	'links';
 $"."wtable				=	'wifi0';
 $"."user_logins_table	=	'user_info';
+$"."daemon_perf_table	=	'daemon_perf_mon';
 $"."validate_table		=	'validate_table';
 $"."share_cache		=	'share_waypoints';
 $"."files				=	'files';

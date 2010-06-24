@@ -42,11 +42,11 @@ if(isset($_POST['encry']))
 {$encry = @$_POST['encry'];}
 else{$encry = @$_GET['encry'];}
 
-$ord   =	addslashes(strip_tags($_GET['ord']));
-$sort  =	addslashes(strip_tags($_GET['sort']));
-$from  =	addslashes(strip_tags($_GET['from']));
-$from_ =	addslashes(strip_tags($_GET['from']));
-$inc   =	addslashes(strip_tags($_GET['to']));
+$ord   =	addslashes(strip_tags(@$_GET['ord']));
+$sort  =	addslashes(strip_tags(@$_GET['sort']));
+$from  =	addslashes(strip_tags(@$_GET['from']));
+$from_ =	addslashes(strip_tags(@$_GET['from']));
+$inc   =	addslashes(strip_tags(@$_GET['to']));
 
 $ssid = addslashes(strip_tags($ssid));
 $mac = addslashes(strip_tags($mac));
@@ -75,48 +75,48 @@ if($ssid!='')
 {
 	$save_url .= '&ssid='.$ssid;
 	$export_url .= '&ssid='.$ssid;
-	$sql_a[$II]	=	" `ssid` like '".$ssid."%' ";
-	
+	$sql_a[]	=	" `ssid` like '".$ssid."%' ";
+	$args[] = $ssid;
 }
 
 if($mac!='')
 {
 	$save_url .= '&mac='.$mac;
 	$export_url .=  '&mac='.$mac;
-	$sql_a[$II]	=	" `mac` like '".$mac."%' ";
-	$II++;
+	$sql_a[]	=	" `mac` like '".$mac."%' ";
+	$args[] = $mac;
 }
 
 if($radio!='')
 {
 	$save_url .= '&radio='.$radio;
 	$export_url .=  '&radio='.$radio;
-	$sql_a[$II]	=	" `radio` like '".$radio."%' ";
-	$II++;
+	$sql_a[]	=	" `radio` like '".$radio."%' ";
+	$args[] = $radio;
 }
 
 if($chan!='')
 {
 	$save_url .= '&chan='.$chan;
 	$export_url .=  '&chan='.$chan;
-	$sql_a[$II]	=	" `chan` like '".$chan."%' ";
-	$II++;
+	$sql_a[]	=	" `chan` like '".$chan."%' ";
+	$args[] = $chan;
 }
 
 if($auth!='')
 {
 	$save_url .= '&auth='.$auth;
 	$export_url .=  'auth='.$auth.'&';
-	$sql_a[$II]	=	" `auth` like '".$auth."%' ";
-	$II++;
+	$sql_a[]	=	" `auth` like '".$auth."%' ";
+	$args[] = $auth;
 }
 
 if($encry!='')
 {
 	$save_url .= '&encry='.$encry;
 	$export_url .=  '&encry='.$encry;
-	$sql_a[$II]	=	" `encry` like '".$encry."%' ";
-	$II++;
+	$sql_a[]	=	" `encry` like '".$encry."%' ";
+	$args[] = $encry;
 }
 $save_url .= '">Save for later</a>';		
 $export_url .=  '">Export to KML</a>';
@@ -129,8 +129,8 @@ if(!$sql_a)
 if($func == "export")
 {
 	$database = new database();
-	$args = array( $ssid, $mac, $chan, $auth, $encry, $radio);
-	$database->exp_search($args);
+#	dump($args);
+	$database->exp_search($sql_a);
 	die(footer($_SERVER['SCRIPT_FILENAME']));
 }
 

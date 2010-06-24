@@ -155,7 +155,14 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 		{
 			$result_update = mysql_query("UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'", $conn);
 			$source = $GLOBALS['wifidb_install'].'/import/up/'.str_replace("%20", " ", $files_array['file']);
-#			echo $source."\n";
+			$file_src = explode(".",$files_array['file']);
+			$file_type = strtolower($file_src[1]);
+			if($file_type == "db3" or $file_type == "txt" or $file_type == "tmp")
+			{
+				$source = $database->convert_vs1($source);
+				$files_array['file'] = $file_src[0].'.vs1';
+			}
+		echo $source."\r\n".$files_array['file'];
 			$remove_file = $files_array['id'];
 			$return  = file($source);
 			$count = count($return);
@@ -173,7 +180,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 				$sql_check = "SELECT * FROM `$db`.`$files` WHERE `hash` LIKE '$hash_Ce'";
 				$fileq = mysql_query($sql_check, $GLOBALS['conn']);
 				$fileqq = mysql_fetch_array($fileq);
-#				echo $fileqq['hash']."\n";
+				echo $fileqq['hash']." - ".$hash_Ce."\r\n";
 				if( $hash_Ce == $fileqq['hash'])
 				{
 					$check = 0;

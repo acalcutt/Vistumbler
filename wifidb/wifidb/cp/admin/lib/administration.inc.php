@@ -902,37 +902,50 @@ class admin
 			case "daemon_hist":
 				?><table class="style4" border="1" width="75%"><?php
 				$sql0 = "SELECT * FROM `$db`.`$daemon_perf_table` ORDER BY `id` DESC";
+			#	echo $sql0."<BR>";
 				$result = mysql_query($sql0, $conn);
-				
+				$rows = mysql_num_rows($result);
 				?><tr class="style4"><th colspan="5">Daemon Performance History</th><tr class="style4"><th>TIMESTAMP</th><th>PID</th><th>RUNTIME</th><th>Memory</th><th>CMD</th></tr><?php
 				$row = 0;
-				while($daemon_a = mysql_fetch_array($result))
+				if($rows>0)
 				{
-					if($row){$row = 0;$style="dark";}else{$row=1;$style="light";}
-					$timestamp = $daemon_a['timestamp'];
-					$pid = $daemon_a['pid'];
-					$runtime = $daemon_a['uptime'];
-					$CMD = $daemon_a['CMD'];
-					$mem = $daemon_a['mem'];
-					$msg = $daemon_a['mesg'];
-					if($pid == 0)
+					while($daemon_a = mysql_fetch_array($result))
 					{
-						?><tr align="center" bgcolor="red">
-							<td colspan="2"><?php echo $timestamp;?></td> 
-							<td colspan="3"><?php echo $msg;?></td>
-						</tr>
-						<?php
-					}else
-					{	
-						?><tr align="center" class="<?php echo $style; ?>">
-							<td><?php echo $timestamp?></td>
-							<td><?php echo $pid;?></td>
-							<td><?php echo $runtime;?></td>
-							<td><?php echo $mem."%";?></td>
-							<td><?php echo $CMD;?></td>
-						</tr>
-						<?php
+						if($row){$row = 0;$style="dark";}else{$row=1;$style="light";}
+						$timestamp = $daemon_a['timestamp'];
+						$pid = $daemon_a['pid'];
+						$runtime = $daemon_a['uptime'];
+						$CMD = $daemon_a['CMD'];
+						$mem = $daemon_a['mem'];
+						$msg = $daemon_a['mesg'];
+						if($pid == 0)
+						{
+							?><tr align="center" bgcolor="red">
+								<td colspan="2"><?php echo $timestamp;?></td> 
+								<td colspan="3"><?php echo $msg;?></td>
+							</tr>
+							<?php
+						}else
+						{	
+							?><tr align="center" class="<?php echo $style; ?>">
+								<td><?php echo $timestamp?></td>
+								<td><?php echo $pid;?></td>
+								<td><?php echo $runtime;?></td>
+								<td><?php echo $mem."%";?></td>
+								<td><?php echo $CMD;?></td>
+							</tr>
+							<?php
+						}
 					}
+				}else
+				{
+					?>
+					<tr>
+						<td colspan='5'>
+							There is no Daemon Performance History yet.
+						</td>
+					</tr>
+					<?php
 				}
 				?></table><?php
 			break;

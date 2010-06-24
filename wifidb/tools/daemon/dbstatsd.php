@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ALL);
-global $screen_output, $half_path;
+global $screen_output;
 $screen_output = "CLI";
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 #####################
@@ -11,7 +11,6 @@ if(!(require_once 'config.inc.php')){die("You need to create and configure your 
 if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
-require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 require_once $GLOBALS['wifidb_install']."/cp/admin/lib/administration.inc.php";
 #####################
 $conn							= 	$GLOBALS['conn'];
