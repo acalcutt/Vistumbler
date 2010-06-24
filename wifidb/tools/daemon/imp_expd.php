@@ -15,7 +15,7 @@ if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config fi
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
 
-$dim = DIRECTORY_SEPERATOR;
+$dim = @DIRECTORY_SEPERATOR;
 
 date_default_timezone_set("UTC");
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
@@ -41,15 +41,13 @@ $UPATH	 				=	$GLOBALS['UPATH'];
 $console_trim_log		=	$GLOBALS['console_trim_log'];
 $console_line_limit		=	$GLOBALS['console_line_limit'];
 $date_format			=	"Y-m-d H:i:s.u";
-$BAD_IED_COLOR			=	$GLOBALS['BAD_IED_COLOR'];
-$GOOD_IED_COLOR			=	$GLOBALS['GOOD_IED_COLOR'];
-$OTHER_IED_COLOR		=	$GLOBALS['OTHER_IED_COLOR'];
+$BAD_IED_COLOR			=	$GLOBALS['BAD_CLI_COLOR'];
+$GOOD_IED_COLOR			=	$GLOBALS['GOOD_CLI_COLOR'];
+$OTHER_IED_COLOR		=	$GLOBALS['OTHER_CLI_COLOR'];
 $This_is_me				=	getmypid();
-$PHP_OS					=	PHP_OS;
-$OS						=	$PHP_OS[0];
 $subject				=	"WiFiDB Import / Export Daemon";
-
-if($GLOBALS['colors_setting'] == 0 or $OS == "W")
+$type					=	"import";
+if($GLOBALS['colors_setting'] == 0 or PHP_OS == "WINNT")
 {
 	$COLORS = array(
 					"LIGHTGRAY"	=> "",
@@ -161,8 +159,13 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			{
 				$source = $database->convert_vs1($source);
 				$files_array['file'] = $file_src[0].'.vs1';
+				$hash1 = hash_file('md5', $GLOBALS['wifidb_install'].'/import/up/'.$files_array['file']);
+				$size1 = format_size(dos_filesize($GLOBALS['wifidb_install'].'/import/up/'.$files_array['file']));
+				$update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '".$files_array['id']."'";
+			#	echo $update_tmp."\r\n";
+				$result_update = mysql_query($update_tmp, $conn);
 			}
-		echo $source."\r\n".$files_array['file'];
+	#	echo $source."\r\n".$files_array['file'];
 			$remove_file = $files_array['id'];
 			$return  = file($source);
 			$count = count($return);
@@ -180,7 +183,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 				$sql_check = "SELECT * FROM `$db`.`$files` WHERE `hash` LIKE '$hash_Ce'";
 				$fileq = mysql_query($sql_check, $GLOBALS['conn']);
 				$fileqq = mysql_fetch_array($fileq);
-				echo $fileqq['hash']." - ".$hash_Ce."\r\n";
+			#	echo $fileqq['hash']." - ".$hash_Ce."\r\n";
 				if( $hash_Ce == $fileqq['hash'])
 				{
 					$check = 0;
@@ -304,7 +307,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			logd("Starting Automated KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
 			verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Starting Automated KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
 			daemon::daemon_kml($named = 0, $verbose);
-			mail_users("Generation of Full Database KML File.\r\n".$host_url."/".$root."/out/daemon/update.kml\r\n\r\n-WiFiDB Service", $subject, "kml", 0);
+			mail_users("Generation of Full Database KML File.\r\n".$host_url."/".$root."/out/daemon/update.kml\r\n\r\n-WiFiDB Service", $subject, "kmz", 0);
 		}
 		
 		$nextrun = date("Y-m-d H:i:s", (time()+$time_interval_to_check));

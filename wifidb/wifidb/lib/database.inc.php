@@ -566,6 +566,10 @@ function sql_type_mail_filter($type = 'none')
 		case "none":
 			$sql = '';
 		break;
+		
+		default:
+			$sql = '';
+		break;
 	}
 	return $sql;
 }
@@ -1133,15 +1137,6 @@ function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 #########################################
 function top_ssids()
 {
-	$conn			= 	$GLOBALS['conn'];
-	$db				= 	$GLOBALS['db'];
-	$db_st			= 	$GLOBALS['db_st'];
-	$wtable			=	$GLOBALS['wtable'];
-	$users_t		=	$GLOBALS['users_t'];
-	$gps_ext		=	$GLOBALS['gps_ext'];
-	$files			=	$GLOBALS['files'];
-	$user_logins_table = $GLOBALS['user_logins_table'];
-	$root			= 	$GLOBALS['root'];
 	$half_path		=	$GLOBALS['half_path'];
 	if($GLOBALS['half_path'] =='')
 	{
@@ -1150,10 +1145,14 @@ function top_ssids()
 	{
 		include_once($GLOBALS['half_path'].'/lib/config.inc.php');
 	}
-
+	$conn			= 	$GLOBALS['conn'];
+	$db				= 	$GLOBALS['db'];
+	$db_st			= 	$GLOBALS['db_st'];
+	$wtable			=	$GLOBALS['wtable'];
+	
 	$ssids = array();
 	$number = array();
-
+	echo "Select from Pointers Table\r\n";
 	$sql0 = "SELECT * FROM `$db`.`$wtable`";
 	$result0 = mysql_query($sql0, $conn) or die(mysql_error($conn));
 	$total_rows = mysql_num_rows($result0);
@@ -1163,8 +1162,11 @@ function top_ssids()
 		{
 			$ssids[]	=	$files['ssid'];
 		}
+		echo "Gathered all SSIDs, now Uniqueifying it...\r\n";
 		$ssids = array_unique($ssids);
+		echo "Now sorting the array...\r\n";
 		sort($ssids);
+		echo "Find out the number of each SSID\r\n";
 		foreach($ssids as $key=>$ssid)
 		{
 			$sql1 = "SELECT * FROM `$db`.`$wtable` WHERE `ssid` LIKE '$ssid'";
@@ -1173,6 +1175,7 @@ function top_ssids()
 			
 			$num_ssid[]	=	array( 0=>$total_rows, 1=>$ssid);
 		}
+		echo "Sort again so the count is in decending order...\r\n";
 		rsort($num_ssid);
 		return $num_ssid;
 	}else
@@ -1557,6 +1560,7 @@ class database
 				$man = database::manufactures($mac);
 				$capa = explode("][", $row["capabilities"]);
 				$capa_ = explode("-", $capa[0]);
+			#	echo $capa_[0]."\r\n";
 				switch($capa_[0])
 				{
 					case "[IBSS]":
@@ -1575,10 +1579,11 @@ class database
 						$nt = "Infrastructure";
 						$authen = "WPA2-Enterprise";
 						$encry = "CCMP";
-						$sectype = 2;
+						$sectype = 3;
 					break;
 					case "[WPA2":
 						$nt = "Infrastructure";
+					#	echo "\r\n--------\r\n".$capa_[2]."\r\n------------\r\n";
 						switch($capa_[2])
 						{
 							case "TKIP":
@@ -1586,6 +1591,30 @@ class database
 							break;
 							case "CCMP":
 								$encry = "CCMP";
+							break;
+							case "PSK":
+								$encry = "PSK";
+							break;
+							default:
+								$encry = "TKIP";
+							break;
+						}
+						$authen = "WPA-Personal";
+						$sectype = 3;
+					break;
+					case "[WPA":
+						$nt = "Infrastructure";
+					#	echo "\r\n--------\r\n".$capa_[2]."\r\n------------\r\n";
+						switch($capa_[2])
+						{
+							case "TKIP":
+								$encry = "TKIP";
+							break;
+							case "CCMP":
+								$encry = "CCMP";
+							break;
+							case "PSK":
+								$encry = "PSK";
 							break;
 							default:
 								$encry = "TKIP";
@@ -1664,8 +1693,26 @@ class database
 						$radio = 'g';
 					break;
 				}
+				
 				$lat = $row["lat"];
+				if($lat[0] == "-")
+				{
+					$lat = "S ".str_replace("-", "", $lat);
+				}else
+				{
+					$lat = "N ".$lat;
+				}
+				
 				$long = $row["lon"];
+				if($long[0] == "-")
+				{
+					$long = "W ".str_replace("-", "", $long);
+				}else
+				{
+					$long = "E ".$long;
+				}
+				
+				
 				$level = (100+$row["level"]);
 				$alt = $row["alt"];
 				
@@ -1674,7 +1721,7 @@ class database
 				
 				$table = $ssid_t.$sep.$mac.$sep.$sectype.$sep.$radio.$sep.$chan;
 				echo $table."\r\n".$timestamp."\r\n".$nt." - ".$authen." - ".$encry." - ".$sectype." - ".$lat." - ".$long."\r\n----------\r\n\r\n";
-				
+			#	if($ssid_t == "yellow"){ die(); }
 				//format date and time
 				$datetime=explode(" ",$timestamp);
 				$date=$datetime[0];
@@ -2754,13 +2801,14 @@ class database
 							$imported++;
 						}else
 						{	
-							$dup_sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `mac` LIKE '%$macs%'  AND `ssid` LIKE '%$ssids%' AND `chan` LIKE '$chan' AND `sectype` LIKE '$sectype'";
-							
-							fwrite($fileappend, $dup_sql."\r\n");
+							$dup_sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs'  AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `radio` LIKE '$radios' AND `sectype` LIKE '$sectype'";
+					#	echo $dup_sql."\r\n";
+							logd($dup_sql, $log_interval, 0,  $log_level);
 							
 							$result_dup = mysql_query($dup_sql, $conn) or die(mysql_error($conn));
 							
 							$newArray_dup = mysql_fetch_array($result_dup);
+							
 							$duplicate_id = $newArray_dup['id'];
 							
 							$result_sig = mysql_query("SELECT `id` FROM `$db_st`.`$table`", $conn) or die(mysql_error($conn));
@@ -2777,6 +2825,7 @@ class database
 							}
 							$user_n++;	
 							verbosed($GLOBALS['COLORS']['RED']."Skipped Creation of duplicate Pointer Row in wifi0\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
+							if(is_null($newArray_dup)){die();}
 						}
 						$skip_pt_insert = 0;
 					}
@@ -3138,6 +3187,7 @@ class database
 		list($ssid_ptb) = make_ssid($newArray["ssid"]);
 		$table		=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
 		$table_gps	=	$table.$gps_ext;
+	#	echo $table."<BR>";
 		?>
 				<SCRIPT LANGUAGE="JavaScript">
 				// Row Hide function.
@@ -3758,6 +3808,12 @@ class database
 				</tr>
 				<tr class="sub_head">
 					<td><i><b>Total APs in List</b></i></td><td><b><?php echo $user_array["aps"]; ?></b></td>
+				</tr>
+				<tr class="sub_head">
+					<td colspan="2"><CENTER><i><b>Notes</b></i></CENTER></td>
+				</tr>
+				<tr class="light">
+					<td colspan="2"><CENTER><b><?php echo $user_array["notes"]; ?></b></CENTER></td>
 				</tr>
 			<table>
 			<br>
@@ -5703,7 +5759,7 @@ class daemon
 		copy($filename, $filename_copy);
 
 		######## The Network Link KML file
-		$daemon_KMZ_folder = $GLOBALS['hosturl'].'/'.$GLOBALS['root']."/out/daemon/";
+		$daemon_KMZ_folder = $GLOBALS['UPATH']."/out/daemon/";
 		
 		$Network_link_KML = $daemon_KMZ_folder."update.kml";
 		
@@ -6547,242 +6603,6 @@ class daemon
 			return 0;
 		}
 	}
-#########################################
-
-#########################################
-	function start($d='',$out='')
-	{
-		if($out == 'CLI'){$ender = '\r\n';}else{$ender = '<br>';}
-		require('config.inc.php');
-		require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
-		if (!file_exists($GLOBALS['daemon_log_folder']))
-		{
-			echo "No WiFiDB folder in /var/log/";
-			mkdir($GLOBALS['daemon_log_folder']);
-		}
-		############
-		switch($d)
-		{
-			case "imp_exp":
-				$console_log = $GLOBALS['daemon_log_folder'].'imp_expd.log';
-				echo "Starting WiFiDB 'Import/Export Daemon'..".$ender;
-				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."imp_expd.php";
-				if (PHP_OS == "WINNT")
-				{$cmd = "start ".$GLOBALS['php_install']."\\php.exe C:\\CLI\\rund.php start ied &";}
-				else{$cmd = "php /CLI/rund.php start ied &";}
-				
-				echo $cmd.$ender;
-				if(file_exists($daemon_script))
-				{
-					echo "Wait for it.....".$ender;
-					$handle = system($cmd, $r);
-					if($handle)
-					{
-						echo "::::: '$handle' ;\r\n $r :::::\n";
-						echo "WiFiDB 'Import/Export Daemon' Started!".$ender;
-						return 1;
-					}else
-					{
-						echo "WiFiDB 'Import/Export Daemon' Could not start \nStatus: ".$start."\n";
-						return 0;
-					}
-				}else
-				{
-					echo "Could not find the WiFiDB 'Import/Export Daemon' file. [imp_expd.php].\n";
-					return 0;
-				}
-			break;
-			#####
-			#####
-			case "daemon_perf":
-				$console_log = $GLOBALS['daemon_log_folder'].'daemonperfd.log';
-			#	echo "Starting WiFiDB 'Daemon Performance Montitor'..\n";
-				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."daemonperfd.php";
-				if (PHP_OS == "WINNT")
-				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
-				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
-				
-			#	echo $cmd."\n";
-				if(file_exists($daemon_script))
-				{
-					$start = popen($cmd, 'w');
-					if($start)
-					{
-			#			echo "WiFiDB 'Daemon Performance Montitor' Started..\n";
-						return 1;
-					}else
-					{
-						echo "WiFiDB 'Daemon Performance Montitor' Could not start\nStatus: ".$start."\n";
-						foreach($screen_output as $line)
-						{
-							echo $line."\n";
-						}
-						return 0;
-					}
-				}else
-				{
-					echo "Could not find the WiFiDB 'Daemon Performance Montitor' file. [daemonperfd.php].\n";
-					return 0;
-				}
-			break;
-			#####
-			#####
-			case "daemon_stats":
-				$console_log = $GLOBALS['daemon_log_folder'].'dbstatsd.log';
-			#	echo "Starting WiFiDB 'Database Statistics Daemon'..\n";
-				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."dbstatsd.php";
-				if (PHP_OS == "WINNT")
-				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
-				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
-				
-			#	echo $cmd."\n";
-				if(file_exists($daemon_script))
-				{
-					$start = popen($cmd, 'w');
-					if($start)
-					{
-			#			echo "WiFiDB 'Database Statistics Daemon' Started..\n";
-						return 1;
-					}else
-					{
-						echo "WiFiDB 'Database Statistics Daemon' Could not start\nStatus: ".$start."\n";
-						foreach($screen_output as $line)
-						{
-							echo $line."\n";
-						}
-						return 0;
-					}
-				}else
-				{
-					echo "Could not find the WiFiDB 'Database Statistics Daemon' file. [dbstatsd.php].\n";
-					return 0;
-				}
-			break;
-			
-			default:
-				echo "You cannot use the start function without a switch, other wise what does it know to start?\r\n";
-				return 0;
-			break;
-		}
-	}
-#########################################
-
-#########################################
-	function stop($d)
-	{
-		require('config.inc.php');
-		require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
-		if (!file_exists("/var/log/wifidb/"))
-		{
-			mkdir($GLOBALS['daemon_log_folder']);
-		}
-		switch($d)
-		{
-			case "imp_exp":
-				$console_log = $GLOBALS['daemon_log_folder'].'imp_expd.log';
-			#	echo "Starting WiFiDB 'Import/Export Daemon'..\n";
-				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."imp_expd.php";
-				if (PHP_OS == "WINNT")
-				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
-				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
-				
-			#	echo $cmd."\n";
-				if(file_exists($daemon_script))
-				{
-					$start = popen($cmd, 'w');
-					if($start)
-					{
-					#	echo "WiFiDB 'Import/Export Daemon' Started..\n";
-						return 1;
-					}else
-					{
-						echo "WiFiDB 'Import/Export Daemon' Could not start\nStatus: ".$start."\n";
-						foreach($screen_output as $line)
-						{
-							echo $line."\n";
-						}
-						return 0;
-					}
-				}else
-				{
-					echo "Could not find the WiFiDB 'Import/Export Daemon' file. [imp_expd.php].\n";
-					return 0;
-				}
-			break;
-			#####
-			#####
-			case "daemon_perf":
-				$console_log = $GLOBALS['daemon_log_folder'].'daemonperfd.log';
-			#	echo "Starting WiFiDB 'Daemon Performance Montitor'..\n";
-				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."daemonperfd.php";
-				if (PHP_OS == "WINNT")
-				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
-				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
-				
-			#	echo $cmd."\n";
-				if(file_exists($daemon_script))
-				{
-					$start = popen($cmd, 'w');
-					if($start)
-					{
-			#			echo "WiFiDB 'Daemon Performance Montitor' Started..\n";
-						return 1;
-					}else
-					{
-						echo "WiFiDB 'Daemon Performance Montitor' Could not start\nStatus: ".$start."\n";
-						foreach($screen_output as $line)
-						{
-							echo $line."\n";
-						}
-						return 0;
-					}
-				}else
-				{
-					echo "Could not find the WiFiDB 'Daemon Performance Montitor' file. [daemonperfd.php].\n";
-					return 0;
-				}
-			break;
-			#####
-			#####
-			case "daemon_stats":
-				$console_log = $GLOBALS['daemon_log_folder'].'dbstatsd.log';
-			#	echo "Starting WiFiDB 'Database Statistics Daemon'..\n";
-				$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim']."dbstatsd.php";
-				if (PHP_OS == "WINNT")
-				{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemoon_script." > ".$console_log;}
-				else{$cmd = "nohup php ".$daemon_script." > ".$console_log." &";}
-				
-			#	echo $cmd."\n";
-				if(file_exists($daemon_script))
-				{
-					$start = popen($cmd, 'w');
-					if($start)
-					{
-			#			echo "WiFiDB 'Database Statistics Daemon' Started..\n";
-						return 1;
-					}else
-					{
-						echo "WiFiDB 'Database Statistics Daemon' Could not start\nStatus: ".$start."\n";
-						foreach($screen_output as $line)
-						{
-							echo $line."\n";
-						}
-						return 0;
-					}
-				}else
-				{
-					echo "Could not find the WiFiDB 'Database Statistics Daemon' file. [dbstatsd.php].\n";
-					return 0;
-				}
-			break;
-			
-			default:
-				echo "You cannot use the start function without a switch, other wise what does it know to start?\r\n";
-				return 0;
-			break;
-		}
-	}
-
 #END DAEMON CLASS
 }
 ?>

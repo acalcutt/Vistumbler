@@ -55,8 +55,6 @@ switch($func)
 			$uploadfile = $uploadfolder.$rand.'_'.$filename;
 			$filename = str_replace( " ", "%20", $filename);
 			
-			echo $ext."<BR>";
-			
 			switch($ext)
 			{
 				case "vs1":

@@ -2,7 +2,7 @@
 $start = microtime(1);
 error_reporting(E_ALL|E_STRICT);
 ini_set("memory_limit","3072M");
-global $screen_output;
+global $screen_output, $COLORS;
 $ver = '1.0';
 $screen_output = "CLI";
 if(!(@require_once 'config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
@@ -10,6 +10,52 @@ if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config fi
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/wdb_xml.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
+if($GLOBALS['colors_setting'] == 0 or PHP_OS == "WINNT")
+{
+	$COLORS = array(
+					"LIGHTGRAY"	=> "",
+					"BLUE"		=> "",
+					"GREEN"		=> "",
+					"RED"		=> "",
+					"YELLOW"	=> ""
+					);
+}else
+{
+	$COLORS = array(
+					"LIGHTGRAY"	=> "\033[0;37m",
+					"BLUE"		=> "\033[0;34m",
+					"GREEN"		=> "\033[0;32m",
+					"RED"		=> "\033[0;31m",
+					"YELLOW"	=> "\033[1;33m"
+					);
+}
+
+$BAD_CLI_COLOR = $GLOBALS['BAD_CLI_COLOR'];
+$GOOD_CLI_COLOR = $GLOBALS['GOOD_CLI_COLOR'];
+$OTHER_CLI_COLOR = $GLOBALS['OTHER_CLI_COLOR'];
+
+$subject						=	"WiFiDB Statistics Daemon";
+$type							=	"geonamed";
+$pid_file						=	$GLOBALS['pid_file_loc'].'geonamed.pid';
+$This_is_me						=	getmypid();
+if(!file_exists($GLOBALS['pid_file_loc'])){mkdir($GLOBALS['pid_file_loc']);}
+fopen($pid_file, "w");
+$fileappend = fopen($pid_file, "a");
+$write_pid = fwrite($fileappend, "$This_is_me");
+
+if(!$write_pid){die($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Could not write pid file, thats not good... >:[".$GLOBALS['COLORS'][$OTHER_CLI_COLOR]);}
+verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."
+WiFiDB 'Geoname Daemon'
+Version: 1.0.0
+- Daemon Start: 2010-06-23
+- Last Daemon File Edit: 2010-06-23
+( /tools/daemon/geonamed.php )
+- By: Phillip Ferland ( pferland@randomintervals.com )
+- http://www.randomintervals.com/wifidb/
+
+PID: [ $This_is_me ]
+".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], 1, $screen_output, 1);
+
 ##################################################################
 ##################################################################
 ##################################################################
@@ -51,42 +97,34 @@ while(1)
 	{
 		$man 		= $database->manufactures($ap_array['mac']);
 		$id			= $ap_array['id'];
-		$ssid_ptb_  = addslashes($ap_array['ssid']);
-		$ssids_ptb  = str_split($ssid_ptb_,25);
-		$ssid		= smart_quotes($ssids_ptb[0]);
+		list($ssid)  = make_ssid($ap_array['ssid']);
 		$mac		= $ap_array['mac'];
 		$sectype	= $ap_array['sectype'];
 		$radio		= $ap_array['radio'];
 		$chan		= $ap_array['chan'];
-		echo "GeoNames.org Data Returned:
-	Country Code: ".$ap_array['countrycode']."--
-	County Name: ".$ap_array['countryname']."--
-	Admin Code: ".$ap_array['admincode']."--
-	Admin Name: ".$ap_array['adminname']."--
-	ISO Code: ".$ap_array['iso3166-2']."--
-	Lat: ".$ap_array['lat']."--
-	Long: ".$ap_array['long']."--
+#		echo "GeoNames.org Data Returned:
+#	Country Code: ".$ap_array['countrycode']."--
+#	County Name: ".$ap_array['countryname']."--
+#	Admin Code: ".$ap_array['admincode']."--
+#	Admin Name: ".$ap_array['adminname']."--
+#	ISO Code: ".$ap_array['iso3166-2']."--
+#	Lat: ".$ap_array['lat']."--
+#	Long: ".$ap_array['long']."--\r\n\r\n";
 
-	";
 		if(($ap_array['countryname'] != '' || $ap_array['iso3166-2'] != 0) && $ap_array['lat'] != 'N 0.0000')
 		{
 			echo $id.' - '.$ssid."\r\n Already updated.\r\n";
 			continue;
 		}
 		
-		$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
-		$table_gps = $table.$gps_ext;
+		$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan.$gps_ext;
 		
 		echo $id.' - '.$ssid."\r\nRunning GeoFilter check....\r\n";
 		
 		$sql1 = "SELECT * FROM `$db_st`.`$table`";
+	#	echo $sql1."\r\n";
 		$result1 = mysql_query($sql1, $conn);
-		
 		if(!$result1){$bad++;continue;}
-		
-		$rows = mysql_num_rows($result1);
-		$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='1'";
-		$newArray = mysql_fetch_array($result1);
 		switch($sectype)
 		{
 			case 1:
@@ -123,31 +161,19 @@ while(1)
 				$radio="Unknown Radio";
 				break;
 		}
-		
-		$otx = $newArray["otx"];
-		$btx = $newArray["btx"];
-		$nt = $newArray['nt'];
-		$label = $newArray['label'];
-		
-		$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
-		$result6 = mysql_query($sql6, $conn);
-		$max = mysql_num_rows($result6);
-		
-		$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
-		$result_1 = mysql_query($sql_1, $conn);
 		$zero = 0;
-		while($gps_table_first = mysql_fetch_array($result_1))
+		while($gps_table_first = mysql_fetch_array($result1))
 		{
 			$lat_exp = explode(" ", $gps_table_first['lat']);
-			
-			$test = @$lat_exp[1]+0;
-			
+			if(@$lat_exp[1])
+			{
+				$test = $lat_exp[1]+0;
+			}else
+			{
+				$test = $lat_exp[0]+0;
+			}
 			if($test == "0"){$zero = 1; $bad++; continue;}
 			
-			$date_first = $gps_table_first["date"];
-			$time_first = $gps_table_first["time"];
-			$fa   = $date_first." ".$time_first;
-			$alt  = $gps_table_first['alt'];
 			$lat  =& $database->convert_dm_dd($gps_table_first['lat']);
 			$long =& $database->convert_dm_dd($gps_table_first['long']);
 			$start1 = microtime(1);
@@ -172,22 +198,18 @@ while(1)
 							 WHERE `$wtable`.`id` = '$id'  LIMIT 1";
 					if(mysql_query($update, $conn))
 					{
-						echo "
-		Updated!
-		Country Code: ".$xml['geonames']['_c']['countrySubdivision']['_c']['countryCode']['_v']."
-		County Name: ".$xml['geonames']['_c']['countrySubdivision']['_c']['countryName']['_v']."
-		Admin Code: ".$xml['geonames']['_c']['countrySubdivision']['_c']['adminCode1']['_v']."
-		Admin Name: ".$xml['geonames']['_c']['countrySubdivision']['_c']['adminName1']['_v']."
-		ISO Code: $isoCode
-		Lat: $lat
-		Long: $long
-
-
-		";
+						echo "Updated!\r\n";
+	#	Country Code: ".$xml['geonames']['_c']['countrySubdivision']['_c']['countryCode']['_v']."
+	#	County Name: ".$xml['geonames']['_c']['countrySubdivision']['_c']['countryName']['_v']."
+	#	Admin Code: ".$xml['geonames']['_c']['countrySubdivision']['_c']['adminCode1']['_v']."
+	#	Admin Name: ".$xml['geonames']['_c']['countrySubdivision']['_c']['adminName1']['_v']."
+	#	ISO Code: $isoCode
+	#	Lat: $lat
+	#	Long: $long\r\n\r\n";
 					}else
 					{
-						echo "Failed.\r\n";
-						die(mysql_error($conn));
+						echo "There was an error inserting the APs Geoname data.\r\n";
+						mail_users("There was an error inserting the APs Geoname data. :-(\r\n".mysql_error($conn)."\r\n\r\n-WiFiDB Service", $subject, $type, 1); 
 					}
 				}else
 				{
@@ -207,26 +229,24 @@ while(1)
 					#	echo $update."\r\n";
 					if(mysql_query($update, $conn))
 					{
-						echo "
-		Updated!
-		Country Code: ".$xml['geonames']['_c']['countrySubdivision']['_c']['countryCode']['_v']."
-		County Name: ".$xml['geonames']['_c']['countrySubdivision']['_c']['countryName']['_v']."
-		Admin Code: ".$xml['geonames']['_c']['countrySubdivision']['_c']['adminCode1']['_v']."
-		Admin Name: ".$xml['geonames']['_c']['countrySubdivision']['_c']['adminName1']['_v']."
-		ISO Code: $isoCode
-		Lat: $lat
-		Long: $long
-
-		";
+						echo "Updated!\r\n";
+	#	Country Code: ".$xml['geonames']['_c']['countrySubdivision']['_c']['countryCode']['_v']."
+	#	County Name: ".$xml['geonames']['_c']['countrySubdivision']['_c']['countryName']['_v']."
+	#	Admin Code: ".$xml['geonames']['_c']['countrySubdivision']['_c']['adminCode1']['_v']."
+	#	Admin Name: ".$xml['geonames']['_c']['countrySubdivision']['_c']['adminName1']['_v']."
+	#	ISO Code: $isoCode
+	#	Lat: $lat
+	#	Long: $long\r\n\r\n";
 					}else
 					{
-						echo "Failed.\r\n";
-						die(mysql_error($conn));
+						echo "There was an error inserting the APs Geoname data.\r\n";
+						mail_users("There was an error inserting the APs Geoname data. :-(\r\n".mysql_error($conn)."\r\n\r\n-WiFiDB Service", $subject, $type, 1); 
 					}
 				}
 			}else
 			{
 				echo "Failed to gather GeoNames data.\r\n";
+				mail_users("Failed to gather GeoNames data. :-(\r\n\r\n-WiFiDB Service", $subject, $type, 1); 
 			}
 			$zero = 0;
 			$NN++;
@@ -235,7 +255,8 @@ while(1)
 			$stop1 = microtime(1);
 			$total = $total + ($stop1  - $start1);
 			$avg = $total / $NN;
-			echo "Run : ".($stop1  - $start1)."\r\nTotal: $total\r\nAPS: $NN\r\nAPs / sec: $avg\r\n##########################\r\n\r\n";
+		#	echo "Run : ".($stop1  - $start1)."\r\nTotal: $total\r\nAPS: $NN\r\nAPs / sec: $avg\r\n";
+			echo "##########################\r\n\r\n";
 			
 			break;
 		}
@@ -251,6 +272,7 @@ while(1)
 	}
 	$stop = microtime(1);
 	echo "Finished generating location filter data.\r\nStart: $start\r\nStop: $stop\r\nTotal Run: ".($stop - $start)."\r\n";
+	mail_users("New Statistics have been ran, go check them out!\r\nLink: ".$UPATH."\r\nLogin and go to the admin panel\r\n-WiFiDB Service", $subject, $type); 
 	sleep(86400);
 }
 ?>

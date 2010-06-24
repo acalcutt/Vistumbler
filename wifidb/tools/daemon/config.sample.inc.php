@@ -3,7 +3,7 @@ global $daemon_ver, $start_date, $last_edit;
 global $wifidb_install, $log_level, $log_interval, $verbose, $dst, $time_interval_to_check, $daemon_log, $debug;
 global $colors_setting, $default_user, $default_title, $default_notes, $dim, $console_line_limit;
 global $PERF_time_interval_to_check, $DBSTATS_time_interval_to_check;
-global $BAD_CT_COLOR, $GOOD_CT_COLOR, $OTHER_CT_COLOR, $BAD_DBS_COLOR, $GOOD_DBS_COLOR, $OTHER_DBS_COLOR, $BAD_DPM_COLOR, $GOOD_DPM_COLOR, $OTHER_DPM_COLOR, $BAD_IED_COLOR, $GOOD_IED_COLOR, $OTHER_IED_COLOR;
+global $BAD_CLI_COLOR, $GOOD_CLI_COLOR, $OTHER_CLI_COLOR;
 if(PHP_OS == 'WINNT')
 {
 	$dim = '\\';
@@ -60,22 +60,9 @@ $colors_setting	=	1;
 //Default colors for the CLI
 //Allowed colors:
 	//LIGHTGRAY, BLUE, GREEN, RED, YELLOW
-	//wifidbd.php
-$BAD_CT_COLOR	=	'RED';
-$GOOD_CT_COLOR	=	'GREEN';
-$OTHER_CT_COLOR	=	'YELLOW';
-	//dbstatsd.php
-$BAD_DBS_COLOR	=	'RED';
-$GOOD_DBS_COLOR	=	'GREEN';
-$OTHER_DBS_COLOR	=	'YELLOW';
-	//daemonperfd.php
-$BAD_DPM_COLOR	=	'RED';
-$GOOD_DPM_COLOR	=	'GREEN';
-$OTHER_DPM_COLOR	=	'YELLOW';
-	//imp_expd.php
-$BAD_IED_COLOR	=	'RED';
-$GOOD_IED_COLOR	=	'GREEN';
-$OTHER_IED_COLOR	=	'YELLOW';
+$BAD_CLI_COLOR	=	'RED';
+$GOOD_CLI_COLOR	=	'GREEN';
+$OTHER_CLI_COLOR	=	'YELLOW';
 
 //Debug functions turned on, may also include dropping tables and re-createing them 
 //so only turn on if you really know what you are doing

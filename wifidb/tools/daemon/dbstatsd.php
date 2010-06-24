@@ -1,12 +1,10 @@
 <?php
 error_reporting(E_ALL);
-global $screen_output;
+global $screen_output, $COLORS, $dim;
 $screen_output = "CLI";
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 #####################
-$PHP_OS							=	PHP_OS;
-$OS								=	$PHP_OS[0];
-if($OS == "WINNT"){$dim = "\\";}else{$dim = "/";}
+$dim = @DIRECTORY_SEPERATOR;
 if(!(require_once 'config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
 if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
@@ -35,13 +33,13 @@ $gpx_out						=	'/out/gpx/';
 $graph_out						=	'/out/graph/';
 $upload							=	'/import/up/';
 $date_format					=	"Y-m-d H:i:s.u";
-$BAD_CLI_COLOR					=	$GLOBALS['BAD_DBS_COLOR'];
-$GOOD_CLI_COLOR					=	$GLOBALS['GOOD_DBS_COLOR'];
-$OTHER_CLI_COLOR				=	$GLOBALS['OTHER_DBS_COLOR'];
+$BAD_CLI_COLOR					=	$GLOBALS['BAD_CLI_COLOR'];
+$GOOD_CLI_COLOR					=	$GLOBALS['GOOD_CLI_COLOR'];
+$OTHER_CLI_COLOR				=	$GLOBALS['OTHER_CLI_COLOR'];
 $subject						=	"WiFiDB Statistics Daemon";
 $type							=	"statistics";
 #####################
-if($GLOBALS['colors_setting'] == 0 or $OS == "W")
+if($GLOBALS['colors_setting'] == 0 or PHP_OS == "WINNT")
 {
 	$COLORS = array(
 					"LIGHTGRAY"	=> "",
@@ -347,7 +345,7 @@ while(TRUE)
 		$num_gps = @mysql_num_rows($result01);
 		$aps_gps_totals[] = array($num_gps , $all_array['ssid']);
 	}
-	verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Sorted APs GPS Array.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
+	verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Sorting APs GPS Array.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 	rsort($aps_gps_totals);
 	$ap_gps_totals_a = array();
 	foreach($aps_gps_totals as $gps)
@@ -355,8 +353,9 @@ while(TRUE)
 		$ap_gps_totals_a[] = implode('|', $gps);
 	}
 	$ap_gps_totals_s = implode('-', $ap_gps_totals_a);
-	if(is_array($aps_gps_totals)){verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Retreived Total GPS cords for each AP.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);}
-	else{verbosed($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Failed to Retreived Total GPS cords for each AP.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);}
+	if(is_array($aps_gps_totals)){verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Retreived GPS count for each AP.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);}
+	else{mail_users("There was an error while gathering data for the AP with the most GPS. :-(\r\n\r\n-WiFiDB Service", $subject, $type, 1);
+	verbosed($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Failed to Retreived Total GPS cords for each AP.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);}
 ###############
 
 # TOP SSID
@@ -364,7 +363,11 @@ while(TRUE)
 	verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting to Calculate the Top SSID's.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 	$top_ssids = top_ssids();
 	if(is_array($top_ssids)){verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Finished Calculating the Top SSID's.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);}
-	else{verbosed($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Failed Calculating the Top SSID's.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);}
+	else
+	{
+		mail_users("There was an error while running the Top_ssid() function. :-(\r\n\r\n-WiFiDB Service", $subject, $type, 1);
+		verbosed($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Failed Calculating the Top SSID's.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
+	}
 	verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting to Implode the Top SSID's array into a string.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 	$top_ssids_a = array();
 	$count_ssids = 1;
@@ -385,15 +388,14 @@ while(TRUE)
 
 	if(!mysql_query($insert, $conn))
 	{
-		mail_admin("There was an error inserting the Database Statistics data into the `DB_stats` table. :-(", $enable_mail_admin, 1);
+		mail_users("There was an error inserting the Database Statistics data into the `DB_stats` table. :-(\r\n".mysql_error($conn)."\r\n\r\n-WiFiDB Service", $subject, $type, 1);
 		verbosed($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Failed to Insert Data into The Database.".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 	}else
 	{
 		verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Inserted Data into The Database.\r\n".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 	}
 #############
-
-verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting Users Statistics.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
+	verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting Users Statistics.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 	foreach($users as $user)
 	{
 		verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting for user: $user.\r\n\t\t\tAP With Most GPS Points.".$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
@@ -418,7 +420,7 @@ verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting Users Statistics.".$GLOBA
 				$ap_qry = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$ap_ary = mysql_fetch_array($ap_qry);
 				$id = $ap_ary['id'];
-				list($ssid_ptb = make_ssid($ap_ary["ssid"]);
+				list($ssid_ptb) = make_ssid($ap_ary["ssid"]);
 				$table		=	$ssid_ptb.'-'.$ap_ary["mac"].'-'.$ap_ary["sectype"].'-'.$ap_ary["radio"].'-'.$ap_ary['chan'];
 				$table_gps	=	$table.$gps_ext;
 				
@@ -461,7 +463,7 @@ verbosed($GLOBALS['COLORS'][$GOOD_CLI_COLOR]."Starting Users Statistics.".$GLOBA
 		$insert_user = "INSERT INTO `$db`.`stats_$user` (`id`, `newest`, `largest`) VALUES ('', '$newest', '$largest')";
 		if(!mysql_query($insert_user, $conn))
 		{
-			mail_users"There was an error inserting the Database Statistics data. :-(\r\n\r\n".mysql_error($conn), $subject, $type, 1, 1); 
+			mail_users("There was an error inserting the Database Statistics data. :-(\r\n".mysql_error($conn)."\r\n\r\n-WiFiDB Service", $subject, $type, 1); 
 			verbosed($GLOBALS['COLORS'][$BAD_CLI_COLOR]."Failed to Insert Data into The Database.".mysql_error($conn).$GLOBALS['COLORS'][$OTHER_CLI_COLOR], $verbose, $screen_output, 1);
 		}else
 		{
