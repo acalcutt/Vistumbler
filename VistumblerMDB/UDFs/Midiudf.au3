@@ -1,7 +1,18 @@
 #include <Array.au3>
 
 ;======================
-;Midi UDF by Eynstyne
+;Midi UDF by Eynstyne.
+; *Altered by GMK -> cleanup of code, Constants 'cleanup', addition of Drum Map
+; *Alterations by Ascend4nt:
+;	- Changed '_NOTEON/OFF' to _ON or _OFF per suggestion by Paulie
+;	- @error checks/returns fixed (still some consistency needed in the module overall though)
+; 	- x64 compatibility & Structure fixes
+; 	- Addition of functions: _MidiOutPrepareHeader, _MidiOutUnprepareHeader, _MidiStreamOut
+;	 (still unclear as to buffer info, and also the format/calling method for these:
+;	 	_MidiOutCachePatches, _MidiOutCacheDrumPatches, _MidiStreamProperty)
+;	- some info about MIDI In/Output buffer
+;
+; Special note: Callbacks can be done during Streaming. see MidiInProc and MidiOutProc @ MSDN
 ;======================
 
 Const $callback_NULL				=	0
@@ -52,9 +63,9 @@ Const $MIDIPROP_SET				=	0x80000000
 Const $MIDIPROP_TEMPO			=	0x2
 Const $MIDIPROP_TIMEDIV			=	0x1
 Const $MIDISTRM_ERROR			=	-2
-Const $MM_MPU401_MIDIOUT		=	10
-Const $MM_MPU401_MIDIIN			=	11
-Const $MM_MIDI_MAPPER			=	1
+Const $MM_MPU401_MidiOUT		=	10
+Const $MM_MPU401_MidiIN			=	11
+Const $MM_Midi_MAPPER			=	1
 Const $MIDIPATCHSIZE				=	128
 
 Const $MM_MIM_CLOSE				=	0x3c2
@@ -83,188 +94,188 @@ Const $MOM_POSITIONCB			=	($MM_MOM_POSITIONCB)
 
 ;Midi Notes
 ;==========
-Const $A0_NOTEON					=	0x00401590	;1
-Const $A0SHARP_NOTEON			=	0x00401690	;2
-Const $B0_NOTEON					=	0x00401790	;3
-Const $C1_NOTEON					=	0x00401890	;4
-Const $C1SHARP_NOTEON			=	0x00401990	;5
-Const $D1_NOTEON					=	0x00401A90	;6
-Const $D1SHARP_NOTEON			=	0x00401B90	;7
-Const $E1_NOTEON					=	0x00401C90	;8
-Const $F1_NOTEON					=	0x00401D90	;9
-Const $F1SHARP_NOTEON			=	0x00401E90	;10
-Const $G1_NOTEON					=	0x00401F90	;11
-Const $G1SHARP_NOTEON			=	0x00402090	;12
-Const $A1_NOTEON					=	0x00402190	;13
-Const $A1SHARP_NOTEON			=	0x00402290	;14
-Const $B1_NOTEON					=	0x00402390	;15
-Const $C2_NOTEON					=	0x00402490	;16
-Const $C2SHARP_NOTEON			=	0x00402590	;17
-Const $D2_NOTEON					=	0x00402690	;18
-Const $D2SHARP_NOTEON			=	0x00402790	;19
-Const $E2_NOTEON					=	0x00402890	;20
-Const $F2_NOTEON					=	0x00402990	;21
-Const $F2SHARP_NOTEON			=	0x00402A90	;22
-Const $G2_NOTEON					=	0x00402B90	;23
-Const $G2SHARP_NOTEON			=	0x00402C90	;24
-Const $A2_NOTEON					=	0x00402D90	;25
-Const $A2SHARP_NOTEON			=	0x00402E90	;26
-Const $B2_NOTEON					=	0x00402F90	;27
-Const $C3_NOTEON					=	0x00403090	;28
-Const $C3SHARP_NOTEON			=	0x00403190	;29
-Const $D3_NOTEON					=	0x00403290	;30
-Const $D3SHARP_NOTEON			=	0x00403390	;31
-Const $E3_NOTEON					=	0x00403490	;32
-Const $F3_NOTEON					=	0x00403590	;33
-Const $F3SHARP_NOTEON			=	0x00403690	;34
-Const $G3_NOTEON					=	0x00403790	;35
-Const $G3SHARP_NOTEON			=	0x00403890	;36
-Const $A3_NOTEON					=	0x00403990	;37
-Const $A3SHARP_NOTEON			=	0x00403A90	;38
-Const $B3_NOTEON					=	0x00403B90	;39
-Const $C4_NOTEON					=	0x00403C90	;40 - Middle C
-Const $C4SHARP_NOTEON			=	0x00403D90	;41
-Const $D4_NOTEON					=	0x00403E90	;42
-Const $D4SHARP_NOTEON			=	0x00403F90	;43
-Const $E4_NOTEON					=	0x00404090	;44
-Const $F4_NOTEON					=	0x00404190	;45
-Const $F4SHARP_NOTEON			=	0x00404290	;46
-Const $G4_NOTEON					=	0x00404390	;47
-Const $G4SHARP_NOTEON			=	0x00404490	;48
-Const $A4_NOTEON					=	0x00404590	;49
-Const $A4SHARP_NOTEON			=	0x00404690	;50
-Const $B4_NOTEON					=	0x00404790	;51
-Const $C5_NOTEON					=	0x00404890	;52
-Const $C5SHARP_NOTEON			=	0x00404990	;53
-Const $D5_NOTEON					=	0x00404A90	;54
-Const $D5SHARP_NOTEON			=	0x00404B90	;55
-Const $E5_NOTEON					=	0x00404C90	;56
-Const $F5_NOTEON					=	0x00404D90	;57
-Const $F5SHARP_NOTEON			=	0x00404E90	;58
-Const $G5_NOTEON					=	0x00404F90	;59
-Const $G5SHARP_NOTEON			=	0x00405090	;60
-Const $A5_NOTEON					=	0x00405190	;61
-Const $A5SHARP_NOTEON			=	0x00405290	;62
-Const $B5_NOTEON					=	0x00405390	;63
-Const $C6_NOTEON					=	0x00405490	;64
-Const $C6SHARP_NOTEON			=	0x00405590	;65
-Const $D6_NOTEON					=	0x00405690	;66
-Const $D6SHARP_NOTEON			=	0x00405790	;67
-Const $E6_NOTEON					=	0x00405890	;68
-Const $F6_NOTEON					=	0x00405990	;69
-Const $F6SHARP_NOTEON			=	0x00405A90	;70
-Const $G6_NOTEON					=	0x00405B90	;71
-Const $G6SHARP_NOTEON			=	0x00405C90	;72
-Const $A6_NOTEON					=	0x00405D90	;73
-Const $A6SHARP_NOTEON			=	0x00405E90	;74
-Const $B6_NOTEON					=	0x00405F90	;75
-Const $C7_NOTEON					=	0x00406090	;76
-Const $C7SHARP_NOTEON			=	0x00406190	;77
-Const $D7_NOTEON					=	0x00406290	;78
-Const $D7SHARP_NOTEON			=	0x00406390	;79
-Const $E7_NOTEON					=	0x00406490	;80
-Const $F7_NOTEON					=	0x00406590	;81
-Const $F7SHARP_NOTEON			=	0x00406690	;82
-Const $G7_NOTEON					=	0x00406790	;83
-Const $G7SHARP_NOTEON			=	0x00406890	;84
-Const $A7_NOTEON					=	0x00406990	;85
-Const $A7SHARP_NOTEON			=	0x00406A90	;86
-Const $B7_NOTEON					=	0x00406B90	;87
-Const $C8_NOTEON					=	0x00406C90	;88
+Const $A0_ON					=	0x00401590	;1
+Const $A0SHARP_ON			=	0x00401690	;2
+Const $B0_ON					=	0x00401790	;3
+Const $C1_ON					=	0x00401890	;4
+Const $C1SHARP_ON			=	0x00401990	;5
+Const $D1_ON					=	0x00401A90	;6
+Const $D1SHARP_ON			=	0x00401B90	;7
+Const $E1_ON					=	0x00401C90	;8
+Const $F1_ON					=	0x00401D90	;9
+Const $F1SHARP_ON			=	0x00401E90	;10
+Const $G1_ON					=	0x00401F90	;11
+Const $G1SHARP_ON			=	0x00402090	;12
+Const $A1_ON					=	0x00402190	;13
+Const $A1SHARP_ON			=	0x00402290	;14
+Const $B1_ON					=	0x00402390	;15
+Const $C2_ON					=	0x00402490	;16
+Const $C2SHARP_ON			=	0x00402590	;17
+Const $D2_ON					=	0x00402690	;18
+Const $D2SHARP_ON			=	0x00402790	;19
+Const $E2_ON					=	0x00402890	;20
+Const $F2_ON					=	0x00402990	;21
+Const $F2SHARP_ON			=	0x00402A90	;22
+Const $G2_ON					=	0x00402B90	;23
+Const $G2SHARP_ON			=	0x00402C90	;24
+Const $A2_ON					=	0x00402D90	;25
+Const $A2SHARP_ON			=	0x00402E90	;26
+Const $B2_ON					=	0x00402F90	;27
+Const $C3_ON					=	0x00403090	;28
+Const $C3SHARP_ON			=	0x00403190	;29
+Const $D3_ON					=	0x00403290	;30
+Const $D3SHARP_ON			=	0x00403390	;31
+Const $E3_ON					=	0x00403490	;32
+Const $F3_ON					=	0x00403590	;33
+Const $F3SHARP_ON			=	0x00403690	;34
+Const $G3_ON					=	0x00403790	;35
+Const $G3SHARP_ON			=	0x00403890	;36
+Const $A3_ON					=	0x00403990	;37
+Const $A3SHARP_ON			=	0x00403A90	;38
+Const $B3_ON					=	0x00403B90	;39
+Const $C4_ON					=	0x00403C90	;40 - Middle C
+Const $C4SHARP_ON			=	0x00403D90	;41
+Const $D4_ON					=	0x00403E90	;42
+Const $D4SHARP_ON			=	0x00403F90	;43
+Const $E4_ON					=	0x00404090	;44
+Const $F4_ON					=	0x00404190	;45
+Const $F4SHARP_ON			=	0x00404290	;46
+Const $G4_ON					=	0x00404390	;47
+Const $G4SHARP_ON			=	0x00404490	;48
+Const $A4_ON					=	0x00404590	;49
+Const $A4SHARP_ON			=	0x00404690	;50
+Const $B4_ON					=	0x00404790	;51
+Const $C5_ON					=	0x00404890	;52
+Const $C5SHARP_ON			=	0x00404990	;53
+Const $D5_ON					=	0x00404A90	;54
+Const $D5SHARP_ON			=	0x00404B90	;55
+Const $E5_ON					=	0x00404C90	;56
+Const $F5_ON					=	0x00404D90	;57
+Const $F5SHARP_ON			=	0x00404E90	;58
+Const $G5_ON					=	0x00404F90	;59
+Const $G5SHARP_ON			=	0x00405090	;60
+Const $A5_ON					=	0x00405190	;61
+Const $A5SHARP_ON			=	0x00405290	;62
+Const $B5_ON					=	0x00405390	;63
+Const $C6_ON					=	0x00405490	;64
+Const $C6SHARP_ON			=	0x00405590	;65
+Const $D6_ON					=	0x00405690	;66
+Const $D6SHARP_ON			=	0x00405790	;67
+Const $E6_ON					=	0x00405890	;68
+Const $F6_ON					=	0x00405990	;69
+Const $F6SHARP_ON			=	0x00405A90	;70
+Const $G6_ON					=	0x00405B90	;71
+Const $G6SHARP_ON			=	0x00405C90	;72
+Const $A6_ON					=	0x00405D90	;73
+Const $A6SHARP_ON			=	0x00405E90	;74
+Const $B6_ON					=	0x00405F90	;75
+Const $C7_ON					=	0x00406090	;76
+Const $C7SHARP_ON			=	0x00406190	;77
+Const $D7_ON					=	0x00406290	;78
+Const $D7SHARP_ON			=	0x00406390	;79
+Const $E7_ON					=	0x00406490	;80
+Const $F7_ON					=	0x00406590	;81
+Const $F7SHARP_ON			=	0x00406690	;82
+Const $G7_ON					=	0x00406790	;83
+Const $G7SHARP_ON			=	0x00406890	;84
+Const $A7_ON					=	0x00406990	;85
+Const $A7SHARP_ON			=	0x00406A90	;86
+Const $B7_ON					=	0x00406B90	;87
+Const $C8_ON					=	0x00406C90	;88
 
 ;Turn Off the Notes
-Const $A0_NOTEOFF					=	0x00001590	;1
-Const $A0SHARP_NOTEOFF			=	0x00001690	;2
-Const $B0_NOTEOFF					=	0x00001790	;3
-Const $C1_NOTEOFF					=	0x00001890	;4
-Const $C1SHARP_NOTEOFF			=	0x00001990	;5
-Const $D1_NOTEOFF					=	0x00001A90	;6
-Const $D1SHARP_NOTEOFF			=	0x00001B90	;7
-Const $E1_NOTEOFF					=	0x00001C90	;8
-Const $F1_NOTEOFF					=	0x00001D90	;9
-Const $F1SHARP_NOTEOFF			=	0x00001E90	;10
-Const $G1_NOTEOFF					=	0x00001F90	;11
-Const $G1SHARP_NOTEOFF			=	0x00002090	;12
-Const $A1_NOTEOFF					=	0x00002190	;13
-Const $A1SHARP_NOTEOFF			=	0x00002290	;14
-Const $B1_NOTEOFF					=	0x00002390	;15
-Const $C2_NOTEOFF					=	0x00002490	;16
-Const $C2SHARP_NOTEOFF			=	0x00002590	;17
-Const $D2_NOTEOFF					=	0x00002690	;18
-Const $D2SHARP_NOTEOFF			=	0x00002790	;19
-Const $E2_NOTEOFF					=	0x00002890	;20
-Const $F2_NOTEOFF					=	0x00002990	;21
-Const $F2SHARP_NOTEOFF			=	0x00002A90	;22
-Const $G2_NOTEOFF					=	0x00002B90	;23
-Const $G2SHARP_NOTEOFF			=	0x00002C90	;24
-Const $A2_NOTEOFF					=	0x00002D90	;25
-Const $A2SHARP_NOTEOFF			=	0x00002E90	;26
-Const $B2_NOTEOFF					=	0x00002F90	;27
-Const $C3_NOTEOFF					=	0x00003090	;28
-Const $C3SHARP_NOTEOFF			=	0x00003190	;29
-Const $D3_NOTEOFF					=	0x00003290	;30
-Const $D3SHARP_NOTEOFF			=	0x00003390	;31
-Const $E3_NOTEOFF					=	0x00003490	;32
-Const $F3_NOTEOFF					=	0x00003590	;33
-Const $F3SHARP_NOTEOFF			=	0x00003690	;34
-Const $G3_NOTEOFF					=	0x00003790	;35
-Const $G3SHARP_NOTEOFF			=	0x00003890	;36
-Const $A3_NOTEOFF					=	0x00003990	;37
-Const $A3SHARP_NOTEOFF			=	0x00003A90	;38
-Const $B3_NOTEOFF					=	0x00003B90	;39
-Const $C4_NOTEOFF					=	0x00003C90	;40 - Middle C
-Const $C4SHARP_NOTEOFF			=	0x00003D90	;41
-Const $D4_NOTEOFF					=	0x00003E90	;42
-Const $D4SHARP_NOTEOFF			=	0x00003F90	;43
-Const $E4_NOTEOFF					=	0x00000090	;44
-Const $F4_NOTEOFF					=	0x00004190	;45
-Const $F4SHARP_NOTEOFF			=	0x00004290	;46
-Const $G4_NOTEOFF					=	0x00004390	;47
-Const $G4SHARP_NOTEOFF			=	0x00004490	;48
-Const $A4_NOTEOFF					=	0x00004590	;49
-Const $A4SHARP_NOTEOFF			=	0x00004690	;50
-Const $B4_NOTEOFF					=	0x00004790	;51
-Const $C5_NOTEOFF					=	0x00004890	;52
-Const $C5SHARP_NOTEOFF			=	0x00004990	;53
-Const $D5_NOTEOFF					=	0x00004A90	;54
-Const $D5SHARP_NOTEOFF			=	0x00004B90	;55
-Const $E5_NOTEOFF					=	0x00004C90	;56
-Const $F5_NOTEOFF					=	0x00004D90	;57
-Const $F5SHARP_NOTEOFF			=	0x00004E90	;58
-Const $G5_NOTEOFF					=	0x00004F90	;59
-Const $G5SHARP_NOTEOFF			=	0x00005090	;60
-Const $A5_NOTEOFF					=	0x00005190	;61
-Const $A5SHARP_NOTEOFF			=	0x00005290	;62
-Const $B5_NOTEOFF					=	0x00005390	;63
-Const $C6_NOTEOFF					=	0x00005490	;64
-Const $C6SHARP_NOTEOFF			=	0x00005590	;65
-Const $D6_NOTEOFF					=	0x00005690	;66
-Const $D6SHARP_NOTEOFF			=	0x00005790	;67
-Const $E6_NOTEOFF					=	0x00005890	;68
-Const $F6_NOTEOFF					=	0x00005990	;69
-Const $F6SHARP_NOTEOFF			=	0x00005A90	;70
-Const $G6_NOTEOFF					=	0x00005B90	;71
-Const $G6SHARP_NOTEOFF			=	0x00005C90	;72
-Const $A6_NOTEOFF					=	0x00005D90	;73
-Const $A6SHARP_NOTEOFF			=	0x00005E90	;74
-Const $B6_NOTEOFF					=	0x00005F90	;75
-Const $C7_NOTEOFF					=	0x00006090	;76
-Const $C7SHARP_NOTEOFF			=	0x00006190	;77
-Const $D7_NOTEOFF					=	0x00006290	;78
-Const $D7SHARP_NOTEOFF			=	0x00006390	;79
-Const $E7_NOTEOFF					=	0x00006490	;80
-Const $F7_NOTEOFF					=	0x00006590	;81
-Const $F7SHARP_NOTEOFF			=	0x00006690	;82
-Const $G7_NOTEOFF					=	0x00006790	;83
-Const $G7SHARP_NOTEOFF			=	0x00006890	;84
-Const $A7_NOTEOFF					=	0x00006990	;85
-Const $A7SHARP_NOTEOFF			=	0x00006A90	;86
-Const $B7_NOTEOFF					=	0x00006B90	;87
-Const $C8_NOTEOFF					=	0x00006C90	;88
+Const $A0_OFF					=	0x00001590	;1
+Const $A0SHARP_OFF			=	0x00001690	;2
+Const $B0_OFF					=	0x00001790	;3
+Const $C1_OFF					=	0x00001890	;4
+Const $C1SHARP_OFF			=	0x00001990	;5
+Const $D1_OFF					=	0x00001A90	;6
+Const $D1SHARP_OFF			=	0x00001B90	;7
+Const $E1_OFF					=	0x00001C90	;8
+Const $F1_OFF					=	0x00001D90	;9
+Const $F1SHARP_OFF			=	0x00001E90	;10
+Const $G1_OFF					=	0x00001F90	;11
+Const $G1SHARP_OFF			=	0x00002090	;12
+Const $A1_OFF					=	0x00002190	;13
+Const $A1SHARP_OFF			=	0x00002290	;14
+Const $B1_OFF					=	0x00002390	;15
+Const $C2_OFF					=	0x00002490	;16
+Const $C2SHARP_OFF			=	0x00002590	;17
+Const $D2_OFF					=	0x00002690	;18
+Const $D2SHARP_OFF			=	0x00002790	;19
+Const $E2_OFF					=	0x00002890	;20
+Const $F2_OFF					=	0x00002990	;21
+Const $F2SHARP_OFF			=	0x00002A90	;22
+Const $G2_OFF					=	0x00002B90	;23
+Const $G2SHARP_OFF			=	0x00002C90	;24
+Const $A2_OFF					=	0x00002D90	;25
+Const $A2SHARP_OFF			=	0x00002E90	;26
+Const $B2_OFF					=	0x00002F90	;27
+Const $C3_OFF					=	0x00003090	;28
+Const $C3SHARP_OFF			=	0x00003190	;29
+Const $D3_OFF					=	0x00003290	;30
+Const $D3SHARP_OFF			=	0x00003390	;31
+Const $E3_OFF					=	0x00003490	;32
+Const $F3_OFF					=	0x00003590	;33
+Const $F3SHARP_OFF			=	0x00003690	;34
+Const $G3_OFF					=	0x00003790	;35
+Const $G3SHARP_OFF			=	0x00003890	;36
+Const $A3_OFF					=	0x00003990	;37
+Const $A3SHARP_OFF			=	0x00003A90	;38
+Const $B3_OFF					=	0x00003B90	;39
+Const $C4_OFF					=	0x00003C90	;40 - Middle C
+Const $C4SHARP_OFF			=	0x00003D90	;41
+Const $D4_OFF					=	0x00003E90	;42
+Const $D4SHARP_OFF			=	0x00003F90	;43
+Const $E4_OFF					=	0x00000090	;44
+Const $F4_OFF					=	0x00004190	;45
+Const $F4SHARP_OFF			=	0x00004290	;46
+Const $G4_OFF					=	0x00004390	;47
+Const $G4SHARP_OFF			=	0x00004490	;48
+Const $A4_OFF					=	0x00004590	;49
+Const $A4SHARP_OFF			=	0x00004690	;50
+Const $B4_OFF					=	0x00004790	;51
+Const $C5_OFF					=	0x00004890	;52
+Const $C5SHARP_OFF			=	0x00004990	;53
+Const $D5_OFF					=	0x00004A90	;54
+Const $D5SHARP_OFF			=	0x00004B90	;55
+Const $E5_OFF					=	0x00004C90	;56
+Const $F5_OFF					=	0x00004D90	;57
+Const $F5SHARP_OFF			=	0x00004E90	;58
+Const $G5_OFF					=	0x00004F90	;59
+Const $G5SHARP_OFF			=	0x00005090	;60
+Const $A5_OFF					=	0x00005190	;61
+Const $A5SHARP_OFF			=	0x00005290	;62
+Const $B5_OFF					=	0x00005390	;63
+Const $C6_OFF					=	0x00005490	;64
+Const $C6SHARP_OFF			=	0x00005590	;65
+Const $D6_OFF					=	0x00005690	;66
+Const $D6SHARP_OFF			=	0x00005790	;67
+Const $E6_OFF					=	0x00005890	;68
+Const $F6_OFF					=	0x00005990	;69
+Const $F6SHARP_OFF			=	0x00005A90	;70
+Const $G6_OFF					=	0x00005B90	;71
+Const $G6SHARP_OFF			=	0x00005C90	;72
+Const $A6_OFF					=	0x00005D90	;73
+Const $A6SHARP_OFF			=	0x00005E90	;74
+Const $B6_OFF					=	0x00005F90	;75
+Const $C7_OFF					=	0x00006090	;76
+Const $C7SHARP_OFF			=	0x00006190	;77
+Const $D7_OFF					=	0x00006290	;78
+Const $D7SHARP_OFF			=	0x00006390	;79
+Const $E7_OFF					=	0x00006490	;80
+Const $F7_OFF					=	0x00006590	;81
+Const $F7SHARP_OFF			=	0x00006690	;82
+Const $G7_OFF					=	0x00006790	;83
+Const $G7SHARP_OFF			=	0x00006890	;84
+Const $A7_OFF					=	0x00006990	;85
+Const $A7SHARP_OFF			=	0x00006A90	;86
+Const $B7_OFF					=	0x00006B90	;87
+Const $C8_OFF					=	0x00006C90	;88
 
 ;Instruments
 #cs
-	Piano	
+	Piano
 		0		Acoustic Grand Piano
 		1		Bright Piano
 		2		Electric Grand Piano
@@ -273,7 +284,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		5		Electric Piano 2
 		6		Harpsichord
 		7		Clav
-	Chromatic Percussion	
+	Chromatic Percussion
 		8		Celesta
 		9		Glockenspiel
 		10		Music Box
@@ -282,7 +293,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		13		Xylophone
 		14		Tubular Bells
 		15		Dulcimer
-	Organ	
+	Organ
 		16		Drawbar Organ
 		17		Percussive Organ
 		18		Rock Organ
@@ -291,7 +302,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		21		Accordian
 		22		Harmonica
 		23		Tango Accordian
-	Guitar	
+	Guitar
 		24		Nylon String Guitar
 		25		Steel String Guitar
 		26		Jazz Guitar
@@ -300,7 +311,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		29		Overdrive Guitar
 		30		Distortion Guitar
 		31		Guitar Harmonics
-	Bass	
+	Bass
 		32		Acoustic Bass
 		33		Fingered Bass
 		34		Picked Bass
@@ -309,7 +320,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		37		Slap Bass 2
 		38		Synth Bass 1
 		39		Synth Bass 2
-	Strings	
+	Strings
 		40		Violin
 		41		Viola
 		42		Cello
@@ -318,7 +329,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		45		Pizzicato Strings
 		46		Orchestral Harp
 		47		Timpani
-	Ensemble	
+	Ensemble
 		48		String Ensemble 1
 		49		String Ensemble 2
 		50		Synth Strings 1
@@ -327,7 +338,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		53		Choir Oohh
 		54		Synth Voice
 		55		Orchestral Hit
-	Brass	
+	Brass
 		56		Trumpet
 		57		Trombone
 		58		Tuba
@@ -336,7 +347,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		61		Brass Section
 		62		Synth Brass 1
 		63		Synth Brass 2
-	Reed	
+	Reed
 		64		Soprano Sax
 		65		Alto Sax
 		66		Tenor Sax
@@ -345,7 +356,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		69		English Horn
 		70		Bassoon
 		71		Clarinet
-	Pipe	
+	Pipe
 		72		Piccolo
 		73		Flute
 		74		Recorder
@@ -354,7 +365,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		77		Shakuhachi
 		78		Whistle
 		79		Ocarina
-	Synth Lead	
+	Synth Lead
 		80		Square Wav
 		81		Sawtooth Wav
 		82		Caliope
@@ -363,7 +374,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		85		Voice
 		86		Fifth's
 		87		Bass&Lead
-	Synth Pad	
+	Synth Pad
 		88		New Age
 		89		Warm
 		90		Polysynth
@@ -372,7 +383,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		93		Metallic
 		94		Halo
 		95		Sweep
-	Synth Effects	
+	Synth Effects
 		96		FX Rain
 		97		FX Soundtrack
 		98		FX Crystal
@@ -381,7 +392,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		101	FX Goblins
 		102	FX Echo Drops
 		103	FX Star Theme
-	Ethnic	
+	Ethnic
 		104	Sitar
 		105	Banjo
 		106	Shamisen
@@ -390,7 +401,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		109	Bagpipe
 		110	Fiddle
 		111	Shanai
-	Percussive	
+	Percussive
 		112	Tinkle Bell
 		113	Agogo
 		114	Steel Drums
@@ -399,7 +410,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		117	Melodic Tom
 		118	Synth Drum
 		119	Reverse Cymbal
-	Sound Effects	
+	Sound Effects
 		120	Guitar Fret Noise
 		121	Breath Noise
 		122	Seashore
@@ -408,7 +419,7 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 		125	Helicopter
 		126	Applause
 		127	Gunshot
-   
+
    Drum Notes
 		27
 		28
@@ -479,10 +490,12 @@ Const $C8_NOTEOFF					=	0x00006C90	;88
 ;Author : Eynstyne
 ;Library : Microsoft winmm.dll
 ;=======================================================
-Func _midiOutGetNumDevs()
+Func _MidiOutGetNumDevs()
    $ret = DllCall("winmm.dll", "long", "midiOutGetNumDevs")
-   If Not @error Then Return $ret[0]
-EndFunc   ;==>_midiOutGetNumDevs
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
+EndFunc   ;==>_MidiOutGetNumDevs
 
 ;=======================================================
 ;Retrieves the number of Midi Input devices which exist
@@ -490,10 +503,12 @@ EndFunc   ;==>_midiOutGetNumDevs
 ;Author : Eynstyne
 ;Library : Microsoft winmm.dll
 ;=======================================================
-Func _midiInGetNumDevs ($ReturnErrorAsString = 0) ;Working
+Func _MidiInGetNumDevs ($ReturnErrorAsString = 0) ;Working
    $ret = DllCall("winmm.dll", "long", "midiInGetNumDevs")
-   If Not @error Then Return $ret[0]
-EndFunc   ;==>_midiInGetNumDevs
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
+EndFunc   ;==>_MidiInGetNumDevs
 
 ;=======================================================
 ;Retrieves a MIDI handle and Opens the Device
@@ -502,16 +517,12 @@ EndFunc   ;==>_midiInGetNumDevs
 ;Author : Eynstyne
 ;Library : Microsoft winmm.dll
 ;=======================================================
-Func _midiOutOpen($devid = 0, $callback = 0, $instance = 0, $flags = 0)
-   $struct = DllStructCreate("udword")
-   $ret = DllCall("winmm.dll", "long", "midiOutOpen", "ptr", DllStructGetPtr($struct), "int", $devid, "long", $callback, "long", $instance, "long", $flags)
-   If Not @error Then
-      $Get = DllStructGetData($struct, 1)
-      Return $Get
-   Else
-      Return $ret[0]
-   EndIf
-EndFunc   ;==>_midiOutOpen
+Func _MidiOutOpen($devid = 0, $callback = 0, $instance = 0, $flags = 0)
+   $ret = DllCall("winmm.dll", "long", "midiOutOpen", "handle*", 0, "int", $devid, "dword_ptr", $callback, "dword_ptr", $instance, "long", $flags)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[1]
+EndFunc   ;==>_MidiOutOpen
 
 ;=======================================================
 ;Retrieves a MIDI handle and Opens the Device
@@ -520,16 +531,12 @@ EndFunc   ;==>_midiOutOpen
 ;Author : Eynstyne
 ;Library : Microsoft winmm.dll
 ;=======================================================
-Func _midiInOpen ($devid = 0, $callback = 0, $instance = 0, $flags = 0)
-   $struct = DllStructCreate("udword")
-   $ret = DllCall("winmm.dll", "long", "midiInOpen", "ptr", DllStructGetPtr($struct), "int", $devid, "long", $callback, "long", $instance, "long", $flags)
-   If Not @error Then
-      $Get = DllStructGetData($struct, 1)
-      Return $Get
-   Else
-      Return $ret[0]
-   EndIf
-EndFunc   ;==>_midiInOpen
+Func _MidiInOpen ($devid = 0, $callback = 0, $instance = 0, $flags = 0)
+   $ret = DllCall("winmm.dll", "long", "midiInOpen", "handle*", 0, "int", $devid, "dword_ptr", $callback, "dword_ptr", $instance, "long", $flags)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[1]
+EndFunc   ;==>_MidiInOpen
 
 ;=======================================================
 ;Sets the Mixer Volume for MIDI
@@ -538,8 +545,10 @@ EndFunc   ;==>_midiInOpen
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiOutSetVolume ($volume, $devid = 0)
-   $ret = DllCall("winmm.dll", "long", "midiOutSetVolume", "long", $devid, "int", $volume)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiOutSetVolume", "handle", $devid, "int", $volume)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiOutSetVolume
 
 ;=======================================================
@@ -549,12 +558,10 @@ EndFunc   ;==>_MidiOutSetVolume
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiOutGetVolume ($devid = 0)
-   $struct = DllStructCreate("ushort")
-   $ret = DllCall("winmm.dll", "long", "midiOutGetVolume", "long", $devid, "ptr", DllStructGetPtr($struct))
-   If Not @error Then
-      $Get = DllStructGetData($struct, 1)
-      Return $Get
-   EndIf
+   $ret = DllCall("winmm.dll", "long", "midiOutGetVolume", "handle", $devid, "dword*",0)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[2]
 EndFunc   ;==>_MidiOutGetVolume
 
 ;=======================================================
@@ -564,13 +571,17 @@ EndFunc   ;==>_MidiOutGetVolume
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiOutReset ($hmidiout)
-   $ret = DllCall("winmm.dll", "long", "midiOutReset", "long", $hmidiout)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiOutReset", "handle", $hmidiout)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiOutReset
 
 Func _MidiInReset ($hmidiin)
-   $ret = DllCall("winmm.dll", "long", "midiInReset", "long", $hmidiin)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiInReset", "handle", $hmidiin)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiInReset
 
 ;=======================================================
@@ -580,8 +591,10 @@ EndFunc   ;==>_MidiInReset
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiInStart ($hmidiin)
-   $ret = DllCall("winmm.dll", "long", "midiInStart", "long", $hmidiin)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiInStart", "handle", $hmidiin)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiInStart
 
 ;=======================================================
@@ -591,8 +604,10 @@ EndFunc   ;==>_MidiInStart
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiInStop ($hmidiin)
-   $ret = DllCall("winmm.dll", "long", "midiInStop", "long", $hmidiin)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiInStop", "handle", $hmidiin)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiInStop
 
 ;=======================================================
@@ -602,13 +617,17 @@ EndFunc   ;==>_MidiInStop
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiOutClose ($hmidiout)
-   $ret = DllCall("winmm.dll", "long", "midiOutClose", "long", $hmidiout)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiOutClose", "handle", $hmidiout)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiOutClose
 
 Func _MidiInClose ($hmidiin)
-   $ret = DllCall("winmm.dll", "long", "midiInClose", "long", $hmidiin)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiInClose", "handle", $hmidiin)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiInClose
 
 ;=======================================================
@@ -618,11 +637,13 @@ EndFunc   ;==>_MidiInClose
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiOutCacheDrumPatches ($hmidiout, $Patch, $keynumber, $flags = 0)
-   $struct = DllStructCreate("short")
-   $keyarray = _ArrayCreate($keynumber)
+   $struct = DllStructCreate("short")	; MSDN indicates this should be "short KEYARRAY[MIDIPATCHSIZE]"
+   $keyarray = _ArrayCreate($keynumber)	; ?
    DllStructSetData($struct, 1, $keynumber)
-   $ret = DllCall("winmm.dll", "long", "midiOutCacheDrumPatches", "long", $hmidiout, "int", $Patch, "ptr", DllStructGetPtr($struct), "int", $flags)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiOutCacheDrumPatches", "handle", $hmidiout, "int", $Patch, "ptr", DllStructGetPtr($struct), "int", $flags)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiOutCacheDrumPatches
 
 ;=======================================================
@@ -632,11 +653,13 @@ EndFunc   ;==>_MidiOutCacheDrumPatches
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiOutCachePatches ($hmidiout, $bank, $patchnumber, $flags = 0)
-   $struct = DllStructCreate("short")
-   $patcharray = _ArrayCreate($patchnumber)
+   $struct = DllStructCreate("short")	; MSDN indicates this should be "short PATCHARRAY[MIDIPATCHSIZE]"
+   $patcharray = _ArrayCreate($patchnumber)	; ?
    DllStructSetData($struct, 1, $patchnumber)
-   $ret = DllCall("winmm.dll", "long", "midiOutCachePatches", "long", $hmidiout, "int", $bank, "ptr", DllStructGetPtr($struct), "int", $flags)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiOutCachePatches", "handle", $hmidiout, "int", $bank, "ptr", DllStructGetPtr($struct), "int", $flags)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiOutCachePatches
 
 ;=======================================================
@@ -646,21 +669,17 @@ EndFunc   ;==>_MidiOutCachePatches
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiInGetID ($hmidiin)
-   $struct = DllStructCreate("uint")
-   $ret = DllCall("winmm.dll", "long", "midiInGetID", "long", $hmidiin, "ptr", DllStructGetPtr($struct))
-   If Not @error Then
-      $Get = DllStructGetData($struct, 1)
-      Return $Get
-   EndIf
+   $ret = DllCall("winmm.dll", "long", "midiInGetID", "handle", $hmidiin, "uint*",0)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[2]
 EndFunc   ;==>_MidiInGetID
 
 Func _MidiOutGetID ($hmidiout)
-   $struct = DllStructCreate("uint")
-   $ret = DllCall("winmm.dll", "long", "midiInGetID", "long", $hmidiout, "ptr", DllStructGetPtr($struct))
-   If Not @error Then
-      $Get = DllStructGetData($struct, 1)
-      Return $Get
-   EndIf
+   $ret = DllCall("winmm.dll", "long", "midiOutGetID", "handle", $hmidiout, "uint*",0)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[2]
 EndFunc   ;==>_MidiOutGetID
 
 ;=======================================================
@@ -670,17 +689,19 @@ EndFunc   ;==>_MidiOutGetID
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiInGetErrorText ($error)
-   $struct = DllStructCreate("char[128]")
-   $ret = DllCall("winmm.dll", "long", "midiInGetErrorText", "int", $error, "ptr", DllStructGetPtr($struct), "int", 999)
-   $Get = DllStructGetData($struct, 1)
-   MsgBox(0, "", $Get)
+   $ret = DllCall("winmm.dll", "long", "midiInGetErrorTextW", "int", $error, "wstr", "", "uint", 65536)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   MsgBox(0, "MIDI In Error Text", $ret[2])
+   Return $ret[2]
 EndFunc   ;==>_MidiInGetErrorText
 
 Func _MidiOutGetErrorText($error)
-   $struct = DllStructCreate("char[128]")
-   $ret = DllCall("winmm.dll", "long", "midiOutGetErrorText", "int", $error, "ptr", DllStructGetPtr($struct), "int", 999)
-   $Get = DllStructGetData($struct, 1)
-   MsgBox(0, "", $Get)
+   $ret = DllCall("winmm.dll", "long", "midiOutGetErrorTextW", "int", $error, "wstr", "", "uint", 65536)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   MsgBox(0, "MIDI Out Error Text", $ret[2])
+   Return $ret[2]
 EndFunc   ;==>_MidiOutGetErrorText
 
 ;=======================================================
@@ -690,27 +711,31 @@ EndFunc   ;==>_MidiOutGetErrorText
 ;Library : Microsoft winmm.dll
 ;=======================================================
 Func _MidiOutShortMsg($hmidiout, $msg)
-   $ret = DllCall("winmm.dll", "long", "midiOutShortMsg", "long", $hmidiout, "long", $msg)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiOutShortMsg", "handle", $hmidiout, "long", $msg)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiOutShortMsg
 
 Func _MidiOutLongMsg ($hmidiout, $data, $bufferlength, $bytesrecorded, $user, $flags, $next, $getmmsyserr = 0)
-   $struct = DllStructCreate("char[128];udword;udword;udword;udword;ushort;ushort")
-   DllStructSetData($struct, 1, $data)
+   $datastruct=DLLStructCreate("byte["&$bufferlength+1&"]")
+   DLLStructSetData($datastruct, 1, $data)
+   $struct = DllStructCreate("ptr;dword;dword;dword_ptr;dword;ptr;dword_ptr;dword;dword_ptr[4]")
+   DllStructSetData($struct, 1, DLLStructGetPtr($datastruct))
    DllStructSetData($struct, 2, $bufferlength)
    DllStructSetData($struct, 3, $bytesrecorded)
    DllStructSetData($struct, 4, $user)
    DllStructSetData($struct, 5, $flags)
-   DllStructSetData($struct, 6, $next)
+;~   DllStructSetData($struct, 6, $next)	; according to MSDN - do NOT use
    DllStructSetData($struct, 7, 0)
-   $ret = DllCall("winmm.dll", "long", "midiInPrepareHeader", "long", $hmidiout, "ptr", DllStructGetPtr($struct), "long", 999)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $array = _ArrayCreate($hmidiout, DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7))
-         Return $array
-      EndIf
+   $ret = DllCall("winmm.dll", "long", "midiOutLongMsg", "handle", $hmidiout, "ptr", DllStructGetPtr($struct), "long", DLLStructGetSize($struct))
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+      Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+      $array = _ArrayCreate($hmidiout, DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7))
+      Return $array
    EndIf
 EndFunc   ;==>_MidiOutLongMsg
 
@@ -730,15 +755,15 @@ EndFunc   ;==>_MidiOutLongMsg
 ;Ninth Value - Capabilities
 ;=======================================================
 Func _MidiOutGetDevCaps($deviceid = 0, $getmmsyserr = 0)
-   $struct = DllStructCreate("ushort;ushort;uint;char[128];ushort;ushort;ushort;ushort;uint")
-   $ret = DllCall("winmm.dll", "long", "midiOutGetDevCapsA", "long", $deviceid, "ptr", DllStructGetPtr($struct), "int", 999)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $array = _ArrayCreate(DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7), DllStructGetData($struct, 8), DllStructGetData($struct, 9))
-         Return $array
-      EndIf
+   $struct = DllStructCreate("ushort;ushort;uint;wchar[32];ushort;ushort;ushort;ushort;uint")
+   $ret = DllCall("winmm.dll", "long", "midiOutGetDevCapsW", "uint_ptr", $deviceid, "ptr", DllStructGetPtr($struct), "int", DLLStructGetSize($struct))
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+	  Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+	  $array = _ArrayCreate(DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7), DllStructGetData($struct, 8), DllStructGetData($struct, 9))
+	  Return $array
    EndIf
 EndFunc   ;==>_MidiOutGetDevCaps
 
@@ -753,15 +778,15 @@ EndFunc   ;==>_MidiOutGetDevCaps
 ;Fourth Value - Driver Name
 ;=======================================================
 Func _MidiInGetDevCaps($deviceid = 0, $getmmsyserr = 0)
-   $struct = DllStructCreate("ushort;ushort;uint;char[128]")
-   $ret = DllCall("winmm.dll", "long", "midiInGetDevCapsA", "long", $deviceid, "ptr", DllStructGetPtr($struct), "int", 999)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $array = _ArrayCreate(DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4))
-         Return $array
-      EndIf
+   $struct = DllStructCreate("ushort;ushort;uint;wchar[32];dword")
+   $ret = DllCall("winmm.dll", "long", "midiInGetDevCapsW", "uint_ptr", $deviceid, "ptr", DllStructGetPtr($struct), "int", DLLStructGetSize($struct))
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+ 	 Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+	  $array = _ArrayCreate(DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4))
+	  Return $array
    EndIf
 EndFunc   ;==>_MidiInGetDevCaps
 
@@ -773,61 +798,129 @@ EndFunc   ;==>_MidiInGetDevCaps
 ;Library : Microsoft winmm.dll
 ;========================================================
 Func _MidiConnect($hmidiin, $hmidiout)
-   $ret = DllCall("winmm.dll", "long", "midiConnect", "long", $hmidiin, "long", $hmidiout, "int", 0)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiConnect", "handle", $hmidiin, "handle", $hmidiout, "ptr", 0)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiConnect
 
 Func _MidiDisconnect($hmidiin, $hmidiout)
-   $ret = DllCall("winmm.dll", "long", "midiDisconnect", "long", $hmidiin, "long", $hmidiout, "int", 0)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiDisconnect", "handle", $hmidiin, "handle", $hmidiout, "ptr", 0)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiDisconnect
 
 ;========================================================
-;Prepare/Unprepare the MIDI header
+;Prepare/Unprepare the MIDI IN header
 ;Parameters - MidiInHandle,Data,Bufferlength,
 ; BytesRecorded,User,Flags,Next,Getmmsystemerror
 ;Author:Eynstyne
 ;Library:Microsoft winmm.dll
+;
+; Buffer format:
+;  MSDN: A series of MIDIEVENT Structures:
+; 	struct MIDIEVENT {
+;  		DWORD dwDeltaTime;
+;  		DWORD dwStreamID;
+;  		DWORD dwEvent;
+;		DWORD dwParms[];
+;	}
 ;========================================================
 Func _MidiInPrepareHeader ($hmidiin, $data, $bufferlength, $bytesrecorded, $user, $flags, $next, $getmmsyserr = 0)
-   $struct = DllStructCreate("char[128];udword;udword;udword;udword;ushort;ushort")
-   DllStructSetData($struct, 1, $data)
+   $datastruct=DLLStructCreate("byte["&$bufferlength+1&"]")
+   DLLStructSetData($datastruct, 1, $data)
+   $struct = DllStructCreate("ptr;dword;dword;dword_ptr;dword;ptr;dword_ptr;dword;dword_ptr[4]")
+   DllStructSetData($struct, 1, DLLStructGetPtr($datastruct))
    DllStructSetData($struct, 2, $bufferlength)
    DllStructSetData($struct, 3, $bytesrecorded)
    DllStructSetData($struct, 4, $user)
    DllStructSetData($struct, 5, $flags)
-   DllStructSetData($struct, 6, $next)
+;~   DllStructSetData($struct, 6, $next)	; according to MSDN - do NOT use
    DllStructSetData($struct, 7, 0)
-   $ret = DllCall("winmm.dll", "long", "midiInPrepareHeader", "long", $hmidiin, "ptr", DllStructGetPtr($struct), "long", 999)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $array = _ArrayCreate($hmidiin, DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7))
-         Return $array
-      EndIf
+   $ret = DllCall("winmm.dll", "long", "midiInPrepareHeader", "handle", $hmidiin, "ptr", DllStructGetPtr($struct), "long", DLLStructGetSize($struct))
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+      Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+      $array = _ArrayCreate($hmidiin, DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7))
+      Return $array
    EndIf
 EndFunc   ;==>_MidiInPrepareHeader
 
 Func _MidiInUnprepareHeader ($hmidiin, $data, $bufferlength, $bytesrecorded, $user, $flags, $next, $getmmsyserr = 0)
-   $struct = DllStructCreate("char[128];udword;udword;udword;udword;ushort;ushort")
-   DllStructSetData($struct, 1, $data)
+   $datastruct=DLLStructCreate("byte["&$bufferlength+1&"]")
+   DLLStructSetData($datastruct, 1, $data)
+   $struct = DllStructCreate("ptr;dword;dword;dword_ptr;dword;ptr;dword_ptr;dword;dword_ptr[4]")
+   DllStructSetData($struct, 1, DLLStructGetPtr($datastruct))
    DllStructSetData($struct, 2, $bufferlength)
    DllStructSetData($struct, 3, $bytesrecorded)
    DllStructSetData($struct, 4, $user)
    DllStructSetData($struct, 5, $flags)
-   DllStructSetData($struct, 6, $next)
+;~   DllStructSetData($struct, 6, $next)	; according to MSDN - do NOT use
    DllStructSetData($struct, 7, 0)
-   $ret = DllCall("winmm.dll", "long", "midiInUnprepareHeader", "long", $hmidiin, "ptr", DllStructGetPtr($struct), "long", 999)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $array = _ArrayCreate($hmidiin, DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7))
-         Return $array
-      EndIf
+   $ret = DllCall("winmm.dll", "long", "midiInUnprepareHeader", "handle", $hmidiin, "ptr", DllStructGetPtr($struct), "long", DLLStructGetSize($struct))
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+      Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+      $array = _ArrayCreate($hmidiin, DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7))
+      Return $array
    EndIf
 EndFunc   ;==>_MidiInUnprepareHeader
+
+;========================================================
+;Prepare/Unprepare the MIDI OUT header
+;Parameters - MidiInHandle,Data,Bufferlength,
+; BytesRecorded,User,Flags,Next,Getmmsystemerror
+;
+; Returns:
+;	Success: Prepared Header STRUCTURE, with size in @extended
+;	Failure: 0, @error set
+;
+;Author:Eynstyne, Ascend4nt
+;Library:Microsoft winmm.dll
+;
+; Buffer format:
+;  MSDN: A series of MIDIEVENT Structures:
+; 	struct MIDIEVENT {
+;  		DWORD dwDeltaTime;
+;  		DWORD dwStreamID;
+;  		DWORD dwEvent;
+;		DWORD dwParms[];
+;	}
+;========================================================
+Func _MidiOutPrepareHeader ($hmidiout, $data, $bufferlength, $bytesrecorded, $user, $flags)
+   $datastruct=DLLStructCreate("byte["&$bufferlength+1&"]")
+   DLLStructSetData($datastruct, 1, $data)
+   $struct = DllStructCreate("ptr;dword;dword;dword_ptr;dword;ptr;dword_ptr;dword;dword_ptr[4]")
+   DllStructSetData($struct, 1, DLLStructGetPtr($datastruct))
+   DllStructSetData($struct, 2, $bufferlength)
+   DllStructSetData($struct, 3, $bytesrecorded)
+   DllStructSetData($struct, 4, $user)
+   DllStructSetData($struct, 5, $flags)
+;~   DllStructSetData($struct, 6, $next)	; according to MSDN - do NOT use
+   DllStructSetData($struct, 7, 0)
+   $ret = DllCall("winmm.dll", "long", "midiOutPrepareHeader", "handle", $hmidiout, "ptr", DllStructGetPtr($struct), "long", DLLStructGetSize($struct))
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return SetExtended(DLLStructGetSize($struct),$struct)
+EndFunc   ;==>_MidiOutPrepareHeader
+
+;=======================================================
+; Func _MidiOutUnprepareHeader ($hmidiout, $preparedMidiHdrPtr, $headerSize)
+;
+; parameters: handle to Midi Out, pointer to structure (from _MidiOutPrepareHeader), structure size
+;=======================================================
+
+Func _MidiOutUnprepareHeader ($hmidiout, $preparedMidiHdrPtr, $headerSize)
+   $ret = DllCall("winmm.dll", "long", "midiOutUnprepareHeader", "handle", $hmidiout, "ptr", $preparedMidiHdrPtr, "long", $headerSize)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
+EndFunc   ;==>_MidiOutUnprepareHeader
 
 ;========================================================
 ;Add buffer to Midi Header
@@ -837,22 +930,24 @@ EndFunc   ;==>_MidiInUnprepareHeader
 ;Library:Microsoft winmm.dll
 ;========================================================
 Func _MidiInAddBuffer ($hmidiin, $data, $bufferlength, $bytesrecorded, $user, $flags, $next, $getmmsyserr = 0)
-   $struct = DllStructCreate("char[128];udword;udword;udword;udword;ushort;ushort")
-   DllStructSetData($struct, 1, $data)
+   $datastruct=DLLStructCreate("byte["&$bufferlength+1&"]")
+   DLLStructSetData($datastruct, 1, $data)
+   $struct = DllStructCreate("ptr;dword;dword;dword_ptr;dword;ptr;dword_ptr;dword;dword_ptr[4]")
+   DllStructSetData($struct, 1, DLLStructGetPtr($datastruct))
    DllStructSetData($struct, 2, $bufferlength)
    DllStructSetData($struct, 3, $bytesrecorded)
    DllStructSetData($struct, 4, $user)
    DllStructSetData($struct, 5, $flags)
-   DllStructSetData($struct, 6, $next)
+;~   DllStructSetData($struct, 6, $next)	; according to MSDN - do NOT use
    DllStructSetData($struct, 7, 0)
-   $ret = DllCall("winmm.dll", "long", "midiInAddBuffer", "long", $hmidiin, "ptr", DllStructGetPtr($struct), "long", 999)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $array = _ArrayCreate($hmidiin, DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7))
-         Return $array
-      EndIf
+   $ret = DllCall("winmm.dll", "long", "midiInAddBuffer", "handle", $hmidiin, "ptr", DllStructGetPtr($struct), "long", DLLStructGetSize($struct))
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+      Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+      $array = _ArrayCreate($hmidiin, DllStructGetData($struct, 1), DllStructGetData($struct, 2), DllStructGetData($struct, 3), DllStructGetData($struct, 4), DllStructGetData($struct, 5), DllStructGetData($struct, 6), DllStructGetData($struct, 7))
+      Return $array
    EndIf
 EndFunc   ;==>_MidiInAddBuffer
 
@@ -863,73 +958,99 @@ EndFunc   ;==>_MidiInAddBuffer
 ;Library:Microsoft winmm.dll
 ;========================================================
 Func _MidiInMessage($hmidiin, $msg, $dw1 = 0, $dw2 = 0)
-   $ret = DllCall("winmm.dll", "long", "midiInMessage", "long", $hmidiin, "long", $msg, "long", $dw1, "long", $dw2)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiInMessage", "handle", $hmidiin, "long", $msg, "dword_ptr", $dw1, "dword_ptr", $dw2)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiInMessage
 
 Func _MidiOutMessage($hmidiout, $msg, $dw1 = 0, $dw2 = 0)
-   $ret = DllCall("winmm.dll", "long", "midiOutMessage", "long", $hmidiout, "long", $msg, "long", $dw1, "long", $dw2)
-   If Not @error Then Return $ret[0]
+   $ret = DllCall("winmm.dll", "long", "midiOutMessage", "handle", $hmidiout, "long", $msg, "dword_ptr", $dw1, "dword_ptr", $dw2)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
 EndFunc   ;==>_MidiOutMessage
 
 ;====================
 ;Stream Functions
 ;====================
-Func _midiStreamClose($hmidiStream)
-   $ret = DllCall("winmm.dll", "long", "midiStreamClose", "long", $hmidiStream)
-   If Not @error Then Return $ret[0]
-EndFunc   ;==>_midiStreamClose
+Func _MidiStreamClose($hmidiStream)
+   $ret = DllCall("winmm.dll", "long", "midiStreamClose", "handle", $hmidiStream)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
+EndFunc   ;==>_MidiStreamClose
 
-Func _midiStreamOpen($cMidi = 0, $callback = 0, $instance = 0, $fdwopen = 0, $getmmsyserr = 0)
-   $struct = DllStructCreate("udword;uint")
-   $ret = DllCall("winmm.dll", "long", "midiStreamOpen", "ptr", DllStructGetPtr($struct, 1), "ptr", DllStructGetPtr($struct, 2), "long", $cMidi, "long", $callback, "long", $instance, "long", $fdwopen)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $array = _ArrayCreate(DllStructGetData($struct, 1), DllStructGetData($struct, 2))
-         Return $array
-      EndIf
+Func _MidiStreamOpen($cMidi = 0, $callback = 0, $instance = 0, $fdwopen = 0, $getmmsyserr = 0)
+   $ret = DllCall("winmm.dll", "long", "midiStreamOpen", "handle*", 0, "uint*", 0, "long", $cMidi, "dword_ptr", $callback, "dword_ptr", $instance, "long", $fdwopen)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+      Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+      $array = _ArrayCreate($ret[1],$ret[2])
+      Return $array
    EndIf
-EndFunc   ;==>_midiStreamOpen
+EndFunc   ;==>_MidiStreamOpen
 
-Func _midiStreamPause($hmidiStream)
-   $ret = DllCall("winmm.dll", "long", "midiStreamPause", "long", $hmidiStream)
-   If Not @error Then Return $ret[0]
-EndFunc   ;==>_midiStreamPause
+;=======================================================
+; Func _MidiStreamOut($hMidiStreamOut,$preparedMidiHdrPtr, $headerSize)
+;
+; Notes: _MidiOutPrepareHeader and _MidiStreamRestart must be called before this
+;
+; parameters: handle to stream, pointer to structure (from _MidiOutPrepareHeader), structure size
+;=======================================================
 
-Func _midiStreamPos($hmidiStream, $cbmmt = 0, $getmmsyserr = 0)
-   $struct = DllStructCreate("ushort;ushort")
-   $ret = DllCall("winmm.dll", "long", "midiStreamPause", "long", $hmidiStream, "ptr", DllStructGetPtr($struct), "long", $cbmmt)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $array = _ArrayCreate(DllStructGetData($struct, 1), DllStructGetData($struct, 2))
-         Return $array
-      EndIf
+Func _MidiStreamOut($hMidiStreamOut,$preparedMidiHdrPtr, $headerSize)
+   $ret = DLLCall("winmm.dll", "long", "midiStreamOut", "handle", $hMidiStreamOut, "ptr", $preparedMidiHdrPtr, "uint", $headerSize)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
+EndFunc
+
+Func _MidiStreamPause($hmidiStream)
+   $ret = DllCall("winmm.dll", "long", "midiStreamPause", "handle", $hmidiStream)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
+EndFunc   ;==>_MidiStreamPause
+
+Func _MidiStreamPos($hmidiStream, $cbmmt = 0, $getmmsyserr = 0)
+   $struct = DllStructCreate("uint;dword;dword;dword;dword")
+   $ret = DllCall("winmm.dll", "long", "midiStreamPosition", "handle", $hmidiStream, "ptr", DllStructGetPtr($struct), "long", DLLStructGetSize($struct))
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+      Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+      $array = _ArrayCreate(DllStructGetData($struct, 1), DllStructGetData($struct, 2))
+      Return $array
    EndIf
-EndFunc   ;==>_midiStreamPos
+EndFunc   ;==>_MidiStreamPos
 
-Func _midiStreamRestart ($hmidiStream)
-   $ret = DllCall("winmm.dll", "long", "midiStreamRestart", "long", $hmidiStream)
-   If Not @error Then Return $ret[0]
-EndFunc   ;==>_midiStreamRestart
+Func _MidiStreamRestart ($hmidiStream)
+   $ret = DllCall("winmm.dll", "long", "midiStreamRestart", "handle", $hmidiStream)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
+EndFunc   ;==>_MidiStreamRestart
 
-Func _midiStreamStop ($hmidiStream)
-   $ret = DllCall("winmm.dll", "long", "midiStreamStop", "long", $hmidiStream)
-   If Not @error Then Return $ret[0]
-EndFunc   ;==>_midiStreamStop
+Func _MidiStreamStop ($hmidiStream)
+   $ret = DllCall("winmm.dll", "long", "midiStreamStop", "handle", $hmidiStream)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   Return $ret[0]
+EndFunc   ;==>_MidiStreamStop
 
-Func _midiStreamProperty ($hmidiStream, $property = 0, $getmmsyserr = 0)
-   $struct = DllStructCreate("byte")
-   $ret = DllCall("winmm.dll", "long", "midiStreamProperty", "long", $hmidiStream, "ptr", DllStructGetPtr($struct), "long", $property)
-   If Not @error Then
-      If $getmmsyserr = 1 Then
-         Return $ret[0]
-      ElseIf $getmmsyserr <> 1 Then
-         $Get = DllStructGetData($struct, 1)
-         Return $Get
-      EndIf
+Func _MidiStreamProperty ($hmidiStream, $property = 0, $getmmsyserr = 0)
+   $struct = DllStructCreate("byte")	; should this be an array of bytes? If not, put in DLLCall as "byte*" and retrieve with $ret[2]
+   $ret = DllCall("winmm.dll", "long", "midiStreamProperty", "handle", $hmidiStream, "ptr", DllStructGetPtr($struct), "long", $property)
+   If @error Then Return SetError(@error,0,0)
+   If $ret[0] Then Return SetError(-1,$ret[0],0)
+   If $getmmsyserr = 1 Then
+      Return $ret[0]
+   ElseIf $getmmsyserr <> 1 Then
+      $Get = DllStructGetData($struct, 1)
+      Return $Get
    EndIf
-EndFunc   ;==>_midiStreamProperty
+EndFunc   ;==>_MidiStreamProperty
