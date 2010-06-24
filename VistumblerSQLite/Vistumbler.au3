@@ -15,10 +15,10 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'SQLite Alpha 7'
+$version = 'SQLite Alpha 8'
 If @AutoItX64 Then $version &= ' (x64)'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/06/22'
+$last_modified = '2010/06/24'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -41,6 +41,7 @@ $last_modified = '2010/06/22'
 #include "UDFs\ZIP.au3"
 #include "UDFs\FileInUse.au3"
 #include "UDFs\WinGetPosEx.au3"
+#include "UDFs\UnixTime.au3"
 #include <SQLite.au3>
 ;VistumblerEXE-------------------------------------------
 $VistumblerEXE = StringReplace(@ScriptName, ".au3", ".exe")
@@ -221,7 +222,7 @@ Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GP
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $AutoKmlDeadHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
 Dim $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
-Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs
+Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
 Dim $ExportKMLGUI, $GUI_TrackColor
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
@@ -1121,6 +1122,7 @@ $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Ex
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $Extra)
 $UpdateManufacturers = GUICtrlCreateMenuItem("Update Manufacturers", $Extra)
 
+
 $Help = GUICtrlCreateMenu($Text_Help)
 $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
 $VistumblerForum = GUICtrlCreateMenuItem($Text_VistumblerForum, $Help)
@@ -1281,6 +1283,8 @@ GUICtrlSetOnEvent($ViewInPhilsPHP, '_ViewInPhilsPHP')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
 GUICtrlSetOnEvent($LocateInWDB, '_LocatePositionInWiFiDB')
 GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
+
+
 ;Help Menu
 GUICtrlSetOnEvent($VistumblerHome, '_OpenVistumblerHome')
 GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
@@ -5177,12 +5181,13 @@ Func _LoadListGUI($imfile1 = "")
 	GUISetBkColor($BackgroundColor)
 	$vistumblerfileinput = GUICtrlCreateInput($imfile1, 8, 10, 377, 21)
 	$browse1 = GUICtrlCreateButton($Text_Browse, 392, 8, 97, 25, $WS_GROUP)
-	$RadVis = GUICtrlCreateRadio("Vistumbler file (VS1, VSZ)", 10, 40, 480, 20)
+	$RadVis = GUICtrlCreateRadio("Vistumbler file (VS1, VSZ)", 10, 40, 240, 20)
 	GUICtrlSetState($RadVis, $GUI_CHECKED)
-	$RadCsv = GUICtrlCreateRadio("Detailed Comma Delimited file (CSV)", 10, 60, 481, 20)
-	$RadNs = GUICtrlCreateRadio("Netstumbler wi-scan (TXT, NS1)", 10, 80, 481, 20)
-	$NsOk = GUICtrlCreateButton($Text_Ok, 95, 105, 150, 25, $WS_GROUP)
-	$NsCancel = GUICtrlCreateButton($Text_Close, 255, 105, 150, 25, $WS_GROUP)
+	$RadCsv = GUICtrlCreateRadio("Detailed Comma Delimited file (CSV)", 10, 60, 240, 20)
+	$RadNs = GUICtrlCreateRadio("Netstumbler wi-scan (TXT, NS1)", 255, 40, 240, 20)
+	$RadWD = GUICtrlCreateRadio("Wardrive-android file (DB3)", 255, 60, 240, 20)
+	$NsOk = GUICtrlCreateButton($Text_Ok, 95, 95, 150, 25, $WS_GROUP)
+	$NsCancel = GUICtrlCreateButton($Text_Close, 255, 95, 150, 25, $WS_GROUP)
 	$progressbar = GUICtrlCreateProgress(10, 135, 480, 20)
 	$percentlabel = GUICtrlCreateLabel($Text_Progress & ': ' & $Text_Ready, 10, 165, 230, 20)
 	$linetotal = GUICtrlCreateLabel($Text_LineTotal & ':', 10, 190, 230, 20)
@@ -5211,6 +5216,9 @@ Func _ImportFileBrowse()
 		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 	ElseIf GUICtrlRead($RadNs) = 1 Then
 		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_NetstumblerTxtFile & ' (*.txt;*.ns1)', 1)
+		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
+	ElseIf GUICtrlRead($RadWD) = 1 Then
+		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, "Wardrive-android file" & ' (*.db3)', 1)
 		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 	EndIf
 EndFunc   ;==>_ImportFileBrowse
@@ -5248,6 +5256,8 @@ Func _ImportOk()
 			_ImportCSV($loadfile)
 		ElseIf GUICtrlRead($RadNs) = 1 Then
 			_ImportNS1($loadfile)
+		ElseIf GUICtrlRead($RadWD) = 1 Then
+			_ImportWardriveDb3($loadfile)
 		EndIf
 		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
@@ -9831,3 +9841,146 @@ EndFunc   ;==>_CleanupFiles
 	_SQLite_Exec($DBhndl, $query)
 	EndFunc   ;==>_OpenExternalTool
 #comments-end
+
+Func _ImportWardriveDb3($DB3file)
+	$WardriveImpDB = _SQLite_Open($DB3file, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
+	Local $NetworkMatchArray, $iRows, $iColumns, $iRval
+	$query = "SELECT bssid, ssid, capabilities, level, frequency, lat, lon, alt, timestamp FROM networks"
+	$iRval = _SQLite_GetTable2d($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
+	$WardriveAPs = $iRows
+	_ArrayDisplay($NetworkMatchArray)
+
+	$UpdateTimer = TimerInit()
+	$begintime = TimerInit()
+	$AddAP = 0
+	$AddGID = 0
+	For $NewAP = 1 To $WardriveAPs
+		$Found_BSSID = StringUpper($NetworkMatchArray[$NewAP][0])
+		$Found_SSID = $NetworkMatchArray[$NewAP][1]
+		$Found_Capabilies = $NetworkMatchArray[$NewAP][2]
+		$Found_Level = $NetworkMatchArray[$NewAP][3]
+		$Found_Frequency = $NetworkMatchArray[$NewAP][4]
+		$Found_Lat = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][5], "N", "S")
+		$Found_Lon = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][6], "E", "W")
+		$Found_Alt = $NetworkMatchArray[$NewAP][7]
+		$Found_TimeStamp = StringTrimRight($NetworkMatchArray[$NewAP][8], 3)
+
+		;Get Authentication and Encrytion from capabilities
+		If StringInStr($Found_Capabilies, "WPA2-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA2-PSK-TKIP+CCMP") Then
+			$Found_AUTH = "WPA2-Personal"
+			$Found_ENCR = "CCMP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA-PSK-TKIP+CCMP") Then
+			$Found_AUTH = "WPA-Personal"
+			$Found_ENCR = "CCMP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA2-EAP-TKIP+CCMP") Then
+			$Found_AUTH = "WPA2-Enterprise"
+			$Found_ENCR = "CCMP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA-EAP-TKIP+CCMP") Then
+			$Found_AUTH = "WPA-Enterprise"
+			$Found_ENCR = "CCMP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA2-PSK-TKIP") Then
+			$Found_AUTH = "WPA2-Personal"
+			$Found_ENCR = "TKIP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-TKIP") Then
+			$Found_AUTH = "WPA-Personal"
+			$Found_ENCR = "TKIP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-TKIP") Then
+			$Found_AUTH = "WPA2-Enterprise"
+			$Found_ENCR = "TKIP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-TKIP") Then
+			$Found_AUTH = "WPA-Enterprise"
+			$Found_ENCR = "TKIP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WEP") Then
+			$Found_AUTH = "Open"
+			$Found_ENCR = "WEP"
+			$Found_SecType = "2"
+		Else
+			$Found_AUTH = "Open"
+			$Found_ENCR = "None"
+			$Found_SecType = "1"
+		EndIf
+
+		;Get Network Type from capabilities
+		If StringInStr($Found_Capabilies, "[IBSS]") Then
+			$Found_NETTYPE = "Adhoc"
+		Else
+			$Found_NETTYPE = "Infrastructure"
+		EndIf
+
+		;Get Channel From Frequency
+		If $Found_Frequency = "2412" Then
+			$Found_CHAN = "001"
+		ElseIf $Found_Frequency = "2417" Then
+			$Found_CHAN = "002"
+		ElseIf $Found_Frequency = "2422" Then
+			$Found_CHAN = "003"
+		ElseIf $Found_Frequency = "2427" Then
+			$Found_CHAN = "004"
+		ElseIf $Found_Frequency = "2432" Then
+			$Found_CHAN = "005"
+		ElseIf $Found_Frequency = "2437" Then
+			$Found_CHAN = "006"
+		ElseIf $Found_Frequency = "2442" Then
+			$Found_CHAN = "007"
+		ElseIf $Found_Frequency = "2447" Then
+			$Found_CHAN = "008"
+		ElseIf $Found_Frequency = "2452" Then
+			$Found_CHAN = "009"
+		ElseIf $Found_Frequency = "2457" Then
+			$Found_CHAN = "010"
+		ElseIf $Found_Frequency = "2462" Then
+			$Found_CHAN = "011"
+		ElseIf $Found_Frequency = "2467" Then
+			$Found_CHAN = "012"
+		ElseIf $Found_Frequency = "2472" Then
+			$Found_CHAN = "013"
+		Else
+			$Found_CHAN = "Unknown"
+		EndIf
+
+		$Found_Date = _StringFormatTime("%Y", $Found_TimeStamp) & "-" & _StringFormatTime("%m", $Found_TimeStamp) & "-" & _StringFormatTime("%d", $Found_TimeStamp)
+		$Found_Time = _StringFormatTime("%X", $Found_TimeStamp) & ".000"
+
+		;Add GPS data in Vistumbler DB
+		Local $GpsMatchArray, $iRows, $iColumns, $iRval
+		$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $Found_Lat & "' And Longitude = '" & $Found_Lon & "' And Date1 = '" & $Found_Date & "' And Time1 = '" & $Found_Time & "'"
+		$iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $iRows, $iColumns)
+		$FoundGpsMatch = $iRows
+		If $FoundGpsMatch = 0 Then
+			$AddGID += 1
+			$GPS_ID += 1
+			;Add GPS ID
+			$query = "INSERT INTO GPS(GPSID,Latitude,Longitude,NumOfSats,HorDilPitch,Alt,Geo,SpeedInMPH,SpeedInKmH,TrackAngle,Date1,Time1) VALUES ('" & $GPS_ID & "','" & $Found_Lat & "','" & $Found_Lon & "','0','0','" & $Found_Alt & "','0','0','0','0','" & $Found_Date & "','" & $Found_Time & "');"
+			_SQLite_Exec($DBhndl, $query)
+			$NewGpsId = $GPS_ID
+		ElseIf $FoundGpsMatch = 1 Then
+			$NewGpsId = $GpsMatchArray[1][0]
+		EndIf
+
+		;Add AP data into Vistumbler DB
+		$NewApAdded = _AddApData(0, $NewGpsId, $Found_BSSID, $Found_SSID, $Found_CHAN, $Found_AUTH, $Found_ENCR, $Found_NETTYPE, "802.11g", "Unknown", "Unknown", "0")
+		If $NewApAdded = 1 Then $AddAP += 1
+
+		If TimerDiff($UpdateTimer) > 600 Or ($NewAP = $WardriveAPs) Then
+			$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+			$percent = ($NewAP / $WardriveAPs) * 100
+			GUICtrlSetData($progressbar, $percent)
+			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+			GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($Load / $min, 1))
+			GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+			GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $NewAP & "/" & $WardriveAPs)
+			GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($WardriveAPs / Round($NewAP / $min, 1)) - $min, 1) & "/" & Round($WardriveAPs / Round($NewAP / $min, 1), 1))
+			$UpdateTimer = TimerInit()
+		EndIf
+	Next
+	_SQLite_Close($WardriveImpDB)
+EndFunc   ;==>_ImportWardriveDb3
