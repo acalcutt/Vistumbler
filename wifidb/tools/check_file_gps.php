@@ -161,7 +161,7 @@ if($result)
 		$gps_array_n = 1;
 		
 		$row = $newArray['user_row'];
-		$user_row_return = mysql_query("SELECT * FROM `wifi`.`users` WHERE `id`='$row' LIMIT 1", $conn);
+		$user_row_return = mysql_query("SELECT * FROM `$db`.`$users_t` WHERE `id`='$row' LIMIT 1", $conn);
 		echo "Selected points for APs to check...\r\n";
 		$user_row_array = mysql_fetch_array($user_row_return);
 		$points = $user_row_array['points'];
@@ -171,7 +171,7 @@ if($result)
 			$pnt_exp = explode(",", $point);
 			$pt_exp = explode(":", $pnt_exp[1]);
 			$PT_ID = $pt_exp[0];
-			$sqls = "SELECT * FROM `wifi`.`wifi0` WHERE `id`='$PT_ID' LIMIT 1";
+			$sqls = "SELECT * FROM `$db`.`$wtable` WHERE `id`='$PT_ID' LIMIT 1";
 			$PT_result = mysql_query($sqls, $conn) or die(mysql_error($conn));
 			$pt_array = mysql_fetch_array($PT_result);
 			$TB_ID = $pt_array['id'];
@@ -241,7 +241,7 @@ if($result)
 				$long = $field['long'];
 				
 				
-				$gps_sql = "SELECT `lat`,`long`,`date`,`time` FROM `wifi`.`gps_table` WHERE `date` = '$date' AND `time` LIKE '$time' LIMIT 1";
+				$gps_sql = "SELECT `lat`,`long`,`date`,`time` FROM `$db`.`gps_table` WHERE `date` = '$date' AND `time` LIKE '$time' LIMIT 1";
 				$gps_return = mysql_query($gps_sql, $conn);
 				$fieldf = mysql_fetch_array($gps_return);
 				$datef = $fieldf['date'];
@@ -253,7 +253,7 @@ if($result)
 				if($datef == '' or $latf == ''){echo "/"; $other++; continue;}
 				if($lat == $latf and $long != $longf)
 				{
-					$up_long = "UPDATE `wifi_st`.`$table_gps` SET `long` =  '$longf', `lat` =  '$latf' WHERE `id` = '$GPS_ID' LIMIT 1";
+					$up_long = "UPDATE `$db_st`.`$table_gps` SET `long` =  '$longf', `lat` =  '$latf' WHERE `id` = '$GPS_ID' LIMIT 1";
 					if(mysql_query($up_long, $conn))
 					{echo "-";$badf++;}
 					else

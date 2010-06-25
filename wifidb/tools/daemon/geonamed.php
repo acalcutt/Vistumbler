@@ -78,7 +78,7 @@ while(1)
 {
 	echo "Start Gather of WiFiDB GeoNames\r\n";
 
-	$sql = "SELECT * FROM `$db`.`$wtable`"; # ORDER BY `id` DESC";
+	$sql = "SELECT * FROM `$db`.`$wtable` WHERE `countryname` = ''"; # ORDER BY `id` DESC";
 	$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 	$total = mysql_num_rows($result);
 
@@ -177,7 +177,8 @@ while(1)
 			$lat  =& $database->convert_dm_dd($gps_table_first['lat']);
 			$long =& $database->convert_dm_dd($gps_table_first['long']);
 			$start1 = microtime(1);
-			$geo_site = implode("\r\n", file("http://ws.geonames.org/countrySubdivision?lat=$lat&lng=$long"));
+			$URL = "http://ws.geonames.org/countrySubdivision?lat=$lat&lng=$long";
+			$geo_site = implode("\r\n", file($URL));
 			$xml = $WDB_XML->xml2ary($geo_site);
 			if(@$xml['geonames']['_c']['countrySubdivision'])
 			{
@@ -246,7 +247,7 @@ while(1)
 			}else
 			{
 				echo "Failed to gather GeoNames data.\r\n";
-				mail_users("Failed to gather GeoNames data. :-(\r\n\r\n-WiFiDB Service", $subject, $type, 1); 
+				mail_users("Failed to gather GeoNames data. [$id] $ssid \r\n:-(\r\n$URL\r\n\r\n-WiFiDB Service", $subject, $type, 1); 
 			}
 			$zero = 0;
 			$NN++;
