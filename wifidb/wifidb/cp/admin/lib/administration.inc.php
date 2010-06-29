@@ -435,6 +435,7 @@ class admin
 					<tr>
 				<?php
 				$i=0;
+				$DB_stats = $GLOBALS['DB_stats'];
 				$sql0 = "SELECT * FROM `$db`.`$DB_stats` ORDER BY `id` DESC";
 			#	echo $sql0;
 				$row = 0;
@@ -473,6 +474,7 @@ class admin
 			break;
 			###
 			case "aps":
+				$DB_stats = $GLOBALS['DB_stats'];
 				$sql0 = "SELECT * FROM `$db`.`$DB_stats` ORDER BY `id` DESC LIMIT 1";
 				if($result = mysql_query($sql0, $conn))
 				{
@@ -696,114 +698,65 @@ class admin
 			###
 			
 			case "users":
-				$detailed_user_view = addslashes(@$_GET['detailed_users']);
-				if($detailed_user_view)
-				{
-				}else
-				{
-					
-				}
+				$detailed_user_view = @$_GET['detailed_users']+0;
+				
 				$sql0 = "SELECT * FROM `$db`.`$user_logins_table` WHERE `username` NOT LIKE 'admin%' ORDER BY `username` ASC";
 				if($result = mysql_query($sql0, $conn))
 				{
-					if($detailed_user_view)
+					$rows = mysql_num_rows($result);
+					if($rows > 0)
 					{
-					?>
-						<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=0" title="Show the Short version" >detailed</a>)</font></b><br>
-					<?php
-					}else
-					{
-					?>
-						<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=1" title="Show Detailed Version">short</a>)</font></b><br>
-						<table border="1" style="width: 95%">
-					<?php
-					}
-					$row_color = 0;
-					while($users_a = mysql_fetch_array($result))
-					{
-						if($users_a['uid'] == ''){continue;}
-						if($row_color){$row_color =0; $style = "light";}else{$row_color = 1; $style = "dark";}
-						$username = $users_a['username'];
-						$user_geos = "waypoints_".$users_a['username'];
-						
-						$sql1 = "SELECT * FROM `$db`.`$users_t` WHERE `username` = '$username'";
-						$result1 = mysql_query($sql1, $conn);
-						$Num_aps=0;
-						while($points_a = mysql_fetch_array($result1))
-						{
-							$points = explode("-", $points_a['points']);
-							$Num_aps = $Num_aps+count($points);
-						}
-						
-						$sql1 = "SELECT `id` FROM `$db`.`$user_geos`";
-						$result1 = mysql_query($sql1, $conn);
-						$Num_geo = @mysql_num_rows($result1);
-						if($Num_geo==''){$Num_geo = 0;}
-						$rank = '';
-						if($users_a["admins"]){	$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/admins.gif\" title=\"Obey the admins, for they are gods.\" /> \r\n"; }
-						if($users_a["devs"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/devs.gif\" title=\"Piss off a dev and be sure to never see the light of a console again.\" /> \r\n";}
-						if($users_a["mods"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/mods.gif\" title=\"Mods are the KGB of Packet land.\" /> \r\n";}
-						if($users_a["users"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/users.gif\" title=\"Fellow users can be your freind or they can be your enemey, either way keep them close, and keep track of those fuckers, their sneeky\" /> \r\n";}
-						
 						if($detailed_user_view)
 						{
-							?>
-							<table border="1" width="95%">
-							<tr class="style4">
-								<th>ID</th>
-								<th>User Name</th>
-								<th>Number of APs</th>
-								<th>E-Mail</th>
-								<th>Website</th>
-								<th>Vistumbler Version</th>
-								<th>Title</th></tr>
-							<tr class="<?php echo $style; ?>">
-								<td><?php echo $users_a['id']; ?></td>
-								<td>
-								<?php
-								if($Num_aps > 0)
-								{
-									?>
-									<a class="links" href="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>/opt/userstats.php?func=alluserlists&user=<?php echo $users_a['username'];?>"><?php echo $users_a['username']; ?></a>
-									<?php 
-								}else
-								{
-									echo $users_a['username'];
-								}
-								?>
-								</td>
-								<td><?php echo $Num_aps; ?></td>
-								<td><?php if($users_a['h_email'] and $GLOBALS['priv_name'] != "Administrator"){echo "Email Hidden, except to admins";}else{ ?><a class='email' href='mailto:<?php echo $users_a['email']; ?>' ><?php echo $users_a['email']; ?></a><?php } ?></td>
-								<td><?php echo $users_a['website']; ?></td>
-								<td><?php echo $users_a['Vis_ver']; ?></td>
-								<td>
-									<?php echo $rank; ?>
-								</td>
-							</tr>
-							<tr class="style4">
-								<th colspan="2">&nbsp;</th>
-								<th>Rank</th>
-								<th>Number of Geocaches</th>
-								<th>Last Login</th>
-								<th>Join Date</th>
-								<th>UID</th>
-							</tr>
-							<tr class="<?php echo $style; ?>">
-								<td colspan="2">&nbsp;</td>
-								<td><?php echo $users_a['rank']; ?></td>
-								<td><?php echo $Num_geo; ?></td>
-								<td><?php echo $users_a['last_login']; ?></td>
-								<td><?php echo $users_a['join_date']; ?></td>
-								<td><?php echo $users_a['uid']; ?></td>
-							</tr>
-						</table>
-						<br>
+						?>
+							<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=0" title="Show the Short version" >detailed</a>)</font></b><br>
 						<?php
 						}else
 						{
-							?>
+						?>
+							<b><font size='6'>WiFiDB Users (<a class="links" href="?func=overview&mode=users&detailed_users=1" title="Show Detailed Version">short</a>)</font></b><br>
+							<table border="1" style="width: 95%">
+						<?php
+						}
+						$row_color = 0;
+						while($users_a = mysql_fetch_array($result))
+						{
+							if($users_a['uid'] == ''){continue;}
+							if($row_color){$row_color =0; $style = "light";}else{$row_color = 1; $style = "dark";}
+							$username = $users_a['username'];
+							$user_geos = "waypoints_".$users_a['username'];
+							
+							$sql1 = "SELECT * FROM `$db`.`$users_t` WHERE `username` = '$username'";
+							$result1 = mysql_query($sql1, $conn);
+							$Num_aps=0;
+							while($points_a = mysql_fetch_array($result1))
+							{
+								$points = explode("-", $points_a['points']);
+								$Num_aps = $Num_aps+count($points);
+							}
+							
+							$sql1 = "SELECT `id` FROM `$db`.`$user_geos`";
+							$result1 = mysql_query($sql1, $conn);
+							$Num_geo = @mysql_num_rows($result1);
+							if($Num_geo==''){$Num_geo = 0;}
+							$rank = '';
+							if($users_a["admins"]){	$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/admins.gif\" title=\"Obey the admins, for they are gods.\" /> \r\n"; }
+							if($users_a["devs"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/devs.gif\" title=\"Piss off a dev and be sure to never see the light of a console again.\" /> \r\n";}
+							if($users_a["mods"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/mods.gif\" title=\"Mods are the KGB of Packet land.\" /> \r\n";}
+							if($users_a["users"]){$rank .= "<img src=\"$hosturl/$root/themes/$theme/img/users.gif\" title=\"Fellow users can be your freind or they can be your enemey, either way keep them close, and keep track of those fuckers, their sneeky\" /> \r\n";}
+							
+							if($detailed_user_view)
+							{
+								?>
+								<table border="1" width="95%">
 								<tr class="style4">
-									<th>ID</th><th>User Name</th><th>Number of APs</th><th>Last Login</th><th>Join Date</th><th>Vistumbler Version</th><th>Title / Rank</th></tr>
+									<th>ID</th>
+									<th>User Name</th>
+									<th>Number of APs</th>
+									<th>E-Mail</th>
+									<th>Website</th>
+									<th>Vistumbler Version</th>
+									<th>Title</th></tr>
 								<tr class="<?php echo $style; ?>">
 									<td><?php echo $users_a['id']; ?></td>
 									<td>
@@ -820,18 +773,71 @@ class admin
 									?>
 									</td>
 									<td><?php echo $Num_aps; ?></td>
+									<td><?php if($users_a['h_email'] and $GLOBALS['priv_name'] != "Administrator"){echo "Email Hidden, except to admins";}else{ ?><a class='email' href='mailto:<?php echo $users_a['email']; ?>' ><?php echo $users_a['email']; ?></a><?php } ?></td>
+									<td><?php echo $users_a['website']; ?></td>
+									<td><?php echo $users_a['Vis_ver']; ?></td>
+									<td>
+										<?php echo $rank; ?>
+									</td>
+								</tr>
+								<tr class="style4">
+									<th colspan="2">&nbsp;</th>
+									<th>Rank</th>
+									<th>Number of Geocaches</th>
+									<th>Last Login</th>
+									<th>Join Date</th>
+									<th>UID</th>
+								</tr>
+								<tr class="<?php echo $style; ?>">
+									<td colspan="2">&nbsp;</td>
+									<td><?php echo $users_a['rank']; ?></td>
+									<td><?php echo $Num_geo; ?></td>
 									<td><?php echo $users_a['last_login']; ?></td>
 									<td><?php echo $users_a['join_date']; ?></td>
-									<td><?php echo $users_a['Vis_ver']; ?></td>
-									<td width="30%"><?php echo $rank; ?></td>
+									<td><?php echo $users_a['uid']; ?></td>
 								</tr>
+							</table>
+							<br>
 							<?php
+							}else
+							{
+								?>
+									<tr class="style4">
+										<th>ID</th><th>User Name</th><th>Number of APs</th><th>Last Login</th><th>Join Date</th><th>Vistumbler Version</th><th>Title / Rank</th></tr>
+									<tr class="<?php echo $style; ?>">
+										<td><?php echo $users_a['id']; ?></td>
+										<td>
+										<?php
+										if($Num_aps > 0)
+										{
+											?>
+											<a class="links" href="<?php echo $GLOBALS['hosturl'].$GLOBALS['root']; ?>/opt/userstats.php?func=alluserlists&user=<?php echo $users_a['username'];?>"><?php echo $users_a['username']; ?></a>
+											<?php 
+										}else
+										{
+											echo $users_a['username'];
+										}
+										?>
+										</td>
+										<td><?php echo $Num_aps; ?></td>
+										<td><?php echo $users_a['last_login']; ?></td>
+										<td><?php echo $users_a['join_date']; ?></td>
+										<td><?php echo $users_a['Vis_ver']; ?></td>
+										<td width="30%"><?php echo $rank; ?></td>
+									</tr>
+								<?php
+							}
 						}
+					}else
+					{
+						?>
+						<table><tr class="bad"><td align='center' colspan='<?php if($detailed_user_view){ echo '11';}else{echo '7';} ?>'>There are no Users yet, why dont you go make some freinds.</td></tr>
+						<?php
 					}
 				}else
 				{
 					?>
-					<tr class="bad"><td align='center' colspan='<?php if($detailed_user_view){ echo '11';}else{echo '7';} ?>'>There are no Users yet, why dont you go make some freinds.</td></tr>
+					<table><tr class="bad"><td align='center' colspan='<?php if($detailed_user_view){ echo '11';}else{echo '7';} ?>'>There was an error Querying the Users Table...<br><?php echo mysql_error($conn); ?></td></tr>
 					<?php
 				}
 				?></table><?php
@@ -3295,6 +3301,7 @@ $"."debug = $debug;\r\n?>";
 				$hosturl			=	addslashes(strip_tags($_POST['hosturl']));
 				$admin_email		=	addslashes(strip_tags($_POST['admin_email']));
 				$wifidb_email_updates = addslashes(strip_tags($_POST['wifidb_email_updates']));
+				if($wifidb_email_updates == "on"){$wifidb_email_updates = 1;}else{$wifidb_email_updates = 0;}
 				$wifidb_from		=	addslashes(strip_tags($_POST['wifidb_from']));
 				$wifidb_from_pass	=	addslashes(strip_tags($_POST['wifidb_from_pass']));
 				$wifidb_smtp		=	addslashes(strip_tags($_POST['wifidb_smtp']));
@@ -3302,6 +3309,7 @@ $"."debug = $debug;\r\n?>";
 				$reserved_users		=	addslashes(strip_tags($_POST['reserved_users']));
 				$config_fails		=	addslashes(strip_tags($_POST['config_fails']));
 				$daemon				=	addslashes(strip_tags($_POST['daemon']));
+				if($daemon == "on"){$daemon = 1;}else{$daemon = 0;}
 				$WiFiDB_LNZ_User 	=	addslashes(strip_tags($_POST['WiFiDB_LNZ_User']));
 				$apache_grp			=	addslashes(strip_tags($_POST['apache_grp']));
 				$default_theme		=	addslashes(strip_tags($_POST['default_theme']));
@@ -3309,19 +3317,27 @@ $"."debug = $debug;\r\n?>";
 				$timeout			=	addslashes(strip_tags($_POST['timeout']));
 				$console_refresh	=	addslashes(strip_tags($_POST['console_refresh']));
 				$console_scroll		=	addslashes(strip_tags($_POST['console_scroll']));
+				if($console_scroll == "on"){$console_scroll = 1;}else{$console_scroll = 0;}
 				$console_last5		=	addslashes(strip_tags($_POST['console_last5']));
+				if($console_last5 == "on"){$console_last5 = 1;}else{$console_last5 = 0;}
 				$console_lines		=	addslashes(strip_tags($_POST['console_lines']));
 				$console_log		=	addslashes(strip_tags($_POST['console_log']));
 				$bypass_check		=	addslashes(strip_tags($_POST['bypass_check']));
+				if($bypass_check == "on"){$bypass_check = 1;}else{$bypass_check = 0;}
 				$rebuild			=	addslashes(strip_tags($_POST['rebuild']));
+				if($rebuild == "on"){$rebuild = 1;}else{$rebuild = 0;}
 				$bench				=	addslashes(strip_tags($_POST['bench']));
+				if($bench == "on"){$bench = 1;}else{$bench = 0;}
 				$debug				=	addslashes(strip_tags($_POST['debug']));
+				if($debug == "on"){$debug = 1;}else{$debug = 0;}
 				$settings_tb		=	addslashes(strip_tags($_POST['settings_tb']));
 				$users_t			=	addslashes(strip_tags($_POST['users_t']));
 				$links				=	addslashes(strip_tags($_POST['links']));
 				$wtable				=	addslashes(strip_tags($_POST['wtable']));
 				$user_logins_table	=	addslashes(strip_tags($_POST['user_logins_table']));
 				$validate_table		=	addslashes(strip_tags($_POST['validate_table']));
+				$daemon_perf_table	=	addslashes(strip_tags($_POST['daemon_perf_table']));
+				$DB_stats			=	addslashes(strip_tags($_POST['DB_stats']));
 				$share_cache		=	addslashes(strip_tags($_POST['share_cache']));
 				$files				=	addslashes(strip_tags($_POST['files']));
 				$files_tmp			=	addslashes(strip_tags($_POST['files_tmp']));
@@ -3348,7 +3364,19 @@ $"."debug = $debug;\r\n?>";
 				$ads				= 	addslashes($_POST['ads']);
 				$header				= 	addslashes($_POST['header']);
 				$tracker			= 	addslashes($_POST['tracker']);
-				echo $_POST['header'];
+				echo $_POST['bypass_check'];
+				if($wifidb_from_pass == '' && $wifidb_email_updates == 1)
+				{
+					?> <h2>You have Email updates enabled, but have not entered the SMTP password, please do so.</h2><?php
+					admin_footer();
+					break;
+				}
+				if($db_pwd == '')
+				{
+					?> <h2>You have not entered the SQL users password, please go back and do so.</h2><?php
+					admin_footer();
+					break;
+				}
 				$DB_Config = "$"."lastedit	=	'".date('Y-M-d H:i:s')."';
 #COOKIE GLOBALS
 global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
@@ -3409,6 +3437,8 @@ $"."users_t		=	'$users_t';
 $"."links			=	'$links';
 $"."wtable			=	'$wtable';
 $"."user_logins_table	=	'$user_logins_table';
+$"."daemon_perf_mon		=	'$daemon_perf_table';
+$"."DB_stats		=	'$DB_stats';
 $"."validate_table		=	'$validate_table';
 $"."share_cache	=	'$share_cache';
 $"."files			=	'$files';
@@ -3489,14 +3519,17 @@ $"."tracker	= '$tracker';";
 				  <tr class="dark">
 					<td>WiFiDB Email Updates</td>
 					<td>
-					<input style="width: 96%" name="wifidb_email_updates" value="<?php echo $wifidb_email_updates; ?>"></td></tr>
+					<input type="checkbox" name="wifidb_email_updates"  <?php if($wifidb_email_updates){echo 'CHECKED';} ?>></td></tr>
 				  <tr class="dark">
 					<td> WiFiDB Sending Email</td>
 					<td>
-					<input style="width: 84%" name="wifidb_from_email" value="<?php echo $wifidb_from_email; ?>"></td></tr>
+					<input style="width: 84%" name="wifidb_from_email" value="<?php echo $wifidb_from; ?>"></td></tr>
 				  <tr class="dark">
 					<td >WiFiDB Sending Pass</td>
-					<td ><input style="width: 25%" name="wifidb_from_pass" type=PASSWORD value="<?php echo $wifidb_from_pass; ?>"></td></tr>
+					<td ><input style="width: 25%" name="wifidb_from_pass" type=PASSWORD></td></tr>
+				  <tr class="dark">
+					<TD>Reserved Usernames</TD>
+					<td><input name="reserved_users" value="<?php echo $reserved_users; ?>" style="width: 215px"></td></tr>
 				  <tr>
 					<th colspan="2" class="style4">Daemon Settings</th>
 				</tr>
@@ -3568,7 +3601,7 @@ $"."tracker	= '$tracker';";
 				</TR>
 				  <tr class="dark">
 					<td >Console Log</td>
-					<td ><input name="console_log" <?php echo $console_log; ?> ></td>
+					<td ><input name="console_log" value="<?php echo $console_log; ?>" ></td>
 				</TR>
 				  <tr>
 					<th colspan="2" class="style4">Debug and Other Settings</th>
@@ -3608,7 +3641,7 @@ $"."tracker	= '$tracker';";
 				<tr class="dark">
 					<TD>WiFiDB SQL Password</TD>
 					<td>
-						<input style="width: 49%" name="db_pwd" type=PASSWORD value="<?php echo $db_pwd; ?>"></td>
+						<input style="width: 49%" name="db_pwd" type=PASSWORD></td>
 				</tr>
 				<tr class="dark">
 					<TD>SQL Collate</TD>
@@ -3667,6 +3700,16 @@ $"."tracker	= '$tracker';";
 				<TD >Users Validation Table</TD>
 					<td>
 						<input name="validate_table" value="<?php echo $validate_table; ?>" style="width: 215px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >Daemon Performance Monitor Table</TD>
+					<td>
+						<input name="daemon_perf_table" value="<?php echo $daemon_perf_table; ?>" style="width: 215px"></td>
+				</tr>
+				<tr class="dark">
+				<TD >DataBase Statistics Table</TD>
+					<td>
+						<input name="DB_stats" value="<?php echo $DB_stats; ?>" style="width: 215px"></td>
 				</tr>
 				<tr class="dark">
 				<TD >Geocache Shares Table</TD>

@@ -10,6 +10,19 @@ if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config fi
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/wdb_xml.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
+if(!file_exists($GLOBALS['daemon_log_folder']))
+{
+	if(mkdir($GLOBALS['daemon_log_folder']))
+	{echo "Made WiFiDB Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+	else{echo "Could not make Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+}
+if(!file_exists($GLOBALS['pid_file_loc']))
+{
+	if(mkdir($GLOBALS['pid_file_loc']))
+	{echo "Made WiFiDB PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+	else{echo "Could not make PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+}
+
 if($GLOBALS['colors_setting'] == 0 or PHP_OS == "WINNT")
 {
 	$COLORS = array(
@@ -178,7 +191,12 @@ while(1)
 			$long =& $database->convert_dm_dd($gps_table_first['long']);
 			$start1 = microtime(1);
 			$URL = "http://ws.geonames.org/countrySubdivision?lat=$lat&lng=$long";
-			$geo_site = implode("\r\n", file($URL));
+			while(!$geonames_org = @file($URL))
+			{
+				echo "Geonames.org seems to be down... sleeping for an hour, that seems to be how long they go down for. if this is your ISP having problems, stop the daemon.\r\n";
+				sleep(10);
+			}
+			$geo_site = implode("\r\n", $geonames_org);
 			$xml = $WDB_XML->xml2ary($geo_site);
 			if(@$xml['geonames']['_c']['countrySubdivision'])
 			{
@@ -247,7 +265,7 @@ while(1)
 			}else
 			{
 				echo "Failed to gather GeoNames data.\r\n";
-				mail_users("Failed to gather GeoNames data. [$id] $ssid \r\n:-(\r\n$URL\r\n\r\n-WiFiDB Service", $subject, $type, 1); 
+			#	mail_users("Failed to gather GeoNames data. [$id] $ssid \r\n:-(\r\n$URL\r\n\r\n-WiFiDB Service", $subject, $type, 1); 
 			}
 			$zero = 0;
 			$NN++;
@@ -258,7 +276,7 @@ while(1)
 			$avg = $total / $NN;
 		#	echo "Run : ".($stop1  - $start1)."\r\nTotal: $total\r\nAPS: $NN\r\nAPs / sec: $avg\r\n";
 			echo "##########################\r\n\r\n";
-			
+			sleep(1);
 			break;
 		}
 		$total++;

@@ -36,7 +36,6 @@ if($_POST['email_validation'] == 'on')
 {
 	$email_validation	=	0;
 }
-echo $_POST['wdb_email_updates'];
 if($_POST['wdb_email_updates'] == 'on')
 {
 	$wifidb_email_updates	=	1;
@@ -261,6 +260,7 @@ if($insert)
 else{
 echo "<tr class=\"bad\"><td>Failure..........</td><td>Altered `$wifi`.`users` to new table name `user_imports;<br>".mysql_error($conn1)."</td></tr>\r\n";
 }
+$users_t = 'users_imports';
 ############################################
 $sql1 = "ALTER TABLE `$wifi`.`$users_t` ADD `hash` VARCHAR ( 255 ) NOT NULL";
 $insert = mysql_query($sql1, $conn1);
@@ -487,7 +487,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>To create Daemon Performan
 
 ##########################################
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`DB_stats` (
-`id` INT( 255 ) NOT NULL ,
+`id` INT( 255 ) NOT NULL auto_increment,
 `timestamp` VARCHAR( 60 ) NOT NULL ,
 `graph_min` VARCHAR( 255 ) NOT NULL ,
 `graph_max` VARCHAR( 255 ) NOT NULL ,
@@ -616,6 +616,7 @@ if(!@$login_seed)
 	$activatecode = $login_seed;
 }
 #Add last edit date and globals
+if($root != ''){$wifidb_install_ = $_SERVER['DOCUMENT_ROOT'].$root;}else{$wifidb_install_ = $_SERVER['DOCUMENT_ROOT'];}
 $CR_CF_FL_Re = fwrite($fileappend, "<?php
 #COOKIE GLOBALS
 global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
@@ -628,7 +629,7 @@ $"."lastedit	=	'$date';
 
 #----------General Settings------------#
 $"."wifidb_tools	=	'$toolsdir';
-$"."wifidb_install	=	'".$_SERVER['DOCUMENT_ROOT']."';
+$"."wifidb_install	=	'".$wifidb_install_."';
 $"."timezn			=	'UTC';
 $"."root			=	'$root';
 $"."hosturl		=	'$hosturl';
@@ -708,8 +709,9 @@ $"."links				=	'links';
 $"."wtable				=	'wifi0';
 $"."user_logins_table	=	'user_info';
 $"."daemon_perf_table	=	'daemon_perf_mon';
+$"."DB_stats			=	'DB_stats';
 $"."validate_table		=	'validate_table';
-$"."share_cache		=	'share_waypoints';
+$"."share_cache			=	'share_waypoints';
 $"."files				=	'files';
 $"."files_tmp			=	'files_tmp';
 $"."annunc				=	'annunc';

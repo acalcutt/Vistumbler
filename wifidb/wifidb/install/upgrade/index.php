@@ -19,7 +19,7 @@ include('../../lib/config.inc.php');
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
+		Wireless DataBase Upgrade</font>
 		<font color="#FFFFFF" size="2">
             <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
 		</font></b>
@@ -49,6 +49,11 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 if(@class_exists('ZipArchive'))
 {echo '<table><tr class="style4"><td><b><font color=#00ff00>ZipArchive class is installed</font></b></td></tr></table>';}
 else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have the ZipArchive class installed, please install this or you will not beable to use the Export Feature or the Daemon Generated KML.</font></b></td></tr></table>';}
+
+if(class_exists('SQLiteDatabase'))
+{echo '<table><tr class="style4"><td><b><font color=#00ff00>SQLiteDatabase class is installed</font></b></td></tr></table>';}
+else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have the SQLiteDatabase class installed, please install this or you will not beable to import files from <a href="http://code.google.com/p/wardrive-android/" target="_blank">Wardrive for Android.</a></font></b></td></tr></table>';}
+
 ?>
 <table border="1" cellspacing="0" cellpadding="3">
 <tr><th colspan="2" class="style4">Basic WiFiDB Settings</th></tr>
@@ -60,40 +65,40 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
     <td><input TYPE=PASSWORD name="root_sql_pwd"></td></tr>
   <tr>
     <td>MySQL Host <font size="1">(Default `localhost` )</font></td>
-    <td><input name="sqlhost"></td></tr>
+    <td><input name="sqlhost" value="<?php echo @$GLOBALS['host']; ?>"></td></tr>
   <tr>
     <td>WiFiDB SQL Username</td>
-    <td><input name="sqlu"></td></tr>
+    <td><input name="sqlu" value="<?php echo @$GLOBALS['db_user']; ?>"></td></tr>
   <tr>
     <td>WiFiDB SQL Password</td>
-    <td><input type=password name="sqlp"></td></tr>
+    <td><input type=password name="sqlp" value="<?php echo @$GLOBALS['db_pwd']; ?>"></td></tr>
   <tr>
     <td>Administrator User Password</td>
     <td><input type=password name="wdb_admn_pass"></td></tr>
   <tr>
     <td>Administrator User E-Mail</td>
-    <td><input name="wdb_admn_emailadrs"></td></tr>
+    <td><input name="wdb_admn_emailadrs" value="<?php echo @$GLOBALS['admin_email']; ?>"></td></tr>
   <tr>
     <td>WiFiDB Email Updates </td>
-    <td><input type="checkbox" name="wdb_email_updates"></td></tr>
+    <td><input type="checkbox" name="wdb_email_updates"  <?php if(@$GLOBALS['wifidb_email_updates'] === 1){echo "checked";}?>></td></tr>
   <tr>
     <td>WiFiDB Email User Validation </td>
-    <td><input type="checkbox" name="email_validation"></td></tr>
+    <td><input type="checkbox" name="email_validation" <?php if(@$GLOBALS['email_validation'] === 1){echo "checked";}?>></td></tr>
   <tr>
     <td>Updates Sending Address</font></td>
-    <td><input name="wdb_from_emailadrs"></td></tr>
+    <td><input name="wdb_from_emailadrs" value="<?php echo @$GLOBALS['wifidb_from']; ?>"></td></tr>
   <tr>
     <td>Sending Password</font></td>
-    <td><input name="wdb_from_pass" type=PASSWORD></td></tr>
+    <td><input name="wdb_from_pass" type=PASSWORD value="<?php echo @$GLOBALS['wifidb_from_pass']; ?>"></td></tr>
   <tr>
     <td>SMTP Server</font></td>
-    <td><input name="wdb_smtp"></td></tr>
+    <td><input name="wdb_smtp" value="<?php echo @$GLOBALS['wifidb_smtp']; ?>"></td></tr>
   <tr>
    <td>WiFi DB name <font size="1">(Default `wifi` )</font></td>
-    <td><input name="wifi"></td></tr>
+    <td><input name="wifi" value="<?php echo @$GLOBALS['db']; ?>"></td></tr>
   <tr>
     <td>WiFi Storage DB name <font size="1">(Default `wifi_st` )</font></td>
-    <td><input name="wifist"></td>
+    <td><input name="wifist" value="<?php echo @$GLOBALS['db_st']; ?>"></td>
 </TR>
   <tr>
     <td>Default Theme</td>
@@ -101,7 +106,6 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 		<select name="theme">
 		<OPTION selected VALUE=""> Select a Theme.
 		<?php
-		$default_theme = $GLOBALS['default_theme'];
 		$themes = "../../themes";
 		$dh = opendir($themes) or die("couldn't open directory");
 		while (!(($file = readdir($dh)) == false))
@@ -112,7 +116,7 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 				if($file=="."){continue;}
 				if($file==".."){continue;}
 				if($file==".svn"){continue;}
-				if($file === $default_theme){$checked = 'selected';}
+				if($file === $GLOBALS['default_theme']){$checked = 'selected';}
 				echo '<OPTION VALUE="'.$file.'"> '.$file;
 			}
 		}

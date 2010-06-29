@@ -23,21 +23,22 @@ function pageheader($title, $output="detailed", $install=0)
 		echo '<html><head><title>Wireless DataBase '.$GLOBALS["ver"]["wifidb"].' --> '.$title.'</title>'.$head.'</head>';
 		# START YOUR HTML EDITS HERE #
 		?>
-		
-		<link rel="stylesheet" href="<?php echo $GLOBALS['UPATH']; ?>/themes/vistumbler/styles.css">
+		<link rel="stylesheet" href="<?php echo $GLOBALS['UPATH'];?>/themes/vistumbler/styles.css">
 			<body style="background-color: #145285">
-			<table style="width: 90%" align="center">
+			<table style="width: 90%; " class="no_border" align="center">
 				<tr>
 					<td>
-						<table>
-							<tr>
-								<td style="width: 228px">
+					<table>
+						<tr>
+							<td style="width: 228px">
 								<a href="http://www.randomintervals.com">
 								<img alt="Random Intervals Logo" src="<?php echo $GLOBALS['UPATH'];?>/themes/vistumbler/img/logo.png" class="no_border" /></a></td>
 							</tr>
 						</table>
 					</td>
 				</tr>
+			</table>
+			<table style="width: 90%" align="center">
 				<tr>
 					<td style="width: 165px; height: 114px" valign="top">
 						<table style="width: 100%" cellpadding="0" cellspacing="0">
@@ -52,7 +53,7 @@ function pageheader($title, $output="detailed", $install=0)
 									<img alt="" src="<?php echo $GLOBALS['UPATH']; ?>/themes/vistumbler/img/1x1_transparent.gif" width="10" height="1" />
 								</td>
 							</tr>
-							<tr>
+							<tr width="185px">
 								<td class="cell_side_left">&nbsp;</td>
 								<td class="cell_color">
 									<div class="inside_dark_header">WiFiDB Links</div>

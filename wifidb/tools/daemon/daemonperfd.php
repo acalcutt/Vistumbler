@@ -4,13 +4,26 @@ global $screen_output;
 $screen_output = "CLI";
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 ###########################
-if($OS == "WINNT"){$dim = "\\";}else{$dim = "/";}
+if(PHP_OS == "WINNT"){$dim = "\\";}else{$dim = "/";}
 if(!(require_once 'config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
 if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 require_once $GLOBALS['wifidb_install']."/cp/admin/lib/administration.inc.php";
+if(!file_exists($GLOBALS['daemon_log_folder']))
+{
+	if(mkdir($GLOBALS['daemon_log_folder']))
+	{echo "Made WiFiDB Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+	else{echo "Could not make Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+}
+if(!file_exists($GLOBALS['pid_file_loc']))
+{
+	if(mkdir($GLOBALS['pid_file_loc']))
+	{echo "Made WiFiDB PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+	else{echo "Could not make PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+}
+
 ###########################
 $PHP_OS							=	PHP_OS;
 $OS								=	$PHP_OS[0];

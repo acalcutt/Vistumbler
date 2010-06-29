@@ -96,12 +96,16 @@ switch($func)
 		{
 			$cookie_name = 'WiFiDB_admin_login_yes';
 			$msg = 'Admin Logout Successful!';
-			$path = '/cp/';
+			if($GLOBALS["root"] != '')
+			{$path		 = '/'.$GLOBALS["root"].'/cp/admin/';}
+			else{$path		 = '/cp/admin/';}
 		}else
 		{
 			$cookie_name = 'WiFiDB_login_yes';
 			$msg = 'Logout Successful!';
-			$path = '/';
+			if($GLOBALS["root"] != '')
+			{$path		 = '/'.$GLOBALS["root"].'/';}
+			else{$path		 = '/';}
 		}
 		if(setcookie($cookie_name, md5("@LOGGEDOUT!").":".$username, time()-3600, $path))
 		{

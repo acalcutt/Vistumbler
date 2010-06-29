@@ -10,6 +10,19 @@ if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config fi
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
 require_once $GLOBALS['wifidb_install']."/cp/admin/lib/administration.inc.php";
+if(!file_exists($GLOBALS['daemon_log_folder']))
+{
+	if(mkdir($GLOBALS['daemon_log_folder']))
+	{echo "Made WiFiDB Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+	else{echo "Could not make Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+}
+if(!file_exists($GLOBALS['pid_file_loc']))
+{
+	if(mkdir($GLOBALS['pid_file_loc']))
+	{echo "Made WiFiDB PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+	else{echo "Could not make PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+}
+
 #####################
 $conn							= 	$GLOBALS['conn'];
 $db								= 	$GLOBALS['db'];

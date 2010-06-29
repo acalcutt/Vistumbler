@@ -142,7 +142,7 @@ if($result)
 			$ret_len = count($retexp);
 			if ($ret_len == 12 or $ret_len == 6)
 			{
-				list($temp_gps) = $database->gen_gps($retexp);
+				$temp_gps = $database->gen_gps($retexp);
 				
 				$gps_array_n_tmp++;
 				$date = $temp_gps['date'];
@@ -174,7 +174,6 @@ if($result)
 			$sqls = "SELECT * FROM `$db`.`$wtable` WHERE `id`='$PT_ID' LIMIT 1";
 			$PT_result = mysql_query($sqls, $conn) or die(mysql_error($conn));
 			$pt_array = mysql_fetch_array($PT_result);
-			$TB_ID = $pt_array['id'];
 			$macaddress = $pt_array['mac'];
 			$radio = $pt_array['radio'];
 			if($radio == "a")
@@ -250,7 +249,11 @@ if($result)
 				$latf = $fieldf['lat'];
 				$longf = $fieldf['long'];
 				
-				if($datef == '' or $latf == ''){echo "/"; $other++; continue;}
+				if($datef == '' or $latf == '')
+				{
+				#	echo "/";
+					$other++; continue;
+				}
 				if($lat == $latf and $long != $longf)
 				{
 					$up_long = "UPDATE `$db_st`.`$table_gps` SET `long` =  '$longf', `lat` =  '$latf' WHERE `id` = '$GPS_ID' LIMIT 1";
@@ -278,5 +281,5 @@ if($result)
 	die();
 }
 $t2 = microtime(1);
-echo "Good : $good (no fix needed)\r\nBad Fixed: $bad (was bad, but is now fixed)\r\nBad still bad: $badb(Is still bad, failed to fix)\r\nOther: $other (Just null gps data, nothing horrable)\r\nRuntime: ".($t2 - $t1)."\r\n:-p\r\n";
+echo "Good : $good (no fix needed)\r\nBad Fixed: $badf (was bad, but is now fixed)\r\nBad still bad: $badb(Is still bad, failed to fix)\r\nOther: $other (Just null gps data, nothing horrable)\r\nRuntime: ".($t2 - $t1)."\r\n:-p\r\n";
 ?>

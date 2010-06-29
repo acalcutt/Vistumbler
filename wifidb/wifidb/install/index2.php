@@ -48,6 +48,11 @@ else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have
 if(class_exists('ZipArchive'))
 {echo '<table><tr class="style4"><td><b><font color=#00ff00>ZipArchive class is installed</font></b></td></tr></table>';}
 else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have the ZipArchive class installed, please install this or you will not beable to use the Export Feature or the Daemon Generated KML.</font></b></td></tr></table>';}
+
+if(class_exists('SQLiteDatabase'))
+{echo '<table><tr class="style4"><td><b><font color=#00ff00>SQLiteDatabase class is installed</font></b></td></tr></table>';}
+else{ echo '<table><tr class="style4"><td><b><font color=#ff0000>You Do Not Have the SQLiteDatabase class installed, please install this or you will not beable to import files from <a href="http://code.google.com/p/wardrive-android/" target="_blank">Wardrive for Android.</a></font></b></td></tr></table>';}
+
 ?>
 <table border="1" cellspacing="0" cellpadding="3">
 <tr><th colspan="2" class="style4">Basic WiFiDB Settings</th></tr>

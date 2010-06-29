@@ -14,6 +14,19 @@ if(!(require_once 'config.inc.php')){die("You need to create and configure your 
 if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
+if(!file_exists($GLOBALS['daemon_log_folder']))
+{
+	if(mkdir($GLOBALS['daemon_log_folder']))
+	{echo "Made WiFiDB Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+	else{echo "Could not make Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+}
+if(!file_exists($GLOBALS['pid_file_loc']))
+{
+	if(mkdir($GLOBALS['pid_file_loc']))
+	{echo "Made WiFiDB PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+	else{echo "Could not make PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+}
+
 
 $dim = @DIRECTORY_SEPERATOR;
 
@@ -157,13 +170,20 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			$file_type = strtolower($file_src[1]);
 			if($file_type == "db3" or $file_type == "txt" or $file_type == "tmp")
 			{
+				verbosed("This file needs to be converted to VS1 first. Please wait while the computer does the work for you.", $verbose, $screen_output, 1);
 				$source = $database->convert_vs1($source);
 				$files_array['file'] = $file_src[0].'.vs1';
 				$hash1 = hash_file('md5', $GLOBALS['wifidb_install'].'/import/up/'.$files_array['file']);
 				$size1 = format_size(dos_filesize($GLOBALS['wifidb_install'].'/import/up/'.$files_array['file']));
 				$update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '".$files_array['id']."'";
 			#	echo $update_tmp."\r\n";
-				$result_update = mysql_query($update_tmp, $conn);
+				if(mysql_query($update_tmp, $conn))
+				{
+					verbosed("Conversion completed.", $verbose, $screen_output, 1);
+				}else
+				{
+					verbosed("Conversion completed, but the update of the table with the new info failed.", $verbose, $screen_output, 1);
+				}
 			}
 	#	echo $source."\r\n".$files_array['file'];
 			$remove_file = $files_array['id'];

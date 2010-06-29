@@ -204,7 +204,7 @@ if(is_string($func))
 						<td colspan="3" class="style4">History</td>
 					</tr>
 					<tr>
-						<td colspan="3" class="light">
+						<td colspan="3" class="dark">
 						<table align="center" border="1" cellspacing="0" cellpadding="0" width="50%">
 							<tr class="style4">
 								<td width="33%">Date Created</td>

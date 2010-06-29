@@ -134,11 +134,12 @@ $handle = fopen($console_log, "r");
 		}
 		$N++;
 	}
-	if($last5 == 0)
+	if($scroll)
 	{
 		echo $text.'<a id="end">';
 	}
-?>
+
+	?>
 
 </span>
 </td></tr></table>

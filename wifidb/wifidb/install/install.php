@@ -501,7 +501,7 @@ echo "<tr class=\"bad\"><td>Failure..........</td><td>To create Daemon Performan
 
 ########################################## DB_stats
 $sql1 = "CREATE TABLE IF NOT EXISTS `$wifi`.`DB_stats` (
-`id` INT( 255 ) NOT NULL ,
+`id` INT( 255 ) NOT NULL auto_increment,
 `timestamp` VARCHAR( 60 ) NOT NULL ,
 `graph_min` VARCHAR( 255 ) NOT NULL ,
 `graph_max` VARCHAR( 255 ) NOT NULL ,
@@ -652,6 +652,7 @@ function gen_key()
 $seed = gen_key();
 
 #Add last edit date and globals
+if($root != ''){$wifidb_install_ = $_SERVER['DOCUMENT_ROOT'].$root;}else{$wifidb_install_ = $_SERVER['DOCUMENT_ROOT'];}
 $CR_CF_FL_Re = fwrite($fileappend, "<?php
 #COOKIE GLOBALS
 global $"."console_refresh, $"."console_scroll, $"."console_last5, $"."default_theme, $"."default_refresh, $"."default_dst, $"."default_timezone, $"."timeout, $"."config_fails, $"."login_seed;
@@ -665,7 +666,7 @@ $"."lastedit	=	'$date';
 #----------General Settings------------#
 $"."bypass_check	=	0;
 $"."wifidb_tools	=	'$toolsdir';
-$"."wifidb_install	=	'".$_SERVER['DOCUMENT_ROOT']."
+$"."wifidb_install	=	'$wifidb_install_';
 $"."timezn			=	'$Local_tz';
 $"."root			=	'$root';
 $"."hosturl		=	'$hosturl';
@@ -744,6 +745,7 @@ $"."links				=	'links';
 $"."wtable				=	'wifi0';
 $"."user_logins_table	=	'user_info';
 $"."daemon_perf_table	=	'daemon_perf_mon';
+$"."DB_stats			=	'DB_stats';
 $"."validate_table		=	'validate_table';
 $"."share_cache		=	'share_waypoints';
 $"."files				=	'files';

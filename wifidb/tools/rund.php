@@ -107,6 +107,7 @@ function start($command = '')
 	}
 	require('daemon/config.inc.php');
 	require($GLOBALS['wifidb_install'].$GLOBALS['dim'].'lib'.$GLOBALS['dim'].'config.inc.php');
+	
 	$is_array = is_array($daemon_);
 	if($is_array)
 	{
@@ -141,7 +142,19 @@ function start($command = '')
 	$console_log = $GLOBALS['daemon_log_folder'].$daemon_.'d.log';
 	$daemon_script = $GLOBALS['wifidb_tools'].$GLOBALS['dim']."daemon".$GLOBALS['dim'].$daemon_."d.php";
 	echo $daemon_script."\r\n".$console_log."\r\n";
-
+	if(!file_exists($GLOBALS['daemon_log_folder']))
+	{
+		if(mkdir($GLOBALS['daemon_log_folder']))
+		{echo "Made WiFiDB Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+		else{echo "Could not make Log Folder [".$GLOBALS['daemon_log_folder']."]\r\n";}
+	}
+	if(!file_exists($GLOBALS['pid_file_loc']))
+	{
+		if(mkdir($GLOBALS['pid_file_loc']))
+		{echo "Made WiFiDB PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+		else{echo "Could not make PID Folder [".$GLOBALS['pid_file_loc']."]\r\n";}
+	}
+	
 	if (PHP_OS == "WINNT")
 	{$cmd = "start ".$GLOBALS['php_install']."\php ".$daemon_script." > ".$console_log;}
 	else{$cmd = "php ".$daemon_script." > ".$console_log." &";}

@@ -20,9 +20,9 @@ $bad = 0;
 $return = mysql_query("SELECT * FROM `$db`.`$wtable`", $conn);
 while($array = mysql_fetch_array($return))
 {
+	$id = $array['id'];
 	list($ssid_S, $ssids, $ssidss ) = make_ssid($array['ssid'], 1);
-	$mac1 = explode(':', $array['mac']);
-	$macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5];
+	$macs = $array['mac'];
 	$auth		=	htmlentities($array['auth'], ENT_QUOTES);
 	$encry		=	htmlentities($array['encry'], ENT_QUOTES);
 	$sectype	=	htmlentities($array['sectype'], ENT_QUOTES);
@@ -31,7 +31,7 @@ while($array = mysql_fetch_array($return))
 	$table = $ssid_S.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 	$gps_table = $table.$GLOBALS['gps_ext'];
 	
-	echo "Checking Table `$db_st`.`$table`...\r\n";
+	echo "$id - Checking Table `$db_st`.`$table`...\r\n";
 	
 	if(mysql_query("SELECT `id` FROM `$db_st`.`$table` LIMIT 1", $GLOBALS['conn']))
 	{

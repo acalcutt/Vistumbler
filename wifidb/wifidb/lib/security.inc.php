@@ -97,12 +97,13 @@ class security
 		}
 		$db = $GLOBALS['db'];
 		$conn = $GLOBALS['conn'];
+	#	echo "<br>".$cookie_name.":  ".$_COOKIE[$cookie_name]."<br>";
 		if($admin and !@isset($_COOKIE[$cookie_name]))
 		{
-				die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
-				<a href="'.$GLOBALS["hosturl"].$GLOBALS["root"].'/cp/?func=admin_cp">go get a cookie</a>. make it a double stuff.<br>');
-			#return "No Cookie";
-			#break;
+		#	die('You are trying to access a page that needs a cookie, without having a cookie, you cant do that... 
+		#	<a href="'.$GLOBALS["hosturl"].$GLOBALS["root"].'/cp/?func=admin_cp">go get a cookie</a>. make it a double stuff.<br>');
+			return "No Cookie";
+		#	break;
 		}
 		if(@isset($_COOKIE[$cookie_name]))
 		{
@@ -157,7 +158,6 @@ class security
 				return "User";
 			}
 		}
-		
 	}
 	
 	
@@ -213,12 +213,18 @@ class security
 		{
 			$cookie_name = 'WiFiDB_admin_login_yes';
 			$cookie_seed = "@LOGGEDIN";
-			$path		 = '/cp/';
+			if($GLOBALS["root"] != '')
+			{$path		 = '/'.$GLOBALS["root"].'/cp/admin/';}
+			else{$path		 = '/cp/admin/';}
+			$cookie_timeout = time()-3600;
 		}else
 		{
 			$cookie_name = 'WiFiDB_login_yes';
 			$cookie_seed = "@LOGGEDIN!";
-			$path		 = '/';
+			if($GLOBALS["root"] != '')
+			{$path		 = '/'.$GLOBALS["root"].'/';}
+			else{$path		 = '/';}
+			
 		}
 		$user_logins_table = $GLOBALS['user_logins_table'];
 		$db = $GLOBALS['db'];
@@ -247,7 +253,13 @@ class security
 
 		if($db_pass === $pass_seed)
 		{
-			if($admin or $no_save_login){$cookie_timeout = 0;}else{$cookie_timeout = time()+$GLOBALS['timeout'];}
+			if($no_save_login == 1)
+			{
+				$cookie_timeout = time()-3600;
+			}else
+			{
+				$cookie_timeout = time()+$GLOBALS['timeout'];
+			}
 			
 			if(setcookie($cookie_name, md5($pass_seed.$cookie_seed).":".$username, $cookie_timeout, $path))
 			{
