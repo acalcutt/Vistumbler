@@ -1314,6 +1314,10 @@ class database
 	function &manufactures($mac="")
 	{
 		include('manufactures.inc.php');
+		if(count(explode(":", $mac)) > 1)
+		{
+			$mac = str_replace(":", "", $mac);
+		}
 		$man_mac = str_split($mac,6);
 		if(isset($manufactures[$man_mac[0]]))
 		{
@@ -1366,7 +1370,7 @@ class database
 		$apdata=array();
 		global $gpsdata;
 		
-		$dir = $GLOBALS['wifidb_install'].'/import/up/';
+	#	$dir = $GLOBALS['wifidb_install'].'/import/up/';
 		// dfine time that the script started
 		$start = date("H:i:s");
 		// counters
@@ -1382,7 +1386,7 @@ class database
 		$file_src = explode(".",$src[$f_max-1]);
 		$file_type = strtolower($file_src[1]);
 		
-		$file_ext = $dir.$file_src[0].'.vs1';
+		$file_ext = @$dir.$file_src[0].'.vs1';
 		$filename = $file_ext;
 			if($GLOBALS["debug"] == 1 ){echo $file_ext."\n".$filename."\n";}
 		// define initial write and appends
@@ -1544,78 +1548,61 @@ class database
 				list($ssid_t, $ssid) = make_ssid($row["ssid"]);
 				$mac = strtoupper($row["bssid"]);
 				$man = database::manufactures($mac);
-				$capa = explode("][", $row["capabilities"]);
-				$capa_ = explode("-", $capa[0]);
-			#	echo $capa_[0]."\r\n";
-				switch($capa_[0])
-				{
-					case "[IBSS]":
-						$nt = "Ad-Hoc";
-						$authen = "Open";
-						$encry = "None";
-						$sectype = 1;
-					break;
-					case "[WEP]":
-						$nt = "Infrastructure";
-						$authen = "Open";
-						$encry = "WEP";
-						$sectype = 2;
-					break;
-					case "[EAP]":
-						$nt = "Infrastructure";
-						$authen = "WPA2-Enterprise";
-						$encry = "CCMP";
-						$sectype = 3;
-					break;
-					case "[WPA2":
-						$nt = "Infrastructure";
-					#	echo "\r\n--------\r\n".$capa_[2]."\r\n------------\r\n";
-						switch($capa_[2])
-						{
-							case "TKIP":
-								$encry = "TKIP";
-							break;
-							case "CCMP":
-								$encry = "CCMP";
-							break;
-							case "PSK":
-								$encry = "PSK";
-							break;
-							default:
-								$encry = "TKIP";
-							break;
-						}
-						$authen = "WPA-Personal";
-						$sectype = 3;
-					break;
-					case "[WPA":
-						$nt = "Infrastructure";
-					#	echo "\r\n--------\r\n".$capa_[2]."\r\n------------\r\n";
-						switch($capa_[2])
-						{
-							case "TKIP":
-								$encry = "TKIP";
-							break;
-							case "CCMP":
-								$encry = "CCMP";
-							break;
-							case "PSK":
-								$encry = "PSK";
-							break;
-							default:
-								$encry = "TKIP";
-							break;
-						}
-						$authen = "WPA2-Personal";
-						$sectype = 3;
-					break;
-					default:
-						$nt = "Infrastructure";
-						$authen = "Open";
-						$encry = "None";
-						$sectype = 1;
-					break;
+				
+				$Found_Capabilies = $row["capabilities"];
+				
+				If(stristr($Found_Capabilies, "WPA2-PSK-CCMP") Or stristr($Found_Capabilies, "WPA2-PSK-TKIP+CCMP"))
+				{	$Found_AUTH = "WPA2-Personal";
+					$Found_ENCR = "CCMP";
+					$Found_SecType = 3;
+				}ElseIf(stristr($Found_Capabilies, "WPA-PSK-CCMP") Or stristr($Found_Capabilies, "WPA-PSK-TKIP+CCMP"))
+				{	$Found_AUTH = "WPA-Personal";
+					$Found_ENCR = "CCMP";
+					$Found_SecType = 3;
+				}ElseIf(stristr($Found_Capabilies, "WPA2-EAP-CCMP") Or stristr($Found_Capabilies, "WPA2-EAP-TKIP+CCMP"))
+				{	$Found_AUTH = "WPA2-Enterprise";
+					$Found_ENCR = "CCMP";
+					$Found_SecType = 3;
+				}ElseIf(stristr($Found_Capabilies, "WPA-EAP-CCMP") Or stristr($Found_Capabilies, "WPA-EAP-TKIP+CCMP"))
+				{	$Found_AUTH = "WPA-Enterprise";
+					$Found_ENCR = "CCMP";
+					$Found_SecType = 3;
+				}ElseIf(stristr($Found_Capabilies, "WPA2-PSK-TKIP"))
+				{	$Found_AUTH = "WPA2-Personal";
+					$Found_ENCR = "TKIP";
+					$Found_SecType = 3;
+				}ElseIf(stristr($Found_Capabilies, "WPA-PSK-TKIP"))
+				{	$Found_AUTH = "WPA-Personal";
+					$Found_ENCR = "TKIP";
+					$Found_SecType = 3;
+				}ElseIf(stristr($Found_Capabilies, "WPA2-EAP-TKIP"))
+				{	$Found_AUTH = "WPA2-Enterprise";
+					$Found_ENCR = "TKIP";
+					$Found_SecType = 3;
+				}ElseIf(stristr($Found_Capabilies, "WPA-EAP-TKIP"))
+				{	$Found_AUTH = "WPA-Enterprise";
+					$Found_ENCR = "TKIP";
+					$Found_SecType = 3;
+				}ElseIf(stristr($Found_Capabilies, "WEP"))
+				{	$Found_AUTH = "Open";
+					$Found_ENCR = "WEP";
+					$Found_SecType = 2;
+				}Else
+				{	$Found_AUTH = "Open";
+					$Found_ENCR = "None";
+					$Found_SecType = 1;
 				}
+				if(stristr($Found_Capabilies, "IBSS"))
+				{
+					$nt = "Ad-Hoc";
+				}else
+				{
+					$nt = "Infrastructure";
+				}
+				$authen = $Found_AUTH;
+				$encry = $Found_ENCR;
+				$sectype = $Found_SecType;
+				###########################
 				switch($row["frequency"]+0)
 				{
 					case 2412:
@@ -1686,7 +1673,7 @@ class database
 				$timestamp = date("Y-m-d H:i:s", $time[0]);
 				
 				$table = $ssid_t.$sep.$mac.$sep.$sectype.$sep.$radio.$sep.$chan;
-			#	echo $table."\r\n".$timestamp."\r\n".$nt." - ".$authen." - ".$encry." - ".$sectype." - ".$lat." - ".$long."\r\n----------\r\n\r\n";
+				echo $table."\r\n$timestamp - - $man\r\n$nt - $authen - $encry - $sectype - $lat - $long\r\n----------\r\n\r\n";
 			#	if($ssid_t == "yellow"){ die(); }
 				//format date and time
 				$datetime=explode(" ",$timestamp);
@@ -1751,7 +1738,7 @@ class database
 										"btx"=>"0",
 										"otx"=>"0",
 										"nt"=>$nt,
-										"label"=>"Unlabeled",
+										"label"=>"Unknown",
 										"sig"=>$sig
 										);
 					if ($GLOBALS["debug"] == 1 )

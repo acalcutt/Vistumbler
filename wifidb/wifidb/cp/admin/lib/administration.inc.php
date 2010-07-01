@@ -188,7 +188,7 @@ function dirSize($directory)
 		return array($size, $num, $max, $min, $avg);
 	}else
 	{
-		return $size;
+		return array("0b", 0, "0b", "0b", "0b");
 	}
 }
 ##-----------------------------##
@@ -445,14 +445,20 @@ class admin
 					if($row == 1)
 					{ $row = 0; $style = "dark";}
 					else{ $row = 1; $style = "light";}
-					
+					$top_ssids = explode("-", $dbstats_a['top_ssids']);
+					$top = explode("|", $top_ssids[0]);
+					$gps_most = explode("-", $dbstats_a['ap_gps_totals']);
+					$most_gps = explode("|", $gps_most[0]);
+					$most_user = explode("-", $dbstats_a['user']);
+					$user_most = explode("|", $most_user[0]);
 					?>
 					<tr class="<?php echo $style; ?>">
 						<td><?php echo $dbstats_a['id']; ?></td>
 						<td><?php echo $dbstats_a['timestamp']; ?></td>
-						<td><?php echo $dbstats_a['top_ssids'][0]; ?></td>
-						<td><?php echo $dbstats_a['ap_gps_totals'][0]; ?></td>
-						<td><?php echo $dbstats_a['user'][0]; ?></td>
+						<td><a class="links" href="<?php echo $GLOBALS['UPATH']."/opt/fetch.php?id=".$top[0];?>" target="_blank"><?php echo $top[1]; ?></a></td>
+						<td><a class="links" href="<?php echo $GLOBALS['UPATH']."/opt/fetch.php?id=".$most_gps[0];?>" target="_blank"><?php echo $most_gps[1]; ?></a></td>
+						
+						<td><a class="links" href="<?php echo $GLOBALS['UPATH']."/opt/userstats.php?user=".$user_most[1];?>" target="_blank"><?php echo $user_most[1]." ( ".$user_most[0]." )"; ?></a></td>
 						<td><?php echo $dbstats_a['total_aps']; ?></td>
 						<td><?php echo $dbstats_a['nuap']; ?></td>
 						<td><?php echo $dbstats_a['wep_aps']; ?></td>
