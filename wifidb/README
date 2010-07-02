@@ -23,9 +23,12 @@ RanInt -> WiFiDB -> Read-me
 		
   Requirements:
 		PHP 5.0 or later
+			GD2 (included with PHP now)
+			ZipArchive class
+			SQLiteDatabase class
 		MySQL 5.0 or later
 		Apache 1.3 or later
-		a web-browser (doh!)
+		A Web-browser (doh!)
 		
   Summary:
 		WiFiDB is a PHP and MySQL based set of scripts that is intended to manage 
