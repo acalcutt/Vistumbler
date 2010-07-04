@@ -20,9 +20,8 @@
 RETVAL=0
 
 # SCRIPT DEFAULT SETTINGS
-prog="WiFiDBd"
-wifidbpath="/CLI"
-logpath="/var/log/wifidb/imp_expd.log"
+prog="Wifidb Daemons"
+wifidbpath="/opt/wifidb/tools"
 wdbpid="/var/run/wifidb/imp_expd.pid"
 lockfile="/var/lock/WiFiDB"
 
@@ -31,13 +30,12 @@ start() {
     if [ -f $wdbpid ]
     then
 		# failed
-		log_failure_msg "$prog is already running..."
+		log_failure_msg "$prog are already running..."
 		echo
 		RETVAL=2
     else
-        output=`nohup php ${wifidbpath}/rund.php start all> $logpath &`
-		sleep 1s
-        if [ -e $wdbpid ]
+        output=`php ${wifidbpath}/rund.php start all`
+        if [ -f $wdbpid ]
         then
 			# success
             touch $lockfile
@@ -60,7 +58,7 @@ stop() {
 	if [ -f $wdbpid ]
 	then
         # failed
-        log_failure_msg "$wdbpid still exists. $prog was not stopped properly..."
+        log_failure_msg "$wdbpid still exists. $prog were not stopped properly..."
 		echo		
 		RETVAL=1
     else
@@ -83,10 +81,10 @@ status() {
     if [ -f $wdbpid ]
     then
 		echo "$wdbpid file exists."
-		echo "WifiDB is running"
+		echo "WifiDB are running"
     else
         echo "$wdbpid file does not exist"
-		echo "WifiDB is not running"
+		echo "WifiDB are not running"
     fi
 }
 

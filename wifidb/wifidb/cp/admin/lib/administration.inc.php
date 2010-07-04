@@ -1162,6 +1162,7 @@ class admin
 				$user_id		=	$_POST['user_id'];
 				$email			=	$_POST['email'];
 				$h_email		=	$_POST['h_email'];
+				dump($h_email);
 				$disabled		=	$_POST['disabled'];
 				$locked			=	$_POST['locked'];
 				#dump($HTTP_POST_VARS['login_fails_submit']);
@@ -1238,12 +1239,8 @@ class admin
 										<td>
 											Email Address
 										</td>
-										<td>
+										<td colspan='2'>
 											<input type="text" size="48" maxlength="255" name="email" value="<?php echo $users['email']; ?>">
-										</td>
-										<td>
-												<input type="hidden" name="h_email" value="<?php if(($users['h_email']+0)===1){echo 0;}else{echo 1;} ?>" >
-												<input type="button" name="hide_email_submit" value="<?php if(($users['h_email']+0)===0){echo "Hide My Email!";}else{echo "Show My Email!";}?>" onClick="document.edit_user_values_form.action='?func=uandp&mode=man_users_edit'; document.edit_user_values_form.submit();" />
 										</td>
 									</tr>
 									<tr class="dark">
@@ -1316,6 +1313,22 @@ class admin
 															<input type="hidden" name="disabled" value="<?php echo $users['disabled']; ?>" >
 															<input type="hidden" name="h_email" value="<?php echo $users['h_email']; ?>" >
 															<input type="button" value="<?php if(($users['locked']+0)=== 1){echo "Account is currently locked out from to many bad logins!";}else{echo "Account is not locked!";}?>" onClick="document.lock_unlock_user_toggle.action='?func=uandp&mode=man_users_edit'; document.lock_unlock_user_toggle.submit();" />
+														</form>
+													</td>
+													<td align="center">
+														Hide Email?...
+														<form method="post" action="" name="toggle_user_email_form">
+															<input type="hidden" name="sec_token" value="<?php echo $token; ?>" >
+															<input type="hidden" name="locked" value="<?php echo ($users['locked']+0); ?>">
+															<input type="hidden" name="website" value="<?php echo $users['website']; ?>">
+															<input type="hidden" name="username" value="<?php echo $users['username']; ?>">
+															<input type="hidden" name="user_id" value="<?php echo $users['id']; ?>">
+															<input type="hidden" name="login_fails" size="3" value="<?php echo $users['login_fails']; ?>">
+															<input type="hidden" name="Vis_ver" value="<?php echo $users['Vis_ver']; ?>">
+															<input type="hidden" name="email" size="48" maxlength="255" value="<?php echo $users['email']; ?>">
+															<input type="hidden" name="disabled" value="<?php echo $users['disabled']; ?>" >
+															<input type="hidden" name="h_email" value="<?php if(($users['h_email']+0)===1){echo 0;}else{echo 1;} ?>" >
+															<input type="button" value="<?php if(($users['h_email']+0)===0){echo "Hide My Email!";}else{echo "Show My Email!";}?>" onClick="document.toggle_user_email_form.action='?func=uandp&mode=man_users_edit'; document.toggle_user_email_form.submit();" />
 														</form>
 													</td>
 												</tr>

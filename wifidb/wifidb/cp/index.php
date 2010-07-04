@@ -1515,16 +1515,17 @@ if($login_check)
 				
 				###########
 				$sql2 = "SELECT * FROM `$db`.`stats_$username` ORDER BY `id` DESC LIMIT 1";
-				echo $sql2."<br>";
+		#		echo $sql2."<br>";
 				$max_gps_query = mysql_query($sql2, $conn) or die(mysql_error($conn));
 				$max_gps_array = mysql_fetch_array($user_query);
 				$max_ssid_id = $max_gps_array['largest'];
-				dump($max_gps_array);
-				if($max_gps_array['largest'] == '')
+			#	dump($max_gps_array);
+				if($max_gps_array['largest'])
 				{
-					echo $max_gps_array['largest']."---".$max_gps_array['newest']."<BR>";
+			#		echo $max_gps_array['largest']."---".$max_gps_array['newest']."<BR>";
 					$max_ssid_ = explode(" - ", $max_gps_array['largest']);
 					$newest_ = explode(" - ", $max_gps_array['newest']);
+					
 					$max_ssid = '<a href="'.$GLOBALS['UPATH'].'opt/fetch.php?id='.$max_ssid_[1].'">'.$max_ssid_[0].'</a> ('.$max_ssid_[2].')';
 					$newest = '<a href="'.$GLOBALS['UPATH'].'opt/fetch.php?id='.$newest_[1].'">'.$newest[0].'</a> '.$newest_[2];
 				}else
