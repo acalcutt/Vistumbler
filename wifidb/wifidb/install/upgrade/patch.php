@@ -46,6 +46,11 @@ if($_POST['wdb_email_updates'] == 'on')
 
 if(!@isset($timeout)){$timeout		=   "(86400 * 365)";}
 
+if($theme == '')
+{
+	$theme = 'wifidb';
+}
+
 if($hosturl == '')
 {
 	$hosturl = (@$_SERVER["SERVER_NAME"]!='' ? $_SERVER["SERVER_NAME"] : $_SERVER["SERVER_ADDR"]);

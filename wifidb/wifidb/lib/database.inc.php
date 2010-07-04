@@ -6,7 +6,7 @@
 global $ver, $full_path, $half_path, $dim, $theme, $UPATH;
 $dim = "/";
 $ver = array(
-			"wifidb"			=>	" *Alpha* 0.20 Build 1 {pre-Final} ",
+			"wifidb"			=>	" *Alpha* 0.20 Build 1 ",
 			"codename"			=>	"Hyannis",
 			"Last_Core_Edit" 	=> 	"2010-June-25",
 			"database"			=>	array(  
@@ -487,7 +487,7 @@ function check_install_folder()
 {
 	$dim = $GLOBALS['dim'];
 	include('config.inc.php');
-	echo $GLOBALS['bypass_check'];
+#	echo $GLOBALS['bypass_check'];
 	if(@$GLOBALS['bypass_check']){return 0;}
 	$path = getcwd();
 	$path_exp = explode($dim , $path);
@@ -795,7 +795,7 @@ function login_bar($theme = "wifidb", $out = 1)
 		{
 			$filtered = filter_var($_SERVER['QUERY_STRING'],FILTER_SANITIZE_ENCODED);
 			$SELF = $_SERVER['PHP_SELF'];
-			if($SELF == $GLOBALS["root"].'/login.php')
+			if($SELF == "/".$GLOBALS["root"].'/login.php')
 			{
 				$SELF = "/".$GLOBALS["root"];
 				$filtered = '';

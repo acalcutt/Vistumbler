@@ -236,7 +236,7 @@ switch($func)
 			#	echo $delete."<BR>";
 				if(mysql_query($delete, $conn))
 				{
-					echo "<font color='Grey'><h2>Username: $username\r\n<BR>Has been activated! Go login -></h2></font>";
+					echo "<font color='Green'><h2>Username: $username\r\n<BR>Has been activated! Go login -></h2></font>";
 				}else
 				{
 					echo "<font color='Yellow'><h2>Username: $username\r\n<BR>Activated, but failed to remove from activation table, <br>
