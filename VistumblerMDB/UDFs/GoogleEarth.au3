@@ -1,4 +1,4 @@
-Func GoogleEarth_Initialize()
+Func _GoogleEarth_Initialize()
 	Local $oGoogleEarth = ObjCreate("GoogleEarth.ApplicationGE")
 	If @error <> 1 Then
 		While 1
@@ -10,7 +10,7 @@ Func GoogleEarth_Initialize()
 	EndIf
 EndFunc   ;==>GoogleEarth_Initialize
 
-Func GoogleEarth_GetPointonTerrain($oGoogleEarth, $x, $y)
+Func _GoogleEarth_GetPointonTerrain($oGoogleEarth, $x, $y)
 	Local $opointOnTerrain = $oGoogleEarth.GetPointOnTerrainFromScreenCoords($x, $y)
 	Local $PointArr[3]
 	$PointArr[0] = $opointOnTerrain.latitude
@@ -19,23 +19,23 @@ Func GoogleEarth_GetPointonTerrain($oGoogleEarth, $x, $y)
 	Return($PointArr)
 EndFunc   ;==>GoogleEarth_GetPointonTerrain
 
-Func GoogleEarth_ZoomTo($oGoogleEarth, $N, $W, $alt, $range, $tilt, $az, $mode = 1, $speed = 5.0)
+Func _GoogleEarth_ZoomTo($oGoogleEarth, $N, $W, $alt, $range, $tilt, $az, $mode = 1, $speed = 5.0)
 	$oGoogleEarth.SetCameraParams($N, $W, $alt, $mode, $range, $tilt, $az, $speed) ; zoom to a custom locus
 EndFunc   ;==>GoogleEarth_ZoomTo
 
-Func GoogleEarth_ScreenShot($oGoogleEarth, $directory, $quality = 100)
+Func _GoogleEarth_ScreenShot($oGoogleEarth, $directory, $quality = 100)
 	$oGoogleEarth.SaveScreenShot($directory, $quality) ; take a snapshot
 EndFunc   ;==>GoogleEarth_ScreenShot
 
-Func GoogleEarth_OpenKmlFile($oGoogleEarth, $fileName, $suppressMessages = True)
+Func _GoogleEarth_OpenKmlFile($oGoogleEarth, $fileName, $suppressMessages = True)
 	$oGoogleEarth.OpenKmlFile($fileName, $suppressMessages)
 EndFunc   ;==>GoogleEarth_OpenKmlFile
 
-Func GoogleEarth_LoadKmlData($oGoogleEarth, $kmlData)
+Func _GoogleEarth_LoadKmlData($oGoogleEarth, $kmlData)
 	$oGoogleEarth.LoadKmlData($kmlData)
 EndFunc   ;==>GoogleEarth_LoadKmlData
 
-Func GoogleEarth_GetCameraInfo($oGoogleEarth, $considerTerrain = True)
+Func _GoogleEarth_GetCameraInfo($oGoogleEarth, $considerTerrain = True)
 	Local $oCameraInfo = $oGoogleEarth.GetCamera($considerTerrain)
 	Local $CamDataArr[7]
 	$CamDataArr[0] = $oCameraInfo.FocusPointLatitude

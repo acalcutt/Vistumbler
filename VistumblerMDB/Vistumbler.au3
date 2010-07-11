@@ -90,6 +90,7 @@ GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
 ;Options-------------------------------------------------
 Opt("TrayIconHide", 1);Hide icon in system tray
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
+Opt("GUIResizeMode", 802)
 ;Get Date/Time-------------------------------------------
 $dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ')
 $datestamp = $dt[1]
@@ -1170,7 +1171,8 @@ $SupportVistumbler = GUICtrlCreateMenu($Text_SupportVistumbler)
 $VistumblerDonate = GUICtrlCreateMenuItem($Text_VistumblerDonate, $SupportVistumbler)
 $VistumblerStore = GUICtrlCreateMenuItem($Text_VistumblerStore, $SupportVistumbler)
 
-$GraphicGUI = GUICreate("", 900, 400, 10, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
+;$GraphicGUI = GUICtrlCreateGraphic (10, 60, 900, 400)
+$GraphicGUI = GUICreate("", 900, 400, 10, 60, $WS_CHILD, -1, $Vistumbler)
 GUISetBkColor($ControlBackgroundColor)
 $100 = GUICtrlCreateLabel('100%', 0, 5, 35, 38)
 $90 = GUICtrlCreateLabel('  90%', 0, 44, 35, 38)
@@ -1192,11 +1194,22 @@ GUICtrlSetColor($40, $TextColor)
 GUICtrlSetColor($30, $TextColor)
 GUICtrlSetColor($20, $TextColor)
 GUICtrlSetColor($10, $TextColor)
+GUICtrlSetResizing($100, 1)
+GUICtrlSetResizing($90, 1)
+GUICtrlSetResizing($80, 1)
+GUICtrlSetResizing($70, 1)
+GUICtrlSetResizing($60, 1)
+GUICtrlSetResizing($50, 1)
+GUICtrlSetResizing($40, 1)
+GUICtrlSetResizing($30, 1)
+GUICtrlSetResizing($20, 1)
+GUICtrlSetResizing($10, 1)
+GUISwitch($Vistumbler)
 
-$DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
-GUISetBkColor($BackgroundColor)
+;$DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
+;GUISetBkColor($BackgroundColor)
 
-$ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+$ListviewAPs = GUICtrlCreateListView($headers, 260, 65, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 $hImage = _GUIImageList_Create()
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
@@ -1214,14 +1227,14 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
 
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
-$TreeviewAPs = GUICtrlCreateTreeView(5, 5, 150, 585)
+$TreeviewAPs = GUICtrlCreateTreeView(5, 65, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 GUISetState()
 
 
 
-$ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $Vistumbler) ; Create Child window for controls
-GUISetBkColor($BackgroundColor)
+;$ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $Vistumbler) ; Create Child window for controls
+;GUISetBkColor($BackgroundColor)
 $ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 20, 0)
 $GpsButton = GUICtrlCreateButton($Text_UseGPS, 80, 8, 70, 20, 0)
 $GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 20, 0)
@@ -2253,7 +2266,7 @@ Func _ClearAllAp()
 	$query = "DELETE * FROM LoadedFiles"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	;Clear Listview
-	GUISwitch($DataChild)
+	;GUISwitch($DataChild)
 	_GetListviewWidths()
 	GUICtrlDelete($ListviewAPs)
 	$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
@@ -2670,10 +2683,9 @@ Func _GraphToggle(); Graph1 Button
 		GUISetState(@SW_HIDE, $GraphicGUI)
 	ElseIf $Graph = 2 Then
 		$Graph = 1
-		GUISwitch($ControlChild)
+		GUISwitch($Vistumbler)
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
-		GUISwitch($Vistumbler)
 	ElseIf $Graph = 0 Then
 		_DrawingStartUp($GraphicGUI)
 		_CreatePens()
@@ -2697,7 +2709,7 @@ Func _GraphToggle2(); Graph2 Button
 		GUISetState(@SW_HIDE, $GraphicGUI)
 	ElseIf $Graph = 1 Then
 		$Graph = 2
-		GUISwitch($ControlChild)
+		;GUISwitch($ControlChild)
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
 		GUISwitch($Vistumbler)
@@ -3643,8 +3655,10 @@ EndFunc   ;==>_Sort
 Func _WinMoved();Checks if window has moved. Returns 1 if it has
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WinMoved()') ;#Debug Display
 	$a = _WinGetPosEx($Vistumbler)
+	$b = _WinGetPosEx($GraphicGUI) ;get graph window size
 	$winpos_old = $winpos
-	$winpos = $a[0] & $a[1] & $a[2] & $a[3] & WinGetState($title, "")
+	$winpos = $a[0] & $a[1] & $a[2] & $a[3] & $b[0] & $b[1] & $b[2] & $b[3] & WinGetState($title, "")
+	ConsoleWrite($winpos & @CRLF)
 
 	If $winpos_old <> $winpos Then
 		;Set window state and position
@@ -3663,38 +3677,39 @@ EndFunc   ;==>_WinMoved
 
 Func _SetControlSizes();Sets control positions in GUI based on the windows current size
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetControlSizes()') ;#Debug Display
-	$a = _WinGetPosEx($Vistumbler)
-	WinMove($DataChild, "", 0, 60, $a[2] - 10, $a[3] - 115)
-	$b = _WinGetPosEx($DataChild) ;get child window size
+	$a = _WinGetPosEx($Vistumbler) ;get vistumbler window size
+	$b = _WinGetPosEx($GraphicGUI) ;get graph window size
 	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Then
-		$DataChild_Width = $b[2]
-		$DataChild_Height = $b[3]
+		$DataChild_Left = 2
+		$DataChild_Width = $a[2] - 16
+		$DataChild_Top = 65
+		$DataChild_Height = ($a[3] - 60) - $DataChild_Top
 		If $Graph <> 0 Then
-			$Graphic_left = ($b[2] * 0.01)
-			$Graphic_width = Round(($b[2] * 0.99) - $Graphic_left)
-			$Graphic_top = ($b[3] * 0.01) + 10
-			$Graphic_height = Round(($b[3] * $SplitHeightPercent) - $Graphic_top)
+			$Graphic_left = $DataChild_Left
+			$Graphic_width = Round($DataChild_Width - $Graphic_left)
+			$Graphic_top = $DataChild_Top
+			$Graphic_height = Round(($DataChild_Height * $SplitHeightPercent))
 
-			$ListviewAPs_left = ($b[2] * 0.01)
-			$ListviewAPs_width = Round(($b[2] * 0.99) - $ListviewAPs_left)
-			$ListviewAPs_top = ($b[3] * $SplitHeightPercent) + 1
-			$ListviewAPs_height = Round(($b[3] * 0.99) - $ListviewAPs_top)
+			$ListviewAPs_left = $DataChild_Left
+			$ListviewAPs_width = $DataChild_Width
+			$ListviewAPs_top = $DataChild_Top + ($Graphic_height + 1)
+			$ListviewAPs_height = $DataChild_Height - ($Graphic_height + 1)
 
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
-			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top + 60, $Graphic_width, $Graphic_height)
+			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		Else
-			$TreeviewAPs_left = ($b[2] * 0.01)
-			$TreeviewAPs_width = ($b[2] * $SplitPercent) - $TreeviewAPs_left
-			$TreeviewAPs_top = ($b[3] * 0.01)
-			$TreeviewAPs_height = ($b[3] * 0.99) - $TreeviewAPs_top
+			$TreeviewAPs_left = $DataChild_Left
+			$TreeviewAPs_width = ($DataChild_Width * $SplitPercent) - $TreeviewAPs_left
+			$TreeviewAPs_top = $DataChild_Top
+			$TreeviewAPs_height = $DataChild_Height
 
-			$ListviewAPs_left = ($b[2] * $SplitPercent) + 1
-			$ListviewAPs_width = ($b[2] * 0.99) - $ListviewAPs_left
-			$ListviewAPs_top = ($b[3] * 0.01)
-			$ListviewAPs_height = ($b[3] * 0.99) - $ListviewAPs_top
+			$ListviewAPs_left = ($DataChild_Width * $SplitPercent) + 1
+			$ListviewAPs_width = $DataChild_Width - $ListviewAPs_left
+			$ListviewAPs_top = $DataChild_Top
+			$ListviewAPs_height = $DataChild_Height
 
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
@@ -3734,7 +3749,8 @@ Func _TreeviewListviewResize()
 			GUISetCursor(2, 1);  2 = ARROW
 		EndIf
 	Else
-		If WinActive($Vistumbler) And $cursorInfo[1] > ($Graphic_top + 60) + $Graphic_height - 5 And $cursorInfo[1] < ($Graphic_top + 60) + $Graphic_height + 5 And $MoveMode = False Then
+		ConsoleWrite($ListviewAPs_top & " - " & $cursorInfo[1] & @CRLF)
+		If WinActive($Vistumbler) And $cursorInfo[1] > $ListviewAPs_top - 5 And $cursorInfo[1] < $ListviewAPs_top + 5 And $MoveMode = False Then
 			$MoveArea = True
 			GUISetCursor(11, 1);  11 = SIZENS
 		ElseIf $MoveArea = True Then
@@ -3746,11 +3762,10 @@ Func _TreeviewListviewResize()
 		EndIf
 		If $MoveMode = True Then
 			GUISetCursor(11, 1);  11 = SIZENS
-			$GraphArea_TopHeight = 60
-			$Graphic_height = $cursorInfo[1] - ($Graphic_top + $GraphArea_TopHeight)
-			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top + $GraphArea_TopHeight, $Graphic_width, $Graphic_height)
+			$Graphic_height = $cursorInfo[1] - $Graphic_top
+			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$ListviewAPs_top = $Graphic_top + $Graphic_height + 1
-			$ListviewAPs_height = $DataChild_Height - $ListviewAPs_top
+			$ListviewAPs_height = $DataChild_Height - $Graphic_height
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitHeightPercent = StringFormat('%0.2f', $Graphic_height / $DataChild_Height)
 			$Redraw = 1
