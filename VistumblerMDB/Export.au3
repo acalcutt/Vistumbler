@@ -3,18 +3,18 @@
 #AutoIt3Wrapper_icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2008 Andrew Calcutt
+;Copyright (C) 2010 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.2.13.11 Beta
+;AutoIt Version: v3.3.6.1
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Save'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports a KML based on input options'
 $version = 'v2'
-$last_modified = '2009/07/12'
+$last_modified = '2010/07/11'
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
@@ -121,7 +121,7 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 		$ExpTime = $GpsMatchArray[$exp][6]
 		FileWriteLine($savefile, $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpDate & '|' & $ExpTime)
 	Next
-	
+
 	;Export AP Information
 	FileWriteLine($savefile, "# ---------------------------------------------------------------------------------------------------------------------------------------------------------")
 	FileWriteLine($savefile, "# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL")
@@ -147,7 +147,7 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 		$ExpAPID = $ApMatchArray[$exp][15]
 		$ExpHighGpsID = $ApMatchArray[$exp][16]
 		$ExpGidSid = ''
-		
+
 		;Create GID,SIG String
 		$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -161,7 +161,7 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 				$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
 			EndIf
 		Next
-		
+
 		FileWriteLine($savefile, $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid)
 	Next
 EndFunc   ;==>_ExportDetailedTXT
@@ -191,7 +191,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		$ExpLastID = $ApMatchArray[$exp][13]
 		$ExpAPID = $ApMatchArray[$exp][14]
 		$ExpHighGpsID = $ApMatchArray[$exp][15]
-		
+
 		;Get High GPS Signal
 		If $ExpHighGpsID = 0 Then
 			$ExpHighGpsSig = 0
@@ -207,7 +207,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 			$ExpHighGpsLat = $GpsMatchArray[1][1]
 			$ExpHighGpsLon = $GpsMatchArray[1][2]
 		EndIf
-		
+
 		;Get First Found Time From FirstHistID
 		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpFirstID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -215,7 +215,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFistsGpsId & "'"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-		
+
 		;Get Last Found Time From LastHistID
 		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -223,7 +223,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFistsGpsId & "'"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-		
+
 		;Get Signal History
 		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -235,7 +235,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 				$ExpSigHist &= '-' & $HistMatchArray[$esh][1]
 			EndIf
 		Next
-		
+
 		FileWriteLine($savefile, $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpHighGpsSig & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpHighGpsLat & '|' & $ExpHighGpsLon & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $FirstDateTime & '|' & $LastDateTime & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpSigHist)
 	Next
 EndFunc   ;==>_ExportToTXT
@@ -286,7 +286,7 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapAPs = 1, $MapActive = 1, $MapDead 
 						 & '</Icon>' & @CRLF _
 						 & '</IconStyle>' & @CRLF _
 						 & '</Style>' & @CRLF
-					 
+
 			EndIf
 			If $MapDead = 1 Then
 				$file &= '<Style id="secureDeadStyle">' & @CRLF _
