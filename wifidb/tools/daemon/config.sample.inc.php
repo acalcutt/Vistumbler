@@ -1,7 +1,7 @@
 <?php //#last edited -> 2010-Apr-19 20:40:50
 global $daemon_ver, $start_date, $last_edit;
 global $wifidb_install, $log_level, $log_interval, $verbose, $dst, $time_interval_to_check, $daemon_log, $debug;
-global $colors_setting, $default_user, $default_title, $default_notes, $dim, $console_line_limit;
+global $colors_setting, $default_user, $default_title, $default_notes, $dim, $console_line_limit, $console_trim_log;
 global $PERF_time_interval_to_check, $DBSTATS_time_interval_to_check;
 global $BAD_CLI_COLOR, $GOOD_CLI_COLOR, $OTHER_CLI_COLOR;
 if(PHP_OS == 'WINNT')
