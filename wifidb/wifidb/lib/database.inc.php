@@ -1674,7 +1674,6 @@ class database
 				$timestamp = date("Y-m-d H:i:s", $time[0]);
 				
 				$table = $ssid_t.$sep.$mac.$sep.$sectype.$sep.$radio.$sep.$chan;
-				echo $table."\r\n$timestamp - - $man\r\n$nt - $authen - $encry - $sectype - $lat - $long\r\n----------\r\n\r\n";
 			#	if($ssid_t == "yellow"){ die(); }
 				//format date and time
 				$datetime=explode(" ",$timestamp);
@@ -1682,6 +1681,7 @@ class database
 				$time=$datetime[1];
 				$lat = $row['lat'];
 				$long = $row['lon'];
+				echo $table."\r\n$timestamp - - $man\r\n$nt - $authen - $encry - $sectype - $lat - $long\r\n----------\r\n\r\n";
 				// This is a temp array of data to be tested against the GPS array
 				$gpsdata_t=array(
 									"lat"=>$lat,
@@ -3741,6 +3741,9 @@ class database
 				</tr>
 				<tr class="light">
 					<td colspan="2"><CENTER><b><?php echo $user_array["notes"]; ?></b></CENTER></td>
+				</tr>
+				<tr class="dark">
+					<td colspan="2"><CENTER><b><a href="export.php?func=exp_user_list&row=<?php echo $user_array["id"]; ?>">Export List</a></b></CENTER></td>
 				</tr>
 			<table>
 			<br>

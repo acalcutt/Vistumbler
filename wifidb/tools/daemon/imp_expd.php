@@ -5,7 +5,7 @@
 //perpetually in the background. I am hoping to get a C++ version working 
 //sometime soon, until then I am using php.
 
-error_reporting(E_ALL|E_STRICT);
+#error_reporting(E_ALL|E_STRICT);
 
 global $screen_output, $dim, $COLORS, $daemon_ver;
 $screen_output = "CLI";
@@ -172,10 +172,11 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			{
 				verbosed("This file needs to be converted to VS1 first. Please wait while the computer does the work for you.", $verbose, $screen_output, 1);
 				$source = $database->convert_vs1($source);
+				$id = $files_array['id'];
 				$files_array['file'] = $file_src[0].'.vs1';
 				$hash1 = hash_file('md5', $GLOBALS['wifidb_install'].'/import/up/'.$files_array['file']);
 				$size1 = format_size(dos_filesize($GLOBALS['wifidb_install'].'/import/up/'.$files_array['file']));
-				$update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '".$files_array['id']."'";
+				$update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '$id'";
 			#	echo $update_tmp."\r\n";
 				if(mysql_query($update_tmp, $conn))
 				{
@@ -259,7 +260,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 							verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing $source ($remove_file) from the Temp files table\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
 						}else
 						{
-							$sel_new = "SELECT `id` FROM `$db`.`$files` ORDER BY `id` DESC";
+							$sel_new = "SELECT `id` FROM `$db`.`$users_t` ORDER BY `id` DESC";
 							$res_new = mysql_query($sel_new, $conn);
 							$new_array = mysql_fetch_array($res_new);
 							$newrow = $new_array['id'];
@@ -326,7 +327,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			$message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
 			logd("Starting Automated KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
 			verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Starting Automated KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-			daemon::daemon_kml($named = 0, $verbose);
+			$daemon->daemon_kml($named = 0, $verbose);
 			mail_users("Generation of Full Database KML File.\r\n".$host_url."/".$root."/out/daemon/update.kml\r\n\r\n-WiFiDB Service", $subject, "kmz", 0);
 		}
 		

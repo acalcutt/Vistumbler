@@ -16,55 +16,25 @@ if(!(@require_once 'daemon/config.inc.php')){die("You need to create and configu
 if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
+
 echo "WiFiDB Backup Script\r\nVersion: ".$bver['version']."\r\n\r\n";
 $sep = $GLOBALS['sep'];
 $recover = array();
 $database = new database();
 $daemon	=	new daemon();
-if(!function_exists('parseArgs'))
-{
-	function parseArgs($argv){
-		array_shift($argv);
-		$out = array();
-		foreach ($argv as $arg){
-			if (substr($arg,0,2) == '--'){
-				$eqPos = strpos($arg,'=');
-				if ($eqPos === false){
-					$key = substr($arg,2);
-					$out[$key] = isset($out[$key]) ? $out[$key] : true;
-				} else {
-					$key = substr($arg,2,$eqPos-2);
-					$out[$key] = substr($arg,$eqPos+1);
-				}
-			} else if (substr($arg,0,1) == '-'){
-				if (substr($arg,2,1) == '='){
-					$key = substr($arg,1,1);
-					$out[$key] = substr($arg,3);
-				} else {
-					$chars = str_split(substr($arg,1));
-					foreach ($chars as $char){
-						$key = $char;
-						$out[$key] = isset($out[$key]) ? $out[$key] : true;
-					}
-				}
-			} else {
-				$out[] = $arg;
-			}
-		}
-		return $out;
-	}
-}
+
 $parm = parseArgs($argv);
 if(@$parm[0] == '')
 {
 	echo "You need to define a Destination file inorder to run the backup script.\r\n";die();
 }
+
 $fo = fopen($parm[0], 'w');
 $fileappend = fopen($parm[0], 'a');
-
+if(@$parm['c']){$compress = 1; echo "Will Compress to tar.gz\r\n\r\n";}else{$compress = 0;}
 if(@$parm['v']){$verbose = 1;}else{$verbose = 0;}
 
-$start = "\r\n########\r\n#\r\n#\r\nSTART TIME: ".date("H:i:s.u")."\r\n";
+$start = "\r\n########\r\n#\r\n#\r\nSTART TIME: ".date("H:i:s")."\r\n";
 
 $sql0 = "SHOW TABLES FROM `$db`";
 $return0 = mysql_query($sql0, $conn);
@@ -340,6 +310,23 @@ while($newArray = mysql_fetch_array($return__))
 
 }
 $stop = microtime(1);
-echo "\r\n$start\r\n########\r\n#\r\n#\r\nEND TIME: ".date("H:i:s.u")." - (".($stop - $starts).")\r\n";
+if($compress)
+{
+	$tarfile = tar_file($parm[0]);
+	if(!$tarfile)
+	{
+		echo "taring of file failed...";
+	}else
+	{
+		echo "System tar program returned: ".$tarfile[0]." - RunTime: ".$tarfile[2]." - MBps: ".$tarfile[3]."\r\n";
+	}
+	echo "File: ".$tarfile[4]."\r\n";
+}else
+{
+	echo "File: ".$parm[0]."\r\n";
+}
+
+echo "\r\n$start\r\n########\r\n#\r\n#\r\nEND TIME: ".date("H:i:s")." - (".($stop - $starts).")\r\n";
+
 #var_dump($recover);
 ?>
