@@ -6,9 +6,9 @@
 global $ver, $full_path, $half_path, $dim, $theme, $UPATH;
 $dim = "/";
 $ver = array(
-			"wifidb"			=>	" *Alpha* 0.20 Build 1 ",
+			"wifidb"			=>	" *Alpha* 0.20 Build 1.1 ",
 			"codename"			=>	"Hyannis",
-			"Last_Core_Edit" 	=> 	"2010-June-25",
+			"Last_Core_Edit" 	=> 	"2010-July-10",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.7.0",
@@ -22,7 +22,7 @@ $ver = array(
 										"exp_gpx"			=>	"1.0.0",
 										"convert_dm_dd"		=>	"1.3.1",
 										"convert_dd_dm"		=>	"1.3.1",
-										"convert_vs1"		=>	"1.1",
+										"convert_vs1"		=>	"1.2",
 										"manufactures"		=>	"1.0",
 										"gen_gps"			=>	"1.0",
 										"exp_newest_kml"	=>	"1.0",
@@ -53,7 +53,7 @@ $ver = array(
 										"get_set"			=>	"1.0",
 										"getTZ"				=>	"1.0",
 										"parseArgs"			=>	"1.0",
-										"tarfile"			=>	"1.1",
+										"tar_file"			=>	"1.1",
 										"my_caches"			=>	"1.0",
 										"login_bar"			=>	"1.0",
 										"user_panel_bar"	=>	"1.0",
@@ -318,19 +318,20 @@ function redirect_page($return = "", $delay = 0, $msg = "no Message", $new_windo
 #-------------------------------------------------------------------------------------#
 function tar_file($file)
 {
+	include_once('config.inc.php');
 	$start = microtime(1);
 	$filename_exp = explode( ".", $file);
 	$filename_strip = $filename_exp[0];
-
-	$script = "tar -czfv backups/$filename_strip.tar.gz $file";
+	$archive = $GLOBALS['wifidb_tools']."/backups/".$filename_strip.".tar.gz";
+	$script = "tar -czfv $archive $file";
 	$results = system($script,$retval);
-
+	
 	if(!$results)
 	{
 		$stop = microtime(1);
 		$time = ($stop-$start);
 		$mbps = ((filesize($file)/1024)/1024)/$time;
-		$return = array( $results, $retval, $time, $mbps );
+		$return = array( $results, $retval, $time, $mbps, $archive );
 		return $return;
 	}else
 	{
@@ -1370,7 +1371,7 @@ class database
 		$apdata=array();
 		global $gpsdata;
 		
-	#	$dir = $GLOBALS['wifidb_install'].'/import/up/';
+		$dir = $GLOBALS['wifidb_install'].'/import/up/';
 		// dfine time that the script started
 		$start = date("H:i:s");
 		// counters

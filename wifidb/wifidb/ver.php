@@ -20,9 +20,9 @@ pageheader("Version Page");
 			</tr>
 		</table>
 		<BR><H2>Change Log</H2>
-		<table class="light" width="100%" border="2" id="16b4">
+		<table class="light" width="100%" border="2" id="20b1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-June-23</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-July-4</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
