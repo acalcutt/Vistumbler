@@ -50,12 +50,13 @@ $text = "";
 if($scroll)
 {
 ?>
-<script>
-function go(){
-setTimeout(window.location='#end', 20000);
-}
-</script>
-<body onload='go()' bgcolor="BLACK">
+	<script>
+	function go()
+	{
+		window.location='#end';
+	}
+	</script>
+	<body onload='go()' bgcolor="BLACK">
 <?php
 }else
 {
@@ -77,13 +78,13 @@ $handle = fopen($console_log, "r");
 			$console_exp = explode(".",$console_line);
 			foreach($console_exp as $exp)
 			{
-				$text = $text.".";
-				if($sig_line>300){$text = $text."\r\n";$sig_line=0;}
+				$text = $text;
+				if($sig_line>300){$text = $text."\r\n<br>";$sig_line=0;}
 				$sig_line++;
 				$sig_num++;
 			}
 		}
-		if($sig_num != 0 && $console_line[0] == "."){$text = $text."\nSignal Points: ".$sig_num."<br>\r\n";$sig_num=0;}
+		if($sig_num != 0 && $console_line[0] == "."){$text = $text; $sig_num=0;}
 		
 		if($console_line[0] == ":")
 		{
@@ -94,7 +95,7 @@ $handle = fopen($console_log, "r");
 				$exp_num++;
 			}
 		}
-		if($exp_num != 0 && $console_line[0] != ":"){$text = $text."\nAccess Points: ".$exp_num."<br>\r\n";$exp_num=0;}
+		if($exp_num != 0 && $console_line[0] != ":"){$text = $text."<br>\r\n";$exp_num=0;}
 		
 		$sig_num=0;
 		$exp_num=0;

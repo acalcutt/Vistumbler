@@ -18,23 +18,23 @@ else
 ?>
 <table border="0" cellspacing="0" cellpadding="3">
   <tr>
-    <td width="100%">1>  SQL Root User To Make the changes)</td><td>........................................</td>
+    <td width="100%">1&#60;  SQL Root User To Make the changes)</td><td>........................................</td>
     <td><input name="root_sql_user"></td></tr>
   <tr>
-    <td>2>  SQL Root user Password</td><td>........................................</td>
+    <td>2&#60;  SQL Root user Password</td><td>........................................</td>
     <td><input TYPE=PASSWORD name="root_sql_pwd"></td></tr>
   <tr>
   <tr>
-    <td width="100%">1>  WiFiDB User (To verify that you have access)</td><td>........................................</td>
+    <td width="100%">3&#60;  WiFiDB User (To verify that you have access)</td><td>........................................</td>
     <td><input name="wdb_sql_user"></td></tr>
   <tr>
-    <td>2>  WiFiDB user Password</td><td>........................................</td>
+    <td>4&#60;  WiFiDB user Password</td><td>........................................</td>
     <td><input TYPE=PASSWORD name="wdb_sql_pwd"></td></tr>
   <tr>
-    <td>3>  Would you like to replace erroneous data with valid blank data?<h5>(eg. N 0.00000 | E 0.00000 | 1-1-1971 | 00:00:00)<h5></td><td>........................................</td>
+    <td>5&#60;  Would you like to replace erroneous data with valid blank data?<h5>(eg. N 0.00000 | E 0.00000 | 1-1-1971 | 00:00:00)<h5></td><td>........................................</td>
     <td><INPUT TYPE=CHECKBOX NAME="replace"></td></tr>
   <tr>
-    <td>4>  Would you like to delete Access points altogether if they don't have any 'valid' GPS points?</td><td>........................................</td>
+    <td>6&#60;  Would you like to delete Access points altogether if they don't have any 'valid' GPS points?</td><td>........................................</td>
     <td><INPUT TYPE=CHECKBOX NAME="deleteap"></td>
 </TR><TR></TR><TD></TD><TD></TD><TR><TD></TD><TD></TD><TD>
 <INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in">

@@ -22,7 +22,7 @@ function admin_pageheader($page = '')
 	?>
 	<html>
 		<head>
-			<title>Wireless DataBase <?php echo $ver;?> --> Administrator Control Panel --> <?php echo $page;?></title>
+			<title>Wireless DataBase <?php echo $ver;?> --&#60; Administrator Control Panel --&#60; <?php echo $page;?></title>
 			<?php echo $head;?>
 		</head>
 	<?php

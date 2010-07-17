@@ -1109,7 +1109,7 @@ if($login_check)
 										</table>
 									</td>
 								</tr>
-							</table
+							</table>
 							<?php
 							break;
 						}

@@ -803,8 +803,8 @@ class admin
 									<td><?php echo $users_a['uid']; ?></td>
 								</tr>
 							</table>
-							<br>
 							<?php
+							echo "<BR>";
 							}else
 							{
 								?>

@@ -8,7 +8,7 @@ $dim = "/";
 $ver = array(
 			"wifidb"			=>	" *Alpha* 0.20 Build 1.1 ",
 			"codename"			=>	"Hyannis",
-			"Last_Core_Edit" 	=> 	"2010-July-10",
+			"Last_Core_Edit" 	=> 	"2010-July-17",
 			"database"			=>	array(  
 										"import_vs1"		=>	"1.7.2", 
 										"apfetch"			=>	"2.7.0",
@@ -1387,7 +1387,7 @@ class database
 		$file_src = explode(".",$src[$f_max-1]);
 		$file_type = strtolower($file_src[1]);
 		
-		$file_ext = @$dir.$file_src[0].'.vs1';
+		$file_ext = $dir.$file_src[0].'.vs1';
 		$filename = $file_ext;
 			if($GLOBALS["debug"] == 1 ){echo $file_ext."\n".$filename."\n";}
 		// define initial write and appends
@@ -3139,10 +3139,12 @@ class database
 		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Encryption Type</P></TD><TD class="light" WIDTH=439><P><?php echo $newArray['encry'];?></P></TD></TR>
 		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Radio Type</P></TD><TD class="light" WIDTH=439><P><?php echo $radio;?></P></TD></TR>
 		<TR VALIGN=TOP><TD class="style4" WIDTH=112><P>Channel #</P></TD><TD class="light" WIDTH=439><P><?php echo $newArray['chan'];?></P></TD></TR>
-		<?php
-		?>
-		<tr  class="style4"><td colspan="2" align="center" ><a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>">Export this AP to KML</a></td></tr>
-		</table>
+		<tr class="style4">
+			<td colspan="2" align="center" >
+				<a class="links" href="../opt/export.php?func=exp_single_ap&row=<?php echo $ID;?>">Export this AP to KML</a>
+			</td>
+		</tr>
+		</TABLE>
 		<br>
 		<TABLE align=center  WIDTH=85% BORDER=1 CELLPADDING=4 CELLSPACING=0 id="gps">
 		<tr class="style4"><th colspan="10">Signal History</th></tr>

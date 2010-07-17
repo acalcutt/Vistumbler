@@ -22,7 +22,7 @@ pageheader("Version Page");
 		<BR><H2>Change Log</H2>
 		<table class="light" width="100%" border="2" id="20b1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-July-4</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-July-17</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -75,7 +75,7 @@ pageheader("Version Page");
 					<LI>Changed mail_admin() function to `mail_users(), So Administrators and other users can be updated with new imports and other updates. Based off of <a class="links" href="http://www.XpertMailer.com" target="_blank">XpertMailer</a></LI>
 					<LI>Added another Daemon called 'geonamed.php'</LI>
 						<UL><LI>Geonaming of Country and Administrative Names of Access Points with GPS. </LI>
-						<LI>Data gathered from this page: http://ws.geonames.org/countrySubdivision?lat=43.5762033&lng=7.02199666</LI>
+						<LI>Data gathered from this page: http://ws.geonames.org/countrySubdivision?lat=43.5762033&#38;lng=7.02199666</LI>
 						<LI><a class="links" href="http://www.geonames.org/" target="_blank" >GeoNames.org</a></LI></UL>
 					</UL>
 					<LI>Support for <a class="links" href="http://code.google.com/p/wardrive-android/">Wardrive</a> on android.
@@ -88,7 +88,14 @@ pageheader("Version Page");
 							</LI>
 						</UL>
 					</LI>
-
+					<LI><B>Build 1.1 Fixes</B><OL>
+						<LI>Fixed an error in the converter function, was not telling it the location to write the file, resulted in a file being imported, but not saved to the disc.</LI>
+						<LI>Fixed a bug in the import page, when there was an unsupported file being uploaded an Email was sent out. This is no longer done.</li>
+						<LI>The Last import date on the main page was changing even when the import had finished.</LI>
+						<LI>The console viewer had an error with some modifications that i made, and didnt fix before the release.</LI>
+						<LI>Some small HTML tag issues are fixed.</LI>
+					</OL>
+					</LI>
 				</OL>
 			</td></tr>
 		</table>
@@ -144,7 +151,7 @@ pageheader("Version Page");
 					<LI>Fixed some errors in the way the daemon compares the files that are being prepared to import. </LI>
 					<LI>Re-generated manufatures.inc.php to get new manufactures. </LI>
 					<LI>Removed Export Single AP to KML from the exports page, since there is more detailed exports on the APs fetch page, where you can choose what signal history row, or all the history rows, was also causing the page to take forever to load with lots of APs.</LI>
-					<LI>Added $header variable for < Meta > tags and the such</LI>
+					<LI>Added $header variable for &#62; Meta &#60; tags and the such</LI>
 					<LI>Added the Random Intervals Logo to the header</LI>
 					<LI>Added support for Themes, please read this thread on how to use it / make your own. </LI>
 					<LI>Changed scheduling.php so it has cookies support, now it is per-browser not per-server. </LI>
@@ -172,7 +179,7 @@ pageheader("Version Page");
 					<LI>Fixed an issue where if you had sent a file from Vistumbler the token would not be able to be compared. </LI>
 					<LI>Added signal strength to Access Point Signal Plot KML export. </LI>
 					<LI>Changed Individual User Stat Page to new layout. </LI>
-					<LI>Standardized SSID usage, there are three types :< /LI>
+					<LI>Standardized SSID usage, there are three types :</LI>
 					<OL>
 						<LI>&#60;ny-paq&#62;&#124;sayz oh-my this is fun (Is the non-sanitized, but still safe SSID, used to name APs, 32 char limit, no special chars.)</LI>
 						<LI>&#60;ny-paq&#62;_sayz oh-my this is fun (Safe for file names, no special chars, 32 char limit.)</LI>
@@ -284,22 +291,22 @@ pageheader("Version Page");
 			<LI>Fixed an error in the GPS conversion. </LI>
 			<LI>Added a footer function to take over the "*THIS PAGE* has been last edited on..." at the end of all forms, to standardize it, seeing how it was on all forms anyway. </LI>
 			<LI>Moved the "*THIS PAGE* was last modified on: YYYY-MMM-DD @ HH:MM:SS" to the bottom of the page in the bottom cell. </LI>
-			<LI>Working on changing the layout of the AP fetch page. Soon it will be :< /LI>
-			<OL type="A">
-				<LI><b><i><br>---------------------------------------<br>
-				&nbsp;&nbsp; Associated list <br>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_&gt; Signal history for that list <br>
-				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_&gt; GPS points for that Signal<br>
-				---------------------------------------<br></i></b></LI>
-				<LI>Would like to have it so the GPS history is hide able via Java-script or something. </LI>
-				<LI>So far the changes are, all the previous separate functions (fetch GPS, fetch associate list, and fetch signal) are all now one function (fetch AP). </LI>
-				<LI>Unfortunately this is going to require a change in the back end. Previous databases will not be compatible with this update. </LI>
-				<LI>Reason being, in the previous versions (0.14 &amp; 0.15[all builds]) did not store the signal history row in the Users table. </LI> 
-					<OL>
-						<LI>Old way ex <font color="red">1</font>,<font color="Yellow">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>-<font color="red">1</font>,<font color="Yellow">10</font>-... / <font color="red">0</font>,<font color="Yellow">6</font> : <font color="red">0</font> is the update or new flag <font color="red">1</font> = Updated AP  <font color="red">0</font> = New AP, the <font color="Yellow">6</font> is the AP ID number in the Database</LI>
-						<LI>New way ex <font color="red">1</font>,<font color="Yellow">6</font>:<font color="Green">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>:<font color="Green">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">3</font>-<font color="red">1</font>,<font color="Yellow">10</font>:<font color="Green">1</font>-... /<br> <font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">2</font> ; <font color="red">0</font> is the update or new flag 1 = Updated AP / 0 = New AP, the <font color="Yellow">6</font> is the Unique Access Point ID (UAPID) in the Database, and the <font color="Green">2</font> is the Signal History row number for the access point.)</LI>
-					</OL>
-			</OL>
+			<LI>Working on changing the layout of the AP fetch page. Soon it will be :</LI>
+				<OL type="A">
+					<LI><b><i><br>---------------------------------------<br>
+					&nbsp;&nbsp; Associated list <br>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_&gt; Signal history for that list <br>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|_&gt; GPS points for that Signal<br>
+					---------------------------------------<br></i></b></LI>
+					<LI>Would like to have it so the GPS history is hide able via Java-script or something. </LI>
+					<LI>So far the changes are, all the previous separate functions (fetch GPS, fetch associate list, and fetch signal) are all now one function (fetch AP). </LI>
+					<LI>Unfortunately this is going to require a change in the back end. Previous databases will not be compatible with this update. </LI>
+					<LI>Reason being, in the previous versions (0.14 &amp; 0.15[all builds]) did not store the signal history row in the Users table. </LI> 
+						<OL>
+							<LI>Old way ex <font color="red">1</font>,<font color="Yellow">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>-<font color="red">1</font>,<font color="Yellow">10</font>-... / <font color="red">0</font>,<font color="Yellow">6</font> : <font color="red">0</font> is the update or new flag <font color="red">1</font> = Updated AP  <font color="red">0</font> = New AP, the <font color="Yellow">6</font> is the AP ID number in the Database</LI>
+							<LI>New way ex <font color="red">1</font>,<font color="Yellow">6</font>:<font color="Green">1</font>-<font color="red">0</font>,<font color="Yellow">2</font>:<font color="Green">2</font>-<font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">3</font>-<font color="red">1</font>,<font color="Yellow">10</font>:<font color="Green">1</font>-... /<br> <font color="red">0</font>,<font color="Yellow">6</font>:<font color="Green">2</font> ; <font color="red">0</font> is the update or new flag 1 = Updated AP / 0 = New AP, the <font color="Yellow">6</font> is the Unique Access Point ID (UAPID) in the Database, and the <font color="Green">2</font> is the Signal History row number for the access point.)</LI>
+						</OL>
+				</OL>
 			<LI>The users table holds all the list imports for each user. </LI>
 			<LI>Fixed a bug when a search has no results, the page would output a PHP error, now it says "There were no results, please try again". </LI>
 			<LI>Fixed an issue, where on install there would be an SQL error and fail to install. </LI>
@@ -323,7 +330,7 @@ pageheader("Version Page");
 				<OL>
 					<LI>Soon you will be able to make the viewing time as your local time zone. </LI>
 					<LI><a class="links" href="http://wwp.greenwichmeantime.com/">greenwichmeantime.com</a></LI>
-					<LI><a class="links" href="http://en.wikipedia.org/wiki/Greenwich_Mean_Time">wikipedia -> Greenwich_Mean_Time</a></LI>
+					<LI><a class="links" href="http://en.wikipedia.org/wiki/Greenwich_Mean_Time">wikipedia -&#60; Greenwich_Mean_Time</a></LI>
 				</OL>
 		</OL>
 	</td></tr>
@@ -488,7 +495,7 @@ pageheader("Version Page");
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26">Changes :</td></tr>
 	<tr><td style="border-style: solid; border-width: 1px;width:50%" height="26" colspan="3">
 		<OL>
-			<LI>Fixed the issue where the signal history was getting corrupted and adding in way more signal points then there actually where for the AP. [functions.php->import_vs1()].</LI>
+			<LI>Fixed the issue where the signal history was getting corrupted and adding in way more signal points then there actually where for the AP. [functions.php-&#60;import_vs1()].</LI>
 			<LI>Added in a `Users` table to keep track of what users imported/updated APs.</LI>
 			<LI>Added in `notes` for the group of APs to be added into the `Users` table, by the user upon import.</LI>
 			<LI>Fixed most if not all CSS issues.</LI>
@@ -509,7 +516,7 @@ pageheader("Version Page");
 </table>
 <br>
 
-	<h2><---LINKS---></h2>
+	<h2>&#62;---LINKS---&#60;</h2>
 	<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=22">RanInt Forum</a><br>
 	<a class="links" href="http://forum.techidiots.net/forum/viewforum.php?f=38">WiFiDB Forum</a><br>
 <br>

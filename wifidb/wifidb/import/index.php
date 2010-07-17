@@ -75,8 +75,8 @@ switch($func)
 			break;
 			default:
 				echo '<h2>You can only upload supported files. (VS1, Txt, or DB3)<br><A class="links" HREF="javascript:history.go(-1)">Go back</a> and do it right!</h2>';
-				$message = "Non Supported File uploaded, my need to be removed from import/up/ folder.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
-				mail_users($message, $subject, $type, 0, 1);
+			#	$message = "Non Supported File uploaded, my need to be removed from import/up/ folder.\r\nUser: $user\r\nTitle: $title\r\nFile: ".$UPATH."import/up/$rand.'_'.$filename\r\n\r\n-WiFiDB Daemon.\r\n There was an error inserting file for schedualing.\r\n\r\n".mysql_error($conn);
+			#	mail_users($message, $subject, $type, 0, 1);
 				footer($_SERVER['SCRIPT_FILENAME']);
 				die();
 			break;

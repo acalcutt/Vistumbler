@@ -58,7 +58,7 @@ $sqls = "SELECT * FROM `$table_gps`";
 $result = mysql_num_row($sqls, $conn) or die(mysql_error());
 
 
-list($centerlat_form , $centerlong_form) &= convert_dm_dd($newArray['lat'],$gpsarray['long']);
+list($centerlat_form , $centerlong_form) = convert_dm_dd($newArray['lat'],$gpsarray['long']);
  
 }
 $longs=explode(" ",$centerlong_form,2);

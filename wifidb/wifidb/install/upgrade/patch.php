@@ -6,7 +6,7 @@ include($half_path.'/lib/config.inc.php');
 ?>
 <h3>If one of the steps shows "Duplicate column name '***'," you can ignore this error.</h3>
 <table border="1">
-<tr class="style4"><TH colspan="2">Upgrade DB for all versions <b>--></b> 0.20 Build 1</TH>
+<tr class="style4"><TH colspan="2">Upgrade DB for all versions <b>--&#60;</b> 0.20 Build 1</TH>
 <tr class="style4"><th colspan="2">Upgrade Database Tables</th></tr>
 <tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
 

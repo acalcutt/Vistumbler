@@ -23,8 +23,8 @@ function pageheader($title, $output="detailed", $install=0)
 		echo '<html><head><title>Wireless DataBase '.$GLOBALS["ver"]["wifidb"].' --> '.$title.'</title>'.$head.'</head>';
 		# START YOUR HTML EDITS HERE #
 		?>
+		<body style="background-color: #145285">
 		<link rel="stylesheet" href="<?php echo $GLOBALS['UPATH'];?>/themes/vistumbler/styles.css">
-			<body style="background-color: #145285">
 			<table style="width: 90%; " class="no_border" align="center">
 				<tr>
 					<td>

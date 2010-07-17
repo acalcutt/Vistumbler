@@ -64,7 +64,7 @@ if (file_exists($filename)) {?>
 <?php
 }
 ?>
-</td
+</td>
 </tr>
 </table>
 </body>
