@@ -10011,7 +10011,7 @@ Func _LocateGpsInWifidb()
 							Case "LOCATE"
 								ConsoleWrite("<-- LOCATE Response -->" & @CRLF)
 								Dim $RLat, $RLon, $RSats, $RDate, $RTime
-								If $recv_array[2] = "Empty" Then
+								If $recv_array[2] = "Empty" Or $recv_array[2] = "Error" Then
 									;No Position Found
 								Else
 									$RLat = $recv_array[2]
