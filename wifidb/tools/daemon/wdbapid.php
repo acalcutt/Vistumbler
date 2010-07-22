@@ -16,9 +16,9 @@ $server_settings['seed']	= 	$GLOBALS['login_seed'];
 // Set the ip and port we will listen on
 $ips = getIPs();
 $address = $ips[0];
-$port = 9000;
-$max_clients = 2;
-echo "Starting the WiFiDB API Daemon on [".$ips[0].":".$port."]\r\nMax Clients configured for: ".$max_clients."\r\n";
+$port = $GLOBALS['API_PORT'];
+$max_clients = $GLOBALS['MAX_CLIENTS'];
+echo "Starting the WiFiDB API Daemon on [".$address.":".$port."]\r\nMax Clients configured for: ".$max_clients."\r\n";
 // Array that will hold client information
 $client = Array();
 

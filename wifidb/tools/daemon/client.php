@@ -1,16 +1,6 @@
 <?php
 global $client_seed;
 
-
-function getIPs($withV6 = true) {
-    preg_match_all('/inet'.($withV6 ? '6?' : '').' addr: ?([^ ]+)/', `ifconfig`, $ips);
-    return $ips[1];
-}
-
-
-
-
-#$address = 'localhost';
 $remote_address = '192.168.1.27';
 $remote_port = 9000;
 
@@ -114,4 +104,10 @@ if($sent === false)
 		#echo "Sent message waiting for response from server...\r\n";
 	}	
 }
+
+function getIPs($withV6 = true) {
+    preg_match_all('/inet'.($withV6 ? '6?' : '').' addr: ?([^ ]+)/', `ifconfig`, $ips);
+    return $ips[1];
+}
+
 ?>
