@@ -11,7 +11,7 @@ include($half_path.'/lib/config.inc.php');
 <tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
 
 <?php
-global $wifidb_smtp, $wifidb_email_updates;
+global $wifidb_smtp, $wifidb_email_updates, $reserved_users;
 $ENG = "InnoDB";
 $date = date("Y-m-d");
 
@@ -28,6 +28,8 @@ $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
 $wifidb_from			=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
 $wifidb_from_pass		=	addslashes(strip_tags($_POST['wdb_from_pass']));
 $wifidb_smtp			=	addslashes(strip_tags($_POST['wdb_smtp']));
+
+$reserved_users		=	'WiFiDB:Recovery';
 
 if($_POST['email_validation'] == 'on')
 {
@@ -785,7 +787,7 @@ fclose($filewrite);
 	#========================================================================================================================#
 require_once("../../lib/security.inc.php");
 $sec = new security();
-$create = $sec->create_user('Admin', $password, $email, $user_array=array(1,0,0,1), $activatecode, 0);
+$create = $sec->create_user('Admin', $password, $email, $user_array=array(1,0,0,1), "", 0);
 switch($create)
 {
 	case 1:

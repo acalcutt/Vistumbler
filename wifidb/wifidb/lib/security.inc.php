@@ -373,19 +373,23 @@ class security
 		$mod = $user_array[2];
 		$user = $user_array[3];
 		
-		if($seed == ''){$seed = $GLOBALS['seed'];}
+		if($seed == ''){$seed = $GLOBALS['login_seed'];}
 		if($seed == ''){$seed = "PIECAVE!";}
 		
 		if($username == '' or $password == ''){die("Username and/or password cannot be blank.");}
 		
-		$uid_b = md5($date.$username.$seed);
+		$uid_b = md5($date.$username."PIECAVE");
 		$uid_exp = str_split($uid_b, 6);
 		$uid = implode("-", $uid_exp);
 		#echo $uid."<BR>";
+		
 		$user_cache = 'waypoints_'.$username;
 		$user_stats = 'stats_'.$username;
+		
 		$pass_seed = md5($password.$seed);
-		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `admins` , `devs`, `mods`, `users` ,`last_login` ,`email`, `uid`, `join_date`, `validated` )VALUES ( NULL , '$username', '$pass_seed', '$admin','$dev','$mod','$user', '$date', '$email', '$uid', '$date', '$validate_user_flag')";
+		
+		$insert_user = "INSERT INTO `$db`.`$user_logins_table` (`id` ,`username` ,`password`, `admins` , `devs`, `mods`, `users` ,`last_login` ,`email`, `uid`, `join_date`, `validated` )VALUES ( '' , '$username', '$pass_seed', '$admin','$dev','$mod','$user', '$date', '$email', '$uid', '$date', '$validate_user_flag')";
+		echo $insert_user."<BR>";
 		if(mysql_query($insert_user, $conn))
 		{
 			$create_user_cache = "CREATE TABLE `$db`.`$user_cache` 
@@ -412,38 +416,49 @@ class security
 							) ENGINE=INNODB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0";
 			if(mysql_query($create_user_cache, $conn))
 			{
-				$create_user_cache = "CREATE TABLE `$db`.`$user_stats` 
+				$create_user_stats = "CREATE TABLE `$db`.`$user_stats` 
 							(
 							  `id` int(255) NOT NULL auto_increment,
 							  `newest` varchar(255) NOT NULL,
 							  `largest` varchar(255) NOT NULL,
 							  UNIQUE KEY `id` (`id`)
 							) ENGINE=INNODB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=0";
-				if(mysql_query($create_user_cache, $conn))
+				if(mysql_query($create_user_stats, $conn))
 				{
-					$msg = "New user has been created!\r\nUsername: $username\r\nDate: $date\r\nLink to Users' info: ".$UPATH."/opt/userstats.php?func=alluserlists&user=$username";
-					mail_users($msg, $subject, $type, 0);
+					if($validate_user_flag)
+					{
+						$msg = "New user has been created!\r\nUsername: $username\r\nDate: $date\r\nLink to Users' info: ".$UPATH."/opt/userstats.php?func=alluserlists&user=$username";
+						mail_users($msg, $subject, $type, 0);
+					}
 					return 1;
 				}else
 				{
-					$msg = "Failed to create new user statistics table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n$err";
-					mail_users($msg, $subject, $type, 1);
+					if($validate_user_flag)
+					{
+						$msg = "Failed to create new user statistics table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n$err";
+						mail_users($msg, $subject, $type, 1);
+					}
 					$return = array("create_tb", $msg);
 					return $return;
 				}
 			}else
 			{
-				$msg = "Failed to create new user Geocache table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n$err";
-				mail_users($msg, $subject, $type, 1);
+				if($validate_user_flag)
+				{
+					$msg = "Failed to create new user Geocache table. ($date)\r\n Username: $username\r\nMySQL Error:\r\n$err";
+					mail_users($msg, $subject, $type, 1);
+				}
 				$return = array("create_tb", $msg);
 				return $return;
 			}
-		}
-		else
+		}else
 		{
 			$err = mysql_error($conn);
-			$msg = "Failed to create new user. Duplicate username or email already exists in database. ($date)\r\n Username: $username\r\n Email: $email\r\n MySQL Error:\r\n$err";
-			mail_users($msg, $subject, $type, 1);
+			if($validate_user_flag)
+			{
+				$msg = "Failed to create new user. Duplicate username or email already exists in database. ($date)\r\n Username: $username\r\n Email: $email\r\n MySQL Error:\r\n$err";
+				mail_users($msg, $subject, $type, 1);
+			}
 			$return = array("dup_u", $err);
 			return $return;
 		}

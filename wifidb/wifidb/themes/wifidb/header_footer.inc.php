@@ -36,7 +36,7 @@ function pageheader($title, $output="detailed", $install=0)
 					<table>
 					<tr>
 							<td style="width: 215px">
-								<a href="<?php echo $GLOBALS['UPATH'];?>"><img border="0" src="<?php echo $GLOBALS['UPATH']; ?>/img/logo.png"></a>
+								<a href="<?php echo $GLOBALS['UPATH'];?>"><img border="0" src="<?php echo $GLOBALS['UPATH']; ?>/themes/wifidb/img/logo.png"></a>
 							</td>
 							<td width="100%" align="center">
 								<b>
@@ -46,6 +46,7 @@ function pageheader($title, $output="detailed", $install=0)
 									<?php breadcrumb($_SERVER["REQUEST_URI"]); ?>
 								</b>
 							</td>
+							<td><img alt="" src="/wifidb/themes/wifidb/img/1x1_transparent.gif" width="130" height="1" /></td>
 						</tr>
 					</table>
 				</td>

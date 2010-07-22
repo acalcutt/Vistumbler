@@ -260,7 +260,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 							verbosed($GLOBALS['COLORS'][$BAD_IED_COLOR]."Error removing $source ($remove_file) from the Temp files table\n\t".mysql_error($GLOBALS['conn']).$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
 						}else
 						{
-							$sel_new = "SELECT `id` FROM `$db`.`$users_t` ORDER BY `id` DESC";
+							$sel_new = "SELECT `id` FROM `$db`.`$users_t` ORDER BY `id` DESC LIMIT 1";
 							$res_new = mysql_query($sel_new, $conn);
 							$new_array = mysql_fetch_array($res_new);
 							$newrow = $new_array['id'];
@@ -327,7 +327,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			$message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
 			logd("Starting Automated KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
 			verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Starting Automated KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-			$daemon->daemon_kml($named = 0, $verbose);
+			daemon::daemon_kml($named = 0, $verbose);
 			mail_users("Generation of Full Database KML File.\r\n".$host_url."/".$root."/out/daemon/update.kml\r\n\r\n-WiFiDB Service", $subject, "kmz", 0);
 		}
 		

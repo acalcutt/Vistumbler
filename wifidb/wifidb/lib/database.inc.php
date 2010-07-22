@@ -69,11 +69,13 @@ $ver = array(
 #-------------------------------------------------------------------------------------#
 #----------------------------------  Get/Set values  ---------------------------------#
 #-------------------------------------------------------------------------------------#
-
 if(!@include('config.inc.php'))
 {
-	echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="'.$PATH.'install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
-	die();
+	if(@$GLOBALS['install'] != "installing")
+	{
+		echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="'.$PATH.'install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
+		die();
+	}
 }else
 {
 	$sql = "SELECT `id` FROM `$db`.`user_info`";
@@ -96,47 +98,46 @@ if(!@include('config.inc.php'))
 	{
 		$UPATH = 'http://'.$server_name.'/'.$root;
 	}
-}
-if(PHP_OS == "WINNT")
-{$dim="\\";}else{$dim = "/";}
-$path = getcwd();
-$wifidb_tools = $GLOBALS['wifidb_tools'];
-$root = $GLOBALS['root'];
-
-$path_exp = explode($dim, $path);
-$path_count = count($path_exp);
-
-
-include($wifidb_tools.'/daemon/config.inc.php');
-#	echo "Root: ".$root."<br>Path: ".$path."<br>Div: ".$dim."<br>Path Count: ".$path_count;
-if($root == '' or $root == '/')
-{
-	$half_path = $GLOBALS['wifidb_install'];
-}
-else
-{
-	foreach($path_exp as $key=>$val)
+	if(PHP_OS == "WINNT")
+	{$dim="\\";}else{$dim = "/";}
+	$path = getcwd();
+	$wifidb_tools = @$GLOBALS['wifidb_tools'];
+	$root = @$GLOBALS['root'];
+	
+	$path_exp = explode($dim, $path);
+	$path_count = count($path_exp);
+	include($wifidb_tools.'/daemon/config.inc.php');
+	#	echo "Root: ".$root."<br>Path: ".$path."<br>Div: ".$dim."<br>Path Count: ".$path_count;
+	if($root == '' or $root == '/')
 	{
-	#	echo $root."<br>";
-		if($val == $root){ $path_key = $key;}
-	#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
+		$half_path = $GLOBALS['wifidb_install'];
 	}
-
-	$half_path = '';
-	$I = 0;
-	if(isset($path_key))
+	else
 	{
-	#	echo "I: ".$I." - ".$path_key."<br>";
-		while($I!=($path_key+1))
+		foreach($path_exp as $key=>$val)
 		{
-			
-			$half_path = $half_path.$path_exp[$I].$dim;
-		#	echo "Half Path: ".$half_path."<br>";
-			$I++;
+		#	echo $root."<br>";
+			if($val == $root){ $path_key = $key;}
+		#	echo "Val: ".$val."<br>Path key: ".$path_key."<BR>";
 		}
-
+	
+		$half_path = '';
+		$I = 0;
+		if(isset($path_key))
+		{
+		#	echo "I: ".$I." - ".$path_key."<br>";
+			while($I!=($path_key+1))
+			{
+				
+				$half_path = $half_path.$path_exp[$I].$dim;
+			#	echo "Half Path: ".$half_path."<br>";
+				$I++;
+			}
+	
+		}
 	}
 }
+
 
 ####### HTTP ONLY ########
 if(@$GLOBALS['screen_output'] != "CLI")
@@ -487,6 +488,7 @@ function recurse_chmod($mypath, $mod)
 function check_install_folder()
 {
 	$dim = $GLOBALS['dim'];
+	$install_folder_remove = "";
 	include('config.inc.php');
 #	echo $GLOBALS['bypass_check'];
 	if(@$GLOBALS['bypass_check']){return 0;}

@@ -1,8 +1,9 @@
 <?php
-global $screen_output, $wifidb_smtp, $wifidb_email_updates;
+global $screen_output, $install;
 $screen_output = 'CLI';
-
+$install = "installing";
 include('../lib/database.inc.php');
+global $wifidb_smtp, $wifidb_email_updates, $reserved_users, $login_seed;
 echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].' --> Install Page</title>';
 ?>
 <link rel="stylesheet" href="../themes/wifidb/styles.css">
@@ -79,10 +80,11 @@ $wifi_st		=	addslashes(strip_tags($_POST['wifist']));
 $theme			=	addslashes(strip_tags($_POST['theme']));
 $password		=	addslashes(strip_tags($_POST['wdb_admn_pass']));
 $email			=	addslashes(strip_tags($_POST['wdb_admn_emailadrs']));
-$wifidb_email			=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
-$wifidb_from_pass		=	addslashes(strip_tags($_POST['wdb_from_pass']));
-$wifidb_smtp		=	addslashes(strip_tags($_POST['wdb_smtp']));
-$timeout				=   "(86400 * 365)";
+$wifidb_from	=	addslashes(strip_tags($_POST['wdb_from_emailadrs']));
+$wifidb_from_pass	=	addslashes(strip_tags($_POST['wdb_from_pass']));
+$wifidb_smtp	=	addslashes(strip_tags($_POST['wdb_smtp']));
+$timeout	=   "(86400 * 365)";
+$reserved_users	=	'WiFiDB:Recovery';
 
 if($_POST['email_validation'] == 'on')
 {
@@ -649,7 +651,7 @@ function gen_key()
 	return $activatecode;
 }
 
-$seed = gen_key();
+$login_seed = gen_key();
 
 #Add last edit date and globals
 if($root != ''){$wifidb_install_ = $_SERVER['DOCUMENT_ROOT'].$root;}else{$wifidb_install_ = $_SERVER['DOCUMENT_ROOT'];}
@@ -673,7 +675,7 @@ $"."hosturl		=	'$hosturl';
 $"."dim			=	DIRECTORY_SEPARATOR;
 $"."admin_email	=	'$email';
 $"."config_fails	=	3;
-$"."login_seed		=	'$seed';
+$"."login_seed		=	'$login_seed';
 $"."wifidb_email_updates = '$wifidb_email_updates';
 $"."wifidb_from	=	'$wifidb_from';
 $"."wifidb_from_pass	=	'$wifidb_from_pass';
@@ -816,7 +818,7 @@ fclose($filewrite);
 	#========================================================================================================================#
 require("../lib/security.inc.php");
 $sec = new security();
-$create = $sec->create_user('Admin', $password, $email, $user_array=array(1,0,0,1), $activatecode);
+$create = $sec->create_user('Admin', $password, $email, $user_array=array(1,0,0,1), "", 0);
 switch($create)
 {
 	case 1:
@@ -827,8 +829,8 @@ switch($create)
 		list($er, $msg) = $create;
 		switch($er)
 		{
-			case "create_wpt":
-				echo '<tr class="bad"><td>Failure..........</td><td>There was an error in Creating the Geocache table.<BR>This is a serious error, contact Phil on the <a href="http://forum.techidiots.net/">forums</a><br>MySQL Error Message: '.$msg."<br><h1>D'oh!</h1></td></tr>";
+			case "create_tb":
+				echo '<tr class="bad"><td>Failure..........</td><td>'.$msg.'<BR>This is a serious error, contact Phil on the <a href="http://forum.techidiots.net/">forums</a><br>MySQL Error Message: '.$msg."<br><h1>D'oh!</h1></td></tr>";
 			break;
 			
 			case "dup_u":

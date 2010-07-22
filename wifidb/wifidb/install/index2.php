@@ -6,10 +6,8 @@ document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled =! document.forms
 }
 </script>
 <?php
-global $screen_output;
-$screen_output = 'CLI';
-include('../lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].' --> Install Page</title>';
+$version = "0.20 Build 2";
+echo '<title>Wireless DataBase *Alpha* '.$version.' --> Install Page</title>';
 ?>
 <link rel="stylesheet" href="../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" marginwidth="10" marginheight="10" onload="document.forms['WiFiDB_Install'].elements['toolsdir'].disabled=true; document.forms['WiFiDB_Install'].elements['httpduser'].disabled=true; document.forms['WiFiDB_Install'].elements['httpdgrp'].disabled=true;">
@@ -18,7 +16,7 @@ echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].' --> Install Page</titl
 	<tr>
 		<td bgcolor="#315573">
 		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
+		Wireless DataBase *Alpha* <?php echo $version; ?></font>
 		<font color="#FFFFFF" size="2">
             <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
 		</font></b>

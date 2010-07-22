@@ -88,6 +88,10 @@ while($tables = mysql_fetch_array($return0))
 		{
 			fwrite($fileappend, "INSERT INTO `$db`.`$table_name` ( $fields ) VALUES $values );\r\n");
 			continue;
+		}elseif($n == 10000)
+		{
+			fwrite($fileappend, "INSERT INTO `$db`.`$table_name` ( $fields ) VALUES $values );\r\n");
+			$values = "";
 		}else
 		{
 			$values .= " ),\r\n";
@@ -202,8 +206,8 @@ while($newArray = mysql_fetch_array($return__))
 		{
 #			echo "|- ".$key." - ".$arr." -| ";
 			if($ar_siz == ($key+1))
-			{$values .= "'".addslashes($tbl_data[$key])."'";}
-			else{$values .= "'".addslashes($tbl_data[$key])."', ";}
+			{$values .= "'".$tbl_data[$key]."'";}
+			else{$values .= "'".$tbl_data[$key]."', ";}
 		}
 		if($n == $rows){$values .= " )\r\n";}else{$values .= " ),\r\n";}
 	}
@@ -288,8 +292,8 @@ while($newArray = mysql_fetch_array($return__))
 		{
 #			echo "|- ".$key." - ".$arr." -| ";
 			if($ar_siz == ($key+1))
-			{$values .= "'".addslashes($tbl_data[$key])."'";}
-			else{$values .= "'".addslashes($tbl_data[$key])."', ";}
+			{$values .= "'".$tbl_data[$key]."'";}
+			else{$values .= "'".$tbl_data[$key]."', ";}
 		}
 		if($alt_id == $tbl_data['id']){continue;}
 		$alt_id = $tbl_data['id'];
