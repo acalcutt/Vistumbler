@@ -44,6 +44,7 @@ $last_modified = '2010/07/21'
 #include "UDFs\WinGetPosEx.au3"
 #include "UDFs\UnixTime.au3"
 TCPStartup()
+Dim $IP = _GetIP()
 ;Set/Create Folders--------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
 Dim $DefaultSaveDir = @ScriptDir & '\Save\'
@@ -92,6 +93,7 @@ GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
 Opt("TrayIconHide", 1);Hide icon in system tray
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
 Opt("GUIResizeMode", 802)
+Opt("TCPTimeout", 100)
 ;Get Date/Time-------------------------------------------
 $dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ')
 $datestamp = $dt[1]
@@ -4189,116 +4191,6 @@ Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 		MsgBox(0, $Text_Error, $Text_NoActiveApFound)
 	EndIf
 EndFunc   ;==>_LocatePositionInWiFiDB
-
-Func _LocateGpsInWifidb()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
-	Local $RLat, $RLon, $RSats, $RDate, $RTime
-	Local $remote_address = '192.168.1.27';
-	Local $remote_port = 9000;
-	Local $ActiveMacs
-	Local $return = 0
-	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
-	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundBssidMatch = UBound($BssidMatchArray) - 1
-	If $FoundBssidMatch <> 0 Then
-		For $exb = 1 To $FoundBssidMatch
-			If $exb <> 1 Then $ActiveMacs &= '-'
-			$ActiveMacs &= $BssidMatchArray[$exb][1] & ',' & ($BssidMatchArray[$exb][2] + 0)
-		Next
-
-		;// Bind the socket to an address/port
-		$sock = TCPConnect($remote_address, $remote_port)
-		If @error Then
-			ConsoleWrite("<-- Failed to open socket -->" & @CRLF)
-		Else
-			ConsoleWrite("<-- Opened socket -->" & @CRLF)
-			;// Send Hello message
-			$sent = TCPSend($sock, "IP|Hello Server!")
-			If @error Then
-				ConsoleWrite("<-- Failed to send hello message to server -->" & @CRLF)
-			Else
-				ConsoleWrite("<-- Sent hello message to server -->" & @CRLF)
-				While 1
-					$recv = TCPRecv($sock, 2048)
-					If @error Then ExitLoop
-					If $recv <> "" Then
-						ConsoleWrite($recv & @CRLF)
-						$recv_array = StringSplit($recv, "|")
-						;_ArrayDisplay($recv_array)
-						Switch $recv_array[1]
-							Case "GET_U_IP"
-								ConsoleWrite("<-- IP Requested -->" & @CRLF)
-								$ips = _GetIP()
-								If $ips = '-1' Then $ips = "127.0.0.1"
-								$messg = "IPADDR|" & $ips
-								TCPSend($sock, $messg)
-								ConsoleWrite("--> Sent IP(" & $ips & "), waiting for response from server" & @CRLF)
-							Case "OK"
-								ConsoleWrite("<-- Ready -->" & @CRLF)
-								$messg = "LOCATE|" & $ActiveMacs
-								TCPSend($sock, $messg)
-								ConsoleWrite("--> Request Location - Sent MACs(" & $ActiveMacs & ")" & @CRLF)
-							Case "LOCATE"
-								ConsoleWrite("<-- LOCATE Response -->" & @CRLF)
-								Dim $RLat, $RLon, $RSats, $RDate, $RTime
-								If $recv_array[2] = "Empty" Then
-									;No Position Found
-								Else
-									$RLat = $recv_array[2]
-									$RLon = $recv_array[3]
-									$RSats = $recv_array[4]
-									$RDate = $recv_array[5]
-									$RTime = $recv_array[6]
-									$LatitudeWifidb = $RLat
-									$LongitudeWifidb = $RLon
-									$WifidbGPS_Update = TimerInit()
-									$return = 1
-								EndIf
-								TCPCloseSocket($sock)
-								ExitLoop
-						EndSwitch
-					EndIf
-				WEnd
-			EndIf
-		EndIf
-	EndIf
-	_ClearWifiGpsDetails()
-	Return ($return)
-EndFunc   ;==>_LocateGpsInWifidb
-
-#comments-start
-	
-	Func _LocateGpsInWifidb()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
-	Local $ActiveMacs
-	Local $return = 0
-	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
-	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundBssidMatch = UBound($BssidMatchArray) - 1
-	If $FoundBssidMatch <> 0 Then
-	For $exb = 1 To $FoundBssidMatch
-	If $exb <> 1 Then $ActiveMacs &= '-'
-	$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
-	Next
-	$url_root = $PhilsWdbURL & 'opt/locate.php?'
-	$url_data = $url_root & "ActiveBSSIDs=" & $ActiveMacs
-	$webpagesource = _INetGetSource($url_data)
-	If StringInStr($webpagesource, '|') Then
-	$wifigpsdata = StringSplit($webpagesource, "|")
-	If $wifigpsdata[1] <> '' And $wifigpsdata[1] <> '' Then
-	$LatitudeWifidb = $wifigpsdata[1]
-	$LongitudeWifidb = $wifigpsdata[2]
-	$WifidbGPS_Update = TimerInit()
-	$return = 1
-	EndIf
-	EndIf
-	EndIf
-	_ClearWifiGpsDetails()
-	Return ($return)
-	EndFunc   ;==>_LocateGpsInWifidb
-	
-#comments-end
-
 
 Func _ClearWifiGpsDetails();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearWifiGpsDetails()') ;#Debug Display
@@ -10071,3 +9963,76 @@ Func _ImportWardriveDb3($DB3file)
 	_SQLite_Close($WardriveImpDB)
 	_SQLite_Shutdown()
 EndFunc   ;==>_ImportWardriveDb3
+
+Func _LocateGpsInWifidb()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
+	Local $RLat, $RLon, $RSats, $RDate, $RTime
+	Local $remote_address = '192.168.1.27';
+	Local $remote_port = 9000
+	Local $remote_timeout = 500
+	Local $remote_socketopen = 0
+	Local $ActiveMacs
+	Local $return = 0
+	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
+	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundBssidMatch = UBound($BssidMatchArray) - 1
+	If $FoundBssidMatch <> 0 Then
+		For $exb = 1 To $FoundBssidMatch
+			If $exb <> 1 Then $ActiveMacs &= '-'
+			$ActiveMacs &= $BssidMatchArray[$exb][1] & ',' & ($BssidMatchArray[$exb][2] + 0)
+		Next
+
+		;// Bind the socket to an address/port
+		$sock = TCPConnect($remote_address, $remote_port)
+		If @error Then
+			ConsoleWrite("<-- Failed to open socket -->" & @CRLF)
+		Else
+			$remote_socketopen = 1
+			ConsoleWrite("<-- Opened socket -->" & @CRLF)
+			$sent = TCPSend($sock, "HELLO");// Send Hello message
+			If @error Then
+				ConsoleWrite("<-- Failed to send hello message to server -->" & @CRLF)
+			Else
+				ConsoleWrite("<-- Sent hello message to server -->" & @CRLF)
+				$ltimeout = TimerInit()
+				While 1
+					$recv = TCPRecv($sock, 2048)
+					If @error Then ExitLoop
+					If $recv <> "" Then
+						ConsoleWrite($recv & @CRLF)
+						$recv_array = StringSplit($recv, "|")
+						;_ArrayDisplay($recv_array)
+						Switch $recv_array[1]
+							Case "HELLO"
+								ConsoleWrite("<-- Ready -->" & @CRLF)
+								$messg = "LOCATE|" & $ActiveMacs
+								TCPSend($sock, $messg)
+								ConsoleWrite("--> Request Location - Sent MACs(" & $ActiveMacs & ")" & @CRLF)
+							Case "LOCATE"
+								ConsoleWrite("<-- LOCATE Response -->" & @CRLF)
+								Dim $RLat, $RLon, $RSats, $RDate, $RTime
+								If $recv_array[2] = "Empty" Then
+									;No Position Found
+								Else
+									$RLat = $recv_array[2]
+									$RLon = $recv_array[3]
+									$RSats = $recv_array[4]
+									$RDate = $recv_array[5]
+									$RTime = $recv_array[6]
+									$LatitudeWifidb = $RLat
+									$LongitudeWifidb = $RLon
+									$WifidbGPS_Update = TimerInit()
+									$return = 1
+								EndIf
+								ExitLoop
+						EndSwitch
+					EndIf
+					If TimerDiff($ltimeout) > $remote_timeout Then ExitLoop
+				WEnd
+			EndIf
+		EndIf
+		If $remote_socketopen = 1 Then TCPCloseSocket($sock)
+	EndIf
+	_ClearWifiGpsDetails()
+	Return ($return)
+EndFunc   ;==>_LocateGpsInWifidb
