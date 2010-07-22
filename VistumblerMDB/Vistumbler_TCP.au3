@@ -10021,10 +10021,13 @@ Func _LocateGpsInWifidb()
 									$RTime = $recv_array[6]
 									$LatitudeWifidb = $RLat
 									$LongitudeWifidb = $RLon
-									$WifidbGPS_Update = TimerInit()
 									$return = 1
 								EndIf
+								$WiFiDbLocate_Timer = TimerInit()
 								ExitLoop
+							Case Else
+								ConsoleWrite("<-- Re-Sending Hello -->" & @CRLF)
+								TCPSend($sock, "HELLO");// Re-Send Hello message
 						EndSwitch
 					EndIf
 					If TimerDiff($ltimeout) > $remote_timeout Then ExitLoop
