@@ -39,7 +39,7 @@ if($sent === false)
 		{
 			case 'GET_U_IP':
 				$ips = getIPs();
-				$messg = "IP|".$ips[0];
+				$messg = "IPADDR|".$ips[0];
 				socket_write($sock, $messg, strlen($messg));
 				echo "Sent IP, waiting for response from server...\r\n";
 			break;
