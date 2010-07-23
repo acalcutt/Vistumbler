@@ -10068,25 +10068,23 @@ Func _UploadToWifiDB()
 			ConsoleWrite("<-- Sent hello message to server -->" & @CRLF)
 			$ltimeout = TimerInit()
 			While 1
-				ConsoleWrite("waiting" & @CRLF)
 				$recv = TCPRecv($sock, 2048)
 				If @error Then ExitLoop
 				If $recv <> "" Then
 					ConsoleWrite($recv & @CRLF)
 					$recv_array = StringSplit($recv, "|")
-					;_ArrayDisplay($recv_array)
 					Switch $recv_array[1]
-						Case "HELLO"
+						Case "HELLO" ;Server is alive, Log on with WifiDB user
 							ConsoleWrite("<-- Ready -->" & @CRLF)
 							$lip = _GetIP()
 							$messg = "LOGIN|" & $lip & "|" & $WiFiDB_User
 							TCPSend($sock, $messg)
 							ConsoleWrite("-->Sent Logon Request(" & $messg & ")" & @CRLF)
-						Case "EXIT"
+						Case "EXIT" ;Exit message received, Disconnect
 							ConsoleWrite("<-- EXIT -->" & @CRLF)
 							$ExitError = $recv_array[2]
 							ExitLoop
-						Case "PWD"
+						Case "PWD" ;Server requested WiFiDB password
 							$seed = $recv_array[2]
 							$uhpwd = $WiFiDB_Pass & $seed
 							$hpwd = StringLower(StringTrimLeft(_MD5($uhpwd), 2))
@@ -10094,14 +10092,18 @@ Func _UploadToWifiDB()
 							ConsoleWrite("-->Sent Password Hash(" & $hpwd & ")" & @CRLF)
 							TCPSend($sock, $messg)
 						Case "LOGIN"
-							If $recv_array[2] = "OK" Then ;Logon Successful - Initiate Import
+							If $recv_array[2] = "OK" Then ;Logon successful, Start import
 								$session_key = $recv_array[3]
 								$messg = "IMPORT|" & $session_key & '|VS1|' & $ldatetimestamp & '.VS1|TITLE (' & $ldatetimestamp & ')|NOTES|' & StringLower(_MD5ForFile($WdbFile))
 								TCPSend($sock, $messg)
 								ConsoleWrite("-->Initiate Send(" & $messg & ")" & @CRLF)
+							ElseIf $recv_array[2] = "BADU" Then ;Logon failed due to bad username or password
+								$rerr = $recv_array[3]
+								ConsoleWrite("--> " & $rerr & " <--" & @CRLF)
+								ExitLoop
 							EndIf
 						Case "IMPORT"
-							If $recv_array[2] = "SEND" Then
+							If $recv_array[2] = "SEND" Then ;Server sent messgae to start file upload, start binary VS1 transfer to WiFiDB
 								ConsoleWrite("-->Sending File(" & $WdbFile & ")" & @CRLF)
 								$iFileOp = FileOpen($WdbFile, 16)
 								$sBuff = FileRead($iFileOp)
@@ -10113,36 +10115,17 @@ Func _UploadToWifiDB()
 								WEnd
 								TCPSend($sock, "IMPORT|SENT")
 								ConsoleWrite("-->File Sent" & @CRLF)
-							ElseIf $recv_array[2] = "RESEND" Then
+							ElseIf $recv_array[2] = "RESEND" Then ;Server requested file be re-imported
 								$messg = "IMPORT|" & $session_key & '|VS1|' & $ldatetimestamp & '.VS1|TITLE (' & $ldatetimestamp & ')|NOTES|4' & StringLower(_MD5ForFile($WdbFile))
 								TCPSend($sock, $messg)
 								ConsoleWrite("-->Initiate Send(" & $messg & ")" & @CRLF)
-							ElseIf $recv_array[2] = "FAIL" Then
+							ElseIf $recv_array[2] = "FAIL" Then ;Import Failed, Disconnect
 								ConsoleWrite("-- >Failed to send")
 								ExitLoop
-							ElseIf $recv_array[2] = "OK" Then
+							ElseIf $recv_array[2] = "OK" Then ;Import Successful, Disconnect
 								ConsoleWrite("-- >Sending Finished")
 								ExitLoop
 							EndIf
-						Case "LOCATE"
-							ConsoleWrite("<-- LOCATE Response -->" & @CRLF)
-							Dim $RLat, $RLon, $RSats, $RDate, $RTime
-							If $recv_array[2] = "OK" Then
-								$RLat = $recv_array[3]
-								$RLon = $recv_array[4]
-								$RSats = $recv_array[5]
-								$RDate = $recv_array[6]
-								$RTime = $recv_array[7]
-								$LatitudeWifidb = $RLat
-								$LongitudeWifidb = $RLon
-								$return = 1
-								$WifidbGPS_Update = TimerInit()
-							EndIf
-							$WiFiDbLocate_Timer = TimerInit()
-							ExitLoop
-							;Case Else
-							;ConsoleWrite("<-- Re-Sending Hello -->" & @CRLF)
-							;TCPSend($sock, "HELLO");// Re-Send Hello message
 					EndSwitch
 				EndIf
 				If TimerDiff($ltimeout) > $remote_timeout Then ExitLoop
