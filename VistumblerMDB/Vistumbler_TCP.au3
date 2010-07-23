@@ -4165,12 +4165,13 @@ EndFunc   ;==>_ViewInPhilsPHP
 
 Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
-	$WdbFile = $SaveDir & 'WDB_Export.VS1'
-	FileDelete($WdbFile)
-	_ExportDetailedTXT($WdbFile)
-	$url_root = $PhilsWdbURL & 'import/?'
-	$url_data = "file=" & $WdbFile
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
+	_UploadToWifiDB()
+	;$WdbFile = $SaveDir & 'WDB_Export.VS1'
+	;FileDelete($WdbFile)
+	;_ExportDetailedTXT($WdbFile)
+	;$url_root = $PhilsWdbURL & 'import/?'
+	;$url_data = "file=" & $WdbFile
+	;Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 EndFunc   ;==>_AddToYourWDB
 
 Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
@@ -10038,3 +10039,118 @@ Func _LocateGpsInWifidb()
 	_ClearWifiGpsDetails()
 	Return ($return)
 EndFunc   ;==>_LocateGpsInWifidb
+
+Func _UploadToWifiDB()
+	$WiFiDB_User = InputBox("Enter WifiDB Username", "Username")
+	$WiFiDB_Pass = InputBox("Enter WifiDB Password", "Password", "", "*")
+	Local $remote_address = '192.168.1.27';
+	Local $remote_port = 9000
+	Local $remote_timeout = 500
+	Local $remote_socketopen = 0
+	Local $session_key
+
+	$WdbFile = $SaveDir & 'WDB_Export.VS1'
+	FileDelete($WdbFile)
+	_ExportDetailedTXT($WdbFile)
+
+
+	;// Bind the socket to an address/port
+	$sock = TCPConnect($remote_address, $remote_port)
+	If @error Then
+		ConsoleWrite("<-- Failed to open socket -->" & @CRLF)
+	Else
+		$remote_socketopen = 1
+		ConsoleWrite("<-- Opened socket -->" & @CRLF)
+		$sent = TCPSend($sock, "HELLO");// Send Hello message
+		If @error Then
+			ConsoleWrite("<-- Failed to send hello message to server -->" & @CRLF)
+		Else
+			ConsoleWrite("<-- Sent hello message to server -->" & @CRLF)
+			$ltimeout = TimerInit()
+			While 1
+				ConsoleWrite("waiting" & @CRLF)
+				$recv = TCPRecv($sock, 2048)
+				If @error Then ExitLoop
+				If $recv <> "" Then
+					ConsoleWrite($recv & @CRLF)
+					$recv_array = StringSplit($recv, "|")
+					;_ArrayDisplay($recv_array)
+					Switch $recv_array[1]
+						Case "HELLO"
+							ConsoleWrite("<-- Ready -->" & @CRLF)
+							$lip = _GetIP()
+							$messg = "LOGIN|" & $lip & "|" & $WiFiDB_User
+							TCPSend($sock, $messg)
+							ConsoleWrite("-->Sent Logon Request(" & $messg & ")" & @CRLF)
+						Case "EXIT"
+							ConsoleWrite("<-- EXIT -->" & @CRLF)
+							$ExitError = $recv_array[2]
+							ExitLoop
+						Case "PWD"
+							$seed = $recv_array[2]
+							$uhpwd = $WiFiDB_Pass & $seed
+							$hpwd = StringLower(StringTrimLeft(_MD5($uhpwd), 2))
+							$messg = "PWD|" & $hpwd
+							ConsoleWrite("-->Sent Password Hash(" & $hpwd & ")" & @CRLF)
+							TCPSend($sock, $messg)
+						Case "LOGIN"
+							If $recv_array[2] = "OK" Then ;Logon Successful - Initiate Import
+								$session_key = $recv_array[3]
+								$messg = "IMPORT|" & $session_key & '|VS1|' & $ldatetimestamp & '.VS1|TITLE (' & $ldatetimestamp & ')|NOTES|' & StringLower(_MD5ForFile($WdbFile))
+								TCPSend($sock, $messg)
+								ConsoleWrite("-->Initiate Send(" & $messg & ")" & @CRLF)
+							EndIf
+						Case "IMPORT"
+							If $recv_array[2] = "SEND" Then
+								ConsoleWrite("-->Sending File(" & $WdbFile & ")" & @CRLF)
+								$iFileOp = FileOpen($WdbFile, 16)
+								$sBuff = FileRead($iFileOp)
+								FileClose($iFileOp)
+								While BinaryLen($sBuff)
+									$iSendReturn = TCPSend($sock, $sBuff)
+									If @error Then ExitLoop
+									$sBuff = BinaryMid($sBuff, $iSendReturn + 1, BinaryLen($sBuff) - $iSendReturn)
+								WEnd
+								TCPSend($sock, "IMPORT|SENT")
+								ConsoleWrite("-->File Sent" & @CRLF)
+							ElseIf $recv_array[2] = "RESEND" Then
+								$messg = "IMPORT|" & $session_key & '|VS1|' & $ldatetimestamp & '.VS1|TITLE (' & $ldatetimestamp & ')|NOTES|4' & StringLower(_MD5ForFile($WdbFile))
+								TCPSend($sock, $messg)
+								ConsoleWrite("-->Initiate Send(" & $messg & ")" & @CRLF)
+							ElseIf $recv_array[2] = "FAIL" Then
+								ConsoleWrite("-- >Failed to send")
+								ExitLoop
+							ElseIf $recv_array[2] = "OK" Then
+								ConsoleWrite("-- >Sending Finished")
+								ExitLoop
+							EndIf
+						Case "LOCATE"
+							ConsoleWrite("<-- LOCATE Response -->" & @CRLF)
+							Dim $RLat, $RLon, $RSats, $RDate, $RTime
+							If $recv_array[2] = "OK" Then
+								$RLat = $recv_array[3]
+								$RLon = $recv_array[4]
+								$RSats = $recv_array[5]
+								$RDate = $recv_array[6]
+								$RTime = $recv_array[7]
+								$LatitudeWifidb = $RLat
+								$LongitudeWifidb = $RLon
+								$return = 1
+								$WifidbGPS_Update = TimerInit()
+							EndIf
+							$WiFiDbLocate_Timer = TimerInit()
+							ExitLoop
+							;Case Else
+							;ConsoleWrite("<-- Re-Sending Hello -->" & @CRLF)
+							;TCPSend($sock, "HELLO");// Re-Send Hello message
+					EndSwitch
+				EndIf
+				If TimerDiff($ltimeout) > $remote_timeout Then ExitLoop
+			WEnd
+		EndIf
+	EndIf
+	If $remote_socketopen = 1 Then TCPCloseSocket($sock)
+
+	;_ClearWifiGpsDetails()
+	;Return ($return)
+EndFunc   ;==>_UploadToWifiDB
