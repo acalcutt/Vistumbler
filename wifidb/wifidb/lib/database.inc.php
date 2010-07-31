@@ -5158,17 +5158,292 @@ class database
 	#													Export to Vistumbler VS1 File										 #
 	#========================================================================================================================#
 
-	function exp_vs1($export = "", $user = "", $row = 0)
+	function exp_vs1($export = "", $user = "", $row = 0, $screen = "HTML")
 	{
-		include('config.inc.php');
+		include_once('config.inc.php');
 		include('manufactures.inc.php');
+		$conn	= 	$GLOBALS['conn'];
+		$db	= 	$GLOBALS['db'];
+		$db_st	= 	$GLOBALS['db_st'];
+		$wtable	=	$GLOBALS['wtable'];
+		$users_t	=	$GLOBALS['users_t'];
+		$gps_ext	=	$GLOBALS['gps_ext'];
+		$vs1_out	=	$GLOBALS['wifidb_install']."/out/VS1/";
 		$gps_array = array();
 		switch ($export)
 		{
+			case "exp_user_all":
+				if($screen == "HTML"){echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start Export Of $user</th></tr>';}
+				$sql_		= "SELECT * FROM `$db`.`$users_t` WHERE `username` = '$user' ORDER by `id` ASC";
+				$result_2	= mysql_query($sql_, $conn) or die(mysql_error($conn));
+				echo "Rows: ".mysql_num_rows($result_2)."\r\n";
+				$username = $list_array['username'];
+				$nn =-1;
+				$n =1;	# GPS Array KEY -has to start at 1 vistumbler will error out if the first GPS point has a key of 0
+				while($list_array = mysql_fetch_array($result_2))
+				{
+					if($list_array["points"] == ''){continue;}
+					$points = explode("-", $list_array['points']);
+					$title = $list_array['title'];
+				#	echo "Starting AP Export.\r\n";
+					foreach($points as $point)
+					{
+				#		echo $point."\r\n";
+						$nn++;
+						$point_exp = explode(",", $point);
+						$pnt = explode(":", $point_exp[1]);
+						$rows = $pnt[1];
+						$APID = $pnt[0];
+						$sql_1	= "SELECT * FROM `$db`.`$wtable` WHERE `id` = '$APID' LIMIT 1";
+						$result_1	= mysql_query($sql_1, $conn) or die(mysql_error($conn));
+						$ap_array = mysql_fetch_array($result_1);
+						#var_dump($ap_array);
+						$manuf = @database::manufactures($ap_array['mac']);
+						switch($ap_array['sectype'])
+							{
+								case 1:
+									$type = "#openStyleDead";
+									$auth = "Open";
+									$encry = "None";
+									break;
+								case 2:
+									$type = "#wepStyleDead";
+									$auth = "Open";
+									$encry = "WEP";
+									break;
+								case 3:
+									$type = "#secureStyleDead";
+									$auth = "WPA-Personal";
+									$encry = "TKIP-PSK";
+									break;
+							}
+						switch($ap_array['radio'])
+							{
+								case "a":
+									$radio="802.11a";
+									break;
+								case "b":
+									$radio="802.11b";
+									break;
+								case "g":
+									$radio="802.11g";
+									break;
+								case "n":
+									$radio="802.11n";
+									break;
+								default:
+									$radio="Unknown Radio";
+									break;
+							}
+				#		echo $ap_array['id']." -- ".$ap_array['ssid']."\r\n";
+						$ssid_edit = html_entity_decode($ap_array['ssid']);
+						list($ssid_t, $ssid_f, $ssid)  = make_ssid($ssid_edit);
+					#	$ssid_t = $ssid_array[0];
+					#	$ssid_f = $ssid_array[1];
+					#	$ssid = $ssid_array[2];
+						$table	=	$ssid_t.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
+						$sql1 = "SELECT * FROM `$db_st`.`$table` WHERE `id` = '$rows'";
+						$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+						$newArray = mysql_fetch_array($result1);
+	#					echo $nn."<BR>";
+						$otx	= $newArray["otx"];
+						$btx	= $newArray["btx"];
+						$nt		= $newArray['nt'];
+						$label	= $newArray['label'];
+						$signal	= $newArray['sig'];
+						$aps[$nn]	= array(
+											'id'		=>	$ap_array['id'],
+											'ssid'		=>	$ssid_t,
+											'mac'		=>	$ap_array['mac'],
+											'sectype'	=>	$ap_array['sectype'],
+											'r'			=>	$radio,
+											'radio'		=>	$ap_array['radio'],
+											'chan'		=>	$ap_array['chan'],
+											'man'		=>	$manuf,
+											'type'		=>	$type,
+											'auth'		=>	$auth,
+											'encry'		=>	$encry,
+											'label'		=>	$label,
+											'nt'		=>	$nt,
+											'btx'		=>	$btx,
+											'otx'		=>	$otx,
+											'sig'		=>	$signal
+											);
+						
+						$sig		=	$aps[$nn]['sig'];
+						$signals	=	explode("-", $sig);
+		#				echo $sig."<BR>";
+						$table_gps		=	$aps[$nn]['ssid'].'-'.$aps[$nn]['mac'].'-'.$aps[$nn]['sectype'].'-'.$aps[$nn]['radio'].'-'.$aps[$nn]['chan'].$gps_ext;
+				#		echo $table_gps."\r\n";
+						foreach($signals as $key=>$val)
+						{
+							$sig_exp = explode(",", $val);
+							$gps_id	= $sig_exp[0];
+							
+							$sql1 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id` = '$gps_id'";
+							$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+							$gps_table = mysql_fetch_array($result1);
+							$gps_array[$n]	=	array(
+													"lat" => $gps_table['lat'],
+													"long" => $gps_table['long'],
+													"sats" => $gps_table['sats'],
+													"hdp" => $gps_table['hdp'],
+													"alt" => $gps_table['alt'],
+													"geo" => $gps_table['geo'],
+													"kmh" => $gps_table['kmh'],
+													"mph" => $gps_table['mph'],
+													"track" => $gps_table['track'],
+													"date" => $gps_table['date'],
+													"time" => $gps_table['time']
+													);
+							$n++;
+							$signals[] = $n.",".$sig_exp[1];
+						}
+						echo $nn."-".$n."==";
+						$sig_new = implode("-", $signals);
+						$aps[$nn]['sig'] = $sig_new;
+						unset($signals);
+					}
+				}
+			break;
+			
+			case "exp_user_list":
+				$sql_		= "SELECT * FROM `$db`.`$users_t` WHERE `id` = '$row' LIMIT 1";
+				$result_1	= mysql_query($sql_, $conn) or die(mysql_error($conn));
+				$list_array = mysql_fetch_array($result_1);
+				if($list_array["points"] == ''){$return = array(0=>0, 1=>"Empty return"); return $return;}
+				$points = explode("-", $list_array['points']);
+				$title = $list_array['title'];
+				$username = $list_array['username'];
+				if($screen == "HTML"){echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start Export Of $title by $username</th></tr>';}
+			#	echo "Starting AP Export.\r\n";
+				$nn=-1;
+				foreach($points as $point)
+				{
+			#		echo $point."\r\n";
+					$nn++;
+			#		echo $nn."\r\n";
+					$point_exp = explode(",", $point);
+					$pnt = explode(":", $point_exp[1]);
+					$rows = $pnt[1];
+					$APID = $pnt[0];
+					$sql_1	= "SELECT * FROM `$db`.`$wtable` WHERE `id` = '$APID' LIMIT 1";
+					$result_1	= mysql_query($sql_1, $conn) or die(mysql_error($conn));
+					$ap_array = mysql_fetch_array($result_1);
+					#var_dump($ap_array);
+					$manuf = database::manufactures($ap_array['mac']);
+					switch($ap_array['sectype'])
+						{
+							case 1:
+								$type = "#openStyleDead";
+								$auth = "Open";
+								$encry = "None";
+								break;
+							case 2:
+								$type = "#wepStyleDead";
+								$auth = "Open";
+								$encry = "WEP";
+								break;
+							case 3:
+								$type = "#secureStyleDead";
+								$auth = "WPA-Personal";
+								$encry = "TKIP-PSK";
+								break;
+						}
+					switch($ap_array['radio'])
+						{
+							case "a":
+								$radio="802.11a";
+								break;
+							case "b":
+								$radio="802.11b";
+								break;
+							case "g":
+								$radio="802.11g";
+								break;
+							case "n":
+								$radio="802.11n";
+								break;
+							default:
+								$radio="Unknown Radio";
+								break;
+						}
+			#		echo $ap_array['id']." -- ".$ap_array['ssid']."\r\n";
+					$ssid_edit = html_entity_decode($ap_array['ssid']);
+					list($ssid_t, $ssid_f, $ssid)  = make_ssid($ssid_edit);
+				#	$ssid_t = $ssid_array[0];
+				#	$ssid_f = $ssid_array[1];
+				#	$ssid = $ssid_array[2];
+					$table	=	$ssid_t.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
+					$sql1 = "SELECT * FROM `$db_st`.`$table` WHERE `id` = '$rows'";
+					$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+					$newArray = mysql_fetch_array($result1);
+#					echo $nn."<BR>";
+					$otx	= $newArray["otx"];
+					$btx	= $newArray["btx"];
+					$nt		= $newArray['nt'];
+					$label	= $newArray['label'];
+					$signal	= $newArray['sig'];
+					$aps[$nn]	= array(
+										'id'		=>	$ap_array['id'],
+										'ssid'		=>	$ssid_t,
+										'mac'		=>	$ap_array['mac'],
+										'sectype'	=>	$ap_array['sectype'],
+										'r'			=>	$radio,
+										'radio'		=>	$ap_array['radio'],
+										'chan'		=>	$ap_array['chan'],
+										'man'		=>	$manuf,
+										'type'		=>	$type,
+										'auth'		=>	$auth,
+										'encry'		=>	$encry,
+										'label'		=>	$label,
+										'nt'		=>	$nt,
+										'btx'		=>	$btx,
+										'otx'		=>	$otx,
+										'sig'		=>	$signal
+										);
+					
+					$n			=	1;	# GPS Array KEY -has to start at 1 vistumbler will error out if the first GPS point has a key of 0
+					$sig		=	$aps[$nn]['sig'];
+					$signals	=	explode("-", $sig);
+	#				echo $sig."<BR>";
+					$table_gps		=	$aps[$nn]['ssid'].'-'.$aps[$nn]['mac'].'-'.$aps[$nn]['sectype'].'-'.$aps[$nn]['radio'].'-'.$aps[$nn]['chan'].$gps_ext;
+			#		echo $table_gps."\r\n";
+					foreach($signals as $key=>$val)
+					{
+						$sig_exp = explode(",", $val);
+						$gps_id	= $sig_exp[0];
+						
+						$sql1 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id` = '$gps_id'";
+						$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+						$gps_table = mysql_fetch_array($result1);
+						$gps_array[$n]	=	array(
+												"lat" => $gps_table['lat'],
+												"long" => $gps_table['long'],
+												"sats" => $gps_table['sats'],
+												"hdp" => $gps_table['hdp'],
+												"alt" => $gps_table['alt'],
+												"geo" => $gps_table['geo'],
+												"kmh" => $gps_table['kmh'],
+												"mph" => $gps_table['mph'],
+												"track" => $gps_table['track'],
+												"date" => $gps_table['date'],
+												"time" => $gps_table['time']
+												);
+						$n++;
+						$signals[] = $n.",".$sig_exp[1];
+					}
+					$sig_new = implode("-", $signals);
+					$aps[$nn]['sig'] = $sig_new;
+					echo $nn."-".$n."==";
+					unset($signals);
+				}
+			break;
+			
 			case "exp_all_db_vs1":
 				$n	=	1; 
 				$nn	=	1; # AP Array key
-				echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to VS1</th></tr>';
+				if($screen == "HTML"){echo '<table><tr class="style4"><th style="border-style: solid; border-width: 1px">Start of WiFi DB export to VS1</th></tr>';}
 				$sql_		= "SELECT * FROM `$db`.`$wtable`";
 				$result_	= mysql_query($sql_, $conn) or die(mysql_error($conn));
 				while($ap_array = mysql_fetch_array($result_))
@@ -5210,10 +5485,8 @@ class database
 								$radio="Unknown Radio";
 								break;
 						}
-					$ssid_array = make_ssid($aparray['ssid']);
-					$ssid_t = $ssid_array[0];
-					$ssid_f = $ssid_array[1];
-					$ssid = $ssid_array[2];
+					$ssid_edit = html_entity_decode($ap_array['ssid']);
+					list($ssid_t, $ssid_f, $ssid)  = make_ssid($ssid_edit);
 					$table	=	$ssid_t.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
 					$sql	=	"SELECT * FROM `$db_st`.`$table`";
 					$result	=	mysql_query($sql, $conn) or die(mysql_error($conn));
@@ -5246,18 +5519,11 @@ class database
 										'otx'		=>	$otx,
 										'sig'		=>	$signal
 										);
-					$nn++;
-				}
-				$signals = array();
-				
-				foreach($aps as $key=>$ap)
-				{
-					$n			=	1;	# GPS Array KEY -has to start at 1 vistumbler will error out if the first GPS point has a key of 0
 					$sig		=	$ap['sig'];
 					$signals	=	explode("-", $sig);
 	#				echo $sig."<BR>";
 					$table_gps		=	$table.$gps_ext;
-					echo $table_gps."<BR>";
+					echo $table_gps."\r\n";
 					foreach($signals as $sign)
 					{
 						$sig_exp = explode(",", $sign);
@@ -5270,6 +5536,12 @@ class database
 												"lat" => $gps_table['lat'],
 												"long" => $gps_table['long'],
 												"sats" => $gps_table['sats'],
+												"hdp" => $gps_table['hdp'],
+												"alt" => $gps_table['alt'],
+												"geo" => $gps_table['geo'],
+												"kmh" => $gps_table['kmh'],
+												"mph" => $gps_table['mph'],
+												"track" => $gps_table['track'],
 												"date" => $gps_table['date'],
 												"time" => $gps_table['time']
 												);
@@ -5277,52 +5549,101 @@ class database
 						$signals[] = $n.",".$sig_exp[1];
 					}
 					$sig_new = implode("-", $signals);
-					$aps[$key]['sig'] = $sig_new;
-					echo $aps[$key]['sig']."<BR>";
+					$aps[$nn]['sig'] = $sig_new;
+					
+					echo $nn."-".$n."==";
+					unset($signals);
+					$nn++;
 				}
-				#$gps_array = array_unique($gps_array);
-		#		var_dump($gps_array);
+			break;
+		}
+		if(count($aps) > 1 && count($gps_array) > 1)
+		{
+			$date		=	date('Y-m-d_H-i-s');
+			
+			if(@$row != 0)
+			{
+				$file_ext	=	$date."_".$title.".vs1";
+			}elseif(@$user != "")
+			{
+				$file_ext	=	$date."_".$user.".vs1";
+			}else
+			{
+				$file_ext	=	$date."_FULL_DB.vs1";
+			}
+			$filename	=	$vs1_out.$file_ext;
+		#	echo $filename."\r\n";
+			// define initial write and appends
+			fopen($filename, "w");
+			$fileappend	=	fopen($filename, "a");
+			
+			$h1 = "#  Vistumbler VS1 - Detailed Export Version 3.0
+# Created By: RanInt WiFiDB ".$ver['wifidb']."
+# -------------------------------------------------
+# GpsID|Latitude|Longitude|NumOfSatalites|HorizontalDilutionOfPrecision|Altitude(m)|HeightOfGeoidAboveWGS84Ellipsoid(m)|Speed(km/h)|Speed(MPH)|TrackAngle(Deg)|Date(UTC y-m-d)|Time(UTC h:m:s.ms)
+# -------------------------------------------------
+";
+			fwrite($fileappend, $h1);
+			
+			foreach( $gps_array as $key=>$gps )
+			{
+				$lat	=	$gps['lat'];
+				$long	=	$gps['long'];
+				$sats	=	$gps['sats'];
 				
-				$date		=	date('Y-m-d_H-i-s');
-				$file_ext	=	$date."_entire_db.vs1";
-				$filename	=	$vs1_out.$file_ext;
-				// define initial write and appends
-				$filewrite	=	fopen($filename, "w");
-				$fileappend	=	fopen($filename, "a");
+				$hdp	= $gps['hdp'];
+				if($hdp == ''){$hdp = 0;}
 				
-				$h1 = "#  Vistumbler VS1 - Detailed Export Version 1.2\r\n# Created By: RanInt WiFi DB Alpha 0.16 Build 1 \r\n# -------------------------------------------------\r\n# GpsID|Latitude|Longitude|NumOfSatalites|Date(UTC y-m-d)|Time(UTC h:m:s)\r\n# -------------------------------------------------\r\n";
-				fwrite($fileappend, $h1);
+				$alt	= $gps['alt'];
+				if($alt == ''){$alt = 0;}
 				
-				foreach( $gps_array as $key=>$gps )
-				{
-					$lat	=	$gps['lat'];
-					$long	=	$gps['long'];
-					$sats	=	$gps['sats'];
-					$date	=	$gps['date'];
-					$time	=	$gps['time'];
-					if ($GLOBALS["debug"] ==1 ){echo "Lat : ".$lat." - Long : ".$long."\n";}
-					$gpsd = $key."|".$lat."|".$long."|".$sats."|".$date."|".$time."\r\n";
-					if($GLOBALS["debug"] == 1){ echo $gpsd;}
-					fwrite($fileappend, $gpsd);
-				}
-				$ap_head = "# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GpsID,SIGNAL\r\n# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n";
-				fwrite($fileappend, $ap_head);
-				foreach($aps as $ap)
-				{
-					$apd = $ap['ssid']."|".$ap['mac']."|".$ap['man']."|".$ap['auth']."|".$ap['encry']."|".$ap['sectype']."|".$ap['radio']."|".$ap['chan']."|".$ap['btx']."|".$ap['otx']."|".$ap['nt']."|".$ap['label']."|".$ap['sig']."\r\n";
-					fwrite($fileappend, $apd);
-				}
-				fclose($fileappend);
-				fclose($filewrite);
-				mysql_close($conn);
-				$end 	=	date("H:i:s");
-				$GPSS	=	count($gps_array);
+				$geo	= $gps['geo'];
+				if($geo == ''){$geo = "-0";}
+				
+				$kmh	= $gps['kmh'];
+				if($kmh == ''){$kmh = 0;}
+				
+				$mph	= $gps['mph'];
+				if($mph == ''){$mph = 0;}
+				
+				$track	= $gps['track'];
+				if($track == ''){$track = 0;}
+				
+				$date	=	$gps['date'];
+				$time	=	$gps['time'];
+				$gpsd = $key."|".$lat."|".$long."|".$sats."|".$hdp."|".$alt."|".$geo."|".$kmh."|".$mph."|".$track."|".$date."|".$time."\r\n";
+				fwrite($fileappend, $gpsd);
+			}
+			$ap_head = "# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GpsID,SIGNAL
+# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+";
+			fwrite($fileappend, $ap_head);
+			foreach($aps as $ap)
+			{
+				$apd = $ap['ssid']."|".$ap['mac']."|".$ap['man']."|".$ap['auth']."|".$ap['encry']."|".$ap['sectype']."|".$ap['radio']."|".$ap['chan']."|".$ap['btx']."|".$ap['otx']."|".$ap['nt']."|".$ap['label']."|".$ap['sig']."\r\n";
+				fwrite($fileappend, $apd);
+			}
+			fclose($fileappend);
+			$end 	=	date("H:i:s");
+			$GPSS	=	count($gps_array);
+			$APSS	=	count($aps);
+			$return = array(0=>1, 1=>$file_ext);
+			if($screen == "HTML")
+			{
 				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote # GPS Points: '.$GPSS.'</td></tr>';
-				$APSS	=	count($aps);
 				echo '<tr><td style="border-style: solid; border-width: 1px">Wrote # Access Points: '.$APSS.'</td></tr>';
 				echo '<tr><td style="border-style: solid; border-width: 1px">Your Vistumbler VS1 file is ready,<BR>you can download it from <a class="links" href="'.$filename.'">Here</a></td><td></td></tr></table>';
-				break;
+			}
+		}else
+		{
+			$return = array(0=>0, 1=>"Empty arrays. :/");
+			if($screen == "HTML")
+			{
+				echo '<tr><td style="border-style: solid; border-width: 1px">Failed to export.</td><td></td></tr></table>';
+			}
 		}
+		return $return;
 	}
 	
 	function exp_newest_kml($named = 0, $verbose = 1)
