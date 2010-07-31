@@ -22,7 +22,7 @@ pageheader("Version Page");
 		<BR><H2>Change Log</H2>
 		<table class="light" width="100%" border="2" id="20b1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-July-17</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-July-31</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
@@ -94,6 +94,10 @@ pageheader("Version Page");
 						<LI>The Last import date on the main page was changing even when the import had finished.</LI>
 						<LI>The console viewer had an error with some modifications that i made, and didnt fix before the release.</LI>
 						<LI>Some small HTML tag issues are fixed.</LI>
+					</OL>
+					</LI>
+					<LI><B>Build 1.2 Fixes</B><OL>
+						<LI>Fixed an issue some may have with installing from scratch.</LI>
 					</OL>
 					</LI>
 				</OL>
