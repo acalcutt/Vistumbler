@@ -3,6 +3,7 @@
 #include <Array.au3>
 #include <INet.au3>
 #include <SQLite.au3>
+Dim $Added = 0
 Dim $RetryAttempts = 5 ;Number of times to retry getting location
 Dim $DBhndl
 Dim $TmpDir = @ScriptDir & '\temp\'
@@ -110,12 +111,14 @@ Func _SearchForPlaceMark($spath)
 					EndIf
 				Next
 				If $PName <> "" Or BitAnd($Plon <> "", $Plat <> "") Or $PDesc <> "" Then
+					$Added += 1
+					ConsoleWrite($Added & @CRLF)
 					Local $KmlMatchArray, $iRows, $iColumns, $iRval
 					$query = "SELECT FirstActiveDate, FirstActiveTime, LastActiveDate, LastActiveTime FROM KMLDATA WHERE BSSID = '" & $BSSID & "' And SSID ='" & $SSID & "' And CHAN = '" & $CHAN & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RadType = '" & $RadType & "' limit 1"
 					$iRval = _SQLite_GetTable2d($DBhndl, $query, $KmlMatchArray, $iRows, $iColumns)
 					If $iRows = 0 Then ;If AP is not found then add it
 						;Get Location Information
-						Local $PCountryCode, $PCountryName, $PAreaName
+						Local $PCountryCode, $PCountryName, $PAreaName, $LocProvider
 						For $gl = 1 to $RetryAttempts
 							$LocationArr = _GeonamesGetGpsLocation($PLat, $Plon)
 							$PCountryCode = $LocationArr[1]
@@ -130,7 +133,6 @@ Func _SearchForPlaceMark($spath)
 							$LocProvider = "Google"
 							If $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Then ExitLoop
 							$LocProvider = ""
-							Sleep(1000)
 						Next
 						ConsoleWrite($PCountryCode &  ' - ' & $PCountryName &  ' - ' & $PAreaName &  ' - ' & $LocProvider & @CRLF)
 						;Add AP Data to DB
@@ -141,7 +143,8 @@ Func _SearchForPlaceMark($spath)
 						$OrigFirstActiveTime = $KmlMatchArray[1][1]
 						$OrigLastActiveDate = $KmlMatchArray[1][2]
 						$OrigLastActiveTime = $KmlMatchArray[1][3]
-						ConsoleWrite($OrigFirstActiveDate & @CRLF)
+						ConsoleWrite($OrigFirstActiveDate & " " & $OrigFirstActiveTime & ' - ' & $OrigLastActiveDate & " " & $OrigLastActiveTime & @CRLF)
+						ConsoleWrite($FirstActiveDate & " " & $FirstActiveTime & ' - ' & $LastActiveDate & " " & $LastActiveTime & @CRLF)
 
 						;See if new first time is older than old first time
 						If _CompareDate($FirstActiveDate & ' ' & $FirstActiveTime, $OrigFirstActiveDate & ' ' & $OrigFirstActiveTime) = 2 Then ;Orig First active is newer....change to new first active
@@ -151,7 +154,7 @@ Func _SearchForPlaceMark($spath)
 
 						;See if new last time is newer than old last time
 						If _CompareDate($LastActiveDate & ' ' & $LastActiveTime, $OrigLastActiveDate & ' ' & $OrigLastActiveTime) = 1 Then ;Orig Last active is older....change to new last active
-							$query = "UPDATE KMLDATA SET FirstActiveDate='" & $FirstActiveDate & "', FirstActiveTime='" & $FirstActiveTime & "' WHERE BSSID = '" & $BSSID & "' And SSID ='" & $SSID & "' And CHAN = '" & $CHAN & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RadType = '" & $RadType & "'"
+							$query = "UPDATE KMLDATA SET LastActiveDate='" & $LastActiveDate & "', LastActiveTime='" & $LastActiveTime & "' WHERE BSSID = '" & $BSSID & "' And SSID ='" & $SSID & "' And CHAN = '" & $CHAN & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RadType = '" & $RadType & "'"
 							_SQLite_Exec($DBhndl, $query)
 						EndIf
 					EndIf
@@ -189,7 +192,7 @@ Func _GoogleGetGpsLocation($gllat, $gllon)
 	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
 	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
 	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
-	Sleep(750);Sleep 15 seconds to prevent hitting 15,000 request/day limit
+	Sleep(1000);Sleep 15 seconds to prevent hitting 15,000 request/day limit
 	Return $aResult
 EndFunc
 
@@ -219,7 +222,7 @@ Func _GeonamesGetGpsLocation($gllat, $gllon)
 	$aResult[2] = StringReplace(StringReplace($CountryName, ',', ''), '"', '')
 	$aResult[3] = StringReplace(StringReplace($AdministrativeAreaName, ',', ''), '"', '')
 	;ConsoleWrite('aan:' & $AdministrativeAreaName & @CRLF & 'cn' & $CountryName & @CRLF & 'cnc' & $CountryNameCode & @CRLF)
-	Sleep(750);Sleep 500ms to prevent hitting 5000 request/hr limit
+	Sleep(1000);Sleep 500ms to prevent hitting 5000 request/hr limit
 	Return $aResult
 EndFunc
 
