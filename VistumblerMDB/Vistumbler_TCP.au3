@@ -43,6 +43,7 @@ $last_modified = '2010/07/21'
 #include "UDFs\FileInUse.au3"
 #include "UDFs\WinGetPosEx.au3"
 #include "UDFs\UnixTime.au3"
+#include "UDFs\rijndael.au3"
 TCPStartup()
 Dim $IP = _GetIP()
 ;Set/Create Folders--------------------------------------
@@ -10085,11 +10086,16 @@ Func _UploadToWifiDB()
 							$ExitError = $recv_array[2]
 							ExitLoop
 						Case "PWD" ;Server requested WiFiDB password
-							$seed = $recv_array[2]
-							$uhpwd = $WiFiDB_Pass & $seed
-							$hpwd = StringLower(StringTrimLeft(_MD5($uhpwd), 2))
-							$messg = "PWD|" & $hpwd
-							ConsoleWrite("-->Sent Password Hash(" & $hpwd & ")" & @CRLF)
+							$key = $recv_array[2]
+							;$encseed = '0x' & $recv_array[3]
+							;$decseed = BinaryToString(_rijndaelInvCipher($key, $encseed, 256, 0))
+							;ConsoleWrite("Dec Seed - " & $decseed & @CRLF)
+							;$uhpwd = $WiFiDB_Pass; & $decseed
+							;$hpwd = StringLower(StringTrimLeft(_MD5($uhpwd), 2))
+							$ehpwd = StringTrimLeft(_rijndaelCipher($key, $WiFiDB_Pass, 256, 0), 2)
+							$messg = "PWD|" & $ehpwd
+							ConsoleWrite("-->Sent Encr Password(" & $ehpwd & ")" & @CRLF)
+							;ConsoleWrite("-->Sent Password Hash(" & $hpwd & ")" & @CRLF)
 							TCPSend($sock, $messg)
 						Case "LOGIN"
 							If $recv_array[2] = "OK" Then ;Logon successful, Start import
@@ -10120,7 +10126,8 @@ Func _UploadToWifiDB()
 								TCPSend($sock, $messg)
 								ConsoleWrite("-->Initiate Send(" & $messg & ")" & @CRLF)
 							ElseIf $recv_array[2] = "FAIL" Then ;Import Failed, Disconnect
-								ConsoleWrite("-- >Failed to send")
+								$error = $recv_array[3]
+								ConsoleWrite("-- >Failed to send(" & $error & ")." & @CRLF)
 								ExitLoop
 							ElseIf $recv_array[2] = "OK" Then ;Import Successful, Disconnect
 								ConsoleWrite("-- >Sending Finished")
@@ -10132,8 +10139,121 @@ Func _UploadToWifiDB()
 			WEnd
 		EndIf
 	EndIf
-	If $remote_socketopen = 1 Then TCPCloseSocket($sock)
-
-	;_ClearWifiGpsDetails()
-	;Return ($return)
+	If $remote_socketopen = 1 Then
+		TCPSend($sock, "EXIT")
+		TCPCloseSocket($sock)
+	EndIf
 EndFunc   ;==>_UploadToWifiDB
+
+#comments-start
+	TCPSend($sock, "LIST GAMES")
+	While 1
+	$recv = TCPRecv($sock, 2048)
+	If @error Then ExitLoop
+	If $recv <> '' Then
+	$recv_array = StringSplit($recv, "|")
+	ConsoleWrite($recv & @CRLF)
+	Switch $recv_array[1]
+	Case "HELLO" ;Server wants to play
+	ConsoleWrite("HELLO" & @CRLF)
+	Local $GameArray[9]
+	$GameArray[1] = "TicTacToe"
+	$GameArray[2] = "Chess"
+	$GameArray[3] = "Checkers"
+	$GameArray[4] = "Backgammon"
+	$GameArray[5] = "Poker"
+	$GameArray[6] = "Falkin's Maze"
+	$GameArray[7] = "Thermo-Nuclear War"
+	$GameArray[8] = "Theaterwide Biotoxic and Chemical Warfare"
+	$Play = $GameArray[1];[Random(1, 8, 1)]
+	ConsoleWrite($Play & @CRLF)
+	$messg = $Play
+	TCPSend($sock, $messg)
+	Case "GAMES"
+	If $recv_array[2] = "TIC" Then
+	If $recv_array[3] = "PLY" Then
+	If $recv_array[4] = "Choose a player (X or O)." Then
+	$XONum = Random(1, 2, 1)
+	If $XONum = 1 Then
+	$Player = "X"
+	Else
+	$Player = "O"
+	EndIf
+	ConsoleWrite($XONum & @CRLF)
+	$messg = "TICTACTOE|PLY|" & $Player
+	TCPSend($sock, $messg)
+	EndIf
+	ElseIf $recv_array[3] = "MV" Then
+	$rmsg = $recv_array[4]
+	$rboard = $recv_array[5] & @CRLF _
+	& '|' & $recv_array[6] & '|' & $recv_array[7] & '|' & $recv_array[8] & '|' & @CRLF _
+	& $recv_array[9] & @CRLF _
+	& '|' & $recv_array[10] & '|' & $recv_array[11] & '|' & $recv_array[12] & '|' & @CRLF _
+	& $recv_array[13] & @CRLF _
+	& '|' & $recv_array[14] & '|' & $recv_array[15] & '|' & $recv_array[16] & '|' & @CRLF _
+	& $recv_array[17]
+	
+	$responce = InputBox($rmsg, $rboard, "", "", 400, 400)
+	$messg = "TICTACTOE|MV|" & $responce
+	TCPSend($sock, $messg)
+	EndIf
+	EndIf
+	Case "CHESS"
+	ExitLoop
+	EndSwitch
+	ConsoleWrite($recv & @CRLF)
+	;ExitLoop
+	EndIf
+	WEnd
+	ExitLoop
+	----------------------------------------------------
+	
+	$error = $recv_array[3]
+	ConsoleWrite("-- >Failed to send(" & $error & "). Playing a game instead" & @CRLF)
+	TCPSend($sock, "LIST GAMES")
+	While 1
+	$recv = TCPRecv($sock, 2048)
+	If @error Then ExitLoop
+	If $recv <> '' Then
+	$recv_array = StringSplit($recv, "|")
+	Switch $recv_array[1]
+	Case "HELLO" ;Server wants to play
+	ConsoleWrite("HELLO" & @CRLF)
+	Local $GameArray[9]
+	$GameArray[1] = "TicTacToe"
+	$GameArray[2] = "Chess"
+	$GameArray[3] = "Checkers"
+	$GameArray[4] = "Backgammon"
+	$GameArray[5] = "Poker"
+	$GameArray[6] = "Falkin's Maze"
+	$GameArray[7] = "Thermo-Nuclear War"
+	$GameArray[8] = "Theaterwide Biotoxic and Chemical Warfare"
+	$Play = $GameArray[1];[Random(1, 8)]
+	ConsoleWrite($Play & @CRLF)
+	$messg = $Play
+	TCPSend($sock, $messg)
+	Case "GAMES"
+	If $recv_array[2] = "TIC" Then
+	If $recv_array[3] = "PLY" Then
+	If $recv_array[4] = "Choose a player (X or O)." Then
+	$XONum = Random(1, 2)
+	If $XONum = 1 Then
+	$Player = "X"
+	Else
+	$Player = "O"
+	EndIf
+	ConsoleWrite($XONum & @CRLF)
+	$messg = "TICTACTOE|PLY|" & $Player
+	TCPSend($sock, $messg)
+	EndIf
+	EndIf
+	EndIf
+	Case "CHESS"
+	ExitLoop
+	EndSwitch
+	ConsoleWrite($recv & @CRLF)
+	;ExitLoop
+	EndIf
+	WEnd
+	ExitLoop
+#comments-end
