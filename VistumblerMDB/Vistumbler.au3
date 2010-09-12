@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10'
+$version = 'v10.1 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/07/11' ; Happy Birthday Vistumbler :-)
+$last_modified = '2010/09/12'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -384,7 +384,7 @@ Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 Dim $SortTime = IniRead($settings, 'AutoSort', 'AutoSortTime', 60)
 Dim $AutoSort = IniRead($settings, 'AutoSort', 'AutoSort', 0)
 Dim $SortBy = IniRead($settings, 'AutoSort', 'SortCombo', 'Sort by SSID')
-Dim $SortDirection = IniRead($settings, 'AutoSort', 'AscDecDefault', 1)
+Dim $SortDirection = IniRead($settings, 'AutoSort', 'AscDecDefault', 0)
 
 Dim $SaveTime = IniRead($settings, 'AutoSave', 'AutoSaveTime', 300)
 Dim $AutoSave = IniRead($settings, 'AutoSave', 'AutoSave', 1)
@@ -1505,7 +1505,7 @@ While 1
 	EndIf
 
 	;Sort Listview (if enabled)
-	If $AutoSort = 1 And TimerDiff($sort_timer) >= ($SortTime * 1000) Then _Sort($SortBy)
+	If $AutoSort = 1 And TimerDiff($sort_timer) >= ($SortTime * 1000) Then _SortListColumn($SortBy, $SortDirection)
 	If $AutoSave = 1 And $UpdateAutoSave = 1 And TimerDiff($save_timer) >= ($SaveTime * 1000) Then
 		_AutoSave()
 		$UpdateAutoSave = 0
@@ -1720,9 +1720,9 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$DBHighGpsHistId = '0'
 			EndIf
 			;Add History Information
-			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
+			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & StringFormat("%08i", $APID) & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
 			;Add AP Data into the AP table
-			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $APID & '|' & $ListRow & '|' & $AP_StatusNum & '|' & $BSSID & '|' & $SSID & '|' & StringFormat("%03i", $CHAN) & '|' & $AUTH & '|' & $ENCR & '|' & $SecType & '|' & $NETTYPE & '|' & $RADTYPE & '|' & $BTX & '|' & $OtX & '|' & $DBHighGpsHistId & '|' & $NewGpsId & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL & '|' & StringFormat("%03i", $SIG))
+			_AddRecord($VistumblerDB, "AP", $DB_OBJ, StringFormat("%08i", $APID) & '|' & $ListRow & '|' & $AP_StatusNum & '|' & $BSSID & '|' & $SSID & '|' & StringFormat("%03i", $CHAN) & '|' & $AUTH & '|' & $ENCR & '|' & $SecType & '|' & $NETTYPE & '|' & $RADTYPE & '|' & $BTX & '|' & $OtX & '|' & $DBHighGpsHistId & '|' & $NewGpsId & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL & '|' & StringFormat("%03i", $SIG))
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
 			$Found_APID = $ApMatchArray[1][1]
 			$Found_ListRow = $ApMatchArray[1][2]
@@ -1736,10 +1736,10 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			;Set Last Time and First Time
 			If $New = 1 Then ;If this is a new access point, use new information
 				$ExpLastHistID = $HISTID
-				$ExpFirstHistID = ''
+				$ExpFirstHistID = -1
 				$ExpGpsID = $NewGpsId
 				$ExpLastDateTime = $New_DateTime
-				$ExpFirstDateTime = ''
+				$ExpFirstDateTime = -1
 			Else ;If this is not a new check if this information is newer or older
 				$query = "SELECT TOP 1 Date1, Time1 FROM Hist WHERE HistID = '" & $Found_LastHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -1755,8 +1755,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$query = "SELECT TOP 1 Date1, Time1 FROM Hist WHERE HistID = '" & $Found_FirstHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				If _CompareDate($HistMatchArray[1][1] & ' ' & $HistMatchArray[1][2], $New_Date & ' ' & $New_Time) = 2 Then
-					$ExpFirstDateTime = ''
-					$ExpFirstHistID = ''
+					$ExpFirstDateTime = -1
+					$ExpFirstHistID = -1
 				Else
 					$ExpFirstDateTime = $New_Date & ' ' & $New_Time
 					$ExpFirstHistID = $HISTID
@@ -1791,19 +1791,19 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 							$DBLon = $New_Lon
 						Else
 							$DBHighGpsHistId = $Found_HighGpsHistId
-							$DBLat = ''
-							$DBLon = ''
+							$DBLat = -1
+							$DBLon = -1
 						EndIf
 					Else ;If the Old Number of satalites is greater than the new, use the old position
 						$DBHighGpsHistId = $Found_HighGpsHistId
-						$DBLat = ''
-						$DBLon = ''
+						$DBLat = -1
+						$DBLon = -1
 					EndIf
 				EndIf
 			Else ;If new lat and lon are not valid, use the old position and do not update lat and lon
 				$DBHighGpsHistId = $Found_HighGpsHistId
-				$DBLat = ''
-				$DBLon = ''
+				$DBLat = -1
+				$DBLon = -1
 			EndIf
 			;If HighGpsHistID is different from the origional, update it
 			If $DBHighGpsHistId <> $Found_HighGpsHistId Then
@@ -1814,7 +1814,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$query = "UPDATE AP SET Active = '" & $AP_StatusNum & "', LastGpsID = '" & $ExpGpsID & "', LastHistId = '" & $ExpLastHistID & "',Signal = '" & StringFormat("%03i", $SIG) & "' WHERE ApId = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Update AP in DB. Set FirstHistID
-			If $ExpFirstHistID <> '' Then
+			If $ExpFirstHistID <> -1 Then
 				$query = "UPDATE AP SET FirstHistId = '" & $ExpFirstHistID & "' WHERE ApId = '" & $Found_APID & "'"
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			EndIf
@@ -1822,15 +1822,15 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
 			;Update List information
 			If $New = 0 And $Found_Active = 0 Then
-				$Exp_AP_Status = ''
-				$Exp_AP_DisplaySig = ''
+				$Exp_AP_Status = -1
+				$Exp_AP_DisplaySig = -1
 			Else
 				$Exp_AP_Status = $AP_Status
 				$Exp_AP_DisplaySig = $AP_DisplaySig
 			EndIf
 			If $Found_ListRow <> -1 Then
 				;Update AP Listview data
-				_ListViewAdd($Found_ListRow, '', $Exp_AP_Status, '', '', '', '', $Exp_AP_DisplaySig, '', '', '', '', '', $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, '', '')
+				_ListViewAdd($Found_ListRow, -1, $Exp_AP_Status, -1, -1, -1, -1, $Exp_AP_DisplaySig, -1, -1, -1, -1, -1, $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, -1, -1)
 				;Update Signal Icon
 				_UpdateIcon($Found_ListRow, $Exp_AP_DisplaySig, $Found_SecType)
 			EndIf
@@ -1882,11 +1882,10 @@ EndFunc   ;==>_UpdateIcon
 
 Func _MarkDeadAPs()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_MarkDeadAPs()') ;#Debug Display
+	;Set APs Dead in Listview
 	$query = "SELECT ApID, ListRow, LastGpsID, SecType FROM AP WHERE Active = '1'"
-	;$query = "SELECT ApID.AP, ListRow.AP, LastGpsID.AP Date1.GPS Time1.GPS FROM AP, GPS WHERE Active.AP = '1' And (LastGpsID.AP = GpsID.GPS)"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
-	;Set APs Dead in Listview
 	For $resetdead = 1 To $FoundApMatch
 		$Found_APID = $ApMatchArray[$resetdead][1]
 		$Found_ListRow = $ApMatchArray[$resetdead][2]
@@ -1916,6 +1915,11 @@ Func _MarkDeadAPs()
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
 	Next
+
+	;Fix APs that are marked dead but still have a signal
+	$query = "UPDATE AP SET Signal='000' WHERE Active='0' And Signal<>'000'"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+
 	;Update active/total ap label
 	$query = "Select COUNT(ApID) FROM AP WHERE Active = '1'"
 	$ActiveCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -1930,54 +1934,56 @@ Func _TimeToSeconds($iTime)
 	Return ($rTime)
 EndFunc   ;==>_TimeToSeconds
 
-Func _ListViewAdd($line, $Add_Line = '', $Add_Active = '', $Add_BSSID = '', $Add_SSID = '', $Add_Authentication = '', $Add_Encryption = '', $Add_Signal = '', $Add_Channel = '', $Add_RadioType = '', $Add_BasicTransferRates = '', $Add_OtherTransferRates = '', $Add_NetworkType = '', $Add_FirstAcvtive = '', $Add_LastActive = '', $Add_LatitudeDMM = '', $Add_LongitudeDMM = '', $Add_MANU = '', $Add_Label = '')
+Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add_SSID = -1, $Add_Authentication = -1, $Add_Encryption = -1, $Add_Signal = -1, $Add_Channel = -1, $Add_RadioType = -1, $Add_BasicTransferRates = -1, $Add_OtherTransferRates = -1, $Add_NetworkType = -1, $Add_FirstAcvtive = -1, $Add_LastActive = -1, $Add_LatitudeDMM = -1, $Add_LongitudeDMM = -1, $Add_MANU = -1, $Add_Label = -1)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ListViewAdd()') ;#Debug Display
 
-	If $Add_LatitudeDMM <> '' And $Add_LongitudeDMM <> '' Then
+	If $Add_Active <> -1 Then $Add_Active = StringReplace(StringReplace($Add_Active, "1", $Text_Active), "0", $Text_Dead)
+
+	If $Add_LatitudeDMM <> -1 And $Add_LongitudeDMM <> -1 Then
 		$LatDMS = _Format_GPS_DMM_to_DMS($Add_LatitudeDMM)
 		$LonDMS = _Format_GPS_DMM_to_DMS($Add_LongitudeDMM)
 		$LatDDD = _Format_GPS_DMM_to_DDD($Add_LatitudeDMM)
 		$LonDDD = _Format_GPS_DMM_to_DDD($Add_LongitudeDMM)
 	Else ;Do nothing (Reset lat,lon variables)
-		$LatDMS = ''
-		$LonDMS = ''
-		$LatDDD = ''
-		$LonDDD = ''
+		$LatDMS = -1
+		$LonDMS = -1
+		$LatDDD = -1
+		$LonDDD = -1
 	EndIf
 
-	If $Add_Signal <> '' Then
+	If $Add_Signal <> -1 Then
 		If $Add_Signal = 0 Or $ShowEstimatedDB = 0 Then
-			$AddDb = ''
+			$AddDb = ""
 		Else
 			$AddDb = '(' & _EstimateDbFromSignalPercent($Add_Signal) & 'dB)'
 		EndIf
 	EndIf
 
-	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Line, $column_Line)
-	If $Add_Active <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Active, $column_Active)
-	If $Add_SSID <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_SSID, $column_SSID)
-	If $Add_BSSID <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BSSID, $column_BSSID)
-	If $Add_MANU <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF)
-	If $Add_Signal <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Signal & '% ' & $AddDb, $column_Signal)
-	If $Add_Authentication <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Authentication, $column_Authentication)
-	If $Add_Encryption <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Encryption, $column_Encryption)
-	If $Add_RadioType <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RadioType, $column_RadioType)
-	If $Add_Channel <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Channel), $column_Channel)
-	If $LatDDD <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LatDDD, $column_Latitude)
-	If $LonDDD <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LonDDD, $column_Longitude)
-	If $LatDMS <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LatDMS, $column_LatitudeDMS)
-	If $LonDMS <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LonDMS, $column_LongitudeDMS)
-	If $Add_LatitudeDMM <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_LatitudeDMM, $column_LatitudeDMM)
-	If $Add_LongitudeDMM <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_LongitudeDMM, $column_LongitudeDMM)
-	If $Add_BasicTransferRates <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BasicTransferRates, $column_BasicTransferRates)
-	If $Add_OtherTransferRates <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_OtherTransferRates, $column_OtherTransferRates)
-	If $Add_NetworkType <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_NetworkType, $column_NetworkType)
-	If $Add_Label <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Label, $column_Label)
-	If $Add_FirstAcvtive <> '' Then
+	If $Add_Line <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Line), $column_Line)
+	If $Add_Active <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Active, $column_Active)
+	If $Add_SSID <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_SSID, $column_SSID)
+	If $Add_BSSID <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BSSID, $column_BSSID)
+	If $Add_MANU <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF)
+	If $Add_Signal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Signal) & '% ' & $AddDb, $column_Signal)
+	If $Add_Authentication <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Authentication, $column_Authentication)
+	If $Add_Encryption <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Encryption, $column_Encryption)
+	If $Add_RadioType <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RadioType, $column_RadioType)
+	If $Add_Channel <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Channel), $column_Channel)
+	If $LatDDD <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LatDDD, $column_Latitude)
+	If $LonDDD <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LonDDD, $column_Longitude)
+	If $LatDMS <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LatDMS, $column_LatitudeDMS)
+	If $LonDMS <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $LonDMS, $column_LongitudeDMS)
+	If $Add_LatitudeDMM <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_LatitudeDMM, $column_LatitudeDMM)
+	If $Add_LongitudeDMM <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_LongitudeDMM, $column_LongitudeDMM)
+	If $Add_BasicTransferRates <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BasicTransferRates, $column_BasicTransferRates)
+	If $Add_OtherTransferRates <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_OtherTransferRates, $column_OtherTransferRates)
+	If $Add_NetworkType <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_NetworkType, $column_NetworkType)
+	If $Add_Label <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Label, $column_Label)
+	If $Add_FirstAcvtive <> -1 Then
 		$LTD = StringSplit($Add_FirstAcvtive, ' ')
 		_GUICtrlListView_SetItemText($ListviewAPs, $line, _DateTimeLocalFormat(_DateTimeUtcConvert($LTD[1], $LTD[2], 0)), $column_FirstActive)
 	EndIf
-	If $Add_LastActive <> '' Then
+	If $Add_LastActive <> -1 Then
 		$LTD = StringSplit($Add_LastActive, ' ')
 		_GUICtrlListView_SetItemText($ListviewAPs, $line, _DateTimeLocalFormat(_DateTimeUtcConvert($LTD[1], $LTD[2], 0)), $column_LastActive)
 	EndIf
@@ -3560,25 +3566,190 @@ Func _SortTree();Sort the data in the treeview
 	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_SortTree
 
+Func _SortListColumn($ListColName, $SortOrder)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SortListColumn()') ;#Debug Display
+	Local $DbColName = _GetDbColNameByListColName($ListColName) ;Set DB Column to sort by
+	_ListSort($DbColName, $SortOrder);Sort List
+	$sort_timer = TimerInit();Reset Sort Timer
+EndFunc   ;==>_SortListColumn
+
 Func _HeaderSort($column);Sort a column in ap list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_HeaderSort()') ;#Debug Display
+	;Get Column Name
+	Local $colInfo = _GUICtrlListView_GetColumn($ListviewAPs, $column)
+	Local $colName = $colInfo[5]
+	;Set DB Column to sort by
+	Local $DbColName = _GetDbColNameByListColName($colName)
+	;Sort List
 	GUICtrlSetData($msgdisplay, $Text_SortingList)
-	If $Direction[$column] = 0 Then
-		Dim $v_sort = False;set descending
-	Else
-		Dim $v_sort = True;set ascending
-	EndIf
-	If $Direction[$column] = 0 Then
-		$Direction[$column] = 1
-	Else
-		$Direction[$column] = 0
-	EndIf
-	_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column)
-	_FixLineNumbers()
-	_FixListIcons()
-	$SortColumn = -1
+	_ListSort($DbColName, $Direction[$column])
 	GUICtrlSetData($msgdisplay, '')
+	;Reverse sort direction (for next sort)
+	If $Direction[$column] = 1 Then
+		$Direction[$column] = 0
+	Else
+		$Direction[$column] = 1
+	EndIf
+	;Sort complete. Reset sort variable.
+	$SortColumn = -1
 EndFunc   ;==>_HeaderSort
+
+Func _ListSort($DbCol, $SortOrder)
+	If $DbCol <> "" Then
+		Local $ListRowPos = -1
+		If $SortOrder = 1 Then
+			$SortDir = "DESC"
+		Else
+			$SortDir = "ASC"
+		EndIf
+		If $DbCol = "Latitude" Or $DbCol = "Longitude" Then ; Sort by Latitude Or Longitude
+			;Add results that have no GPS postion first if DESC
+			If $SortDir = "DESC" Then
+				$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal FROM AP WHERE HighGpsHistID='0' And ListRow<>'-1' ORDER BY ApID " & $SortDir
+				$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
+			EndIf
+			;Add sorted results with GPS
+			If $DbCol = "Latitude" Then $query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal FROM (AP INNER JOIN Hist ON AP.HighGpsHistId = Hist.HistID) INNER JOIN GPS ON Hist.GpsID = GPS.GPSID WHERE ListRow<>'-1' ORDER BY GPS.Latitude " & $SortDir & ", GPS.Longitude " & $SortDir & ", AP.ApID " & $SortDir
+			If $DbCol = "Longitude" Then $query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal FROM (AP INNER JOIN Hist ON AP.HighGpsHistId = Hist.HistID) INNER JOIN GPS ON Hist.GpsID = GPS.GPSID WHERE ListRow<>'-1' ORDER BY GPS.Longitude " & $SortDir & ", GPS.Latitude " & $SortDir & ", AP.ApID " & $SortDir
+			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
+			;Add results that have no GPS postion last if ASC
+			If $SortDir = "ASC" Then
+				$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal FROM AP WHERE HighGpsHistID='0' And ListRow<>'-1' ORDER BY ApID " & $SortDir
+				$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
+			EndIf
+		ElseIf $DbCol = "FirstActive" Then ; Sort by First Active Time
+			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.FirstHistID = Hist.HistID WHERE ListRow<>'-1' ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
+			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
+		ElseIf $DbCol = "LastActive" Then ; Sort by Last Active Time
+			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.LastHistID = Hist.HistID WHERE ListRow<>'-1' ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
+			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
+		Else ; Sort by any other column
+			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal FROM AP WHERE ListRow<>'-1' ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
+			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
+		EndIf
+	EndIf
+EndFunc   ;==>_ListSort
+
+Func _SortDbQueryToList($query, $listpos)
+	ConsoleWrite($query & @CRLF)
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $wlv = 1 To $FoundApMatch
+		$listpos += 1
+		$Found_ListRow = $ApMatchArray[$wlv][1]
+		If $Found_ListRow <> $listpos Then ;If row has changed, update list information
+			$Found_APID = $ApMatchArray[$wlv][2]
+			$Found_SSID = $ApMatchArray[$wlv][3]
+			$Found_BSSID = $ApMatchArray[$wlv][4]
+			$Found_NETTYPE = $ApMatchArray[$wlv][5]
+			$Found_RADTYPE = $ApMatchArray[$wlv][6]
+			$Found_CHAN = $ApMatchArray[$wlv][7]
+			$Found_AUTH = $ApMatchArray[$wlv][8]
+			$Found_ENCR = $ApMatchArray[$wlv][9]
+			$Found_SecType = $ApMatchArray[$wlv][10]
+			$Found_BTX = $ApMatchArray[$wlv][11]
+			$Found_OTX = $ApMatchArray[$wlv][12]
+			$Found_MANU = $ApMatchArray[$wlv][13]
+			$Found_LABEL = $ApMatchArray[$wlv][14]
+			$Found_HighGpsHistId = $ApMatchArray[$wlv][15]
+			$Found_FirstHistID = $ApMatchArray[$wlv][16]
+			$Found_LastHistID = $ApMatchArray[$wlv][17]
+			$Found_LastGpsID = $ApMatchArray[$wlv][18]
+			$Found_Active = $ApMatchArray[$wlv][19]
+			$Found_Signal = $ApMatchArray[$wlv][20]
+
+			;Get First Time
+			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID='" & $Found_FirstHistID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$Found_FirstDate = $HistMatchArray[1][1]
+			$Found_FirstTime = $HistMatchArray[1][2]
+			$Found_FirstDateTime = $Found_FirstDate & ' ' & $Found_FirstTime
+
+			;Get Last Time
+			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID='" & $Found_LastHistID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$Found_LastDate = $HistMatchArray[1][1]
+			$Found_LastTime = $HistMatchArray[1][2]
+			$Found_LastDateTime = $Found_LastDate & ' ' & $Found_LastTime
+
+			;Get GPS Position
+			If $Found_HighGpsHistId = 0 Then
+				$Found_Lat = "N 0000.0000"
+				$Found_Lon = "E 0000.0000"
+			Else
+				$query = "SELECT GpsID FROM Hist WHERE HistID='" & $Found_HighGpsHistId & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$Found_GpsID = $HistMatchArray[1][1]
+				$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID='" & $Found_GpsID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$Found_Lat = $GpsMatchArray[1][1]
+				$Found_Lon = $GpsMatchArray[1][2]
+			EndIf
+
+			;Write changes to listview
+			_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
+
+			;Update ListRow Icon
+			_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
+
+			;Update ListRow
+			$query = "UPDATE AP SET ListRow='" & $listpos & "' WHERE ApID='" & $Found_APID & "'"
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		EndIf
+	Next
+	Return ($listpos)
+EndFunc   ;==>_SortDbQueryToList
+
+Func _GetDbColNameByListColName($colName)
+	Local $DbSortCol = ""
+	ConsoleWrite($colName & @CRLF)
+	If $colName = $Column_Names_Line Then
+		$DbSortCol = "ApID"
+	ElseIf $colName = $Column_Names_Active Then
+		$DbSortCol = "Active"
+	ElseIf $colName = $Column_Names_BSSID Then
+		$DbSortCol = "BSSID"
+	ElseIf $colName = $Column_Names_SSID Then
+		$DbSortCol = "SSID"
+	ElseIf $colName = $Column_Names_Signal Then
+		$DbSortCol = "Signal"
+	ElseIf $colName = $Column_Names_Channel Then
+		$DbSortCol = "CHAN"
+	ElseIf $colName = $Column_Names_Authentication Then
+		$DbSortCol = "AUTH"
+	ElseIf $colName = $Column_Names_Encryption Then
+		$DbSortCol = "ENCR"
+	ElseIf $colName = $Column_Names_NetworkType Then
+		$DbSortCol = "NETTYPE"
+	ElseIf $colName = $Column_Names_Latitude Then
+		$DbSortCol = "Latitude"
+	ElseIf $colName = $Column_Names_Longitude Then
+		$DbSortCol = "Longitude"
+	ElseIf $colName = $Column_Names_LatitudeDMM Then
+		$DbSortCol = "Latitude"
+	ElseIf $colName = $Column_Names_LongitudeDMM Then
+		$DbSortCol = "Longitude"
+	ElseIf $colName = $Column_Names_LatitudeDMS Then
+		$DbSortCol = "Latitude"
+	ElseIf $colName = $Column_Names_LongitudeDMS Then
+		$DbSortCol = "Longitude"
+	ElseIf $colName = $Column_Names_MANUF Then
+		$DbSortCol = "MANU"
+	ElseIf $colName = $Column_Names_Label Then
+		$DbSortCol = "Label"
+	ElseIf $colName = $Column_Names_RadioType Then
+		$DbSortCol = "RADTYPE"
+	ElseIf $colName = $Column_Names_BasicTransferRates Then
+		$DbSortCol = "BTX"
+	ElseIf $colName = $Column_Names_OtherTransferRates Then
+		$DbSortCol = "OTX"
+	ElseIf $colName = $Column_Names_FirstActive Then
+		$DbSortCol = "FirstActive"
+	ElseIf $colName = $Column_Names_LastActive Then
+		$DbSortCol = "LastActive"
+	EndIf
+	Return ($DbSortCol)
+EndFunc   ;==>_GetDbColNameByListColName
 
 Func _ManufacturerSort();Sorts manufacturer column in manufacturer list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ManufacturerSort()') ;#Debug Display
@@ -3607,61 +3778,6 @@ Func _LabelSort();Sorts manufacturer column in manufacturer list
 	_GUICtrlListView_SimpleSort($GUI_Lab_List, $v_sort, $column)
 	$Apply_Lab = 1
 EndFunc   ;==>_LabelSort
-
-Func _Sort($Sort);Auto Sort based on a user chosen column
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Sort()') ;#Debug Display
-	GUICtrlSetData($msgdisplay, $Text_SortingList)
-	If $SortDirection = 1 Then
-		Dim $v_sort = False;set ascending
-	Else
-		Dim $v_sort = True;set descending
-	EndIf
-
-	If $Sort = $Column_Names_SSID Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_SSID)
-	ElseIf $Sort = $Column_Names_NetworkType Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_NetworkType)
-	ElseIf $Sort = $Column_Names_Authentication Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Authentication)
-	ElseIf $Sort = $Column_Names_Encryption Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Encryption)
-	ElseIf $Sort = $Column_Names_BSSID Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_BSSID)
-	ElseIf $Sort = $Column_Names_Signal Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Signal)
-	ElseIf $Sort = $Column_Names_RadioType Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_RadioType)
-	ElseIf $Sort = $Column_Names_Channel Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Channel)
-	ElseIf $Sort = $Column_Names_BasicTransferRates Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_BasicTransferRates)
-	ElseIf $Sort = $Column_Names_OtherTransferRates Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_OtherTransferRates)
-	ElseIf $Sort = $Column_Names_Latitude Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Longitude)
-	ElseIf $Sort = $Column_Names_Longitude Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Latitude)
-	ElseIf $Sort = $Column_Names_LatitudeDMS Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_LongitudeDMS)
-	ElseIf $Sort = $Column_Names_LongitudeDMS Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_LatitudeDMS)
-	ElseIf $Sort = $Column_Names_LatitudeDMM Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_LongitudeDMM)
-	ElseIf $Sort = $Column_Names_LongitudeDMM Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_LatitudeDMM)
-	ElseIf $Sort = $Column_Names_FirstActive Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_FirstActive)
-	ElseIf $Sort = $Column_Names_LastActive Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_LastActive)
-	ElseIf $Sort = $Column_Names_Active Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Active)
-	ElseIf $Sort = $Column_Names_MANUF Then
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_MANUF)
-	EndIf
-	_FixLineNumbers()
-	_FixListIcons()
-	$sort_timer = TimerInit()
-EndFunc   ;==>_Sort
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       WINDOW FUNCTIONS
@@ -7767,9 +7883,9 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_SortBy = GUICtrlCreateCombo($Column_Names_SSID, 30, 225, 615, 21)
 		GUICtrlSetData(-1, $Column_Names_NetworkType & "|" & $Column_Names_Authentication & "|" & $Column_Names_Encryption & "|" & $Column_Names_BSSID & "|" & $Column_Names_Signal & "|" & $Column_Names_RadioType & "|" & $Column_Names_Channel & "|" & $Column_Names_BasicTransferRates & "|" & $Column_Names_OtherTransferRates & "|" & $Column_Names_Latitude & "|" & $Column_Names_Longitude & "|" & $Column_Names_LatitudeDMM & "|" & $Column_Names_LongitudeDMM & "|" & $Column_Names_LatitudeDMS & "|" & $Column_Names_LongitudeDMS & "|" & $Column_Names_FirstActive & "|" & $Column_Names_LastActive & "|" & $Column_Names_Active & "|" & $Column_Names_MANUF, $SortBy)
 		If $SortDirection = 1 Then
-			$SortDirectionDefault = $Text_Ascending
-		Else
 			$SortDirectionDefault = $Text_Decending
+		Else
+			$SortDirectionDefault = $Text_Ascending
 		EndIf
 		GUICtrlCreateLabel($Text_SortDirection, 30, 250, 625, 15)
 		GUICtrlSetColor(-1, $TextColor)
@@ -8503,9 +8619,9 @@ Func _ApplySettingsGUI();Applys settings
 		$SaveTime = GUICtrlRead($AutoSaveSec)
 		;AutoSort
 		If GUICtrlRead($GUI_SortDirection) = $Text_Ascending Then
-			$SortDirection = 1
-		Else
 			$SortDirection = 0
+		Else
+			$SortDirection = 1
 		EndIf
 
 		$SortBy = GUICtrlRead($GUI_SortBy)
