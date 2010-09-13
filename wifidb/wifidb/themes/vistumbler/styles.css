@@ -283,3 +283,22 @@ table.asscotable {
 .light {
 	background-color: #BAD0E2;
 }
+
+a:hover {
+  text-decoration: underline;
+}
+
+.popupCell {
+   background-color: #BAD0E2;
+
+}
+
+.popupCell:hover {
+  background-color: #85ABCB;
+}
+
+.popupItem {
+  text-decoration: none;
+  font-size: 1.2em;
+  color:#112233;
+}

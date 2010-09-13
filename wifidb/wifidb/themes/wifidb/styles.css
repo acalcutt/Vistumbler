@@ -4,22 +4,26 @@ body {
 	text-align:center;
 	line-height: 1.5em;
 	color:#112233;
-	font-size/* */:/**/small; font-style:normal; font-variant:normal; font-weight:normal; font-family:Trebuchet MS
+	font-size:small;
+        font-style:normal;
+        font-variant:normal;
+        font-weight:normal;
+        font-family:"Trebuchet MS";
 }
 
 .content_head{
-				color: #A9C6FA;
+    color: #A9C6FA;
 }
 
 .sub_head{
-	background-color:#508FAE;
+    background-color:#508FAE;
 }
 
 #foo {
-	position: absolute;
-	z-index: 99;
-	left: 120px;
-	top: 60px;
+    position: absolute;
+    z-index: 99;
+    left: 120px;
+    top: 60px;
 }
 
 #leftcolumn{
@@ -68,19 +72,19 @@ height: 400px;
   
 .style2 {
 	text-align: center;
-	border-width: 1;
+	border-width: 1px;
 }
 
 .style3 {
 
-	border: 1;
+	border: 1px;
 	background-color: #477DA9;
 }
 
 .style4
 {
 	text-align: center;
-	border-width: 1; 
+	border-width: 1px;
 	background-color: #477DA9;
 }
 
@@ -95,7 +99,7 @@ height: 400px;
 .style4.td
 {
 	text-align: center;
-	border-width: 1; 
+	border-width: 1px;
 	background-color: #477DA9;
 }
 
@@ -146,15 +150,15 @@ a.email {
 table.importconvert
 { 
 	color: #123;
-	border-width: 1;
+	border-width: 1px;
 }
 
 table.new
 { 
-	border-width: 1;
-	border: 1;
+	border-width: 1px;
+	border: 1px;
 	border-color: #0F0;
-	width: "90%";
+	width: 90%;
 }
 
 table.new ha {
@@ -175,10 +179,10 @@ table.new td {
 
 table.update
 { 
-	border-width: 1;
-	border: 1;
+	border-width: 1px;
+	border: 1px;
 	border-color: #F00;
-	width: "90%";
+	width: 90%;
 }
 
 table.update td {
@@ -221,9 +225,28 @@ table.update ha {
 }
 
 .dark {
-	background-color: #85ABCB;
+    background-color: #85ABCB;
 }
 
 .light {
-	background-color: #BAD0E2;
+    background-color: #BAD0E2;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.popupCell {
+   background-color: #BAD0E2;
+
+}
+
+.popupCell:hover {
+  background-color: #85ABCB;
+}
+
+.popupItem {
+  text-decoration: none;
+  font-size: 1.2em;
+  color:#112233;
 }

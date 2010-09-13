@@ -20,7 +20,18 @@ pageheader("Version Page");
 			</tr>
 		</table>
 		<BR><H2>Change Log</H2>
-		<table class="light" width="100%" border="2" id="20b1">
+		<table class="light" width="100%" border="2" id="20b2">
+			<TR><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
+			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 2</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-12</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
+				<OL>
+                                    <LI>Added the ability for the search page to show the first 15 results on the same page as you type. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=" target="_blank"></a></LI>
+				</OL>
+			</td></tr>
+		</table>
+                <table class="light" width="100%" border="2" id="20b1">
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 1</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2010-July-31</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Hyannis</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
@@ -129,7 +140,7 @@ pageheader("Version Page");
 					<LI>Daemon now checks if the log file is longer than 500 lines, if so the file is moved to [tools_dir]/backups/logs/console_wifidbd_[date-time].log</LI>
 					<LI>Added a bash script written by Andrew, was adapted from the Plone startup bash script. Use either wifidbd or wifidbd.sh</LI>
 					<LI>Fixed some bugs with the KMZ exports being generated in the opt folder, and not the out/kmz folder.</LI>\
-					<LI>Some others that I can’t remember, but were done.</LI>
+					<LI>Some others that I canï¿½t remember, but were done.</LI>
 				</OL>
 			</td></tr>
 		</table>
@@ -163,7 +174,7 @@ pageheader("Version Page");
 					<LI>Fixed a Time zone issue conversion in the daemon and general core of WiFiDB. </LI>
 					<LI>Added cookie based Time zone settings on the scheduling page. </LI>
 					<LI>Fixed a bug in the individual User stats page, where it was not showing the first import for any user. </LI>
-					<LI>Fixed an error where I didn’t have the 'exp_single_ap' on the exports page. </LI>
+					<LI>Fixed an error where I didnï¿½t have the 'exp_single_ap' on the exports page. </LI>
 					<LI>Fixed an error in the Export all DB to KML, where if the last AP had no valid GPS cords, the link for the final file would not be shown. </LI>
 					<LI>Changed the Full DB KML so that it is now a KMZ file not a KML, to save on bandwidth. </LI>
 				</OL>

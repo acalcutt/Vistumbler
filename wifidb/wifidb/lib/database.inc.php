@@ -511,7 +511,7 @@ function check_install_folder()
 		$full_path = $full_path.'install';
 		if(is_dir($full_path)){$install_folder_remove = '<p align="center"><font color="red" size="6">The install Folder is still there, remove it!</font></p>';}
 	}
-	echo $install_folder_remove;
+	if(isset($install_folder_remove)){echo $install_folder_remove;}
 	return 1;
 }
 
@@ -1036,7 +1036,7 @@ function smart_quotes($text="") // Used for SSID Sanatization
 					20=>"-", #
 					21=>"/", #
 					22=>"\\", #
-					23=>"ÿ",
+					23=>"ï¿½",
 					24=>""
 				);
 	$text = preg_replace($pattern,"&#147;\\1&#148;",$text);
@@ -1356,7 +1356,7 @@ class database
 		$count = count($return);
 		$rettest = substr($return[1], 1, -1);
 		
-		if ($rettest = 'gpx xmlns="http://www.topografix.com/GPX/1/1" creator="Vistumbler 9.3 Beta 2" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"')
+		if($rettest == 'gpx xmlns="http://www.topografix.com/GPX/1/1" creator="Vistumbler 9.3 Beta 2" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd"')
 		{	
 			echo $rettest."<br>";
 		}else

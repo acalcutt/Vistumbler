@@ -10,26 +10,39 @@ function pageheader($title, $output="detailed", $install=0)
 	include_once($GLOBALS['half_path'].'/lib/config.inc.php');
 	$head		= 	$GLOBALS['header'];
 	$half_path	=	$GLOBALS['half_path'];
-	if($output == "detailed")
+	if(!$install)
+        {
+                include_once($GLOBALS['half_path'].'/lib/security.inc.php');
+                $sec = new security();
+                $login_check = $sec->login_check();
+                if(is_array($login_check) or $login_check == "No Cookie"){$login_check = 0;}
+                check_install_folder();
+        }else{$login_check = 0;}
+
+        if($output == "detailed")
 	{
-		if(!$install)
-		{
-			include_once($GLOBALS['half_path'].'/lib/security.inc.php');
-			$sec = new security();
-			$login_check = $sec->login_check();
-			if(is_array($login_check) or $login_check == "No Cookie"){$login_check = 0;}
-			check_install_folder();
-		}else
-		{
-			$login_check = 0;
+		?><html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+                <?php
+                echo "<title>Wireless DataBase ".$GLOBALS["ver"]["wifidb"]." --> $title</title>\r\n$head\r\n";
+                if($title == "Search Page")
+                {
+                    ?><script type="text/javascript" src="<?php echo $GLOBALS['UPATH'];?>/lib/javascript.js"></script><?php
+                }
+                ?>
+                <link rel="stylesheet" href="<?php echo $GLOBALS['UPATH'];?>/themes/wifidb/styles.css">
+                </head>
+                <?php
+                if($title == "Search Page")
+                {
+                    ?><body onload="init()"><?php
+                }else{
+                    ?><body><?php
 		}
-		echo '<html><head><title>Wireless DataBase '.$GLOBALS["ver"]["wifidb"].' --> '.$title.'</title>'.$head.'</head>';
-		# START YOUR HTML EDITS HERE #
-		?>
-		
-		<link rel="stylesheet" href="<?php echo $GLOBALS['UPATH'];?>/themes/wifidb/styles.css">
-		<body>
-		<div align="center">
+                ?>
+                <!-- START YOUR HTML EDITS HERE -->
+                <div align="center">
 		<table width="100%" border="0" cellspacing="5" cellpadding="2">
 			<tr style="background-color: #315573;">
 				<td colspan="2">

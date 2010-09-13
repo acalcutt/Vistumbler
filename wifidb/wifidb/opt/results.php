@@ -10,7 +10,7 @@ $sql_a=array();
 
 if (@$_POST['ssid'] == "%" or @$_POST['mac'] == "%" or @$_POST['radio'] == "%" or @$_POST['chan'] == "%" or @$_POST['auth'] == "%" or @$_POST['encry'] == "%" )
 {
-	echo '<table><tr><td colspan="6" align="center">Come on man, you cant search or all of something, thats what <a class="links" href="../all.php">this page</a> is for!</td></tr></table>'; 
+	echo '<table><tr><td colspan="6" align="center">Come on man, you cant search for all of something, thats what <a class="links" href="../all.php">this page</a> is for!</td></tr></table>';
 	die(footer($_SERVER['SCRIPT_FILENAME']));
 }
 

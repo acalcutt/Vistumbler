@@ -2,82 +2,88 @@
 include('../lib/database.inc.php');
 pageheader("Search Page");
 include('../lib/config.inc.php');
-		?><h2>Search for Access Points</h2>
-						<form action="results.php?ord=ASC&sort=ssid&from=0&to=25" method="post" enctype="multipart/form-data">
-								<TABLE WIDTH=75% BORDER=1 CELLPADDING=2 CELLSPACING=0 align="center">
-									<COL WIDTH=40*>
-									<COL WIDTH=216*>
-									<TR>
-										<TD class="style3" WIDTH=16%>
-											<P>SSID  <font size="2"><i>(Linksys)</i></font>: 
-											</P>
-										</TD>
-										<TD class="light" WIDTH=84%>
-											<P><A NAME="ssid"></A><INPUT TYPE=TEXT NAME="ssid" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
-										</TD>
-									</TR>
-									<TR>
-										<TD class="style3" WIDTH=16% HEIGHT=35>
-											<P>MAC Address  <font size="2"><i>(00:11:22:33:44:55)</i></font>: 
-											</P>
-										</TD>
-										<TD class="light" WIDTH=84%>
-											<P><A NAME="mac"></A><INPUT TYPE=TEXT NAME="mac" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
-										</TD>
-									</TR>
-									<TR>
-										<TD class="style3" WIDTH=16%>
-											<P>Radio Type  <font size="2"><i>(a/b/g/n)</i></font>: 
-											</P>
-										</TD>
-										<TD class="light" WIDTH=84%>
-											<P><A NAME="radio"></A><INPUT TYPE=TEXT NAME="radio" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
-										</TD>
-									</TR>
-									<TR>
-										<TD class="style3" WIDTH=16%>
-											<P>Channel <font size="2"><i>(1/2/3/..)</i></font>: 
-											</P>
-										</TD>
-										<TD class="light" WIDTH=84%>
-											<P><A NAME="chan"></A><INPUT TYPE=TEXT NAME="chan" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
-										</TD>
-									</TR>
-									<TR>
-										<TD class="style3" WIDTH=16%>
-											<P>Authentication <font size="2"><i>(WPA/WPA2/OPEN)</i></font>: 
-											</P>
-										</TD>
-										<TD class="light" WIDTH=84%>
-											<P><A NAME="auth"></A><INPUT TYPE=TEXT NAME="auth" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
-										</TD>
-									</TR>
-									<TR>
-										<TD class="style3" WIDTH=16%>
-											<P>Encryption <font size="2"><i>(None/WEP/TKIP/PSK)</i></font>: 
-											</P>
-										</TD>
-										<TD class="light" WIDTH=84%>
-											<P><A NAME="encry"></A><INPUT TYPE=TEXT NAME="encry" SIZE=28 STYLE="width: 2.42in; height: 0.25in"></P>
-										</TD>
-									</TR>
-									<TR>
-										<TD class="style3"  WIDTH=16%>
-											<font size="3"><i>Use % as a wildcard</i></font>
-										</TD>
-										<TD class="light" WIDTH=84%>
-											<P>
-										<?php	
-											if($rebuild === 0)
-											{
-											echo '<INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in"></P>';
-											}else{echo "The database is in  rebuild mode, please wait...";}
-										?></p>
-										</TD>
-									</TR>
-								</TABLE>
-							</form>
-						</p>
-		<?php
+?>
+<h2>Search for Access Points</h2>
+<form action="results.php?ord=ASC&sort=ssid&from=0&to=25" method="post" enctype="multipart/form-data">
+    <table border="0" cellpadding="5">
+        <thead>
+            <tr>
+                <th align="right">SSID:</th>
+                <th align="left">
+                    <input type="text"
+                           name="ssid"
+                        size="40"
+                        id="ssid"
+                        onkeyup="doCompletion();">
+                </th>
+            </tr>
+            <tr>
+                <th align="right">MacAddress:</th>
+                <th align="left">
+                    <input type="text"
+                           name="mac"
+                        size="40"
+                        id="mac"
+                        onkeyup="doCompletion();">
+                </th>
+            </tr>
+            <tr>
+                <th align="right">Authentication:</th>
+                <th align="left">
+                    <input type="text"
+                           name="auth"
+                        size="40"
+                        id="auth"
+                        onkeyup="doCompletion();">
+                </th>
+            </tr>
+            <tr>
+                <th align="right">Encryption:</th>
+                <th align="left">
+                    <input type="text"
+                           name="encry"
+                        size="40"
+                        id="encry"
+                        onkeyup="doCompletion();">
+                </th>
+            </tr>
+            <tr>
+                <th align="right">Radio Type:</th>
+                <th align="left">
+                    <input type="text"
+                           name="radio"
+                        size="40"
+                        id="radio"
+                        onkeyup="doCompletion();">
+                </th>
+            </tr>
+            <tr>
+                <th align="right">Channel:</th>
+                <th align="left">
+                    <input type="text"
+                           name="chan"
+                        size="40"
+                        id="chan"
+                        onkeyup="doCompletion();">
+                </th>
+            </tr>
+            <tr>
+                <td align="center" colspan="2">
+                    <input type=submit name="submit" value="Submit" style="width: 0.71in; height: 0.36in" />
+                </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td align="center" id="auto-row" colspan="2">
+                    <h4>First 15 results will show here.</h4>
+                    <table class="popupBox" style="display: none"></table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</form>
+<?php
 $filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);?>
+footer($filename);
+?>
