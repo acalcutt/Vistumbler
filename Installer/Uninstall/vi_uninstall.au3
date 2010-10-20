@@ -12,8 +12,8 @@ Dim $Desktop_CurrentUser = @DesktopDir & '\Vistumbler.lnk'
 If FileExists($InstallLocation) Then DirRemove($InstallLocation , 1)
 If FileExists($StartMenu_AllUsers) Then DirRemove($StartMenu_AllUsers , 1)
 If FileExists($StartMenu_CurrentUser) Then DirRemove($StartMenu_CurrentUser , 1)
-If FileExists($Desktop_AllUsers) Then FileDelete ($StartMenu_AllUsers)
-If FileExists($Desktop_CurrentUser) Then FileDelete ($StartMenu_AllUsers)
+If FileExists($Desktop_AllUsers) Then FileDelete ($Desktop_AllUsers)
+If FileExists($Desktop_CurrentUser) Then FileDelete ($Desktop_CurrentUser)
 
 RegDelete("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler")
 
