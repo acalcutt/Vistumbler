@@ -1,3 +1,4 @@
+#RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_icon=icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
@@ -22,9 +23,9 @@ $last_modified = '2010/10/19'
 #include <WindowsConstants.au3>
 #include "UDFs\Zip.au3"
 ;--------------------------------------------------------
-Dim $TempSourceFiles = @TempDir & '\installfiles.zip'
-Dim $TempLicense = @TempDir & '\License.txt'
-Dim $TempSettings = @TempDir & '\installsettings.ini'
+Dim $TempSourceFiles = @TempDir & '\vi_files.zip'
+Dim $TempLicense = @TempDir & '\vi_license.txt'
+Dim $TempSettings = @TempDir & '\vi_settings.ini'
 
 Dim $Destination = @ProgramFilesDir & '\Vistumbler\'
 Dim $StartMenu_AllUsers = @ProgramsCommonDir & '\Vistumbler\'
@@ -33,9 +34,9 @@ Dim $Desktop_AllUsers = @DesktopCommonDir & '\'
 Dim $Desktop_CurrentUser = @DesktopDir & '\'
 
 ;Install needed files into exe
-FileInstall ( "installfiles.zip", $TempSourceFiles, 1)
-FileInstall ( "License.txt", $TempLicense, 1)
-FileInstall ( "installsettings.ini", $TempSettings, 1)
+FileInstall ( "vi_files.zip", $TempSourceFiles, 1)
+FileInstall ( "vi_license.txt", $TempLicense, 1)
+FileInstall ( "vi_settings.ini", $TempSettings, 1)
 
 ;Get settings
 Dim $ProgramName = IniRead($TempSettings, 'Settings', 'ProgramName', 'Vistumbler')
@@ -44,7 +45,7 @@ Dim $ProgramAuthor = IniRead($TempSettings, 'Settings', 'ProgramAuthor', 'Andrew
 Dim $title = $ProgramName & ' ' & $ProgramVersion & ' Installer'
 
 ;Read in license file
-$licensefile = FileOpen("License.txt", 0)
+$licensefile = FileOpen($TempLicense, 0)
 $licensetxt = FileRead($licensefile)
 FileClose($licensefile)
 
@@ -181,6 +182,14 @@ Func _Install($source_zip, $dest_dir, $RemOldDir=1, $StartShortcuts=1, $DesktopS
 			FileDelete ($Desktop_CurrentUser & 'Vistumbler.lnk')
 			FileCreateShortcut ($dest_dir & 'Vistumbler.exe', $Desktop_CurrentUser & 'Vistumbler.lnk')
 		EndIf
+		;Write uninstall information into the registry
+		RegDelete("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler")
+		RegWrite("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler", "InstallLocation", "REG_SZ", $Destination)
+		RegWrite("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler", "UninstallString", "REG_SZ", $Destination & 'Uninstall.exe')
+		RegWrite("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler", "DisplayIcon", "REG_SZ", $Destination & 'Uninstall.exe')
+		RegWrite("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler", "DisplayName", "REG_SZ", $ProgramName)
+		RegWrite("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler", "DisplayVersion", "REG_SZ", $ProgramVersion)
+		RegWrite("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler", "Publisher", "REG_SZ", "Vistumbler.net")
 		Msgbox(0, "Done", "Install completed succesfully")
 	EndIf
 EndFunc
@@ -191,7 +200,6 @@ Func _RemoveOldFiles()
 	DirRemove ($StartMenu_CurrentUser, 1)
 	FileDelete ($Desktop_CurrentUser & 'Vistumbler.lnk')
 	FileDelete ($Desktop_AllUsers & 'Vistumbler.lnk')
-	MsgBox(0, "Old files removed", "Click OK to continue")
 EndFunc
 
 Func _Exit()
