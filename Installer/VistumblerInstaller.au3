@@ -56,7 +56,7 @@ _Exit()
 
 
 Func _LicenseAgreementGui()
-	$LA_GUI = GUICreate('License Agreement - ' & $title, 625, 443)
+	$LA_GUI = GUICreate($title & ' - License Agreement', 625, 443)
 	$Edit1 = GUICtrlCreateEdit('', 8, 16, 609, 369, BitOr($GUI_SS_DEFAULT_EDIT,$ES_READONLY,$ES_CENTER))
 	GUICtrlSetData(-1, $licensetxt)
 	$LA_Agree = GUICtrlCreateButton("Agree", 184, 400, 105, 25, $WS_GROUP)
@@ -81,17 +81,26 @@ Func _LicenseAgreementGui()
 EndFunc
 
 Func _InstallOptionsGui()
-	$IO_GUI = GUICreate('Install Options - ' & $title, 558, 218)
-	$IO_Dest = GUICtrlCreateInput($Destination, 32, 48, 400, 20)
-	$Label1 = GUICtrlCreateLabel("Vistumbler Install Location", 32, 24, 126, 17)
-	$Checkbox1 = GUICtrlCreateCheckbox("Add Shortcut on Desktop", 32, 80, 321, 15)
-	$Checkbox2 = GUICtrlCreateCheckbox("Add Shortcut in Start Menu (All Users)", 32, 100, 225, 15)
-	$Checkbox3 = GUICtrlCreateCheckbox("Add Shortcut in Start Menu (Current Users)", 32, 120, 220, 15)
-	$Checkbox4 = GUICtrlCreateCheckbox("Remove old vistumbler directories (make sure you have a backup of your scans)", 32, 140, 400, 15)
-	$Button1 = GUICtrlCreateButton("Browse", 440, 45, 81, 25, $WS_GROUP)
-	$IO_Install = GUICtrlCreateButton("Install", 160, 168, 113, 25, $WS_GROUP)
-	$IO_Exit = GUICtrlCreateButton("Exit", 284, 169, 113, 25, $WS_GROUP)
-	GUISetState(@SW_SHOW)
+$IO_GUI = GUICreate($title & ' - Install Options', 513, 259)
+$IO_Dest = GUICtrlCreateInput($Destination, 16, 32, 385, 21)
+$Browse = GUICtrlCreateButton("Browse", 408, 30, 89, 25, $WS_GROUP)
+GUICtrlCreateLabel("Vistumbler Install Location", 16, 12, 126, 15)
+GUICtrlCreateGroup("Options", 8, 64, 497, 145)
+GUICtrlCreateGroup("Create start menu shortcuts", 16, 88, 230, 89)
+$SMS_AllUsers = GUICtrlCreateRadio("All Users", 32, 144, 100, 17)
+$SMS_CurrentUser = GUICtrlCreateRadio("Current User", 32, 128, 100, 17)
+$SMS_None = GUICtrlCreateRadio("None", 32, 112, 100, 17)
+GUICtrlSetState($SMS_CurrentUser, $GUI_CHECKED)
+GUICtrlCreateGroup("Create desktop shortcuts", 266, 88, 230, 89)
+$DS_AllUsers = GUICtrlCreateRadio("All Users", 282, 144, 100, 17)
+$DS_CurrentUser  = GUICtrlCreateRadio("Current User", 282, 128, 100, 17)
+$DS_None = GUICtrlCreateRadio("None", 282, 112, 100, 17)
+GUICtrlSetState($DS_CurrentUser, $GUI_CHECKED)
+$RVD_Check = GUICtrlCreateCheckbox("Remove old vistumbler directories (make sure you have a backup of your scans)", 16, 184, 481, 17)
+GUICtrlSetState($RVD_Check, $GUI_CHECKED)
+$IO_Install = GUICtrlCreateButton("Install", 104, 220, 130, 25, $WS_GROUP)
+$IO_Exit = GUICtrlCreateButton("Exit", 272, 220, 130, 25, $WS_GROUP)
+GUISetState(@SW_SHOW)
 
 	While 1
 		$nMsg = GUIGetMsg()
@@ -102,19 +111,41 @@ Func _InstallOptionsGui()
 			Case $IO_Exit
 				GUIDelete($IO_GUI)
 				ExitLoop
+			Case $Browse
+				$instaldir = FileSelectFolder("Choose a folder.", "", 1, GUICtrlRead($IO_Dest))
+				If Not @error Then GUICtrlSetData($IO_Dest, $instaldir)
 			Case $IO_Install
+				Dim $SMS=0, $DS=0, $RVD=0
+				;get install folder
 				$Destination = GUICtrlRead($IO_Dest)
+				;Get start menu shortcut type
+				If GUICtrlRead($SMS_AllUsers) = 1 Then
+					$SMS = 2
+				ElseIf GUICtrlRead($SMS_CurrentUser) = 1 Then
+					$SMS = 1
+				EndIf
+				;Get desktop shortcut type
+				If GUICtrlRead($DS_AllUsers) = 1 Then
+					$DS = 2
+				ElseIf GUICtrlRead($DS_CurrentUser) = 1 Then
+					$DS = 1
+				EndIf
+				;Set remove directories flag
+				If GUICtrlRead($RVD_Check) = 1 Then $RVD=1
+				;Close Install Options Window
 				GUIDelete($IO_GUI)
-				_Install($TempSourceFiles, $Destination)
+				;Install files from zip to selected dir
+				_Install($TempSourceFiles, $Destination, $RVD, $SMS, $DS)
 				ExitLoop
 		EndSwitch
 	WEnd
 EndFunc
 
 Func _Install($source_zip, $dest_dir, $RemOldDir=1, $StartShortcuts=1, $DesktopShortcuts=1)
+	ConsoleWrite('$StartShortcuts:' & $StartShortcuts & ' - ' & '$DesktopShortcuts:' & $DesktopShortcuts & @CRLF)
 	If $RemOldDir = 1 Then _RemoveOldFiles()
-	_Zip_UnzipAll($source_zip, $dest_dir, 16)
-	If @error Then
+	$Unzip = _Zip_UnzipAll($source_zip, $dest_dir, 272)
+	If $Unzip = 0 Then
 		If @error = 1 Then
 			$err = "zipfldr.dll does not exist."
 		ElseIf @error = 2 Then
@@ -138,7 +169,7 @@ Func _Install($source_zip, $dest_dir, $RemOldDir=1, $StartShortcuts=1, $DesktopS
 		If $StartShortcuts = 2 Then
 			DirCreate($StartMenu_AllUsers)
 			FileCreateShortcut ($dest_dir & 'Vistumbler.exe', $StartMenu_AllUsers & 'Vistumbler.lnk')
-		ElseIf $StartShortcuts = 1 Then 
+		ElseIf $StartShortcuts = 1 Then
 			DirCreate($StartMenu_CurrentUser)
 			FileCreateShortcut ($dest_dir & 'Vistumbler.exe', $StartMenu_CurrentUser & 'Vistumbler.lnk')
 		EndIf
@@ -146,7 +177,7 @@ Func _Install($source_zip, $dest_dir, $RemOldDir=1, $StartShortcuts=1, $DesktopS
 		If $DesktopShortcuts = 2 Then
 			FileDelete ($Desktop_AllUsers & 'Vistumbler.lnk')
 			FileCreateShortcut ($dest_dir & 'Vistumbler.exe', $Desktop_AllUsers & 'Vistumbler.lnk')
-		ElseIf $DesktopShortcuts = 1 Then 
+		ElseIf $DesktopShortcuts = 1 Then
 			FileDelete ($Desktop_CurrentUser & 'Vistumbler.lnk')
 			FileCreateShortcut ($dest_dir & 'Vistumbler.exe', $Desktop_CurrentUser & 'Vistumbler.lnk')
 		EndIf
