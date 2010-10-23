@@ -639,7 +639,12 @@ Func _Zip_UnzipAll($sZipFile, $sDestPath, $iFlag = 20)
     If Not IsObj($oNS2) Then Return SetError(6, 0, 0)
     $oNS2.CopyHere($oNS.Items, $iFlag)
     DirRemove($sTempDir, 1)
-    If FileExists($sDestPath & "\" & $oNS.Items.Item($oNS.Items.Count - 1).Name) Then
+
+	;Workaround because windows did not always return file extension for .Name - Andrew Calcutt 10/23/2010
+	$testfilesourcepath = $oNS.Items.Item($oNS.Items.Count - 1).path
+	$testfiledestpath = $sDestPath & "\" & StringTrimLeft($testfilesourcepath, StringInStr($testfilesourcepath, "\" , 0 , -1))
+	;end workaround
+    If FileExists($testfiledestpath) Then
         ; success... most likely
         ; checks for existence of last item from source in destination
         Return 1
