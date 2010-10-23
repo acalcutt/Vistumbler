@@ -1,9 +1,9 @@
 #RequireAdmin
-#region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Icons\icon.ico
-#AutoIt3Wrapper_outfile=Vistumbler.exe
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2010 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 1'
+$version = 'v10.1 Beta 2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/09/12'
+$last_modified = '2010/10/23'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -1563,7 +1563,7 @@ Func _ScanAccessPoints()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, ' _ScanAccessPoints()') ;#Debug Display
 	If $UseNativeWifi = 1 Then
 		$FoundAPs = 0
-		$NewFoundAPs = 0
+		$FilterMatches = 0
 		$aplist = _Wlan_GetAvailableNetworkList(2, $DefaultApapterID, $wlanhandle)
 		;_ArrayDisplay($aplist)
 		$aplistsize = UBound($aplist) - 1
@@ -1586,16 +1586,28 @@ Func _ScanAccessPoints()
 			EndIf
 			;Add new access point
 			$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
-			If $NewFound = 1 Then $NewFoundAPs += 1
+			If $NewFound <> 0 Then
+				;Check if this AP matches the filter
+				If StringInStr($AddQuery, "WHERE") Then
+					$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
+				Else
+					$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
+				EndIf
+				ConsoleWrite($fquery & @CRLF)
+				$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+				$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+				;If AP Matches filter, increment $FilterMatches
+				If $FoundLoadApMatch = 1 Then $FilterMatches += 1
+			EndIf
 		Next
 		;Play New AP sound if sounds are enabled
-		If $NewFoundAPs <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+		If $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
 		;Return number of active APs
 		Return ($FoundAPs)
 	Else
 		$NewAP = 0
 		$FoundAPs = 0
-		$NewFoundAPs = 0
+		$FilterMatches = 0
 		;Dump data from netsh
 		FileDelete($tempfile);delete old temp file
 		_RunDOS($netsh & ' wlan show networks mode=bssid interface="' & $DefaultApapter & '" > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
@@ -1651,12 +1663,23 @@ Func _ScanAccessPoints()
 						EndIf
 						;Add new access point
 						$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
-						If $NewFound = 1 Then $NewFoundAPs += 1
+						If $NewFound <> 0 Then
+							;Check if this AP matches the filter
+							If StringInStr($AddQuery, "WHERE") Then
+								$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
+							Else
+								$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
+							EndIf
+							$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+							$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+							;If AP Matches filter, increment $FilterMatches
+							If $FoundLoadApMatch = 1 Then $FilterMatches += 1
+						EndIf
 					EndIf
 				EndIf
 			Next
 			;Play New AP sound if sounds are enabled
-			If $NewFoundAPs <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+			If $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
 			;Return number of active APs
 			Return ($FoundAPs)
 		Else
@@ -1700,7 +1723,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
 			$APID += 1
 			$HISTID += 1
-			$NewApFound = 1
+			$NewApFound = $APID
 			$ListRow = -1
 			;Set Security Type
 			If BitOR($AUTH = $SearchWord_Open, $AUTH = 'Open') And BitOR($ENCR = $SearchWord_None, $ENCR = 'Unencrypted') Then
@@ -5564,7 +5587,7 @@ Func _ImportVS1($VS1file)
 								$NewGID = $TempGidMatchArray[1][1]
 								;Add AP Info to DB, Listview, and Treeview
 								$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig)
-								If $NewApAdded = 1 Then $AddAP += 1
+								If $NewApAdded <> 0 Then $AddAP += 1
 							EndIf
 						EndIf
 						$closebtn = _GUICtrlButton_GetState($NsCancel)
@@ -5615,7 +5638,7 @@ Func _ImportVS1($VS1file)
 					EndIf
 					;Add First AP Info to DB, Listview, and Treeview
 					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
-					If $NewApAdded = 1 Then $AddAP += 1
+					If $NewApAdded <> 0 Then $AddAP += 1
 					;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5630,7 +5653,7 @@ Func _ImportVS1($VS1file)
 					EndIf
 					;Add Last AP Info to DB, Listview, and Treeview
 					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
-					If $NewApAdded = 1 Then $AddAP += 1
+					If $NewApAdded <> 0 Then $AddAP += 1
 				Else
 					;ExitLoop
 				EndIf
@@ -5721,7 +5744,7 @@ Func _ImportCSV($CSVfile)
 				EndIf
 
 				$NewApAdded = _AddApData(0, $ImpGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpSig)
-				If $NewApAdded = 1 Then $AddAP += 1
+				If $NewApAdded <> 0 Then $AddAP += 1
 
 				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $iSize) Then
 					$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
@@ -5789,7 +5812,7 @@ Func _ImportCSV($CSVfile)
 				EndIf
 				;Add First AP Info to DB, Listview, and Treeview
 				$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpHighSig)
-				If $NewApAdded = 1 Then $AddAP += 1
+				If $NewApAdded <> 0 Then $AddAP += 1
 				;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5804,7 +5827,7 @@ Func _ImportCSV($CSVfile)
 				EndIf
 				;Add Last AP Info to DB, Listview, and Treeview
 				$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpHighSig)
-				If $NewApAdded = 1 Then $AddAP += 1
+				If $NewApAdded <> 0 Then $AddAP += 1
 
 				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $iSize) Then
 					$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
@@ -5914,7 +5937,7 @@ Func _ImportNS1($NS1file)
 						EndIf
 						;Add Last AP Info to DB, Listview
 						$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal)
-						If $NewApAdded = 1 Then $AddAP += 1
+						If $NewApAdded <> 0 Then $AddAP += 1
 					EndIf
 				Else
 					ExitLoop
@@ -10087,7 +10110,7 @@ Func _ImportWardriveDb3($DB3file)
 
 		;Add AP data into Vistumbler DB
 		$NewApAdded = _AddApData(0, $NewGpsId, $Found_BSSID, $Found_SSID, $Found_CHAN, $Found_AUTH, $Found_ENCR, $Found_NETTYPE, "802.11g", "Unknown", "Unknown", "0")
-		If $NewApAdded = 1 Then $AddAP += 1
+		If $NewApAdded <> 0 Then $AddAP += 1
 
 		If TimerDiff($UpdateTimer) > 600 Or ($NewAP = $WardriveAPs) Then
 			$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
