@@ -14,10 +14,10 @@
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
-$Script_Function = 'A wireless network scanner for vista. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 2'
+$Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
+$version = 'v10.1 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/10/23'
+$last_modified = '2010/11/15'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -50,7 +50,6 @@ Dim $LanguageDir = @ScriptDir & '\Languages\'
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $TmpDir = @ScriptDir & '\temp\'
-Dim $ToolsDir = @ScriptDir & '\Tools\'
 Dim $IconDir = @ScriptDir & '\Icons\'
 DirCreate($SettingsDir)
 DirCreate($DefaultSaveDir)
@@ -59,7 +58,6 @@ DirCreate($LanguageDir)
 DirCreate($SoundDir)
 DirCreate($ImageDir)
 DirCreate($TmpDir)
-DirCreate($ToolsDir)
 ;Cleanup Old Temp Files----------------------------------
 _CleanupFiles($TmpDir, '*.tmp')
 _CleanupFiles($TmpDir, '*.ldb')
@@ -547,6 +545,7 @@ Dim $Text_ExportToTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToTXT', 
 Dim $Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
 Dim $Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
 Dim $Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
+Dim $Text_ExportToVSZ = IniRead($DefaultLanguagePath, "GuiText", "ExportToVSZ", "Export To VSZ")
 Dim $Text_ImportFromTXT = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFromTXT', 'Import From TXT / VS1')
 Dim $Text_ImportFromVSZ = IniRead($DefaultLanguagePath, 'GuiText', 'ImportFromVSZ', 'Import From VSZ')
 Dim $Text_Exit = IniRead($DefaultLanguagePath, 'GuiText', 'Exit', 'E&xit')
@@ -815,10 +814,8 @@ Dim $Text_AddFilter = IniRead($DefaultLanguagePath, "GuiText", "AddFilter", "Add
 Dim $Text_EditFilter = IniRead($DefaultLanguagePath, "GuiText", "EditFilter ", "Edit Filter ")
 Dim $Text_DeleteFilter = IniRead($DefaultLanguagePath, "GuiText", "DeleteFilter", "Delete Filter")
 Dim $Text_TimeBeforeMarkedDead = IniRead($DefaultLanguagePath, "GuiText", "TimeBeforeMarkedDead", "Time to wait before marking AP dead (s)")
-
 Dim $Text_FilterNameRequired = IniRead($DefaultLanguagePath, "GuiText", "FilterNameRequired", "Filter Name is required")
 Dim $Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "UpdateManufacturers", "Update Manufacturers")
-Dim $Text_ExportToVSZ = IniRead($DefaultLanguagePath, "GuiText", "ExportToVSZ", "Export To VSZ")
 Dim $Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
 
 If $AutoCheckForUpdates = 1 Then
@@ -6270,6 +6267,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToNS1", $Text_ExportToNS1)
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToVS1", $Text_ExportToVS1)
 	IniWrite($DefaultLanguagePath, "GuiText", "ExportToCSV", $Text_ExportToCSV)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToVSZ", $Text_ExportToVSZ)
 	IniWrite($DefaultLanguagePath, "GuiText", "PhilsPHPgraph", $Text_PhilsPHPgraph)
 	IniWrite($DefaultLanguagePath, "GuiText", "PhilsWDB", $Text_PhilsWDB)
 	IniWrite($DefaultLanguagePath, "GuiText", "UploadDataToWiFiDB", $Text_UploadDataToWifiDB)
@@ -6500,6 +6498,9 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'EditFilter', $Text_EditFilter)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteFilter', $Text_DeleteFilter)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'TimeBeforeMarkedDead', $Text_TimeBeforeMarkedDead)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterNameRequired', $Text_FilterNameRequired)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateManufacturers', $Text_UpdateManufacturers)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FixHistSignals', $Text_FixHistSignals)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -8296,6 +8297,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_ExportToNS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToNS1', 'Export To NS1')
 		$Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
 		$Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
+		$Text_ExportToVSZ = IniRead($DefaultLanguagePath, "GuiText", "ExportToVSZ", "Export To VSZ")
 		$Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'View graph (Phils PHP version)')
 		$Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'Phils WiFiDB (Alpha)')
 		$Text_UploadDataToWifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'UploadDataToWiFiDB', 'Upload Data to WiFiDB')
@@ -8523,6 +8525,9 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_EditFilter = IniRead($DefaultLanguagePath, "GuiText", "EditFilter ", "Edit Filter ")
 		$Text_DeleteFilter = IniRead($DefaultLanguagePath, "GuiText", "DeleteFilter", "Delete Filter")
 		$Text_TimeBeforeMarkedDead = IniRead($DefaultLanguagePath, "GuiText", "TimeBeforeMarkedDead", "Time to wait before marking AP dead (s)")
+		$Text_FilterNameRequired = IniRead($DefaultLanguagePath, "GuiText", "FilterNameRequired", "Filter Name is required")
+		$Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "UpdateManufacturers", "Update Manufacturers")
+		$Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
