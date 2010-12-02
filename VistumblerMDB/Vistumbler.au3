@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 3'
+$version = 'v10.1 Beta 4'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/11/15'
+$last_modified = '2010/11/25'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -366,6 +366,7 @@ Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDe
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
 Dim $UseWiFiDbGpsLocate = IniRead($settings, 'Vistumbler', 'UseWiFiDbGpsLocate', 0)
 Dim $DefFiltID = IniRead($settings, 'Vistumbler', 'DefFiltID', '-1')
+Dim $AutoScan = IniRead($settings, 'Vistumbler', 'AutoScan', '0')
 
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
@@ -1062,6 +1063,8 @@ If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
 
 $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$AutoScanMenu = GUICtrlCreateMenuItem("Auto Scan APs on launch", $Options)
+If $AutoScan = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $Options)
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
@@ -1239,6 +1242,7 @@ GUISetState()
 ;$ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $Vistumbler) ; Create Child window for controls
 ;GUISetBkColor($BackgroundColor)
 $ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 20, 0)
+If $AutoScan = 1 Then ScanToggle()
 $GpsButton = GUICtrlCreateButton($Text_UseGPS, 80, 8, 70, 20, 0)
 $GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 20, 0)
 $GraphButton2 = GUICtrlCreateButton($Text_Graph2, 80, 35, 70, 20, 0)
@@ -1289,6 +1293,7 @@ GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
 GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
 GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
+GUICtrlSetOnEvent($AutoScanMenu, '_AutoScanToggle')
 GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
 GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
@@ -2616,6 +2621,17 @@ Func ScanToggle();Turns AP scanning on or off
 		_Wlan_Scan($DefaultApapterID, $wlanhandle)
 	EndIf
 EndFunc   ;==>ScanToggle
+
+Func _AutoScanToggle();Turns auto scan on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoScanToggle()') ;#Debug Display
+	If $AutoScan = 1 Then
+		GUICtrlSetState($AutoScanMenu, $GUI_UNCHECKED)
+		$AutoScan = 0
+	Else
+		GUICtrlSetState($AutoScanMenu, $GUI_CHECKED)
+		$AutoScan = 1
+	EndIf
+EndFunc   ;==>_AutoScanToggle
 
 Func _AutoRefreshToggle()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRefreshToggle()') ;#Debug Display
@@ -6068,6 +6084,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
 	IniWrite($settings, "Vistumbler", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
 	IniWrite($settings, "Vistumbler", 'DefFiltID', $DefFiltID)
+	IniWrite($settings, "Vistumbler", 'AutoScan', $AutoScan)
 
 	IniWrite($settings, 'WindowPositions', 'VistumblerState', $VistumblerState)
 	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
