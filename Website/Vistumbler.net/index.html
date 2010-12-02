@@ -12,14 +12,18 @@
 		<link rel="stylesheet" type="text/css" href="style.css" />
 		<!-- Begin Analytics Tracking Code -->
 		<script type="text/javascript">
-		var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-		document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+		
+		  var _gaq = _gaq || [];
+		  _gaq.push(['_setAccount', 'UA-19284813-1']);
+		  _gaq.push(['_trackPageview']);
+		
+		  (function() {
+		    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		  })();
+		
 		</script>
-		<script type="text/javascript">
-		try {
-		var pageTracker = _gat._getTracker("UA-6849049-1");
-		pageTracker._trackPageview();
-		} catch(err) {}</script>
 		<!-- End Analytics Tracking Code-->
 		<style type="text/css">
 .style1 {
@@ -193,9 +197,9 @@
 																					<ul>
 																						<li class="inside_text_bold">Released: 07/11/2010</li>
 																						<li class="inside_text_bold">Download EXE:
-																						<a href="http://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v10/Vistumbler_v10.exe/download">Vistumbler v10</a></li>
+																						<a href="http://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v10/Vistumbler_v10-b2.exe/download">Vistumbler v10</a></li>
 																						<li class="inside_text_bold">Download ZIP: 
-																						<a href="http://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v10/Vistumbler_v10.zip/download">Vistumbler v10 source</a></li>
+																						<a href="http://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v10/Vistumbler_v10-b2.zip/download">Vistumbler v10 source</a></li>
 																					</ul>
 																				</td>
 																			</tr>
