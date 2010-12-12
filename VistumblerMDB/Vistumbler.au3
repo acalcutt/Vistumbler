@@ -9320,16 +9320,19 @@ Func _CheckForUpdates()
 				$FileName = $fv[$i][0]
 				$fversion = $fv[$i][1]
 				If IniRead($CurrentVersionFile, "FileVersions", $FileName, '0') <> $fversion Or FileExists(@ScriptDir & '\' & $FileName) = 0 Then
-					If $FileName = 'update.exe' Then
-						$getfileerror = 0
-						$dfile = InetGet($VIEWSVN_ROOT & $FileName & '?revision=' & $fversion, @ScriptDir & '\' & $FileName, 1, 1)
-						While InetGetInfo();While Download Active
-							Sleep(5)
-						WEnd
-						If InetGetInfo($dfile, 3) = False Then $getfileerror = 1
-						If $getfileerror = 0 And FileGetSize($FileName) <> 0 Then IniWrite($CurrentVersionFile, "FileVersions", $FileName, $fversion)
+					If $FileName = 'update.exe' Then ;Download updated update.exe
+						$sourcefile = $VIEWSVN_ROOT & $FileName & '?revision=' & $fversion
+						$desttmpfile = @ScriptDir & '\' & $FileName & '.tmp'
+						$destfile = @ScriptDir & '\' & $FileName
+						$get = InetGet($sourcefile, $desttmpfile, 1)
+						If $get = 0 Then ;Download Failed
+							FileDelete($desttmpfile)
+						ElseIf FileGetSize($desttmpfile) <> 0 Then;Download Successful
+							If FileMove($desttmpfile, $destfile) = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $FileName, $fversion)
+						EndIf
+					Else
+						$UpdatesAvalible = 1
 					EndIf
-					$UpdatesAvalible = 1
 				EndIf
 			Next
 		EndIf
