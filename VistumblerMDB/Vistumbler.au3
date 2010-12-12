@@ -9307,10 +9307,10 @@ Func _CheckForUpdates()
 	DirCreate(@ScriptDir & '\temp\')
 	FileDelete($NewVersionFile)
 	If $CheckForBetaUpdates = 1 Then
-		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile)
+		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
 		If $get = 0 Then FileDelete($NewVersionFile)
 	Else
-		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
+		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
 		If $get = 0 Then FileDelete($NewVersionFile)
 	EndIf
 	If FileExists($NewVersionFile) Then
@@ -9325,11 +9325,10 @@ Func _CheckForUpdates()
 						$desttmpfile = @ScriptDir & '\' & $FileName & '.tmp'
 						$destfile = @ScriptDir & '\' & $FileName
 						$get = InetGet($sourcefile, $desttmpfile, 1)
-						If $get = 0 Then ;Download Failed
-							FileDelete($desttmpfile)
-						ElseIf FileGetSize($desttmpfile) <> 0 Then;Download Successful
+						If $get <> 0 And FileGetSize($desttmpfile) <> 0 Then ;Download Successful
 							If FileMove($desttmpfile, $destfile) = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $FileName, $fversion)
 						EndIf
+						FileDelete($desttmpfile)
 					Else
 						$UpdatesAvalible = 1
 					EndIf

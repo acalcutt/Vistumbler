@@ -92,12 +92,12 @@ Else
 	If $CheckForBetaUpdates = 1 Then
 		$data = $Text_DownloadingBetaVerFile & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
-		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile)
+		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
 		If $get = 0 Then FileDelete($NewVersionFile)
 	Else
 		$data = $Text_DownloadingVerFile & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
-		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile)
+		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
 		If $get = 0 Then FileDelete($NewVersionFile)
 	EndIf
 	If FileExists($NewVersionFile) Then
