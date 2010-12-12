@@ -12,7 +12,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v6 beta 1'
+$version = 'v6'
 $origional_date = '2010/09/01'
 $last_modified = '2010/12/12'
 ;--------------------------------------------------------
@@ -129,16 +129,6 @@ If FileExists($NewVersionFile) Then
 							DirCreate(@ScriptDir & '\' & $dirstruct)
 						Next
 					EndIf
-						;$getfileerror = 0
-						;$dfile = InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename & '.tmp', 1, 1)
-						;While InetGetInfo();While Download Active
-						;	$txt = 'Updating ' & $filename & '. Downloaded ' & InetGetInfo($dfile, 0) / 1000 & 'kB'
-						;	GUICtrlSetData($datalabel, $txt)
-						;	Sleep(5)
-						;Wend
-						;If InetGetInfo($dfile, 3) = False Then $getfileerror = 1
-						;If $getfileerror = 0 And FileGetSize ($filename & '.tmp') <> 0 Then
-
 						$sourcefile = $VIEWSVN_ROOT & $filename_web & '?revision=' & $version
 						$desttmpfile = @ScriptDir & '\' & $filename & '.tmp'
 						$destfile = @ScriptDir & '\' & $filename
