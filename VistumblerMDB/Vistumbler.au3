@@ -1,9 +1,9 @@
 #RequireAdmin
-#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=Icons\icon.ico
-#AutoIt3Wrapper_Outfile=Vistumbler.exe
+#region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_icon=Icons\icon.ico
+#AutoIt3Wrapper_outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2010 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -65,6 +65,8 @@ _CleanupFiles($TmpDir, '*.ini')
 _CleanupFiles($TmpDir, '*.kml')
 ;Set Settings file
 Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
+IniWrite($settings, "Vistumbler", "Name", $Script_Name)
+IniWrite($settings, "Vistumbler", "Version", $version)
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
 	RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
@@ -94,6 +96,7 @@ $dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & String
 $datestamp = $dt[1]
 $timestamp = $dt[2]
 $ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate')), 'MM', 'M'), 'dd', 'd')
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
@@ -112,7 +115,6 @@ Dim $ManuDB = $SettingsDir & 'Manufacturers.mdb'
 Dim $LabDB = $SettingsDir & 'Labels.mdb'
 Dim $InstDB = $SettingsDir & 'Instruments.mdb'
 Dim $FiltDB = $SettingsDir & 'Filters.mdb'
-Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate')), 'MM', 'M'), 'dd', 'd')
 
 Dim $DB_OBJ
 Dim $ManuDB_OBJ

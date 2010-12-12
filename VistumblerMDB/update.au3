@@ -12,9 +12,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v5'
+$version = 'v6 beta 1'
 $origional_date = '2010/09/01'
-$last_modified = '2010/07/11' ; Happy Birthday Vistumbler!
+$last_modified = '2010/12/12'
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
@@ -129,21 +129,35 @@ If FileExists($NewVersionFile) Then
 							DirCreate(@ScriptDir & '\' & $dirstruct)
 						Next
 					EndIf
-						$getfileerror = 0
-						$dfile = InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename & '.tmp', 1, 1)
-						While InetGetInfo();While Download Active
-							$txt = 'Updating ' & $filename & '. Downloaded ' & InetGetInfo($dfile, 0) / 1000 & 'kB'
-							GUICtrlSetData($datalabel, $txt)
-							Sleep(5)
-						Wend
-						If InetGetInfo($dfile, 3) = False Then $getfileerror = 1
-						If $getfileerror = 0 And FileGetSize ($filename & '.tmp') <> 0 Then
+						;$getfileerror = 0
+						;$dfile = InetGet($VIEWSVN_ROOT & $filename_web & '?revision=' & $version, @ScriptDir & '\' & $filename & '.tmp', 1, 1)
+						;While InetGetInfo();While Download Active
+						;	$txt = 'Updating ' & $filename & '. Downloaded ' & InetGetInfo($dfile, 0) / 1000 & 'kB'
+						;	GUICtrlSetData($datalabel, $txt)
+						;	Sleep(5)
+						;Wend
+						;If InetGetInfo($dfile, 3) = False Then $getfileerror = 1
+						;If $getfileerror = 0 And FileGetSize ($filename & '.tmp') <> 0 Then
+
+						$sourcefile = $VIEWSVN_ROOT & $filename_web & '?revision=' & $version
+						$desttmpfile = @ScriptDir & '\' & $filename & '.tmp'
+						$destfile = @ScriptDir & '\' & $filename
+						GUICtrlSetData($datalabel, 'Downloading ' & $filename)
+						$get = InetGet($sourcefile, $desttmpfile, 1)
+						If $get = 0 Then ;Download Failed
+							GUICtrlSetData($datalabel, 'Downloading ' & $filename & ' failed')
+							$data = $Text_ErrDownloadingNewFile & ':' & $filename & @CRLF & $data
+							$Errors &= $Text_ErrDownloadingNewFile & ':' & $filename  & @CRLF
+							GUICtrlSetData($UpdateEdit, $data)
+							FileDelete($NewVersionFile)
+						Else ;Download Succesful
+							GUICtrlSetData($datalabel, 'Downloading ' & $filename & ' successful')
 							$ExistingFile = 0
-							If FileExists(@ScriptDir & '\' & $filename) Then
+							If FileExists($destfile) Then
 								$ExistingFile = 1
-								FileDelete(@ScriptDir & '\' & $filename)
+								FileDelete($destfile)
 							EndIf
-							If FileMove(@ScriptDir & '\' & $filename & '.tmp', @ScriptDir & '\' & $filename) = 1 Then
+							If FileMove($desttmpfile, $destfile) = 1 Then
 								If $ExistingFile = 0 Then
 									$data = $Text_NewFile & ':' & $filename & @CRLF & $data
 									$NewFiles &= $Text_NewFile & ':' & $filename & @CRLF
@@ -162,12 +176,8 @@ If FileExists($NewVersionFile) Then
 								EndIf
 							EndIf
 							GUICtrlSetData($UpdateEdit, $data)
-						Else
-							$data = $Text_ErrDownloadingNewFile & ':' & $filename & @CRLF & $data
-							$Errors &= $Text_ErrDownloadingNewFile & ':' & $filename  & @CRLF
-							GUICtrlSetData($UpdateEdit, $data)
 						EndIf
-						If FileExists(@ScriptDir & '\' & $filename & '.tmp') Then FileDelete(@ScriptDir & '\' & $filename & '.tmp')
+						If FileExists($desttmpfile) Then FileDelete($desttmpfile)
 						GUICtrlSetData($datalabel, '')
 				Else
 					$data = $Text_NoChangeInFile & ':' & $filename & @CRLF & $data
