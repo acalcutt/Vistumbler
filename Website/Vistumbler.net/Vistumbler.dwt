@@ -62,65 +62,21 @@
 							<td class="cell_side_left">&nbsp;</td>
 							<td class="cell_color">
 								<div class="inside_dark_header">Navigation</div>
-								<div class="inside_text_bold"><strong>
-									<a class="inside_text_bold" href="index.html">Home</a></strong></div>
-								<div class="inside_text_bold"><strong>
-									<a href="http://forum.vistumbler.net">Forum</a></strong></div>
-								<div class="inside_text_bold">
-									<a href="http://www.vistumbler.net/wifidb/">
-									WiFiDB</a><br />
-								</div>
-								<div class="inside_text_bold"><strong>
-									<a href="http://sourceforge.net/apps/mediawiki/vistumbler/">Wiki</a></strong></div>
-								<div class="inside_text_bold"><strong>
-									<a href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/">SVN</a> (<a href="https://sourceforge.net/scm/?type=svn&amp;group_id=235720">Info</a>)</strong></div>								
-								<div class="inside_text_bold"><strong>
-									<a href="https://sourceforge.net/projects/vistumbler/">Sourceforge Page</a></strong></div>
-								<div class="inside_text_bold"><strong>
-									<a href="downloads.html">Downloads</a></strong></div>
-								<div class="inside_text_bold"><strong>
-									<a href="verhist.html">Version History</a></strong></div>
-								<div class="inside_text_bold"><strong>
-									<a href="http://www.techidiots.net/project-pages">Other Projects</a></strong></div>
-								<div class="inside_text_bold"><strong>
-									<a href="http://www.techidiots.net">
-									TechIdiots.net</a></strong><br />
-								</div>
-								<div class="inside_text_bold">
-									<a href="http://www.randomintervals.com/">
-									Random Intervals</a><br />
-								</div>
-
-							</td>
-							<td class="cell_side_right">&nbsp;</td>
-						</tr>
-						<tr>
-							<td class="cell_bot_left">&nbsp;</td>
-							<td class="cell_bot_mid">&nbsp;</td>
-							<td class="cell_bot_right">&nbsp;</td>
-						</tr>
-					</table>
-		<table style="width: 100%" cellpadding="0" cellspacing="0">
-						<tr>
-							<td style="width: 10px; height: 20px" class="cell_top_left">
-								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
-							</td>
-							<td class="cell_top_mid" style="height: 20px"></td>
-							<td style="width: 10px" class="cell_top_right">
-								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
-							</td>
-						</tr>
-						<tr>
-							<td class="cell_side_left">&nbsp;</td>
-							<td class="cell_color">
-								<div class="inside_dark_header">Store</div>
-								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products">All Products</a></div>
-								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-235">Shirts</a></div>
-								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-128">Bumper Stickers</a></div>
-								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-144">Mousepads</a></div>
-								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-217">Stickers</a></div>
-								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-147">Magnets</a></div>
-								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-146">Keychains</a></div>
+								<div class="inside_text_bold"><a class="inside_text_bold" href="index.html">Home</a></div>
+								<div class="inside_text_bold"><a href="http://forum.vistumbler.net">Forum</a></div>
+								<div class="inside_text_bold"><a href="http://www.vistumbler.net/wifidb/">WiFiDB</a></div>
+								<div class="inside_text_bold"><a href="http://sourceforge.net/apps/mediawiki/vistumbler/">Wiki</a></div>
+								<div class="inside_text_bold"><a href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/">SVN</a> (<a href="https://sourceforge.net/scm/?type=svn&amp;group_id=235720">Info</a>)</div>								
+								<div class="inside_text_bold"><a href="https://sourceforge.net/projects/vistumbler/">Sourceforge Page</a></div>
+								<div class="inside_text_bold"><a href="downloads.html">Downloads</a></div>
+								<div class="inside_text_bold"><a href="verhist.html">Version History</a></div>
+								<div class="inside_dark_header">Other Projects</div>
+								<div class="inside_text_bold"><a href="http://uns.randomintervals.com/">UNS Home</a></div>
+								<div class="inside_text_bold"><a href="http://www.randomintervals.com/wifidb/">WifiDB Home</a></div>
+								<div class="inside_text_bold"><a href="http://mysticache.techidiots.net">Mysticache Home</a></div>
+								<div class="inside_text_bold"><a href="http://www.techidiots.net/project-pages">TechIdiots Projects</a></div>
+								<div class="inside_text_bold"><a href="http://www.techidiots.net/">TechIdiots.net</a></div>
+								<div class="inside_text_bold"><a href="http://www.randomintervals.net">RandomIntervals.net</a></div>
 							</td>
 							<td class="cell_side_right">&nbsp;</td>
 						</tr>
@@ -135,7 +91,9 @@
 							<td style="width: 10px; height: 20px" class="cell_top_left">
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
 							</td>
-							<td class="cell_top_mid" style="height: 20px"></td>
+							<td class="cell_top_mid" style="height: 20px">
+								<img alt="" src="images/1x1_transparent.gif" width="120" height="1" />
+							</td>
 							<td style="width: 10px" class="cell_top_right">
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
 							</td>
@@ -143,12 +101,23 @@
 						<tr>
 							<td class="cell_side_left">&nbsp;</td>
 							<td class="cell_color">
+
+								<div class="inside_dark_header">Store</div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products">All Products</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-235">Shirts</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-128">Bumper Stickers</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-144">Mousepads</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-217">Stickers</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-147">Magnets</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-146">Keychains</a></div>
+
 								<div class="inside_dark_header">Donate</div>
 								<div class="center"><br />
 									<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=ACalcutt%40Vistumbler%2enet&amp;item_name=Vistumbler%20Donation&amp;no_shipping=0&amp;no_note=1&amp;tax=0&amp;currency_code=USD&amp;lc=US&amp;bn=PP%2dDonationsBF&amp;charset=UTF%2d8">
-									<img alt="Donate" src="images/btn-donate-LG.gif" width="92" height="26" class="style1" /></a><br />
+									<img alt="Donate" src="images/project-support.jpg" class="style1" /></a><br />
 									<br />
 								</div>
+
 							</td>
 							<td class="cell_side_right">&nbsp;</td>
 						</tr>
@@ -157,7 +126,7 @@
 							<td class="cell_bot_mid">&nbsp;</td>
 							<td class="cell_bot_right">&nbsp;</td>
 						</tr>
-					</table>
+					</table>				
 				</td>
 				<td style="height: 114px" valign="top" class="center">
 					<table style="width: 100%" cellpadding="0" cellspacing="0">
