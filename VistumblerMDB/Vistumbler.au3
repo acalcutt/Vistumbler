@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2010 Andrew Calcutt
+;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 5'
+$version = 'v10.1 Beta 6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2010/11/25'
+$last_modified = '2011/01/31'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -768,9 +768,6 @@ Dim $Text_Information = IniRead($DefaultLanguagePath, 'GuiText', 'Information', 
 Dim $Text_AddedGuessedSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'AddedGuessedSearchwords', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
 Dim $Text_SortingTreeview = IniRead($DefaultLanguagePath, 'GuiText', 'SortingTreeview', 'Sorting Treeview')
 Dim $Text_Recovering = IniRead($DefaultLanguagePath, 'GuiText', 'Recovering', 'Recovering')
-Dim $Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler File')
-Dim $Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed CSV File')
-Dim $Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler TXT File')
 Dim $Text_ErrorOpeningGpsPort = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorOpeningGpsPort', 'Error opening GPS port')
 Dim $Text_SecondsSinceGpsUpdate = IniRead($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', 'Seconds Since GPS Update')
 Dim $Text_SavingGID = IniRead($DefaultLanguagePath, 'GuiText', 'SavingGID', 'Saving GID')
@@ -820,6 +817,12 @@ Dim $Text_TimeBeforeMarkedDead = IniRead($DefaultLanguagePath, "GuiText", "TimeB
 Dim $Text_FilterNameRequired = IniRead($DefaultLanguagePath, "GuiText", "FilterNameRequired", "Filter Name is required")
 Dim $Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "UpdateManufacturers", "Update Manufacturers")
 Dim $Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
+Dim $Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler file')
+Dim $Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed Comma Delimited file')
+Dim $Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler wi-scan file')
+Dim $Text_WardriveDb3File = IniRead($DefaultLanguagePath, "GuiText", "WardriveDb3File", "Wardrive-android file")
+Dim $Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
+Dim $Text_RefreshInterfaces = IniRead($DefaultLanguagePath, "GuiText", "RefreshInterfaces", "Refresh Interfaces")
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1065,7 +1068,7 @@ If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
 
 $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$AutoScanMenu = GUICtrlCreateMenuItem("Auto Scan APs on launch", $Options)
+$AutoScanMenu = GUICtrlCreateMenuItem($Text_AutoScanApsOnLaunch, $Options)
 If $AutoScan = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $Options)
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
@@ -1135,7 +1138,7 @@ $SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort & ' / '
 $SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI, $SettingsMenu)
 
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
-$RefreshInterfaces = GUICtrlCreateMenuItem("Refresh Interfaces", $Interfaces)
+$RefreshInterfaces = GUICtrlCreateMenuItem($Text_RefreshInterfaces, $Interfaces)
 GUICtrlSetOnEvent($RefreshInterfaces, '_RefreshInterfaces')
 _AddInterfaces()
 
@@ -4425,12 +4428,12 @@ EndFunc   ;==>_OpenVistumblerWiki
 
 Func _OpenVistumblerDonate();Opens Vistumbler Donate
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerDonate() ') ;#Debug Display
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ACalcutt%40Vistumbler%2enet&item_name=Vistumbler%20Donation&no_shipping=0&no_note=1&tax=0&currency_code=USD&lc=US&bn=PP%2dDonationsBF&charset=UTF%2d8')
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://donate.vistumbler.net')
 EndFunc   ;==>_OpenVistumblerDonate
 
 Func _OpenVistumblerStore();Opens Vistumbler Store
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerStore() ') ;#Debug Display
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://www.zazzle.com/acalcutt/products')
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://store.vistumbler.net')
 EndFunc   ;==>_OpenVistumblerStore
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5385,11 +5388,11 @@ Func _LoadListGUI($imfile1 = "")
 	GUISetBkColor($BackgroundColor)
 	$vistumblerfileinput = GUICtrlCreateInput($imfile1, 8, 10, 377, 21)
 	$browse1 = GUICtrlCreateButton($Text_Browse, 392, 8, 97, 25, $WS_GROUP)
-	$RadVis = GUICtrlCreateRadio("Vistumbler file (VS1, VSZ)", 10, 40, 240, 20)
+	$RadVis = GUICtrlCreateRadio($Text_VistumblerFile & ' (VS1, VSZ)', 10, 40, 240, 20)
 	GUICtrlSetState($RadVis, $GUI_CHECKED)
-	$RadCsv = GUICtrlCreateRadio("Detailed Comma Delimited file (CSV)", 10, 60, 240, 20)
-	$RadNs = GUICtrlCreateRadio("Netstumbler wi-scan (TXT, NS1)", 255, 40, 240, 20)
-	$RadWD = GUICtrlCreateRadio("Wardrive-android file (DB3)", 255, 60, 240, 20)
+	$RadCsv = GUICtrlCreateRadio($Text_DetailedCsvFile & ' (CSV)', 10, 60, 240, 20)
+	$RadNs = GUICtrlCreateRadio($Text_NetstumblerTxtFile & ' (TXT, NS1)', 255, 40, 240, 20)
+	$RadWD = GUICtrlCreateRadio($Text_WardriveDb3File & ' (DB3)', 255, 60, 240, 20)
 	$NsOk = GUICtrlCreateButton($Text_Ok, 95, 95, 150, 25, $WS_GROUP)
 	$NsCancel = GUICtrlCreateButton($Text_Close, 255, 95, 150, 25, $WS_GROUP)
 	$progressbar = GUICtrlCreateProgress(10, 135, 480, 20)
@@ -6468,9 +6471,6 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AddedGuessedSearchwords', $Text_AddedGuessedSearchwords)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SortingTreeview', $Text_SortingTreeview)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Recovering', $Text_Recovering)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerFile', $Text_VistumblerFile)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DetailedFile', $Text_DetailedCsvFile)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', $Text_NetstumblerTxtFile)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorOpeningGpsPort', $Text_ErrorOpeningGpsPort)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', $Text_SecondsSinceGpsUpdate)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingGID', $Text_SavingGID)
@@ -6520,6 +6520,12 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterNameRequired', $Text_FilterNameRequired)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateManufacturers', $Text_UpdateManufacturers)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FixHistSignals', $Text_FixHistSignals)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerFile', $Text_VistumblerFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DetailedFile', $Text_DetailedCsvFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', $Text_NetstumblerTxtFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', $Text_WardriveDb3File)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoScanApsOnLaunch', $Text_AutoScanApsOnLaunch)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshInterfaces', $Text_RefreshInterfaces)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -8496,9 +8502,6 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AddedGuessedSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'AddedGuessedSearchwords', 'Added guessed netsh searchwords. Searchwords for Open, None, WEP, Infrustructure, and Adhoc will still need to be done manually')
 		$Text_SortingTreeview = IniRead($DefaultLanguagePath, 'GuiText', 'SortingTreeview', 'Sorting Treeview')
 		$Text_Recovering = IniRead($DefaultLanguagePath, 'GuiText', 'Recovering', 'Recovering')
-		$Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler File')
-		$Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed CSV File')
-		$Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler TXT File')
 		$Text_ErrorOpeningGpsPort = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorOpeningGpsPort', 'Error opening GPS port')
 		$Text_SecondsSinceGpsUpdate = IniRead($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', 'Seconds Since GPS Update')
 		$Text_SavingGID = IniRead($DefaultLanguagePath, 'GuiText', 'SavingGID', 'Saving GID')
@@ -8547,6 +8550,12 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_FilterNameRequired = IniRead($DefaultLanguagePath, "GuiText", "FilterNameRequired", "Filter Name is required")
 		$Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "UpdateManufacturers", "Update Manufacturers")
 		$Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
+		$Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler file')
+		$Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed Comma Delimited file')
+		$Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler wi-scan file')
+		$Text_WardriveDb3File = IniRead($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', 'Wardrive-android file')
+		$Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
+		$Text_RefreshInterfaces = IniRead($DefaultLanguagePath, "GuiText", "RefreshInterfaces", "Refresh Interfaces")
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
