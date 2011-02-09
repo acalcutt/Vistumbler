@@ -1534,7 +1534,10 @@ class database
 				{
 					echo "\nLine: ".$c." - Wrong data type, dropping row\n";
 				}
-				unset($gpsdata_t[0]);
+				if(@$gpsdata_t[0])
+				{
+				    unset($gpsdata_t[0]);
+				}
 			}
 		}elseif($file_type == "db3")
 		{
@@ -1844,7 +1847,7 @@ class database
 	#													VS1 File import													     #
 	#========================================================================================================================#
 	
-	function import_vs1($source="" , $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 1 , $out = "CLI")
+	function import_vs1($source="" , $file_id, $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 1 , $out = "CLI", $times = "")
 	{
 		#MESSAGES FOR CLI AND HTML INTERFACES#
 		$wrong_file_type_msg			= "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again.";
@@ -1883,6 +1886,8 @@ class database
 		if(!file_exists($filename)){$filewrite = fopen($filename, "w");}
 		$fileappend = fopen($filename, "a");
 		
+		if($times == "")$times = date('Y-m-d H:i:s');
+
 		if($out == "HTML"){$verbose = 1;}
 		if ($source == NULL)
 		{
@@ -1903,7 +1908,7 @@ class database
 		require 'config.inc.php';
 		
 		$conn			= 	$GLOBALS['conn'];
-		$db				= 	$GLOBALS['db'];
+		$db			= 	$GLOBALS['db'];
 		$db_st			= 	$GLOBALS['db_st'];
 		$wtable			=	$GLOBALS['wtable'];
 		$users_t		=	$GLOBALS['users_t'];
@@ -1918,7 +1923,6 @@ class database
 		
 		$FILENUM = 1;
 		$start = microtime(true);
-		$times=date('Y-m-d H:i:s');
 		
 		$user_n	 = 0;
 		$N		 = 0;
@@ -2015,6 +2019,8 @@ class database
 				
 				//You cant have any blank data, thats just rude...
 				if($wifi[0] == ''){$wifi[0]="UNNAMED";}
+				$wifi[0] = utf8_encode($wifi[0]);
+				echo $wifi[0]."\r\n";
 				if($wifi[1] == ''){$wifi[1] = "00:00:00:00:00:00";}
 				if($wifi[5] == ''){$wifi[5] = "0";}
 				if($wifi[6] == ''){$wifi[6] = "u";}
@@ -2025,8 +2031,8 @@ class database
 				{
 					$this_of_this = $FILENUM." / ".$count1;
 					$file1 = str_replace(" ", "%20", $file1);
-					$sqlup = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `file` LIKE '$file1';";
-				#	echo $sqlup."\r\n";
+					$sqlup = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `id` = '$file_id';";
+					echo $sqlup."\r\n";
 					if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 					{
 						logd($updated_tmp_table_msg."\r\n", $log_interval, 0,  $log_level);
@@ -2493,7 +2499,7 @@ class database
 						$esp = explode(",",$exp);
 						$vs1_id = $esp[0];
 						$signal = $esp[1];
-						
+						if(!@$gdata[$vs1_id]){continue;}
 						$lat = $gdata[$vs1_id]["lat"];
 						$long = $gdata[$vs1_id]["long"];
 						$sats = $gdata[$vs1_id]["sats"];
@@ -2514,6 +2520,8 @@ class database
 						$comp = $lat1."".$long1."".$date1."".$time1;
 						if(!isset($db_gps)){$db_gps = array();}
 						list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
+						#$return_gps = 0;
+						#$dbid = 0;
 						if ($prev == $vs1_id)
 						{
 							$gps_id_ = $gps_id-1;
@@ -2580,7 +2588,6 @@ class database
 								$sql_multi[$NNN] = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
 																		."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 								$signals[$N] = $gps_id.",".$signal;
-		#						echo "New GPS for 'update': ".$signals[$N]."\n";
 								#echo "New GPS: ".$gps_id."\n";
 							}else
 							{
@@ -2877,11 +2884,11 @@ class database
 			echo "<p>File DONE!</p>";
 		}
 		$end = microtime(true);
-		$times = array(
+		$ret = array(
 						"aps"	=> $total_ap,
 						"gps" => $gdatacount
 						);
-		return $times;
+		return $ret;
 		fclose($fileappend);
 	}
 	

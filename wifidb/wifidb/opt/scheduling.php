@@ -324,7 +324,7 @@ if(is_string($func))
 			?>
 			<br>
 			<table border="1" width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr><?php
-			$sql = "SELECT * FROM `$db`.`files_tmp` ORDER BY `id`";
+			$sql = "SELECT * FROM `$db`.`files_tmp` ORDER BY `date` asc";
 			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 			if($total_rows === 0)
 			{
@@ -370,27 +370,33 @@ if(is_string($func))
 					<th <?php echo $color;?>>
 					</th>
 					<th>Hash Sum</th><th>User</th><th >Current SSID</th><th>AP / Total AP's</th></tr>
-					<tr <?php echo $color;?>>
-					<td></td>
-					<td align="center">
+					    <tr <?php echo $color;?>>
+						<td></td>
+						<td align="center">
 					<?php
 					echo $newArray['hash'];
 					?>
-					</td><td align="center">
+						</td>
+						<td align="center">
 					<?php
 					echo $newArray['user'];
 					?>
-					</td><td align="center">
+						</td>
 					<?php
-					if($newArray['ap'] == NULL){$ssid = "None being imported";}else{$ssid = $newArray['ap'];}
+					if($newArray['ap'] == NULL)
+					{
+					    $ssid = "<td colspan='2' align='center'>Not being imported</td>";
+
+					}else
+					{
+					    $ssid = '<td align="center">'.$newArray['ap'].'</td>';
+					}
 					echo $ssid;
-					?>
-					</td><td align="center">
-					<?php
-					if($newArray['tot'] == NULL){$tot = "None being imported";}else{$tot = $newArray['tot'];}
+					
+					if($newArray['tot'] == NULL){$tot = "";}else{$tot = '<td align="center">'.$newArray['tot'].'</td>';}
 					echo $tot;
 					?>
-					</td></tr>
+					    </tr>
 					</table>
 					<br>
 					<?php

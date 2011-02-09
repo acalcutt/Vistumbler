@@ -4,7 +4,7 @@ $screen_output = "CLI";
 require 'daemon/config.inc.php';
 require $GLOBALS['wifidb_install']."/lib/database.inc.php";
 require $GLOBALS['wifidb_install']."/lib/config.inc.php";
-$lastedit="2009.07.07";
+$lastedit="2011.02.06";
 $start="2008.05.23";
 $ver="1.1";
 $localtimezone = date("T");
@@ -87,7 +87,7 @@ foreach($filenames as $filen)
 	if($filen[0] == "#"){continue;}
 	echo $filen."\n";
 	$filen_e = explode("|", $filen);
-	$file_names[$filen_e[0]] = array("hash" => $filen_e[0], "file"=>$filen_e[1],"user"=>$filen_e[2],"title"=>$filen_e[3],"notes"=>$filen_e[4]);
+	$file_names[$filen_e[0]] = array("hash" => $filen_e[0], "file"=>$filen_e[1],"user"=>$filen_e[2],"title"=>$filen_e[3],"date"=>$filen_e[4],"notes"=>$filen_e[5]);
 }
 var_dump($file_names);
 //start import of all files in VS1 folder
@@ -103,11 +103,13 @@ foreach($file_a as $key => $file)
 		$user = $file_names[$hash]['user'];
 		$title = $file_names[$hash]['title'];
 		$notes = $file_names[$hash]['notes'];
+		$date = $file_names[$hash]['date'];
 	}else
 	{
 		$user = $default_user;
 		$title = $default_title;
 		$notes = $default_notes;
+		$date = date("y-m-d H:i:s");
 	}
 	echo $user." - ".$title." - ".$notes."\n\t".$file_names[$hash]['hash'].' - '.$hash."\n";
 	echo $source."\n";
@@ -116,7 +118,6 @@ foreach($file_a as $key => $file)
 	{
 		fwrite($fileappend, "\r\n\r\n\t".$key."\t->\t################=== Start Daemon Prep of ".$file." ===################\r\n\r\n");
 	}
-	$date = date("y-m-d H:i:s");
 	$sql = "INSERT INTO `$db`.`files_tmp` ( `id`, `file`, `date`, `user`, `notes`, `title`, `size`, `hash`  ) 
 								VALUES ( '', '$file', '$date', '$user', '$notes', '$title', '$size1', '$hash')";
 	$result = mysql_query( $sql , $conn);
