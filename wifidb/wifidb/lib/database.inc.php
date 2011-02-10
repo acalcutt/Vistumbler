@@ -2198,14 +2198,14 @@ class database
 						$mph = $gdata[$vs1_id]["mph"];
 						$track = $gdata[$vs1_id]["track"];
 						
-						$lat1 = smart($lat);
-						$long1 = smart($long);
-						$time1 = smart($time);
-						$date1 = smart($date);
+						#$lat1 = smart($lat);
+						#$long1 = smart($long);
+						#$time1 = smart($time);
+						#$date1 = smart($date);
 						
-						$comp = $lat1."".$long1."".$date1."".$time1;
-						if(!isset($db_gps)){$db_gps = array();}
-						list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
+						#$comp = $lat1."".$long1."".$date1."".$time1;
+						#if(!isset($db_gps)){$db_gps = array();}
+						#list($return_gps, $dbid) = database::check_gps_array($db_gps,$comp, $gps_table);
 						if ($prev == $vs1_id)
 						{
 							$gps_id_ = $gps_id-1;
@@ -2216,63 +2216,64 @@ class database
 							if($verbose == 1 && $out == "CLI"){echo ".";}
 							continue;
 						}
-						
-						if($return_gps === 1 && $dbid != 0)
-						{
-							$gps_SQL = "SELECT * FROM `$db_st`.`$gps_table` WHERE `id` = '$dbid'";
-							$DBresult = mysql_query($gps_SQL, $conn);
-							$GPSDBArray = mysql_fetch_array($DBresult);
-							$id_db = $GPSDBArray['id'];
-							$sats_db = $GPSDBArray['sats'];
-							if($sats > $sats_db && $id_db != 0)
-							{
-								$sql_D = "DELETE FROM `$db_st`.`$gps_table` WHERE `id` = '$id_db' LIMIT 1";
-								$DBresult1 = mysql_query($sql_D, $conn);
-								if(!$DBresult1)
-								{
-									logd($removed_old_gps_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-									if($out=="CLI")
-									{
-										verbosed($GLOBALS['COLORS']['GREEN'].$removed_old_gps_msg.".\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-									}elseif($out=="HTML")
-									{
-										verbosed("<p>".$removed_old_gps_msg."\n".mysql_error($conn)."</p>", $verbose, "HTML");
-									}
-									die();
-								}
-								$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$id_db', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
-								$DBresult2 = mysql_query($sql_U, $conn);
-								if(!$DBresult2)
-								{
-									logd($insert_up_gps_msg.".\r\n".mysql_error($conn)."\r\n", $log_interval, 0,  $log_level);
-									if($out=="CLI")
-									{
-										verbosed($GLOBALS['COLORS']['RED'].$insert_up_gps_msg.".\n".mysql_error($conn)."\r\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-									}elseif($out=="HTML")
-									{
-										verbosed("<p>".$insert_up_gps_msg.mysql_error($conn)."</p>", $verbose, "HTML");
-									}
-									die();
-								}
-								$signals[$N] = $dbid.",".$signal;
-		#						echo "Update DB: ".$signals[$N]."\n";
-								if($verbose == 1 && $out == "CLI"){echo ".";}
-								$N++;
-								$prev = $vs1_id;
-								continue;
-							#	echo "Update DB: ".$dbid."\n";
-							}else
-							{
-								$signals[$N] = $dbid.",".$signal;
-		#						echo "In DB: ".$signals[$N]."\n";
-								if($verbose == 1 && $out == "CLI"){echo ".";}
-								$N++;
-								$prev = $vs1_id;
-								continue;
-							#	echo "Already in DB: ".$dbid."\n";
-							}
-						}elseif($return_gps === 0 or $dbid == 0)
-						{
+						# Yeah I know, there is alot of bad code, im trying to work al; this shit out XXX
+						#if($return_gps === 1 && $dbid != 0)
+						#{
+						#	$gps_SQL = "SELECT * FROM `$db_st`.`$gps_table` WHERE `id` = '$dbid'";
+						#	$DBresult = mysql_query($gps_SQL, $conn);
+						#	$GPSDBArray = mysql_fetch_array($DBresult);
+						#	$id_db = $GPSDBArray['id'];
+						#	$sats_db = $GPSDBArray['sats'];
+						#	if($sats > $sats_db && $id_db != 0)
+						#	{
+						#		$sql_D = "DELETE FROM `$db_st`.`$gps_table` WHERE `id` = '$id_db' LIMIT 1";
+						#		$DBresult1 = mysql_query($sql_D, $conn);
+						#		if(!$DBresult1)
+						#		{
+						#			logd($removed_old_gps_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+						#			if($out=="CLI")
+						#			{
+						#				verbosed($GLOBALS['COLORS']['GREEN'].$removed_old_gps_msg.".\n".mysql_error($conn).$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
+						#			}elseif($out=="HTML")
+						#			{
+						#				verbosed("<p>".$removed_old_gps_msg."\n".mysql_error($conn)."</p>", $verbose, "HTML");
+						#			}
+						#			die();
+						##		}
+						#		$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) VALUES ( '$id_db', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
+						#		$DBresult2 = mysql_query($sql_U, $conn);
+						#		if(!$DBresult2)
+						#		{
+						#			logd($insert_up_gps_msg.".\r\n".mysql_error($conn)."\r\n", $log_interval, 0,  $log_level);
+						#			if($out=="CLI")
+						#			{
+						#				verbosed($GLOBALS['COLORS']['RED'].$insert_up_gps_msg.".\n".mysql_error($conn)."\r\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
+						#			}elseif($out=="HTML")
+						#			{
+						#				verbosed("<p>".$insert_up_gps_msg.mysql_error($conn)."</p>", $verbose, "HTML");
+						#			}
+						#			die();
+						#		}
+						#		$signals[$N] = $dbid.",".$signal;
+		#				#		echo "Update DB: ".$signals[$N]."\n";
+						#		if($verbose == 1 && $out == "CLI"){echo ".";}
+						#		$N++;
+						#		$prev = $vs1_id;
+						#		continue;
+						#	#	echo "Update DB: ".$dbid."\n";
+						#	}else
+						#	{
+						#		$signals[$N] = $dbid.",".$signal;
+		#				#		echo "In DB: ".$signals[$N]."\n";
+						#		if($verbose == 1 && $out == "CLI"){echo ".";}
+						#		$N++;
+						#		$prev = $vs1_id;
+						#		continue;
+						#	#	echo "Already in DB: ".$dbid."\n";
+						#	}
+						#}elseif($return_gps === 0 or $dbid == 0)
+						#{
+						    #All the code above is really not needed, since we are trying to keep historical data here, not update old data. Because, well we are trying to keep the old data as it is, duh wtf was I thinking before?
 							$sql_U = "INSERT INTO `$db_st`.`$gps_table` ( `id` , `lat` , `long` , `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track` , `date` , `time` ) "
 																	."VALUES ( '$gps_id', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time')";
 							
@@ -2292,18 +2293,18 @@ class database
 							$signals[$N] = $gps_id.",".$signal;
 	#						echo "New GPS: ".$signals[$N]."\n";
 							#echo "New GPS: ".$gps_id."\n";
-						}else
-						{
-							logd($error_running_gps_check_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
-							if($out=="CLI")
-							{
-								verbosed($GLOBALS['COLORS']['RED'].$error_running_gps_check_msg.".\n".$GLOBALS['COLORS']['LIGHTGRAY'].mysql_error($conn), $verbose, "CLI");
-							}elseif($out=="HTML")
-							{
-								verbosed("<p>".$error_running_gps_check_msg."</p>".mysql_error($conn), $verbose, "HTML");
-							}
-							if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
-						}
+						#}else
+						#{
+						#	logd($error_running_gps_check_msg.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+						#	if($out=="CLI")
+						#	{
+						#		verbosed($GLOBALS['COLORS']['RED'].$error_running_gps_check_msg.".\n".$GLOBALS['COLORS']['LIGHTGRAY'].mysql_error($conn), $verbose, "CLI");
+						#	}elseif($out=="HTML")
+						#	{
+						#		verbosed("<p>".$error_running_gps_check_msg."</p>".mysql_error($conn), $verbose, "HTML");
+						#	}
+						#	if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+						#}
 						if($verbose == 1 && $out == "CLI"){echo ".";}
 						$gps_id++;
 						$N++;
@@ -2312,7 +2313,7 @@ class database
 					if($verbose == 1 && $out == "CLI"){echo "\n";}
 					
 					
-					
+					#This code is a failed attempt at getting a batch import of all the GPS in one query XXX
 			#		$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
 			#		if (mysqli_connect_errno())
 			#		{
@@ -2726,10 +2727,10 @@ class database
 							}
 							$user_n++;
 						#######################
-							#    #       ##    ##       #
+							#   /       ##    ##        #
 							#  #         # #  # #       #
-							# # .        #  ##  #		#
-							#    #       #      #       ####
+							# # .        #  ##  #	    #
+							#    \       #      #       ####
 							database::exp_newest_kml($named = 0, $verbose=1);
 						#######################
 						}else
