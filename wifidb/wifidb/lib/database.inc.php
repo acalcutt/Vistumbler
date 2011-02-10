@@ -2021,7 +2021,7 @@ class database
 				
 				//You cant have any blank data, thats just rude...
 				if($wifi[0] == ''){$wifi[0]="UNNAMED";}
-				$wifi[0] = utf8_encode($wifi[0]);
+				#$wifi[0] = utf8_encode($wifi[0]);
 				echo $wifi[0]."\r\n";
 				if($wifi[1] == ''){$wifi[1] = "00:00:00:00:00:00";}
 				if($wifi[5] == ''){$wifi[5] = "0";}
