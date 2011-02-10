@@ -348,6 +348,18 @@ if(is_string($func))
 					<td align="center">
 					<?php
 					echo $newArray['id'];
+					$id = $newArray['id'];
+					$sql1 = "select * from `$db`.`$wtable` where `id` = '$id'";
+					$result1 = mysql_query($sql1, $conn);
+					$newArray1 = mysql_fetch_array($result1);
+					list($ssid_ptb) = make_ssid($newArray1["ssid"]);
+					$table = $ssid_ptb.'-'.$newArray1["mac"].'-'.$newArray1["sectype"].'-'.$newArray1["radio"].'-'.$newArray1['chan'].$gps_ext;
+					$sql_gps = "select * from `$db_st`.`$table` where `lat` NOT LIKE 'N 0.0000' limit 1";
+					#echo $sql_gps;
+					$resultgps = mysql_query($sql_gps, $conn);
+					$lastgps = @mysql_fetch_array($resultgps);
+					#var_dump($lastgps);
+					if(@$lastgps['lat'] != "N 0.0000"){$gps_yes = 1;}else{$gps_yes = 0;}
 					?>
 					</td><td align="center">
 					<?php
@@ -389,7 +401,14 @@ if(is_string($func))
 
 					}else
 					{
-					    $ssid = '<td align="center">'.$newArray['ap'].'</td>';
+					    if($gps_yes)
+					    {
+						$ssid = '<td align="center">'.$newArray['ap'].'<img width="20px" src="../img/globe_on.png"></td>';
+					    }
+					    else
+					    {
+						$ssid = '<td align="center"><table align="center"><tr><td valign="center" align="right">'.$newArray['ap'].'</td><td valign="center" align="left"><img width="20px" src="../img/globe_off.png"></td></tr></table></td>';
+					    }
 					}
 					echo $ssid;
 					

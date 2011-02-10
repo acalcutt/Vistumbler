@@ -16,7 +16,7 @@ $result2 = mysql_query($sql, $conn);
 $sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `sectype`='3'";
 $result3 = mysql_query($sql, $conn);
 
-$sql = "SELECT `id`,`ssid` FROM `$db`.`$wtable` ORDER BY ID DESC LIMIT 1";
+$sql = "SELECT * FROM `$db`.`$wtable` ORDER BY ID DESC LIMIT 1";
 $result4 = mysql_query($sql, $conn);
 
 $sql = "SELECT `username` FROM `$db`.`$users_t`";
@@ -32,17 +32,22 @@ $usercount = count($usersa);
 
 $sql = "SELECT * FROM `$db`.`$users_t` WHERE `id`='$row_users'";
 $result6 = mysql_query($sql, $conn);
-#
 $open = mysql_num_rows($result1);
-#
 $WEP = mysql_num_rows($result2);
-#
 $Sec = mysql_num_rows($result3);
-#
+
 $lastap_array = mysql_fetch_array($result4);
 $lastap_id = $lastap_array['id'];
+#echo $lastap_id;
 $lastap_ssid = $lastap_array['ssid'];
-#
+list($ssid_ptb) = make_ssid($newArray["ssid"]);
+$table = $ssid_ptb.'-'.$lastap_array["mac"].'-'.$lastap_array["sectype"].'-'.$lastap_array["radio"].'-'.$lastap_array['chan'].$gps_ext;
+$sql_gps = "select * from `$db_st`.`$table` where `lat` NOT LIKE 'N 0.0000' limit 1";
+#echo $sql_gps;
+$resultgps = mysql_query($sql_gps, $conn);
+$lastgps = @mysql_fetch_array($resultgps);
+#var_dump($lastgps);
+if($lastgps['lat'] != "N 0.0000"){$gps_yes = 1;}else{$gps_yes = 0;}
 $lastuser = @mysql_fetch_array($result6);
 if(!$result0 OR !$result1 OR !$result2 OR !$result3 OR !$result4 OR !$result5 or !$result6)
 {
@@ -92,7 +97,7 @@ else{$lastdate = $lastuser['date'];}
 	<tr class="dark">
 		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
 		<td align="center" class="style2"><?php if ($usercount == NULL){echo "No users in Database.";}else{?><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>"><?php echo $lastuser['username'];?></a><?php } ?></a></td>
-		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No APs imported yet.";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td>
+		<td align="center" class="style2"><table align="center" width="1px"><tr><td align="right"><?php if($lastap_ssid==''){echo "No APs imported yet.";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td><td align="left"><img width="20px" src="img/globe_<?php if($gps_yes){echo "on";}else{echo "off";} ?>.png"></td></tr></table></td>
 		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No imports yet.";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>"><?php echo $lastuser['title'];?></a><br>  <?php echo "[".$lastdate."]"; } ?> </td>
 	</tr>
 </table>
