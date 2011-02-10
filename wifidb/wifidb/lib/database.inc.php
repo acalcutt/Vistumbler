@@ -2012,6 +2012,7 @@ class database
 					}
 				}
 				$SETFLAGTEST = TRUE;
+				$ret = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $ret);
 				$wifi = explode("|",$ret, 13);
 				if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
 				
@@ -2027,7 +2028,7 @@ class database
 				if($wifi[5] == ''){$wifi[5] = "0";}
 				if($wifi[6] == ''){$wifi[6] = "u";}
 				if($wifi[7] == ''){$wifi[7] = "0";}
-
+				
 				list($ssid_S, $ssids, $ssidss ) = make_ssid($wifi[0]);//Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, the rest of the info will suffice for unique table names
 				if($out=="CLI")
 				{
@@ -2128,8 +2129,7 @@ class database
 				$gps_table = $table.$gps_ext;
 				
 				$table_ptb = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $table_ptb);
-				$table = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $table);
-				$gps_table = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $gps_table);
+				
 				
 				if(!isset($table_ptb)){$table_ptb="";}
 				
