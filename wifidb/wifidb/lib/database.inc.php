@@ -2056,39 +2056,36 @@ class database
 				$san_sig	=	htmlentities($wifi[12], ENT_QUOTES);
 				
 				$san_sig	=	str_replace("&#13;&#10;","",$san_sig);
-				$NUM_SIG = explode("-",$san_sig);
-				foreach($NUM_SIG as $key=>$val)
-				{
-					$num_san_sig = explode(",",$val);
-					$NUM_SIG[$key] = ($num_san_sig[0]+0).",".($num_san_sig[1]+0);
-				}
-				$san_sig = implode("-",$NUM_SIG);
+
 				$signal_exp = explode("-",$san_sig);
-				foreach($signal_exp as $key=>$exp)
-					{
-						$esp = explode(",",$exp);
-						$vs1_id = $esp[0];
-						
-						$lat = $gdata[$vs1_id]["lat"];
-						$lat_exp = explode(" ", $lat);
-						if(isset($lat_exp[1]))
-						{
-							$test = $lat_exp[1]+0;
-						}else
-						{
-							$test = $lat_exp[0]+0;
-						}
-						if($test != TRUE)
-						{
-							$zero = 1;
-						}else
-						{$zero=0;break;}
-					}
-					if($zero == true)
-					{
-						verbosed("SKIPPING AP, NO GPS COORDS.", $verbose, "CLI");
-					#	continue;
-					}
+				foreach($signal_exp as $key=>$val)
+				{
+				    $num_san_sig = explode(",",$val);
+				    $NUM_SIG[$key] = ($num_san_sig[0]+0).",".($num_san_sig[1]+0);
+
+				    $vs1_id = $num_san_sig[0];
+				    if(!@$gdata[$vs1_id]["lat"]){continue;}
+				    $lat = $gdata[$vs1_id]["lat"];
+				    $lat_exp = explode(" ", $lat);
+				    if(isset($lat_exp[1]))
+				    {
+					$test = $lat_exp[1]+0;
+				    }else
+				    {
+					$test = $lat_exp[0]+0;
+				    }
+				    if(!$test)
+				    {
+					$zero = 1;
+				    }else
+				    {$zero=0;break;}
+				}
+				
+				if($zero)
+				{
+					verbosed("SKIPPING AP, NO GPS COORDS.", $verbose, "CLI");
+				#	continue;
+				}
 				if($wifi[6] == "802.11a")
 					{$radios = "a";}
 				elseif($wifi[6] == "802.11b")
