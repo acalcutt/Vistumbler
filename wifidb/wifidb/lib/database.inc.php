@@ -1982,7 +1982,7 @@ class database
 		foreach($return as $ret)
 		{
 			if ($ret[0] == "#"){continue;}
-			
+			$current_encoding = mb_detect_encoding($ret, 'auto');
 			$retexp = explode("|",$ret);
 			$ret_len = count($retexp);
 			
@@ -2121,10 +2121,15 @@ class database
 						$sectype = "2";
 					}
 				}
-				$table_ptb = $ssid_pt_S.'-'.$mac_pt.'-'.$sectype_pt.'-'.$radio_pt.'-'.$chan_pt;
 				//create table name to select from, insert into, or create
+				$table_ptb = $ssid_pt_S.'-'.$mac_pt.'-'.$sectype_pt.'-'.$radio_pt.'-'.$chan_pt;
+				
 				$table = $ssid_S.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 				$gps_table = $table.$gps_ext;
+				
+				$table_ptb = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $table_ptb);
+				$table = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $table);
+				$gps_table = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $gps_table);
 				
 				if(!isset($table_ptb)){$table_ptb="";}
 				
