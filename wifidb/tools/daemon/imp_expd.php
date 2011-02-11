@@ -124,6 +124,10 @@ $daemon_console_log = $daemon_console_log.'/imp_expd.log';
 echo $daemon_console_log."\r\n";
 while(1) //while my pid file is still in the /var/run/ folder i will still run, this is for the init.d script or crash override
 {
+    $D_SQL = "SELECT * FROM `$db`.`$settings_tb` WHERE `table` = 'daemon_state'";
+    $Dresult = mysql_query($D_SQL, $conn);
+    $daemon_state = mysql_fetch_array($Dresult);
+    if($daemon_state['size']=="WIFIDB_KILL"){die("Daemon was told to kill self :(\r\n");}
 	$daemon_console_log_moved = $GLOBALS['wifidb_tools']."/backups/logs/console_wifidbd_".date('Y-m-d H:i:s').".log";
 	if(@file_exists($daemon_console_log))
 	{
