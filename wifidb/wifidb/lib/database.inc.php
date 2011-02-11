@@ -5688,7 +5688,7 @@ class database
 		#$ssid_ptb_	= $ap_array['ssid'];
 		#$ssids_ptb	= str_split($ssid_ptb_,25);
 		#$ssid		= smart_quotes($ssids_ptb[0]);
-		list($ssid_S, $ssids, $ssidss ) = make_ssid($ap_array['ssid'])
+		list($ssid_S, $ssids, $ssidss ) = make_ssid($ap_array['ssid']);
 		
 		$mac		= $ap_array['mac'];
 		$sectype	= $ap_array['sectype'];
