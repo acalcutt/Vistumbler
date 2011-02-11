@@ -1122,11 +1122,11 @@ function make_ssid($ssid_frm_src_or_pnt_tbl = '')
 {
 	if($ssid_frm_src_or_pnt_tbl == ''){$ssid_frm_src_or_pnt_tbl="UNNAMED";}
 	$ssids = $ssid_frm_src_or_pnt_tbl;
-        $alt = htmlentities($ssids, ENT_QUOTES);
-	$ssid_safe_full_length = smart_quotes($alt);
+        //$alt = htmlentities($ssids, ENT_QUOTES);
+	$ssid_safe_full_length = mysql_real_escape_string($ssids);
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char.
 	$ssid_table_safe = $ssid_sized[0]; //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths, 
-	$A = array(0=>html_entity_decode($ssid_table_safe, ENT_QUOTES), 1=>html_entity_decode($ssid_safe_full_length, ENT_QUOTES) , 2=> $ssids,);
+	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
 	return $A;
 }
 
@@ -2012,7 +2012,7 @@ class database
 					}
 				}
 				$SETFLAGTEST = TRUE;
-				$ret = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $ret);
+				$ret = iconv($current_encoding, 'UTF-8//IGNORE', $ret);
 				$wifi = explode("|",$ret, 13);
 				if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
 				
@@ -2034,7 +2034,7 @@ class database
 				{
 					$this_of_this = $FILENUM." / ".$count1;
 					$file1 = str_replace(" ", "%20", $file1);
-					$sqlup = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssids', `row` = '$file_row' WHERE `id` = '$file_id';";
+					$sqlup = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssid_S', `row` = '$file_row' WHERE `id` = '$file_id';";
 					echo $sqlup."\r\n";
 					if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 					{
@@ -2128,7 +2128,7 @@ class database
 				$table = $ssid_S.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 				$gps_table = $table.$gps_ext;
 				
-				$table_ptb = iconv($current_encoding, 'UTF-8//TRANSLIT//IGNORE', $table_ptb);
+				$table_ptb = iconv($current_encoding, 'UTF-8//IGNORE', $table_ptb);
 				
 				
 				if(!isset($table_ptb)){$table_ptb="";}
@@ -5684,9 +5684,13 @@ class database
 
 		$man 		= database::manufactures($ap_array['mac']);
 		$id			= $ap_array['id'];
-		$ssid_ptb_	= $ap_array['ssid'];
-		$ssids_ptb	= str_split($ssid_ptb_,25);
-		$ssid		= smart_quotes($ssids_ptb[0]);
+		
+		#$ssid_ptb_	= $ap_array['ssid'];
+		#$ssids_ptb	= str_split($ssid_ptb_,25);
+		#$ssid		= smart_quotes($ssids_ptb[0]);
+		list($ssid_S, $ssids, $ssidss ) = make_ssid($ap_array['ssid']);//Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, the rest of the info will suffice for unique table names
+		$ssid = $ssid_S;
+		
 		$mac		= $ap_array['mac'];
 		$sectype	= $ap_array['sectype'];
 		$radio		= $ap_array['radio'];
