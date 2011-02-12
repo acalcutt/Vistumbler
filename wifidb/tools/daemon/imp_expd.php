@@ -235,7 +235,13 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					logd("Start Import of :(".$files_array['id'].") ".$files_array['file'], 2, $details,  $GLOBALS['log_level']); //write the details array to the log if the level is 2 /this one is hard coded, beuase i wanted to show an example.
 					verbosed("Start Import of : (".$files_array['id'].") ".$files_array['file'], $verbose, $screen_output, 1); //default verbise is 0 or none, or STFU, IE dont do shit.
 					echo $files_array['id']."\r\n";
-					$tmp = $database->import_vs1($source, $files_array['id'], $files_array['user'], $files_array['notes'], $files_array['title'], $verbose, $screen_output, $files_array['date']);
+					try
+					{
+					    $tmp = $database->import_vs1($source, $files_array['id'], $files_array['user'], $files_array['notes'], $files_array['title'], $verbose, $screen_output, $files_array['date']);
+					}catch (Exception $e)
+					{
+					    die("OH NO! THERE WAS AN ERROR! CHECK THE CASTLE!");
+					}
 					$temp = $files_array['file']." | ".$tmp['aps']." - ".$tmp['gps'];
 					logd("Finished Import of : ".$files_array['file'] , 2 , $temp ,  $GLOBALS['log_level']); //same thing here, hard coded as log_lev 2
 					verbosed("Finished Import of :".$files_array['file'] , $verbose, $screen_output);

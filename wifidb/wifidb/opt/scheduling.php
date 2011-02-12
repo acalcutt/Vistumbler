@@ -306,17 +306,23 @@ if(is_string($func))
 			</table>
 			<br>
 			<?php
-			$sql1 = "SELECT * FROM `$db`.`files_tmp`";
-			$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
-			$total_rows = mysql_num_rows($result1);
+			if($func == 'waiting')
+			{
+			    $sql = "SELECT * FROM `$db`.`files_tmp` ORDER BY `date` asc";
+			}else
+			{
+			    $sql = "SELECT * FROM `$db`.`files_tmp` ORDER BY `date` asc limit 20";
+			}
+			$result_1 = mysql_query($sql, $conn) or die(mysql_error($conn));
+			$total_rows = mysql_num_rows($result_1);
 			if($total_rows > 10)
 			{
 				echo '<a class="links" href="scheduling.php?func=waiting">View other files waiting for import.</a><br>';
 			}
 			
 			$sql1 = "SELECT * FROM `$db`.`files`";
-			$result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
-			$done_rows = mysql_num_rows($result1);
+			$result2 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+			$done_rows = mysql_num_rows($result2);
 			if($done_rows > 0)
 			{
 				echo '<a class="links" href="scheduling.php?func=done">View other files that have finished importing.</a><br>';
@@ -324,15 +330,14 @@ if(is_string($func))
 			?>
 			<br>
 			<table border="1" width="90%"><tr class="style4"><th border="1" colspan="7" align="center">Files waiting for import</th></tr><?php
-			$sql = "SELECT * FROM `$db`.`files_tmp` ORDER BY `date` asc";
-			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
+			
 			if($total_rows === 0)
 			{
 				?><tr class="light"><td border="1" colspan="7" align="center">There are no files waiting to be imported, Go and import a file</td></tr></table><?php
 			}else
 			{
 				?><tr align="center"><td border="1"><br><?php
-				while ($newArray = mysql_fetch_array($result))
+				while ($newArray = mysql_fetch_array($result_1))
 				{
 					if($newArray['importing'] == '1' )
 					{
@@ -359,7 +364,9 @@ if(is_string($func))
 					$resultgps = mysql_query($sql_gps, $conn);
 					$lastgps = @mysql_fetch_array($resultgps);
 					#var_dump($lastgps);
-					if(@$lastgps['lat'] != "N 0.0000"){$gps_yes = 1;}else{$gps_yes = 0;}
+					$lat_check = explode(" ", $lastgps['lat']);
+					$lat_c = $lat_check[1]+0;
+					if($lat_c != "0"){$gps_yes = 1;}else{$gps_yes = 0;}
 					?>
 					</td><td align="center">
 					<?php

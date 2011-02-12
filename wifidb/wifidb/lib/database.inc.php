@@ -1125,7 +1125,7 @@ function make_ssid($ssid_frm_src_or_pnt_tbl = '')
         $ssids = htmlentities($ssids, ENT_QUOTES);
 	$ssid_safe_full_length = mysql_real_escape_string($ssid_frm_src_or_pnt_tbl);
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char.
-	$ssid_table_safe = $ssid_sized[0]; //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths, 
+	$ssid_table_safe = preg_replace('/`/','_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
 	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
 	return $A;
 }
@@ -2968,6 +2968,15 @@ class database
 		list($ssid_ptb) = make_ssid($newArray["ssid"]);
 		$table		=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
 		$table_gps	=	$table.$gps_ext;
+		$sql_gps = "select * from `$db_st`.`$table_gps` where `lat` NOT LIKE 'N 0.0000' limit 1";
+		#echo $sql_gps;
+		$resultgps = mysql_query($sql_gps, $conn);
+		$lastgps = @mysql_fetch_array($resultgps);
+		#var_dump($lastgps);
+		$lat_check = explode(" ", $lastgps['lat']);
+		$lat_c = $lat_check[1]+0;
+		if($lat_c != "0"){$gps_yes = 1;}else{$gps_yes = 0;}
+
 		#echo $table."<BR>";		?>
 				<SCRIPT LANGUAGE="JavaScript">
 				// Row Hide function.
@@ -2984,7 +2993,16 @@ class database
 					}
 				}
 				</SCRIPT>
-                <h1><?php echo htmlentities($newArray['ssid'], ENT_QUOTES);?></h1>
+                <h1><?php echo htmlentities($newArray['ssid'], ENT_QUOTES);
+		if($gps_yes)
+		{
+		    echo '<img width="20px" src="../img/globe_on.png">';
+		}
+		else
+		{
+		    echo '<img width="20px" src="../img/globe_off.png">';
+		}
+		?></h1>
 		<TABLE align=center WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<TABLE align=center WIDTH=569 BORDER=1 CELLPADDING=4 CELLSPACING=0>
 		<COL WIDTH=112><COL WIDTH=439>
@@ -6404,6 +6422,7 @@ class daemon
 					$mem = $match[0][0];
 					
 					preg_match_all("/(php.*)/", $start, $matc);
+					var_dump($matc);
 					$CMD = $matc[0][0];
 					
 					preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
