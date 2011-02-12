@@ -19,19 +19,6 @@ $result = mysql_query($sqls, $conn) or die(mysql_error($conn));
 while($newArray = mysql_fetch_array($result))
 {
 	$TB_ID = $newArray['id'];
-	$macaddress = $newArray['mac'];
-	$radio = $newArray['radio'];
-	if($radio == "a")
-		{$radio = "802.11a";}
-	elseif($radio == "b")
-		{$radio = "802.11b";}
-	elseif($radio == "g")
-		{$radio = "802.11g";}
-	elseif($radio == "n")
-		{$radio = "802.11n";}
-	else
-		{$radio = "802.11u";}
-
 	list($ssid_ptb) = make_ssid($newArray["ssid"]);
 	
 	$table_gps	=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'].$gps_ext;

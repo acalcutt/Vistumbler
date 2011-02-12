@@ -128,6 +128,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
     $Dresult = mysql_query($D_SQL, $conn);
     $daemon_state = mysql_fetch_array($Dresult);
     if($daemon_state['size']=="WIFIDB_KILL"){die("Daemon was told to kill self :(\r\n");}
+    
 	$daemon_console_log_moved = $GLOBALS['wifidb_tools']."/backups/logs/console_wifidbd_".date('Y-m-d H:i:s').".log";
 	if(@file_exists($daemon_console_log))
 	{
@@ -168,6 +169,11 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 	{
 		while ($files_array = mysql_fetch_array($result))
 		{
+			$D_SQL = "SELECT * FROM `$db`.`$settings_tb` WHERE `table` = 'daemon_state'";
+			$Dresult = mysql_query($D_SQL, $conn);
+			$daemon_state = mysql_fetch_array($Dresult);
+			if($daemon_state['size']=="WIFIDB_KILL"){die("Daemon was told to kill self :(\r\n");}
+			
 			$result_update = mysql_query("UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'", $conn);
 			$source = $GLOBALS['wifidb_install'].'/import/up/'.str_replace("%20", " ", $files_array['file']);
 			$file_src = explode(".",$files_array['file']);

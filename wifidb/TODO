@@ -1,0 +1,9 @@
+rewrite code to OO
+    daemons [import(), export(), scheduling(), stats()]
+    web front end [web()]
+re-design some of the web pages [ap fetch, list all users, index, scheduling]
+cache all exports, until new import.
+finish implementing memcached
+rewrite SQL methods with PDO
+rewrite installer for PostgreSQL and Drizzle (maybe Oracle and MSSQL if i have the will power)
+i have a lot of work to do

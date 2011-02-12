@@ -69,7 +69,7 @@ while (!(($file = readdir($dh)) == false))
 			$n++;
 		}else{
 			echo "File not supported !\n";
-			if($log == 1 or 2)
+			if($log == 1 || 2)
 			{
 				fwrite($fileappend, $file."	is not a supported file extention of ".$file_e[$file_max-1]."\r\n If the file is a txt file run it through the converter first.\r\n\r\n");
 			}elseif($log ==2){fwrite($fileappend, $file." has vaules of: ".var_dump($file));}
@@ -89,7 +89,7 @@ foreach($filenames as $filen)
 	$filen_e = explode("|", $filen);
 	$file_names[$filen_e[0]] = array("hash" => $filen_e[0], "file"=>$filen_e[1],"user"=>$filen_e[2],"title"=>$filen_e[3],"date"=>$filen_e[4],"notes"=>$filen_e[5]);
 }
-var_dump($file_names);
+#var_dump($file_names);
 //start import of all files in VS1 folder
 foreach($file_a as $key => $file)
 {
@@ -98,20 +98,22 @@ foreach($file_a as $key => $file)
 	$hash = hash_file('md5', $source);
 	$size1 = format_size(dos_filesize($source));
 	
-	if(is_array($file_names[$hash]))
+	if(@is_array($file_names[$hash]))
 	{
 		$user = $file_names[$hash]['user'];
 		$title = $file_names[$hash]['title'];
 		$notes = $file_names[$hash]['notes'];
 		$date = $file_names[$hash]['date'];
+		$hash_ = $file_names[$hash]['hash'];
 	}else
 	{
 		$user = $default_user;
 		$title = $default_title;
 		$notes = $default_notes;
 		$date = date("y-m-d H:i:s");
+		$hash_ = 0;
 	}
-	echo $user." - ".$title." - ".$notes."\n\t".$file_names[$hash]['hash'].' - '.$hash."\n";
+	echo $user." - ".$title." - ".$notes."\n\t".$hash_.' - '.$hash."\n";
 	echo $source."\n";
 #	echo "\n".$key."\t->\t################=== Start Daemon prep of ".$file." ===################\n";
 	if($GLOBALS['log'] == 1 or $GLOBALS['log'] == 2)

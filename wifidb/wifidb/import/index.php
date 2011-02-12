@@ -360,7 +360,7 @@ switch($func)
 						if($GLOBALS['username'] == 'admin')
 						{}elseif($rebuild === 0)
 						{ ?><INPUT TYPE=SUBMIT NAME="submit" VALUE="Submit" STYLE="width: 0.71in; height: 0.36in"></P><?php }else
-						{ ?>The database is in  rebuild mode, please wait...<?php }
+						{ ?>Messing around with the code, trying to make it faster, it must go faster, much much faster... </br>This might take a while though<?php }
 					?>
 					</TD>
 				</TR>

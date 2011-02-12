@@ -21,13 +21,13 @@ pageheader("Version Page");
 		</table>
 		<BR><H2>Change Log</H2>
 		<table class="light" width="100%" border="2" id="20b2">
-			<TR><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td>
-			<td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 2</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Sept-12</td></tr>
+			<TR><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 2</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Nov-01</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Peabody</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
-                                    <LI>Added the ability for the search page to show the first 15 results on the same page as you type. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=" target="_blank"></a></LI>
+                    <LI>Added the ability for the search page to show the first 15 results on the same page as you type. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=" target="_blank"></a></LI>
+					<LI>Added Temp File cleanup for Daemon KML generation.</LI>
 				</OL>
 			</td></tr>
 		</table>
