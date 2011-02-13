@@ -1125,7 +1125,8 @@ function make_ssid($ssid_frm_src_or_pnt_tbl = '')
         $ssids = htmlentities($ssids, ENT_QUOTES);
 	$ssid_safe_full_length = mysql_real_escape_string($ssid_frm_src_or_pnt_tbl);
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char.
-	$ssid_table_safe = preg_replace('/`/','_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
+	$replace = array('/`/', '/\./');
+	$ssid_table_safe = preg_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
 	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
 	return $A;
 }
@@ -1851,6 +1852,7 @@ class database
 	
 	function import_vs1($source="" , $file_id, $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 1 , $out = "CLI", $times = "")
 	{
+	    error_reporting(E_ALL|E_STRICT);
 		#MESSAGES FOR CLI AND HTML INTERFACES#
 		$wrong_file_type_msg			= "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again.";
 		$Inserted_user_data_good_msg	= "Succesfully Inserted User data into Users table.";
@@ -1906,8 +1908,9 @@ class database
 		}
 		
 		$file_row =  0;
-		require $GLOBALS['wifidb_install']."/lib/config.inc.php";
-		require 'config.inc.php';
+		echo $GLOBALS['wdb_install'];
+		require $GLOBALS['wdb_install']."/lib/config.inc.php";
+		require $GLOBALS['wifidb_tools'].'/daemon/config.inc.php';
 		
 		$conn			= 	$GLOBALS['conn'];
 		$db			= 	$GLOBALS['db'];
@@ -1938,9 +1941,11 @@ class database
 		$signals = array();
 		$sats_id = array();
 		$db_gps	 = array();
+		echo $source."\r\n";
 		$return  = file($source);
+		#echo $return[0]."\r\n";
 		$count = count($return);
-		
+		echo $count."\r\n";
 		$file_row =  0;
 		if($count <= 8) 
 		{
@@ -1982,8 +1987,10 @@ class database
 		foreach($return as $ret)
 		{
 			if ($ret[0] == "#"){continue;}
+			#echo $ret[0]."\r\n";
 			$current_encoding = mb_detect_encoding($ret, 'auto');
 			$retexp = explode("|",$ret);
+			#var_dump($retexp);
 			$ret_len = count($retexp);
 			
 			if ($ret_len == 12 or $ret_len == 6)
@@ -2218,8 +2225,9 @@ class database
 						   # if($verbose == 1 && $out == "CLI"){echo "New GPS inserted. [$gps_id]\r\n";}
 						}else
 						{
-						    echo $sql_multi[$N]."\r\n";
-						    echo $signals[$N]."\r\n";
+						    echo "failed\r\n";
+						    #echo $sql_multi[$N]."\r\n";
+						    #echo $signals[$N]."\r\n";
 						}
 
 						if($verbose == 1 && $out == "CLI"){echo ".";}
@@ -2230,7 +2238,7 @@ class database
 					if($verbose == 1 && $out == "CLI"){echo "\n";}
 					
 					
-					#This code is a failed attempt at getting a batch import of all the GPS in one query XXX
+				/*	#This code is a failed attempt at getting a batch import of all the GPS in one query XXX
 					$mysqli = new mysqli($GLOBALS['host'], $GLOBALS['db_user'], $GLOBALS['db_pwd'], $GLOBALS['db_st']);
 					if (mysqli_connect_errno())
 					{
@@ -2267,7 +2275,7 @@ class database
 							verbosed("<p>".$Finished_inserting_gps_msg, $verbose, "HTML");
 						}
 					}
-
+					*/
 					if($out=="HTML")
 					{
 						$DB_COUNT = count($db_gps);
@@ -2324,6 +2332,7 @@ class database
 #################################################################################################################################################################
 #################################################################################################################################################################
 					$skip_pt_insert=0;
+					
 					logd($this_of_this."   ( ".$size." )   ||   ".$table." - ".$being_imported_msg."\r\n", $log_interval, 0,  $log_level);
 					if($out=="CLI")
 					{
@@ -2372,7 +2381,87 @@ class database
 						}
 						$skip_pt_insert = 1;
 					}
+					# pointers
+					if($skip_pt_insert == 0)
+					{
+						$sqlp = "INSERT INTO `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '', '$ssids', '$macs','$chan', '$radios', '$auth', '$encry', '$sectype')";
+						if (mysql_query($sqlp, $conn))
+						{
+							$user_aps[$user_n]="0,".$size.":1";
+							$sqlup = "UPDATE `$db`.`$settings_tb` SET `size` = '$size' WHERE `table` = 'wifi0' LIMIT 1;";
+							if (mysql_query($sqlup, $conn))
+							{
+								logd($updating_stgs_good_msg."\r\n", $log_interval, 0,  $log_level);
+								if($out=="CLI")
+								{
+									verbosed($GLOBALS['COLORS']['GREEN'].$updating_stgs_good_msg."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
+								}elseif($out=="HTML")
+								{
+									verbosed("<p>".$updating_stgs_good_msg."</p>".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "HTML");
+								}
+							}else
+							{
+								logd($error_updating_stgs_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
+								if($out=="CLI")
+								{
+									verbosed($GLOBALS['COLORS']['RED'].$error_updating_stgs_msg."\n".$GLOBALS['COLORS']['LIGHTGRAY'].mysql_error($conn), $verbose, "CLI");
+								}elseif($out=="HTML")
+								{
+									verbosed("<p>".$error_updating_stgs_msg."</p>".mysql_error($conn), $verbose, "HTML");
+								}
+								if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+							}
+							logd($user_aps[$user_n], $log_interval, 0,  $log_level);
+							if($out=="CLI")
+							{
+								verbosed($GLOBALS['COLORS']['GREEN'].$user_aps[$user_n]."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
+							}elseif($out=="HTML")
+							{
+								verbosed($user_aps[$user_n]."<br>", $verbose, "HTML");
+							}
+							$user_n++;
+						}else
+						{
+							logd($error_updating_pts_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
+							if($out=="CLI")
+							{
+								verbosed($GLOBALS['COLORS']['RED'].$error_updating_pts_msg."\n\t-> ".$GLOBALS['COLORS']['LIGHTGRAY'].mysql_error($conn), $verbose, "CLI");
+							}elseif($out=="HTML")
+							{
+								verbosed("<p>".$error_updating_pts_msg."</p>".mysql_error($conn), $verbose, "HTML");
+							}
+							if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+						}
+						$imported++;
+					}
+					else
+					{
+						$dup_sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs'  AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `radio` LIKE '$radios' AND `sectype` LIKE '$sectype'";
+					    echo $dup_sql."\r\n";
+						logd($dup_sql, $log_interval, 0,  $log_level);
 
+						$result_dup = mysql_query($dup_sql, $conn) or die(mysql_error($conn));
+
+						$newArray_dup = mysql_fetch_array($result_dup);
+
+						$duplicate_id = $newArray_dup['id'];
+
+						$result_sig = mysql_query("SELECT `id` FROM `$db_st`.`$table`", $conn) or die(mysql_error($conn));
+						$row_sig = mysql_num_rows($result_sig);
+
+						$user_aps[$user_n]="1,".$duplicate_id.":".$row_sig;
+						logd($user_aps[$user_n], $log_interval, 0,  $log_level);
+						if($out=="CLI")
+						{
+							verbosed($GLOBALS['COLORS']['GREEN'].$user_aps[$user_n]."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
+						}elseif($out=="HTML")
+						{
+							verbosed($user_aps[$user_n]."<br>", $verbose, "HTML");
+						}
+						$user_n++;
+						verbosed($GLOBALS['COLORS']['RED']."Skipped Creation of duplicate Pointer Row in wifi0\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
+						if(is_null($newArray_dup)){die();}
+					}
 					$DB_result = mysql_query("SELECT * FROM `$db_st`.`$gps_table`", $conn);
 					$gpstableid = mysql_num_rows($DB_result);
 					
@@ -2445,8 +2534,9 @@ class database
 						   # if($verbose == 1 && $out == "CLI"){echo "New GPS inserted. [$gps_id]\r\n";}
 						}else
 						{
-						    echo $sql_multi[$N]."\r\n";
-						    echo $signals[$N]."\r\n";
+						    echo "failed\r\n";
+						    #echo $sql_multi[$N]."\r\n";
+						    #echo $signals[$N]."\r\n";
 						}
 						if($verbose == 1 && $out == "CLI"){echo ".";}
 						$gps_id++;
@@ -2454,7 +2544,7 @@ class database
 					}
 
 					if($verbose == 1 && $out == "CLI"){echo "\n";}
-					$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
+					/*$mysqli = new mysqli($host, $db_user, $db_pwd, $db_st);
 					if (mysqli_connect_errno())
 					{
 						printf("Connect failed: %s\n", mysqli_connect_error());
@@ -2492,7 +2582,7 @@ class database
 							verbosed("<p>".$Finished_inserting_gps_msg, $verbose, "HTML");
 						}
 					}
-					
+					*/
 					if($out == "HTML")
 					{
 						?>
@@ -2534,93 +2624,15 @@ class database
 						}
 					
 					}
-					# pointers
-					if($skip_pt_insert == 0)
-					{
-						$sqlp = "INSERT INTO `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '', '$ssids', '$macs','$chan', '$radios', '$auth', '$encry', '$sectype')";
-						if (mysql_query($sqlp, $conn))
-						{
-							$user_aps[$user_n]="0,".$size.":1";
-							$sqlup = "UPDATE `$db`.`$settings_tb` SET `size` = '$size' WHERE `table` = 'wifi0' LIMIT 1;";
-							if (mysql_query($sqlup, $conn))
-							{
-								logd($updating_stgs_good_msg."\r\n", $log_interval, 0,  $log_level);
-								if($out=="CLI")
-								{
-									verbosed($GLOBALS['COLORS']['GREEN'].$updating_stgs_good_msg."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-								}elseif($out=="HTML")
-								{
-									verbosed("<p>".$updating_stgs_good_msg."</p>".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "HTML");
-								}
-							}else
-							{
-								logd($error_updating_stgs_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
-								if($out=="CLI")
-								{
-									verbosed($GLOBALS['COLORS']['RED'].$error_updating_stgs_msg."\n".$GLOBALS['COLORS']['LIGHTGRAY'].mysql_error($conn), $verbose, "CLI");
-								}elseif($out=="HTML")
-								{
-									verbosed("<p>".$error_updating_stgs_msg."</p>".mysql_error($conn), $verbose, "HTML");
-								}
-								if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
-							}
-							logd($user_aps[$user_n], $log_interval, 0,  $log_level);
-							if($out=="CLI")
-							{
-								verbosed($GLOBALS['COLORS']['GREEN'].$user_aps[$user_n]."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-							}elseif($out=="HTML")
-							{
-								verbosed($user_aps[$user_n]."<br>", $verbose, "HTML");
-							}
-							$user_n++;
-						#######################
-							#   /       ##    ##        #
-							#  #         # #  # #       #
-							# # .        #  ##  #	    #
-							#    \       #      #       ####
-							database::exp_newest_kml($named = 0, $verbose=1);
-						#######################
-						}else
-						{
-							logd($error_updating_pts_msg."\r\n\t-> ".mysql_error($conn), $log_interval, 0,  $log_level);
-							if($out=="CLI")
-							{
-								verbosed($GLOBALS['COLORS']['RED'].$error_updating_pts_msg."\n\t-> ".$GLOBALS['COLORS']['LIGHTGRAY'].mysql_error($conn), $verbose, "CLI");
-							}elseif($out=="HTML")
-							{
-								verbosed("<p>".$error_updating_pts_msg."</p>".mysql_error($conn), $verbose, "HTML");
-							}
-							if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
-						}
-						$imported++;
-					}else
-					{	
-						$dup_sql = "SELECT `id` FROM `$db`.`$wtable` WHERE `mac` LIKE '$macs'  AND `ssid` LIKE '$ssids' AND `chan` LIKE '$chan' AND `radio` LIKE '$radios' AND `sectype` LIKE '$sectype'";
-				#	echo $dup_sql."\r\n";
-						logd($dup_sql, $log_interval, 0,  $log_level);
-						
-						$result_dup = mysql_query($dup_sql, $conn) or die(mysql_error($conn));
-						
-						$newArray_dup = mysql_fetch_array($result_dup);
-						
-						$duplicate_id = $newArray_dup['id'];
-						
-						$result_sig = mysql_query("SELECT `id` FROM `$db_st`.`$table`", $conn) or die(mysql_error($conn));
-						$row_sig = mysql_num_rows($result_sig);
-						
-						$user_aps[$user_n]="1,".$duplicate_id.":".$row_sig;
-						logd($user_aps[$user_n], $log_interval, 0,  $log_level);
-						if($out=="CLI")
-						{
-							verbosed($GLOBALS['COLORS']['GREEN'].$user_aps[$user_n]."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-						}elseif($out=="HTML")
-						{
-							verbosed($user_aps[$user_n]."<br>", $verbose, "HTML");
-						}
-						$user_n++;	
-						verbosed($GLOBALS['COLORS']['RED']."Skipped Creation of duplicate Pointer Row in wifi0\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-						if(is_null($newArray_dup)){die();}
-					}
+					
+					#######################
+					#   /        ##    ##       #
+					#  #         # #  # #       #
+					# # .        #  ##  #	    #
+					#    \       #      #       ####
+					database::exp_newest_kml($named = 0, $verbose=1);
+					#######################
+
 					$skip_pt_insert = 0;
 				}
 				if($out == "HTML")
@@ -5520,8 +5532,8 @@ class database
 	
 	function exp_newest_kml($named = 0, $verbose = 1)
 	{
-		require $GLOBALS['wifidb_install']."/lib/config.inc.php";
-		require "config.inc.php";
+		require $GLOBALS['wdb_install']."/lib/config.inc.php";
+		require $GLOBALS['wifidb_tools']."/daemon/config.inc.php";
 		$date=date('Y-m-d_H-i-s');
 		$start = microtime(true);
 		$sql = "SELECT * FROM `$db`.`$wtable` ORDER BY `id` DESC LIMIT 1";
@@ -5700,8 +5712,8 @@ class daemon
 	
 	function daemon_kml($named = 0, $verbose = 1)
 	{
-		require "config.inc.php";
-		require $GLOBALS['wifidb_install']."/lib/config.inc.php";
+		require $GLOBALS['wifidb_tools']."/daemon/config.inc.php";
+		require $GLOBALS['wdb_install']."/lib/config.inc.php";
 		verbosed($GLOBALS['COLORS']['GREEN']."Starting Automated KMZ creation.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
 		
 		$db_st = $GLOBALS['db_st'];
@@ -5723,8 +5735,8 @@ class daemon
 		$date=date('Y-m-d');
 		#	$date = "2009-07-24";
 		
-		$daily_folder = $GLOBALS['wifidb_install']."/out/daemon/".$date."/";
-		$daemon_folder = $GLOBALS['wifidb_install']."/out/daemon/";
+		$daily_folder = $GLOBALS['wdb_install']."/out/daemon/".$date."/";
+		$daemon_folder = $GLOBALS['wdb_install']."/out/daemon/";
 		if(!(is_dir($daily_folder)))
 		{
 			echo "Make Folder $daily_folder\n";
@@ -5855,7 +5867,7 @@ class daemon
 		
 		$Network_link_KML = $daemon_KMZ_folder."update.kml";
 		
-		$daemon_daily_KML = $GLOBALS['wifidb_install']."/out/daemon/update.kml";
+		$daemon_daily_KML = $GLOBALS['wdb_install']."/out/daemon/update.kml";
 		
 		$filewrite = fopen($daemon_daily_KML, "w");
 		$fileappend_update = fopen($daemon_daily_KML, "a");
@@ -5922,7 +5934,7 @@ class daemon
 	function daemon_full_db_exp($temp_kml="", $temp_kml_label="", $verbose = 0)
 	{
 		require_once "config.inc.php";
-		require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
+		require_once $GLOBALS['wdb_install']."/lib/config.inc.php";
 		
 		$db_st = $GLOBALS['db_st'];
 		$db = $GLOBALS['db'];
@@ -6156,7 +6168,7 @@ class daemon
 	function daemon_daily_db_exp($temp_daily_kml=NULL, $temp_dailyL_kml=NULL, $verbose = 0)
 	{
 		require_once "config.inc.php";
-		require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
+		require_once $GLOBALS['wdb_install']."/lib/config.inc.php";
 		
 		$date = date('Y-m-d');
 		$db_st = $GLOBALS['db_st'];

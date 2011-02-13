@@ -112,13 +112,11 @@ switch($func)
 				$size1 = format_size(dos_filesize($uploadfile));
 								
 				$return  = file($tmp);
-				
-				$VS1Test = str_split($return[0], 12);
 				$file_e = explode('.',$filename);
 				$file_max = count($file_e);
 				
 				//What file are we tring to import, a VS1 or a GPX file?
-				if($VS1Test[0] == "# Vistumbler" )
+				if(substr_compare($return[0], "Vistumbler", 2, 13))
 				{
 					echo "<h2>Importing VS1 File</h2><h1>Imported By: ".$user."<BR></h1>";
 					echo "<h2>With Title: ".$title."</h2>";

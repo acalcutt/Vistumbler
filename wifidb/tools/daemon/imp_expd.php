@@ -7,13 +7,15 @@
 
 #error_reporting(E_ALL|E_STRICT);
 
-global $screen_output, $dim, $COLORS, $daemon_ver;
+global $screen_output, $dim, $COLORS, $daemon_ver, $wdb_install;
 $screen_output = "CLI";
 
 if(!(require_once 'config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
-if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
-require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
-require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
+
+$wdb_install = $GLOBALS['wifidb_install'];
+if($wdb_install == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
+require_once $wdb_install."/lib/database.inc.php";
+require_once $wdb_install."/lib/config.inc.php";
 if(!file_exists($GLOBALS['daemon_log_folder']))
 {
 	if(mkdir($GLOBALS['daemon_log_folder']))
@@ -33,33 +35,33 @@ $dim = @DIRECTORY_SEPERATOR;
 date_default_timezone_set("UTC");
 ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
 
-$conn					= 	$GLOBALS['conn'];
-$db						= 	$GLOBALS['db'];
-$db_st					= 	$GLOBALS['db_st'];
-$wtable					=	$GLOBALS['wtable'];
-$users_t				=	$GLOBALS['users_t'];
-$gps_ext				=	$GLOBALS['gps_ext'];
-$files					=	$GLOBALS['files'];
-$files_tmp				=	$GLOBALS['files_tmp'];
+$conn				= 	$GLOBALS['conn'];
+$db				= 	$GLOBALS['db'];
+$db_st				= 	$GLOBALS['db_st'];
+$wtable				=	$GLOBALS['wtable'];
+$users_t			=	$GLOBALS['users_t'];
+$gps_ext			=	$GLOBALS['gps_ext'];
+$files				=	$GLOBALS['files'];
+$files_tmp			=	$GLOBALS['files_tmp'];
 $user_logins_table		=	$GLOBALS['user_logins_table'];
 $settings_tb			=	$GLOBALS['settings_tb'];
 $daemon_console_log		=	$GLOBALS['daemon_log_folder'];
-$pid_file				=	$GLOBALS['pid_file_loc'].'imp_expd.pid';
+$pid_file			=	$GLOBALS['pid_file_loc'].'imp_expd.pid';
 $console_line_limit		=	$GLOBALS['console_line_limit'];
-$time_interval_to_check =	$GLOBALS['time_interval_to_check'];
-$root					=	$GLOBALS['root'];
-$half_path				=	$GLOBALS['half_path'];
-$host_url 				=	$GLOBALS['hosturl'];
-$UPATH	 				=	$GLOBALS['UPATH'];
+$time_interval_to_check		=	$GLOBALS['time_interval_to_check'];
+$root				=	$GLOBALS['root'];
+$half_path			=	$GLOBALS['half_path'];
+$host_url 			=	$GLOBALS['hosturl'];
+$UPATH	 			=	$GLOBALS['UPATH'];
 $console_trim_log		=	$GLOBALS['console_trim_log'];
 $console_line_limit		=	$GLOBALS['console_line_limit'];
 $date_format			=	"Y-m-d H:i:s.u";
 $BAD_IED_COLOR			=	$GLOBALS['BAD_CLI_COLOR'];
 $GOOD_IED_COLOR			=	$GLOBALS['GOOD_CLI_COLOR'];
 $OTHER_IED_COLOR		=	$GLOBALS['OTHER_CLI_COLOR'];
-$This_is_me				=	getmypid();
-$subject				=	"WiFiDB Import / Export Daemon";
-$type					=	"import";
+$This_is_me			=	getmypid();
+$subject			=	"WiFiDB Import / Export Daemon";
+$type				=	"import";
 if($GLOBALS['colors_setting'] == 0 or PHP_OS == "WINNT")
 {
 	$COLORS = array(
@@ -117,7 +119,7 @@ $finished = 0;
 
 $database	=	new database;
 $daemon		=	new daemon;
-
+var_dump($wdb_install);
 //Main loop
 echo $daemon_console_log."\r\n";
 $daemon_console_log = $daemon_console_log.'/imp_expd.log';
@@ -175,7 +177,8 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			if($daemon_state['size']=="WIFIDB_KILL"){die("Daemon was told to kill self :(\r\n");}
 			
 			$result_update = mysql_query("UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'", $conn);
-			$source = $GLOBALS['wifidb_install'].'/import/up/'.str_replace("%20", " ", $files_array['file']);
+			$source = $wdb_install.'/import/up/'.str_replace("%20", " ", $files_array['file']);
+			
 			$file_src = explode(".",$files_array['file']);
 			$file_type = strtolower($file_src[1]);
 			if($file_type == "db3" or $file_type == "txt" or $file_type == "tmp")
@@ -184,8 +187,8 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 				$source = $database->convert_vs1($source);
 				$id = $files_array['id'];
 				$files_array['file'] = $file_src[0].'.vs1';
-				$hash1 = hash_file('md5', $GLOBALS['wifidb_install'].'/import/up/'.$files_array['file']);
-				$size1 = format_size(dos_filesize($GLOBALS['wifidb_install'].'/import/up/'.$files_array['file']));
+				$hash1 = hash_file('md5', $wdb_install.'/import/up/'.$files_array['file']);
+				$size1 = format_size(dos_filesize($wdb_install.'/import/up/'.$files_array['file']));
 				$update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '$id'";
 			#	echo $update_tmp."\r\n";
 				if(mysql_query($update_tmp, $conn))
@@ -198,7 +201,9 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			}
 	#	echo $source."\r\n".$files_array['file'];
 			$remove_file = $files_array['id'];
+			echo $source."\r\n";
 			$return  = file($source);
+			echo $return[0]."\r\n";
 			$count = count($return);
 			$testing_return = explode("|",$return[0]);
 			$txt_or_vs1_count = count($testing_return);
@@ -234,13 +239,14 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 					
 					logd("Start Import of :(".$files_array['id'].") ".$files_array['file'], 2, $details,  $GLOBALS['log_level']); //write the details array to the log if the level is 2 /this one is hard coded, beuase i wanted to show an example.
 					verbosed("Start Import of : (".$files_array['id'].") ".$files_array['file'], $verbose, $screen_output, 1); //default verbise is 0 or none, or STFU, IE dont do shit.
-					echo $files_array['id']."\r\n";
+					
 					try
 					{
+					    echo $files_array['id']."\r\n".$source."\r\n";
 					    $tmp = $database->import_vs1($source, $files_array['id'], $files_array['user'], $files_array['notes'], $files_array['title'], $verbose, $screen_output, $files_array['date']);
 					}catch (Exception $e)
 					{
-					    die("OH NO! THERE WAS AN ERROR! CHECK THE CASTLE!");
+					    die("OH NO! THERE WAS AN ERROR! CHECK THE CASTLE!\r\n".$e);
 					}
 					$temp = $files_array['file']." | ".$tmp['aps']." - ".$tmp['gps'];
 					logd("Finished Import of : ".$files_array['file'] , 2 , $temp ,  $GLOBALS['log_level']); //same thing here, hard coded as log_lev 2
