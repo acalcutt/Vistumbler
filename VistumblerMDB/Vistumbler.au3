@@ -701,7 +701,8 @@ Dim $Text_SavedAs = IniRead($DefaultLanguagePath, 'GuiText', 'SavedAs', 'Saved A
 Dim $Text_Overwrite = IniRead($DefaultLanguagePath, 'GuiText', 'Overwrite', 'Overwrite')
 Dim $Text_InstallNetcommOCX = IniRead($DefaultLanguagePath, 'GuiText', 'InstallNetcommOCX', 'Install Netcomm OCX')
 Dim $Text_NoFileSaved = IniRead($DefaultLanguagePath, 'GuiText', 'NoFileSaved', 'No file has been saved')
-Dim $Text_NoApsWithGps = IniRead($DefaultLanguagePath, 'GuiText', 'NoApsWithGps', 'No Access Points found with GPS coordinates.')
+Dim $Text_NoApsWithGps = IniRead($DefaultLanguagePath, 'GuiText', 'NoApsWithGps', 'No access points found with gps coordinates.')
+Dim $Text_NoAps = IniRead($DefaultLanguagePath, 'GuiText', 'NoAps', 'No access points.')
 Dim $Text_MacExistsOverwriteIt = IniRead($DefaultLanguagePath, 'GuiText', 'MacExistsOverwriteIt', 'A entry for this mac address already exists. would you like to overwrite it?')
 Dim $Text_SavingLine = IniRead($DefaultLanguagePath, 'GuiText', 'SavingLine', 'Saving Line')
 Dim $Text_DisplayDebug = IniRead($DefaultLanguagePath, 'GuiText', 'DisplayDebug', 'Debug - Display Functions')
@@ -4720,7 +4721,7 @@ Func _ExportDetailedDataGui($Filter = 0);Save VS1 GUI
 		If $saved = 1 Then
 			MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $filename & '"')
 		Else
-			MsgBox(0, $Text_Error, "No access points")
+			MsgBox(0, $Text_Error, $Text_NoAps & ' ' & $Text_NoFileSaved)
 		EndIf
 		GUICtrlSetData($msgdisplay, '')
 		$newdata = 0
@@ -4812,121 +4813,6 @@ Func _ExportVS1($savefile, $Filter = 0);writes vistumbler detailed data to a txt
 	EndIf
 EndFunc   ;==>_ExportVS1
 
-#cs - TXT Export was removed and is no longer needed
-	Func _ExportData();Saves data to a selected file
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportData()') ;#Debug Display
-	_ExportDataGui(0)
-	EndFunc   ;==>_ExportData
-	
-	Func _ExportFilteredData();Saves data to a selected file
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportFilteredData()') ;#Debug Display
-	_ExportDataGui(1)
-	EndFunc   ;==>_ExportFilteredData
-	
-	Func _ExportDataGui($Filter = 0);Saves data to a selected file
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDataGui()') ;#Debug Display
-	DirCreate($SaveDir)
-	$file = FileSaveDialog($Text_SaveAsTXT, $SaveDir, 'Text (*.txt)', '', $ldatetimestamp & '.txt')
-	If @error <> 1 Then
-	If StringInStr($file, '.txt') = 0 Then $file = $file & '.txt'
-	FileDelete($file)
-	_ExportToTXT($file, $Filter)
-	MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $file & '"')
-	GUICtrlSetData($msgdisplay, '')
-	$newdata = 0
-	EndIf
-	EndFunc   ;==>_ExportDataGui
-	
-	
-	Func _ExportToTXT($savefile, $Filter = 0);writes vistumbler data to a txt file
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToTXT()') ;#Debug Display
-	$file = "# Vistumbler TXT - Export Version 2" & @CRLF & _
-	"# Created By: " & $Script_Name & ' ' & $version & @CRLF & _
-	"# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
-	"# SSID|BSSID|MANUFACTURER|Highest Signal w/GPS|Authetication|Encryption|Radio Type|Channel|Latitude|Longitude|Basic Transfer Rates|Other Transfer Rates|First Seen(UTC)|Last Seen(UTC)|Network Type|Label|Signal History" & @CRLF & _
-	"# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
-	If $Filter = 1 Then
-	$query = $AddQuery
-	Else
-	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
-	EndIf
-	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundApMatch = UBound($ApMatchArray) - 1
-	If $FoundApMatch > 0 Then
-	For $exp = 1 To $FoundApMatch
-	GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
-	$ExpApID = $ApMatchArray[$exp][1]
-	$ExpSSID = $ApMatchArray[$exp][2]
-	$ExpBSSID = $ApMatchArray[$exp][3]
-	$ExpNET = $ApMatchArray[$exp][4]
-	$ExpRAD = $ApMatchArray[$exp][5]
-	$ExpCHAN = $ApMatchArray[$exp][6]
-	$ExpAUTH = $ApMatchArray[$exp][7]
-	$ExpENCR = $ApMatchArray[$exp][8]
-	$ExpBTX = $ApMatchArray[$exp][10]
-	$ExpOTX = $ApMatchArray[$exp][11]
-	$ExpMANU = $ApMatchArray[$exp][12]
-	$ExpLAB = $ApMatchArray[$exp][13]
-	$ExpHighGpsID = $ApMatchArray[$exp][14]
-	$ExpFirstID = $ApMatchArray[$exp][15]
-	$ExpLastID = $ApMatchArray[$exp][16]
-	
-	;Get High GPS Signal
-	If $ExpHighGpsID = 0 Then
-	$ExpHighGpsSig = 0
-	$ExpHighGpsLat = 'N 0000.0000'
-	$ExpHighGpsLon = 'E 0000.0000'
-	Else
-	$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpHighGpsID & "'"
-	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$ExpHighGpsSig = $HistMatchArray[1][1]
-	$ExpHighGpsID = $HistMatchArray[1][2]
-	$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ExpHighGpsID & "'"
-	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$ExpHighGpsLat = $GpsMatchArray[1][1]
-	$ExpHighGpsLon = $GpsMatchArray[1][2]
-	EndIf
-	
-	;Get First Found Time From FirstHistID
-	$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpFirstID & "'"
-	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$ExpFirstGpsId = $HistMatchArray[1][1]
-	$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFirstGpsId & "'"
-	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-	
-	;Get Last Found Time From LastHistID
-	$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
-	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$ExpLastGpsId = $HistMatchArray[1][1]
-	$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsId & "'"
-	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-	
-	;Get Signal History
-	$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpApID & "'"
-	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundHistMatch = UBound($HistMatchArray) - 1
-	For $esh = 1 To $FoundHistMatch
-	If $esh = 1 Then
-	$ExpSigHist = $HistMatchArray[$esh][1]
-	Else
-	$ExpSigHist &= '-' & $HistMatchArray[$esh][1]
-	EndIf
-	Next
-	
-	$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpHighGpsSig & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpHighGpsLat & '|' & $ExpHighGpsLon & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $FirstDateTime & '|' & $LastDateTime & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpSigHist & @CRLF
-	Next
-	$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
-	FileWrite($savefile, $file)
-	FileClose($savefile)
-	Return(1)
-	Else
-	Return(0)
-	EndIf
-	EndFunc   ;==>_ExportToTXT
-#ce
-
 Func _ExportCsvData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvData()') ;#Debug Display
 	_ExportCsvDataGui(0)
@@ -4970,7 +4856,7 @@ Func _ExportCsvDataGui_Ok()
 	If $saved = 1 Then
 		MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $filename & '"')
 	Else
-		MsgBox(0, $Text_Done, "No access points")
+		MsgBox(0, $Text_Error, $Text_NoAps & ' ' & $Text_NoFileSaved)
 	EndIf
 	GUICtrlSetData($msgdisplay, '')
 	$newdata = 0
@@ -5745,87 +5631,6 @@ Func _ImportCSV($CSVfile)
 		$currentline = 1
 		$AddAP = 0
 		$AddGID = 0
-		#cs
-			;Code for huge csv file
-			;Get Total number of lines
-			$totallines = 0
-			While 1
-			FileReadLine($vistumblerfile)
-			If @error = -1 Then ExitLoop
-			$totallines += 1
-			ConsoleWrite($totallines & @CRLF)
-			WEnd
-			;Start Importing File
-			For $Load = 2 To $totallines
-			$linein = FileReadLine($vistumblerfile, $Load);Open Line in file
-			If @error = -1 Then ExitLoop
-			$loadlist = StringSplit($linein, ',');Split Infomation of AP on line
-			If $loadlist[0] = 23 Then
-			$ImpSSID = $loadlist[1]
-			If StringLeft($ImpSSID, 1) = '"' And StringRight($ImpSSID, 1) = '"' Then $ImpSSID = StringTrimLeft(StringTrimRight($ImpSSID, 1), 1)
-			$ImpBSSID = $loadlist[2]
-			$ImpBSSID = StringMid($ImpBSSID, 1, 2) & ":" & StringMid($ImpBSSID, 3, 2) & ":" & StringMid($ImpBSSID, 5, 2) & ":" & StringMid($ImpBSSID, 7, 2) & ":" & StringMid($ImpBSSID, 9, 2) & ":" & StringMid($ImpBSSID, 11, 2)
-			$ImpMANU = $loadlist[3]
-			If StringLeft($ImpMANU, 1) = '"' And StringRight($ImpMANU, 1) = '"' Then $ImpMANU = StringTrimLeft(StringTrimRight($ImpMANU, 1), 1)
-			$ImpSig = $loadlist[4]
-			$ImpAUTH = $loadlist[5]
-			$ImpENCR = $loadlist[6]
-			$ImpRAD = $loadlist[7]
-			$ImpCHAN = $loadlist[8]
-			$ImpBTX = $loadlist[9]
-			$ImpOTX = $loadlist[10]
-			$ImpNET = $loadlist[11]
-			$ImpLAB = $loadlist[12]
-			If StringLeft($ImpLAB, 1) = '"' And StringRight($ImpLAB, 1) = '"' Then $ImpLAB = StringTrimLeft(StringTrimRight($ImpLAB, 1), 1)
-			$ImpLat = _Format_GPS_DDD_to_DMM($loadlist[13], "N", "S")
-			$ImpLon = _Format_GPS_DDD_to_DMM($loadlist[14], "E", "W")
-			$ImpSat = $loadlist[15]
-			$ImpHDOP = $loadlist[16]
-			$ImpAlt = $loadlist[17]
-			$ImpGeo = $loadlist[18]
-			$ImpSpeedKMH = $loadlist[19]
-			$ImpSpeedMPH = $loadlist[20]
-			$ImpTrackAngle = $loadlist[21]
-			$ImpDate = $loadlist[22]
-			$ImpTime = $loadlist[23]
-			
-			$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And NumOfSats = '" & $ImpSat & "' And Date1 = '" & $ImpDate & "' And Time1 = '" & $ImpTime & "'"
-			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundGpsMatch = UBound($GpsMatchArray) - 1
-			If $FoundGpsMatch = 0 Then
-			$AddGID += 1
-			$GPS_ID += 1
-			_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $ImpLat & '|' & $ImpLon & '|' & $ImpSat & '|' & $ImpHDOP & '|' & $ImpAlt & '|' & $ImpGeo & '|' & $ImpSpeedKMH & '|' & $ImpSpeedMPH & '|' & $ImpTrackAngle & '|' & $ImpDate & '|' & $ImpTime)
-			$ImpGID = $GPS_ID
-			ElseIf $FoundGpsMatch = 1 Then
-			$ImpGID = $GpsMatchArray[1][1]
-			EndIf
-			
-			$NewApAdded = _AddApData(0, $ImpGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpSig)
-			If $NewApAdded <> 0 Then $AddAP += 1
-			
-			If TimerDiff($UpdateTimer) > 600 Or ($currentline = $totallines) Then
-			$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
-			$percent = ($currentline / $totallines) * 100
-			GUICtrlSetData($progressbar, $percent)
-			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
-			GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
-			GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
-			GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline & "/" & $totallines)
-			GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($currentline / $min, 1), 1))
-			$UpdateTimer = TimerInit()
-			EndIf
-			If TimerDiff($MemReleaseTimer) > 10000 Then
-			_ReduceMemory()
-			$MemReleaseTimer = TimerInit()
-			EndIf
-			$currentline += 1
-			$closebtn = _GUICtrlButton_GetState($NsCancel)
-			If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
-			EndIf
-			Next
-		#ce
 		;Start Importing File
 		$CSVArray = _ParseCSV($CSVfile, ',|', '"')
 		$iSize = UBound($CSVArray) - 1
@@ -5992,7 +5797,6 @@ Func _ImportNS1($NS1file)
 	If $netstumblerfile <> -1 Then
 		;Get Total number of lines
 		$totallines = 0
-
 		While 1
 			FileReadLine($netstumblerfile)
 			If @error = -1 Then ExitLoop
@@ -6002,8 +5806,6 @@ Func _ImportNS1($NS1file)
 		$currentline = 1
 		$AddAP = 0
 		$AddGID = 0
-		;$Loading = 1
-
 		For $Load = 1 To $totallines
 			$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
 			If @error = -1 Then ExitLoop
@@ -6519,6 +6321,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'InstallNetcommOCX', $Text_InstallNetcommOCX)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoFileSaved', $Text_NoFileSaved)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoApsWithGps', $Text_NoApsWithGps)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoAps', $Text_NoAps)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'MacExistsOverwriteIt', $Text_MacExistsOverwriteIt)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingLine', $Text_SavingLine)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'DisplayDebug', $Text_DisplayDebug)
@@ -7075,7 +6878,6 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 	Else
 		Return (0)
 	EndIf
-	;EndIf
 EndFunc   ;==>SaveKML
 
 Func _KmlSignalMapSelectedAP()
@@ -7595,7 +7397,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 			FileClose($savefile)
 			MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $filename & '"')
 		Else
-			MsgBox(0, $Text_Done, 'No access points.' & ' ' & $Text_NoFileSaved)
+			MsgBox(0, $Text_Done, $Text_NoAps & ' ' & $Text_NoFileSaved)
 		EndIf
 	Else
 		MsgBox(0, $Text_Error, $Text_NoFileSaved)
@@ -8558,7 +8360,8 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Overwrite = IniRead($DefaultLanguagePath, 'GuiText', 'Overwrite', 'Overwrite')
 		$Text_InstallNetcommOCX = IniRead($DefaultLanguagePath, 'GuiText', 'InstallNetcommOCX', 'Install Netcomm OCX')
 		$Text_NoFileSaved = IniRead($DefaultLanguagePath, 'GuiText', 'NoFileSaved', 'No file has been saved')
-		$Text_NoApsWithGps = IniRead($DefaultLanguagePath, 'GuiText', 'NoApsWithGps', 'No Access Points found with GPS coordinates.')
+		$Text_NoApsWithGps = IniRead($DefaultLanguagePath, 'GuiText', 'NoApsWithGps', 'No access points found with gps coordinates.')
+		$Text_NoAps = IniRead($DefaultLanguagePath, 'GuiText', 'NoAps', 'No access points.')
 		$Text_MacExistsOverwriteIt = IniRead($DefaultLanguagePath, 'GuiText', 'MacExistsOverwriteIt', 'A entry for this mac address already exists. would you like to overwrite it?')
 		$Text_SavingLine = IniRead($DefaultLanguagePath, 'GuiText', 'SavingLine', 'Saving Line')
 		$Text_DisplayDebug = IniRead($DefaultLanguagePath, 'GuiText', 'DisplayDebug', 'Debug - Display Functions')
