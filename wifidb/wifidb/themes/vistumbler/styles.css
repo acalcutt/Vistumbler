@@ -114,6 +114,12 @@ a:visited {
 	color: #002448;
 	font-weight: bold;
 }
+.annunc_text {
+	text-align: center;
+	color: #FFFFFF;
+	background-color: #003366;
+	font-weight: bold;
+}
 .cell_color_centered {
 	background-color: #6388c7;
 	text-align: center;
@@ -282,23 +288,4 @@ table.asscotable {
 }
 .light {
 	background-color: #BAD0E2;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-
-.popupCell {
-   background-color: #BAD0E2;
-
-}
-
-.popupCell:hover {
-  background-color: #85ABCB;
-}
-
-.popupItem {
-  text-decoration: none;
-  font-size: 1.2em;
-  color:#112233;
 }
