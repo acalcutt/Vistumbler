@@ -40,15 +40,16 @@ $lastap_array = mysql_fetch_array($result4);
 $lastap_id = $lastap_array['id'];
 #echo $lastap_id;
 $lastap_ssid = $lastap_array['ssid'];
-list($ssid_ptb) = make_ssid($newArray["ssid"]);
+list($ssid_ptb) = make_ssid($lastap_array['ssid']);
 $table = $ssid_ptb.'-'.$lastap_array["mac"].'-'.$lastap_array["sectype"].'-'.$lastap_array["radio"].'-'.$lastap_array['chan'].$gps_ext;
-$sql_gps = "select * from `$db_st`.`$table` where `lat` NOT LIKE 'N 0.0000' limit 1";
+$sql_gps = "select * from `$db_st`.`$table` where `lat` NOT LIKE '%0.0000' limit 1";
 #echo $sql_gps;
 $resultgps = mysql_query($sql_gps, $conn);
 $lastgps = @mysql_fetch_array($resultgps);
-#var_dump($lastgps);
+
 $lat_check = explode(" ", $lastgps['lat']);
 $lat_c = $lat_check[1]+0;
+#var_dump($lat_c);
 if($lat_c != "0"){$gps_yes = 1;}else{$gps_yes = 0;}
 $lastuser = @mysql_fetch_array($result6);
 if(!$result0 OR !$result1 OR !$result2 OR !$result3 OR !$result4 OR !$result5 or !$result6)

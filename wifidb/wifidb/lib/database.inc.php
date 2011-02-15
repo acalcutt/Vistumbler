@@ -1912,15 +1912,15 @@ class database
 	    require $GLOBALS['wdb_install']."/lib/config.inc.php";
 	    require $GLOBALS['wifidb_tools'].'/daemon/config.inc.php';
 
-	    $conn			= 	$GLOBALS['conn'];
-	    $db			= 	$GLOBALS['db'];
-	    $db_st			= 	$GLOBALS['db_st'];
-	    $wtable			=	$GLOBALS['wtable'];
-	    $users_t		=	$GLOBALS['users_t'];
-	    $files_tmp		=	$GLOBALS['files_tmp'];
-	    $gps_ext		=	$GLOBALS['gps_ext'];
-	    $root			= 	$GLOBALS['root'];
-	    $half_path		=	$GLOBALS['half_path'];
+	    $conn	=   $GLOBALS['conn'];
+	    $db		=   $GLOBALS['db'];
+	    $db_st	=   $GLOBALS['db_st'];
+	    $wtable	=   $GLOBALS['wtable'];
+	    $users_t	=   $GLOBALS['users_t'];
+	    $files_tmp	=   $GLOBALS['files_tmp'];
+	    $gps_ext	=   $GLOBALS['gps_ext'];
+	    $root	=   $GLOBALS['root'];
+	    $half_path	=   $GLOBALS['half_path'];
 
 	    $file_exp = explode("/", $source);
 	    $file_exp_seg = count($file_exp);
@@ -1987,7 +1987,7 @@ class database
 	    foreach($return as $ret)
 	    {
 		if ($ret[0] == "#"){continue;}
-		#echo $ret[0]."\r\n";
+		
 		$current_encoding = mb_detect_encoding($ret, 'auto');
 		$retexp = explode("|",$ret);
 		#var_dump($retexp);
@@ -2018,6 +2018,7 @@ class database
 			    }
 			}
 		    }
+		    echo "########################################\r\n";
 		    $SETFLAGTEST = TRUE;
 		    $ret = iconv($current_encoding, 'UTF-8//IGNORE', $ret);
 		    $wifi = explode("|",$ret, 13);
@@ -2028,7 +2029,8 @@ class database
 		    //You cant have any blank data, thats just rude...
 		    if($wifi[0] == ''){$wifi[0]="UNNAMED";}
 		    #$wifi[0] = utf8_encode($wifi[0]);
-		    echo $wifi[0]."\r\n";
+		    #echo $wifi[0]."\r\n";
+		    #var_dump($wifi);
 		    if($wifi[1] == ''){$wifi[1] = "00:00:00:00:00:00";}
 		    if($wifi[5] == ''){$wifi[5] = "0";}
 		    if($wifi[6] == ''){$wifi[6] = "u";}
@@ -2045,16 +2047,18 @@ class database
 		    }
 		    $mac1 = explode(':', $wifi[1]);
 		    $macs = $mac1[0].$mac1[1].$mac1[2].$mac1[3].$mac1[4].$mac1[5]; //the APs table doesnt need :'s in its name, nor does the Pointers table, well it could I just dont want to
-		    $auth	=   htmlentities($wifi[3], ENT_QUOTES);
-		    $encry	=   htmlentities($wifi[4], ENT_QUOTES);
-		    $sectype	=   htmlentities($wifi[5], ENT_QUOTES);
-		    $chan	=   htmlentities($wifi[7], ENT_QUOTES);
+		    $auth	=   mysql_real_escape_string($wifi[3]);
+		    $encry	=   mysql_real_escape_string($wifi[4]);
+		    $sectype	=   mysql_real_escape_string($wifi[5]);
+		    #echo $wifi[5]."\r\n";
+		    #echo $sectype."\r\n";
+		    $chan	=   mysql_real_escape_string($wifi[7]);
 		    $chan	=   $chan+0;
-		    $btx	=   htmlentities($wifi[8], ENT_QUOTES);
-		    $otx	=   htmlentities($wifi[9], ENT_QUOTES);
-		    $nt		=   htmlentities($wifi[10], ENT_QUOTES);
-		    $label	=   htmlentities($wifi[11], ENT_QUOTES);
-		    $san_sig	=   htmlentities($wifi[12], ENT_QUOTES);
+		    $btx	=   mysql_real_escape_string($wifi[8]);
+		    $otx	=   mysql_real_escape_string($wifi[9]);
+		    $nt		=   mysql_real_escape_string($wifi[10]);
+		    $label	=   mysql_real_escape_string($wifi[11]);
+		    $san_sig	=   mysql_real_escape_string($wifi[12]);
 		    $san_sig	=   str_replace("\r\n","",$san_sig);
 		    $signal_exp =   explode("-",$san_sig);
 		    foreach($signal_exp as $key=>$val)
@@ -2096,10 +2100,16 @@ class database
 			{$radios = "n";}
 		    else
 			{$radios = "U";}
-		    $conn = mysql_connect($host, $db_user, $db_pwd);
-		    $result = mysql_query("SELECT * FROM `$db`.`$wtable` WHERE `mac` = '$macs' AND `ssid` = '$ssids' AND `chan` = '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios' LIMIT 1", $conn) or die(mysql_error($conn));
+		    
+		    $pt_sql = "SELECT id,ssid,mac,chan,sectype,auth,encry,radio FROM `$db`.`$wtable` WHERE `mac` = '$macs' AND `ssid` = '$ssids' AND `chan` = '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios' LIMIT 1";
+		    #echo $pt_sql."\r\n";
+
+		    $result = mysql_query($pt_sql, $conn) or die(mysql_error($conn));
 		    $rows = mysql_num_rows($result);
 		    $newArray = mysql_fetch_array($result);
+		    
+		    var_dump($newArray);
+
 		    $APid = $newArray['id'];
 		    list($ssid_pt_S) = make_ssid($newArray['ssid']);
 		    $mac_pt = $newArray['mac'];
@@ -2108,19 +2118,10 @@ class database
 		    $chan_pt = $newArray['chan'];
 		    $auth_pt = $newArray['auth'];
 		    $encry_pt = $newArray['encry'];
-		    if($auth == "Offen")
-		    {
-			if($encry == "Keine")
-			{
-			    $sectype = "1";
-			}
-			elseif($encry == "WEP")
-			{
-			    $sectype = "2";
-			}
-		    }
+		    
 		    //create table name to select from, insert into, or create
 		    $table_ptb = $ssid_pt_S.'-'.$mac_pt.'-'.$sectype_pt.'-'.$radio_pt.'-'.$chan_pt;
+		    #echo $table_ptb."\r\n";
 		    $table = $ssid_S.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
 		    $gps_table = $table.$gps_ext;
 		    $table_ptb = iconv($current_encoding, 'UTF-8//IGNORE', $table_ptb);
@@ -2779,20 +2780,16 @@ class database
 			{$radio = "802.11n";}
 		else
 			{$radio = "802.11u";}
-                #echo $newArray["ssid"]."<BR>";
 		list($ssid_ptb) = make_ssid($newArray["ssid"]);
 		$table		=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
 		$table_gps	=	$table.$gps_ext;
 		$sql_gps = "select * from `$db_st`.`$table_gps` where `lat` NOT LIKE 'N 0.0000' limit 1";
-		#echo $sql_gps;
 		$resultgps = mysql_query($sql_gps, $conn);
 		$lastgps = @mysql_fetch_array($resultgps);
-		#var_dump($lastgps);
 		$lat_check = explode(" ", $lastgps['lat']);
 		$lat_c = $lat_check[1]+0;
 		if($lat_c != "0"){$gps_yes = 1;}else{$gps_yes = 0;}
-
-		#echo $table."<BR>";		?>
+		?>
 				<SCRIPT LANGUAGE="JavaScript">
 				// Row Hide function.
 				// by tcadieux
@@ -3029,12 +3026,26 @@ class database
 		$users = array();
 		$userarray = array();
 		?>
+			<SCRIPT LANGUAGE="JavaScript">
+			// Row Hide function.
+			// by tcadieux
+			function expandcontract(tbodyid,ClickIcon)
+			{
+				if (document.getElementById(ClickIcon).innerHTML == "+")
+				{
+					document.getElementById(tbodyid).style.display = "";
+					document.getElementById(ClickIcon).innerHTML = "-";
+				}else{
+					document.getElementById(tbodyid).style.display = "none";
+					document.getElementById(ClickIcon).innerHTML = "+";
+				}
+			}
+			</SCRIPT>
 			<h1>Stats For: All Users</h1>
 			<table border="1" align="center">
 			<tr class="style4">
 			<th>ID</th><th>UserName</th><th>Title</th><th>Import Notes</th><th>Number of APs</th><th>Imported On</th></tr><tr>
 		<?php
-		
 		
 		$sql = "SELECT * FROM `$db`.`$users_t` ORDER BY username ASC";
 		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
@@ -3056,57 +3067,57 @@ class database
 		$row_color = 0;
 		foreach($users as $user)
 		{
-			if($row_color == 1)
-			{$row_color = 0; $color = "light";}
-			else{$row_color = 1; $color = "dark";}
-			
-			$sql = "SELECT * FROM `$db`.`$users_t` WHERE `username`='$user'";
-			$result = mysql_query($sql, $conn) or die(mysql_error($conn));
-			while ($user_array = mysql_fetch_array($result))
+		    if($row_color == 1)
+		    {$row_color = 0; $color = "light";}
+		    else{$row_color = 1; $color = "dark";}
+		    $tablerowid = 0;
+		    $sql = "SELECT * FROM `$db`.`$users_t` WHERE `username`='$user'";
+		    $result = mysql_query($sql, $conn) or die(mysql_error($conn));
+		    while ($user_array = mysql_fetch_array($result))
+		    {
+			$tablerowid++;
+			$id = $user_array['id'];
+			$username = $user_array['username'];
+			if($pre_user === $username or $pre_user === ""){$n++;}else{$n=0;}
+			if ($user_array['title'] === "" or $user_array['title'] === " "){ $user_array['title']="UNTITLED";}
+			if ($user_array['date'] === ""){ $user_array['date']="No date, hmm..";}
+			$search = array('\n','\r','\n\r');
+			$user_array['notes'] = str_replace($search,"", $user_array['notes']);
+			if ($user_array['notes'] == ""){ $user_array['notes']="No Notes, hmm..";}
+			$notes = $user_array['notes'];
+			$points = explode("-",$user_array['points']);
+			$pc = count($points);
+			if($user_array['points'] === ""){continue;}
+			if($pre_user !== $username)
 			{
-				$id	=	$user_array['id'];
-				$username = $user_array['username'];
-				if($pre_user === $username or $pre_user === ""){$n++;}else{$n=0;}
-				if ($user_array['title'] === "" or $user_array['title'] === " "){ $user_array['title']="UNTITLED";}
-				if ($user_array['date'] === ""){ $user_array['date']="No date, hmm..";}
-				$search = array('\n','\r','\n\r');
-				$user_array['notes'] = str_replace($search,"", $user_array['notes']);
-				if ($user_array['notes'] == ""){ $user_array['notes']="No Notes, hmm..";}
-				$notes = $user_array['notes'];
-				$points = explode("-",$user_array['points']);
-				$pc = count($points);
-				if($user_array['points'] === ""){continue;}
-				if($pre_user !== $username)
-				{
-					?>
-					<tr >
-						<td class="<?php echo $color;?>"><?php echo $user_array['id'];?></td>
-						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $username;?>"><?php echo $username;?></a></td>
-						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>"><?php echo $user_array['title'];?></a></td>
-						<td class="<?php echo $color;?>"><?php echo wordwrap($notes, 56, "<br />\n"); ?></td>
-						<td class="<?php echo $color;?>"><?php echo $pc;?></td>
-						<td class="<?php echo $color;?>"><?php echo $user_array['date'];?></td>
-					</tr>
-					<?php
-				}
-				else
-				{
-					?>
-					<tr>
-						<td></td>
-						<td></td>
-						<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>"><?php echo $user_array['title'];?></a></td>
-						<td class="<?php echo $color;?>"><?php echo wordwrap($notes, 56, "<br />\n"); ?></td>
-						<td class="<?php echo $color;?>"><?php echo $pc;?></td>
-						<td class="<?php echo $color;?>"><?php echo $user_array['date'];?></td>
-					</tr>
-					<?php
-				}
-				$pre_user = $username;
+			    ?>
+			    <tr >
+				<td class="<?php echo $color;?>"><?php echo $user_array['id'];?></td>
+				<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=alluserlists&user=<?php echo $username;?>"><?php echo $username;?></a></td>
+				<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>"><?php echo $user_array['title'];?></a></td>
+				<td class="<?php echo $color;?>"><?php echo wordwrap($notes, 56, "<br />\n"); ?></td>
+				<td class="<?php echo $color;?>"><?php echo $pc;?></td>
+				<td class="<?php echo $color;?>"><?php echo $user_array['date'];?></td>
+			    </tr>
+			    <?php
+			}else
+			{
+			    ?>
+			    <tr>
+				<td></td>
+				<td></td>
+				<td class="<?php echo $color;?>"><a class="links" href="userstats.php?func=useraplist&row=<?php echo $user_array["id"];?>"><?php echo $user_array['title'];?></a></td>
+				<td class="<?php echo $color;?>"><?php echo wordwrap($notes, 56, "<br />\n"); ?></td>
+				<td class="<?php echo $color;?>"><?php echo $pc;?></td>
+				<td class="<?php echo $color;?>"><?php echo $user_array['date'];?></td>
+			    </tr>
+			    <?php
 			}
-			?>
-			<tr></tr>
-			<?php
+			$pre_user = $username;
+		    }
+		    ?>
+		    <tr></tr>
+		    <?php
 		}
 		
 		?>
@@ -6237,7 +6248,6 @@ class daemon
 					$mem = $match[0][0];
 					
 					preg_match_all("/(php.*)/", $start, $matc);
-					var_dump($matc);
 					$CMD = $matc[0][0];
 					
 					preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);

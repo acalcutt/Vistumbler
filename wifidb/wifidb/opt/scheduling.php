@@ -257,7 +257,7 @@ if(is_string($func))
 			include $GLOBALS['wifidb_tools']."/daemon/config.inc.php";
 			echo '<meta http-equiv="refresh" content="'.$refresh.'"><table border="1" width="90%"><tr class="style4"><th colspan="4">Scheduled Imports</th></tr>';
 			mysql_select_db($db,$conn);
-			$sql = "SELECT * FROM `$db`.`settings` WHERE `table` LIKE 'files'";
+			$sql = "SELECT * FROM `$db`.`settings` WHERE `id` = '1'";
 			$result = mysql_query($sql, $conn) or die(mysql_error());
 			$file_array = mysql_fetch_array($result);		
 			?>
