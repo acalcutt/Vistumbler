@@ -2101,14 +2101,20 @@ class database
 		    else
 			{$radios = "U";}
 		    
-		    $pt_sql = "SELECT id,ssid,mac,chan,sectype,auth,encry,radio FROM `$db`.`$wtable` WHERE `mac` = '$macs' AND `ssid` = '$ssids' AND `chan` = '$chan' AND `sectype` LIKE '$sectype' AND `radio` LIKE '$radios' LIMIT 1";
-		    #echo $pt_sql."\r\n";
+		    $pt_sql = "SELECT id,ssid,mac,chan,sectype,auth,encry,radio FROM 
+			`$db`.`$wtable`
+			WHERE `mac` = '$macs'
+			AND `ssid` = '$ssids' collate utf8_bin
+			AND `chan` = '$chan'
+			AND `sectype` = '$sectype'
+			AND `radio` = '$radios' LIMIT 1";
+		    echo $pt_sql."\r\n";
 
 		    $result = mysql_query($pt_sql, $conn) or die(mysql_error($conn));
 		    $rows = mysql_num_rows($result);
 		    $newArray = mysql_fetch_array($result);
 		    
-		    var_dump($newArray);
+		    var_dump($newArray['id']);
 
 		    $APid = $newArray['id'];
 		    list($ssid_pt_S) = make_ssid($newArray['ssid']);
@@ -2121,12 +2127,13 @@ class database
 		    
 		    //create table name to select from, insert into, or create
 		    $table_ptb = $ssid_pt_S.'-'.$mac_pt.'-'.$sectype_pt.'-'.$radio_pt.'-'.$chan_pt;
-		    #echo $table_ptb."\r\n";
+		    echo $table_ptb."\r\n";
 		    $table = $ssid_S.'-'.$macs.'-'.$sectype.'-'.$radios.'-'.$chan;
+		    echo $table."\r\n";
 		    $gps_table = $table.$gps_ext;
 		    $table_ptb = iconv($current_encoding, 'UTF-8//IGNORE', $table_ptb);
 		    if(!isset($table_ptb)){$table_ptb="";}
-		    if($table == $table_ptb)
+		    if(!strcmp($table,$table_ptb))
 		    {
 			#################
 			##  UPDATE AP  ##
@@ -2159,6 +2166,7 @@ class database
 			$sql_multi = array();
 			$signals = array();
 			$NNN = 0;
+			$r=0;
 			$sig_counting = count($signal_exp)-1;
 			foreach($signal_exp as $key=>$exp)
 			{
@@ -2198,12 +2206,23 @@ class database
 				#echo $sql_multi[$N]."\r\n";
 				#echo $signals[$N]."\r\n";
 			    }
-			    if($verbose == 1 && $out == "CLI"){echo ".";}
+			    if($verbose == 1 && $out == "CLI")
+			    {
+				if($r===0){echo "|\r";}
+				if($r===10){echo "/\r";}
+				if($r===20){echo "-\r";}
+				if($r===30){echo "|\r";}
+				if($r===40){echo "/\r";}
+				if($r===50){echo "-\r";}
+				if($r===60){echo "\\\r";$r=0;}
+				$r++;
+			    }
 			    $gps_id++;
 			    $N++;
 			}
 			unset($gps_id);
-			if($verbose == 1 && $out == "CLI"){echo "\n";}
+			if($verbose == 1 && $out == "CLI"){echo " \n";}
+			echo count($signals)."\r\n";
 			if($out=="HTML")
 			{
 			    $DB_COUNT = count($db_gps);
@@ -2356,6 +2375,7 @@ class database
 			$imported++;
 			$gps_id = 1;
 			$N=0;
+			$r=0;
 			$prev='';
 			$sql_multi = array();
 			$signal_exp = explode("-",$san_sig);
@@ -2398,11 +2418,22 @@ class database
 				#echo $sql_multi[$N]."\r\n";
 				#echo $signals[$N]."\r\n";
 			    }
-			    if($verbose == 1 && $out == "CLI"){echo ".";}
+			    if($verbose == 1 && $out == "CLI")
+			    {
+				if($r===0){echo "|\r";}
+				if($r===10){echo "/\r";}
+				if($r===20){echo "-\r";}
+				if($r===30){echo "|\r";}
+				if($r===40){echo "/\r";}
+				if($r===50){echo "-\r";}
+				if($r===60){echo "\\\r";$r=0;}
+				$r++;
+			    }
 			    $gps_id++;
 			    $N++;
 			}
-			if($verbose == 1 && $out == "CLI"){echo "\n";}
+			if($verbose == 1 && $out == "CLI"){echo " \n";}
+			echo count($signals)."\r\n";
 			if($out == "HTML")
 			{
 			    ?>
