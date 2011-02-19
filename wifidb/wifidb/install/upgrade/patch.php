@@ -1,4 +1,6 @@
 <?php
+global $screen_output;
+$screen_output = "CLI";
 include('../../lib/database.inc.php');
 pageheader("Upgrade Page", "detailed", 1);
 

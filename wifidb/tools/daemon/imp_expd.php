@@ -124,7 +124,8 @@ var_dump($wdb_install);
 echo $daemon_console_log."\r\n";
 $daemon_console_log = $daemon_console_log.'/imp_expd.log';
 echo $daemon_console_log."\r\n";
-while(1) //while my pid file is still in the /var/run/ folder i will still run, this is for the init.d script or crash override
+mysql_query("SET NAMES 'utf8'", $conn);
+while(1)
 {
     $D_SQL = "SELECT * FROM `$db`.`$settings_tb` WHERE `table` = 'daemon_state'";
     $Dresult = mysql_query($D_SQL, $conn);
@@ -181,7 +182,7 @@ while(1) //while my pid file is still in the /var/run/ folder i will still run, 
 			
 			$file_src = explode(".",$files_array['file']);
 			$file_type = strtolower($file_src[1]);
-			if($file_type == "db3" or $file_type == "txt" or $file_type == "tmp")
+			if($file_type == "db3" or $file_type == "txt")
 			{
 				verbosed("This file needs to be converted to VS1 first. Please wait while the computer does the work for you.", $verbose, $screen_output, 1);
 				$source = $database->convert_vs1($source);

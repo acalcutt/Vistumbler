@@ -67,7 +67,7 @@ if($_POST['line']==='line')
 	
 	$graphs->wifigraphline($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $bgc, $linec, $text );
 	
-	echo 'You can find your Wifi Graph here -> <a class="links" href="../out/graph/'.$name.'v.png">'.$name.'v.png</a>';
+	echo 'You can find your Wifi Graph here -> <a class="links" href="'.$GLOBALS['wifidb_install'].'/out/graph/'.$name.'v.png">'.$name.'v.png</a>';
 
 }else
 {
@@ -117,7 +117,7 @@ if($_POST['line']==='line')
 	
 	$graphs->wifigraphbar($ssid, $mac, $man, $auth, $encry, $radio, $chan, $lat, $long, $btx, $otx, $fa, $lu, $nt, $label, $sig, $name, $bgc, $linec, $text);
 
-	echo 'You can find your Wifi Graph here -> <a class="links" href="../out/graph/'.$name.'.png">'.$name.'.png</a>';
+	echo 'You can find your Wifi Graph here -> <a class="links" href="'.$GLOBALS['wifidb_install'].'/out/graph/'.$name.'.png">'.$name.'.png</a>';
 
 }
 footer($_SERVER['SCRIPT_FILENAME']);

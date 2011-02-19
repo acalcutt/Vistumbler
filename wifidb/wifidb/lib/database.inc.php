@@ -1980,9 +1980,6 @@ class database
 		    }
 		}
 	    }
-	    $user_row_result = mysql_query("SELECT `id` FROM `$db`.`$users_t` ORDER BY `id` DESC LIMIT 1", $conn);
-	    $user_row_array = mysql_fetch_array($user_row_result);
-	    $user_row_id = $user_row_array['id'];  //STILL NEED TO IMPLEMENT THIS, ONLY JUST STARTED
 
 	    foreach($return as $ret)
 	    {
@@ -2023,9 +2020,9 @@ class database
 		    $ret = iconv($current_encoding, 'UTF-8//IGNORE', $ret);
 		    $wifi = explode("|",$ret, 13);
 		    if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
-		    $dbsize = mysql_query("SELECT `size` FROM `$db`.`settings` WHERE `id` = '2'", $GLOBALS['conn']);
+		    $dbsize = mysql_query("SELECT `id` FROM `$db`.`$wtable` order by id desc limit 1", $GLOBALS['conn']);
 		    $size1 = mysql_fetch_array($dbsize);
-		    $size = ($size1['size']+0)+1;
+		    $size = ($size1['id']+0)+1;
 		    //You cant have any blank data, thats just rude...
 		    if($wifi[0] == ''){$wifi[0]="UNNAMED";}
 		    #$wifi[0] = utf8_encode($wifi[0]);
@@ -2327,7 +2324,7 @@ class database
 			$sqlp = "INSERT INTO `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '', '$ssids', '$macs','$chan', '$radios', '$auth', '$encry', '$sectype')";
 			if (mysql_query($sqlp, $conn))
 			{
-			    $user_aps[$user_n]="0,".$size.":1";
+			    $user_aps[$user_n]="0,".mysql_insert_id($conn).":1";
 			    $sqlup = "UPDATE `$db`.`$settings_tb` SET `size` = '$size' WHERE `table` = 'wifi0' LIMIT 1;";
 			    if (mysql_query($sqlup, $conn))
 			    {

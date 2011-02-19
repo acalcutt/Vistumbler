@@ -244,7 +244,7 @@ class graphs
 			$nn++;
 			$count--;
 		}
-		$name='../out/graph/'.$date.'v.png';
+		$name= $GLOBALS['wifidb_install'].'/out/graph/'.$date.'v.png';
 		echo '<h1>'.$ssid.'</h1><br>';
 		echo '<img src="'.$name.'"><br />';
 		ImagePNG($img, $name);
@@ -371,7 +371,7 @@ class graphs
 			$n++;
 			$count--;
 		}
-		$name='../out/graph/'.$date.'.png';
+		$name = $GLOBALS['wifidb_install'].'/out/graph/'.$date.'.png';
 		echo '<h1>'.$ssid.'</h1><br>';
 		echo '<img src="'.$name.'"><br />';
 		ImagePNG($img, $name);
