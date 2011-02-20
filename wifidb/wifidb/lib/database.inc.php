@@ -6,64 +6,63 @@
 global $ver, $full_path, $half_path, $dim, $theme, $UPATH;
 $dim = "/";
 $ver = array(
-			"wifidb"			=>	" *Alpha* 0.20 Build 2 ",
-			"codename"			=>	"Peabody",
-			"Last_Core_Edit" 	=> 	"2010-Nov-1",
-			"database"			=>	array(  
-										"import_vs1"		=>	"1.7.2", 
-										"apfetch"			=>	"2.7.0",
-										"check_gps_array"	=>	"1.2",
-										"all_users"			=>	"1.3",
-										"users_lists"		=>	"1.3",
-										"user_ap_list"		=>	"1.3",
-										"all_users_ap"		=>	"1.3",
-										"exp_kml"			=>	"3.6.0",
-										"exp_vs1"			=>	"1.1.0",
-										"exp_gpx"			=>	"1.0.0",
-										"convert_dm_dd"		=>	"1.3.1",
-										"convert_dd_dm"		=>	"1.3.1",
-										"convert_vs1"		=>	"1.2",
-										"manufactures"		=>	"1.0",
-										"gen_gps"			=>	"1.0",
-										"exp_newest_kml"	=>	"1.0",
-										"table_exists"		=>	"1.0"
-										),
-			"Daemon"			=>	array(
-										"daemon_kml"		=>	"1.1",
-										"getdaemonstats"	=>	"1.1",
-										"getdbdaemonstats"	=>	"1.1",
-										"getperfdaemonstats"	=>	"1.1",
-										"getgeonamestats"		=>	"1.1",
-										"daemon_full_db_exp"	=>	"1.0",
-										"daemon_daily_db_exp"	=>	"1.0"
-										),
-			"Misc"				=>	array(
-										"breadcrumb"		=>	"1.1",
-										"smart_quotes"		=> 	"1.0",
-										"smart"				=> 	"1.0",
-										"Manufactures-list"	=> 	"2.0",
-										"Languages-List"	=>	"1.0",
-										"make_ssid"			=>	"1.1",
-										"verbosed"			=>	"1.2",
-										"logd"				=>	"1.2",
-										"sql_type_mail_filter" => "1.0",
-										"mail_validation"	=>	"1.0",
-										"mail_users"		=>	"1.0",
-										"dump"				=>	"1.0",
-										"get_set"			=>	"1.0",
-										"getTZ"				=>	"1.0",
-										"parseArgs"			=>	"1.0",
-										"tar_file"			=>	"1.1",
-										"my_caches"			=>	"1.0",
-										"login_bar"			=>	"1.0",
-										"user_panel_bar"	=>	"1.0",
-
-										),
-			"Themes"			=>	array(
-										"pageheader"		=>  "1.2",
-										"footer"			=>	"1.2"
-										),
-			);
+            "wifidb"            =>	" *Alpha* 0.21 Build 1 ",
+            "codename"          =>	"Peabody",
+            "Last_Core_Edit"    => 	"2011-Feb-19",
+            "database"          =>	array(  
+                                    "import_vs1"	=>	"1.8.0", 
+                                    "apfetch"		=>	"2.7.0",
+                                    "check_gps_array"	=>	"1.2",
+                                    "all_users"		=>	"1.3",
+                                    "users_lists"	=>	"1.3",
+                                    "user_ap_list"	=>	"1.3",
+                                    "all_users_ap"	=>	"1.3",
+                                    "exp_kml"		=>	"3.6.0",
+                                    "exp_vs1"		=>	"1.1.0",
+                                    "exp_gpx"		=>	"1.0.0",
+                                    "convert_dm_dd"	=>	"1.3.1",
+                                    "convert_dd_dm"	=>	"1.3.1",
+                                    "convert_vs1"	=>	"1.2",
+                                    "manufactures"	=>	"1.0",
+                                    "gen_gps"		=>	"1.0",
+                                    "exp_newest_kml"	=>	"1.0",
+                                    "table_exists"	=>	"1.0"
+                                    ),
+            "Daemon"	=>	array(
+                                    "daemon_kml"            =>	"1.1",
+                                    "getdaemonstats"        =>	"1.1",
+                                    "getdbdaemonstats"      =>	"1.1",
+                                    "getperfdaemonstats"    =>	"1.1",
+                                    "getgeonamestats"       =>	"1.1",
+                                    "daemon_full_db_exp"    =>	"1.0",
+                                    "daemon_daily_db_exp"   =>	"1.0"
+                                    ),
+            "Misc"		=>	array(
+                                        "breadcrumb"            =>	"1.1",
+                                        "smart_quotes"          => 	"1.0",
+                                        "smart"                 => 	"1.0",
+                                        "Manufactures-list"     => 	"2.0",
+                                        "Languages-List"        =>	"1.0",
+                                        "make_ssid"             =>	"1.1",
+                                        "verbosed"              =>	"1.2",
+                                        "logd"                  =>	"1.2",
+                                        "sql_type_mail_filter"  => "1.0",
+                                        "mail_validation"       =>	"1.0",
+                                        "mail_users"            =>	"1.0",
+                                        "dump"                  =>	"1.0",
+                                        "get_set"               =>	"1.0",
+                                        "getTZ"                 =>	"1.0",
+                                        "parseArgs"             =>	"1.0",
+                                        "tar_file"              =>	"1.1",
+                                        "my_caches"             =>	"1.0",
+                                        "login_bar"             =>	"1.0",
+                                        "user_panel_bar"        =>	"1.0",
+                                        ),
+            "Themes"	=>	array(
+                                        "pageheader"    =>  "1.2",
+                                        "footer"        =>  "1.2"
+                                        ),
+            );
 			
 
 #-------------------------------------------------------------------------------------#
@@ -1118,16 +1117,16 @@ function format_size($size, $round = 2)
 #							make ssid (makes a DB safe, File safe and Unsan versions of an SSID)			 		#
 #=========================================================================================================================#
 
-function make_ssid($ssid_frm_src_or_pnt_tbl = '')
+function make_ssid($ssids = '')
 {
-	if($ssid_frm_src_or_pnt_tbl == ''){$ssid_frm_src_or_pnt_tbl="UNNAMED";}
-	$ssids = $ssid_frm_src_or_pnt_tbl;
+	if($ssids == ''){$ssids="UNNAMED";}
+        $file_safe_ssid = smart_quotes($ssids);
         $ssids = htmlentities($ssids, ENT_QUOTES);
-	$ssid_safe_full_length = mysql_real_escape_string($ssid_frm_src_or_pnt_tbl);
+	$ssid_safe_full_length = mysql_real_escape_string($ssids);
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char.
 	$replace = array('/`/', '/\./');
 	$ssid_table_safe = preg_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
-	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids,);
+	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids, 3=>$file_safe_ssid);
 	return $A;
 }
 
@@ -3577,15 +3576,14 @@ class database
 				while($ap_array = mysql_fetch_array($result))
 				{
 					$man 		= database::manufactures($ap_array['mac']);
-					$id			= $ap_array['id'];
-					$ssid_ptb_  = addslashes($ap_array['ssid']);
-					$ssids_ptb  = str_split($ssid_ptb_,25);
-					$ssid		= smart_quotes($ssids_ptb[0]);
+					$id             = $ap_array['id'];
+					$ssid_ptb_      = $ap_array['ssid'];
+					list($ssid_table, $ssid_safe, $ssids, $ssid_file) = make_ssid($ssid_ptb);
 					$mac		= $ap_array['mac'];
 					$sectype	= $ap_array['sectype'];
 					$radio		= $ap_array['radio'];
 					$chan		= $ap_array['chan'];
-					$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
+					$table = $ssid_table.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
 					$table_gps = $table.$gps_ext;
 					$sql1 = "SELECT * FROM `$db_st`.`$table`";
 					$result1 = mysql_query($sql1, $conn);
@@ -3676,7 +3674,7 @@ class database
 					$time_last = $gps_table_last["time"];
 					$la = $date_last." ".$time_last;
 					$ssid_name = '';
-					if ($named == 1){$ssid_name = $ssid;}
+					if ($named == 1){$ssid_name = $ssids;}
 					
 					switch($type)
 					{
@@ -4338,18 +4336,19 @@ class database
 				$aparray = mysql_fetch_array($result);
 				$ssid_array = make_ssid($aparray['ssid']);
 				$ssid_t = $ssid_array[0];
-				$ssid_f = $ssid_array[1];
+				$ssid_f = $ssid_array[3];
 				$ssid = $ssid_array[2];
+                                
 				
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$ssid.'\'s Signal History</th></tr>';
-				$ssid_f = preg_replace("/%/","",$ssid_f);
-				$ssid_f = preg_replace("/ /","_",$ssid_f);
-				$temp_kml = '../tmp/'.$ssid_f."-".$aparray['mac']."-".$aparray['sectype']."-".rand().'tmp.kml';
+				$name = $ssid_f."-".$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan']."-".rand();
+                                $name2 = $ssid."-".$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan']."-".rand();
+                                $temp_kml = '../tmp/'.$name.'tmp.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$date=date('Y-m-d_H-i-s');
 
-				$filename = '../tmp/'.$ssid_f.'-'.$aparray['mac'].'-'.$aparray['sectype']."-".rand().'.kmz';
-				$moved  = '../out/kmz/single/'.$ssid_f.'-'.$aparray['mac'].'-'.$aparray['sectype']."-".rand().'.kmz';
+				$filename = '../tmp/'.$name.'tmp.kmz';
+				$moved  = '../out/kmz/single/'.$name.'.kmz';
 				
 				if($filewrite != FALSE)
 				{
@@ -4358,7 +4357,7 @@ class database
 					$table_gps = $table.$gps_ext;
 					
 					$file_data  = ("");
-					$file_data .= ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"".$KML_SOURCE_URL."\">\r\n<!--exp_all_signal--><Document>\r\n<name>".$table."</name>\r\n");
+					$file_data .= ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"".$KML_SOURCE_URL."\">\r\n<!--exp_all_signal--><Document>\r\n<name>".$name2."</name>\r\n");
 					$file_data .= ("<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/open.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 					$file_data .= ("<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure-wep.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");
 					$file_data .= ("<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>http://www.vistumbler.net/images/program-images/secure.png</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n");

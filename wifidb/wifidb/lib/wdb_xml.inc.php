@@ -20,7 +20,9 @@ class WDB_XML
 	######################################################
 	###   http://mysrc.blogspot.com/2007/02/php-xml-to-array-and-backwards.html
 	######################################################
-	function xml2ary(&$string) {
+	function xml2ary(&$string="")
+        {
+            if($string == "") return -1;
 	    $parser = xml_parser_create();
 	    xml_parser_set_option($parser, XML_OPTION_CASE_FOLDING, 0);
 	    xml_parse_into_struct($parser, $string, $vals, $index);

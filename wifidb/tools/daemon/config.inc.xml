@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <dim>DIRECTORY_SEPARATOR</dim>
+    <default_user>WiFiDB</default_user>
+    <default_title>Recovered</default_title>
+    <default_notes>No Notes, its just been recovered that is all...</default_notes>
+    <wifidb_install>/srv/www/virtual/vistumbler.net/wifidb/</wifidb_install>
+    <console_line_limit>30000</console_line_limit>
+    <console_trim_log>1</console_trim_log>
+    <pid_file_loc>/var/run/wifidbd/</pid_file_loc>
+    <daemon_log_folder>/var/log/wifidbd/</daemon_log_folder>
+    <php_install>C:\php\php.exe</php_install>
+    <time_to_check>300</time_to_check>
+    <perf_time_to_check>300</perf_time_to_check>
+    <stats_time_to_check>86400</stats_time_to_check>
+    <log_level>0</log_level>
+    <log_interval>0</log_interval>
+    <verbose>1</verbose>
+    <colors>1</colors>
+    <bad>RED</bad>
+    <good>GREEN</good>
+    <other>YELLOW</other>
+    <debug>0</debug>
+</config>

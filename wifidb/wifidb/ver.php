@@ -20,14 +20,18 @@ pageheader("Version Page");
 			</tr>
 		</table>
 		<BR><H2>Change Log</H2>
-		<table class="light" width="100%" border="2" id="20b2">
-			<TR><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.20 Build 2</td></tr>
-			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2009-Nov-01</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Peabody</td></tr>
+                <table class="light" width="100%" border="2" id="20b2">
+			<TR><td style="border-style: solid; border-width: 1px" height="26">Author: Phillip Ferland</td><td style="border-style: solid; border-width: 1px" height="26">Version: 0.21 Build 1</td></tr>
+			<tr><td style="border-style: solid; border-width: 1px" height="26">Date: 2011-Feb-19</td><td style="border-style: solid; border-width: 1px" height="26">Codename: Peabody</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26">Changes :</td></tr>
 			<tr><td style="border-style: solid; border-width: 1px" height="26" colspan="3">
 				<OL>
-                    <LI>Added the ability for the search page to show the first 15 results on the same page as you type. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=" target="_blank"></a></LI>
-					<LI>Added Temp File cleanup for Daemon KML generation.</LI>
+                                    <LI>Fixed lots of WTF moments in the code, which includes increasing the speed of the imports by, well... alot.</LI>
+                                    <li>Added a globe icon for APs that have GPS, APs that do not have GPS have a greyed out globe.</li>
+                                    <li>Fixed errors with handling UTF8 characters.</li>
+                                    <li>Fixed errors with exporting data for APs with some special characters.</li>
+                                    <LI>Added the ability for the search page to show the first 15 results on the same page as you type. <a href="http://forum.techidiots.net/forum/viewtopic.php?f=49&t=" target="_blank"></a></LI>
+                                    <LI>Added Temp File cleanup for Daemon KML generation.</LI>
 				</OL>
 			</td></tr>
 		</table>
@@ -539,4 +543,19 @@ pageheader("Version Page");
 
 $filename = $_SERVER['SCRIPT_FILENAME'];
 footer($filename);
+#############
+#   _____   #
+#  |_____|  #
+# /      #\ #   
+#(         )#      
+# \_______/ #   
+#  =======  #    
+#  |  _  |  #     
+#  | /_\ |  #        
+#  | |_| |  #         
+#  )     (  #            
+# ========= #
+#############
+//  Gypsy : Tom...I dont get you.
+//  Tom   : Nobody does! I'm the wind, baby!
 ?>
