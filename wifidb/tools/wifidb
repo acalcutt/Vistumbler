@@ -1,6 +1,6 @@
 #!/bin/bash
 # Start/stop WiFiDB server instance
-# WiFiDB v0.20 Build 1.
+# WiFiDB v0.20 Build 2.
 #
 # create as: /etc/init.d/wifidb
 # to activate it, run: chkconfig -add wifidb
@@ -22,7 +22,7 @@ RETVAL=0
 # SCRIPT DEFAULT SETTINGS
 prog="Wifidb Daemons"
 wifidbpath="/opt/wifidb/tools"
-wdbpid="/var/run/wifidb/imp_expd.pid"
+wdbpid="/var/run/wifidbd/imp_expd.pid"
 lockfile="/var/lock/WiFiDB"
 
 start() {
@@ -30,11 +30,11 @@ start() {
     if [ -f $wdbpid ]
     then
 		# failed
-		log_failure_msg "$prog are already running..."
+		log_failure_msg "$prog is already running..."
 		echo
 		RETVAL=2
     else
-        output=`php ${wifidbpath}/rund.php start all`
+        output=`php ${wifidbpath}/rund.php start ied`
         if [ -f $wdbpid ]
         then
 			# success
@@ -54,11 +54,11 @@ start() {
 
 stop() {
     echo $"Stopping $prog: "
-    output=`php ${wifidbpath}/rund.php stop all`
+    output=`php ${wifidbpath}/rund.php stop ied`
 	if [ -f $wdbpid ]
 	then
         # failed
-        log_failure_msg "$wdbpid still exists. $prog were not stopped properly..."
+        log_failure_msg "$wdbpid still exists. $prog was not stopped properly..."
 		echo		
 		RETVAL=1
     else
@@ -81,10 +81,10 @@ status() {
     if [ -f $wdbpid ]
     then
 		echo "$wdbpid file exists."
-		echo "WifiDB are running"
+		echo "WifiDB is running"
     else
         echo "$wdbpid file does not exist"
-		echo "WifiDB are not running"
+		echo "WifiDB is not running"
     fi
 }
 
