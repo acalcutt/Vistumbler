@@ -1120,13 +1120,19 @@ function format_size($size, $round = 2)
 function make_ssid($ssids = '')
 {
 	if($ssids == ''){$ssids="UNNAMED";}
-        $file_safe_ssid = smart_quotes($ssids);
+        
+	$file_safe_ssid = smart_quotes($ssids);
+	$ssidss = $ssids;
         $ssids = htmlentities($ssids, ENT_QUOTES);
+
 	$ssid_safe_full_length = mysql_real_escape_string($ssids);
+
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char.
 	$replace = array('/`/', '/\./');
+
 	$ssid_table_safe = preg_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
-	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids, 3=>$file_safe_ssid);
+
+	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids, 3=>$file_safe_ssid, 4=>$ssidss);
 	return $A;
 }
 
@@ -4334,16 +4340,19 @@ class database
 				$sql = "SELECT * FROM `$db`.`$wtable` WHERE `ID`='$id'";
 				$result = mysql_query($sql, $conn) or die(mysql_error($conn));
 				$aparray = mysql_fetch_array($result);
+
 				$ssid_array = make_ssid($aparray['ssid']);
 				$ssid_t = $ssid_array[0];
 				$ssid_f = $ssid_array[3];
-				$ssid = $ssid_array[2];
+				$ssid = $ssid_array[4];
                                 
 				
 				echo '<table style="border-style: solid; border-width: 1px"><tr class="style4"><th style="border-style: solid; border-width: 1px">Start export of Single AP: '.$ssid.'\'s Signal History</th></tr>';
 				$name = $ssid_f."-".$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan']."-".rand();
-                                $name2 = $ssid."-".$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan']."-".rand();
-                                $temp_kml = '../tmp/'.$name.'tmp.kml';
+
+				$name2 = $ssid."-".$aparray['mac'].'-'.$aparray['sectype'].'-'.$aparray['radio'].'-'.$aparray['chan']."-".rand();
+
+				$temp_kml = '../tmp/'.$name.'tmp.kml';
 				$filewrite = fopen($temp_kml, "w");
 				$date=date('Y-m-d_H-i-s');
 
