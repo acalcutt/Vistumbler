@@ -1,3 +1,4 @@
+#include-once
 #cs
 	UDF cfx.au3
 	serial functions using kernel32.dll
@@ -8,7 +9,7 @@
 	V2.1
 	Mikko Keski-Heroja 02/23/2011 - UDF is now compatible with Opt("MustDeclareVars",1) and Date.au3. Global variable $dll is renamed to $commDll.
 #ce
- #include-once
+
 Global $commDll
 Global $hSerialPort
 Global $dcb_Struct
@@ -26,13 +27,15 @@ Const $NAK=chr(15)
 Const $DLE=chr(16)
 
 ;====================================================================================
-; Function Name:   _OpenComm($CommPort, $CommBaud, $CommBits, $CommParity, $CommStop, $CommCtrl)
+; Function Name:   _OpenComm($CommPort, $CommBaud, $CommBits, $CommParity, $CommStop, $CommCtrl, $DEBUG)
 ; Description:    Opens serial port
 ; Parameters:     $CommPort
+;				  $CommBaud - default:4800
 ;				  $CommBits - 4-8
 ;				  $CommParity - 0=none, 1=odd, 2=even, 3=mark, 4=space
 ;				  $CommStop - 0,1,5,2
 ;				  $CommCtrl = 0011
+;                 $DEBUG - Show debug messages = 1
 ; Returns:  on success, returns serial port id?
 ;           on failure returns -1 and sets @error to 1
 ; Note:
