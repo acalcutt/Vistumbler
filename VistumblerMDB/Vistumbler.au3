@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 7'
+$version = 'v10.1 Beta 8'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/02/13'
+$last_modified = '2011/03/05'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -2317,6 +2317,7 @@ Func _ClearAllAp()
 	;Clear Listview
 	;GUISwitch($DataChild)
 	_GetListviewWidths()
+	GUISwitch($Vistumbler)
 	GUICtrlDelete($ListviewAPs)
 	$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	$hImage = _GUIImageList_Create()
@@ -2336,7 +2337,6 @@ Func _ClearAllAp()
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 	_SetListviewWidths()
 	GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
-	GUISwitch($Vistumbler)
 	_SetControlSizes()
 	;Clear Treeview
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $Authentication_tree)
