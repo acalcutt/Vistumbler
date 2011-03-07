@@ -1,5 +1,5 @@
 <?php
-#		error_reporting(E_ALL|E_STRICT);
+		error_reporting(E_ALL|E_STRICT);
 #		error_reporting(E_ALL);
 #		error_reporting(E_WARNING);
 #		error_reporting(E_ERROR);
@@ -68,24 +68,32 @@ $ver = array(
 #-------------------------------------------------------------------------------------#
 #----------------------------------  Get/Set values  ---------------------------------#
 #-------------------------------------------------------------------------------------#
-if(!@include('config.inc.php'))
+if(@$screen_output=="CLI")
+{
+    $config_loc = $GLOBALS['wifidb_install'].'lib/config.inc.php';
+}else
+{
+    $config_loc = 'config.inc.php';
+}
+echo $config_loc."\r\n";
+if(!@include($config_loc))
 {
 	if(@$GLOBALS['install'] != "installing")
 	{
-		echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="'.$PATH.'install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
+		echo '<h1>There was no config file found. You will need to install WiFiDB first.<br> Please go <a href="/'.$GLOBALS['root'].'/install/index2.php">/[WiFiDB]/install/index2.php</a> to do that.</h1>';
 		die();
 	}
 }else
 {
-	$sql = "SELECT `id` FROM `$db`.`user_info`";
+	$sql = "SELECT `id` FROM `".$GLOBALS['db']."`.`user_info`";
 	if(!@mysql_query($sql, $conn))
 	{
 		$cwd = getcwd().'/';
-		$gen_cwd = $_SERVER['DOCUMENT_ROOT'].$root.'/install/upgrade/';
+		$gen_cwd = $_SERVER['DOCUMENT_ROOT'].$GLOBALS['root'].'/install/upgrade/';
 	#	echo $gen_cwd."<BR>".$cwd."<BR>";
 		if($cwd != $gen_cwd)
 		{
-			echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="/'.$root.'/install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
+			echo '<h1>The database is still in an old format, you will need to do an upgrade first.<br> Please go <a href="/'.$GLOBALS['root'].'/install/upgrade/index.php">/[WiFiDB]/install/upgrade/index.php</a> to do that.</h1>';
 			die();
 		}
 	}
@@ -873,7 +881,7 @@ function logd($message = '', $log_interval = 0, $details = "",  $log_level = 0)
 	require('config.inc.php');
 	if(!$log_level)
 	{
-		if($message == ''){echo "Logd was told to write a blank string.\nThis has NOT been logged.\nThis will NOT be allowed!\n"; continue;}
+		if($message == ''){echo "Logd was told to write a blank string.\nThis has NOT been logged.\nThis will NOT be allowed!\n"; return 0;}
 		$date = date("y-m-d");
 		$time = time();
 		$datetime = date("Y-m-d H:i:s",$time);
@@ -1013,33 +1021,16 @@ function smart_quotes($text="") // Used for SSID Sanatization
 {
 	$pattern = '/"((.)*?)"/i';
 	$strip = array(
-					0=>".", #
-					1=>"*", #
-					2=>"?", #
-					3=>"&lt;", #
-					4=>"&gt;", #
-					5=>'&quot;',
-					6=>"&#39;",
-					7=>"$", #
-                                        8=>"&yuml;",
-                                        9=>";",
-					10=>"#", #
-					11=>"&amp;", #
-					12=>"=", #
-					13=>"~", #
-					14=>"^", #
-					15=>"`", #
-					16=>"+", #
-					17=>"%", #
-					18=>"!", #
-					19=>"@", #
-					20=>"-", #
-					21=>"/", #
-					22=>"\\", #
-					23=>"�",
-					24=>" ",
-                                        
-				);
+			0=>";",
+			1=>"`",
+			2=>"&", #
+			3=>"!", #
+			4=>"/", #
+			5=>"\\", #
+			6=>"'",
+			7=>'"',
+			8=>" "
+			);
 	$text = preg_replace($pattern,"&#147;\\1&#148;",$text);
 	$text = str_replace($strip,"_",$text);
 	return $text;
@@ -1122,10 +1113,11 @@ function make_ssid($ssids = '')
 	if($ssids == ''){$ssids="UNNAMED";}
         
 	$file_safe_ssid = smart_quotes($ssids);
+
 	$ssidss = $ssids;
         $ssids = htmlentities($ssids, ENT_QUOTES);
 
-	$ssid_safe_full_length = mysql_real_escape_string($ssids);
+	$ssid_safe_full_length = mysql_real_escape_string($ssidss);
 
 	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char.
 	$replace = array('/`/', '/\./');
@@ -1855,40 +1847,38 @@ class database
 	#													VS1 File import													     #
 	#========================================================================================================================#
 	
-	function import_vs1($source="" , $file_id, $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 1 , $out = "CLI", $times = "")
+	function import_vs1($source="" , $file_id=0, $user="Unknown" , $notes="No Notes" , $title="UNTITLED", $verbose = 1 , $out = "CLI", $times = "")
 	{
 	    error_reporting(E_ALL|E_STRICT);
 	    #MESSAGES FOR CLI AND HTML INTERFACES#
-	    $wrong_file_type_msg			= "There is something wrong with the file you uploaded, check and make sure it is a valid VS1 file and try again.";
 	    $Inserted_user_data_good_msg	= "Succesfully Inserted User data into Users table.";
 	    $failed_import_user_data_msg	= "Failed to Insert User data into Users table.";
-	    $text_file_support_ms			= "Text files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu option in Vistumbler.";
-	    $error_updating_pts_msg			= "Error Updating Pointers table with new AP.";
+	    $text_file_support_ms		= "Text files are no longer supported, please save your list as a VS1 file or use the Extra->Wifidb menu option in Vistumbler.";
+	    $error_updating_pts_msg		= "Error Updating Pointers table with new AP.";
 	    $error_updating_stgs_msg		= "Error Updating Settings table with new size.";
-	    $updating_stgs_good_msg			= "Updated Settings table with new size.";
-	    $error_retrev_file_name_CLI_msg = "There was an error sending the file name to the function.";
-	    $error_retrev_file_name_HTML_msg = "You did not submit a file, please <A HREF=\"javascript:history.go(-1)\"> [- Go Back -]</A> and do so.";
-	    $emtpy_file_err_msg				= "You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.";
-	    $error_reserv_user_row			= "Could not reserve user import row!";
-	    $no_aps_in_file_msg				= "This File does not have any APs to import, just a bunch of GPS cords.";
-	    $updated_tmp_table_msg			= "Updated files_tmp table with this runs data.";
+	    $updating_stgs_good_msg		= "Updated Settings table with new size.";
+	    $error_retrev_file_name_CLI_msg	= "There was an error sending the file name to the function.";
+	    $error_retrev_file_name_HTML_msg	= "You did not submit a file, please <A HREF=\"javascript:history.go(-1)\"> [- Go Back -]</A> and do so.";
+	    $emtpy_file_err_msg			= "You cannot upload an empty VS1 file, at least scan for a few seconds to import some data.";
+	    $error_reserv_user_row		= "Could not reserve user import row!";
+	    $no_aps_in_file_msg			= "This File does not have any APs to import, just a bunch of GPS cords.";
+	    $updated_tmp_table_msg		= "Updated files_tmp table with this runs data.";
 	    $too_many_unique_aps_error_msg	= "There are too many Pointers for this one Access Point, defaulting to the first one in the list.";
-	    $being_updated_msg				= "is being updated.";
+	    $being_updated_msg			= "is being updated.";
 	    $error_running_gps_check_msg	= "There was an error running gps check.";
-	    $failed_gps_add					= "FAILED to added GPS History to Table";
-	    $being_imported_msg				= "is being imported";
-	    $failed_insert_sig_msg			= "FAILED to insert the Signal data.";
-	    $failed_insert_gps_msg			= "FAILED to insert the GPS data.";
-	    $failed_create_gps_msg			= "FAILED to create the GPS History Table.";
-	    $failed_create_sig_msg			= "FAILED to create Signal History Table";
+	    $failed_gps_add			= "FAILED to added GPS History to Table";
+	    $being_imported_msg			= "is being imported";
+	    $failed_insert_sig_msg		= "FAILED to insert the Signal data.";
+	    $failed_insert_gps_msg		= "FAILED to insert the GPS data.";
+	    $failed_create_gps_msg		= "FAILED to create the GPS History Table.";
+	    $failed_create_sig_msg		= "FAILED to create Signal History Table";
 	    $Finished_inserting_sig_msg		= "Finished Inserting Signal History into its table";
 	    $Error_inserting_sig_msg		= "Error inserting signal history into its table";
 	    $Finished_inserting_gps_msg		= "Finished Inserting GPS History into its table";
 	    $Error_inserting_gps_msg		= "Error inserting GPS history into its table";
-	    $text_files_support_msg			= "Text Files are not longer supported, either re-export it from Vistumbler or use the converter.exe";
-	    $insert_up_gps_msg				= "Error inserting Updated GPS point";
-	    $removed_old_gps_msg			= "Error removing old GPS point";
-
+	    $text_files_support_msg		= "Text Files are not longer supported, either re-export it from Vistumbler or use the converter.exe";
+	    $insert_up_gps_msg			= "Error inserting Updated GPS point";
+	    $removed_old_gps_msg		= "Error removing old GPS point";
 
 	    // define initial write and appends
 	    $filename = ("mass_import_errors.log");
@@ -1913,8 +1903,8 @@ class database
 	    }
 
 	    $file_row =  0;
-	    echo $GLOBALS['wdb_install'];
-	    require $GLOBALS['wdb_install']."/lib/config.inc.php";
+	    echo $GLOBALS['wifidb_install']."\r\n";
+	    require $GLOBALS['wifidb_install']."/lib/config.inc.php";
 	    require $GLOBALS['wifidb_tools'].'/daemon/config.inc.php';
 
 	    $conn	=   $GLOBALS['conn'];
@@ -1947,7 +1937,7 @@ class database
 	    $sats_id = array();
 	    $db_gps	 = array();
 	    echo $source."\r\n";
-	    $return  = file($source);
+	    $return  = explode("\r\n", utf8_decode(file_get_contents($source)));
 	    #echo $return[0]."\r\n";
 	    $count = count($return);
 	    echo $count."\r\n";
@@ -1983,21 +1973,43 @@ class database
 			verbosed("<p>".$error_reserv_user_row."</p>".mysql_error($conn), $verbose);
 			if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 		    }
+		}else
+		{
+		    $user_row_id = mysql_insert_id($conn);
 		}
-	    }
-
-	    foreach($return as $ret)
+	    }else
 	    {
-		if ($ret[0] == "#"){continue;}
-		
+		$user_row_id = $user_row_old['id'];
+	    }
+	    #echo "Sleep for echo review\r\n";
+	    #sleep(10);
+	    foreach($return as $key=>$ret)
+	    {
 		$current_encoding = mb_detect_encoding($ret, 'auto');
+		mb_internal_encoding($current_encoding);
+		$ret = iconv($current_encoding, 'UTF-8//IGNORE', $ret);
+		if($key == 0)
+		{
+		    $ret = str_replace("?","",$ret);
+		}
+		$ret_0 = substr($ret,0,1);
+
+		var_dump($ret_0);
+		
+		var_dump($ret);
+
+		if ($ret_0 == "#"){continue;}
+
+		die();
+
 		$retexp = explode("|",$ret);
 		#var_dump($retexp);
 		$ret_len = count($retexp);
-
+		echo $ret_len."\r\n";
+		echo $ret."\r\n";
 		if ($ret_len == 12 or $ret_len == 6)
 		{
-		    $gdata[$retexp[0]] = database::gen_gps($retexp);
+		    $gdata[$retexp[0]] = $this->gen_gps($retexp);
 		}elseif($ret_len == 13)
 		{
 		    $gpscount = count($gdata);
@@ -2022,7 +2034,6 @@ class database
 		    }
 		    echo "########################################\r\n";
 		    $SETFLAGTEST = TRUE;
-		    $ret = iconv($current_encoding, 'UTF-8//IGNORE', $ret);
 		    $wifi = explode("|",$ret, 13);
 		    if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
 		    $dbsize = mysql_query("SELECT `id` FROM `$db`.`$wtable` order by id desc limit 1", $GLOBALS['conn']);
@@ -2477,7 +2488,7 @@ class database
 			###############################################
 			#   KML Export of AP just imported/updated    #
 			###############################################
-			if(!$skip_kml){database::exp_newest_kml($named = 0, $verbose=1);}
+			if(!$skip_kml){$this->exp_newest_kml($named = 0, $verbose=1);}
 		    }
 		    if($out == "HTML")
 		    {
@@ -2518,8 +2529,10 @@ class database
 			verbosed("<h1>".$wrong_file_type_msg.".</h1>", $verbose, "HTML");
 		    }
 		    if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);die();}
+		    die();
 		}
 	    }
+	    var_dump($user_aps);
 	    if(is_array($user_aps))
 	    {
 		$user_ap_s = implode("-",$user_aps);
@@ -2529,6 +2542,7 @@ class database
 		$user_ap_s = "";
 		$total_ap = "0";
 	    }
+
 	    $notes = addslashes($notes);
 	    if($title === ''){$title = "Untitled";}
 	    if($user === ''){$user="Unknown";}
@@ -2537,6 +2551,7 @@ class database
 	    if($user_ap_s != "" and $total_ap > 0)
 	    {
 		$sqlu = "UPDATE `$db`.`$users_t` SET `points` = '$user_ap_s' , `date` = '$times' , `aps` =  '$total_ap' , `gps` = '$gdatacount' WHERE `id` = '$user_row_id'";
+		echo $sqlu."\r\n";
 		if(!mysql_query($sqlu, $conn))
 		{
 		    if($out=="CLI")
@@ -2580,11 +2595,11 @@ class database
 		echo "<p>File DONE!</p>";
 	    }
 	    $end = microtime(true);
-	    $ret = array(
+	    $this->Imp_ret = array(
 			"aps" => $total_ap,
 			"gps" => $gdatacount
 			);
-	    return $ret;
+	    return $this->Imp_ret;
 	    fclose($fileappend);
 	}
 	
@@ -5557,7 +5572,7 @@ class database
 	}
 }#END DATABASE CLASS
 
-class daemon
+class daemon extends database
 {
 	
 	function daemon_kml($named = 0, $verbose = 1)
@@ -5602,13 +5617,13 @@ class daemon
 		$filename = $daemon_folder.'fulldb.kmz';
 		$filename_copy = $daily_folder.'fulldb.kmz';
 		
-		daemon::daemon_daily_db_exp($temp_daily_kml, $temp_dailyL_kml, $verbose);
+		 daemon::daemon_daily_db_exp($temp_daily_kml, $temp_dailyL_kml, $verbose);
 		
 		# do a full Db export for the day if needed
 		$temp_kml_size = dos_filesize($temp_kml);
 		if(!file_exists($temp_kml) or $temp_kml_size == '0' )
 		{
-		daemon::daemon_full_db_exp($temp_kml, $temp_kml_label, $verbose);
+		    daemon::daemon_full_db_exp($temp_kml, $temp_kml_label, $verbose);
 		}
 		else{verbosed($GLOBALS['COLORS']['RED']."File already exists, no need to export full DB.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");}
 		

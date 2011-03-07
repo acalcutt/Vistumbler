@@ -178,7 +178,7 @@ while(1)
 			if($daemon_state['size']=="WIFIDB_KILL"){die("Daemon was told to kill self :(\r\n");}
 			
 			$result_update = mysql_query("UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'", $conn);
-			$source = $wdb_install.'/import/up/'.str_replace("%20", " ", $files_array['file']);
+			$source = $wdb_install.'import/up/'.str_replace("%20", " ", $files_array['file']);
 			
 			$file_src = explode(".",$files_array['file']);
 			$file_type = strtolower($file_src[1]);
@@ -188,10 +188,10 @@ while(1)
 				$source = $database->convert_vs1($source);
 				$id = $files_array['id'];
 				$files_array['file'] = $file_src[0].'.vs1';
-				$hash1 = hash_file('md5', $wdb_install.'/import/up/'.$files_array['file']);
-				$size1 = format_size(dos_filesize($wdb_install.'/import/up/'.$files_array['file']));
+				$hash1 = hash_file('md5', $source);
+				$size1 = format_size(dos_filesize($source));
 				$update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '$id'";
-			#	echo $update_tmp."\r\n";
+				echo $update_tmp."\r\n";
 				if(mysql_query($update_tmp, $conn))
 				{
 					verbosed("Conversion completed.", $verbose, $screen_output, 1);
@@ -244,14 +244,15 @@ while(1)
 					try
 					{
 					    echo $files_array['id']."\r\n".$source."\r\n";
-					    $tmp = $database->import_vs1($source, $files_array['id'], $files_array['user'], $files_array['notes'], $files_array['title'], $verbose, $screen_output, $files_array['date']);
+					    $tmp = $database->import_vs1( $source, $files_array['id'], $files_array['user'], $files_array['notes'], $files_array['title'], $verbose, $screen_output, $files_array['date']);
 					}catch (Exception $e)
 					{
 					    die("OH NO! THERE WAS AN ERROR! CHECK THE CASTLE!\r\n".$e);
 					}
 					$temp = $files_array['file']." | ".$tmp['aps']." - ".$tmp['gps'];
+
 					logd("Finished Import of : ".$files_array['file'] , 2 , $temp ,  $GLOBALS['log_level']); //same thing here, hard coded as log_lev 2
-					verbosed("Finished Import of :".$files_array['file'] , $verbose, $screen_output);
+					verbosed("Finished Import of :".$files_array['file']."--".$temp , $verbose, $screen_output);
 					
 					$hash = hash_file('md5', $source);
 					$result1 = mysql_query("SELECT * FROM `$db`.`$users_t` WHERE `hash`='$hash' LIMIT 1", $conn);
@@ -260,14 +261,13 @@ while(1)
 					if($verbose == 1)
 					{echo "\n";}
 					
-					$file = $source;
 					$totalaps = $tmp['aps'];
 					$totalgps = $tmp['gps'];
 					$user = $files_array['user'];
 					$notes = $files_array['notes'];
 					$title = $files_array['title'];
-					$size = (filesize($file)/1024);
-					$hash = hash_file('md5', $file);
+					$size = (filesize($source)/1024);
+					$hash = hash_file('md5', $source);
 					$date = $files_array['date'];
 					
 					$sql_insert_file = "INSERT INTO `$db`.`$files` (`id`, `file`, `date`, `size`, `aps`, `gps`, `hash`, `user_row`, `user`, `notes`, `title`) VALUES ('', '$file1', '$date', '$size', '$totalaps', '$totalgps', '$hash', '$user_row', '$user', '$notes', '$title')";

@@ -48,7 +48,7 @@ $resultgps = mysql_query($sql_gps, $conn);
 $lastgps = @mysql_fetch_array($resultgps);
 
 $lat_check = explode(" ", $lastgps['lat']);
-$lat_c = $lat_check[1]+0;
+$lat_c = @$lat_check[1]+0;
 #var_dump($lat_c);
 if($lat_c != "0"){$gps_yes = 1;}else{$gps_yes = 0;}
 $lastuser = @mysql_fetch_array($result6);
