@@ -52,7 +52,7 @@
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
 							</td>
 							<td class="cell_top_mid" style="height: 20px">
-								<img alt="" src="images/1x1_transparent.gif" width="120" height="1" />
+								<img alt="" src="images/1x1_transparent.gif" width="160" height="1" />
 							</td>
 							<td style="width: 10px" class="cell_top_right">
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
@@ -63,7 +63,7 @@
 							<td class="cell_color">
 								<div class="inside_dark_header">Navigation</div>
 								<div class="inside_text_bold"><a class="inside_text_bold" href="index.html">Home</a></div>
-								<div class="inside_text_bold"><a href="http://forum.vistumbler.net">Forum</a></div>
+								<div class="inside_text_bold"><a href="http://forum.techidiots.net">Forum</a></div>
 								<div class="inside_text_bold"><a href="http://www.vistumbler.net/wifidb/">WiFiDB</a></div>
 								<div class="inside_text_bold"><a href="http://sourceforge.net/apps/mediawiki/vistumbler/">Wiki</a></div>
 								<div class="inside_text_bold"><a href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/">SVN</a> (<a href="https://sourceforge.net/scm/?type=svn&amp;group_id=235720">Info</a>)</div>								
@@ -92,7 +92,7 @@
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
 							</td>
 							<td class="cell_top_mid" style="height: 20px">
-								<img alt="" src="images/1x1_transparent.gif" width="120" height="1" />
+								<img alt="" src="images/1x1_transparent.gif" width="160" height="1" />
 							</td>
 							<td style="width: 10px" class="cell_top_right">
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
@@ -112,10 +112,8 @@
 								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-146">Keychains</a></div>
 
 								<div class="inside_dark_header">Donate</div>
-								<div class="center"><br />
-									<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=ACalcutt%40Vistumbler%2enet&amp;item_name=Vistumbler%20Donation&amp;no_shipping=0&amp;no_note=1&amp;tax=0&amp;currency_code=USD&amp;lc=US&amp;bn=PP%2dDonationsBF&amp;charset=UTF%2d8">
-									<img alt="Donate" src="images/project-support.jpg" class="style1" /></a><br />
-									<br />
+								<div class="center">
+									<object width="160" height="250"><param name="movie" value="http://widget.chipin.com/widget/id/69d6e4742ac0f255"></param><param name="allowScriptAccess" value="always"></param><param name="wmode" value="transparent"></param><param name="event_title" value="Donate"></param><param name="event_desc" value="Help%20support%20vistumbler%20hosting%20and%20development%20costs"></param><param name="color_scheme" value="blue"></param><embed src="http://widget.chipin.com/widget/id/69d6e4742ac0f255" flashVars="event_title=Donate&event_desc=Help%20support%20vistumbler%20hosting%20and%20development%20costs&color_scheme=blue" type="application/x-shockwave-flash" allowScriptAccess="always" wmode="transparent" width="160" height="250"></embed></object>
 								</div>
 
 							</td>
