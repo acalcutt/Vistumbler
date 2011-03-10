@@ -366,6 +366,7 @@ Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
 Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
+Dim $AutoSelectHS = IniRead($settings, 'Vistumbler', 'AutoSelectHS', 0)
 Dim $UseWiFiDbGpsLocate = IniRead($settings, 'Vistumbler', 'UseWiFiDbGpsLocate', 0)
 Dim $DefFiltID = IniRead($settings, 'Vistumbler', 'DefFiltID', '-1')
 Dim $AutoScan = IniRead($settings, 'Vistumbler', 'AutoScan', '0')
@@ -1128,6 +1129,8 @@ $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $ViewMenu)
 If $AutoSort = 1 Then GUICtrlSetState($AutoSortGUI, $GUI_CHECKED)
 $AutoSelectMenuButton = GUICtrlCreateMenuItem($Text_AutoSelectConnectedAP, $ViewMenu)
 If $AutoSelect = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$AutoSelectHighSignal = GUICtrlCreateMenuItem("Auto Select High Signal AP", $ViewMenu)
+If $AutoSelectHS = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $ViewMenu)
 If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $ViewMenu)
@@ -1316,6 +1319,7 @@ GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
 GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
+GUICtrlSetOnEvent($AutoSelectHighSignal, '_AutoSelHighSigToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
 GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
@@ -1463,6 +1467,8 @@ While 1
 		If $RefreshNetworks = 1 Then _RefreshNetworks()
 		;Select connected AP
 		If $AutoSelect = 1 And WinActive($Vistumbler) Then _SelectConnectedAp()
+		;Select the active AP with the highest signal
+		If $AutoSelectHS = 1 And WinActive($Vistumbler) Then _SelectHighSignalAp()
 	ElseIf $Scan = 0 And $UpdatedAPs <> 1 Then
 		$UpdatedAPs = 1
 		;Add GPS ID If AP Scanning is off, UseGPS is on, and Save GPS when no AP are active is on
@@ -2680,6 +2686,17 @@ Func _AutoConnectToggle()
 		$AutoSelect = 1
 	EndIf
 EndFunc   ;==>_AutoConnectToggle
+
+Func _AutoSelHighSigToggle()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSelHighSigToggle()') ;#Debug Display
+	If $AutoSelectHS = 1 Then
+		GUICtrlSetState($AutoSelectHighSignal, $GUI_UNCHECKED)
+		$AutoSelectHS = 0
+	Else
+		GUICtrlSetState($AutoSelectHighSignal, $GUI_CHECKED)
+		$AutoSelectHS = 1
+	EndIf
+EndFunc   ;==>_AutoSelHighSigToggle
 
 Func _ActiveApMidiToggle()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ActiveApMidiToggle()') ;#Debug Display
@@ -6023,6 +6040,7 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
 	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
+	IniWrite($settings, "Vistumbler", 'AutoSelectHS', $AutoSelectHS)
 	IniWrite($settings, "Vistumbler", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
 	IniWrite($settings, "Vistumbler", 'DefFiltID', $DefFiltID)
 	IniWrite($settings, "Vistumbler", 'AutoScan', $AutoScan)
@@ -9929,6 +9947,21 @@ Func _SelectConnectedAp()
 	EndIf
 	Return ($return)
 EndFunc   ;==>_SelectConnectedAp
+
+Func _SelectHighSignalAp()
+	$query = "SELECT TOP 1 ListRow FROM AP WHERE ListRow <> '-1' ORDER BY Signal DESC"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	If $FoundApMatch = 1 Then
+		$Found_ListRow = $ApMatchArray[1][1]
+		_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_FOCUSED, $LVIS_FOCUSED)
+		_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_SELECTED, $LVIS_SELECTED)
+		GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+EndFunc   ;==>_SelectHighSignalAp
 
 Func _DataMatchInDelimitedString($mdata, $mDelimitedString, $mDelimiter = '|', $mAllSymbol = '*')
 	If $mDelimitedString = $mAllSymbol Then
