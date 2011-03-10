@@ -1,9 +1,9 @@
 #RequireAdmin
-#region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Icons\icon.ico
-#AutoIt3Wrapper_outfile=Vistumbler.exe
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -17,7 +17,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
 $version = 'v10.1 Beta 10'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/03/09'
+$last_modified = '2011/03/10'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -465,11 +465,11 @@ Dim $column_Width_SSID = IniRead($settings, 'Column_Width', 'Column_SSID', 150)
 Dim $column_Width_BSSID = IniRead($settings, 'Column_Width', 'Column_BSSID', 110)
 Dim $column_Width_MANUF = IniRead($settings, 'Column_Width', 'Column_Manufacturer', 110)
 Dim $column_Width_Signal = IniRead($settings, 'Column_Width', 'Column_Signal', 60)
-Dim $column_Width_HighSignal = IniRead($settings, 'Column_Width', 'Column_HighSignal', 60)
+Dim $column_Width_HighSignal = IniRead($settings, 'Column_Width', 'Column_HighSignal', 75)
+Dim $column_Width_Channel = IniRead($settings, 'Column_Width', 'Column_Channel', 70)
 Dim $column_Width_Authentication = IniRead($settings, 'Column_Width', 'Column_Authentication', 105)
 Dim $column_Width_Encryption = IniRead($settings, 'Column_Width', 'Column_Encryption', 105)
 Dim $column_Width_RadioType = IniRead($settings, 'Column_Width', 'Column_RadioType', 85)
-Dim $column_Width_Channel = IniRead($settings, 'Column_Width', 'Column_Channel', 70)
 Dim $column_Width_Latitude = IniRead($settings, 'Column_Width', 'Column_Latitude', 85)
 Dim $column_Width_Longitude = IniRead($settings, 'Column_Width', 'Column_Longitude', 85)
 Dim $column_Width_LatitudeDMS = IniRead($settings, 'Column_Width', 'Column_LatitudeDMS', 115)
@@ -501,10 +501,10 @@ Dim $Column_Names_BSSID = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_
 Dim $Column_Names_MANUF = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Manufacturer', 'Manufacturer')
 Dim $Column_Names_Signal = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Signal', 'Signal')
 Dim $Column_Names_HighSignal = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_HighSignal', 'High Signal')
+Dim $Column_Names_Channel = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Channel', 'Channel')
 Dim $Column_Names_Authentication = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Authentication', 'Authentication')
 Dim $Column_Names_Encryption = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Encryption', 'Encryption')
 Dim $Column_Names_RadioType = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_RadioType', 'Radio Type')
-Dim $Column_Names_Channel = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Channel', 'Channel')
 Dim $Column_Names_Latitude = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Latitude', 'Latitude')
 Dim $Column_Names_Longitude = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Longitude', 'Longitude')
 Dim $Column_Names_LatitudeDMS = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_LatitudeDMS', 'Latitude (DDMMSS)')
@@ -2339,10 +2339,63 @@ Func _ClearAllAp()
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "DELETE * FROM LoadedFiles"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	;Clear Listview
-	;GUISwitch($DataChild)
+	;Update Column Widths
 	_GetListviewWidths()
-	_UpdateColumnPositions()
+	;Update Column Order
+	Local $sheaders
+	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
+	For $c = 1 To $currentcolumn[0]
+		$cinfo = _GUICtrlListView_GetColumn($ListviewAPs, $currentcolumn[$c] - 0)
+		$sheaders &= $cinfo[5] & '|'
+		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
+		If $column_Active = $currentcolumn[$c] Then $save_column_Active = $c - 1
+		If $column_BSSID = $currentcolumn[$c] Then $save_column_BSSID = $c - 1
+		If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
+		If $column_Signal = $currentcolumn[$c] Then $save_column_Signal = $c - 1
+		If $column_HighSignal = $currentcolumn[$c] Then $save_column_HighSignal = $c - 1
+		If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
+		If $column_Authentication = $currentcolumn[$c] Then $save_column_Authentication = $c - 1
+		If $column_Encryption = $currentcolumn[$c] Then $save_column_Encryption = $c - 1
+		If $column_NetworkType = $currentcolumn[$c] Then $save_column_NetworkType = $c - 1
+		If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
+		If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
+		If $column_MANUF = $currentcolumn[$c] Then $save_column_MANUF = $c - 1
+		If $column_Label = $currentcolumn[$c] Then $save_column_Label = $c - 1
+		If $column_RadioType = $currentcolumn[$c] Then $save_column_RadioType = $c - 1
+		If $column_LatitudeDMS = $currentcolumn[$c] Then $save_column_LatitudeDMS = $c - 1
+		If $column_LongitudeDMS = $currentcolumn[$c] Then $save_column_LongitudeDMS = $c - 1
+		If $column_LatitudeDMM = $currentcolumn[$c] Then $save_column_LatitudeDMM = $c - 1
+		If $column_LongitudeDMM = $currentcolumn[$c] Then $save_column_LongitudeDMM = $c - 1
+		If $column_BasicTransferRates = $currentcolumn[$c] Then $save_column_BasicTransferRates = $c - 1
+		If $column_OtherTransferRates = $currentcolumn[$c] Then $save_column_OtherTransferRates = $c - 1
+		If $column_FirstActive = $currentcolumn[$c] Then $save_column_FirstActive = $c - 1
+		If $column_LastActive = $currentcolumn[$c] Then $save_column_LastActive = $c - 1
+	Next
+	$headers = $sheaders
+	$column_Line = $save_column_Line
+	$column_Active = $save_column_Active
+	$column_BSSID = $save_column_BSSID
+	$column_SSID = $save_column_SSID
+	$column_Signal = $save_column_Signal
+	$column_HighSignal = $save_column_HighSignal
+	$column_Channel = $save_column_Channel
+	$column_Authentication = $save_column_Authentication
+	$column_Encryption = $save_column_Encryption
+	$column_NetworkType = $save_column_NetworkType
+	$column_Latitude = $save_column_Latitude
+	$column_Longitude = $save_column_Longitude
+	$column_MANUF = $save_column_MANUF
+	$column_Label = $save_column_Label
+	$column_RadioType = $save_column_RadioType
+	$column_LatitudeDMS = $save_column_LatitudeDMS
+	$column_LongitudeDMS = $save_column_LongitudeDMS
+	$column_LatitudeDMM = $save_column_LatitudeDMM
+	$column_LongitudeDMM = $save_column_LongitudeDMM
+	$column_BasicTransferRates = $save_column_BasicTransferRates
+	$column_OtherTransferRates = $save_column_OtherTransferRates
+	$column_FirstActive = $save_column_FirstActive
+	$column_LastActive = $save_column_LastActive
+	;Recreate Listview
 	GUISwitch($Vistumbler)
 	GUICtrlDelete($ListviewAPs)
 	$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
@@ -2613,7 +2666,8 @@ Func _Exit()
 	_AccessCloseConn($ManuDB_OBJ)
 	_AccessCloseConn($LabDB_OBJ)
 	_AccessCloseConn($InstDB_OBJ)
-	_WriteINI(); Write current settings to back to INI file
+	; Write current settings to back to INI file
+	_WriteINI()
 	$PID = -1
 	$CloseTimer = TimerInit()
 	While $PID <> 0
@@ -5974,13 +6028,10 @@ Func _ImportMdbOk()
 	_AccessConnectConn($VistumblerLoadDB, $LoadDB_OBJ)
 EndFunc   ;==>_ImportMdbOk
 
-Func _UpdateColumnPositions()
-	Local $sheaders
-	;Get new order of columns to write back to INI
+Func _WriteINI()
+	;Get Current column positions
 	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
 	For $c = 1 To $currentcolumn[0]
-		$cinfo = _GUICtrlListView_GetColumn($ListviewAPs, $currentcolumn[$c] - 0)
-		$sheaders &= $cinfo[5] & '|'
 		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
 		If $column_Active = $currentcolumn[$c] Then $save_column_Active = $c - 1
 		If $column_BSSID = $currentcolumn[$c] Then $save_column_BSSID = $c - 1
@@ -6005,37 +6056,7 @@ Func _UpdateColumnPositions()
 		If $column_FirstActive = $currentcolumn[$c] Then $save_column_FirstActive = $c - 1
 		If $column_LastActive = $currentcolumn[$c] Then $save_column_LastActive = $c - 1
 	Next
-
-	$headers = $sheaders
-	$column_Line = $save_column_Line
-	$column_Active = $save_column_Active
-	$column_BSSID = $save_column_BSSID
-	$column_SSID = $save_column_SSID
-	$column_Signal = $save_column_Signal
-	$column_HighSignal = $save_column_HighSignal
-	$column_Channel = $save_column_Channel
-	$column_Authentication = $save_column_Authentication
-	$column_Encryption = $save_column_Encryption
-	$column_NetworkType = $save_column_NetworkType
-	$column_Latitude = $save_column_Latitude
-	$column_Longitude = $save_column_Longitude
-	$column_MANUF = $save_column_MANUF
-	$column_Label = $save_column_Label
-	$column_RadioType = $save_column_RadioType
-	$column_LatitudeDMS = $save_column_LatitudeDMS
-	$column_LongitudeDMS = $save_column_LongitudeDMS
-	$column_LatitudeDMM = $save_column_LatitudeDMM
-	$column_LongitudeDMM = $save_column_LongitudeDMM
-	$column_BasicTransferRates = $save_column_BasicTransferRates
-	$column_OtherTransferRates = $save_column_OtherTransferRates
-	$column_FirstActive = $save_column_FirstActive
-	$column_LastActive = $save_column_LastActive
-EndFunc   ;==>_UpdateColumnPositions
-
-Func _WriteINI()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WriteINI()') ;#Debug Display
-	;Update Column Postions
-	_UpdateColumnPositions()
 	;write ini settings
 	If $SaveDir <> $DefaultSaveDir Then
 		IniWrite($settings, "Vistumbler", "SaveDir", $SaveDir);Write new save dir ro ini
@@ -6148,29 +6169,29 @@ Func _WriteINI()
 	IniWrite($settings, 'PhilsWifiTools', 'Graph_URL', $PhilsGraphURL)
 	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_URL', $PhilsWdbURL)
 
-	IniWrite($settings, "Columns", "Column_Line", $column_Line)
-	IniWrite($settings, "Columns", "Column_Active", $column_Active)
-	IniWrite($settings, "Columns", "Column_BSSID", $column_BSSID)
-	IniWrite($settings, "Columns", "Column_SSID", $column_SSID)
-	IniWrite($settings, "Columns", "Column_Signal", $column_Signal)
-	IniWrite($settings, "Columns", "Column_HighSignal", $column_HighSignal)
-	IniWrite($settings, "Columns", "Column_Channel", $column_Channel)
-	IniWrite($settings, "Columns", "Column_Authentication", $column_Authentication)
-	IniWrite($settings, "Columns", "Column_Encryption", $column_Encryption)
-	IniWrite($settings, "Columns", "Column_NetworkType", $column_NetworkType)
-	IniWrite($settings, "Columns", "Column_Latitude", $column_Latitude)
-	IniWrite($settings, "Columns", "Column_Longitude", $column_Longitude)
-	IniWrite($settings, "Columns", "Column_Manufacturer", $column_MANUF)
-	IniWrite($settings, "Columns", "Column_Label", $column_Label)
-	IniWrite($settings, "Columns", "Column_RadioType", $column_RadioType)
-	IniWrite($settings, "Columns", "Column_LatitudeDMS", $column_LatitudeDMS)
-	IniWrite($settings, "Columns", "Column_LongitudeDMS", $column_LongitudeDMS)
-	IniWrite($settings, "Columns", "Column_LatitudeDMM", $column_LatitudeDMM)
-	IniWrite($settings, "Columns", "Column_LongitudeDMM", $column_LongitudeDMM)
-	IniWrite($settings, "Columns", "Column_BasicTransferRates", $column_BasicTransferRates)
+	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
+	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
+	IniWrite($settings, "Columns", "Column_BSSID", $save_column_BSSID)
+	IniWrite($settings, "Columns", "Column_SSID", $save_column_SSID)
+	IniWrite($settings, "Columns", "Column_Signal", $save_column_Signal)
+	IniWrite($settings, "Columns", "Column_HighSignal", $save_column_HighSignal)
+	IniWrite($settings, "Columns", "Column_Channel", $save_column_Channel)
+	IniWrite($settings, "Columns", "Column_Authentication", $save_column_Authentication)
+	IniWrite($settings, "Columns", "Column_Encryption", $save_column_Encryption)
+	IniWrite($settings, "Columns", "Column_NetworkType", $save_column_NetworkType)
+	IniWrite($settings, "Columns", "Column_Latitude", $save_column_Latitude)
+	IniWrite($settings, "Columns", "Column_Longitude", $save_column_Longitude)
+	IniWrite($settings, "Columns", "Column_Manufacturer", $save_column_MANUF)
+	IniWrite($settings, "Columns", "Column_Label", $save_column_Label)
+	IniWrite($settings, "Columns", "Column_RadioType", $save_column_RadioType)
+	IniWrite($settings, "Columns", "Column_LatitudeDMS", $save_column_LatitudeDMS)
+	IniWrite($settings, "Columns", "Column_LongitudeDMS", $save_column_LongitudeDMS)
+	IniWrite($settings, "Columns", "Column_LatitudeDMM", $save_column_LatitudeDMM)
+	IniWrite($settings, "Columns", "Column_LongitudeDMM", $save_column_LongitudeDMM)
+	IniWrite($settings, "Columns", "Column_BasicTransferRates", $save_column_BasicTransferRates)
 	IniWrite($settings, "Columns", "Column_OtherTransferRates", $column_OtherTransferRates)
-	IniWrite($settings, "Columns", "Column_FirstActive", $column_FirstActive)
-	IniWrite($settings, "Columns", "Column_LastActive", $column_LastActive)
+	IniWrite($settings, "Columns", "Column_FirstActive", $save_column_FirstActive)
+	IniWrite($settings, "Columns", "Column_LastActive", $save_column_LastActive)
 
 	IniWrite($settings, "Column_Width", "Column_Line", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0))
 	IniWrite($settings, "Column_Width", "Column_Active", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0))
@@ -7749,8 +7770,6 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$Tab_Col = GUICtrlCreateTabItem($Text_Columns)
 		;Get Current GUI widths from listview
 		_GetListviewWidths()
-		;Get current column positions
-		;_UpdateColumnPositions()
 		;Start Column tab gui
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 		$GroupColumns = GUICtrlCreateGroup($Text_Columns, 16, 40, 657, 420)
@@ -8951,7 +8970,7 @@ Func _SetWidthValue_Signal()
 	_SetWidthValue($CWCB_Signal, $CWIB_Signal, $column_Width_Signal, $settings, 'Column_Width', 'Column_Signal', 70)
 EndFunc   ;==>_SetWidthValue_Signal
 Func _SetWidthValue_HighSignal()
-	_SetWidthValue($CWCB_HighSignal, $CWIB_HighSignal, $column_Width_HighSignal, $settings, 'Column_Width', 'Column_HighSignal', 60)
+	_SetWidthValue($CWCB_HighSignal, $CWIB_HighSignal, $column_Width_HighSignal, $settings, 'Column_Width', 'Column_HighSignal', 75)
 EndFunc   ;==>_SetWidthValue_HighSignal
 Func _SetWidthValue_Authentication()
 	_SetWidthValue($CWCB_Authentication, $CWIB_Authentication, $column_Width_Authentication, $settings, 'Column_Width', 'Column_Authentication', 100)
