@@ -75,7 +75,7 @@ if(@$screen_output=="CLI")
 {
     $config_loc = 'config.inc.php';
 }
-echo $config_loc."\r\n";
+#echo $config_loc."\r\n";
 if(!@include($config_loc))
 {
 	if(@$GLOBALS['install'] != "installing")
@@ -1994,19 +1994,19 @@ class database
 		}
 		$ret_0 = substr($ret,0,1);
 
-		var_dump($ret_0);
+		#var_dump($ret_0);
 		
-		var_dump($ret);
+		#var_dump($ret);
 
 		if ($ret_0 == "#"){continue;}
 
-		die();
+		#die();
 
 		$retexp = explode("|",$ret);
 		#var_dump($retexp);
 		$ret_len = count($retexp);
-		echo $ret_len."\r\n";
-		echo $ret."\r\n";
+		#echo $ret_len."\r\n";
+		#echo $ret."\r\n";
 		if ($ret_len == 12 or $ret_len == 6)
 		{
 		    $gdata[$retexp[0]] = $this->gen_gps($retexp);
@@ -2518,18 +2518,6 @@ class database
 			verbosed("<h1>".$wrong_file_type_msg.".</h1>", $verbose, "HTML");
 		    }
 		    if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);die();}
-		}else
-		{
-		    logd($wrong_file_type_msg, $log_interval, 0,  $log_level);
-		    if($out=="CLI")
-		    {
-			verbosed($GLOBALS['COLORS']['RED'].$wrong_file_type_msg."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-		    }elseif($out=="HTML")
-		    {
-			verbosed("<h1>".$wrong_file_type_msg.".</h1>", $verbose, "HTML");
-		    }
-		    if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);die();}
-		    die();
 		}
 	    }
 	    var_dump($user_aps);
@@ -2638,7 +2626,7 @@ class database
 		// 428.7753 ---- 4 - 28.7753
 		$geocord_div = $geocord_min/60;
 		// 428.7753 ---- 4 - (28.7753)/60 = 0.4795883
-		if($len ==3)
+		if($len == 3)
 		{
 			$geocord_deg = substr($geocord_exp[0], 0,1);
 #			echo $geocord_deg.'<br>';
@@ -2655,11 +2643,15 @@ class database
 			$geocord_deg = 0;
 #			echo $geocord_deg.'<br>';
 		}
+                if(!isset($geocord_deg))
+                {
+                    echo $geocord_in."\r\n";
+                }
 		$geocord_out = $geocord_deg + $geocord_div;
 		// 428.7753 ---- 4.4795883
 		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
 		$end = microtime(true);
-
+                
 		$geocord_out = substr($geocord_out, 0,10);
 		return $geocord_out;
 	}
@@ -5600,8 +5592,8 @@ class daemon extends database
 		$date=date('Y-m-d');
 		#	$date = "2009-07-24";
 		
-		$daily_folder = $GLOBALS['wdb_install']."/out/daemon/".$date."/";
-		$daemon_folder = $GLOBALS['wdb_install']."/out/daemon/";
+		$daily_folder = $GLOBALS['wdb_install']."out/daemon/".$date."/";
+		$daemon_folder = $GLOBALS['wdb_install']."out/daemon/";
 		if(!(is_dir($daily_folder)))
 		{
 			echo "Make Folder $daily_folder\n";
@@ -5617,7 +5609,7 @@ class daemon extends database
 		$filename = $daemon_folder.'fulldb.kmz';
 		$filename_copy = $daily_folder.'fulldb.kmz';
 		
-		 daemon::daemon_daily_db_exp($temp_daily_kml, $temp_dailyL_kml, $verbose);
+		daemon::daemon_daily_db_exp($temp_daily_kml, $temp_dailyL_kml, $verbose);
 		
 		# do a full Db export for the day if needed
 		$temp_kml_size = dos_filesize($temp_kml);

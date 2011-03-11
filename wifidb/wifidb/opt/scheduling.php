@@ -129,7 +129,7 @@ if(is_string($func))
 			}
 			rsort($DGK_folder);
 			rsort($DATES);
-			if(@$DATES[0] == ''){$today = $date;}else{$today = $DATES[0];}
+			if(@$DATES[0] != $date){$today = $date;}else{$today = $DATES[0];}
 			?>
 			<table width="700px" border="1" cellspacing="0" cellpadding="0" align="center">
 			<tr>
