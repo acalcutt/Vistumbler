@@ -1368,476 +1368,491 @@ class database
 	
 	function convert_vs1($source='', $out='file')
 	{
-		if($source == ''){die("cannot supply an empty string for the file source.");}
-		//Access point and GPS Data Array
-		$apdata=array();
-		global $gpsdata;
-		
-		$dir = $GLOBALS['wifidb_install'].'/import/up/';
-		// dfine time that the script started
-		$start = date("H:i:s");
-		// counters
-		$c=0;
-		$cc=0;
-		$n=0;
-		$nn=0;
-		$N=0;
-		$complete=0;
-		
-		$src=explode("/",$source);
-		$f_max = count($src);
-		$file_src = explode(".",$src[$f_max-1]);
-		$file_type = strtolower($file_src[1]);
-		
-		$file_ext = $dir.$file_src[0].'.vs1';
-		$filename = $file_ext;
-			if($GLOBALS["debug"] == 1 ){echo $file_ext."\n".$filename."\n";}
-		// define initial write and appends
-		$filewrite = fopen($filename, "w");
-		$fileappend = fopen($filename, "a");
+            if($source == ''){die("cannot supply an empty string for the file source.");}
+            //Access point and GPS Data Array
+            $apdata=array();
+            global $gpsdata;
 
-		if($file_type == "txt" or $file_type == "tmp")
-		{
-			//Break out file into an Array
-			$return = file($source);
+            $dir = $GLOBALS['wifidb_install'].'/import/up/';
+            // dfine time that the script started
+            $start = date("H:i:s");
+            // counters
+            $c=0;
+            $cc=0;
+            $n=0;
+            $nn=0;
+            $N=0;
+            $complete=0;
 
-			//create interval for progress
-			$line = count($return);
-			$stat_c = $line/97;
-			if ($GLOBALS["debug"] ==1){echo $stat_c."\r\n";}
-			if ($GLOBALS["debug"] ==1){echo $line."\r\n";}
-			
-			// Start the main loop
-			foreach($return as $ret)
-			{
-				$c++;
-				$cc++;
-				if ($ret[0] == "#"){continue;}
-				$wifi = explode("|",$ret);
-				$ret_count = count($wifi);
-				if ($ret_count == 17)// test to see if the data is in correct format
-				{	
-					if ($cc >= $stat_c)
-					{
-						$cc=0;
-						$complete++;
-						echo $complete."% - ";
-						if ($complete == 100 ){ echo "\r\n\r\n";}
-					}
-					//format date and time
-					$datetime=explode(" ",$wifi[13]);
-					$date=$datetime[0];
-					$time=$datetime[1];
-					
-					// This is a temp array of data to be tested against the GPS array
-					$gpsdata_t=array(
-										"lat"=> $wifi[8],
-										"long"=> $wifi[9],
-										"sats"=> "0",
-										"hdp"=> '0.0',
-										"alt"=> '0.0',
-										"geo"=> '-0.0',
-										"kmh"=> '0.0',
-										"mph"=> '0.0',
-										"track"=> '0.0',
-										"date"=>$date,
-										"time"=>$time
-										);
-					$lat = smart($gpsdata_t['lat']);
-					$long = smart($gpsdata_t['long']);
-					$time = smart($gpsdata_t['time']);
-					$date = smart($gpsdata_t['date']);
-					$gps_test = $lat."".$long."".$date."".$time;
-						
-					// Create the Security Type number for the respective Access point
-					if ($wifi[4]=="Open"&&$wifi[5]=="None"){$sectype="1";}
-					if ($wifi[4]=="Open"&&$wifi[5]=="WEP"){$sectype="2";}
-					if ($wifi[4]=="WPA-Personal" or $wifi[4] =="WPA2-Personal"){$sectype="3";}
+            $src=explode("/",$source);
+            $f_max = count($src);
+            $file_src = explode(".",$src[$f_max-1]);
+            $file_type = strtolower($file_src[1]);
 
-					if ($GLOBALS["debug"] == 1 )
-					{
-						echo "\n\n+-+-+-+-+-+-\n".$gpsdata_t["lat"]."+-\n".$gpsdata_t["long"]."+-\n".$gpsdata_t["sats"]."+-\n".$gpsdata_t["date"]."+-\n".$gpsdata_t["time"]."+-\n";	
-					}
-					
-					$gpschk =& database::check_gps_array($gpsdata, $gps_test);
-					if ($gpschk[0]==0)
-					{
-						if ($GLOBALS["debug"] ==1)
-						{echo "\$n = ".$n."\n\$N = ".$N."\n";}
-						$n++;
-						$N++;
-						$sig=$n.",".$wifi[3];
-						$gpsdata[$n]=array(
-											"id"=>$n,
-											"lat"=>$wifi[8],
-											"long"=>$wifi[9],
-											"sats"=>'0',
-											"hdp"=> '0.0',
-											"alt"=> '0.0',
-											"geo"=> '-0.0',
-											"kmh"=> '0.0',
-											"mph"=> '0.0',
-											"track"=> '0.0',
-											"date"=>$date,
-											"time"=>$time
-											);
+            $file_ext = $dir.$file_src[0].'.vs1';
+            $filename = $file_ext;
+            if($GLOBALS["debug"] == 1 ){echo $file_ext."\n".$filename."\n";}
+            // define initial write and appends
+            $filewrite = fopen($filename, "w");
+            $fileappend = fopen($filename, "a");
+            $return = file($source);
+            $exp = explode("|", $return[0]);
+            if($return[0][0] == "#")
+            {
+                $ext_e = explode(".", $source);
+                $c_ext = count($ext_e)-1;
+                $ext_e[$c_ext] = "vs1";
+                $source = implode(".", $ext_e);
+                return $source;
+            }
+            if(count($exp) == 17)
+            {
+                //Break out file into an Array
+                $return = file($source);
+                //create interval for progress
+                $line = count($return);
+                $stat_c = $line/97;
+                if ($GLOBALS["debug"] ==1){echo $stat_c."\r\n";}
+                if ($GLOBALS["debug"] ==1){echo $line."\r\n";}
+                // Start the main loop
+                foreach($return as $ret)
+                {
+                    $c++;
+                    $cc++;
+                    if ($ret[0] == "#"){continue;}
+                    $wifi = explode("|",$ret);
+                    $ret_count = count($wifi);
+                    if ($ret_count == 17)// test to see if the data is in correct format
+                    {	
+                        if ($cc >= $stat_c)
+                        {
+                            $cc=0;
+                            $complete++;
+                            echo $complete."% - ";
+                            if ($complete == 100 ){ echo "\r\n\r\n";}
+                        }
+                        //format date and time
+                        $datetime=explode(" ",$wifi[13]);
+                        $date=$datetime[0];
+                        $time=$datetime[1];
 
-						$apdata[$N]=array(
-											"ssid"=>$wifi[0],
-											"mac"=>$wifi[1],
-											"man"=>$wifi[2],
-											"auth"=>$wifi[4],
-											"encry"=>$wifi[5],
-											"sectype"=>$sectype,
-											"radio"=>$wifi[6],
-											"chan"=>$wifi[7],
-											"btx"=>$wifi[10],
-											"otx"=>$wifi[11],
-											"nt"=>$wifi[14],
-											"label"=>$wifi[15],
-											"sig"=>$sig
-											);
-						if ($GLOBALS["debug"] == 1 )
-						{
-							echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."  +_\n".$gpsdata[$n]["long"]."  +_\n".$gpsdata[$n]["sats"]."  +_\n".$gpsdata[$n]["date"]."  +_\n".$gpsdata[$n]["time"]."  +_\n";	
-							echo "Access Point Number: ".$N."\n";
-							echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."  =-\n".$apdata[$N]["mac"]."  =-\n".$apdata[$N]["auth"]."  =-\n".$apdata[$N]["encry"]."  =-\n".$apdata[$N]["sectype"]."  =-\n".$apdata[$N]["radio"]."  =-\n".$apdata[$N]["chan"]."  =-\n".$apdata[$N]["btx"]."  =-\n".$apdata[$N]["otx"]."  =-\n".$apdata[$N]["nt"]."  =-\n".$apdata[$N]["label"]."  =-\n".$apdata[$N]["sig"]."\n";
-						}
-					}elseif($gpschk===1)
-					{
-						if ($GLOBALS["debug"] ==1)
-						{echo "\$n = ".$n."\n\$N = ".$N."\n";}
-						$N++;
-						$sig=$n.",".$wifi[3];
-						if ($GLOBALS["debug"] ==1 ){echo "\nduplicate GPS data, not entered into array\n";}
-						$apdata[$N]=array("ssid"=>$wifi[0],
-										"mac"=>$wifi[1],
-										"man"=>$wifi[2],
-										"auth"=>$wifi[4],
-										"encry"=>$wifi[5],
-										"sectype"=>$sectype,
-										"radio"=>$wifi[6],
-										"chan"=>$wifi[7],
-										"btx"=>$wifi[10],
-										"otx"=>$wifi[11],
-										"nt"=>$wifi[14],
-										"label"=>$wifi[15],
-										"sig"=>$sig);
-						if ($GLOBALS["debug"] == 1 )
-						{
-							echo "Access Point Number: ".$N."\n";
-							echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."=-\n".$apdata[$N]["mac"]."=-\n".$apdata[$N]["auth"]."=-\n".$apdata[$N]["encry"]."=-\n".$apdata[$N]["sectype"]."=-\n".$apdata[$N]["radio"]."=-\n".$apdata[$N]["chan"]."=-\n".$apdata[$N]["btx"]."=-\n".$apdata[$N]["otx"]."=-\n".$apdata[$N]["nt"]."=-\n".$apdata[$N]["label"]."=-\n".$apdata[$N]["sig"]."\n";
-						}
+                        // This is a temp array of data to be tested against the GPS array
+                        $gpsdata_t=array(
+                                        "lat"=> $wifi[8],
+                                        "long"=> $wifi[9],
+                                        "sats"=> "0",
+                                        "hdp"=> '0.0',
+                                        "alt"=> '0.0',
+                                        "geo"=> '-0.0',
+                                        "kmh"=> '0.0',
+                                        "mph"=> '0.0',
+                                        "track"=> '0.0',
+                                        "date"=>$date,
+                                        "time"=>$time
+                                        );
+                        $lat = smart($gpsdata_t['lat']);
+                        $long = smart($gpsdata_t['long']);
+                        $time = smart($gpsdata_t['time']);
+                        $date = smart($gpsdata_t['date']);
+                        $gps_test = $lat."".$long."".$date."".$time;
 
-					}
-				}else
-				{
-					echo "\nLine: ".$c." - Wrong data type, dropping row\n";
-				}
-				if(@$gpsdata_t[0])
-				{
-				    unset($gpsdata_t[0]);
-				}
-			}
-		}elseif($file_type == "db3")
-		{
-			$sep = '-';
-			$dbh = new PDO("sqlite:$source"); // success
-			$line = count($dbh->query('SELECT * FROM networks'));
-			
-			$stat_c = $line/100;
-			if ($GLOBALS["debug"] ==1){echo $stat_c."\n";}
-			if ($GLOBALS["debug"] ==1){echo $line."\n";}
-			
-			foreach ($dbh->query('SELECT * FROM networks') as $row)
-			{
-				list($ssid_t, $ssid) = make_ssid($row["ssid"]);
-				$mac = strtoupper($row["bssid"]);
-				$man = database::manufactures($mac);
-				
-				$Found_Capabilies = $row["capabilities"];
-				
-				If(stristr($Found_Capabilies, "WPA2-PSK-CCMP") Or stristr($Found_Capabilies, "WPA2-PSK-TKIP+CCMP"))
-				{	$Found_AUTH = "WPA2-Personal";
-					$Found_ENCR = "CCMP";
-					$Found_SecType = 3;
-				}ElseIf(stristr($Found_Capabilies, "WPA-PSK-CCMP") Or stristr($Found_Capabilies, "WPA-PSK-TKIP+CCMP"))
-				{	$Found_AUTH = "WPA-Personal";
-					$Found_ENCR = "CCMP";
-					$Found_SecType = 3;
-				}ElseIf(stristr($Found_Capabilies, "WPA2-EAP-CCMP") Or stristr($Found_Capabilies, "WPA2-EAP-TKIP+CCMP"))
-				{	$Found_AUTH = "WPA2-Enterprise";
-					$Found_ENCR = "CCMP";
-					$Found_SecType = 3;
-				}ElseIf(stristr($Found_Capabilies, "WPA-EAP-CCMP") Or stristr($Found_Capabilies, "WPA-EAP-TKIP+CCMP"))
-				{	$Found_AUTH = "WPA-Enterprise";
-					$Found_ENCR = "CCMP";
-					$Found_SecType = 3;
-				}ElseIf(stristr($Found_Capabilies, "WPA2-PSK-TKIP"))
-				{	$Found_AUTH = "WPA2-Personal";
-					$Found_ENCR = "TKIP";
-					$Found_SecType = 3;
-				}ElseIf(stristr($Found_Capabilies, "WPA-PSK-TKIP"))
-				{	$Found_AUTH = "WPA-Personal";
-					$Found_ENCR = "TKIP";
-					$Found_SecType = 3;
-				}ElseIf(stristr($Found_Capabilies, "WPA2-EAP-TKIP"))
-				{	$Found_AUTH = "WPA2-Enterprise";
-					$Found_ENCR = "TKIP";
-					$Found_SecType = 3;
-				}ElseIf(stristr($Found_Capabilies, "WPA-EAP-TKIP"))
-				{	$Found_AUTH = "WPA-Enterprise";
-					$Found_ENCR = "TKIP";
-					$Found_SecType = 3;
-				}ElseIf(stristr($Found_Capabilies, "WEP"))
-				{	$Found_AUTH = "Open";
-					$Found_ENCR = "WEP";
-					$Found_SecType = 2;
-				}Else
-				{	$Found_AUTH = "Open";
-					$Found_ENCR = "None";
-					$Found_SecType = 1;
-				}
-				if(stristr($Found_Capabilies, "IBSS"))
-				{
-					$nt = "Ad-Hoc";
-				}else
-				{
-					$nt = "Infrastructure";
-				}
-				$authen = $Found_AUTH;
-				$encry = $Found_ENCR;
-				$sectype = $Found_SecType;
-				###########################
-				switch($row["frequency"]+0)
-				{
-					case 2412:
-						$chan = 1;
-						$radio = '802.11g';
-					break;
-					case 2417:
-						$chan = 2;
-						$radio = '802.11g';
-					break;
-					case 2422:
-						$chan = 3;
-						$radio = '802.11g';
-					break;
-					case 2427:
-						$chan = 4;
-						$radio = '802.11g';
-					break;
-					case 2432:
-						$chan = 5;
-						$radio = '802.11g';
-					break;
-					case 2437:
-						$chan = 6;
-						$radio = '802.11g';
-					break;
-					case 2442:
-						$chan = 7;
-						$radio = '802.11g';
-					break;
-					case 2447:
-						$chan = 8;
-						$radio = '802.11g';
-					break;
-					case 2452:
-						$chan = 9;
-						$radio = '802.11g';
-					break;
-					case 2457:
-						$chan = 10;
-						$radio = '802.11g';
-					break;
-					case 2462:
-						$chan = 11;
-						$radio = '802.11g';
-					break;
-					case 2467:
-						$chan = 12;
-						$radio = '802.11g';
-					break;
-					case 2472:
-						$chan = 13;
-						$radio = '802.11g';
-					break;
-					case 2484:
-						$chan = 14;
-						$radio = '802.11b';
-					break;
-					default:
-						$chan = 6;
-						$radio = 'g';
-					break;
-				}
-				$level = (100+$row["level"]);
-				$alt = $row["alt"];
-				
-				$time = str_split($row["timestamp"], 10);
-				$timestamp = date("Y-m-d H:i:s", $time[0]);
-				
-				$table = $ssid_t.$sep.$mac.$sep.$sectype.$sep.$radio.$sep.$chan;
-			#	if($ssid_t == "yellow"){ die(); }
-				//format date and time
-				$datetime=explode(" ",$timestamp);
-				$date=$datetime[0];
-				$time=$datetime[1];
-				$lat = $row['lat'];
-				$long = $row['lon'];
-				echo $table."\r\n$timestamp - - $man\r\n$nt - $authen - $encry - $sectype - $lat - $long\r\n----------\r\n\r\n";
-				// This is a temp array of data to be tested against the GPS array
-				$gpsdata_t=array(
-									"lat"=>$lat,
-									"long"=>$long,
-									"sats"=>"0",
-									"hdp"=> '0.0',
-									"alt"=> $alt,
-									"geo"=> '-0.0',
-									"kmh"=> '0.0',
-									"mph"=> '0.0',
-									"track"=> '0.0',
-									"date"=>$date,
-									"time"=>$time
-									);
-				$lat_t = smart($gpsdata_t['lat']);
-				$long_t = smart($gpsdata_t['long']);
-				$time_t = smart($gpsdata_t['time']);
-				$date_t = smart($gpsdata_t['date']);
-				$gps_test = $lat_t."".$long_t."".$date_t."".$time_t;
-				if ($GLOBALS["debug"] == 1 )
-				{
-					echo "\n\n+-+-+-+-+-+-\n".$gpsdata_t["lat"]."+-\n".$gpsdata_t["long"]."+-\n".$gpsdata_t["sats"]."+-\n".$gpsdata_t["date"]."+-\n".$gpsdata_t["time"]."+-\n";	
-				}
-				$gpschk =& database::check_gps_array($gpsdata, $gps_test);
-				if ($gpschk[0]==0)
-				{
-					if ($GLOBALS["debug"] ==1)
-					{echo "\$n = ".$n."\n\$N = ".$N."\n";}
-					$n++;
-					$N++;
-					$sig=$n.",".$level;
-					$gpsdata[$n]=array(
-										"id"=>$n,
-										"lat"=>$lat,
-										"long"=>$long,
-										"sats"=>'0',
-										"hdp"=> '0.0',
-										"alt"=> $alt,
-										"geo"=> '-0.0',
-										"kmh"=> '0.0',
-										"mph"=> '0.0',
-										"track"=> '0.0',
-										"date"=>$date,
-										"time"=>$time
-										);
-					$apdata[$N]=array(
-										"ssid"=>$ssid,
-										"mac"=>$mac,
-										"man"=>$man,
-										"auth"=>$authen,
-										"encry"=>$encry,
-										"sectype"=>$sectype,
-										"radio"=>$radio,
-										"chan"=>$chan,
-										"btx"=>"0",
-										"otx"=>"0",
-										"nt"=>$nt,
-										"label"=>"Unknown",
-										"sig"=>$sig
-										);
-					if ($GLOBALS["debug"] == 1 )
-					{
-						echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."  +_\n".$gpsdata[$n]["long"]."  +_\n".$gpsdata[$n]["sats"]."  +_\n".$gpsdata[$n]["date"]."  +_\n".$gpsdata[$n]["time"]."  +_\n";	
-						echo "Access Point Number: ".$N."\n";
-						echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."  =-\n".$apdata[$N]["mac"]."  =-\n".$apdata[$N]["auth"]."  =-\n".$apdata[$N]["encry"]."  =-\n".$apdata[$N]["sectype"]."  =-\n".$apdata[$N]["radio"]."  =-\n".$apdata[$N]["chan"]."  =-\n".$apdata[$N]["btx"]."  =-\n".$apdata[$N]["otx"]."  =-\n".$apdata[$N]["nt"]."  =-\n".$apdata[$N]["label"]."  =-\n".$apdata[$N]["sig"]."\n";
-					}
-				}else
-				{
-					if ($GLOBALS["debug"] ==1)
-					{echo "\$n = ".$n."\n\$N = ".$N."\n";}
-					$N++;
-					$sig=$n.",".$level;
-					if ($GLOBALS["debug"] ==1 ){echo "\nduplicate GPS data, not entered into array\n";}
-					$apdata[$N]=array(
-									"ssid"=>$ssid,
-									"mac"=>$mac,
-									"man"=>$man,
-									"auth"=>$authen,
-									"encry"=>$encry,
-									"sectype"=>$sectype,
-									"radio"=>$radio,
-									"chan"=>$chan,
-									"btx"=>"0",
-									"otx"=>"0",
-									"nt"=>$nt,
-									"label"=>"Unlabeled",
-									"sig"=>$sig
-									);
-					if ($GLOBALS["debug"] == 1 )
-					{
-						echo "Access Point Number: ".$N."\n";
-						echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."=-\n".$apdata[$N]["mac"]."=-\n".$apdata[$N]["auth"]."=-\n".$apdata[$N]["encry"]."=-\n".$apdata[$N]["sectype"]."=-\n".$apdata[$N]["radio"]."=-\n".$apdata[$N]["chan"]."=-\n".$apdata[$N]["btx"]."=-\n".$apdata[$N]["otx"]."=-\n".$apdata[$N]["nt"]."=-\n".$apdata[$N]["label"]."=-\n".$apdata[$N]["sig"]."\n";
-					}
-				}
-				unset($gpsdata_t[0]);
-			}
-		}
-		#############################
-		# Now write the VS1 file
-		#############################
-		if ($out == "file" or $out == "File" or $out=="FILE")
-		{
-			$n = 1;
-			# Dump GPS data to VS1 File
-			$h1 = "# Vistumbler VS1 - Detailed Export Version 3.0\r\n# Created By: RanInt WiFi DB Alpha \r\n# -------------------------------------------------\r\n# GpsID|Latitude|Longitude|NumOfSatalites|Date|Time\r\n# -------------------------------------------------\r\n";
-			fwrite($fileappend, $h1);
-			foreach( $gpsdata as $gps )
-			{
-			//	GPS Convertion :
-				$lat  =& database::convert_dd_dm($gps['lat']);
-				$long =& database::convert_dd_dm($gps['long']);
-				if(substr($lat,0,1) == "-")
-				{
-					$lat = "S ".str_replace("-", "", $lat);
-				}else
-				{
-					$lat = "N ".$lat;
-				}
-				if(substr($long,0,1) == "-")
-				{
-					$long = "W ".str_replace("-", "", $long);
-				}else
-				{
-					$long = "E ".$long;
-				}
-			//	END GPS convert
+                        // Create the Security Type number for the respective Access point
+                        if ($wifi[4]=="Open"&&$wifi[5]=="None"){$sectype="1";}
+                        if ($wifi[4]=="Open"&&$wifi[5]=="WEP"){$sectype="2";}
+                        if ($wifi[4]=="WPA-Personal" or $wifi[4] =="WPA2-Personal"){$sectype="3";}
 
-				if ($GLOBALS["debug"] ==1 ){echo "Lat : ".$gps['lat']." - Long : ".$gps['long']."\n";}
-				$gpsd = $n."|".$lat."|".$long."|".$gps["sats"]."|".$gps["hdp"]."|".$gps["alt"]."|".$gps["geo"]."|".$gps["kmh"]."|".$gps["mph"]."|".$gps["track"]."|".$gps["date"]."|".$gps["time"]."\r\n";
-				if($GLOBALS["debug"] == 1){ echo $gpsd;}
-				fwrite($fileappend, $gpsd);
-				$n++;
-			}
-			$n=1;
-			
-			$ap_head = "# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GpsID,SIGNAL\r\n# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n";
-			fwrite($fileappend, $ap_head);
-			foreach($apdata as $ap)
-			{
-				$apd = $ap["ssid"]."|".$ap["mac"]."|".$ap["man"]."|".$ap["auth"]."|".$ap["encry"]."|".$ap["sectype"]."|".$ap["radio"]."|".$ap["chan"]."|".$ap["btx"]."|".$ap["otx"]."|".$ap["nt"]."|".$ap["label"]."|".$ap["sig"]."\r\n";
-				if($GLOBALS["debug"] == 1){echo $apd;}
-				fwrite($fileappend, $apd);
-				$n++;
+                        if ($GLOBALS["debug"] == 1 )
+                        {
+                            echo "\n\n+-+-+-+-+-+-\n".$gpsdata_t["lat"]."+-\n".$gpsdata_t["long"]."+-\n".$gpsdata_t["sats"]."+-\n".$gpsdata_t["date"]."+-\n".$gpsdata_t["time"]."+-\n";	
+                        }
 
-			}
-			$end = date("H:i:s");
-			$GPSS=count($gpsdata);
-			$APS=count($apdata);
-			echo "\n\n------------------------------\nTotal Number of Access Points : ".$APS."\nTotal Number of GPS Points : ".$GPSS."\n------------------------------\nDONE!\nStart Time : ".$start."\nStop Time : ".$end."\n-------";
-			return $filename;
-		}
+                        $gpschk =& database::check_gps_array($gpsdata, $gps_test);
+                        if ($gpschk[0]==0)
+                        {
+                            if ($GLOBALS["debug"] ==1)
+                            {echo "\$n = ".$n."\n\$N = ".$N."\n";}
+                            $n++;
+                            $N++;
+                            $sig=$n.",".$wifi[3];
+                            $gpsdata[$n]=array(
+                                            "id"=>$n,
+                                            "lat"=>$wifi[8],
+                                            "long"=>$wifi[9],
+                                            "sats"=>'0',
+                                            "hdp"=> '0.0',
+                                            "alt"=> '0.0',
+                                            "geo"=> '-0.0',
+                                            "kmh"=> '0.0',
+                                            "mph"=> '0.0',
+                                            "track"=> '0.0',
+                                            "date"=>$date,
+                                            "time"=>$time
+                                            );
+
+                            $apdata[$N]=array(
+                                            "ssid"=>$wifi[0],
+                                            "mac"=>$wifi[1],
+                                            "man"=>$wifi[2],
+                                            "auth"=>$wifi[4],
+                                            "encry"=>$wifi[5],
+                                            "sectype"=>$sectype,
+                                            "radio"=>$wifi[6],
+                                            "chan"=>$wifi[7],
+                                            "btx"=>$wifi[10],
+                                            "otx"=>$wifi[11],
+                                            "nt"=>$wifi[14],
+                                            "label"=>$wifi[15],
+                                            "sig"=>$sig
+                                            );
+                            if ($GLOBALS["debug"] == 1 )
+                            {
+                                echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."  +_\n".$gpsdata[$n]["long"]."  +_\n".$gpsdata[$n]["sats"]."  +_\n".$gpsdata[$n]["date"]."  +_\n".$gpsdata[$n]["time"]."  +_\n";	
+                                echo "Access Point Number: ".$N."\n";
+                                echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."  =-\n".$apdata[$N]["mac"]."  =-\n".$apdata[$N]["auth"]."  =-\n".$apdata[$N]["encry"]."  =-\n".$apdata[$N]["sectype"]."  =-\n".$apdata[$N]["radio"]."  =-\n".$apdata[$N]["chan"]."  =-\n".$apdata[$N]["btx"]."  =-\n".$apdata[$N]["otx"]."  =-\n".$apdata[$N]["nt"]."  =-\n".$apdata[$N]["label"]."  =-\n".$apdata[$N]["sig"]."\n";
+                            }
+                        }elseif($gpschk===1)
+                        {
+                            if ($GLOBALS["debug"] ==1)
+                            {echo "\$n = ".$n."\n\$N = ".$N."\n";}
+                            $N++;
+                            $sig=$n.",".$wifi[3];
+                            if ($GLOBALS["debug"] ==1 ){echo "\nduplicate GPS data, not entered into array\n";}
+                            $apdata[$N]=array("ssid"=>$wifi[0],
+                                                            "mac"=>$wifi[1],
+                                                            "man"=>$wifi[2],
+                                                            "auth"=>$wifi[4],
+                                                            "encry"=>$wifi[5],
+                                                            "sectype"=>$sectype,
+                                                            "radio"=>$wifi[6],
+                                                            "chan"=>$wifi[7],
+                                                            "btx"=>$wifi[10],
+                                                            "otx"=>$wifi[11],
+                                                            "nt"=>$wifi[14],
+                                                            "label"=>$wifi[15],
+                                                            "sig"=>$sig);
+                            if ($GLOBALS["debug"] == 1 )
+                            {
+                                echo "Access Point Number: ".$N."\n";
+                                echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."=-\n".$apdata[$N]["mac"]."=-\n".$apdata[$N]["auth"]."=-\n".$apdata[$N]["encry"]."=-\n".$apdata[$N]["sectype"]."=-\n".$apdata[$N]["radio"]."=-\n".$apdata[$N]["chan"]."=-\n".$apdata[$N]["btx"]."=-\n".$apdata[$N]["otx"]."=-\n".$apdata[$N]["nt"]."=-\n".$apdata[$N]["label"]."=-\n".$apdata[$N]["sig"]."\n";
+                            }
+                        }
+                    }else
+                    {
+                            echo "\nLine: ".$c." - Wrong data type, dropping row\n";
+                    }
+                    if(@$gpsdata_t[0])
+                    {
+                        unset($gpsdata_t[0]);
+                    }
+                }
+            }elseif($file_type == "db3")
+            {
+                $sep = '-';
+                $dbh = new PDO("sqlite:$source"); // success
+                $line = count($dbh->query('SELECT * FROM networks'));
+
+                $stat_c = $line/100;
+                if ($GLOBALS["debug"] ==1){echo $stat_c."\n";}
+                if ($GLOBALS["debug"] ==1){echo $line."\n";}
+
+                foreach ($dbh->query('SELECT * FROM networks') as $row)
+                {
+                    list($ssid_t, $ssid) = make_ssid($row["ssid"]);
+                    $mac = strtoupper($row["bssid"]);
+                    $man = database::manufactures($mac);
+
+                    $Found_Capabilies = $row["capabilities"];
+
+                    If(stristr($Found_Capabilies, "WPA2-PSK-CCMP") Or stristr($Found_Capabilies, "WPA2-PSK-TKIP+CCMP"))
+                    {	$Found_AUTH = "WPA2-Personal";
+                            $Found_ENCR = "CCMP";
+                            $Found_SecType = 3;
+                    }ElseIf(stristr($Found_Capabilies, "WPA-PSK-CCMP") Or stristr($Found_Capabilies, "WPA-PSK-TKIP+CCMP"))
+                    {	$Found_AUTH = "WPA-Personal";
+                            $Found_ENCR = "CCMP";
+                            $Found_SecType = 3;
+                    }ElseIf(stristr($Found_Capabilies, "WPA2-EAP-CCMP") Or stristr($Found_Capabilies, "WPA2-EAP-TKIP+CCMP"))
+                    {	$Found_AUTH = "WPA2-Enterprise";
+                            $Found_ENCR = "CCMP";
+                            $Found_SecType = 3;
+                    }ElseIf(stristr($Found_Capabilies, "WPA-EAP-CCMP") Or stristr($Found_Capabilies, "WPA-EAP-TKIP+CCMP"))
+                    {	$Found_AUTH = "WPA-Enterprise";
+                            $Found_ENCR = "CCMP";
+                            $Found_SecType = 3;
+                    }ElseIf(stristr($Found_Capabilies, "WPA2-PSK-TKIP"))
+                    {	$Found_AUTH = "WPA2-Personal";
+                            $Found_ENCR = "TKIP";
+                            $Found_SecType = 3;
+                    }ElseIf(stristr($Found_Capabilies, "WPA-PSK-TKIP"))
+                    {	$Found_AUTH = "WPA-Personal";
+                            $Found_ENCR = "TKIP";
+                            $Found_SecType = 3;
+                    }ElseIf(stristr($Found_Capabilies, "WPA2-EAP-TKIP"))
+                    {	$Found_AUTH = "WPA2-Enterprise";
+                            $Found_ENCR = "TKIP";
+                            $Found_SecType = 3;
+                    }ElseIf(stristr($Found_Capabilies, "WPA-EAP-TKIP"))
+                    {	$Found_AUTH = "WPA-Enterprise";
+                            $Found_ENCR = "TKIP";
+                            $Found_SecType = 3;
+                    }ElseIf(stristr($Found_Capabilies, "WEP"))
+                    {	$Found_AUTH = "Open";
+                            $Found_ENCR = "WEP";
+                            $Found_SecType = 2;
+                    }Else
+                    {	$Found_AUTH = "Open";
+                            $Found_ENCR = "None";
+                            $Found_SecType = 1;
+                    }
+                    if(stristr($Found_Capabilies, "IBSS"))
+                    {
+                            $nt = "Ad-Hoc";
+                    }else
+                    {
+                            $nt = "Infrastructure";
+                    }
+                    $authen = $Found_AUTH;
+                    $encry = $Found_ENCR;
+                    $sectype = $Found_SecType;
+                    ###########################
+                    switch($row["frequency"]+0)
+                    {
+                        case 2412:
+                                $chan = 1;
+                                $radio = '802.11g';
+                        break;
+                        case 2417:
+                                $chan = 2;
+                                $radio = '802.11g';
+                        break;
+                        case 2422:
+                                $chan = 3;
+                                $radio = '802.11g';
+                        break;
+                        case 2427:
+                                $chan = 4;
+                                $radio = '802.11g';
+                        break;
+                        case 2432:
+                                $chan = 5;
+                                $radio = '802.11g';
+                        break;
+                        case 2437:
+                                $chan = 6;
+                                $radio = '802.11g';
+                        break;
+                        case 2442:
+                                $chan = 7;
+                                $radio = '802.11g';
+                        break;
+                        case 2447:
+                                $chan = 8;
+                                $radio = '802.11g';
+                        break;
+                        case 2452:
+                                $chan = 9;
+                                $radio = '802.11g';
+                        break;
+                        case 2457:
+                                $chan = 10;
+                                $radio = '802.11g';
+                        break;
+                        case 2462:
+                                $chan = 11;
+                                $radio = '802.11g';
+                        break;
+                        case 2467:
+                                $chan = 12;
+                                $radio = '802.11g';
+                        break;
+                        case 2472:
+                                $chan = 13;
+                                $radio = '802.11g';
+                        break;
+                        case 2484:
+                                $chan = 14;
+                                $radio = '802.11b';
+                        break;
+                        default:
+                                $chan = 6;
+                                $radio = 'g';
+                        break;
+                    }
+                    $level = (100+$row["level"]);
+                    $alt = $row["alt"];
+
+                    $time = str_split($row["timestamp"], 10);
+                    $timestamp = date("Y-m-d H:i:s", $time[0]);
+
+                    $table = $ssid_t.$sep.$mac.$sep.$sectype.$sep.$radio.$sep.$chan;
+            #	if($ssid_t == "yellow"){ die(); }
+                    //format date and time
+                    $datetime=explode(" ",$timestamp);
+                    $date=$datetime[0];
+                    $time=$datetime[1];
+                    $lat = $row['lat'];
+                    $long = $row['lon'];
+                    echo $table."\r\n$timestamp - - $man\r\n$nt - $authen - $encry - $sectype - $lat - $long\r\n----------\r\n\r\n";
+                    // This is a temp array of data to be tested against the GPS array
+                    $gpsdata_t=array(
+                                    "lat"=>$lat,
+                                    "long"=>$long,
+                                    "sats"=>"0",
+                                    "hdp"=> '0.0',
+                                    "alt"=> $alt,
+                                    "geo"=> '-0.0',
+                                    "kmh"=> '0.0',
+                                    "mph"=> '0.0',
+                                    "track"=> '0.0',
+                                    "date"=>$date,
+                                    "time"=>$time
+                                    );
+                    $lat_t = smart($gpsdata_t['lat']);
+                    $long_t = smart($gpsdata_t['long']);
+                    $time_t = smart($gpsdata_t['time']);
+                    $date_t = smart($gpsdata_t['date']);
+                    $gps_test = $lat_t."".$long_t."".$date_t."".$time_t;
+                    if ($GLOBALS["debug"] == 1 )
+                    {
+                            echo "\n\n+-+-+-+-+-+-\n".$gpsdata_t["lat"]."+-\n".$gpsdata_t["long"]."+-\n".$gpsdata_t["sats"]."+-\n".$gpsdata_t["date"]."+-\n".$gpsdata_t["time"]."+-\n";	
+                    }
+                    $gpschk =& database::check_gps_array($gpsdata, $gps_test);
+                    if ($gpschk[0]==0)
+                    {
+                        if ($GLOBALS["debug"] ==1)
+                        {echo "\$n = ".$n."\n\$N = ".$N."\n";}
+                        $n++;
+                        $N++;
+                        $sig=$n.",".$level;
+                        $gpsdata[$n]=array(
+                                        "id"=>$n,
+                                        "lat"=>$lat,
+                                        "long"=>$long,
+                                        "sats"=>'0',
+                                        "hdp"=> '0.0',
+                                        "alt"=> $alt,
+                                        "geo"=> '-0.0',
+                                        "kmh"=> '0.0',
+                                        "mph"=> '0.0',
+                                        "track"=> '0.0',
+                                        "date"=>$date,
+                                        "time"=>$time
+                                        );
+                        $apdata[$N]=array(
+                                        "ssid"=>$ssid,
+                                        "mac"=>$mac,
+                                        "man"=>$man,
+                                        "auth"=>$authen,
+                                        "encry"=>$encry,
+                                        "sectype"=>$sectype,
+                                        "radio"=>$radio,
+                                        "chan"=>$chan,
+                                        "btx"=>"0",
+                                        "otx"=>"0",
+                                        "nt"=>$nt,
+                                        "label"=>"Unknown",
+                                        "sig"=>$sig
+                                        );
+                        if ($GLOBALS["debug"] == 1 )
+                        {
+                            echo "\n\n+_+_+_+_+_+_\n".$gpsdata[$n]["lat"]."  +_\n".$gpsdata[$n]["long"]."  +_\n".$gpsdata[$n]["sats"]."  +_\n".$gpsdata[$n]["date"]."  +_\n".$gpsdata[$n]["time"]."  +_\n";	
+                            echo "Access Point Number: ".$N."\n";
+                            echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."  =-\n".$apdata[$N]["mac"]."  =-\n".$apdata[$N]["auth"]."  =-\n".$apdata[$N]["encry"]."  =-\n".$apdata[$N]["sectype"]."  =-\n".$apdata[$N]["radio"]."  =-\n".$apdata[$N]["chan"]."  =-\n".$apdata[$N]["btx"]."  =-\n".$apdata[$N]["otx"]."  =-\n".$apdata[$N]["nt"]."  =-\n".$apdata[$N]["label"]."  =-\n".$apdata[$N]["sig"]."\n";
+                        }
+                    }else
+                    {
+                        if ($GLOBALS["debug"] ==1)
+                        {echo "\$n = ".$n."\n\$N = ".$N."\n";}
+                        $N++;
+                        $sig=$n.",".$level;
+                        if ($GLOBALS["debug"] ==1 ){echo "\nduplicate GPS data, not entered into array\n";}
+                        $apdata[$N]=array(
+                                        "ssid"=>$ssid,
+                                        "mac"=>$mac,
+                                        "man"=>$man,
+                                        "auth"=>$authen,
+                                        "encry"=>$encry,
+                                        "sectype"=>$sectype,
+                                        "radio"=>$radio,
+                                        "chan"=>$chan,
+                                        "btx"=>"0",
+                                        "otx"=>"0",
+                                        "nt"=>$nt,
+                                        "label"=>"Unlabeled",
+                                        "sig"=>$sig
+                                        );
+                        if ($GLOBALS["debug"] == 1 )
+                        {
+                            echo "Access Point Number: ".$N."\n";
+                            echo "=-=-=-=-=-=-\n".$apdata[$N]["ssid"]."=-\n".$apdata[$N]["mac"]."=-\n".$apdata[$N]["auth"]."=-\n".$apdata[$N]["encry"]."=-\n".$apdata[$N]["sectype"]."=-\n".$apdata[$N]["radio"]."=-\n".$apdata[$N]["chan"]."=-\n".$apdata[$N]["btx"]."=-\n".$apdata[$N]["otx"]."=-\n".$apdata[$N]["nt"]."=-\n".$apdata[$N]["label"]."=-\n".$apdata[$N]["sig"]."\n";
+                        }
+                    }
+                    unset($gpsdata_t[0]);
+                }
+            }
+            #############################
+            # Now write the VS1 file
+            #############################
+            if ($out == "file" or $out == "File" or $out=="FILE")
+            {
+                $n = 1;
+                # Dump GPS data to VS1 File
+                $h1 = "# Vistumbler VS1 - Detailed Export Version 3.0\r\n# Created By: RanInt WiFi DB Alpha \r\n# -------------------------------------------------\r\n# GpsID|Latitude|Longitude|NumOfSatalites|Date|Time\r\n# -------------------------------------------------\r\n";
+                fwrite($fileappend, $h1);
+                foreach( $gpsdata as $gps )
+                {
+                //	GPS Convertion  if needed, check for ddmm.mmmm and leave it alone, otherwise i am guessing its DD.mmmmm and that needs to be converted to ddmm.mmmm:
+                    $lat_epx = explode(" ", $gps['lat']);
+                    $lat_exp = explode(".", $lat_epx[1]);
+                    if(strlen($lat_exp[0])>3)
+                    {
+                        $lat  =& $gps['lat'];
+                        $long =& $gps['long'];
+                    }else
+                    {
+                        $lat  =& database::convert_dd_dm($gps['lat']);
+                        $long =& database::convert_dd_dm($gps['long']);
+                    }
+                    if(substr($lat,0,1) == "-")
+                    {
+                            $lat = "S ".str_replace("-", "", $lat);
+                    }else
+                    {
+                            $lat = "N ".$lat;
+                    }
+                    if(substr($long,0,1) == "-")
+                    {
+                            $long = "W ".str_replace("-", "", $long);
+                    }else
+                    {
+                            $long = "E ".$long;
+                    }
+            //	END GPS convert
+
+                    if ($GLOBALS["debug"] ==1 ){echo "Lat : ".$gps['lat']." - Long : ".$gps['long']."\n";}
+                    $gpsd = $n."|".$lat."|".$long."|".$gps["sats"]."|".$gps["hdp"]."|".$gps["alt"]."|".$gps["geo"]."|".$gps["kmh"]."|".$gps["mph"]."|".$gps["track"]."|".$gps["date"]."|".$gps["time"]."\r\n";
+                    if($GLOBALS["debug"] == 1){ echo $gpsd;}
+                    fwrite($fileappend, $gpsd);
+                    $n++;
+                }
+                $n=1;
+
+                $ap_head = "# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GpsID,SIGNAL\r\n# ---------------------------------------------------------------------------------------------------------------------------------------------------------\r\n";
+                fwrite($fileappend, $ap_head);
+                foreach($apdata as $ap)
+                {
+                    $apd = $ap["ssid"]."|".$ap["mac"]."|".$ap["man"]."|".$ap["auth"]."|".$ap["encry"]."|".$ap["sectype"]."|".$ap["radio"]."|".$ap["chan"]."|".$ap["btx"]."|".$ap["otx"]."|".$ap["nt"]."|".$ap["label"]."|".$ap["sig"]."\r\n";
+                    if($GLOBALS["debug"] == 1){echo $apd;}
+                    fwrite($fileappend, $apd);
+                    $n++;
+
+                }
+                $end = date("H:i:s");
+                $GPSS=count($gpsdata);
+                $APS=count($apdata);
+                echo "\n\n------------------------------\nTotal Number of Access Points : ".$APS."\nTotal Number of GPS Points : ".$GPSS."\n------------------------------\nDONE!\nStart Time : ".$start."\nStop Time : ".$end."\n-------";
+                return $filename;
+            }
 	}
 	
 	
@@ -2646,6 +2661,7 @@ class database
                 if(!isset($geocord_deg))
                 {
                     echo $geocord_in."\r\n";
+                    return -1;
                 }
 		$geocord_out = $geocord_deg + $geocord_div;
 		// 428.7753 ---- 4.4795883
@@ -5830,24 +5846,20 @@ class daemon extends database
 		while($ap_array = mysql_fetch_array($result))
 		{
 			$man 		= $database->manufactures($ap_array['mac']);
-			$id			= $ap_array['id'];
-			$ssid_ptb_ = $ap_array['ssid'];
-			$ssids_ptb = str_split($ssid_ptb_,25);
-			$ssid = smart_quotes($ssids_ptb[0]);
-                        $ssid_kml = preg_replace('/[\x00-\x1F]/', '', htmlentities($ssid, ENT_QUOTES));
+			$id		= $ap_array['id'];
+			list($ssid)           = make_ssid($ap_array['ssid']);
+                        $ssid_kml       = preg_replace('/[\x00-\x1F]/', '', htmlentities($ssid, ENT_QUOTES));
 			$mac		= $ap_array['mac'];
 			$sectype	= $ap_array['sectype'];
 			$radio		= $ap_array['radio'];
 			$chan		= $ap_array['chan'];
-			$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
-			$table_gps = $table.$gps_ext;
-			$sql1 = "SELECT * FROM `$db_st`.`$table`";
-			$result1 = mysql_query($sql1, $conn);
-			if(!$result1)
-			{continue;}else{$rows = mysql_num_rows($result1);}
-			$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$rows'";
-			$result1 = mysql_query($sql, $conn);
-			$newArray = mysql_fetch_array($result1);
+			$table          = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
+			$table_gps      = $table.$gps_ext;
+                        #echo $id."\r\n".$table."\r\n";
+			$sql1           = "SELECT * FROM `$db_st`.`$table` order by `id` desc limit 1";
+                        #echo $sql1."\r\n";
+			$result1        = mysql_query($sql1, $conn);
+			$newArray       = mysql_fetch_array($result1);
 			switch($sectype)
 			{
 				case 1:
@@ -5890,44 +5902,44 @@ class daemon extends database
 			$nt = $newArray['nt'];
 			$label = $newArray['label'];
 			
-			$sql_6 = " SELECT * FROM `$db_st`.`$table_gps` ";
-	#		echo "\n".$sql_6."\n";
-			$result_6 = mysql_query($sql_6, $conn);
-			$max = mysql_num_rows($result_6);
-			
 			$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
 			$result_1 = mysql_query($sql_1, $conn);
 			$zero = 0;
 			while($gps_table_first = mysql_fetch_array($result_1))
 			{
-				$lat_exp = explode(" ", $gps_table_first['lat']);
-				if(isset($lat_exp[1]))
-				{
-					$test = $lat_exp[1]+0;
-				}else
-				{
-					$test = $lat_exp[0]+0;
-				}
-				
-				if($test == "0"){$zero = 1; continue;}
-				
-				$date_first = $gps_table_first["date"];
-				$time_first = $gps_table_first["time"];
-				$fa   = $date_first." ".$time_first;
-				$alt  = $gps_table_first['alt'];
-				$lat  =& $database->convert_dm_dd($gps_table_first['lat']);
-				$long =& $database->convert_dm_dd($gps_table_first['long']);
-				$zero = 0;
-				break;
+                            $lat_exp = explode(" ", $gps_table_first['lat']);
+                            if(isset($lat_exp[1]))
+                            {
+                                $test = $lat_exp[1]+0;
+                            }else
+                            {
+                                $test = $lat_exp[0]+0;
+                            }
+
+                            if($test == "0"){$zero = 1; continue;}
+
+                            $date_first = $gps_table_first["date"];
+                            $time_first = $gps_table_first["time"];
+                            $fa   = $date_first." ".$time_first;
+                            $alt  = $gps_table_first['alt'];
+                            $lat  =& $database->convert_dm_dd($gps_table_first['lat']);
+                            $long =& $database->convert_dm_dd($gps_table_first['long']);
+                            if($lat == -1)
+                            {
+                                echo $table."\r\n";
+                                echo $id;
+                            }
+                            $zero = 0;
+                            break;
 			}
 			if($zero == 1)
 			{
-				continue;
+                            continue;
 			}
 			$NN++;
 			//=====================================================================================================//
 			
-			$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$max'";
+			$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` order by `id` desc limit 1";
 			$result_2 = mysql_query($sql_2, $conn);
 			$gps_table_last = mysql_fetch_array($result_2);
 			$date_last = $gps_table_last["date"];
