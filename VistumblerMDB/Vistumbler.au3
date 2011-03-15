@@ -1,9 +1,9 @@
 #RequireAdmin
-#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=Icons\icon.ico
-#AutoIt3Wrapper_Outfile=Vistumbler.exe
+#region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_icon=Icons\icon.ico
+#AutoIt3Wrapper_outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -393,6 +393,8 @@ Dim $AutoSave = IniRead($settings, 'AutoSave', 'AutoSave', 1)
 Dim $AutoSaveDel = IniRead($settings, 'AutoSave', 'AutoSaveDel', 1)
 
 Dim $SoundOnAP = IniRead($settings, 'Sound', 'PlaySoundOnNewAP', 1)
+Dim $SoundPerAP = IniRead($settings, 'Sound', 'SoundPerAP', 0)
+Dim $NewSoundSigBased = IniRead($settings, 'Sound', 'NewSoundSigBased', 0)
 Dim $new_AP_sound = IniRead($settings, 'Sound', 'NewAP_Sound', 'new_ap.wav')
 Dim $ErrorFlag_sound = IniRead($settings, 'Sound', 'Error_Sound', 'error.wav')
 
@@ -1088,6 +1090,10 @@ $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' 
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
+$MenuSoundPerAP = GUICtrlCreateMenuItem("New AP Sound - Per AP", $Options)
+If $SoundPerAP = 1 Then GUICtrlSetState($MenuSoundPerAP, $GUI_CHECKED)
+$MenuNewSoundSigBased = GUICtrlCreateMenuItem("New AP Sound Per AP - Signal based volume", $Options)
+If $NewSoundSigBased = 1 Then GUICtrlSetState($MenuNewSoundSigBased, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
 If $SpeakSignal = 1 Then GUICtrlSetState($SpeakApSignal, $GUI_CHECKED)
 $GUI_MidiActiveAps = GUICtrlCreateMenuItem($Text_PlayMidiSounds, $Options)
@@ -1318,6 +1324,8 @@ GUICtrlSetOnEvent($AutoScanMenu, '_AutoScanToggle')
 GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
 GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
+GUICtrlSetOnEvent($MenuSoundPerAP, '_SoundPerApToggle')
+GUICtrlSetOnEvent($MenuNewSoundSigBased, '_SoundSigBasedToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
@@ -1623,10 +1631,20 @@ Func _ScanAccessPoints()
 				$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
 				;If AP Matches filter, increment $FilterMatches
 				If $FoundLoadApMatch = 1 Then $FilterMatches += 1
+				;Play per-ap new ap sound
+				If $SoundPerAP = 1 Then
+					If $NewSoundSigBased = 1 Then
+						$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
+						$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+					Else
+						$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
+						$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+					EndIf
+				EndIf
 			EndIf
 		Next
-		;Play New AP sound if sounds are enabled
-		If $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+		;Play New AP sound if sounds are enabled if per-ap sound is disabled
+		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
 		;Return number of active APs
 		Return ($FoundAPs)
 	Else
@@ -1699,12 +1717,22 @@ Func _ScanAccessPoints()
 							$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
 							;If AP Matches filter, increment $FilterMatches
 							If $FoundLoadApMatch = 1 Then $FilterMatches += 1
+							;Play per-ap new AP sound
+							If $SoundPerAP = 1 Then
+								If $NewSoundSigBased = 1 Then
+									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
+									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+								Else
+									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
+									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+								EndIf
+							EndIf
 						EndIf
 					EndIf
 				EndIf
 			Next
-			;Play New AP sound if sounds are enabled
-			If $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+			;Play New AP sound if sounds are enabled if per-ap sound is disabled
+			If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
 			;Return number of active APs
 			Return ($FoundAPs)
 		Else
@@ -2913,6 +2941,28 @@ Func _SoundToggle();turns new ap sound on or off
 		$SoundOnAP = 1
 	EndIf
 EndFunc   ;==>_SoundToggle
+
+Func _SoundPerApToggle()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SoundPerApToggle()') ;#Debug Display
+	If $SoundPerAP = 1 Then
+		GUICtrlSetState($MenuSoundPerAP, $GUI_UNCHECKED)
+		$SoundPerAP = 0
+	Else
+		GUICtrlSetState($MenuSoundPerAP, $GUI_CHECKED)
+		$SoundPerAP = 1
+	EndIf
+EndFunc   ;==>_SoundPerApToggle
+
+Func _SoundSigBasedToggle()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SoundSigBasedToggle()') ;#Debug Display
+	If $NewSoundSigBased = 1 Then
+		GUICtrlSetState($MenuNewSoundSigBased, $GUI_UNCHECKED)
+		$NewSoundSigBased = 0
+	Else
+		GUICtrlSetState($MenuNewSoundSigBased, $GUI_CHECKED)
+		$NewSoundSigBased = 1
+	EndIf
+EndFunc   ;==>_SoundSigBasedToggle
 
 Func _SaveGpsWithNoAPsToggle();turns saving gps data without APs on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveGpsWithNoAPsToggle()') ;#Debug Display
@@ -6130,6 +6180,8 @@ Func _WriteINI()
 	IniWrite($settings, "AutoSave", "AutoSaveTime", $SaveTime)
 
 	IniWrite($settings, "Sound", 'PlaySoundOnNewAP', $SoundOnAP)
+	IniWrite($settings, "Sound", 'SoundPerAP', $SoundPerAP)
+	IniWrite($settings, "Sound", 'NewSoundSigBased', $NewSoundSigBased)
 	IniWrite($settings, "Sound", "NewAP_Sound", $new_AP_sound)
 	IniWrite($settings, "Sound", "Error_Sound", $ErrorFlag_sound)
 

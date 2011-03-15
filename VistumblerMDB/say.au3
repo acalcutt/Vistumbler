@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2010 Andrew Calcutt
+;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -14,13 +14,16 @@ $Script_Start_Date = '07/19/2008'
 $Script_Name = 'SayText'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Uses Sound files, Microsoft SAPI, or MIDI sounds to say a number from 0 - 100'
-$version = 'v3'
-$last_modified = '2010/06/24'
+$version = 'v4'
+$last_modified = '2011/03/14'
 ;--------------------------------------------------------
 #include <String.au3>
 #include "UDFs\Midiudf.au3"
 
 Dim $SoundDir = @ScriptDir & '\Sounds\'
+Dim $SettingsDir = @ScriptDir & '\Settings\'
+Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
+Dim $new_AP_sound = IniRead($settings, 'Sound', 'NewAP_Sound', 'new_ap.wav')
 Dim $say = ''
 Dim $midistring = ''
 Dim $type = 2
@@ -71,9 +74,11 @@ If $say <> '' Or $midistring <> '' Then
 		_PlayMidi($Instrument, $say, $MidiWaitTime)
 	ElseIf $type = 4 Then
 		$midistringarray = StringSplit($midistring, '-')
-		For $l = 1 to $midistringarray[0]
+		For $l = 1 To $midistringarray[0]
 			_PlayMidi($Instrument, $midistringarray[$l], $MidiWaitTime)
 		Next
+	ElseIf $type = 5 Then
+		_SigBasedSound($say)
 	EndIf
 EndIf
 Exit
@@ -168,7 +173,7 @@ Func _PlayMidi($Instrument = 0, $Signal = 0, $Sleeptime = 500)
 	If $Signal > 0 And $Signal < 10 Then
 		$PitchOn = $A0_ON
 		$PitchOff = $A0_OFF
-	ElseIf $Signal >= 10 And $Signal < 15  Then
+	ElseIf $Signal >= 10 And $Signal < 15 Then
 		$PitchOn = $A0SHARP_ON
 		$PitchOff = $A0SHARP_OFF
 	ElseIf $Signal = 15 Then
@@ -431,11 +436,30 @@ Func _PlayMidi($Instrument = 0, $Signal = 0, $Sleeptime = 500)
 		$PitchOff = $C8_OFF
 	EndIf
 	If $PitchOn <> '' And $PitchOff <> '' Then
-		$open = _MidiOutOpen ()
-		_MidiOutShortMsg ($open, 256 * $Instrument + 192) ;Select Instrument
-		_MidiOutShortMsg ($open, $PitchOn);Start playing Instrument
+		$open = _MidiOutOpen()
+		_MidiOutShortMsg($open, 256 * $Instrument + 192) ;Select Instrument
+		_MidiOutShortMsg($open, $PitchOn);Start playing Instrument
 		Sleep($Sleeptime)
-		_MidiOutShortMsg ($open, $PitchOff);Stop playing Instrument
-		_MidiOutClose ($open)
+		_MidiOutShortMsg($open, $PitchOff);Stop playing Instrument
+		_MidiOutClose($open)
 	EndIf
+EndFunc   ;==>_PlayMidi
+
+Func _SigBasedSound($volume)
+		If $volume >= 1 And $volume <= 20 Then
+			SoundSetWaveVolume(20)
+			SoundPlay($SoundDir & $new_AP_sound, 1)
+		ElseIf $volume >= 21 And $volume <= 40 Then
+			SoundSetWaveVolume(40)
+			SoundPlay($SoundDir & $new_AP_sound, 1)
+		ElseIf $volume >= 41 And $volume <= 60 Then
+			SoundSetWaveVolume(60)
+			SoundPlay($SoundDir & $new_AP_sound, 1)
+		ElseIf $volume >= 61 And $volume <= 80 Then
+			SoundSetWaveVolume(80)
+			SoundPlay($SoundDir & $new_AP_sound, 1)
+		ElseIf $volume >= 81 And $volume <= 100 Then
+			SoundSetWaveVolume(100)
+			SoundPlay($SoundDir & $new_AP_sound, 1)
+		EndIf
 EndFunc
