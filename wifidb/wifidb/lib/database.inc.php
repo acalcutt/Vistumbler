@@ -8,7 +8,7 @@ $dim = "/";
 $ver = array(
             "wifidb"            =>	" *Alpha* 0.21 Build 1 ",
             "codename"          =>	"Peabody",
-            "Last_Core_Edit"    => 	"2011-Feb-19",
+            "Last_Core_Edit"    => 	"2011-Mar-11",
             "database"          =>	array(  
                                     "import_vs1"	=>	"1.8.0", 
                                     "apfetch"		=>	"2.7.0",
@@ -1932,30 +1932,37 @@ class database
 	    $root	=   $GLOBALS['root'];
 	    $half_path	=   $GLOBALS['half_path'];
 
-	    $file_exp = explode("/", $source);
-	    $file_exp_seg = count($file_exp);
-	    $file1 = $file_exp[$file_exp_seg-1];
+	    $file_exp	    = explode("/", $source);
+	    $file_exp_seg   = count($file_exp);
+	    $file1	    = $file_exp[$file_exp_seg-1];
 
-	    $FILENUM = 1;
-	    $start = microtime(true);
+	    $FILENUM	 = 1;
+	    $start	 = microtime(true);
 
 	    $user_n	 = 0;
 	    $N		 = 0;
 	    $n		 = 0;
 	    $co		 = 0;
 	    $cco	 = 0;
-	    $updated = 0;
-	    $imported = 0;
-	    $apdata  = array();
-	    $gpdata  = array();
-	    $signals = array();
-	    $sats_id = array();
+	    $updated	 = 0;
+	    $imported	 = 0;
+	    $apdata	 = array();
+	    $gpdata	 = array();
+	    $signals	 = array();
+	    $sats_id	 = array();
 	    $db_gps	 = array();
 	    echo $source."\r\n";
-	    $return  = explode("\r\n", utf8_decode(file_get_contents($source)));
-	    #echo $return[0]."\r\n";
+	    $return	 = explode("\n", utf8_decode(file_get_contents($source)));
+	    #$return	= explode("\n", utf8_decode(implode("\n", file($source))));
+	    echo $return[0]."\r\n";
 	    $count = count($return);
 	    echo $count."\r\n";
+	    ####
+	    #die();
+	    ####
+	    ####
+	    ####
+	    ####
 	    $file_row =  0;
 	    if($count <= 8)
 	    {

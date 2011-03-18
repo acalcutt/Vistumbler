@@ -158,13 +158,6 @@ while(1)
             }
         }
     }
-    $date=date('Y-m-d');
-    $daily_folder = $GLOBALS['wdb_install']."out/daemon/".$date."/";
-    $filename_copy = $daily_folder.'fulldb.kmz';
-    if(!file_exists($filename_copy))
-    {
-        $daemon->daemon_kml($named = 0, $verbose);
-    }
     $RUN_SQL = "SELECT `id` FROM `$db`.`$settings_tb` WHERE `table` = 'files'";
     $RUNresult = mysql_query($RUN_SQL, $conn);
     $next_run_id = mysql_fetch_array($RUNresult);
@@ -340,7 +333,8 @@ while(1)
                 }
             }
         }
-        if($finished == 0)
+
+	if($finished == 0)
         {
 
             $message = "File tmp table is empty, go and import something. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
@@ -357,6 +351,17 @@ while(1)
             daemon::daemon_kml($named = 0, $verbose);
             mail_users("Generation of Full Database KML File.\r\n".$host_url."/".$root."/out/daemon/update.kml\r\n\r\n-WiFiDB Service", $subject, "kmz", 0);
         }
+
+	$date=date('Y-m-d');
+	$daily_folder = $GLOBALS['wdb_install']."out/daemon/".$date."/";
+	$filename_copy = $daily_folder.'fulldb.kmz';
+	if(!file_exists($filename_copy))
+	{
+	    logd("Running Daily Full DB KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
+	    verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Running Daily Full DB KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
+	    daemon::daemon_kml($named = 0, $verbose);
+	}
+
 
         $nextrun = date("Y-m-d H:i:s", (time()+$time_interval_to_check));
         $sqlup2 = "UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'";
