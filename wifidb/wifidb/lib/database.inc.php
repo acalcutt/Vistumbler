@@ -1952,8 +1952,8 @@ class database
 	    $sats_id	 = array();
 	    $db_gps	 = array();
 	    echo $source."\r\n";
-	    $return	 = explode("\n", utf8_decode(file_get_contents($source)));
-	    #$return	= explode("\n", utf8_decode(implode("\n", file($source))));
+	    #$return	 = explode("\n", utf8_decode(file_get_contents($source)));
+	    $return	= explode("\n", utf8_decode(implode("\n", file($source))));
 	    echo $return[0]."\r\n";
 	    $count = count($return);
 	    echo $count."\r\n";
@@ -2038,7 +2038,7 @@ class database
 		    if(!isset($SETFLAGTEST))
 		    {
 			$count1 = $count - $gpscount;
-		#	echo $gpscount." - - ".$count."\r\n";
+			echo $gpscount." - - ".$count." - - ".$count1."\r\n";
 			$count1 = $count1 - 8;
 			if($count1 == 0)
 			{
