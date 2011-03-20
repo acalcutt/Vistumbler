@@ -2,7 +2,7 @@ optimize all the code, and i mean all of it
 rewrite code to OO
     daemons [import(), export(), scheduling(), stats()]
     web front end [web()]
-re-design some of the web pages [ap fetch, list all users, index, scheduling]
+re-design some of the pages [ap fetch, list all users, index, scheduling]
 cache all exports, until new import.
 finish implementing memcached
 rewrite SQL methods with PDO
