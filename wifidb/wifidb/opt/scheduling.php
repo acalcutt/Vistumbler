@@ -365,7 +365,7 @@ if(is_string($func))
 					$lastgps = @mysql_fetch_array($resultgps);
 					#var_dump($lastgps);
 					$lat_check = explode(" ", $lastgps['lat']);
-					$lat_c = $lat_check[1]+0;
+                                        $lat_c = @$lat_check[1]+0;
 					if($lat_c != "0"){$gps_yes = 1;}else{$gps_yes = 0;}
 					?>
 					</td><td align="center">
@@ -402,7 +402,8 @@ if(is_string($func))
 					?>
 						</td>
 					<?php
-					if($newArray['ap'] == NULL)
+                                        var_dump($newArray);
+					if($newArray['ap'] == "")
 					{
 					    $ssid = "<td colspan='2' align='center'>Not being imported</td>";
 
