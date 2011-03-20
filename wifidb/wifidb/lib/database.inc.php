@@ -1108,24 +1108,34 @@ function format_size($size, $round = 2)
 #							make ssid (makes a DB safe, File safe and Unsan versions of an SSID)			 		#
 #=========================================================================================================================#
 
-function make_ssid($ssids = '')
+function make_ssid($ssid_in = '')
 {
-	if($ssids == ''){$ssids="UNNAMED";}
-        
-	$file_safe_ssid = smart_quotes($ssids);
+	if($ssid_in == ''){$ssid_in="UNNAMED";}
 
-	$ssidss = $ssids;
-        $ssids = htmlentities($ssids, ENT_QUOTES);
+	###########
+	## Make File Safe SSID
+	$file_safe_ssid = smart_quotes($ssid_in);
+	###########
 
-	$ssid_safe_full_length = mysql_real_escape_string($ssidss);
+	###########
+	## Make Row and HTML safe SSID
+	$ssid_in_dupe = $ssid_in;
+        $ssid_in = htmlentities($ssid_in, ENT_QUOTES);
+	$ssid_safe_full_length = mysql_real_escape_string($ssid_in_dupe);
+	###########
 
-	$ssid_sized = str_split($ssid_safe_full_length,25); //split SSID in two on is 25 char.
-	$replace = array('/`/', '/\./');
-
+	###########
+	## Make Table safe SSID
+	$ssid_sized = str_split($ssid_in_dupe,25); //split SSID in two on is 25 char.
+	$replace = array('/`/', '/\./', "/'/", '/"/', "/\//");
 	$ssid_table_safe = preg_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
+	###########
 
-	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssids, 3=>$file_safe_ssid, 4=>$ssidss);
+	###########
+	## Return
+	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssid_in, 3=>$file_safe_ssid, 4=>$ssid_in_dupe);
 	return $A;
+	###########
 }
 
 
@@ -1952,8 +1962,8 @@ class database
 	    $sats_id	 = array();
 	    $db_gps	 = array();
 	    echo $source."\r\n";
-	    #$return	 = explode("\n", utf8_decode(file_get_contents($source)));
-	    $return	= explode("\n", utf8_decode(implode("\n", file($source))));
+	    $return	 = explode("\n", utf8_decode(file_get_contents($source)));
+	    #$return	= explode("\n", utf8_decode(implode("\n", file($source))));
 	    echo $return[0]."\r\n";
 	    $count = count($return);
 	    echo $count."\r\n";
@@ -2035,12 +2045,14 @@ class database
 		}elseif($ret_len == 13)
 		{
 		    $gpscount = count($gdata);
+                    echo "GPS COUNT: $gpscount\r\n";
+                    echo "FILE ROW COUNT: $count\r\n";
 		    if(!isset($SETFLAGTEST))
 		    {
-			$count1 = $count - $gpscount;
-			echo $gpscount." - - ".$count." - - ".$count1."\r\n";
-			$count1 = $count1 - 8;
-			if($count1 == 0)
+			$count1 = ($count - $gpscount)-8;
+		#	echo $gpscount." - - ".$count."\r\n";
+			#$count1 = $count1 - 8;
+			if($count1 < 1)
 			{
 			    logd($no_aps_in_file_msg."\r\n", $log_interval, 0,  $log_level);
 			    if($out=="CLI")
@@ -2054,7 +2066,7 @@ class database
 			    }
 			}
 		    }
-		    echo "########################################\r\n";
+		    echo "########################################\r\n$source\r\n";
 		    $SETFLAGTEST = TRUE;
 		    $wifi = explode("|",$ret, 13);
 		    if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
@@ -2073,7 +2085,7 @@ class database
 		    list($ssid_S, $ssids, $ssidss ) = make_ssid($wifi[0]);//Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, the rest of the info will suffice for unique table names
 		    $this_of_this = $FILENUM." / ".$count1;
 		    $file1 = str_replace(" ", "%20", $file1);
-		    $sqlup = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssid_S', `row` = '$file_row' WHERE `id` = '$file_id';";
+		    $sqlup = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssidss', `row` = '$file_row' WHERE `id` = '$file_id';";
 		#echo $sqlup."\r\n";
 		    if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 		    {
