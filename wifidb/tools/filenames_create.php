@@ -5,7 +5,7 @@ echo $dbconfig."\n";
 include($dbconfig);
 $filewrite = fopen("filenames.txt", 'w');
 $fileappend = fopen("filenames.txt", 'a');
-fwrite($fileappend, "# FILE HASH						| FILENAME 				| USERNAME | TITLE | DATE | NOTES\r\n");
+fwrite($fileappend, "# FILE HASH | FILENAME | USERNAME | TITLE | DATE | NOTES\r\n");
 $sql1 = "select * from `$db`.`files` ORDER BY `id` ASC";
 $result1 = mysql_query($sql1, $conn);
 if($result1)
