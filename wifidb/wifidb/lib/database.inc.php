@@ -8,7 +8,7 @@ $dim = "/";
 $ver = array(
             "wifidb"            =>	" *Alpha* 0.21 Build 1 ",
             "codename"          =>	"Peabody",
-            "Last_Core_Edit"    => 	"2011-Mar-11",
+            "Last_Core_Edit"    => 	"2011-Mar-21",
             "database"          =>	array(  
                                     "import_vs1"	=>	"1.8.0", 
                                     "apfetch"		=>	"2.7.0",
@@ -345,41 +345,6 @@ function tar_file($file)
 	{
 		return 0;
 	}
-}
-
-
-#-------------------------------------------------------------------------------------#
-#----------------------------------  Parse Arg values  -------------------------------#
-#-------------------------------------------------------------------------------------#
-function parseArgs($argv){
-    array_shift($argv);
-    $out = array();
-    foreach ($argv as $arg){
-        if (substr($arg,0,2) == '--'){
-            $eqPos = strpos($arg,'=');
-            if ($eqPos === false){
-                $key = substr($arg,2);
-                $out[$key] = isset($out[$key]) ? $out[$key] : true;
-            } else {
-                $key = substr($arg,2,$eqPos-2);
-                $out[$key] = substr($arg,$eqPos+1);
-            }
-        } else if (substr($arg,0,1) == '-'){
-            if (substr($arg,2,1) == '='){
-                $key = substr($arg,1,1);
-                $out[$key] = substr($arg,3);
-            } else {
-                $chars = str_split(substr($arg,1));
-                foreach ($chars as $char){
-                    $key = $char;
-                    $out[$key] = isset($out[$key]) ? $out[$key] : true;
-                }
-            }
-        } else {
-            $out[] = $arg;
-        }
-    }
-    return $out;
 }
 
 
@@ -1127,12 +1092,14 @@ function make_ssid($ssid_in = '')
 	###########
 	## Make Table safe SSID
 	$ssid_sized = str_split($ssid_in_dupe,25); //split SSID in two on is 25 char.
-	$replace = array('/`/', '/\./', "/'/", '/"/', "/\//");
-	$ssid_table_safe = preg_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
+	$replace = array('`', '.', "'", '"', "/", "\\");
+	#echo $ssid_sized[0];
+	$ssid_table_safe = str_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
 	###########
 
 	###########
 	## Return
+	#echo $ssid_table_safe;
 	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssid_in, 3=>$file_safe_ssid, 4=>$ssid_in_dupe);
 	return $A;
 	###########
@@ -2045,14 +2012,12 @@ class database
 		}elseif($ret_len == 13)
 		{
 		    $gpscount = count($gdata);
-                    echo "GPS COUNT: $gpscount\r\n";
-                    echo "FILE ROW COUNT: $count\r\n";
 		    if(!isset($SETFLAGTEST))
 		    {
-			$count1 = ($count - $gpscount)-8;
+			$count1 = $count - $gpscount;
 		#	echo $gpscount." - - ".$count."\r\n";
-			#$count1 = $count1 - 8;
-			if($count1 < 1)
+			$count1 = $count1 - 8;
+			if($count1 == 0)
 			{
 			    logd($no_aps_in_file_msg."\r\n", $log_interval, 0,  $log_level);
 			    if($out=="CLI")
@@ -2085,7 +2050,7 @@ class database
 		    list($ssid_S, $ssids, $ssidss ) = make_ssid($wifi[0]);//Use the 25 char long word for the APs table name, this is due to a limitation in MySQL table name lengths, the rest of the info will suffice for unique table names
 		    $this_of_this = $FILENUM." / ".$count1;
 		    $file1 = str_replace(" ", "%20", $file1);
-		    $sqlup = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssidss', `row` = '$file_row' WHERE `id` = '$file_id';";
+		    $sqlup = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `tot` = '$this_of_this', `ap` = '$ssid_S', `row` = '$file_row' WHERE `id` = '$file_id';";
 		#echo $sqlup."\r\n";
 		    if (mysql_query($sqlup, $conn) or die(mysql_error($conn)))
 		    {

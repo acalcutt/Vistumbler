@@ -1,21 +1,6 @@
 <?php
 error_reporting(E_ALL|E_STRICT);
-global $screen_output, $dim, $COLORS, $daemon_ver;
-$screen_output = "CLI";
 
-function clearscreen($out = TRUE) {
-    $clearscreen = chr(27)."[H".chr(27)."[2J";
-    if ($out) print $clearscreen;
-    else return $clearscreen;
-  }
-
-if(!(@require_once 'daemon/config.inc.php')){die("You need to create and configure your config.inc.php file in the [tools dir]/daemon/config.inc.php");}
-if($GLOBALS['wifidb_install'] == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
-require_once $GLOBALS['wifidb_install']."/lib/database.inc.php";
-require_once $GLOBALS['wifidb_install']."/lib/config.inc.php";
-$sep = $GLOBALS['sep'];
-$database = new database();
-$daemon	=	new daemon();
 
 while(1)
 {
@@ -23,6 +8,13 @@ while(1)
 	echo get_file_size($argv[1])."\r\n";
 	sleep(1);
 }
+
+
+function clearscreen($out = TRUE) {
+    $clearscreen = chr(27)."[H".chr(27)."[2J";
+    if ($out) print $clearscreen;
+    else return $clearscreen;
+  }
 
 function get_file_size($file_)
 {
@@ -33,4 +25,19 @@ function get_file_size($file_)
 	pclose($handle);
 	return $return;
 }
+
+function format_size($size, $round = 2)
+{
+	//Size must be bytes!
+
+	$sizes = array('B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB');
+
+	for ($i=0; $size > 1024 && $i < (count($sizes)-1); $i++)
+	{
+		$size = $size/1024;
+	}
+	#echo $size."<BR>";
+	return round($size,$round).$sizes[$i];
+}
+
 ?>
