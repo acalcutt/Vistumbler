@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 11'
+$version = 'v10.1 Beta 12'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/03/10'
+$last_modified = '2011/03/21'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -222,14 +222,14 @@ Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_La
 Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0, $WifidbGPS_Update
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $AutoKmlDeadHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
-Dim $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
+Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
 Dim $ExportKMLGUI, $GUI_TrackColor
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
-Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1
+Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1, $Apply_Sound = 1
 Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
@@ -436,6 +436,7 @@ Dim $GoogleEarth_EXE = IniRead($settings, 'AutoKML', 'GoogleEarth_EXE', 'C:\Prog
 
 Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_URL', 'http://www.randomintervals.com/wifi/')
 Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_URL', 'http://www.vistumbler.net/wifidb/')
+Dim $PhilsLocateURL = IniRead($settings, 'PhilsWifiTools', 'Locate_URL', 'http://locate.vistumbler.net/')
 
 Dim $column_Line = IniRead($settings, 'Columns', 'Column_Line', 0)
 Dim $column_Active = IniRead($settings, 'Columns', 'Column_Active', 1)
@@ -831,8 +832,10 @@ Dim $Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'Netstum
 Dim $Text_WardriveDb3File = IniRead($DefaultLanguagePath, "GuiText", "WardriveDb3File", "Wardrive-android file")
 Dim $Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
 Dim $Text_RefreshInterfaces = IniRead($DefaultLanguagePath, "GuiText", "RefreshInterfaces", "Refresh Interfaces")
-
-
+Dim $Text_Sound = IniRead($DefaultLanguagePath, 'GuiText', 'Sound', 'Sound')
+Dim $Text_OncePerLoop = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerLoop', 'Once per loop')
+Dim $Text_OncePerAP = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAP', 'Once per ap')
+Dim $Text_OncePerAPwSound = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAPwSound', 'Once per ap with volume based on signal')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1090,10 +1093,6 @@ $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' 
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
-$MenuSoundPerAP = GUICtrlCreateMenuItem("New AP Sound - Per AP", $Options)
-If $SoundPerAP = 1 Then GUICtrlSetState($MenuSoundPerAP, $GUI_CHECKED)
-$MenuNewSoundSigBased = GUICtrlCreateMenuItem("New AP Sound Per AP - Signal based volume", $Options)
-If $NewSoundSigBased = 1 Then GUICtrlSetState($MenuNewSoundSigBased, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
 If $SpeakSignal = 1 Then GUICtrlSetState($SpeakApSignal, $GUI_CHECKED)
 $GUI_MidiActiveAps = GUICtrlCreateMenuItem($Text_PlayMidiSounds, $Options)
@@ -1157,7 +1156,8 @@ $SetMacLabel = GUICtrlCreateMenuItem($Text_SetMacLabel, $SettingsMenu)
 $SetMacManu = GUICtrlCreateMenuItem($Text_SetMacManu, $SettingsMenu)
 $SetColumnWidths = GUICtrlCreateMenuItem($Text_SetColumnWidths, $SettingsMenu)
 $SetAuto = GUICtrlCreateMenuItem($Text_AutoSave & ' / ' & $Text_AutoSort & ' / ' & $Text_RefreshNetworks & ' / ' & $Text_AutoWiFiDbGpsLocate, $SettingsMenu)
-$SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI, $SettingsMenu)
+$SetAutoKML = GUICtrlCreateMenuItem($Text_AutoKml, $SettingsMenu)
+$SetSound = GUICtrlCreateMenuItem($Text_Sound, $SettingsMenu)
 
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
 $RefreshInterfaces = GUICtrlCreateMenuItem($Text_RefreshInterfaces, $Interfaces)
@@ -1324,8 +1324,6 @@ GUICtrlSetOnEvent($AutoScanMenu, '_AutoScanToggle')
 GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
 GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
-GUICtrlSetOnEvent($MenuSoundPerAP, '_SoundPerApToggle')
-GUICtrlSetOnEvent($MenuNewSoundSigBased, '_SoundSigBasedToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
@@ -1350,8 +1348,6 @@ GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
 ;View Menu
 GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
 ;Settings Menu
-GUICtrlSetOnEvent($SetAuto, '_SettingsGUI_Auto')
-GUICtrlSetOnEvent($SetAutoKML, '_SettingsGUI_AutoKML')
 GUICtrlSetOnEvent($SetMisc, '_SettingsGUI_Misc')
 GUICtrlSetOnEvent($SetGPS, '_SettingsGUI_GPS')
 GUICtrlSetOnEvent($SetLanguage, '_SettingsGUI_Lan')
@@ -1359,6 +1355,9 @@ GUICtrlSetOnEvent($SetMacManu, '_SettingsGUI_Manu')
 GUICtrlSetOnEvent($SetMacLabel, '_SettingsGUI_Lab')
 GUICtrlSetOnEvent($SetColumnWidths, '_SettingsGUI_Col')
 GUICtrlSetOnEvent($SetSearchWords, '_SettingsGUI_SW')
+GUICtrlSetOnEvent($SetAuto, '_SettingsGUI_Auto')
+GUICtrlSetOnEvent($SetAutoKML, '_SettingsGUI_AutoKML')
+GUICtrlSetOnEvent($SetSound, '_SettingsGUI_Sound')
 ;Extra Menu
 GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
@@ -2942,28 +2941,6 @@ Func _SoundToggle();turns new ap sound on or off
 	EndIf
 EndFunc   ;==>_SoundToggle
 
-Func _SoundPerApToggle()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SoundPerApToggle()') ;#Debug Display
-	If $SoundPerAP = 1 Then
-		GUICtrlSetState($MenuSoundPerAP, $GUI_UNCHECKED)
-		$SoundPerAP = 0
-	Else
-		GUICtrlSetState($MenuSoundPerAP, $GUI_CHECKED)
-		$SoundPerAP = 1
-	EndIf
-EndFunc   ;==>_SoundPerApToggle
-
-Func _SoundSigBasedToggle()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SoundSigBasedToggle()') ;#Debug Display
-	If $NewSoundSigBased = 1 Then
-		GUICtrlSetState($MenuNewSoundSigBased, $GUI_UNCHECKED)
-		$NewSoundSigBased = 0
-	Else
-		GUICtrlSetState($MenuNewSoundSigBased, $GUI_CHECKED)
-		$NewSoundSigBased = 1
-	EndIf
-EndFunc   ;==>_SoundSigBasedToggle
-
 Func _SaveGpsWithNoAPsToggle();turns saving gps data without APs on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveGpsWithNoAPsToggle()') ;#Debug Display
 	If $SaveGpsWithNoAps = 1 Then
@@ -4486,7 +4463,7 @@ Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 			If $exb <> 1 Then $ActiveMacs &= '-'
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
-		$url_root = $PhilsWdbURL & 'opt/locate.php?'
+		$url_root = $PhilsLocateURL & '?'
 		$url_data = "ActiveBSSIDs=" & $ActiveMacs
 		Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 	Else
@@ -4506,7 +4483,7 @@ Func _LocateGpsInWifidb()
 			If $exb <> 1 Then $ActiveMacs &= '-'
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
-		$url_root = $PhilsWdbURL & 'opt/locate.php?'
+		$url_root = $PhilsLocateURL & '?'
 		$url_data = $url_root & "ActiveBSSIDs=" & $ActiveMacs
 		$webpagesource = _INetGetSource($url_data)
 		If StringInStr($webpagesource, '|') Then
@@ -6223,6 +6200,7 @@ Func _WriteINI()
 
 	IniWrite($settings, 'PhilsWifiTools', 'Graph_URL', $PhilsGraphURL)
 	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_URL', $PhilsWdbURL)
+	IniWrite($settings, 'PhilsWifiTools', 'Locate_URL', $PhilsLocateURL)
 
 	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
 	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
@@ -6596,6 +6574,10 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', $Text_WardriveDb3File)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoScanApsOnLaunch', $Text_AutoScanApsOnLaunch)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshInterfaces', $Text_RefreshInterfaces)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Sound', $Text_Sound)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerLoop', $Text_OncePerLoop)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerAP', $Text_OncePerAP)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerAPwSound', $Text_OncePerAPwSound)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -7607,6 +7589,11 @@ Func _SettingsGUI_AutoKML();Opens GUI to Auto tab
 	_SettingsGUI(8)
 EndFunc   ;==>_SettingsGUI_AutoKML
 
+Func _SettingsGUI_Sound();Opens GUI to Auto tab
+	$Apply_Sound = 1
+	_SettingsGUI(9)
+EndFunc   ;==>_SettingsGUI_Sound
+
 Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	If $SettingsOpen = 1 Then
 		WinActivate($Text_VistumblerSettings)
@@ -8043,7 +8030,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 
 		;AutoKML Tab
-		$Tab_AutoKML = GUICtrlCreateTabItem($Text_AutoKml & ' / ' & $Text_SpeakSignal & ' / ' & $Text_MIDI)
+		$Tab_AutoKML = GUICtrlCreateTabItem($Text_AutoKml)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 		GUICtrlCreateGroup($Text_AutoKml, 16, 40, 650, 240);Auto Save Group
 		GUICtrlSetColor(-1, $TextColor)
@@ -8090,14 +8077,28 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_Tilt & '(0-90)', 525, 220, 110, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_AutoKml_Tilt = GUICtrlCreateInput($AutoKML_Tilt, 525, 235, 110, 20)
+
+		;Sound Tab
+		$Tab_Sound = GUICtrlCreateTabItem($Text_Sound)
+		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
+		GUICtrlCreateGroup($Text_PlaySound, 16, 40, 650, 105);Auto Save Group
+		$GUI_NewApSound = GUICtrlCreateCheckbox($Text_PlaySound, 30, 60, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $SoundOnAP = 1 Then GUICtrlSetState($GUI_NewApSound, $GUI_CHECKED)
+		$GUI_ASperloop = GUICtrlCreateRadio($Text_OncePerLoop, 30, 80, 300, 15)
+		If $SoundPerAP = 0 Then GUICtrlSetState($GUI_ASperloop, $GUI_CHECKED)
+		$GUI_ASperap = GUICtrlCreateRadio($Text_OncePerAP, 30, 100, 300, 15)
+		If $SoundPerAP = 1 And $NewSoundSigBased = 0 Then GUICtrlSetState($GUI_ASperap, $GUI_CHECKED)
+		$GUI_ASperapwsound = GUICtrlCreateRadio($Text_OncePerAPwSound, 30, 120, 300, 15)
+		If $SoundPerAP = 1 And $NewSoundSigBased = 1 Then GUICtrlSetState($GUI_ASperapwsound, $GUI_CHECKED)
 		;Speak Signal Options
-		GUICtrlCreateGroup($Text_SpeakSignal, 16, 290, 350, 145)
-		$GUI_SpeakSignal = GUICtrlCreateCheckbox($Text_SpeakSignal, 30, 310, 200, 15)
+		GUICtrlCreateGroup($Text_SpeakSignal, 16, 155, 650, 145)
+		$GUI_SpeakSignal = GUICtrlCreateCheckbox($Text_SpeakSignal, 30, 175, 200, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $SpeakSignal = 1 Then GUICtrlSetState($GUI_SpeakSignal, $GUI_CHECKED)
-		$GUI_SpeakSoundsVis = GUICtrlCreateRadio($Text_SpeakUseVisSounds, 30, 330, 200, 15)
-		$GUI_SpeakSoundsSapi = GUICtrlCreateRadio($Text_SpeakUseSapi, 30, 350, 200, 15)
-		$GUI_SpeakSoundsMidi = GUICtrlCreateRadio($Text_MIDI, 30, 370, 200, 15)
+		$GUI_SpeakSoundsVis = GUICtrlCreateRadio($Text_SpeakUseVisSounds, 30, 195, 200, 15)
+		$GUI_SpeakSoundsSapi = GUICtrlCreateRadio($Text_SpeakUseSapi, 30, 215, 200, 15)
+		$GUI_SpeakSoundsMidi = GUICtrlCreateRadio($Text_MIDI, 30, 235, 200, 15)
 		GUICtrlSetColor($GUI_SpeakSoundsVis, $TextColor)
 		GUICtrlSetColor($GUI_SpeakSoundsSapi, $TextColor)
 		GUICtrlSetColor($GUI_SpeakSoundsMidi, $TextColor)
@@ -8108,20 +8109,20 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		ElseIf $SpeakType = 3 Then
 			GUICtrlSetState($GUI_SpeakSoundsMidi, $GUI_CHECKED)
 		EndIf
-		GUICtrlCreateLabel($Text_SpeakRefreshTime & '(ms)', 30, 390, 150, 15)
+		GUICtrlCreateLabel($Text_SpeakRefreshTime & '(ms)', 30, 255, 150, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_SpeakSigTime = GUICtrlCreateInput($SpeakSigTime, 30, 405, 150, 20)
+		$GUI_SpeakSigTime = GUICtrlCreateInput($SpeakSigTime, 30, 270, 150, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_SpeakPercent = GUICtrlCreateCheckbox($Text_SpeakSayPercent, 200, 405, 150, 15)
+		$GUI_SpeakPercent = GUICtrlCreateCheckbox($Text_SpeakSayPercent, 200, 270, 150, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $SpeakSigSayPecent = 1 Then GUICtrlSetState($GUI_SpeakPercent, $GUI_CHECKED)
 
-		GUICtrlCreateGroup($Text_MIDI, 370, 290, 295, 145)
-		$GUI_PlayMidiSounds = GUICtrlCreateCheckbox($Text_PlayMidiSounds, 385, 310, 200, 15)
+		GUICtrlCreateGroup($Text_MIDI, 16, 310, 650, 135)
+		$GUI_PlayMidiSounds = GUICtrlCreateCheckbox($Text_PlayMidiSounds, 30, 330, 200, 15)
 		If $Midi_PlayForActiveAps = 1 Then GUICtrlSetState($GUI_PlayMidiSounds, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_MidiInstrumentNumber, 385, 330, 150, 15)
+		GUICtrlCreateLabel($Text_MidiInstrumentNumber, 30, 350, 150, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Midi_Instument = GUICtrlCreateCombo('', 385, 345, 265, 20)
+		$GUI_Midi_Instument = GUICtrlCreateCombo('', 30, 365, 310, 20)
 		$query = "SELECT INSTNUM, INSTTEXT FROM Instruments"
 		$InstMatchArray = _RecordSearch($InstDB, $query, $InstDB_OBJ)
 		$FoundInstMatch = UBound($InstMatchArray) - 1
@@ -8136,10 +8137,11 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 			EndIf
 		Next
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_MidiPlayTime & '(ms)', 385, 370, 150, 15)
+		GUICtrlCreateLabel($Text_MidiPlayTime & '(ms)', 30, 390, 150, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 385, 385, 265, 20)
+		$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 30, 405, 310, 20)
 		GUICtrlSetColor(-1, $TextColor)
+
 
 		GUICtrlCreateTabItem("")
 
@@ -8159,6 +8161,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		If $StartTab = 6 Then GUICtrlSetState($Tab_SW, $GUI_SHOW)
 		If $StartTab = 7 Then GUICtrlSetState($Tab_Auto, $GUI_SHOW)
 		If $StartTab = 8 Then GUICtrlSetState($Tab_AutoKML, $GUI_SHOW)
+		If $StartTab = 9 Then GUICtrlSetState($Tab_Sound, $GUI_SHOW)
 
 
 		GUICtrlSetOnEvent($Add_MANU, '_AddManu')
@@ -8640,6 +8643,10 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_WardriveDb3File = IniRead($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', 'Wardrive-android file')
 		$Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
 		$Text_RefreshInterfaces = IniRead($DefaultLanguagePath, "GuiText", "RefreshInterfaces", "Refresh Interfaces")
+		$Text_Sound = IniRead($DefaultLanguagePath, 'GuiText', 'Sound', 'Sound')
+		$Text_OncePerLoop = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerLoop', 'Once per loop')
+		$Text_OncePerAP = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAP', 'Once per ap')
+		$Text_OncePerAPwSound = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAPwSound', 'Once per ap with volume based on signal')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -8804,6 +8811,21 @@ Func _ApplySettingsGUI();Applys settings
 		$AutoKML_Heading = GUICtrlRead($GUI_AutoKml_Heading)
 		$AutoKML_Range = GUICtrlRead($GUI_AutoKml_Range)
 		$AutoKML_Tilt = GUICtrlRead($GUI_AutoKml_Tilt)
+	EndIf
+
+	If $Apply_Sound = 1 Then
+		;New AP Sound Settings
+		If GUICtrlRead($GUI_NewApSound) = 4 And $SoundOnAP = 1 Then _SoundToggle();Turn off new ap sound
+		If GUICtrlRead($GUI_NewApSound) = 1 And $SoundOnAP = 0 Then _SoundToggle();Turn on new ap sound
+		If GUICtrlRead($GUI_ASperloop) = 1 Then
+			$SoundPerAP = 0
+		ElseIf GUICtrlRead($GUI_ASperap) = 1 Then
+			$SoundPerAP = 1
+			$NewSoundSigBased = 0
+		ElseIf GUICtrlRead($GUI_ASperapwsound) = 1 Then
+			$SoundPerAP = 1
+			$NewSoundSigBased = 1
+		EndIf
 		;Save Speak Settings
 		If GUICtrlRead($GUI_SpeakSignal) = 4 And $SpeakSignal = 1 Then _SpeakSigToggle();Turn off speak signal
 		If GUICtrlRead($GUI_SpeakSignal) = 1 And $SpeakSignal = 0 Then _SpeakSigToggle();Turn on speak signal
@@ -8828,7 +8850,7 @@ Func _ApplySettingsGUI();Applys settings
 	EndIf
 
 
-	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1
+	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Sound = 1
 	If $RestartVistumbler = 1 Then MsgBox(0, $Text_Restart, $Text_RestartMsg)
 EndFunc   ;==>_ApplySettingsGUI
 
