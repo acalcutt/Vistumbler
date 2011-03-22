@@ -1092,7 +1092,7 @@ function make_ssid($ssid_in = '')
 	###########
 	## Make Table safe SSID
 	$ssid_sized = str_split($ssid_in_dupe,25); //split SSID in two on is 25 char.
-	$replace = array('`', '.', "'", '"', "/", "\\");
+	$replace = array(' ', '`', '.', "'", '"', "/", "\\");
 	#echo $ssid_sized[0];
 	$ssid_table_safe = str_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
 	###########
@@ -2014,8 +2014,8 @@ class database
 		    $gpscount = count($gdata);
 		    if(!isset($SETFLAGTEST))
 		    {
-			$count1 = $count - $gpscount;
-		#	echo $gpscount." - - ".$count."\r\n";
+			$count1 = ($count - $gpscount)-1;
+			echo "GPS: $gpscount\r\nFULL: $count\r\nCalc: $count1\r\n";
 			$count1 = $count1 - 8;
 			if($count1 == 0)
 			{
@@ -5799,6 +5799,7 @@ class daemon extends database
 		$wtable = $GLOBALS['wtable'];
 		$gps_ext = $GLOBALS['gps_ext'];
 		$root = $GLOBALS['root'];
+                $sep = $GLOBALS['sep'];
 		$hosturl = $GLOBALS['hosturl'];
 		$open_loc 	=	$GLOBALS['open_loc'];
 		$WEP_loc 	=	$GLOBALS['WEP_loc'];
@@ -5831,13 +5832,13 @@ class daemon extends database
 		{
 			$man 		= $database->manufactures($ap_array['mac']);
 			$id		= $ap_array['id'];
-			list($ssid)           = make_ssid($ap_array['ssid']);
+			list($ssid)     = make_ssid($ap_array['ssid']);
                         $ssid_kml       = preg_replace('/[\x00-\x1F]/', '', htmlentities($ssid, ENT_QUOTES));
 			$mac		= $ap_array['mac'];
 			$sectype	= $ap_array['sectype'];
 			$radio		= $ap_array['radio'];
 			$chan		= $ap_array['chan'];
-			$table          = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
+			$table          = $ssid.$sep.$mac.$sep.$sectype.$sep.$radio.$sep.$chan;
 			$table_gps      = $table.$gps_ext;
                         #echo $id."\r\n".$table."\r\n";
 			$sql1           = "SELECT * FROM `$db_st`.`$table` order by `id` desc limit 1";
@@ -5887,7 +5888,11 @@ class daemon extends database
 			$label = $newArray['label'];
 			
 			$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
-			$result_1 = mysql_query($sql_1, $conn);
+			
+                        if(!$result_1 = mysql_query($sql_1, $conn))
+                        {
+                            echo $sql_1."\r\n";
+                        }
 			$zero = 0;
 			while($gps_table_first = mysql_fetch_array($result_1))
 			{
