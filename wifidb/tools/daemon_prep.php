@@ -76,9 +76,15 @@ while (!(($file = readdir($dh)) == false))
 	$fileext = strtolower($file_e[$file_max-1]);
 	if ($fileext=='vs1' or $fileext=="tmp" or $fileext=="db3")
 	{
-	    $file_a[] = $file; //if Filename is valid, throw it into an array for later use
+	    
 	    #echo $n." ".$file."\n";
-	    insert_file($file,$file_names,$fileappend);
+	    if(insert_file($file,$file_names,$fileappend))
+            {
+                $file_a[] = $file; //if Filename is valid, throw it into an array for later use
+            }else
+            {
+                echo "No good... Blehk.\r\n";
+            }
 	}else
 	{
 	    echo "EXT: ".$fileext."\r\n";
@@ -126,12 +132,17 @@ function insert_file($file, $file_names,$fileappend)
 	$GLOBALS['is'] = $is;
     }else
     {
-	$user = $default_user;
+        echo "Not in filenames.txt -->$source\r\n";
+        
+        ### JUST A TRIAL
+	return 0;
+        /*
+        $user = $default_user;
 	$title = $default_title;
 	$notes = $default_notes;
 	$date = date("y-m-d H:i:s");
 	$hash_ = 0;
-	echo "Not in filenames.txt -->$source\r\n";
+	*/
 	$not++;
 	$GLOBALS['not'] = $not;
     }

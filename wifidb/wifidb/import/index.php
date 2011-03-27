@@ -293,7 +293,7 @@ switch($func)
 			$file_imp = implode('\\', $get_exp);
 			echo "<h2>Due to security restrictions in current browsers, file fields cannot have dynamic content, <br> The file that you are trying to import via Vistumbler Is here: <br><b><u>".$file_imp."</u></b><br>Copy and Paste the underlined text into the file location field to import it.<br></h2>";
 		}
-		?><br>Only VS1 Files are Supported at this time.<br>The username is optional, but it helps keep track of who has imported what Access Points<br><br><?php
+		?><br><a class="links" href="http://sourceforge.net/apps/mediawiki/vistumbler/index.php?title=VS1_Format" target="_blank">VS1</a> and <a class="links" href="http://code.google.com/p/wardrive-android/" target="_blank">Wardrive for Android</a> are Supported.<br>Username is optional, but it helps keep track of who has imported what Access Points<br><br><?php
 		if($GLOBALS['username'] == 'admin')
 		{
 			?><h2>The Built-in Administrator user is not allowed to import, please create a user to do that.</h2><?php

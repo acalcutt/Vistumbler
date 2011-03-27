@@ -100,7 +100,7 @@ else{$lastdate = $lastuser['date'];}
 	<tr class="dark">
 		<td align="center" class="style2" style="width: 100px"><?php echo $usercount;?></td>
 		<td align="center" class="style2"><?php if ($usercount == NULL){echo "No users in Database.";}else{?><a class="links" href="opt/userstats.php?func=alluserlists&user=<?php echo $lastuser['username'];?>"><?php echo $lastuser['username'];?></a><?php } ?></a></td>
-		<td align="center" class="style2"><table align="center" width="1px"><tr><td align="right"><?php if($lastap_ssid==''){echo "No APs imported yet.";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td><td align="left"><img width="20px" src="img/globe_<?php if($gps_yes){echo "on";}else{echo "off";} ?>.png"></td></tr></table></td>
+		<td align="center" class="style2"><p align="center"><table><tr><td align="right" width="100%"><?php if($lastap_ssid==''){echo "No APs imported yet.";}else{?><a class="links" href="opt/fetch.php?id=<?php echo $lastap_id;?>"><?php echo $lastap_ssid;?></a><?php } ?></td><td align="left"><img width="20px" src="img/globe_<?php if($gps_yes){echo "on";}else{echo "off";} ?>.png"></td></tr></table></p></td>
 		<td align="center" class="style2"><?php if($lastap_ssid==''){echo "No imports yet.";}else{?><a class="links" href="opt/userstats.php?func=useraplist&row=<?php echo $lastuser['id'];?>"><?php echo $lastuser['title'];?></a><br>  <?php echo "[".$lastdate."]"; } ?> </td>
 	</tr>
 </table>

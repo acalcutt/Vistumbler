@@ -402,25 +402,32 @@ if(is_string($func))
 					?>
 						</td>
 					<?php
-                                        var_dump($newArray);
-					if($newArray['ap'] == "")
-					{
-					    $ssid = "<td colspan='2' align='center'>Not being imported</td>";
-
-					}else
-					{
-					    if($gps_yes)
-					    {
-						$ssid = '<td align="center">'.$newArray['ap'].'<img width="20px" src="../img/globe_on.png"></td>';
-					    }
-					    else
-					    {
-						$ssid = '<td align="center"><table align="center"><tr><td valign="center" align="right">'.$newArray['ap'].'</td><td valign="center" align="left"><img width="20px" src="../img/globe_off.png"></td></tr></table></td>';
-					    }
-					}
+                                        #var_dump($newArray);
+                                        $tot = "";
+                                        $ssid = "";
+                                        switch($newArray['ap'])
+                                        {
+                                            case "":
+                                                $ssid = "<td colspan='2' align='center'>Not being imported</td>";
+                                                break;
+                                            
+                                            case "@#@#_CONVERTING TO VS1_@#@#":
+                                                $ssid = "<td colspan='2' align='center'>Converting file to VS1 Format...</td>";
+                                                break;
+                                            
+                                            default:
+                                                if($gps_yes)
+                                                {
+                                                    $ssid = '<td align="center">'.$newArray['ap'].'<img width="20px" src="../img/globe_on.png"></td>';
+                                                }
+                                                else
+                                                {
+                                                    $ssid = '<td align="center"><table align="center"><tr><td valign="center" align="right">'.$newArray['ap'].'</td><td valign="center" align="left"><img width="20px" src="../img/globe_off.png"></td></tr></table></td>';
+                                                }
+                                                if($newArray['tot'] == NULL){$tot = "";}else{$tot = '<td align="center">'.$newArray['tot'].'</td>';}
+                                                break;
+                                        }
 					echo $ssid;
-					
-					if($newArray['tot'] == NULL){$tot = "";}else{$tot = '<td align="center">'.$newArray['tot'].'</td>';}
 					echo $tot;
 					?>
 					    </tr>

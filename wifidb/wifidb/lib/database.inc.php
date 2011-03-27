@@ -1075,34 +1075,38 @@ function format_size($size, $round = 2)
 
 function make_ssid($ssid_in = '')
 {
-	if($ssid_in == ''){$ssid_in="UNNAMED";}
+    $ssid_in = preg_replace('/[\x00-\x1F\x7F]/', '', $ssid_in);
+    
+    if($ssid_in == ""){$ssid_in="UNNAMED";}
+    #var_dump($exp)."</br>";
+    #if($ssid_len < 1){$ssid_in="UNNAMED";}
 
-	###########
-	## Make File Safe SSID
-	$file_safe_ssid = smart_quotes($ssid_in);
-	###########
+    ###########
+    ## Make File Safe SSID
+    $file_safe_ssid = smart_quotes($ssid_in);
+    ###########
 
-	###########
-	## Make Row and HTML safe SSID
-	$ssid_in_dupe = $ssid_in;
-        $ssid_in = htmlentities($ssid_in, ENT_QUOTES);
-	$ssid_safe_full_length = mysql_real_escape_string($ssid_in_dupe);
-	###########
+    ###########
+    ## Make Row and HTML safe SSID
+    $ssid_in_dupe = $ssid_in;
+    $ssid_in = htmlentities($ssid_in, ENT_QUOTES);
+    $ssid_safe_full_length = mysql_real_escape_string($ssid_in_dupe);
+    ###########
 
-	###########
-	## Make Table safe SSID
-	$ssid_sized = str_split($ssid_in_dupe,25); //split SSID in two on is 25 char.
-	$replace = array(' ', '`', '.', "'", '"', "/", "\\");
-	#echo $ssid_sized[0];
-	$ssid_table_safe = str_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
-	###########
+    ###########
+    ## Make Table safe SSID
+    $ssid_sized = str_split($ssid_in_dupe,25); //split SSID in two on is 25 char.
+    $replace = array(' ', '`', '.', "'", '"', "/", "\\");
+    #echo $ssid_sized[0];
+    $ssid_table_safe = str_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
+    ###########
 
-	###########
-	## Return
-	#echo $ssid_table_safe;
-	$A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssid_in, 3=>$file_safe_ssid, 4=>$ssid_in_dupe);
-	return $A;
-	###########
+    ###########
+    ## Return
+    #echo $ssid_table_safe;
+    $A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssid_in, 3=>$file_safe_ssid, 4=>$ssid_in_dupe);
+    return $A;
+    ###########
 }
 
 
@@ -1780,7 +1784,6 @@ class database
                 {
                 //	GPS Convertion  if needed, check for ddmm.mmmm and leave it alone, otherwise i am guessing its DD.mmmmm and that needs to be converted to ddmm.mmmm:
                     $lat_epx = explode(" ", $gps['lat']);
-                    $lat_exp = explode(".", $lat_epx[1]);
                     if(strlen($lat_exp[0])>3)
                     {
                         $lat  =& $gps['lat'];
@@ -2245,7 +2248,7 @@ class database
 				<td colspan="8">
 			    <?php
 			}
-			$exp = explode(",",$signals[$N-1]);
+			$exp = explode(",",@$signals[$N-1]);
 			if($exp[0] == 0){unset($signals[$N-1]);}
 			$sig = implode("-",$signals);
 			$sqlit = "INSERT INTO `$db_st`.`$table` ( `id` , `btx` , `otx` , `nt` , `label` , `sig`, `user` ) VALUES ( '', '$btx', '$otx', '$nt', '$label', '$sig', '$user')";

@@ -121,7 +121,7 @@ $daemon		=	new daemon;
 var_dump($wdb_install);
 //Main loop
 echo $daemon_console_log."\r\n";
-$daemon_console_log = $daemon_console_log.'/imp_expd.log';
+$daemon_console_log = $daemon_console_log.'/imp_expd_console.log';
 echo $daemon_console_log."\r\n";
 mysql_query("SET NAMES 'utf8'", $conn);
 while(1)
@@ -163,7 +163,7 @@ while(1)
     $next_run_id = mysql_fetch_array($RUNresult);
     $NR_ID = $next_run_id['id'];
     $nextrun = date("Y-m-d H:i:s", (time()+$time_interval_to_check));
-    $daemon_sql = "SELECT * FROM `$db`.`$files_tmp` ORDER BY `date` ASC";
+    $daemon_sql = "SELECT * FROM `$db`.`$files_tmp` where `importing` = '0' ORDER BY `date` ASC";
     $result = mysql_query($daemon_sql, $conn);
     if($result)//check to see if i can successfully look at the file_tmp folder
     {
@@ -173,7 +173,7 @@ while(1)
             $Dresult = mysql_query($D_SQL, $conn);
             $daemon_state = mysql_fetch_array($Dresult);
             if($daemon_state['size']=="WIFIDB_KILL"){die("Daemon was told to kill self :(\r\n");}
-
+            $remove_file = $files_array['id'];
             $result_update = mysql_query("UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'", $conn);
             $source = $wdb_install.'import/up/'.str_replace("%20", " ", $files_array['file']);
 
@@ -182,12 +182,23 @@ while(1)
             if($file_type == "db3" or $file_type == "txt")
             {
                 verbosed("This file needs to be converted to VS1 first. Please wait while the computer does the work for you.", $verbose, $screen_output, 1);
-                $source = $database->convert_vs1($source);
-                $id = $files_array['id'];
+                $update_tmp = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `ap` = '@#@#_CONVERTING TO VS1_@#@#' WHERE `id` = '$remove_file'";
+                echo $update_tmp."\r\n";
+                mysql_query($update_tmp, $conn);
+                $cource = $database->convert_vs1($source);
+                $dest = $wdb_install.'import/up/convert/'.str_replace("%20", " ", $files_array['file']);
+                if(copy($source, $dest))
+                {
+                    echo "Copied convertion source file to its new home.\r\n";
+                }else
+                {
+                    echo "Failed to copy convertion source file to its new home.\r\n";
+                }
                 $files_array['file'] = $file_src[0].'.vs1';
-                $hash1 = hash_file('md5', $source);
-                $size1 = format_size(dos_filesize($source));
-                $update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '$id'";
+                $con_file = $wdb_install.'import/up/'.$files_array['file'];
+                $hash1 = hash_file('md5', $con_file);
+                $size1 = format_size(dos_filesize($con_file));
+                $update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '$remove_file'";
                 echo $update_tmp."\r\n";
                 if(mysql_query($update_tmp, $conn))
                 {
@@ -198,7 +209,6 @@ while(1)
                 }
             }
 #	echo $source."\r\n".$files_array['file'];
-            $remove_file = $files_array['id'];
             echo $source."\r\n";
             $return  = file($source);
             echo $return[0]."\r\n";
@@ -273,6 +283,7 @@ while(1)
                         logd("Added $source ($remove_file) to the Files table", $log_interval, 0,  $GLOBALS['log_level']);
                         verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Added $source ($remove_file) to the Files table.\n".$GLOBALS['COLORS'][$OTHER_IED_COLOR], 1, $screen_output, 1);
                         $del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
+                        echo $del_file_tmp."\r\n";
                         if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
                         {
                             mail_users("Error removing file: $source ($remove_file)", $subject, "import", 1);
@@ -300,9 +311,8 @@ while(1)
                 {
                     logd("File has already been successfully imported into the Database, skipping.\r\n\t\t\t$source ($remove_file)", $log_interval, 0,  $GLOBALS['log_level']);
                     verbosed($GLOBALS['COLORS']['YELLOW']."File has already been successfully imported into the Database, skipping.\r\n\t\t\t$source ($remove_file)".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-
-                    $remove_file = $files_array['id'];
                     $del_file_tmp = "DELETE FROM `$db`.`files_tmp` WHERE `id` = '$remove_file'";
+                    echo $del_file_tmp."\r\n";
                     if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
                     {
                         mail_users("_error_removing_file_tmp:".$remove_file, $subject, "import", 1);
@@ -319,8 +329,8 @@ while(1)
                 $finished = 0;
                 logd("File is empty or not valid, go and import something.\n", $log_interval, 0,  $GLOBALS['log_level']);
                 verbosed($GLOBALS['COLORS']['YELLOW']."File is empty, go and import something.\n".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose);
-                $remove_file = $files_array['id'];
                 $del_file_tmp = "DELETE FROM `$db`.`$files_tmp` WHERE `id` = '$remove_file'";
+                echo $del_file_tmp."\r\n";
                 if(!mysql_query($del_file_tmp, $GLOBALS['conn']))
                 {
                     mail_users("_error_removing_file_tmp:".$remove_file, $subject, "import", 1);
