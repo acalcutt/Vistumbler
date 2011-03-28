@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 12'
+$version = 'v10.1 Beta 13'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/03/21'
+$last_modified = '2011/03/27'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -237,7 +237,7 @@ Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
 Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
-Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL
+Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL, $GUI_PhilsLocateURL
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFilter
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 
@@ -245,7 +245,7 @@ Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitu
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal, $CWCB_HighSignal, $CWIB_HighSignal
 Dim $CWCB_Authentication, $CWIB_Authentication, $CWCB_Encryption, $CWIB_Encryption, $CWCB_NetType, $CWIB_NetType, $CWCB_Label, $CWIB_Label
 
-Dim $GUI_COPY, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
+Dim $GUI_COPY, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive, $Copy_HIGHSIG
 
 Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
@@ -361,6 +361,7 @@ Dim $RefreshNetworks = IniRead($settings, 'Vistumbler', 'AutoRefreshNetworks', 1
 Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'AutoRefreshTime', 1000)
 Dim $WiFiDbLocateRefreshTime = IniRead($settings, 'Vistumbler', 'WiFiDbLocateRefreshTime', 5000)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 0)
+Dim $DebugCom = IniRead($settings, 'Vistumbler', 'DebugCom', 0)
 Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
 Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
@@ -591,8 +592,9 @@ Dim $Text_SetSearchWords = IniRead($DefaultLanguagePath, 'GuiText', 'SetSearchWo
 Dim $Text_SetMacLabel = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacLabel', 'Set Labels by Mac')
 Dim $Text_SetMacManu = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacManu', 'Set Manufactures by Mac')
 
-Dim $Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'View graph (Phils PHP)')
-Dim $Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'Phils WiFiDB (Alpha)')
+Dim $Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'Graph URL')
+Dim $Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'WiFiDB URL')
+Dim $Text_PhilsWdbLocate = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWdbLocate', 'WifiDB Locate URL')
 Dim $Text_UploadDataToWifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'UploadDataToWiFiDB', 'Upload Data to WiFiDB')
 
 Dim $Text_RefreshLoopTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshLoopTime', 'Refresh loop time(ms):')
@@ -712,7 +714,9 @@ Dim $Text_NoApsWithGps = IniRead($DefaultLanguagePath, 'GuiText', 'NoApsWithGps'
 Dim $Text_NoAps = IniRead($DefaultLanguagePath, 'GuiText', 'NoAps', 'No access points.')
 Dim $Text_MacExistsOverwriteIt = IniRead($DefaultLanguagePath, 'GuiText', 'MacExistsOverwriteIt', 'A entry for this mac address already exists. would you like to overwrite it?')
 Dim $Text_SavingLine = IniRead($DefaultLanguagePath, 'GuiText', 'SavingLine', 'Saving Line')
-Dim $Text_DisplayDebug = IniRead($DefaultLanguagePath, 'GuiText', 'DisplayDebug', 'Debug - Display Functions')
+Dim $Text_Debug = IniRead($DefaultLanguagePath, 'GuiText', 'Debug', 'Debug')
+Dim $Text_DisplayDebug = IniRead($DefaultLanguagePath, 'GuiText', 'DisplayDebug', 'Display Functions')
+Dim $Text_DisplayComErrors = IniRead($DefaultLanguagePath, 'GuiText', 'DisplayDebugCom', 'Display COM Errors')
 Dim $Text_GraphDeadTime = IniRead($DefaultLanguagePath, 'GuiText', 'GraphDeadTime', 'Graph Dead Time')
 Dim $Text_OpenKmlNetLink = IniRead($DefaultLanguagePath, 'GuiText', 'OpenKmlNetLink', 'Open KML NetworkLink')
 Dim $Text_ActiveRefreshTime = IniRead($DefaultLanguagePath, 'GuiText', 'ActiveRefreshTime', 'Active Refresh Time')
@@ -1006,8 +1010,6 @@ If FileExists($FiltDB) Then
 	$query = "SELECT FiltID FROM Filters"
 	$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
 	$FiltID = UBound($FiltMatchArray) - 1
-	$query = "DELETE * FROM FiltMenu"
-	_ExecuteMDB($FiltDB, $FiltDB_OBJ, $query)
 Else
 	_CreateDB($FiltDB)
 	_AccessConnectConn($FiltDB, $FiltDB_OBJ)
@@ -1078,13 +1080,13 @@ $Copy = GUICtrlCreateMenuItem($Text_Copy, $Edit)
 $ClearAll = GUICtrlCreateMenuItem($Text_ClearAll, $Edit)
 $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 $SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
+
 $Options = GUICtrlCreateMenu($Text_Options)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
 $RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
 If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
 $AutoSaveGUI = GUICtrlCreateMenuItem($Text_AutoSave, $Options)
 If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
-
 $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AutoScanMenu = GUICtrlCreateMenuItem($Text_AutoScanApsOnLaunch, $Options)
@@ -1102,8 +1104,11 @@ If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GuiUseNativeWifi = GUICtrlCreateMenuItem($Text_UseNativeWifi, $Options)
 If $UseNativeWifi = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
-$DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $Options)
+$DebugMenu = GUICtrlCreateMenu($Text_Debug, $Options)
+$DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $DebugMenu)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$DebugComGUI = GUICtrlCreateMenuItem($Text_DisplayComErrors, $DebugMenu)
+If $DebugCom = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
 $ViewMenu = GUICtrlCreateMenu($Text_View)
 $FilterMenu = GUICtrlCreateMenu($Text_Filters, $ViewMenu)
@@ -1146,7 +1151,6 @@ If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $ViewMenu)
 If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
-
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
 $SetMisc = GUICtrlCreateMenuItem($Text_VistumblerSettings, $SettingsMenu)
 $SetGPS = GUICtrlCreateMenuItem($Text_GpsSettings, $SettingsMenu)
@@ -1165,23 +1169,6 @@ GUICtrlSetOnEvent($RefreshInterfaces, '_RefreshInterfaces')
 _AddInterfaces()
 
 $Extra = GUICtrlCreateMenu($Text_Extra)
-#comments-start
-	$ExternalToolsMenu = GUICtrlCreateMenu("External Tools", $Extra)
-	Dim $ToolMenuID[1]
-	Dim $ToolFilename[1]
-	$menuid = GUICtrlCreateMenuItem("Open External Tools Folder", $ExternalToolsMenu)
-	GUICtrlSetOnEvent($menuid, '_OpenExternalToolsFolder')
-	$ToolFiles = _FileListToArray($ToolsDir, '*.*', 1);Find all files in the folder
-	For $FoundTools = 1 To $ToolFiles[0]
-	$file = $ToolFiles[$FoundTools]
-	$menuid = GUICtrlCreateMenuItem(StringTrimRight($file, 4), $ExternalToolsMenu)
-	_ArrayAdd($ToolMenuID, $menuid)
-	_ArrayAdd($ToolFilename, $ToolsDir & $file)
-	$ToolMenuID[0] = UBound($ToolMenuID) - 1
-	$ToolFilename[0] = UBound($ToolFilename) - 1
-	GUICtrlSetOnEvent($menuid, '_OpenExternalTool')
-	Next
-#comments-end
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
 $GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $Extra)
 $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $Extra)
@@ -1197,14 +1184,10 @@ $VistumblerForum = GUICtrlCreateMenuItem($Text_VistumblerForum, $Help)
 $VistumblerWiki = GUICtrlCreateMenuItem($Text_VistumblerWiki, $Help)
 $UpdateVistumbler = GUICtrlCreateMenuItem($Text_CheckForUpdates, $Help)
 
-
-
-
 $SupportVistumbler = GUICtrlCreateMenu($Text_SupportVistumbler)
 $VistumblerDonate = GUICtrlCreateMenuItem($Text_VistumblerDonate, $SupportVistumbler)
 $VistumblerStore = GUICtrlCreateMenuItem($Text_VistumblerStore, $SupportVistumbler)
 
-;$GraphicGUI = GUICtrlCreateGraphic (10, 60, 900, 400)
 $GraphicGUI = GUICreate("", 900, 400, 10, 60, $WS_CHILD, -1, $Vistumbler)
 GUISetBkColor($ControlBackgroundColor)
 $100 = GUICtrlCreateLabel('100%', 0, 5, 35, 38)
@@ -1239,9 +1222,6 @@ GUICtrlSetResizing($20, 1)
 GUICtrlSetResizing($10, 1)
 GUISwitch($Vistumbler)
 
-;$DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $Vistumbler)
-;GUISetBkColor($BackgroundColor)
-
 $ListviewAPs = GUICtrlCreateListView($headers, 260, 65, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 $hImage = _GUIImageList_Create()
@@ -1257,17 +1237,12 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-orange.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-yellow.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
-
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
 $TreeviewAPs = GUICtrlCreateTreeView(5, 65, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 GUISetState()
 
-
-
-;$ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $Vistumbler) ; Create Child window for controls
-;GUISetBkColor($BackgroundColor)
 $ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 20, 0)
 If $AutoScan = 1 Then ScanToggle()
 $GpsButton = GUICtrlCreateButton($Text_UseGPS, 80, 8, 70, 20, 0)
@@ -1286,8 +1261,6 @@ $debugdisplay = GUICtrlCreateLabel('', 765, 10, 200, 15)
 GUICtrlSetColor(-1, $TextColor)
 $msgdisplay = GUICtrlCreateLabel('', 155, 40, 610, 15)
 GUICtrlSetColor(-1, $TextColor)
-
-GUISetState(@SW_SHOW)
 
 GUISwitch($Vistumbler)
 _SetControlSizes()
@@ -1308,6 +1281,16 @@ GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
 GUICtrlSetOnEvent($NewSession, '_NewSession')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
 GUICtrlSetOnEvent($ImportFolder, '_LoadFolder')
+GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
+GUICtrlSetOnEvent($ExportToFilVS1, '_ExportFilteredDetailedData')
+GUICtrlSetOnEvent($ExportToVSZ, '_ExportVSZ')
+GUICtrlSetOnEvent($ExportToCsv, '_ExportCsvData')
+GUICtrlSetOnEvent($ExportToFilCsv, '_ExportCsvFilteredData')
+GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
+GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
+GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
+GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
+GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
 GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
 ;Edit Menu
@@ -1319,34 +1302,24 @@ GUICtrlSetOnEvent($SortTree, '_SortTree')
 GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
 GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
 GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
-GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
+GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
 GUICtrlSetOnEvent($AutoScanMenu, '_AutoScanToggle')
 GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
-GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
-GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
-GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
-GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
-GUICtrlSetOnEvent($AutoSelectHighSignal, '_AutoSelHighSigToggle')
-GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
-GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
 GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
-GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
+GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
 GUICtrlSetOnEvent($GuiUseNativeWifi, '_NativeWifiToggle')
-;Export Menu
-GUICtrlSetOnEvent($ExportToVS1, '_ExportDetailedData')
-GUICtrlSetOnEvent($ExportToFilVS1, '_ExportFilteredDetailedData')
-GUICtrlSetOnEvent($ExportToVSZ, '_ExportVSZ')
-GUICtrlSetOnEvent($ExportToCsv, '_ExportCsvData')
-GUICtrlSetOnEvent($ExportToFilCsv, '_ExportCsvFilteredData')
-GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
-GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
-GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
-GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
-GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
+GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
+GUICtrlSetOnEvent($DebugComGUI, '_DebugComToggle')
 ;View Menu
 GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
+GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
+GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
+GUICtrlSetOnEvent($AutoSelectHighSignal, '_AutoSelHighSigToggle')
+GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
+GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
+GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 ;Settings Menu
 GUICtrlSetOnEvent($SetMisc, '_SettingsGUI_Misc')
 GUICtrlSetOnEvent($SetGPS, '_SettingsGUI_GPS')
@@ -1594,11 +1567,10 @@ Exit
 
 Func _ScanAccessPoints()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, ' _ScanAccessPoints()') ;#Debug Display
+	Local $FoundAPs = 0
+	Local $FilterMatches = 0
 	If $UseNativeWifi = 1 Then
-		$FoundAPs = 0
-		$FilterMatches = 0
 		$aplist = _Wlan_GetAvailableNetworkList(2, $DefaultApapterID, $wlanhandle)
-		;_ArrayDisplay($aplist)
 		$aplistsize = UBound($aplist) - 1
 		For $add = 0 To $aplistsize
 			$RadioType = ''
@@ -1647,9 +1619,7 @@ Func _ScanAccessPoints()
 		;Return number of active APs
 		Return ($FoundAPs)
 	Else
-		$NewAP = 0
-		$FoundAPs = 0
-		$FilterMatches = 0
+		Local $NewAP = 0
 		;Dump data from netsh
 		FileDelete($tempfile);delete old temp file
 		_RunDOS($netsh & ' wlan show networks mode=bssid interface="' & $DefaultApapter & '" > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
@@ -1985,14 +1955,7 @@ Func _MarkDeadAPs()
 		If ($Current_dts - $Found_dts) > $TimeBeforeMarkedDead Then
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
-			If $Found_SecType = 1 Then
-				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 0)
-			Else
-				_GUICtrlListView_SetItemImage($ListviewAPs, $Found_ListRow, 6)
-			EndIf
-
-
-
+			_UpdateIcon($Found_ListRow, 0, 1)
 			$query = "UPDATE AP SET Active = '0', Signal = '000' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
@@ -2008,13 +1971,6 @@ Func _MarkDeadAPs()
 	$ActiveCount = $ActiveCountArray[1][1]
 	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveCount & " / " & $APID)
 EndFunc   ;==>_MarkDeadAPs
-
-Func _TimeToSeconds($iTime)
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_TimeToSeconds()') ;#Debug Display
-	$dts = StringSplit($iTime, ":") ;Split time so it can be converted to seconds
-	$rTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
-	Return ($rTime)
-EndFunc   ;==>_TimeToSeconds
 
 Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add_SSID = -1, $Add_Authentication = -1, $Add_Encryption = -1, $Add_Signal = -1, $Add_Channel = -1, $Add_RadioType = -1, $Add_BasicTransferRates = -1, $Add_OtherTransferRates = -1, $Add_NetworkType = -1, $Add_FirstAcvtive = -1, $Add_LastActive = -1, $Add_LatitudeDMM = -1, $Add_LongitudeDMM = -1, $Add_MANU = -1, $Add_Label = -1, $Add_HighSignal = -1)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ListViewAdd()') ;#Debug Display
@@ -2916,6 +2872,17 @@ Func _DebugToggle() ;Sets if current function should be displayed in the gui
 		$Debug = 1
 	EndIf
 EndFunc   ;==>_DebugToggle
+
+Func _DebugComToggle() ;Sets if current function should be displayed in the gui
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DebugComToggle()') ;#Debug Display
+	If $DebugCom = 1 Then
+		GUICtrlSetState($DebugComGUI, $GUI_UNCHECKED)
+		$DebugCom = 0
+	Else
+		GUICtrlSetState($DebugComGUI, $GUI_CHECKED)
+		$DebugCom = 1
+	EndIf
+EndFunc   ;==>_DebugComToggle
 
 Func _NativeWifiToggle()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_NativeWifiToggle()') ;#Debug Display
@@ -4560,7 +4527,6 @@ Func _OpenVistumblerStore();Opens Vistumbler Store
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerStore() ') ;#Debug Display
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://store.vistumbler.net')
 EndFunc   ;==>_OpenVistumblerStore
-
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       COPY GUI FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4585,7 +4551,7 @@ Func _CopyAP()
 		$Copy_NETTYPE = GUICtrlCreateCheckbox($Column_Names_NetworkType, 27, 120, 200, 15)
 		$Copy_RADTYPE = GUICtrlCreateCheckbox($Column_Names_RadioType, 27, 135, 200, 15)
 		$Copy_SIG = GUICtrlCreateCheckbox($Column_Names_Signal, 27, 151, 200, 15)
-		$Copy_LAB = GUICtrlCreateCheckbox($Column_Names_Label, 27, 166, 200, 15)
+		$Copy_HIGHSIG = GUICtrlCreateCheckbox($Column_Names_HighSignal, 27, 166, 200, 15)
 		$Copy_MANU = GUICtrlCreateCheckbox($Column_Names_MANUF, 27, 181, 200, 15)
 		$Copy_LAT = GUICtrlCreateCheckbox($Column_Names_Latitude, 267, 29, 200, 15)
 		$Copy_LON = GUICtrlCreateCheckbox($Column_Names_Longitude, 267, 44, 200, 15)
@@ -4597,6 +4563,7 @@ Func _CopyAP()
 		$Copy_OTX = GUICtrlCreateCheckbox($Column_Names_OtherTransferRates, 267, 135, 200, 15)
 		$Copy_FirstActive = GUICtrlCreateCheckbox($Column_Names_FirstActive, 267, 151, 200, 15)
 		$Copy_LastActive = GUICtrlCreateCheckbox($Column_Names_LastActive, 267, 166, 200, 15)
+		$Copy_LAB = GUICtrlCreateCheckbox($Column_Names_Label, 267, 181, 200, 15)
 
 		$CopyOK = GUICtrlCreateButton($Text_Ok, 142, 216, 100, 25, 0)
 		$CopyCancel = GUICtrlCreateButton($Text_Cancel, 256, 216, 100, 25, 0)
@@ -4617,7 +4584,7 @@ EndFunc   ;==>_CloseCopyGUI
 
 Func _CopyOK()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopyOK() ') ;#Debug Display
-	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, NETTYPE, RADTYPE, LABEL, MANU, HighGpsHistID, BTX, OTX, FirstHistID, LastHistID FROM AP WHERE ApID = '" & $CopyAPID & "'"
+	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, NETTYPE, RADTYPE, HighSignal, MANU, HighGpsHistID, BTX, OTX, FirstHistID, LastHistID, LABEL FROM AP WHERE ApID = '" & $CopyAPID & "'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	If $FoundApMatch <> 0 Then
@@ -4685,7 +4652,7 @@ Func _CopyOK()
 				$CopyText &= '|' & $ExpSig
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_LAB) = 1 Then
+		If GUICtrlRead($Copy_HIGHSIG) = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][9]
 			Else
@@ -4798,6 +4765,13 @@ Func _CopyOK()
 				$CopyText = $ExpDate & ' ' & $ExpTime
 			Else
 				$CopyText &= '|' & $ExpDate & ' ' & $ExpTime
+			EndIf
+		EndIf
+		If GUICtrlRead($Copy_LAB) = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][16]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][16]
 			EndIf
 		EndIf
 		ClipPut($CopyText)
@@ -5370,6 +5344,533 @@ Func _ExportVSZ()
 		FileDelete($vs1_file)
 	EndIf
 EndFunc   ;==>_ExportVSZ
+
+Func _WriteINI()
+	;Get Current column positions
+	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
+	For $c = 1 To $currentcolumn[0]
+		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
+		If $column_Active = $currentcolumn[$c] Then $save_column_Active = $c - 1
+		If $column_BSSID = $currentcolumn[$c] Then $save_column_BSSID = $c - 1
+		If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
+		If $column_Signal = $currentcolumn[$c] Then $save_column_Signal = $c - 1
+		If $column_HighSignal = $currentcolumn[$c] Then $save_column_HighSignal = $c - 1
+		If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
+		If $column_Authentication = $currentcolumn[$c] Then $save_column_Authentication = $c - 1
+		If $column_Encryption = $currentcolumn[$c] Then $save_column_Encryption = $c - 1
+		If $column_NetworkType = $currentcolumn[$c] Then $save_column_NetworkType = $c - 1
+		If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
+		If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
+		If $column_MANUF = $currentcolumn[$c] Then $save_column_MANUF = $c - 1
+		If $column_Label = $currentcolumn[$c] Then $save_column_Label = $c - 1
+		If $column_RadioType = $currentcolumn[$c] Then $save_column_RadioType = $c - 1
+		If $column_LatitudeDMS = $currentcolumn[$c] Then $save_column_LatitudeDMS = $c - 1
+		If $column_LongitudeDMS = $currentcolumn[$c] Then $save_column_LongitudeDMS = $c - 1
+		If $column_LatitudeDMM = $currentcolumn[$c] Then $save_column_LatitudeDMM = $c - 1
+		If $column_LongitudeDMM = $currentcolumn[$c] Then $save_column_LongitudeDMM = $c - 1
+		If $column_BasicTransferRates = $currentcolumn[$c] Then $save_column_BasicTransferRates = $c - 1
+		If $column_OtherTransferRates = $currentcolumn[$c] Then $save_column_OtherTransferRates = $c - 1
+		If $column_FirstActive = $currentcolumn[$c] Then $save_column_FirstActive = $c - 1
+		If $column_LastActive = $currentcolumn[$c] Then $save_column_LastActive = $c - 1
+	Next
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WriteINI()') ;#Debug Display
+	;write ini settings
+	If $SaveDir <> $DefaultSaveDir Then
+		IniWrite($settings, "Vistumbler", "SaveDir", $SaveDir);Write new save dir ro ini
+	Else
+		IniDelete($settings, "Vistumbler", "SaveDir");delete entry from the ini file
+	EndIf
+	If $SaveDirAuto <> $DefaultSaveDir Then
+		IniWrite($settings, "Vistumbler", "SaveDirAuto", $SaveDirAuto);Write new auto save dir ro ini
+	Else
+		IniDelete($settings, "Vistumbler", "SaveDirAuto");delete entry from the ini file
+	EndIf
+	If $SaveDirKml <> $DefaultSaveDir Then
+		IniWrite($settings, "Vistumbler", "SaveDirKml", $SaveDirKml);Write new save kml dir ro ini
+	Else
+		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
+	EndIf
+	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
+	IniWrite($settings, "Vistumbler", "UseNativeWifi", $UseNativeWifi)
+	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
+	IniWrite($settings, "Vistumbler", "CheckForBetaUpdates", $CheckForBetaUpdates)
+	IniWrite($settings, "Vistumbler", "DefaultApapter", $DefaultApapter)
+	IniWrite($settings, "Vistumbler", "TextColor", $TextColor)
+	IniWrite($settings, "Vistumbler", "BackgroundColor", $BackgroundColor)
+	IniWrite($settings, "Vistumbler", "ControlBackgroundColor", $ControlBackgroundColor)
+	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
+	IniWrite($settings, "Vistumbler", "SplitHeightPercent", $SplitHeightPercent)
+	IniWrite($settings, "Vistumbler", "Sleeptime", $RefreshLoopTime)
+	IniWrite($settings, "Vistumbler", "NewApPosistion", $AddDirection)
+	IniWrite($settings, "Vistumbler", "Language", $DefaultLanguage)
+	IniWrite($settings, "Vistumbler", "LanguageFile", $DefaultLanguageFile)
+	IniWrite($settings, "Vistumbler", "AutoRefreshNetworks", $RefreshNetworks)
+	IniWrite($settings, "Vistumbler", "AutoRefreshTime", $RefreshTime)
+	IniWrite($settings, "Vistumbler", "WiFiDbLocateRefreshTime", $WiFiDbLocateRefreshTime)
+	IniWrite($settings, 'Vistumbler', 'Debug', $Debug)
+	IniWrite($settings, 'Vistumbler', 'DebugCom', $DebugCom)
+	IniWrite($settings, 'Vistumbler', 'GraphDeadTime', $GraphDeadTime)
+	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
+	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
+	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
+	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
+	IniWrite($settings, "Vistumbler", 'AutoSelectHS', $AutoSelectHS)
+	IniWrite($settings, "Vistumbler", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
+	IniWrite($settings, "Vistumbler", 'DefFiltID', $DefFiltID)
+	IniWrite($settings, "Vistumbler", 'AutoScan', $AutoScan)
+
+	IniWrite($settings, 'WindowPositions', 'VistumblerState', $VistumblerState)
+	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
+	IniWrite($settings, 'WindowPositions', 'CompassPosition', $CompassPosition)
+	IniWrite($settings, 'WindowPositions', 'GpsDetailsPosition', $GpsDetailsPosition)
+
+	IniWrite($settings, "DateFormat", "DateFormat", $DateFormat)
+
+	IniWrite($settings, 'GpsSettings', 'ComPort', $ComPort)
+	IniWrite($settings, 'GpsSettings', 'Baud', $BAUD)
+	IniWrite($settings, 'GpsSettings', 'Parity', $PARITY)
+	IniWrite($settings, 'GpsSettings', 'DataBit', $DATABIT)
+	IniWrite($settings, 'GpsSettings', 'StopBit', $STOPBIT)
+	IniWrite($settings, 'GpsSettings', 'GpsType', $GpsType)
+	IniWrite($settings, 'GpsSettings', 'GPSformat', $GPSformat)
+	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
+
+	IniWrite($settings, "AutoSort", "AutoSortTime", $SortTime)
+	IniWrite($settings, "AutoSort", "AutoSort", $AutoSort)
+	IniWrite($settings, "AutoSort", "SortCombo", $SortBy)
+	IniWrite($settings, "AutoSort", "AscDecDefault", $SortDirection)
+
+	IniWrite($settings, "AutoSave", "AutoSave", $AutoSave)
+	IniWrite($settings, "AutoSave", "AutoSaveDel", $AutoSaveDel)
+	IniWrite($settings, "AutoSave", "AutoSaveTime", $SaveTime)
+
+	IniWrite($settings, "Sound", 'PlaySoundOnNewAP', $SoundOnAP)
+	IniWrite($settings, "Sound", 'SoundPerAP', $SoundPerAP)
+	IniWrite($settings, "Sound", 'NewSoundSigBased', $NewSoundSigBased)
+	IniWrite($settings, "Sound", "NewAP_Sound", $new_AP_sound)
+	IniWrite($settings, "Sound", "Error_Sound", $ErrorFlag_sound)
+
+	IniWrite($settings, "MIDI", 'SpeakSignal', $SpeakSignal)
+	IniWrite($settings, "MIDI", 'SpeakSigSayPecent', $SpeakSigSayPecent)
+	IniWrite($settings, "MIDI", 'SpeakSigTime', $SpeakSigTime)
+	IniWrite($settings, "MIDI", 'SpeakType', $SpeakType)
+	IniWrite($settings, "MIDI", 'Midi_Instument', $Midi_Instument)
+	IniWrite($settings, "MIDI", 'Midi_PlayTime', $Midi_PlayTime)
+	IniWrite($settings, "MIDI", 'Midi_PlayForActiveAps', $Midi_PlayForActiveAps)
+
+	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
+	IniWrite($settings, 'AutoKML', 'AutoKML_Alt', $AutoKML_Alt)
+	IniWrite($settings, 'AutoKML', 'AutoKML_AltMode', $AutoKML_AltMode)
+	IniWrite($settings, 'AutoKML', 'AutoKML_Heading', $AutoKML_Heading)
+	IniWrite($settings, 'AutoKML', 'AutoKML_Range', $AutoKML_Range)
+	IniWrite($settings, 'AutoKML', 'AutoKML_Tilt', $AutoKML_Tilt)
+	IniWrite($settings, 'AutoKML', 'AutoKmlActiveTime', $AutoKmlActiveTime)
+	IniWrite($settings, 'AutoKML', 'AutoKmlDeadTime', $AutoKmlDeadTime)
+	IniWrite($settings, 'AutoKML', 'AutoKmlGpsTime', $AutoKmlGpsTime)
+	IniWrite($settings, 'AutoKML', 'AutoKmlTrackTime', $AutoKmlTrackTime)
+	IniWrite($settings, 'AutoKML', 'KmlFlyTo', $KmlFlyTo)
+	IniWrite($settings, 'AutoKML', 'OpenKmlNetLink', $OpenKmlNetLink)
+	IniWrite($settings, 'AutoKML', 'GoogleEarth_EXE', $GoogleEarth_EXE)
+
+	IniWrite($settings, 'KmlSettings', 'MapPos', $MapPos)
+	IniWrite($settings, 'KmlSettings', 'MapSig', $MapSig)
+	IniWrite($settings, 'KmlSettings', 'MapSigType', $MapSigType)
+	IniWrite($settings, 'KmlSettings', 'MapRange', $MapRange)
+	IniWrite($settings, 'KmlSettings', 'ShowTrack', $ShowTrack)
+	IniWrite($settings, "KmlSettings", 'MapOpen', $MapOpen)
+	IniWrite($settings, 'KmlSettings', 'MapWEP', $MapWEP)
+	IniWrite($settings, 'KmlSettings', 'MapSec', $MapSec)
+	IniWrite($settings, 'KmlSettings', 'UseLocalKmlImagesOnExport', $UseLocalKmlImagesOnExport)
+	IniWrite($settings, 'KmlSettings', 'SigMapTimeBeforeMarkedDead', $SigMapTimeBeforeMarkedDead)
+	IniWrite($settings, 'KmlSettings', 'TrackColor', $TrackColor)
+	IniWrite($settings, 'KmlSettings', 'CirSigMapColor', $CirSigMapColor)
+	IniWrite($settings, 'KmlSettings', 'CirRangeMapColor', $CirRangeMapColor)
+
+	IniWrite($settings, 'PhilsWifiTools', 'Graph_URL', $PhilsGraphURL)
+	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_URL', $PhilsWdbURL)
+	IniWrite($settings, 'PhilsWifiTools', 'Locate_URL', $PhilsLocateURL)
+
+	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
+	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
+	IniWrite($settings, "Columns", "Column_BSSID", $save_column_BSSID)
+	IniWrite($settings, "Columns", "Column_SSID", $save_column_SSID)
+	IniWrite($settings, "Columns", "Column_Signal", $save_column_Signal)
+	IniWrite($settings, "Columns", "Column_HighSignal", $save_column_HighSignal)
+	IniWrite($settings, "Columns", "Column_Channel", $save_column_Channel)
+	IniWrite($settings, "Columns", "Column_Authentication", $save_column_Authentication)
+	IniWrite($settings, "Columns", "Column_Encryption", $save_column_Encryption)
+	IniWrite($settings, "Columns", "Column_NetworkType", $save_column_NetworkType)
+	IniWrite($settings, "Columns", "Column_Latitude", $save_column_Latitude)
+	IniWrite($settings, "Columns", "Column_Longitude", $save_column_Longitude)
+	IniWrite($settings, "Columns", "Column_Manufacturer", $save_column_MANUF)
+	IniWrite($settings, "Columns", "Column_Label", $save_column_Label)
+	IniWrite($settings, "Columns", "Column_RadioType", $save_column_RadioType)
+	IniWrite($settings, "Columns", "Column_LatitudeDMS", $save_column_LatitudeDMS)
+	IniWrite($settings, "Columns", "Column_LongitudeDMS", $save_column_LongitudeDMS)
+	IniWrite($settings, "Columns", "Column_LatitudeDMM", $save_column_LatitudeDMM)
+	IniWrite($settings, "Columns", "Column_LongitudeDMM", $save_column_LongitudeDMM)
+	IniWrite($settings, "Columns", "Column_BasicTransferRates", $save_column_BasicTransferRates)
+	IniWrite($settings, "Columns", "Column_OtherTransferRates", $column_OtherTransferRates)
+	IniWrite($settings, "Columns", "Column_FirstActive", $save_column_FirstActive)
+	IniWrite($settings, "Columns", "Column_LastActive", $save_column_LastActive)
+
+	IniWrite($settings, "Column_Width", "Column_Line", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0))
+	IniWrite($settings, "Column_Width", "Column_Active", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0))
+	IniWrite($settings, "Column_Width", "Column_BSSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BSSID - 0))
+	IniWrite($settings, "Column_Width", "Column_SSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0))
+	IniWrite($settings, "Column_Width", "Column_Signal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0))
+	IniWrite($settings, "Column_Width", "Column_HighSignal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighSignal - 0))
+	IniWrite($settings, "Column_Width", "Column_Channel", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0))
+	IniWrite($settings, "Column_Width", "Column_Authentication", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0))
+	IniWrite($settings, "Column_Width", "Column_Encryption", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0))
+	IniWrite($settings, "Column_Width", "Column_NetworkType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0))
+	IniWrite($settings, "Column_Width", "Column_Latitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0))
+	IniWrite($settings, "Column_Width", "Column_Longitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0))
+	IniWrite($settings, "Column_Width", "Column_Manufacturer", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0))
+	IniWrite($settings, "Column_Width", "Column_Label", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0))
+	IniWrite($settings, "Column_Width", "Column_RadioType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0))
+	IniWrite($settings, "Column_Width", "Column_LatitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0))
+	IniWrite($settings, "Column_Width", "Column_LongitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0))
+	IniWrite($settings, "Column_Width", "Column_LatitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0))
+	IniWrite($settings, "Column_Width", "Column_LongitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0))
+	IniWrite($settings, "Column_Width", "Column_BasicTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0))
+	IniWrite($settings, "Column_Width", "Column_OtherTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0))
+	IniWrite($settings, "Column_Width", "Column_FirstActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_FirstActive - 0))
+	IniWrite($settings, "Column_Width", "Column_LastActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LastActive - 0))
+
+	;//Write Changes to Language File
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Line", $Column_Names_Line)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Active", $Column_Names_Active)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_SSID", $Column_Names_SSID)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_BSSID", $Column_Names_BSSID)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Manufacturer", $Column_Names_MANUF)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Signal", $Column_Names_Signal)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_HighSignal", $Column_Names_HighSignal)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Authentication", $Column_Names_Authentication)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Encryption", $Column_Names_Encryption)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_RadioType", $Column_Names_RadioType)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Channel", $Column_Names_Channel)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Latitude", $Column_Names_Latitude)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Longitude", $Column_Names_Longitude)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LatitudeDMS", $Column_Names_LatitudeDMS)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LongitudeDMS", $Column_Names_LongitudeDMS)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LatitudeDMM", $Column_Names_LatitudeDMM)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LongitudeDMM", $Column_Names_LongitudeDMM)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_BasicTransferRates", $Column_Names_BasicTransferRates)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_OtherTransferRates", $Column_Names_OtherTransferRates)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_FirstActive", $Column_Names_FirstActive)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LastActive", $Column_Names_LastActive)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_NetworkType", $Column_Names_NetworkType)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Label", $Column_Names_Label)
+
+	IniWrite($DefaultLanguagePath, "SearchWords", "SSID", $SearchWord_SSID)
+	IniWrite($DefaultLanguagePath, "SearchWords", "BSSID", $SearchWord_BSSID)
+	IniWrite($DefaultLanguagePath, "SearchWords", "NetworkType", $SearchWord_NetworkType)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Authentication", $SearchWord_Authentication)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Encryption", $SearchWord_Encryption)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Signal", $SearchWord_Signal)
+	IniWrite($DefaultLanguagePath, "SearchWords", "RadioType", $SearchWord_RadioType)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Channel", $SearchWord_Channel)
+	IniWrite($DefaultLanguagePath, "SearchWords", "BasicRates", $SearchWord_BasicRates)
+	IniWrite($DefaultLanguagePath, "SearchWords", "OtherRates", $SearchWord_OtherRates)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Open", $SearchWord_Open)
+	IniWrite($DefaultLanguagePath, "SearchWords", "None", $SearchWord_None)
+	IniWrite($DefaultLanguagePath, "SearchWords", "WEP", $SearchWord_Wep)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Infrastructure", $SearchWord_Infrastructure)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Adhoc", $SearchWord_Adhoc)
+	IniWrite($DefaultLanguagePath, "SearchWords", "Cipher", $SearchWord_Cipher)
+
+	IniWrite($DefaultLanguagePath, "GuiText", "Ok", $Text_Ok)
+	IniWrite($DefaultLanguagePath, "GuiText", "Cancel", $Text_Cancel)
+	IniWrite($DefaultLanguagePath, "GuiText", "Apply", $Text_Apply)
+	IniWrite($DefaultLanguagePath, "GuiText", "Browse", $Text_Browse)
+	IniWrite($DefaultLanguagePath, "GuiText", "File", $Text_File)
+	IniWrite($DefaultLanguagePath, "GuiText", "Import", $Text_Import)
+	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsTXT", $Text_SaveAsTXT)
+	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsVS1", $Text_SaveAsVS1)
+	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsVSZ", $Text_SaveAsVSZ)
+	IniWrite($DefaultLanguagePath, "GuiText", "ImportFromTXT", $Text_ImportFromTXT)
+	IniWrite($DefaultLanguagePath, "GuiText", "ImportFromVSZ", $Text_ImportFromVSZ)
+	IniWrite($DefaultLanguagePath, "GuiText", "Exit", $Text_Exit)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExitSaveDb", $Text_ExitSaveDb)
+	IniWrite($DefaultLanguagePath, "GuiText", "Edit", $Text_Edit)
+	IniWrite($DefaultLanguagePath, "GuiText", "ClearAll", $Text_ClearAll)
+	IniWrite($DefaultLanguagePath, "GuiText", "Cut", $Text_Cut)
+	IniWrite($DefaultLanguagePath, "GuiText", "Copy", $Text_Copy)
+	IniWrite($DefaultLanguagePath, "GuiText", "Paste", $Text_Paste)
+	IniWrite($DefaultLanguagePath, "GuiText", "Delete", $Text_Delete)
+	IniWrite($DefaultLanguagePath, "GuiText", "Select", $Text_Select)
+	IniWrite($DefaultLanguagePath, "GuiText", "SelectAll", $Text_SelectAll)
+	IniWrite($DefaultLanguagePath, "GuiText", "View", $Text_View)
+	IniWrite($DefaultLanguagePath, "GuiText", "Options", $Text_Options)
+	IniWrite($DefaultLanguagePath, "GuiText", "AutoSort", $Text_AutoSort)
+	IniWrite($DefaultLanguagePath, "GuiText", "SortTree", $Text_SortTree)
+	IniWrite($DefaultLanguagePath, "GuiText", "PlaySound", $Text_PlaySound)
+	IniWrite($DefaultLanguagePath, "GuiText", "AddAPsToTop", $Text_AddAPsToTop)
+	IniWrite($DefaultLanguagePath, "GuiText", "Extra", $Text_Extra)
+	IniWrite($DefaultLanguagePath, "GuiText", "ScanAPs", $Text_ScanAPs)
+	IniWrite($DefaultLanguagePath, "GuiText", "StopScanAps", $Text_StopScanAps)
+	IniWrite($DefaultLanguagePath, "GuiText", "UseGPS", $Text_UseGPS)
+	IniWrite($DefaultLanguagePath, "GuiText", "StopGPS", $Text_StopGPS)
+	IniWrite($DefaultLanguagePath, "GuiText", "Settings", $Text_Settings)
+	IniWrite($DefaultLanguagePath, "GuiText", "GpsSettings", $Text_GpsSettings)
+	IniWrite($DefaultLanguagePath, "GuiText", "SetLanguage", $Text_SetLanguage)
+	IniWrite($DefaultLanguagePath, "GuiText", "SetSearchWords", $Text_SetSearchWords)
+	IniWrite($DefaultLanguagePath, "GuiText", "Export", $Text_Export)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToKML", $Text_ExportToKML)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToGPX", $Text_ExportToGPX)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToTXT", $Text_ExportToTXT)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToNS1", $Text_ExportToNS1)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToVS1", $Text_ExportToVS1)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToCSV", $Text_ExportToCSV)
+	IniWrite($DefaultLanguagePath, "GuiText", "ExportToVSZ", $Text_ExportToVSZ)
+	IniWrite($DefaultLanguagePath, "GuiText", "PhilsPHPgraph", $Text_PhilsPHPgraph)
+	IniWrite($DefaultLanguagePath, "GuiText", "PhilsWDB", $Text_PhilsWDB)
+	IniWrite($DefaultLanguagePath, "GuiText", "PhilsWdbLocate", $Text_PhilsWdbLocate)
+	IniWrite($DefaultLanguagePath, "GuiText", "UploadDataToWiFiDB", $Text_UploadDataToWifiDB)
+	IniWrite($DefaultLanguagePath, "GuiText", "RefreshLoopTime", $Text_RefreshLoopTime)
+	IniWrite($DefaultLanguagePath, "GuiText", "ActualLoopTime", $Text_ActualLoopTime)
+	IniWrite($DefaultLanguagePath, "GuiText", "Longitude", $Text_Longitude)
+	IniWrite($DefaultLanguagePath, "GuiText", "Latitude", $Text_Latitude)
+	IniWrite($DefaultLanguagePath, "GuiText", "ActiveAPs", $Text_ActiveAPs)
+	IniWrite($DefaultLanguagePath, "GuiText", "Graph1", $Text_Graph1)
+	IniWrite($DefaultLanguagePath, "GuiText", "Graph2", $Text_Graph2)
+	IniWrite($DefaultLanguagePath, "GuiText", "NoGraph", $Text_NoGraph)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SetMacLabel', $Text_SetMacLabel)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SetMacManu', $Text_SetMacManu)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Active', $Text_Active)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Dead', $Text_Dead)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddNewLabel', $Text_AddNewLabel)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RemoveLabel', $Text_RemoveLabel)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'EditLabel', $Text_EditLabel)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddNewMan', $Text_AddNewMan)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RemoveMan', $Text_RemoveMan)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'EditMan', $Text_EditMan)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NewMac', $Text_NewMac)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NewMan', $Text_NewMan)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NewLabel', $Text_NewLabel)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Save', $Text_Save)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SaveQuestion', $Text_SaveQuestion)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsDetails', $Text_GpsDetails)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsCompass', $Text_GpsCompass)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Quality', $Text_Quality)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Time', $Text_Time)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NumberOfSatalites', $Text_NumberOfSatalites)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'HorizontalDilutionPosition', $Text_HorizontalDilutionPosition)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Altitude', $Text_Altitude)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'HeightOfGeoid', $Text_HeightOfGeoid)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Status', $Text_Status)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Date', $Text_Date)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeedInKnots', $Text_SpeedInKnots)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeedInMPH', $Text_SpeedInMPH)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeedInKmh', $Text_SpeedInKmh)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'TrackAngle', $Text_TrackAngle)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Close', $Text_Close)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Start', $Text_Start)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Stop', $Text_Stop)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', $Text_RefreshNetworks)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshTime', $Text_RefreshTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SetColumnWidths', $Text_SetColumnWidths)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Enable', $Text_Enable)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Disable', $Text_Disable)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Checked', $Text_Checked)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UnChecked', $Text_UnChecked)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Unknown', $Text_Unknown)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Restart', $Text_Restart)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RestartMsg', $Text_RestartMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Error', $Text_Error)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', $Text_NoSignalHistory)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoApSelected', $Text_NoApSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNetcomm', $Text_UseNetcomm)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseCommMG', $Text_UseCommMG)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SignalHistory', $Text_SignalHistory)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', $Text_AutoSortEvery)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Seconds', $Text_Seconds)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Ascending', $Text_Ascending)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Decending', $Text_Decending)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSave', $Text_AutoSave)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', $Text_AutoSaveEvery)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', $Text_DelAutoSaveOnExit)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OpenSaveFolder', $Text_OpenSaveFolder)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SortBy', $Text_SortBy)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SortDirection', $Text_SortDirection)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Auto', $Text_Auto)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Misc', $Text_Misc)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GPS', $Text_Gps)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Labels', $Text_Labels)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Manufacturers', $Text_Manufacturers)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Columns', $Text_Columns)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Language', $Text_Language)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SearchWords', $Text_SearchWords)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerSettings', $Text_VistumblerSettings)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LanguageAuthor', $Text_LanguageAuthor)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LanguageDate', $Text_LanguageDate)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LanguageDescription', $Text_LanguageDescription)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Description', $Text_Description)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Progress', $Text_Progress)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LinesMin', $Text_LinesMin)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NewAPs', $Text_NewAPs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NewGIDs', $Text_NewGIDs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Minutes', $Text_Minutes)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LineTotal', $Text_LineTotal)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'EstimatedTimeRemaining', $Text_EstimatedTimeRemaining)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Ready', $Text_Ready)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Done', $Text_Done)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerSaveDirectory', $Text_VistumblerSaveDirectory)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerAutoSaveDirectory', $Text_VistumblerAutoSaveDirectory)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerKmlSaveDirectory', $Text_VistumblerKmlSaveDirectory)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'BackgroundColor', $Text_BackgroundColor)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ControlColor', $Text_ControlColor)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'BgFontColor', $Text_BgFontColor)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ConFontColor', $Text_ConFontColor)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NetshMsg', $Text_NetshMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'PHPgraphing', $Text_PHPgraphing)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ComInterface', $Text_ComInterface)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ComSettings', $Text_ComSettings)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Com', $Text_Com)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Baud', $Text_Baud)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GPSFormat', $Text_GPSFormat)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'HideOtherGpsColumns', $Text_HideOtherGpsColumns)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ImportLanguageFile', $Text_ImportLanguageFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKml', $Text_AutoKml)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GoogleEarthEXE', $Text_GoogleEarthEXE)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveKmlEvery', $Text_AutoSaveKmlEvery)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SavedAs', $Text_SavedAs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Overwrite', $Text_Overwrite)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'InstallNetcommOCX', $Text_InstallNetcommOCX)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoFileSaved', $Text_NoFileSaved)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoApsWithGps', $Text_NoApsWithGps)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoAps', $Text_NoAps)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MacExistsOverwriteIt', $Text_MacExistsOverwriteIt)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingLine', $Text_SavingLine)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Debug', $Text_Debug)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DisplayDebug', $Text_DisplayDebug)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DisplayDebugCom', $Text_DisplayComErrors)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GraphDeadTime', $Text_GraphDeadTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OpenKmlNetLink', $Text_OpenKmlNetLink)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ActiveRefreshTime', $Text_ActiveRefreshTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DeadRefreshTime', $Text_DeadRefreshTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsRefrshTime', $Text_GpsRefrshTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FlyToSettings', $Text_FlyToSettings)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FlyToCurrentGps', $Text_FlyToCurrentGps)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AltitudeMode', $Text_AltitudeMode)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Range', $Text_Range)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Heading', $Text_Heading)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Tilt', $Text_Tilt)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoOpenNetworkLink', $Text_AutoOpenNetworkLink)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakSignal', $Text_SpeakSignal)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakUseVisSounds', $Text_SpeakUseVisSounds)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakUseSapi', $Text_SpeakUseSapi)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakSayPercent', $Text_SpeakSayPercent)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsTrackTime', $Text_GpsTrackTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SaveAllGpsData', $Text_SaveAllGpsData)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'None', $Text_None)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Even', $Text_Even)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Odd', $Text_Odd)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Mark', $Text_Mark)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Space', $Text_Space)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'StopBit', $Text_StopBit)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Parity', $Text_Parity)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DataBit', $Text_DataBit)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Update', $Text_Update)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateMsg', $Text_UpdateMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Recover', $Text_Recover)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoverMsg', $Text_RecoverMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectConnectedAP', $Text_SelectConnectedAP)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerHome', $Text_VistumblerHome)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerForum', $Text_VistumblerForum)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerWiki', $Text_VistumblerWiki)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'CheckForUpdates', $Text_CheckForUpdates)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectWhatToCopy', $Text_SelectWhatToCopy)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Default', $Text_Default)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'PlayMidiSounds', $Text_PlayMidiSounds)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Interface', $Text_Interface)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LanguageCode', $Text_LanguageCode)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoCheckUpdates', $Text_AutoCheckUpdates)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'CheckBetaUpdates', $Text_CheckBetaUpdates)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GuessSearchwords', $Text_GuessSearchwords)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Help', $Text_Help)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorScanningNetsh', $Text_ErrorScanningNetsh)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsErrorBufferEmpty', $Text_GpsErrorBufferEmpty)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsErrorStopped', $Text_GpsErrorStopped)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowSignalDB', $Text_ShowSignalDB)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SortingList', $Text_SortingList)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Loading', $Text_Loading)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MapOpenNetworks', $Text_MapOpenNetworks)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MapWepNetworks', $Text_MapWepNetworks)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MapSecureNetworks', $Text_MapSecureNetworks)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DrawTrack', $Text_DrawTrack)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseLocalImages', $Text_UseLocalImages)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MIDI', $Text_MIDI)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MidiInstrumentNumber', $Text_MidiInstrumentNumber)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MidiPlayTime', $Text_MidiPlayTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakRefreshTime', $Text_SpeakRefreshTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Information', $Text_Information)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddedGuessedSearchwords', $Text_AddedGuessedSearchwords)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SortingTreeview', $Text_SortingTreeview)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Recovering', $Text_Recovering)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorOpeningGpsPort', $Text_ErrorOpeningGpsPort)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', $Text_SecondsSinceGpsUpdate)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingGID', $Text_SavingGID)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingHistID', $Text_SavingHistID)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoUpdates', $Text_NoUpdates)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoActiveApFound', $Text_NoActiveApFound)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', $Text_VistumblerDonate)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerStore', $Text_VistumblerStore)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', $Text_SupportVistumbler)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', $Text_UseNativeWifi)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterMsg', $Text_FilterMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SetFilters', $Text_SetFilters)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Filtered', $Text_Filtered)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Filters', $Text_Filters)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', $Text_NoAdaptersFound)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', $Text_RecoveringMDB)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', $Text_FixingGpsTableDates)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingGpsTableTimes', $Text_FixingGpsTableTimes)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingHistTableDates', $Text_FixingHistTableDates)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerNeedsToRestart', $Text_VistumblerNeedsToRestart)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', $Text_AddingApsIntoList)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', $Text_GoogleEarthDoesNotExist)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', $Text_AutoKmlIsNotStarted)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', $Text_UnableToGuessSearchwords)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectedAP', $Text_SelectedAP)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AllAPs', $Text_AllAPs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilteredAPs', $Text_FilteredAPs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ImportFolder', $Text_ImportFolder)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteSelected', $Text_DeleteSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoverSelected', $Text_RecoverSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NewSession', $Text_NewSession)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Size', $Text_Size)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', $Text_NoMdbSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LocateInWiFiDB', $Text_LocateInWiFiDB)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', $Text_AutoWiFiDbGpsLocate)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', $Text_AutoSelectConnectedAP)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectHighSigAP', $Text_AutoSelectHighSignal)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Experimental', $Text_Experimental)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Color', $Text_Color)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'PhilsWifiTools', $Text_PhilsWifiTools)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddRemFilters', $Text_AddRemFilters)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NoFilterSelected', $Text_NoFilterSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddFilter', $Text_AddFilter)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'EditFilter', $Text_EditFilter)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteFilter', $Text_DeleteFilter)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'TimeBeforeMarkedDead', $Text_TimeBeforeMarkedDead)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterNameRequired', $Text_FilterNameRequired)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateManufacturers', $Text_UpdateManufacturers)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FixHistSignals', $Text_FixHistSignals)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerFile', $Text_VistumblerFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DetailedFile', $Text_DetailedCsvFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', $Text_NetstumblerTxtFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', $Text_WardriveDb3File)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoScanApsOnLaunch', $Text_AutoScanApsOnLaunch)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshInterfaces', $Text_RefreshInterfaces)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Sound', $Text_Sound)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerLoop', $Text_OncePerLoop)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerAP', $Text_OncePerAP)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerAPwSound', $Text_OncePerAPwSound)
+EndFunc   ;==>_WriteINI
+
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5378,7 +5879,6 @@ Func LoadList()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'LoadList()') ;#Debug Display
 	_LoadListGUI()
 EndFunc   ;==>LoadList
-
 
 Func _ExtractVSZ($vsz_file)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExtractVSZ()') ;#Debug Display
@@ -6058,527 +6558,147 @@ Func _ImportMdbOk()
 	_AccessConnectConn($VistumblerLoadDB, $LoadDB_OBJ)
 EndFunc   ;==>_ImportMdbOk
 
-Func _WriteINI()
-	;Get Current column positions
-	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
-	For $c = 1 To $currentcolumn[0]
-		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
-		If $column_Active = $currentcolumn[$c] Then $save_column_Active = $c - 1
-		If $column_BSSID = $currentcolumn[$c] Then $save_column_BSSID = $c - 1
-		If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
-		If $column_Signal = $currentcolumn[$c] Then $save_column_Signal = $c - 1
-		If $column_HighSignal = $currentcolumn[$c] Then $save_column_HighSignal = $c - 1
-		If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
-		If $column_Authentication = $currentcolumn[$c] Then $save_column_Authentication = $c - 1
-		If $column_Encryption = $currentcolumn[$c] Then $save_column_Encryption = $c - 1
-		If $column_NetworkType = $currentcolumn[$c] Then $save_column_NetworkType = $c - 1
-		If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
-		If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
-		If $column_MANUF = $currentcolumn[$c] Then $save_column_MANUF = $c - 1
-		If $column_Label = $currentcolumn[$c] Then $save_column_Label = $c - 1
-		If $column_RadioType = $currentcolumn[$c] Then $save_column_RadioType = $c - 1
-		If $column_LatitudeDMS = $currentcolumn[$c] Then $save_column_LatitudeDMS = $c - 1
-		If $column_LongitudeDMS = $currentcolumn[$c] Then $save_column_LongitudeDMS = $c - 1
-		If $column_LatitudeDMM = $currentcolumn[$c] Then $save_column_LatitudeDMM = $c - 1
-		If $column_LongitudeDMM = $currentcolumn[$c] Then $save_column_LongitudeDMM = $c - 1
-		If $column_BasicTransferRates = $currentcolumn[$c] Then $save_column_BasicTransferRates = $c - 1
-		If $column_OtherTransferRates = $currentcolumn[$c] Then $save_column_OtherTransferRates = $c - 1
-		If $column_FirstActive = $currentcolumn[$c] Then $save_column_FirstActive = $c - 1
-		If $column_LastActive = $currentcolumn[$c] Then $save_column_LastActive = $c - 1
+Func _ImportWardriveDb3($DB3file)
+	_SQLite_Startup()
+	$WardriveImpDB = _SQLite_Open($DB3file, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
+	Local $NetworkMatchArray, $iRows, $iColumns, $iRval
+	$query = "SELECT bssid, ssid, capabilities, level, frequency, lat, lon, alt, timestamp FROM networks"
+	$iRval = _SQLite_GetTable2d($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
+	$WardriveAPs = $iRows
+
+	$UpdateTimer = TimerInit()
+	$begintime = TimerInit()
+	$AddAP = 0
+	$AddGID = 0
+	For $NewAP = 1 To $WardriveAPs
+		$Found_BSSID = StringUpper($NetworkMatchArray[$NewAP][0])
+		$Found_SSID = $NetworkMatchArray[$NewAP][1]
+		$Found_Capabilies = $NetworkMatchArray[$NewAP][2]
+		$Found_Level = $NetworkMatchArray[$NewAP][3]
+		$Found_Frequency = $NetworkMatchArray[$NewAP][4]
+		$Found_Lat = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][5], "N", "S")
+		$Found_Lon = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][6], "E", "W")
+		$Found_Alt = $NetworkMatchArray[$NewAP][7]
+		$Found_TimeStamp = StringTrimRight($NetworkMatchArray[$NewAP][8], 3)
+
+		;Get Authentication and Encrytion from capabilities
+		If StringInStr($Found_Capabilies, "WPA2-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA2-PSK-TKIP+CCMP") Then
+			$Found_AUTH = "WPA2-Personal"
+			$Found_ENCR = "CCMP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA-PSK-TKIP+CCMP") Then
+			$Found_AUTH = "WPA-Personal"
+			$Found_ENCR = "CCMP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA2-EAP-TKIP+CCMP") Then
+			$Found_AUTH = "WPA2-Enterprise"
+			$Found_ENCR = "CCMP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA-EAP-TKIP+CCMP") Then
+			$Found_AUTH = "WPA-Enterprise"
+			$Found_ENCR = "CCMP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA2-PSK-TKIP") Then
+			$Found_AUTH = "WPA2-Personal"
+			$Found_ENCR = "TKIP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-TKIP") Then
+			$Found_AUTH = "WPA-Personal"
+			$Found_ENCR = "TKIP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-TKIP") Then
+			$Found_AUTH = "WPA2-Enterprise"
+			$Found_ENCR = "TKIP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-TKIP") Then
+			$Found_AUTH = "WPA-Enterprise"
+			$Found_ENCR = "TKIP"
+			$Found_SecType = "3"
+		ElseIf StringInStr($Found_Capabilies, "WEP") Then
+			$Found_AUTH = "Open"
+			$Found_ENCR = "WEP"
+			$Found_SecType = "2"
+		Else
+			$Found_AUTH = "Open"
+			$Found_ENCR = "None"
+			$Found_SecType = "1"
+		EndIf
+
+		;Get Network Type from capabilities
+		If StringInStr($Found_Capabilies, "[IBSS]") Then
+			$Found_NETTYPE = "Adhoc"
+		Else
+			$Found_NETTYPE = "Infrastructure"
+		EndIf
+
+		;Get Channel From Frequency
+		If $Found_Frequency = "2412" Then
+			$Found_CHAN = "001"
+		ElseIf $Found_Frequency = "2417" Then
+			$Found_CHAN = "002"
+		ElseIf $Found_Frequency = "2422" Then
+			$Found_CHAN = "003"
+		ElseIf $Found_Frequency = "2427" Then
+			$Found_CHAN = "004"
+		ElseIf $Found_Frequency = "2432" Then
+			$Found_CHAN = "005"
+		ElseIf $Found_Frequency = "2437" Then
+			$Found_CHAN = "006"
+		ElseIf $Found_Frequency = "2442" Then
+			$Found_CHAN = "007"
+		ElseIf $Found_Frequency = "2447" Then
+			$Found_CHAN = "008"
+		ElseIf $Found_Frequency = "2452" Then
+			$Found_CHAN = "009"
+		ElseIf $Found_Frequency = "2457" Then
+			$Found_CHAN = "010"
+		ElseIf $Found_Frequency = "2462" Then
+			$Found_CHAN = "011"
+		ElseIf $Found_Frequency = "2467" Then
+			$Found_CHAN = "012"
+		ElseIf $Found_Frequency = "2472" Then
+			$Found_CHAN = "013"
+		Else
+			$Found_CHAN = "Unknown"
+		EndIf
+
+		$Found_Date = _StringFormatTime("%Y", $Found_TimeStamp) & "-" & _StringFormatTime("%m", $Found_TimeStamp) & "-" & _StringFormatTime("%d", $Found_TimeStamp)
+		$Found_Time = _StringFormatTime("%X", $Found_TimeStamp) & ".000"
+
+		;Add GPS data in Vistumbler DB
+		$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $Found_Lat & "' And Longitude = '" & $Found_Lon & "' And Date1 = '" & $Found_Date & "' And Time1 = '" & $Found_Time & "'"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundGpsMatch = UBound($GpsMatchArray) - 1
+		If $FoundGpsMatch = 0 Then
+			$AddGID += 1
+			$GPS_ID += 1
+			;Add GPS ID
+			_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Found_Lat & '|' & $Found_Lon & '|0|0|' & $Found_Alt & '|0|0|0|0|' & $Found_Date & '|' & $Found_Time)
+			$NewGpsId = $GPS_ID
+		ElseIf $FoundGpsMatch = 1 Then
+			$NewGpsId = $GpsMatchArray[1][1]
+		EndIf
+
+		;Add AP data into Vistumbler DB
+		$NewApAdded = _AddApData(0, $NewGpsId, $Found_BSSID, $Found_SSID, $Found_CHAN, $Found_AUTH, $Found_ENCR, $Found_NETTYPE, "802.11g", "Unknown", "Unknown", "0")
+		If $NewApAdded <> 0 Then $AddAP += 1
+
+		If TimerDiff($UpdateTimer) > 600 Or ($NewAP = $WardriveAPs) Then
+			$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+			$percent = ($NewAP / $WardriveAPs) * 100
+			GUICtrlSetData($progressbar, $percent)
+			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+			GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($Load / $min, 1))
+			GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+			GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $NewAP & "/" & $WardriveAPs)
+			GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($WardriveAPs / Round($NewAP / $min, 1)) - $min, 1) & "/" & Round($WardriveAPs / Round($NewAP / $min, 1), 1))
+			$UpdateTimer = TimerInit()
+		EndIf
 	Next
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WriteINI()') ;#Debug Display
-	;write ini settings
-	If $SaveDir <> $DefaultSaveDir Then
-		IniWrite($settings, "Vistumbler", "SaveDir", $SaveDir);Write new save dir ro ini
-	Else
-		IniDelete($settings, "Vistumbler", "SaveDir");delete entry from the ini file
-	EndIf
-	If $SaveDirAuto <> $DefaultSaveDir Then
-		IniWrite($settings, "Vistumbler", "SaveDirAuto", $SaveDirAuto);Write new auto save dir ro ini
-	Else
-		IniDelete($settings, "Vistumbler", "SaveDirAuto");delete entry from the ini file
-	EndIf
-	If $SaveDirKml <> $DefaultSaveDir Then
-		IniWrite($settings, "Vistumbler", "SaveDirKml", $SaveDirKml);Write new save kml dir ro ini
-	Else
-		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
-	EndIf
-	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
-	IniWrite($settings, "Vistumbler", "UseNativeWifi", $UseNativeWifi)
-	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
-	IniWrite($settings, "Vistumbler", "CheckForBetaUpdates", $CheckForBetaUpdates)
-	IniWrite($settings, "Vistumbler", "DefaultApapter", $DefaultApapter)
-	IniWrite($settings, "Vistumbler", "TextColor", $TextColor)
-	IniWrite($settings, "Vistumbler", "BackgroundColor", $BackgroundColor)
-	IniWrite($settings, "Vistumbler", "ControlBackgroundColor", $ControlBackgroundColor)
-	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
-	IniWrite($settings, "Vistumbler", "SplitHeightPercent", $SplitHeightPercent)
-	IniWrite($settings, "Vistumbler", "Sleeptime", $RefreshLoopTime)
-	IniWrite($settings, "Vistumbler", "NewApPosistion", $AddDirection)
-	IniWrite($settings, "Vistumbler", "Language", $DefaultLanguage)
-	IniWrite($settings, "Vistumbler", "LanguageFile", $DefaultLanguageFile)
-	IniWrite($settings, "Vistumbler", "AutoRefreshNetworks", $RefreshNetworks)
-	IniWrite($settings, "Vistumbler", "AutoRefreshTime", $RefreshTime)
-	IniWrite($settings, "Vistumbler", "WiFiDbLocateRefreshTime", $WiFiDbLocateRefreshTime)
-	IniWrite($settings, 'Vistumbler', 'Debug', $Debug)
-	IniWrite($settings, 'Vistumbler', 'GraphDeadTime', $GraphDeadTime)
-	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
-	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
-	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
-	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
-	IniWrite($settings, "Vistumbler", 'AutoSelectHS', $AutoSelectHS)
-	IniWrite($settings, "Vistumbler", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
-	IniWrite($settings, "Vistumbler", 'DefFiltID', $DefFiltID)
-	IniWrite($settings, "Vistumbler", 'AutoScan', $AutoScan)
-
-	IniWrite($settings, 'WindowPositions', 'VistumblerState', $VistumblerState)
-	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
-	IniWrite($settings, 'WindowPositions', 'CompassPosition', $CompassPosition)
-	IniWrite($settings, 'WindowPositions', 'GpsDetailsPosition', $GpsDetailsPosition)
-
-	IniWrite($settings, "DateFormat", "DateFormat", $DateFormat)
-
-	IniWrite($settings, 'GpsSettings', 'ComPort', $ComPort)
-	IniWrite($settings, 'GpsSettings', 'Baud', $BAUD)
-	IniWrite($settings, 'GpsSettings', 'Parity', $PARITY)
-	IniWrite($settings, 'GpsSettings', 'DataBit', $DATABIT)
-	IniWrite($settings, 'GpsSettings', 'StopBit', $STOPBIT)
-	IniWrite($settings, 'GpsSettings', 'GpsType', $GpsType)
-	IniWrite($settings, 'GpsSettings', 'GPSformat', $GPSformat)
-	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
-
-	IniWrite($settings, "AutoSort", "AutoSortTime", $SortTime)
-	IniWrite($settings, "AutoSort", "AutoSort", $AutoSort)
-	IniWrite($settings, "AutoSort", "SortCombo", $SortBy)
-	IniWrite($settings, "AutoSort", "AscDecDefault", $SortDirection)
-
-	IniWrite($settings, "AutoSave", "AutoSave", $AutoSave)
-	IniWrite($settings, "AutoSave", "AutoSaveDel", $AutoSaveDel)
-	IniWrite($settings, "AutoSave", "AutoSaveTime", $SaveTime)
-
-	IniWrite($settings, "Sound", 'PlaySoundOnNewAP', $SoundOnAP)
-	IniWrite($settings, "Sound", 'SoundPerAP', $SoundPerAP)
-	IniWrite($settings, "Sound", 'NewSoundSigBased', $NewSoundSigBased)
-	IniWrite($settings, "Sound", "NewAP_Sound", $new_AP_sound)
-	IniWrite($settings, "Sound", "Error_Sound", $ErrorFlag_sound)
-
-	IniWrite($settings, "MIDI", 'SpeakSignal', $SpeakSignal)
-	IniWrite($settings, "MIDI", 'SpeakSigSayPecent', $SpeakSigSayPecent)
-	IniWrite($settings, "MIDI", 'SpeakSigTime', $SpeakSigTime)
-	IniWrite($settings, "MIDI", 'SpeakType', $SpeakType)
-	IniWrite($settings, "MIDI", 'Midi_Instument', $Midi_Instument)
-	IniWrite($settings, "MIDI", 'Midi_PlayTime', $Midi_PlayTime)
-	IniWrite($settings, "MIDI", 'Midi_PlayForActiveAps', $Midi_PlayForActiveAps)
-
-	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
-	IniWrite($settings, 'AutoKML', 'AutoKML_Alt', $AutoKML_Alt)
-	IniWrite($settings, 'AutoKML', 'AutoKML_AltMode', $AutoKML_AltMode)
-	IniWrite($settings, 'AutoKML', 'AutoKML_Heading', $AutoKML_Heading)
-	IniWrite($settings, 'AutoKML', 'AutoKML_Range', $AutoKML_Range)
-	IniWrite($settings, 'AutoKML', 'AutoKML_Tilt', $AutoKML_Tilt)
-	IniWrite($settings, 'AutoKML', 'AutoKmlActiveTime', $AutoKmlActiveTime)
-	IniWrite($settings, 'AutoKML', 'AutoKmlDeadTime', $AutoKmlDeadTime)
-	IniWrite($settings, 'AutoKML', 'AutoKmlGpsTime', $AutoKmlGpsTime)
-	IniWrite($settings, 'AutoKML', 'AutoKmlTrackTime', $AutoKmlTrackTime)
-	IniWrite($settings, 'AutoKML', 'KmlFlyTo', $KmlFlyTo)
-	IniWrite($settings, 'AutoKML', 'OpenKmlNetLink', $OpenKmlNetLink)
-	IniWrite($settings, 'AutoKML', 'GoogleEarth_EXE', $GoogleEarth_EXE)
-
-	IniWrite($settings, 'KmlSettings', 'MapPos', $MapPos)
-	IniWrite($settings, 'KmlSettings', 'MapSig', $MapSig)
-	IniWrite($settings, 'KmlSettings', 'MapSigType', $MapSigType)
-	IniWrite($settings, 'KmlSettings', 'MapRange', $MapRange)
-	IniWrite($settings, 'KmlSettings', 'ShowTrack', $ShowTrack)
-	IniWrite($settings, "KmlSettings", 'MapOpen', $MapOpen)
-	IniWrite($settings, 'KmlSettings', 'MapWEP', $MapWEP)
-	IniWrite($settings, 'KmlSettings', 'MapSec', $MapSec)
-	IniWrite($settings, 'KmlSettings', 'UseLocalKmlImagesOnExport', $UseLocalKmlImagesOnExport)
-	IniWrite($settings, 'KmlSettings', 'SigMapTimeBeforeMarkedDead', $SigMapTimeBeforeMarkedDead)
-	IniWrite($settings, 'KmlSettings', 'TrackColor', $TrackColor)
-	IniWrite($settings, 'KmlSettings', 'CirSigMapColor', $CirSigMapColor)
-	IniWrite($settings, 'KmlSettings', 'CirRangeMapColor', $CirRangeMapColor)
-
-	IniWrite($settings, 'PhilsWifiTools', 'Graph_URL', $PhilsGraphURL)
-	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_URL', $PhilsWdbURL)
-	IniWrite($settings, 'PhilsWifiTools', 'Locate_URL', $PhilsLocateURL)
-
-	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
-	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
-	IniWrite($settings, "Columns", "Column_BSSID", $save_column_BSSID)
-	IniWrite($settings, "Columns", "Column_SSID", $save_column_SSID)
-	IniWrite($settings, "Columns", "Column_Signal", $save_column_Signal)
-	IniWrite($settings, "Columns", "Column_HighSignal", $save_column_HighSignal)
-	IniWrite($settings, "Columns", "Column_Channel", $save_column_Channel)
-	IniWrite($settings, "Columns", "Column_Authentication", $save_column_Authentication)
-	IniWrite($settings, "Columns", "Column_Encryption", $save_column_Encryption)
-	IniWrite($settings, "Columns", "Column_NetworkType", $save_column_NetworkType)
-	IniWrite($settings, "Columns", "Column_Latitude", $save_column_Latitude)
-	IniWrite($settings, "Columns", "Column_Longitude", $save_column_Longitude)
-	IniWrite($settings, "Columns", "Column_Manufacturer", $save_column_MANUF)
-	IniWrite($settings, "Columns", "Column_Label", $save_column_Label)
-	IniWrite($settings, "Columns", "Column_RadioType", $save_column_RadioType)
-	IniWrite($settings, "Columns", "Column_LatitudeDMS", $save_column_LatitudeDMS)
-	IniWrite($settings, "Columns", "Column_LongitudeDMS", $save_column_LongitudeDMS)
-	IniWrite($settings, "Columns", "Column_LatitudeDMM", $save_column_LatitudeDMM)
-	IniWrite($settings, "Columns", "Column_LongitudeDMM", $save_column_LongitudeDMM)
-	IniWrite($settings, "Columns", "Column_BasicTransferRates", $save_column_BasicTransferRates)
-	IniWrite($settings, "Columns", "Column_OtherTransferRates", $column_OtherTransferRates)
-	IniWrite($settings, "Columns", "Column_FirstActive", $save_column_FirstActive)
-	IniWrite($settings, "Columns", "Column_LastActive", $save_column_LastActive)
-
-	IniWrite($settings, "Column_Width", "Column_Line", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0))
-	IniWrite($settings, "Column_Width", "Column_Active", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0))
-	IniWrite($settings, "Column_Width", "Column_BSSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BSSID - 0))
-	IniWrite($settings, "Column_Width", "Column_SSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0))
-	IniWrite($settings, "Column_Width", "Column_Signal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0))
-	IniWrite($settings, "Column_Width", "Column_HighSignal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighSignal - 0))
-	IniWrite($settings, "Column_Width", "Column_Channel", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0))
-	IniWrite($settings, "Column_Width", "Column_Authentication", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0))
-	IniWrite($settings, "Column_Width", "Column_Encryption", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0))
-	IniWrite($settings, "Column_Width", "Column_NetworkType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0))
-	IniWrite($settings, "Column_Width", "Column_Latitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0))
-	IniWrite($settings, "Column_Width", "Column_Longitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0))
-	IniWrite($settings, "Column_Width", "Column_Manufacturer", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0))
-	IniWrite($settings, "Column_Width", "Column_Label", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0))
-	IniWrite($settings, "Column_Width", "Column_RadioType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0))
-	IniWrite($settings, "Column_Width", "Column_LatitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0))
-	IniWrite($settings, "Column_Width", "Column_LongitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0))
-	IniWrite($settings, "Column_Width", "Column_LatitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0))
-	IniWrite($settings, "Column_Width", "Column_LongitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0))
-	IniWrite($settings, "Column_Width", "Column_BasicTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0))
-	IniWrite($settings, "Column_Width", "Column_OtherTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0))
-	IniWrite($settings, "Column_Width", "Column_FirstActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_FirstActive - 0))
-	IniWrite($settings, "Column_Width", "Column_LastActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LastActive - 0))
-
-	;//Write Changes to Language File
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Line", $Column_Names_Line)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Active", $Column_Names_Active)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_SSID", $Column_Names_SSID)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_BSSID", $Column_Names_BSSID)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Manufacturer", $Column_Names_MANUF)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Signal", $Column_Names_Signal)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_HighSignal", $Column_Names_HighSignal)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Authentication", $Column_Names_Authentication)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Encryption", $Column_Names_Encryption)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_RadioType", $Column_Names_RadioType)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Channel", $Column_Names_Channel)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Latitude", $Column_Names_Latitude)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Longitude", $Column_Names_Longitude)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LatitudeDMS", $Column_Names_LatitudeDMS)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LongitudeDMS", $Column_Names_LongitudeDMS)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LatitudeDMM", $Column_Names_LatitudeDMM)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LongitudeDMM", $Column_Names_LongitudeDMM)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_BasicTransferRates", $Column_Names_BasicTransferRates)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_OtherTransferRates", $Column_Names_OtherTransferRates)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_FirstActive", $Column_Names_FirstActive)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_LastActive", $Column_Names_LastActive)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_NetworkType", $Column_Names_NetworkType)
-	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Label", $Column_Names_Label)
-
-	IniWrite($DefaultLanguagePath, "SearchWords", "SSID", $SearchWord_SSID)
-	IniWrite($DefaultLanguagePath, "SearchWords", "BSSID", $SearchWord_BSSID)
-	IniWrite($DefaultLanguagePath, "SearchWords", "NetworkType", $SearchWord_NetworkType)
-	IniWrite($DefaultLanguagePath, "SearchWords", "Authentication", $SearchWord_Authentication)
-	IniWrite($DefaultLanguagePath, "SearchWords", "Encryption", $SearchWord_Encryption)
-	IniWrite($DefaultLanguagePath, "SearchWords", "Signal", $SearchWord_Signal)
-	IniWrite($DefaultLanguagePath, "SearchWords", "RadioType", $SearchWord_RadioType)
-	IniWrite($DefaultLanguagePath, "SearchWords", "Channel", $SearchWord_Channel)
-	IniWrite($DefaultLanguagePath, "SearchWords", "BasicRates", $SearchWord_BasicRates)
-	IniWrite($DefaultLanguagePath, "SearchWords", "OtherRates", $SearchWord_OtherRates)
-	IniWrite($DefaultLanguagePath, "SearchWords", "Open", $SearchWord_Open)
-	IniWrite($DefaultLanguagePath, "SearchWords", "None", $SearchWord_None)
-	IniWrite($DefaultLanguagePath, "SearchWords", "WEP", $SearchWord_Wep)
-	IniWrite($DefaultLanguagePath, "SearchWords", "Infrastructure", $SearchWord_Infrastructure)
-	IniWrite($DefaultLanguagePath, "SearchWords", "Adhoc", $SearchWord_Adhoc)
-	IniWrite($DefaultLanguagePath, "SearchWords", "Cipher", $SearchWord_Cipher)
-
-	IniWrite($DefaultLanguagePath, "GuiText", "Ok", $Text_Ok)
-	IniWrite($DefaultLanguagePath, "GuiText", "Cancel", $Text_Cancel)
-	IniWrite($DefaultLanguagePath, "GuiText", "Apply", $Text_Apply)
-	IniWrite($DefaultLanguagePath, "GuiText", "Browse", $Text_Browse)
-	IniWrite($DefaultLanguagePath, "GuiText", "File", $Text_File)
-	IniWrite($DefaultLanguagePath, "GuiText", "Import", $Text_Import)
-	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsTXT", $Text_SaveAsTXT)
-	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsVS1", $Text_SaveAsVS1)
-	IniWrite($DefaultLanguagePath, "GuiText", "SaveAsVSZ", $Text_SaveAsVSZ)
-	IniWrite($DefaultLanguagePath, "GuiText", "ImportFromTXT", $Text_ImportFromTXT)
-	IniWrite($DefaultLanguagePath, "GuiText", "ImportFromVSZ", $Text_ImportFromVSZ)
-	IniWrite($DefaultLanguagePath, "GuiText", "Exit", $Text_Exit)
-	IniWrite($DefaultLanguagePath, "GuiText", "ExitSaveDb", $Text_ExitSaveDb)
-	IniWrite($DefaultLanguagePath, "GuiText", "Edit", $Text_Edit)
-	IniWrite($DefaultLanguagePath, "GuiText", "ClearAll", $Text_ClearAll)
-	IniWrite($DefaultLanguagePath, "GuiText", "Cut", $Text_Cut)
-	IniWrite($DefaultLanguagePath, "GuiText", "Copy", $Text_Copy)
-	IniWrite($DefaultLanguagePath, "GuiText", "Paste", $Text_Paste)
-	IniWrite($DefaultLanguagePath, "GuiText", "Delete", $Text_Delete)
-	IniWrite($DefaultLanguagePath, "GuiText", "Select", $Text_Select)
-	IniWrite($DefaultLanguagePath, "GuiText", "SelectAll", $Text_SelectAll)
-	IniWrite($DefaultLanguagePath, "GuiText", "View", $Text_View)
-	IniWrite($DefaultLanguagePath, "GuiText", "Options", $Text_Options)
-	IniWrite($DefaultLanguagePath, "GuiText", "AutoSort", $Text_AutoSort)
-	IniWrite($DefaultLanguagePath, "GuiText", "SortTree", $Text_SortTree)
-	IniWrite($DefaultLanguagePath, "GuiText", "PlaySound", $Text_PlaySound)
-	IniWrite($DefaultLanguagePath, "GuiText", "AddAPsToTop", $Text_AddAPsToTop)
-	IniWrite($DefaultLanguagePath, "GuiText", "Extra", $Text_Extra)
-	IniWrite($DefaultLanguagePath, "GuiText", "ScanAPs", $Text_ScanAPs)
-	IniWrite($DefaultLanguagePath, "GuiText", "StopScanAps", $Text_StopScanAps)
-	IniWrite($DefaultLanguagePath, "GuiText", "UseGPS", $Text_UseGPS)
-	IniWrite($DefaultLanguagePath, "GuiText", "StopGPS", $Text_StopGPS)
-	IniWrite($DefaultLanguagePath, "GuiText", "Settings", $Text_Settings)
-	IniWrite($DefaultLanguagePath, "GuiText", "GpsSettings", $Text_GpsSettings)
-	IniWrite($DefaultLanguagePath, "GuiText", "SetLanguage", $Text_SetLanguage)
-	IniWrite($DefaultLanguagePath, "GuiText", "SetSearchWords", $Text_SetSearchWords)
-	IniWrite($DefaultLanguagePath, "GuiText", "Export", $Text_Export)
-	IniWrite($DefaultLanguagePath, "GuiText", "ExportToKML", $Text_ExportToKML)
-	IniWrite($DefaultLanguagePath, "GuiText", "ExportToGPX", $Text_ExportToGPX)
-	IniWrite($DefaultLanguagePath, "GuiText", "ExportToTXT", $Text_ExportToTXT)
-	IniWrite($DefaultLanguagePath, "GuiText", "ExportToNS1", $Text_ExportToNS1)
-	IniWrite($DefaultLanguagePath, "GuiText", "ExportToVS1", $Text_ExportToVS1)
-	IniWrite($DefaultLanguagePath, "GuiText", "ExportToCSV", $Text_ExportToCSV)
-	IniWrite($DefaultLanguagePath, "GuiText", "ExportToVSZ", $Text_ExportToVSZ)
-	IniWrite($DefaultLanguagePath, "GuiText", "PhilsPHPgraph", $Text_PhilsPHPgraph)
-	IniWrite($DefaultLanguagePath, "GuiText", "PhilsWDB", $Text_PhilsWDB)
-	IniWrite($DefaultLanguagePath, "GuiText", "UploadDataToWiFiDB", $Text_UploadDataToWifiDB)
-	IniWrite($DefaultLanguagePath, "GuiText", "RefreshLoopTime", $Text_RefreshLoopTime)
-	IniWrite($DefaultLanguagePath, "GuiText", "ActualLoopTime", $Text_ActualLoopTime)
-	IniWrite($DefaultLanguagePath, "GuiText", "Longitude", $Text_Longitude)
-	IniWrite($DefaultLanguagePath, "GuiText", "Latitude", $Text_Latitude)
-	IniWrite($DefaultLanguagePath, "GuiText", "ActiveAPs", $Text_ActiveAPs)
-	IniWrite($DefaultLanguagePath, "GuiText", "Graph1", $Text_Graph1)
-	IniWrite($DefaultLanguagePath, "GuiText", "Graph2", $Text_Graph2)
-	IniWrite($DefaultLanguagePath, "GuiText", "NoGraph", $Text_NoGraph)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SetMacLabel', $Text_SetMacLabel)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SetMacManu', $Text_SetMacManu)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Active', $Text_Active)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Dead', $Text_Dead)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AddNewLabel', $Text_AddNewLabel)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RemoveLabel', $Text_RemoveLabel)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'EditLabel', $Text_EditLabel)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AddNewMan', $Text_AddNewMan)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RemoveMan', $Text_RemoveMan)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'EditMan', $Text_EditMan)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NewMac', $Text_NewMac)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NewMan', $Text_NewMan)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NewLabel', $Text_NewLabel)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Save', $Text_Save)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SaveQuestion', $Text_SaveQuestion)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsDetails', $Text_GpsDetails)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsCompass', $Text_GpsCompass)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Quality', $Text_Quality)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Time', $Text_Time)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NumberOfSatalites', $Text_NumberOfSatalites)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'HorizontalDilutionPosition', $Text_HorizontalDilutionPosition)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Altitude', $Text_Altitude)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'HeightOfGeoid', $Text_HeightOfGeoid)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Status', $Text_Status)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Date', $Text_Date)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeedInKnots', $Text_SpeedInKnots)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeedInMPH', $Text_SpeedInMPH)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeedInKmh', $Text_SpeedInKmh)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'TrackAngle', $Text_TrackAngle)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Close', $Text_Close)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Start', $Text_Start)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Stop', $Text_Stop)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshingNetworks', $Text_RefreshNetworks)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshTime', $Text_RefreshTime)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SetColumnWidths', $Text_SetColumnWidths)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Enable', $Text_Enable)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Disable', $Text_Disable)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Checked', $Text_Checked)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UnChecked', $Text_UnChecked)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Unknown', $Text_Unknown)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Restart', $Text_Restart)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RestartMsg', $Text_RestartMsg)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Error', $Text_Error)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', $Text_NoSignalHistory)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoApSelected', $Text_NoApSelected)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNetcomm', $Text_UseNetcomm)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UseCommMG', $Text_UseCommMG)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SignalHistory', $Text_SignalHistory)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', $Text_AutoSortEvery)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Seconds', $Text_Seconds)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Ascending', $Text_Ascending)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Decending', $Text_Decending)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSave', $Text_AutoSave)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', $Text_AutoSaveEvery)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', $Text_DelAutoSaveOnExit)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'OpenSaveFolder', $Text_OpenSaveFolder)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SortBy', $Text_SortBy)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SortDirection', $Text_SortDirection)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Auto', $Text_Auto)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Misc', $Text_Misc)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GPS', $Text_Gps)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Labels', $Text_Labels)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Manufacturers', $Text_Manufacturers)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Columns', $Text_Columns)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Language', $Text_Language)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SearchWords', $Text_SearchWords)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerSettings', $Text_VistumblerSettings)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'LanguageAuthor', $Text_LanguageAuthor)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'LanguageDate', $Text_LanguageDate)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'LanguageDescription', $Text_LanguageDescription)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Description', $Text_Description)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Progress', $Text_Progress)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'LinesMin', $Text_LinesMin)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NewAPs', $Text_NewAPs)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NewGIDs', $Text_NewGIDs)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Minutes', $Text_Minutes)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'LineTotal', $Text_LineTotal)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'EstimatedTimeRemaining', $Text_EstimatedTimeRemaining)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Ready', $Text_Ready)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Done', $Text_Done)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerSaveDirectory', $Text_VistumblerSaveDirectory)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerAutoSaveDirectory', $Text_VistumblerAutoSaveDirectory)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerKmlSaveDirectory', $Text_VistumblerKmlSaveDirectory)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'BackgroundColor', $Text_BackgroundColor)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ControlColor', $Text_ControlColor)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'BgFontColor', $Text_BgFontColor)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ConFontColor', $Text_ConFontColor)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NetshMsg', $Text_NetshMsg)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'PHPgraphing', $Text_PHPgraphing)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ComInterface', $Text_ComInterface)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ComSettings', $Text_ComSettings)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Com', $Text_Com)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Baud', $Text_Baud)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GPSFormat', $Text_GPSFormat)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'HideOtherGpsColumns', $Text_HideOtherGpsColumns)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ImportLanguageFile', $Text_ImportLanguageFile)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKml', $Text_AutoKml)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GoogleEarthEXE', $Text_GoogleEarthEXE)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveKmlEvery', $Text_AutoSaveKmlEvery)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SavedAs', $Text_SavedAs)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Overwrite', $Text_Overwrite)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'InstallNetcommOCX', $Text_InstallNetcommOCX)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoFileSaved', $Text_NoFileSaved)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoApsWithGps', $Text_NoApsWithGps)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoAps', $Text_NoAps)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'MacExistsOverwriteIt', $Text_MacExistsOverwriteIt)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingLine', $Text_SavingLine)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DisplayDebug', $Text_DisplayDebug)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GraphDeadTime', $Text_GraphDeadTime)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'OpenKmlNetLink', $Text_OpenKmlNetLink)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ActiveRefreshTime', $Text_ActiveRefreshTime)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DeadRefreshTime', $Text_DeadRefreshTime)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsRefrshTime', $Text_GpsRefrshTime)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FlyToSettings', $Text_FlyToSettings)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FlyToCurrentGps', $Text_FlyToCurrentGps)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AltitudeMode', $Text_AltitudeMode)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Range', $Text_Range)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Heading', $Text_Heading)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Tilt', $Text_Tilt)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoOpenNetworkLink', $Text_AutoOpenNetworkLink)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakSignal', $Text_SpeakSignal)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakUseVisSounds', $Text_SpeakUseVisSounds)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakUseSapi', $Text_SpeakUseSapi)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakSayPercent', $Text_SpeakSayPercent)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsTrackTime', $Text_GpsTrackTime)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SaveAllGpsData', $Text_SaveAllGpsData)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'None', $Text_None)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Even', $Text_Even)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Odd', $Text_Odd)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Mark', $Text_Mark)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Space', $Text_Space)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'StopBit', $Text_StopBit)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Parity', $Text_Parity)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DataBit', $Text_DataBit)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Update', $Text_Update)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateMsg', $Text_UpdateMsg)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Recover', $Text_Recover)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoverMsg', $Text_RecoverMsg)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectConnectedAP', $Text_SelectConnectedAP)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerHome', $Text_VistumblerHome)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerForum', $Text_VistumblerForum)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerWiki', $Text_VistumblerWiki)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'CheckForUpdates', $Text_CheckForUpdates)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectWhatToCopy', $Text_SelectWhatToCopy)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Default', $Text_Default)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'PlayMidiSounds', $Text_PlayMidiSounds)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Interface', $Text_Interface)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'LanguageCode', $Text_LanguageCode)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoCheckUpdates', $Text_AutoCheckUpdates)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'CheckBetaUpdates', $Text_CheckBetaUpdates)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GuessSearchwords', $Text_GuessSearchwords)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Help', $Text_Help)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorScanningNetsh', $Text_ErrorScanningNetsh)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsErrorBufferEmpty', $Text_GpsErrorBufferEmpty)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsErrorStopped', $Text_GpsErrorStopped)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowSignalDB', $Text_ShowSignalDB)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SortingList', $Text_SortingList)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Loading', $Text_Loading)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'MapOpenNetworks', $Text_MapOpenNetworks)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'MapWepNetworks', $Text_MapWepNetworks)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'MapSecureNetworks', $Text_MapSecureNetworks)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DrawTrack', $Text_DrawTrack)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UseLocalImages', $Text_UseLocalImages)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'MIDI', $Text_MIDI)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'MidiInstrumentNumber', $Text_MidiInstrumentNumber)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'MidiPlayTime', $Text_MidiPlayTime)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SpeakRefreshTime', $Text_SpeakRefreshTime)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Information', $Text_Information)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AddedGuessedSearchwords', $Text_AddedGuessedSearchwords)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SortingTreeview', $Text_SortingTreeview)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Recovering', $Text_Recovering)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorOpeningGpsPort', $Text_ErrorOpeningGpsPort)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SecondsSinceGpsUpdate', $Text_SecondsSinceGpsUpdate)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingGID', $Text_SavingGID)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SavingHistID', $Text_SavingHistID)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoUpdates', $Text_NoUpdates)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoActiveApFound', $Text_NoActiveApFound)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', $Text_VistumblerDonate)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerStore', $Text_VistumblerStore)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', $Text_SupportVistumbler)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', $Text_UseNativeWifi)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterMsg', $Text_FilterMsg)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SetFilters', $Text_SetFilters)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Filtered', $Text_Filtered)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Filters', $Text_Filters)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', $Text_NoAdaptersFound)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', $Text_RecoveringMDB)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', $Text_FixingGpsTableDates)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingGpsTableTimes', $Text_FixingGpsTableTimes)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingHistTableDates', $Text_FixingHistTableDates)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerNeedsToRestart', $Text_VistumblerNeedsToRestart)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', $Text_AddingApsIntoList)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', $Text_GoogleEarthDoesNotExist)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', $Text_AutoKmlIsNotStarted)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', $Text_UnableToGuessSearchwords)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectedAP', $Text_SelectedAP)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AllAPs', $Text_AllAPs)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FilteredAPs', $Text_FilteredAPs)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'ImportFolder', $Text_ImportFolder)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteSelected', $Text_DeleteSelected)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoverSelected', $Text_RecoverSelected)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NewSession', $Text_NewSession)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Size', $Text_Size)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', $Text_NoMdbSelected)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'LocateInWiFiDB', $Text_LocateInWiFiDB)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', $Text_AutoWiFiDbGpsLocate)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', $Text_AutoSelectConnectedAP)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectHighSigAP', $Text_AutoSelectHighSignal)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Experimental', $Text_Experimental)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Color', $Text_Color)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'PhilsWifiTools', $Text_PhilsWifiTools)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AddRemFilters', $Text_AddRemFilters)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NoFilterSelected', $Text_NoFilterSelected)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AddFilter', $Text_AddFilter)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'EditFilter', $Text_EditFilter)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteFilter', $Text_DeleteFilter)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'TimeBeforeMarkedDead', $Text_TimeBeforeMarkedDead)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterNameRequired', $Text_FilterNameRequired)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateManufacturers', $Text_UpdateManufacturers)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'FixHistSignals', $Text_FixHistSignals)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerFile', $Text_VistumblerFile)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'DetailedFile', $Text_DetailedCsvFile)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', $Text_NetstumblerTxtFile)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', $Text_WardriveDb3File)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoScanApsOnLaunch', $Text_AutoScanApsOnLaunch)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'RefreshInterfaces', $Text_RefreshInterfaces)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'Sound', $Text_Sound)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerLoop', $Text_OncePerLoop)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerAP', $Text_OncePerAP)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerAPwSound', $Text_OncePerAPwSound)
-EndFunc   ;==>_WriteINI
+	_SQLite_Close($WardriveImpDB)
+	_SQLite_Shutdown()
+EndFunc   ;==>_ImportWardriveDb3
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GOOGLE EARTH SAVE FUNCTIONS
@@ -7605,54 +7725,56 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		;Misc Tab
 		$Tab_Misc = GUICtrlCreateTabItem($Text_Misc)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		$GroupMisc = GUICtrlCreateGroup($Text_Misc, 8, 32, 665, 425)
 		GUICtrlSetColor(-1, $TextColor)
-		$GroupMiscOpt = GUICtrlCreateGroup($Text_Options, 16, 56, 649, 265)
+		$GroupVistSet = GUICtrlCreateGroup($Text_VistumblerSettings, 16, 30, 649, 265)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 31, 76, 620, 15)
+		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 31, 50, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDir = GUICtrlCreateInput($SaveDir, 31, 91, 515, 21)
-		$browse1 = GUICtrlCreateButton($Text_Browse, 556, 91, 97, 20, 0)
-		GUICtrlCreateLabel($Text_VistumblerAutoSaveDirectory, 31, 116, 620, 15)
+		$GUI_Set_SaveDir = GUICtrlCreateInput($SaveDir, 31, 65, 515, 21)
+		$browse1 = GUICtrlCreateButton($Text_Browse, 556, 65, 97, 20, 0)
+		GUICtrlCreateLabel($Text_VistumblerAutoSaveDirectory, 31, 90, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDirAuto = GUICtrlCreateInput($SaveDirAuto, 31, 131, 515, 21)
-		$Browse2 = GUICtrlCreateButton($Text_Browse, 556, 131, 97, 20, 0)
-		GUICtrlCreateLabel($Text_VistumblerKmlSaveDirectory, 31, 156, 620, 15)
+		$GUI_Set_SaveDirAuto = GUICtrlCreateInput($SaveDirAuto, 31, 105, 515, 21)
+		$Browse2 = GUICtrlCreateButton($Text_Browse, 556, 105, 97, 20, 0)
+		GUICtrlCreateLabel($Text_VistumblerKmlSaveDirectory, 31, 130, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDirKml = GUICtrlCreateInput($SaveDirKml, 31, 171, 515, 21)
-		$Browse3 = GUICtrlCreateButton($Text_Browse, 556, 171, 97, 20, 0)
-		GUICtrlCreateLabel($Text_BackgroundColor, 31, 196, 300, 15)
+		$GUI_Set_SaveDirKml = GUICtrlCreateInput($SaveDirKml, 31, 145, 515, 21)
+		$Browse3 = GUICtrlCreateButton($Text_Browse, 556, 145, 97, 20, 0)
+		GUICtrlCreateLabel($Text_BackgroundColor, 31, 170, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 31, 211, 195, 21)
-		$cbrowse1 = GUICtrlCreateButton($Text_Browse, 235, 211, 97, 20, 0)
-		GUICtrlCreateLabel($Text_ControlColor, 353, 196, 300, 15)
+		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 31, 185, 195, 21)
+		$cbrowse1 = GUICtrlCreateButton($Text_Browse, 235, 185, 97, 20, 0)
+		GUICtrlCreateLabel($Text_ControlColor, 353, 170, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_CBKColor = GUICtrlCreateInput(StringReplace($ControlBackgroundColor, '0x', ''), 353, 211, 195, 21)
-		$cbrowse2 = GUICtrlCreateButton($Text_Browse, 556, 211, 97, 20, 0)
-		GUICtrlCreateLabel($Text_BgFontColor, 31, 236, 300, 15)
+		$GUI_CBKColor = GUICtrlCreateInput(StringReplace($ControlBackgroundColor, '0x', ''), 353, 185, 195, 21)
+		$cbrowse2 = GUICtrlCreateButton($Text_Browse, 556, 185, 97, 20, 0)
+		GUICtrlCreateLabel($Text_BgFontColor, 31, 210, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_TextColor = GUICtrlCreateInput(StringReplace($TextColor, '0x', ''), 31, 251, 195, 21)
-		$cbrowse3 = GUICtrlCreateButton($Text_Browse, 235, 251, 97, 20, 0)
-		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 236, 300, 15)
+		$GUI_TextColor = GUICtrlCreateInput(StringReplace($TextColor, '0x', ''), 31, 225, 195, 21)
+		$cbrowse3 = GUICtrlCreateButton($Text_Browse, 235, 225, 97, 20, 0)
+		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 210, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 251, 195, 21)
-		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 31, 277, 300, 15)
+		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 225, 195, 21)
+		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 31, 250, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 31, 292, 195, 21)
-		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 277, 300, 15)
+		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 31, 265, 195, 21)
+		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 255, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
-		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 297, 300, 15)
+		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 270, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
-		$GroupMiscPHP = GUICtrlCreateGroup($Text_PhilsWifiTools, 16, 328, 649, 121)
+		$GroupMiscPHP = GUICtrlCreateGroup($Text_PhilsWifiTools, 16, 300, 649, 150)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_PHPgraphing, 31, 349, 620, 15)
+		GUICtrlCreateLabel($Text_PHPgraphing, 31, 320, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_PhilsGraphURL = GUICtrlCreateInput($PhilsGraphURL, 31, 369, 620, 21)
-		GUICtrlCreateLabel($Text_PhilsWDB, 32, 396, 620, 15)
+		$GUI_PhilsGraphURL = GUICtrlCreateInput($PhilsGraphURL, 31, 335, 620, 20)
+		GUICtrlCreateLabel($Text_PhilsWDB, 32, 360, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_PhilsWdbURL = GUICtrlCreateInput($PhilsWdbURL, 32, 416, 620, 21)
+		$GUI_PhilsWdbURL = GUICtrlCreateInput($PhilsWdbURL, 32, 375, 620, 20)
+		GUICtrlCreateLabel($Text_PhilsWdbLocate, 32, 400, 620, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_PhilsLocateURL = GUICtrlCreateInput($PhilsLocateURL, 32, 415, 620, 20)
 		;GPS Tab
 		$Tab_Gps = GUICtrlCreateTabItem($Text_Gps)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
@@ -7997,7 +8119,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_SortBy, 30, 210, 625, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_SortBy = GUICtrlCreateCombo($Column_Names_SSID, 30, 225, 615, 21)
-		GUICtrlSetData(-1, $Column_Names_NetworkType & "|" & $Column_Names_Authentication & "|" & $Column_Names_Encryption & "|" & $Column_Names_BSSID & "|" & $Column_Names_Signal & "|" & $Column_Names_RadioType & "|" & $Column_Names_Channel & "|" & $Column_Names_BasicTransferRates & "|" & $Column_Names_OtherTransferRates & "|" & $Column_Names_Latitude & "|" & $Column_Names_Longitude & "|" & $Column_Names_LatitudeDMM & "|" & $Column_Names_LongitudeDMM & "|" & $Column_Names_LatitudeDMS & "|" & $Column_Names_LongitudeDMS & "|" & $Column_Names_FirstActive & "|" & $Column_Names_LastActive & "|" & $Column_Names_Active & "|" & $Column_Names_MANUF, $SortBy)
+		GUICtrlSetData(-1, $Column_Names_NetworkType & "|" & $Column_Names_Authentication & "|" & $Column_Names_Encryption & "|" & $Column_Names_BSSID & "|" & $Column_Names_Signal & "|" & $Column_Names_HighSignal & "|" & $Column_Names_RadioType & "|" & $Column_Names_Channel & "|" & $Column_Names_BasicTransferRates & "|" & $Column_Names_OtherTransferRates & "|" & $Column_Names_Latitude & "|" & $Column_Names_Longitude & "|" & $Column_Names_LatitudeDMM & "|" & $Column_Names_LongitudeDMM & "|" & $Column_Names_LatitudeDMS & "|" & $Column_Names_LongitudeDMS & "|" & $Column_Names_FirstActive & "|" & $Column_Names_LastActive & "|" & $Column_Names_Active & "|" & $Column_Names_MANUF, $SortBy)
 		If $SortDirection = 1 Then
 			$SortDirectionDefault = $Text_Decending
 		Else
@@ -8408,8 +8530,9 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
 		$Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
 		$Text_ExportToVSZ = IniRead($DefaultLanguagePath, "GuiText", "ExportToVSZ", "Export To VSZ")
-		$Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'View graph (Phils PHP version)')
-		$Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'Phils WiFiDB (Alpha)')
+		$Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'Graph URL')
+		$Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'WiFiDB URL')
+		$Text_PhilsWdbLocate = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWdbLocate', 'WifiDB Locate URL')
 		$Text_UploadDataToWifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'UploadDataToWiFiDB', 'Upload Data to WiFiDB')
 		$Text_RefreshLoopTime = IniRead($DefaultLanguagePath, 'GuiText', 'RefreshLoopTime', 'Refresh loop time(ms):')
 		$Text_ActualLoopTime = IniRead($DefaultLanguagePath, 'GuiText', 'ActualLoopTime', 'Actual loop time:')
@@ -8524,7 +8647,9 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_NoAps = IniRead($DefaultLanguagePath, 'GuiText', 'NoAps', 'No access points.')
 		$Text_MacExistsOverwriteIt = IniRead($DefaultLanguagePath, 'GuiText', 'MacExistsOverwriteIt', 'A entry for this mac address already exists. would you like to overwrite it?')
 		$Text_SavingLine = IniRead($DefaultLanguagePath, 'GuiText', 'SavingLine', 'Saving Line')
-		$Text_DisplayDebug = IniRead($DefaultLanguagePath, 'GuiText', 'DisplayDebug', 'Debug - Display Functions')
+		$Text_Debug = IniRead($DefaultLanguagePath, 'GuiText', 'Debug', 'Debug')
+		$Text_DisplayDebug = IniRead($DefaultLanguagePath, 'GuiText', 'DisplayDebug', 'Display Functions')
+		$Text_DisplayComErrors = IniRead($DefaultLanguagePath, 'GuiText', 'DisplayDebugCom', 'Display COM Errors')
 		$Text_GraphDeadTime = IniRead($DefaultLanguagePath, 'GuiText', 'GraphDeadTime', 'Graph Dead Time')
 		$Text_OpenKmlNetLink = IniRead($DefaultLanguagePath, 'GuiText', 'OpenKmlNetLink', 'Open KML NetworkLink')
 		$Text_ActiveRefreshTime = IniRead($DefaultLanguagePath, 'GuiText', 'ActiveRefreshTime', 'Active Refresh Time')
@@ -8748,6 +8873,7 @@ Func _ApplySettingsGUI();Applys settings
 		$RefreshLoopTime = GUICtrlRead($GUI_RefreshLoop)
 		$PhilsGraphURL = GUICtrlRead($GUI_PhilsGraphURL)
 		$PhilsWdbURL = GUICtrlRead($GUI_PhilsWdbURL)
+		$PhilsLocateURL = GUICtrlRead($GUI_PhilsLocateURL)
 	EndIf
 	If $Apply_Auto = 1 Then
 		;AutoSave
@@ -9465,83 +9591,6 @@ Func _ManufacturerUpdate()
 EndFunc   ;==>_ManufacturerUpdate
 
 ;-------------------------------------------------------------------------------------------------------------------------------
-;                                                       DATE / TIME FUNCTIONS
-;-------------------------------------------------------------------------------------------------------------------------------
-
-Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
-	Local $mon, $d, $y, $h, $m, $s, $ms
-	$DateSplit = StringSplit($Date, '-')
-	$TimeSplit = StringSplit($time, ':')
-	If $DateSplit[0] = 3 And $TimeSplit[0] = 3 Then
-		If StringInStr($TimeSplit[3], '.') Then
-			$SecMsSplit = StringSplit($TimeSplit[3], '.')
-			$s = $SecMsSplit[1]
-			$ms = $SecMsSplit[2]
-		Else
-			$s = $TimeSplit[3]
-			$ms = '000'
-		EndIf
-		$tSystem = _Date_Time_EncodeSystemTime($DateSplit[2], $DateSplit[3], $DateSplit[1], $TimeSplit[1], $TimeSplit[2], $s)
-		If $ConvertToUTC = 1 Then
-			$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
-		Else
-			$rTime = _Date_Time_SystemTimeToTzSpecificLocalTime(DllStructGetPtr($tSystem))
-		EndIf
-		$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
-		$dts2 = StringSplit($dts1[1], '/')
-		$dts3 = StringSplit($dts1[2], ':')
-		$mon = $dts2[1]
-		$d = $dts2[2]
-		$y = $dts2[3]
-		$h = $dts3[1]
-		$m = $dts3[2]
-		$s = $dts3[3]
-		Return ($y & '-' & $mon & '-' & $d & ' ' & $h & ':' & $m & ':' & $s & '.' & $ms)
-	Else
-		Return ('0000-00-00 00:00:00.000')
-	EndIf
-EndFunc   ;==>_DateTimeUtcConvert
-
-Func _DateTimeLocalFormat($DateTimeString)
-	$dta = StringSplit($DateTimeString, ' ')
-	$ds = _DateLocalFormat($dta[1])
-	Return ($ds & ' ' & $dta[2])
-EndFunc   ;==>_DateTimeLocalFormat
-
-Func _DateLocalFormat($DateString)
-	If StringInStr($DateString, '/') Then
-		$da = StringSplit($DateString, '/')
-		$y = $da[1]
-		$m = $da[2]
-		$d = $da[3]
-		Return (StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y))
-	ElseIf StringInStr($DateString, '-') Then
-		$da = StringSplit($DateString, '-')
-		$y = $da[1]
-		$m = $da[2]
-		$d = $da[3]
-		Return (StringReplace(StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y), '/', '-'))
-	EndIf
-EndFunc   ;==>_DateLocalFormat
-
-Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CompareDate()') ;#Debug Display
-
-	$d1 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d1, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
-	$d2 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d2, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
-	If $d1 = $d2 Then
-		Return (0)
-	ElseIf $d1 > $d2 Then
-		Return (1)
-	ElseIf $d1 < $d2 Then
-		Return (2)
-	Else
-		Return (-1)
-	EndIf
-
-EndFunc   ;==>_CompareDate
-
-;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       FILTER FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
@@ -10014,12 +10063,107 @@ Func _EstimateDbFromSignalPercent($InSig)
 EndFunc   ;==>_EstimateDbFromSignalPercent
 
 ;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       DATE / TIME FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
+
+Func _DateTimeUtcConvert($Date, $time, $ConvertToUTC)
+	Local $mon, $d, $y, $h, $m, $s, $ms
+	$DateSplit = StringSplit($Date, '-')
+	$TimeSplit = StringSplit($time, ':')
+	If $DateSplit[0] = 3 And $TimeSplit[0] = 3 Then
+		If StringInStr($TimeSplit[3], '.') Then
+			$SecMsSplit = StringSplit($TimeSplit[3], '.')
+			$s = $SecMsSplit[1]
+			$ms = $SecMsSplit[2]
+		Else
+			$s = $TimeSplit[3]
+			$ms = '000'
+		EndIf
+		$tSystem = _Date_Time_EncodeSystemTime($DateSplit[2], $DateSplit[3], $DateSplit[1], $TimeSplit[1], $TimeSplit[2], $s)
+		If $ConvertToUTC = 1 Then
+			$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
+		Else
+			$rTime = _Date_Time_SystemTimeToTzSpecificLocalTime(DllStructGetPtr($tSystem))
+		EndIf
+		$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
+		$dts2 = StringSplit($dts1[1], '/')
+		$dts3 = StringSplit($dts1[2], ':')
+		$mon = $dts2[1]
+		$d = $dts2[2]
+		$y = $dts2[3]
+		$h = $dts3[1]
+		$m = $dts3[2]
+		$s = $dts3[3]
+		Return ($y & '-' & $mon & '-' & $d & ' ' & $h & ':' & $m & ':' & $s & '.' & $ms)
+	Else
+		Return ('0000-00-00 00:00:00.000')
+	EndIf
+EndFunc   ;==>_DateTimeUtcConvert
+
+Func _DateTimeLocalFormat($DateTimeString)
+	$dta = StringSplit($DateTimeString, ' ')
+	$ds = _DateLocalFormat($dta[1])
+	Return ($ds & ' ' & $dta[2])
+EndFunc   ;==>_DateTimeLocalFormat
+
+Func _DateLocalFormat($DateString)
+	If StringInStr($DateString, '/') Then
+		$da = StringSplit($DateString, '/')
+		$y = $da[1]
+		$m = $da[2]
+		$d = $da[3]
+		Return (StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y))
+	ElseIf StringInStr($DateString, '-') Then
+		$da = StringSplit($DateString, '-')
+		$y = $da[1]
+		$m = $da[2]
+		$d = $da[3]
+		Return (StringReplace(StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y), '/', '-'))
+	EndIf
+EndFunc   ;==>_DateLocalFormat
+
+Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CompareDate()') ;#Debug Display
+
+	$d1 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d1, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
+	$d2 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d2, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
+	If $d1 = $d2 Then
+		Return (0)
+	ElseIf $d1 > $d2 Then
+		Return (1)
+	ElseIf $d1 < $d2 Then
+		Return (2)
+	Else
+		Return (-1)
+	EndIf
+
+EndFunc   ;==>_CompareDate
+
+Func _TimeToSeconds($iTime)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_TimeToSeconds()') ;#Debug Display
+	$dts = StringSplit($iTime, ":") ;Split time so it can be converted to seconds
+	$rTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
+	Return ($rTime)
+EndFunc   ;==>_TimeToSeconds
+
+;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       OTHER FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 Func MyErrFunc()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'MyErrFunc()') ;#Debug Display
 	$ComError = 1
+	If $DebugCom = 1 Then
+		MsgBox(0, $Text_Error, "We intercepted a COM Error !" & @CRLF & @CRLF & _
+				"err.description is: " & @TAB & $oMyError.description & @CRLF & _
+				"err.windescription:" & @TAB & $oMyError.windescription & @CRLF & _
+				"err.number is: " & @TAB & Hex($oMyError.number, 8) & @CRLF & _
+				"err.lastdllerror is: " & @TAB & $oMyError.lastdllerror & @CRLF & _
+				"err.scriptline is: " & @TAB & $oMyError.scriptline & @CRLF & _
+				"err.source is: " & @TAB & $oMyError.source & @CRLF & _
+				"err.helpfile is: " & @TAB & $oMyError.helpfile & @CRLF & _
+				"err.helpcontext is: " & @TAB & $oMyError.helpcontext _
+				)
+	EndIf
 EndFunc   ;==>MyErrFunc
 
 Func _ReduceMemory() ;http://www.autoitscript.com/forum/index.php?showtopic=14070&view=findpost&p=96101
@@ -10027,6 +10171,7 @@ Func _ReduceMemory() ;http://www.autoitscript.com/forum/index.php?showtopic=1407
 EndFunc   ;==>_ReduceMemory
 
 Func _MenuSelectConnectedAp()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_MenuSelectConnectedAp()') ;#Debug Display
 	Local $SelConAP = _SelectConnectedAp()
 	If $SelConAP = -1 Then
 		;MsgBox(0, $Text_Error, $Text_NoActiveApFound & @CRLF & @CRLF & $Column_Names_BSSID & ':' & $IntBSSID & @CRLF & $Column_Names_SSID & ':' & $IntSSID & @CRLF & $Column_Names_Channel & ':' & $IntChan & @CRLF & $Column_Names_Authentication & ':' & $IntAuth)
@@ -10036,6 +10181,7 @@ Func _MenuSelectConnectedAp()
 EndFunc   ;==>_MenuSelectConnectedAp
 
 Func _SelectConnectedAp()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SelectConnectedAp()') ;#Debug Display
 	$return = 0
 	FileDelete($tempfile_showint)
 	_RunDOS($netsh & ' wlan show interfaces interface="' & $DefaultApapter & '" > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
@@ -10092,10 +10238,11 @@ Func _SelectConnectedAp()
 EndFunc   ;==>_SelectConnectedAp
 
 Func _SelectHighSignalAp()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SelectHighSignalAp()') ;#Debug Display
 	$query = "SELECT TOP 1 ListRow FROM AP WHERE ListRow <> '-1' ORDER BY Signal DESC"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
-	If $FoundApMatch = 1 Then
+	If $FoundApMatch <> 0 Then
 		$Found_ListRow = $ApMatchArray[1][1]
 		_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_FOCUSED, $LVIS_FOCUSED)
 		_GUICtrlListView_SetItemState($ListviewAPs, $Found_ListRow, $LVIS_SELECTED, $LVIS_SELECTED)
@@ -10106,35 +10253,8 @@ Func _SelectHighSignalAp()
 	EndIf
 EndFunc   ;==>_SelectHighSignalAp
 
-Func _DataMatchInDelimitedString($mdata, $mDelimitedString, $mDelimiter = '|', $mAllSymbol = '*')
-	If $mDelimitedString = $mAllSymbol Then
-		Return (1)
-	Else
-		$M_Found = 0
-		$M_SplitString = StringSplit($mDelimitedString, $mDelimiter)
-		For $m = 1 To $M_SplitString[0]
-			If $M_SplitString[$m] = $mdata Then
-				$M_Found = 1
-				ExitLoop
-			EndIf
-		Next
-		If $M_Found = 1 Then
-			Return (1)
-		Else
-			Return (0)
-		EndIf
-	EndIf
-EndFunc   ;==>_DataMatchInDelimitedString
-
-Func _DeleteListviewRow($dapid)
-	;_GUICtrlListView_DeleteItem($ListviewAPs, $drow)
-	;$query = "UPDATE AP SET ListRow = '-1' WHERE ApID = '" & $fApID & "'"
-	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	;$query = " AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
-	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-EndFunc   ;==>_DeleteListviewRow
-
 Func _NewSession()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_NewSession()') ;#Debug Display
 	Run(@ScriptDir & "\Vistumbler.exe")
 EndFunc   ;==>_NewSession
 
@@ -10148,144 +10268,12 @@ Func _CleanupFiles($cDIR, $cTYPE)
 	EndIf
 EndFunc   ;==>_CleanupFiles
 
-Func _ImportWardriveDb3($DB3file)
-	_SQLite_Startup()
-	$WardriveImpDB = _SQLite_Open($DB3file, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
-	Local $NetworkMatchArray, $iRows, $iColumns, $iRval
-	$query = "SELECT bssid, ssid, capabilities, level, frequency, lat, lon, alt, timestamp FROM networks"
-	$iRval = _SQLite_GetTable2d($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
-	$WardriveAPs = $iRows
-
-	$UpdateTimer = TimerInit()
-	$begintime = TimerInit()
-	$AddAP = 0
-	$AddGID = 0
-	For $NewAP = 1 To $WardriveAPs
-		$Found_BSSID = StringUpper($NetworkMatchArray[$NewAP][0])
-		$Found_SSID = $NetworkMatchArray[$NewAP][1]
-		$Found_Capabilies = $NetworkMatchArray[$NewAP][2]
-		$Found_Level = $NetworkMatchArray[$NewAP][3]
-		$Found_Frequency = $NetworkMatchArray[$NewAP][4]
-		$Found_Lat = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][5], "N", "S")
-		$Found_Lon = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][6], "E", "W")
-		$Found_Alt = $NetworkMatchArray[$NewAP][7]
-		$Found_TimeStamp = StringTrimRight($NetworkMatchArray[$NewAP][8], 3)
-
-		;Get Authentication and Encrytion from capabilities
-		If StringInStr($Found_Capabilies, "WPA2-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA2-PSK-TKIP+CCMP") Then
-			$Found_AUTH = "WPA2-Personal"
-			$Found_ENCR = "CCMP"
-			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA-PSK-TKIP+CCMP") Then
-			$Found_AUTH = "WPA-Personal"
-			$Found_ENCR = "CCMP"
-			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA2-EAP-TKIP+CCMP") Then
-			$Found_AUTH = "WPA2-Enterprise"
-			$Found_ENCR = "CCMP"
-			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA-EAP-TKIP+CCMP") Then
-			$Found_AUTH = "WPA-Enterprise"
-			$Found_ENCR = "CCMP"
-			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-PSK-TKIP") Then
-			$Found_AUTH = "WPA2-Personal"
-			$Found_ENCR = "TKIP"
-			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-TKIP") Then
-			$Found_AUTH = "WPA-Personal"
-			$Found_ENCR = "TKIP"
-			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-TKIP") Then
-			$Found_AUTH = "WPA2-Enterprise"
-			$Found_ENCR = "TKIP"
-			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-TKIP") Then
-			$Found_AUTH = "WPA-Enterprise"
-			$Found_ENCR = "TKIP"
-			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WEP") Then
-			$Found_AUTH = "Open"
-			$Found_ENCR = "WEP"
-			$Found_SecType = "2"
-		Else
-			$Found_AUTH = "Open"
-			$Found_ENCR = "None"
-			$Found_SecType = "1"
-		EndIf
-
-		;Get Network Type from capabilities
-		If StringInStr($Found_Capabilies, "[IBSS]") Then
-			$Found_NETTYPE = "Adhoc"
-		Else
-			$Found_NETTYPE = "Infrastructure"
-		EndIf
-
-		;Get Channel From Frequency
-		If $Found_Frequency = "2412" Then
-			$Found_CHAN = "001"
-		ElseIf $Found_Frequency = "2417" Then
-			$Found_CHAN = "002"
-		ElseIf $Found_Frequency = "2422" Then
-			$Found_CHAN = "003"
-		ElseIf $Found_Frequency = "2427" Then
-			$Found_CHAN = "004"
-		ElseIf $Found_Frequency = "2432" Then
-			$Found_CHAN = "005"
-		ElseIf $Found_Frequency = "2437" Then
-			$Found_CHAN = "006"
-		ElseIf $Found_Frequency = "2442" Then
-			$Found_CHAN = "007"
-		ElseIf $Found_Frequency = "2447" Then
-			$Found_CHAN = "008"
-		ElseIf $Found_Frequency = "2452" Then
-			$Found_CHAN = "009"
-		ElseIf $Found_Frequency = "2457" Then
-			$Found_CHAN = "010"
-		ElseIf $Found_Frequency = "2462" Then
-			$Found_CHAN = "011"
-		ElseIf $Found_Frequency = "2467" Then
-			$Found_CHAN = "012"
-		ElseIf $Found_Frequency = "2472" Then
-			$Found_CHAN = "013"
-		Else
-			$Found_CHAN = "Unknown"
-		EndIf
-
-		$Found_Date = _StringFormatTime("%Y", $Found_TimeStamp) & "-" & _StringFormatTime("%m", $Found_TimeStamp) & "-" & _StringFormatTime("%d", $Found_TimeStamp)
-		$Found_Time = _StringFormatTime("%X", $Found_TimeStamp) & ".000"
-
-		;Add GPS data in Vistumbler DB
-		$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $Found_Lat & "' And Longitude = '" & $Found_Lon & "' And Date1 = '" & $Found_Date & "' And Time1 = '" & $Found_Time & "'"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundGpsMatch = UBound($GpsMatchArray) - 1
-		If $FoundGpsMatch = 0 Then
-			$AddGID += 1
-			$GPS_ID += 1
-			;Add GPS ID
-			_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Found_Lat & '|' & $Found_Lon & '|0|0|' & $Found_Alt & '|0|0|0|0|' & $Found_Date & '|' & $Found_Time)
-			$NewGpsId = $GPS_ID
-		ElseIf $FoundGpsMatch = 1 Then
-			$NewGpsId = $GpsMatchArray[1][1]
-		EndIf
-
-		;Add AP data into Vistumbler DB
-		$NewApAdded = _AddApData(0, $NewGpsId, $Found_BSSID, $Found_SSID, $Found_CHAN, $Found_AUTH, $Found_ENCR, $Found_NETTYPE, "802.11g", "Unknown", "Unknown", "0")
-		If $NewApAdded <> 0 Then $AddAP += 1
-
-		If TimerDiff($UpdateTimer) > 600 Or ($NewAP = $WardriveAPs) Then
-			$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
-			$percent = ($NewAP / $WardriveAPs) * 100
-			GUICtrlSetData($progressbar, $percent)
-			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
-			GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($Load / $min, 1))
-			GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
-			GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $NewAP & "/" & $WardriveAPs)
-			GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($WardriveAPs / Round($NewAP / $min, 1)) - $min, 1) & "/" & Round($WardriveAPs / Round($NewAP / $min, 1), 1))
-			$UpdateTimer = TimerInit()
-		EndIf
-	Next
-	_SQLite_Close($WardriveImpDB)
-	_SQLite_Shutdown()
-EndFunc   ;==>_ImportWardriveDb3
+#cs
+	Func _DeleteListviewRow($dapid)
+	;_GUICtrlListView_DeleteItem($ListviewAPs, $drow)
+	;$query = "UPDATE AP SET ListRow = '-1' WHERE ApID = '" & $fApID & "'"
+	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	;$query = " AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
+	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	EndFunc   ;==>_DeleteListviewRow
+#ce
