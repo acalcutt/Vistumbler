@@ -102,7 +102,6 @@ Global $gdi_dll, $user32_dll
 Global $hDC
 
 Dim $NsOk
-Dim $kml_timer
 Dim $StartArraySize
 Dim $Debug
 Dim $debugdisplay
@@ -166,14 +165,12 @@ Dim $Close = 0
 Dim $NewApFound = 0
 Dim $ComError = 0
 Dim $newdata = 0
-Dim $o_old = 0
-;Dim $Loading = 0
 Dim $disconnected_time = -1
 Dim $SortColumn = -1
 Dim $GUIList
 Dim $TempFileArray, $TempFileArrayShowInt, $NetComm, $OpenArray, $headers, $MANUF, $LABEL, $SigHist
 Dim $SSID, $NetworkType, $Authentication, $Encryption, $BSSID, $Signal, $RadioType, $Channel, $BasicTransferRates, $OtherTransferRates
-Dim $newlat, $newlon, $LatTest, $gps, $winpos
+Dim $LatTest, $gps, $winpos
 Dim $sort_timer
 Dim $data_old
 Dim $RefreshTimer
@@ -185,7 +182,6 @@ Dim $save_timer
 Dim $AutoSaveFile
 Dim $SaveDbOnExit = 0
 Dim $ClearAllAps = 0
-Dim $UpdateAutoKml = 0
 Dim $UpdateAutoSave = 0
 Dim $CompassOpen = 0
 Dim $CompassGUI = 0
@@ -196,7 +192,6 @@ Dim $AutoSaveProcess
 Dim $AutoKmlActiveProcess
 Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
-Dim $RefreshWindowOpened
 Dim $NsCancel
 Dim $DefaultApapterID
 Dim $OpenedPort
@@ -216,7 +211,7 @@ Dim $TreeviewAPs_left, $TreeviewAPs_width, $TreeviewAPs_top, $TreeviewAPs_height
 Dim $ListviewAPs_left, $ListviewAPs_width, $ListviewAPs_top, $ListviewAPs_height
 Dim $Graphic_left, $Graphic_width, $Graphic_top, $Graphic_height
 
-Dim $FixTime, $FixTime2, $FixDate, $Quality
+Dim $FixTime, $FixTime2, $FixDate
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
 Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0, $WifidbGPS_Update
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
@@ -234,7 +229,7 @@ Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioTyp
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
-Dim $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
+Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL, $GUI_PhilsLocateURL
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFilter
@@ -1635,7 +1630,6 @@ Func _ScanAccessPoints()
 				If IsArray($temp) Then
 					If $temp[0] = 2 Then
 						If StringInStr($TempFileArray[$loop], $SearchWord_SSID) And StringInStr($TempFileArray[$loop], $SearchWord_BSSID) <> 1 Then
-							$NewSSID = 1
 							$SSID = StringStripWS($temp[2], 3)
 							Dim $NetworkType = '', $Authentication = '', $Encryption = '', $BSSID = ''
 						EndIf
@@ -1715,7 +1709,6 @@ EndFunc   ;==>_ScanAccessPoints
 
 Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApData()') ;#Debug Display
-	$t = TimerInit()
 	If $New = 1 And $SIG <> 0 Then
 		$AP_Status = $Text_Active
 		$AP_StatusNum = 1
@@ -3349,7 +3342,6 @@ Func _Format_GPS_DMM($gps)
 	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
 		$splitlatlon2 = StringSplit(StringFormat("%0.4f", $splitlatlon1[2]), ".");Split dd from data
-		$ls = StringFormat("%04i", $splitlatlon2[1])
 		$return = $splitlatlon1[1] & ' ' & StringFormat("%04i", $splitlatlon2[1]) & '.' & $splitlatlon2[2];set return
 	EndIf
 	Return ($return)
@@ -3387,7 +3379,7 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DMS
 
-Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd° mm' ss", or ddmm.mmmm to ddmm.mmmm
+Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'ddï¿½ mm' ss", or ddmm.mmmm to ddmm.mmmm
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_All_to_DMM()') ;#Debug Display
 	;All GPS Formats to ddmm.mmmm
 	$return = '0.0000'
@@ -4053,7 +4045,7 @@ EndFunc   ;==>_TreeviewListviewResize
 
 Func WM_NOTIFY($hWnd, $MsgID, $wParam, $lParam)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'WM_NOTIFY()') ;#Debug Display
-	Local $tagNMHDR, $hwndFrom, $code
+	Local $tagNMHDR, $code
 	$tagNMHDR = DllStructCreate("int;int;int", $lParam)
 	If @error Then Return 0
 	$code = DllStructGetData($tagNMHDR, 3)
@@ -4102,7 +4094,6 @@ EndFunc   ;==>_RedrawGraphGrid
 
 Func _GraphApSignal() ;Graphs GPS History from selected ap
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphApSignal()') ;#Debug Display
-	$gt = TimerInit()
 	If $Graph <> 0 And $MoveMode = False Then; If the graph tab is selected, run graph script
 		;Set Grid Variables
 		$base_right = $Graphic_width - 1
@@ -4974,7 +4965,7 @@ EndFunc   ;==>_ExportCsvDataGui_SaveAs
 
 Func _ExportCsvDataGui_Close()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui_Close()') ;#Debug Display
-	GUIDelete($EditMacGUIForm)
+	GUIDelete($Gui_Csv)
 EndFunc   ;==>_ExportCsvDataGui_Close
 
 Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data to a csv file
@@ -6445,7 +6436,7 @@ Func _ImportNS1($NS1file)
 					If $linein <> "" And IsArray($array) Then
 						;Decode Flags
 						$HexIn = Number("0x" & $array[9])
-						Global $ESS = False, $nsimploopBSS = False, $WEP = False, $ShortPreAm = False, $PBCC = False
+						Global $ESS = False, $nsimploopBSS = False, $WEP = False, $ShortPreAm = False
 						If BitAND($HexIn, 0x1) Then $ESS = True
 						If BitAND($HexIn, 0x2) Then $nsimploopBSS = True
 						If BitAND($HexIn, 0x10) Then $WEP = True
@@ -7799,15 +7790,15 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		EndIf
 		$GroupComSet = GUICtrlCreateGroup($Text_ComSettings, 24, 160, 633, 185)
 		GUICtrlSetColor(-1, $TextColor)
-		$ComLabel = GUICtrlCreateLabel($Text_Com, 44, 180, 275, 15)
+		GUICtrlCreateLabel($Text_Com, 44, 180, 275, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_Comport = GUICtrlCreateCombo("1", 44, 195, 275, 25)
 		GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20", $ComPort)
-		$BaudLabel = GUICtrlCreateLabel($Text_Baud, 44, 235, 275, 15)
+		GUICtrlCreateLabel($Text_Baud, 44, 235, 275, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_Baud = GUICtrlCreateCombo("4800", 44, 250, 275, 25)
 		GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
-		$StopBitLabel = GUICtrlCreateLabel($Text_StopBit, 44, 290, 275, 15)
+		GUICtrlCreateLabel($Text_StopBit, 44, 290, 275, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_StopBit = GUICtrlCreateCombo("1", 44, 305, 275, 25)
 		GUICtrlSetData(-1, "1.5|2", $STOPBIT)
@@ -7823,10 +7814,10 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		Else
 			$l_PARITY = $Text_None
 		EndIf
-		$ParityLabel = GUICtrlCreateLabel($Text_Parity, 364, 180, 275, 15)
+		GUICtrlCreateLabel($Text_Parity, 364, 180, 275, 15)
 		$GUI_Parity = GUICtrlCreateCombo($Text_None, 364, 195, 275, 25)
 		GUICtrlSetData(-1, $Text_Even & '|' & $Text_Mark & '|' & $Text_Odd & '|' & $Text_Space, $l_PARITY)
-		$DataBitLabel = GUICtrlCreateLabel($Text_DataBit, 364, 235, 275, 15)
+		GUICtrlCreateLabel($Text_DataBit, 364, 235, 275, 15)
 		$GUI_DataBit = GUICtrlCreateCombo("4", 364, 250, 275, 25)
 		GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
 		$GroupGpsFormat = GUICtrlCreateGroup($Text_GPSFormat, 24, 360, 633, 50)
@@ -7909,9 +7900,9 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		;Labels Tab
 		$Tab_Lab = GUICtrlCreateTabItem($Text_Labels)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		$Label7 = GUICtrlCreateLabel($Text_NewMac, 34, 39, 195, 15)
+		GUICtrlCreateLabel($Text_NewMac, 34, 39, 195, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$Label8 = GUICtrlCreateLabel($Text_NewLabel, 244, 39, 410, 15)
+		GUICtrlCreateLabel($Text_NewLabel, 244, 39, 410, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_Lab_NewMac = GUICtrlCreateInput("", 34, 56, 195, 21)
 		GUICtrlSetColor(-1, $TextColor)
@@ -10205,7 +10196,7 @@ Func _SelectConnectedAp()
 			$TempFileArrayShowInt[$strip_ws] = StringStripWS($TempFileArrayShowInt[$strip_ws], 3)
 		Next
 
-		Dim $IntState, $IntSSID, $IntBSSID, $IntChan, $IntAuth, $InEncr
+		Dim $IntSSID, $IntBSSID, $IntChan, $IntAuth, $InEncr
 		For $loop = 1 To $TempFileArrayShowInt[0]
 			$temp = StringSplit(StringStripWS($TempFileArrayShowInt[$loop], 3), ":")
 			If IsArray($temp) Then
