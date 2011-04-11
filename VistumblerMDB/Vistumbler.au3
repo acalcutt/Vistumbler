@@ -6578,7 +6578,7 @@ Func _ImportWardriveDb3($DB3file)
 		$Found_BSSID = StringUpper($NetworkMatchArray[$NewAP][0])
 		$Found_SSID = $NetworkMatchArray[$NewAP][1]
 		$Found_Capabilies = $NetworkMatchArray[$NewAP][2]
-		$Found_Signal = Round(_DbToSignalPercent($NetworkMatchArray[$NewAP][3]))
+		$Found_Signal = _DbToSignalPercent($NetworkMatchArray[$NewAP][3])
 		$Found_Frequency = $NetworkMatchArray[$NewAP][4]
 		$Found_Lat = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][5], "N", "S")
 		$Found_Lon = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][6], "E", "W")
