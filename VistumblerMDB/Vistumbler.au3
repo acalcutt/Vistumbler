@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 13'
+$version = 'v10.1 Beta 14'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/03/27'
+$last_modified = '2011/04/10'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -107,7 +107,7 @@ Dim $StartArraySize
 Dim $Debug
 Dim $debugdisplay
 Dim $sErr
-Dim $CompassGraphic, $compasspos_old, $compasspos, $north, $south, $east, $west, $CompassBack, $CompassHeight, $CompassBrush
+Dim $CompassGraphic, $compasspos, $north, $south, $east, $west, $CompassBack, $CompassHeight
 
 Dim $VistumblerDB
 Dim $VistumblerDbName
@@ -173,7 +173,7 @@ Dim $SortColumn = -1
 Dim $GUIList
 Dim $TempFileArray, $TempFileArrayShowInt, $NetComm, $OpenArray, $headers, $MANUF, $LABEL, $SigHist
 Dim $SSID, $NetworkType, $Authentication, $Encryption, $BSSID, $Signal, $RadioType, $Channel, $BasicTransferRates, $OtherTransferRates
-Dim $addposition, $newlat, $newlon, $LatTest, $gps, $winpos
+Dim $newlat, $newlon, $LatTest, $gps, $winpos
 Dim $sort_timer
 Dim $data_old
 Dim $RefreshTimer
@@ -196,7 +196,6 @@ Dim $AutoSaveProcess
 Dim $AutoKmlActiveProcess
 Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
-Dim $AutoKmlProcess
 Dim $RefreshWindowOpened
 Dim $NsCancel
 Dim $DefaultApapterID
@@ -221,7 +220,7 @@ Dim $FixTime, $FixTime2, $FixDate, $Quality
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
 Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0, $WifidbGPS_Update
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
-Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $AutoKmlDeadHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
+Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
 Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
@@ -229,7 +228,7 @@ Dim $ExportKMLGUI, $GUI_TrackColor
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
-Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Filter = 1, $Apply_Sound = 1
+Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_AutoKML = 1, $Apply_Sound = 1
 Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
@@ -1717,7 +1716,6 @@ EndFunc   ;==>_ScanAccessPoints
 Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApData()') ;#Debug Display
 	$t = TimerInit()
-	$AddedAp = 0
 	If $New = 1 And $SIG <> 0 Then
 		$AP_Status = $Text_Active
 		$AP_StatusNum = 1
@@ -1993,7 +1991,15 @@ Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add
 		If $Add_Signal = 0 Or $ShowEstimatedDB = 0 Then
 			$AddDb = ""
 		Else
-			$AddDb = '(' & _EstimateDbFromSignalPercent($Add_Signal) & 'dB)'
+			$AddDb = '(' & _SignalPercentToDb($Add_Signal) & 'dB)'
+		EndIf
+	EndIf
+
+	If $Add_HighSignal <> -1 Then
+		If $Add_HighSignal = 0 Or $ShowEstimatedDB = 0 Then
+			$AddHighDb = ""
+		Else
+			$AddHighDb = '(' & _SignalPercentToDb($Add_HighSignal) & 'dB)'
 		EndIf
 	EndIf
 
@@ -2003,7 +2009,7 @@ Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add
 	If $Add_BSSID <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BSSID, $column_BSSID)
 	If $Add_MANU <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF)
 	If $Add_Signal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Signal) & '% ' & $AddDb, $column_Signal)
-	If $Add_HighSignal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_HighSignal) & '%', $column_HighSignal)
+	If $Add_HighSignal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_HighSignal) & '% ' & $AddHighDb, $column_HighSignal)
 	If $Add_Authentication <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Authentication, $column_Authentication)
 	If $Add_Encryption <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Encryption, $column_Encryption)
 	If $Add_RadioType <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RadioType, $column_RadioType)
@@ -2101,7 +2107,7 @@ EndFunc   ;==>_TreeViewAdd
 
 Func _AddTreeviewItem($RootTree, $Treeview, $tree, $SubTreeName, $ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddTreeviewItem()') ;#Debug Display
-	$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE RootTree = '" & $RootTree & "' And SubTreeName = '" & $SubTreeName & "'"
+	$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE RootTree = '" & $RootTree & "' And SubTreeName = '" & StringReplace($SubTreeName, "'", "''") & "'"
 	$TreeMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundTreeMatch = UBound($TreeMatchArray) - 1
 	If $FoundTreeMatch = 0 Then
@@ -3362,9 +3368,9 @@ Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddd
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DDD
 
-Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
+Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd? mm' ss"
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM_to_DMS()') ;#Debug Display
-	$return = '0° 0' & Chr(39) & ' 0"'
+	$return = '0? 0' & Chr(39) & ' 0"'
 	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
 		$splitlatlon2 = StringSplit($splitlatlon1[2], ".")
@@ -3373,15 +3379,15 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 			$MM = StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2)
 			$SS = StringFormat('%0.4f', (('.' & $splitlatlon2[2]) * 60)); multiply remaining minutes by 60 to get ss
 			If $DD = "" Then $DD = "0"
-			$return = $splitlatlon1[1] & ' ' & $DD & '° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd° mm' ss"N)
+			$return = $splitlatlon1[1] & ' ' & $DD & '? ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd? mm' ss"N)
 		Else
-			$return = $splitlatlon1[1] & ' 0° 0' & Chr(39) & ' 0"'
+			$return = $splitlatlon1[1] & ' 0? 0' & Chr(39) & ' 0"'
 		EndIf
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DMS
 
-Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd° mm' ss", or ddmm.mmmm to ddmm.mmmm
+Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd? mm' ss", or ddmm.mmmm to ddmm.mmmm
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_All_to_DMM()') ;#Debug Display
 	;All GPS Formats to ddmm.mmmm
 	$return = '0.0000'
@@ -4047,7 +4053,7 @@ EndFunc   ;==>_TreeviewListviewResize
 
 Func WM_NOTIFY($hWnd, $MsgID, $wParam, $lParam)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'WM_NOTIFY()') ;#Debug Display
-	Local $tagNMHDR, $event, $hwndFrom, $code
+	Local $tagNMHDR, $hwndFrom, $code
 	$tagNMHDR = DllStructCreate("int;int;int", $lParam)
 	If @error Then Return 0
 	$code = DllStructGetData($tagNMHDR, 3)
@@ -6416,7 +6422,6 @@ EndFunc   ;==>_ImportCSV
 
 Func _ImportNS1($NS1file)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportNS1()') ;#Debug Display
-	Dim $BSSID_Array[1], $SSID_Array[1], $FirstSeen_Array[1], $LastSeen_Array[1], $SignalHist_Array[1], $Lat_Array[1], $Lon_Array[1], $Auth_Array[1], $Encr_Array[1], $Type_Array[1]
 	$netstumblerfile = FileOpen($NS1file, 0)
 	If $netstumblerfile <> -1 Then
 		;Get Total number of lines
@@ -6440,7 +6445,7 @@ Func _ImportNS1($NS1file)
 					If $linein <> "" And IsArray($array) Then
 						;Decode Flags
 						$HexIn = Number("0x" & $array[9])
-						Global $ESS = False, $nsimploopBSS = False, $CFPoll = False, $CFPollReq = False, $WEP = False, $ShortPreAm = False, $PBCC = False, $ChAgile = False
+						Global $ESS = False, $nsimploopBSS = False, $WEP = False, $ShortPreAm = False, $PBCC = False
 						If BitAND($HexIn, 0x1) Then $ESS = True
 						If BitAND($HexIn, 0x2) Then $nsimploopBSS = True
 						If BitAND($HexIn, 0x10) Then $WEP = True
@@ -6480,7 +6485,6 @@ Func _ImportNS1($NS1file)
 						$LoadLatitude = _Format_GPS_All_to_DMM(StringReplace($array[1], "N 360.0000000", "N 0.0000000"))
 						$LoadLongitude = _Format_GPS_All_to_DMM(StringReplace($array[2], "E 720.0000000", "E 0.0000000"))
 						$Channel = $array[13]
-						$DateTime = $Date & " " & $time
 
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $Date & "' And Time1 = '" & $time & "'"
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -6574,7 +6578,7 @@ Func _ImportWardriveDb3($DB3file)
 		$Found_BSSID = StringUpper($NetworkMatchArray[$NewAP][0])
 		$Found_SSID = $NetworkMatchArray[$NewAP][1]
 		$Found_Capabilies = $NetworkMatchArray[$NewAP][2]
-		$Found_Level = $NetworkMatchArray[$NewAP][3]
+		$Found_Signal = Round(_DbToSignalPercent($NetworkMatchArray[$NewAP][3]))
 		$Found_Frequency = $NetworkMatchArray[$NewAP][4]
 		$Found_Lat = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][5], "N", "S")
 		$Found_Lon = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][6], "E", "W")
@@ -6680,7 +6684,7 @@ Func _ImportWardriveDb3($DB3file)
 		EndIf
 
 		;Add AP data into Vistumbler DB
-		$NewApAdded = _AddApData(0, $NewGpsId, $Found_BSSID, $Found_SSID, $Found_CHAN, $Found_AUTH, $Found_ENCR, $Found_NETTYPE, "802.11g", "Unknown", "Unknown", "0")
+		$NewApAdded = _AddApData(0, $NewGpsId, $Found_BSSID, $Found_SSID, $Found_CHAN, $Found_AUTH, $Found_ENCR, $Found_NETTYPE, "802.11g", "Unknown", "Unknown", $Found_Signal)
 		If $NewApAdded <> 0 Then $AddAP += 1
 
 		If TimerDiff($UpdateTimer) > 600 Or ($NewAP = $WardriveAPs) Then
@@ -10057,10 +10061,20 @@ Func _rad2deg($radian) ;convert radians to degrees
 	Return ($radian * (180 / $PI))
 EndFunc   ;==>_rad2deg
 
-Func _EstimateDbFromSignalPercent($InSig)
-	$EstimatedDB = Round(-70 + (20 * Log10($InSig / (105 - $InSig))))
-	Return ($EstimatedDB)
-EndFunc   ;==>_EstimateDbFromSignalPercent
+Func _SignalPercentToDb($InSig);Estimated value
+	$max_signal = -30 ;(dBm)
+	$disassociation_signal = -85 ;(dBm)
+	$dBm = ((($max_signal - $disassociation_signal) * $InSig) - (20 * $max_signal) + (100 * $disassociation_signal)) / 80
+	Return (Round($dBm))
+EndFunc   ;==>_SignalPercentToDb
+
+Func _DbToSignalPercent($InDB);Estimated value
+	$max_signal = -30 ;(dBm)
+	$disassociation_signal = -85 ;(dBm)
+	$SIG = 100 - 80 * ($max_signal - $InDB) / ($max_signal - $disassociation_signal)
+	If $SIG < 0 Then $SIG = 0
+	Return (Round($SIG))
+EndFunc   ;==>_DbToSignalPercent
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       DATE / TIME FUNCTIONS
