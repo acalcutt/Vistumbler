@@ -14,40 +14,38 @@ $live_aps = "live_aps";
 $live_gps = "live_gps";
 
 // AP Detail Variables
-list($ssid_, $ssids) = make_ssid($_GET['SSID']);
-$macs   =   filter_input(INPUT_GET, 'Mac', FILTER_SANITIZE_ENCODED, array(16,32) );
+list($ssid_, $ssids) = make_ssid(@$_GET['SSID']);
+$macs   =   (@$_GET['Mac'] ? filter_input(INPUT_GET, 'Mac', FILTER_SANITIZE_ENCODED, array(16,32) ) : "00:00:00:00:00:00");
 $mac    =   implode(":", str_split(str_replace(":","",$macs), 2));
-$auth   =   filter_input(INPUT_GET, 'Auth', FILTER_SANITIZE_ENCODED, array(16,32) );
-$encry  =   filter_input(INPUT_GET, 'Encry', FILTER_SANITIZE_ENCODED, array(16,32) );
-$radio  =   filter_input(INPUT_GET, 'Rad', FILTER_SANITIZE_ENCODED, array(16,32) );
-$sectype=   filter_input(INPUT_GET, 'SecType', FILTER_SANITIZE_NUMBER_INT);
-$chan   =   filter_input(INPUT_GET, 'Chn', FILTER_SANITIZE_NUMBER_INT);
-$lat    =   filter_input(INPUT_GET, 'Lat', FILTER_SANITIZE_ENCODED, array(16,32) );
-$long   =   filter_input(INPUT_GET, 'Long', FILTER_SANITIZE_ENCODED, array(16,32) );
-$BTx    =   filter_input(INPUT_GET, 'BTx', FILTER_SANITIZE_ENCODED, array(16,32) );
-$OTx    =   filter_input(INPUT_GET, 'OTx', FILTER_SANITIZE_ENCODED, array(16,32) );
-$FA     =   filter_input(INPUT_GET, 'FA', FILTER_SANITIZE_ENCODED, array(16,32) );
-$LU     =   filter_input(INPUT_GET, 'FA', FILTER_SANITIZE_ENCODED, array(16,32) );
-$NT     =   filter_input(INPUT_GET, 'NT', FILTER_SANITIZE_ENCODED, array(16,32) );
-$label  =   filter_input(INPUT_GET, 'Label', FILTER_SANITIZE_ENCODED, array(16,32));
-$sig    =   filter_input(INPUT_GET, 'Sig', FILTER_SANITIZE_STRING, array(4,8));
+$auth   =   (@$_GET['Auth'] ? filter_input(INPUT_GET, 'Auth', FILTER_SANITIZE_ENCODED, array(16,32) ) : "Open");
+$encry  =   (@$_GET['Encry'] ? filter_input(INPUT_GET, 'Encry', FILTER_SANITIZE_ENCODED, array(16,32) ) : "None");
+$radio  =   (@$_GET['Rad'] ? filter_input(INPUT_GET, 'Rad', FILTER_SANITIZE_ENCODED, array(16,32) ) : "802.11u");
+$sectype=   (@$_GET['SecType'] ? filter_input(INPUT_GET, 'SecType', FILTER_SANITIZE_NUMBER_INT) : 0);
+$chan   =   (@$_GET['Chn'] ? filter_input(INPUT_GET, 'Chn', FILTER_SANITIZE_NUMBER_INT) : 0);
+$BTx    =   (@$_GET['BTx'] ? filter_input(INPUT_GET, 'BTx', FILTER_SANITIZE_ENCODED, array(16,32) ) : "0.0");
+$OTx    =   (@$_GET['OTx'] ? filter_input(INPUT_GET, 'OTx', FILTER_SANITIZE_ENCODED, array(16,32) ) : "0.0");
+$NT     =   (@$_GET['NT'] ? filter_input(INPUT_GET, 'NT', FILTER_SANITIZE_ENCODED, array(16,32) ) : "Unknown");
+$label  =   (@$_GET['Label'] ? filter_input(INPUT_GET, 'Label', FILTER_SANITIZE_ENCODED, array(16,32)) : "No Label");
+$sig    =   (@$_GET['Sig'] ? filter_input(INPUT_GET, 'Sig', FILTER_SANITIZE_STRING, array(4,8)) : "0");
 
 // GPS Variables
-$sats           =   filter_input(INPUT_GET, 'Sats', FILTER_SANITIZE_NUMBER_INT);
-$hdp            =   filter_input(INPUT_GET, 'HDP', FILTER_SANITIZE_NUMBER_FLOAT);
-$alt            =   filter_input(INPUT_GET, 'ALT', FILTER_SANITIZE_NUMBER_FLOAT);
-$geo            =   filter_input(INPUT_GET, 'GEO', FILTER_SANITIZE_NUMBER_FLOAT);
-$kmh            =   filter_input(INPUT_GET, 'KMH', FILTER_SANITIZE_NUMBER_FLOAT);
-$mph            =   filter_input(INPUT_GET, 'MPH', FILTER_SANITIZE_NUMBER_FLOAT);
-$track          =   filter_input(INPUT_GET, 'Track', FILTER_SANITIZE_NUMBER_FLOAT);
-$date           =   filter_input(INPUT_GET, 'Date', FILTER_SANITIZE_STRING, array(16,32));
-$time           =   filter_input(INPUT_GET, 'Time', FILTER_SANITIZE_STRING, array(16,32));
+$lat    =   (@$_GET['Lat'] ? filter_input(INPUT_GET, 'Lat', FILTER_SANITIZE_ENCODED, array(16,32) ) : "N 0000.0000");
+$long   =   (@$_GET['Long'] ? filter_input(INPUT_GET, 'Long', FILTER_SANITIZE_ENCODED, array(16,32) ) : "E 0000.0000");
+$sats   =   (@$_GET['Sats'] ? filter_input(INPUT_GET, 'Sats', FILTER_SANITIZE_NUMBER_INT) : "0" );
+$hdp    =   (@$_GET['HDP'] ? filter_input(INPUT_GET, 'HDP', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
+$alt    =   (@$_GET['ALT'] ? filter_input(INPUT_GET, 'ALT', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
+$geo    =   (@$_GET['GEO'] ? filter_input(INPUT_GET, 'GEO', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
+$kmh    =   (@$_GET['KMH'] ? filter_input(INPUT_GET, 'KMH', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
+$mph    =   (@$_GET['MPH'] ? filter_input(INPUT_GET, 'MPH', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
+$track  =   (@$_GET['Track'] ? filter_input(INPUT_GET, 'Track', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
+$date   =   (@$_GET['Date'] ? filter_input(INPUT_GET, 'Date', FILTER_SANITIZE_STRING, array(16,32)) : date("Y-m-d") );
+$time   =   (@$_GET['Time'] ? filter_input(INPUT_GET, 'Time', FILTER_SANITIZE_STRING, array(16,32)) : date("H:i:s") );
 
 //Username and API Key
 $username   =   ( @$_GET['username'] ? filter_input(INPUT_GET, 'username', FILTER_SANITIZE_STRING, array(16,32)) : "UNKOWN" );
-dump($username);
 $apikey     =   ( @$_GET['apikey'] ? filter_input(INPUT_GET, 'apikey', FILTER_SANITIZE_STRING, array(16,32)) : "NONE" );
 
+#dump($username);
 
 switch(strtolower($radio))
 {
@@ -78,81 +76,105 @@ $sql = "SELECT id,ssid,mac,chan,sectype,auth,encry,radio FROM
         AND `chan` = '$chan'
         AND `sectype` = '$sectype'
         AND `radio` = '$radios' LIMIT 1";
-echo $sql."<br />";
+//echo $sql."<br />";
 $result = $conn->query($sql) or printf($conn->error);
 $array = $result->fetch_array(1);
 if(@$array['id'])
 {
-    echo "is old AP<br />";
-    dump($array);
+    $AP_id = $array['id'];
+    echo "It's an old AP :/<br />";
+
     $sql = "SELECT sig FROM
-        `$db`.`live_aps`
+        `$db`.`$live_aps`
         WHERE `mac` = '$mac'
         AND `ssid` = '$ssids'
         AND `chan` = '$chan'
         AND `sectype` = '$sectype'
         AND `radio` = '$radios' LIMIT 1";
+
     $result->free();
     $result = $conn->query($sql) or printf($conn->error);
     $array = $result->fetch_array(1);
-    dump($array);
+    $all_sigs = $array['sig'];
 
-    $sig_exp = explode("|", $sig);
+    $sig_exp = explode("|", $all_sigs);
+    
     $sig_c = count($sig_exp)-1;
     if(!$sig_c)
     {
         $sig_exp_id = explode("-", $array['sig']);
         $id = $sig_exp_id[1];
+        $signal = $sig_exp_id[0];
     }else
     {
         $sig_exp_id = explode("-", $sig_exp[$sig_c]);
         $id = $sig_exp_id[1];
+        $signal = $sig_exp_id[0];
     }
-    $sql = "SELECT * FROM `$db`.`live_gps` WHERE `id` = '$id'";
+
+    $sql = "SELECT * FROM `$db`.`$live_gps` WHERE `id` = '$id'";
     $result->free();
     $result = $conn->query($sql) or printf($conn->error);
     $array = $result->fetch_array(1);
-    dump($array);
+
     list($lat, $long) = format_gps($lat, $long);
-    dump($lat);
-    dump($long);
-    if(!strcmp($array['lat'], $lat))
+
+    if( (!strcmp($array['lat'], $lat)) && (!strcmp($array['long'], $long)) )
     {
-        echo "Lat is the same, move a litte you lazy bastard <br />";
+        echo "Lat/Long are the same, move a litte you lazy bastard.<br />";
     }else
     {
-        echo "Lat is different, what aboot the sats.<br />";
-        
-    }
-    
+        echo "Lat/Long are different, what aboot the Sats and Date/Time, Eh?<br />";
+        $url_time   = strtotime($date." ".$time);
+        $db_time    = strtotime($array['date']." ".$array['time']);
+        if(($url_time - $db_time) > 2)
+        {
+            echo "Oooo its time is newer o_0, lets go insert it<br />";
+            $sql = "INSERT INTO `$db`.`$live_gps` (`id`, `lat`, `long`, `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track`, `date`, `time`)
+            VALUES ('', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time');";
+           // echo str_replace("
+           // ","<br />", $sql."<br /><br />");
+            $conn->query($sql) or printf($conn->error);
 
+            $sig = $all_sigs."|".$signal."-".$conn->insert_id;
+
+            $sql = "UPDATE `$db`.`live_aps` SET `sig` = '$sig' WHERE `id` = '$AP_id'";
+            //echo $sql."<br /><br />";
+            $conn->query($sql) or printf($conn->error);
+
+        }else
+        {
+            echo "What are you thinking? You cant have more then a second resolution. >:(<br />";
+        }
+    }
 }else
 {
-    echo "add new AP<br />";
+    echo "Add new AP. :]<br />";
 
     list($lat, $long) = format_gps($lat, $long);
     
-    $sql = "INSERT INTO `wifi`.`live_gps` (`id`, `lat`, `long`, `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track`, `date`, `time`)
+    $sql = "INSERT INTO `$db`.`$live_gps` (`id`, `lat`, `long`, `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track`, `date`, `time`)
     VALUES ('', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time');";
-    echo str_replace("
-    ","<br />", $sql."<br /><br />");
+    //echo str_replace("
+    //","<br />", $sql."<br /><br />");
     $conn->query($sql) or printf($conn->error);
     $sig = $sig."-".$conn->insert_id;
     $sql = "INSERT INTO  `$db`.`$live_aps` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype`, `sig`, `username`)
     VALUES ('', '$ssids', '$mac','$chan', '$radios', '$auth', '$encry', '$sectype', '$sig',  '$username' ) ";
-    echo str_replace("
-    ","<br />", $sql."<br /><br />");
+    //echo str_replace("
+    //","<br />", $sql."<br /><br />");
     $conn->query($sql) or printf($conn->error);
 
     $sql = "INSERT INTO  `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype`, `lat`, `long`, `active`)
     VALUES ('', '$ssids', '$mac','$chan', '$radios', '$auth', '$encry', '$sectype', '$lat',  '$long', '1' ) ";
-    echo str_replace("
-    ","<br />", $sql."<br /><br />");
+    //echo str_replace("
+    //","<br />", $sql."<br /><br />");
     $conn->query($sql) or printf($conn->error);
 
 }
 
 $ft_stop = microtime(1);
+echo "Total Memory Usage: ".memory_get_usage(1)."<br />";
 echo "1 Time: ".($ft_stop-$ft_start);
 
 
@@ -181,6 +203,9 @@ echo "1 Time: ".($ft_stop-$ft_start);
 
 function format_gps($lat, $long)
 {
+    $lat = str_replace("%20", " ", $lat);
+    $long = str_replace("%20", " ", $long);
+    
     $lat_sub = $lat[0];
     if($lat_sub != "-" && is_numeric($lat_sub))
     {
