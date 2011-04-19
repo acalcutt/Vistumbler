@@ -19,8 +19,8 @@ include('../lib/graph.inc.php');
 <?php
 echo '<h1>Graph an Access Points Signal history *Beta*</h1><h4>Bar Graph=>'.$ver_graph['graphs']['wifibar'].'<br>Line Graph=>'.$ver_graph['graphs']['wifiline'].'</h4>';
 
-$id = $_GET['id'];
-$row = $_GET['row'];
+$id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
+$row =  filter_input(INPUT_GET, 'row', FILTER_SANITIZE_NUMBER_INT);
 
 mysql_select_db($db,$conn);
 $sql = "SELECT * FROM `$wtable` WHERE `id` = $id";

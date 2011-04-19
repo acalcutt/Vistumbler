@@ -15,6 +15,7 @@ if(!(require_once 'config.inc.php')){die("You need to create and configure your 
 $wdb_install = $GLOBALS['wifidb_install'];
 if($wdb_install == ""){die("You need to edit your daemon config file first in: [tools dir]/daemon/config.inc.php");}
 require_once $wdb_install."/lib/database.inc.php";
+require_once $wdb_install."/lib/daemon.inc.php";
 require_once $wdb_install."/lib/config.inc.php";
 if(!file_exists($GLOBALS['daemon_log_folder']))
 {
@@ -117,7 +118,7 @@ if($time_interval_to_check < '30'){$time_interval_to_check = '30';} //its really
 $finished = 0;
 
 $database	=	new database;
-$daemon		=	new daemon;
+
 var_dump($wdb_install);
 //Main loop
 echo $daemon_console_log."\r\n";
@@ -343,8 +344,7 @@ while(1)
                 }
             }
         }
-
-	if($finished == 0)
+        if($finished == 0)
         {
 
             $message = "File tmp table is empty, go and import something. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
@@ -358,7 +358,8 @@ while(1)
             $message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
             logd("Starting Automated KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
             verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Starting Automated KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-            daemon::daemon_kml($named = 0, $verbose);
+            $daemon = new daemon();
+            $daemon->daemon_kml($named = 0, $verbose);
             mail_users("Generation of Full Database KML File.\r\n".$host_url."/".$root."/out/daemon/update.kml\r\n\r\n-WiFiDB Service", $subject, "kmz", 0);
         }
 
@@ -369,9 +370,10 @@ while(1)
 	{
 	    logd("Running Daily Full DB KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
 	    verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Running Daily Full DB KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-	    daemon::daemon_kml($named = 0, $verbose);
+            $daemon = new daemon();
+            $daemon->daemon_kml($named = 0, $verbose);
 	}
-
+        unset($daemon);
 
         $nextrun = date("Y-m-d H:i:s", (time()+$time_interval_to_check));
         $sqlup2 = "UPDATE `$db`.`$settings_tb` SET `size` = '$nextrun' WHERE `id` = '$NR_ID'";

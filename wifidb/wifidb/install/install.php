@@ -5,6 +5,48 @@ $install = "installing";
 include('../lib/database.inc.php');
 global $wifidb_smtp, $wifidb_email_updates, $reserved_users, $login_seed;
 echo '<title>Wireless DataBase *Alpha* '.$ver["wifidb"].' --> Install Page</title>';
+
+
+/*
+
+CREATE TABLE  `wifi`.`live_gps` (
+`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
+`lat` VARCHAR( 255 ) NOT NULL ,
+`long` VARCHAR( 255 ) NOT NULL ,
+`sats` INT( 25 ) NOT NULL ,
+`hdp` VARCHAR( 255 ) NOT NULL ,
+`alt` VARCHAR( 255 ) NOT NULL ,
+`geo` VARCHAR( 255 ) NOT NULL ,
+`kmh` VARCHAR( 255 ) NOT NULL ,
+`mph` VARCHAR( 255 ) NOT NULL ,
+`track` VARCHAR( 255 ) NOT NULL ,
+`date` VARCHAR( 255 ) NOT NULL ,
+`time` VARCHAR( 255 ) NOT NULL ,
+PRIMARY KEY (  `id` ) ,
+INDEX (  `id` )
+) ENGINE = INNODB;
+
+
+
+
+
+CREATE TABLE  `wifi`.`live_aps` (
+`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
+`ssid` VARCHAR( 255 ) NOT NULL ,
+`mac` VARCHAR( 255 ) NOT NULL ,
+`auth` INT( 25 ) NOT NULL ,
+`encry` VARCHAR( 255 ) NOT NULL ,
+`sectype` VARCHAR( 255 ) NOT NULL ,
+`chan` VARCHAR( 255 ) NOT NULL ,
+`radio` VARCHAR( 255 ) NOT NULL ,
+`sig` VARCHAR( 255 ) NOT NULL ,
+`username` VARCHAR( 255 ) NOT NULL ,
+PRIMARY KEY (  `id` ) ,
+INDEX (  `id` )
+) ENGINE = INNODB;
+*/
+
+
 ?>
 <link rel="stylesheet" href="../themes/wifidb/styles.css">
 <body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
@@ -286,14 +328,15 @@ $sqls =	"CREATE TABLE IF NOT EXISTS `$wifi`.`wifi0`
     `radio` varchar(1) NOT NULL,
     `auth` varchar(25) NOT NULL,
     `encry` varchar(25) NOT NULL,
-	`countrycode` VARCHAR( 5 ) NOT NULL,
-	`countryname` VARCHAR( 64 ) NOT NULL,
-	`admincode` VARCHAR( 5 ) NOT NULL,
-	`adminname` VARCHAR( 64 ) NOT NULL,
-	`iso3166-2` VARCHAR( 3 ) NOT NULL,
-	`lat` VARCHAR( 32 ) NOT NULL DEFAULT 'N 0.0000',
-	`long` VARCHAR( 32 ) NOT NULL DEFAULT 'E 0.0000',
-	INDEX (`id`)) ENGINE=$ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
+    `countrycode` VARCHAR( 5 ) NOT NULL,
+    `countryname` VARCHAR( 64 ) NOT NULL,
+    `admincode` VARCHAR( 5 ) NOT NULL,
+    `adminname` VARCHAR( 64 ) NOT NULL,
+    `iso3166-2` VARCHAR( 3 ) NOT NULL,
+    `lat` VARCHAR( 32 ) NOT NULL DEFAULT 'N 0.0000',
+    `long` VARCHAR( 32 ) NOT NULL DEFAULT 'E 0.0000',
+    `active` tinyint(1) NOT NULL DEFAULT 0,
+    INDEX (`id`)) ENGINE=$ENG DEFAULT CHARSET=utf8 AUTO_INCREMENT=1";
 $CR_TB_W0_Re = mysql_query($sqls, $conn);
 
 if($CR_TB_W0_Re)

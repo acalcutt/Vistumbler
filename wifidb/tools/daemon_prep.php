@@ -80,9 +80,11 @@ while (!(($file = readdir($dh)) == false))
 	    #echo $n." ".$file."\n";
 	    if(insert_file($file,$file_names,$fileappend))
             {
+                $is++;
                 $file_a[] = $file; //if Filename is valid, throw it into an array for later use
             }else
             {
+                $not++;
                 echo "No good... Blehk.\r\n";
             }
 	}else
@@ -108,8 +110,6 @@ closedir($dh);
 
 function insert_file($file, $file_names,$fileappend)
 {
-    $not = $GLOBALS['not'];
-    $is = $GLOBALS['is'];
     $default_user = $GLOBALS['default_user'];
     $default_title = $GLOBALS['default_title'];
     $default_notes = $GLOBALS['default_notes'];
@@ -128,8 +128,6 @@ function insert_file($file, $file_names,$fileappend)
 	$date = $file_names[$hash]['date'];
 	$hash_ = $file_names[$hash]['hash'];
 	echo "Is inside Filenames.txt -->$source\r\n";
-	$is++;
-	$GLOBALS['is'] = $is;
     }else
     {
         echo "Not in filenames.txt -->$source\r\n";
@@ -143,8 +141,6 @@ function insert_file($file, $file_names,$fileappend)
 	$date = date("y-m-d H:i:s");
 	$hash_ = 0;
 	*/
-	$not++;
-	$GLOBALS['not'] = $not;
     }
     #echo $user." - ".$title." - ".$notes."\n\t".$hash_.' - '.$hash."\n";
 
@@ -158,11 +154,11 @@ function insert_file($file, $file_names,$fileappend)
     $result = mysql_query( $sql , $conn);
     if($result)
     {
-#	echo "<h2>File has been inserted for Importing at a later time at a schedualed time.<br>This is a trial to see how well it will work.</h2>";
+	echo "File has been inserted\r\n";
 	return 1;
     }else
     {
-    #	echo "<h2>There was an error inserting file for schedualed import.</h2>".mysql_error($conn);
+    	echo "There was an error inserting the file\r\n".mysql_error($conn);
 	return 0;
     }
 }

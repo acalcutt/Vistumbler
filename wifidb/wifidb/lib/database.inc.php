@@ -10,7 +10,6 @@ $ver = array(
             "codename"          =>	"Peabody",
             "Last_Core_Edit"    => 	"2011-Mar-21",
             "database"          =>	array(  
-                                    "import_vs1"	=>	"1.8.0", 
                                     "apfetch"		=>	"2.7.0",
                                     "check_gps_array"	=>	"1.2",
                                     "all_users"		=>	"1.3",
@@ -2193,6 +2192,30 @@ class database
 			    if(!@$gdata[$vs1_id]){continue;}
 			    $lat = $gdata[$vs1_id]["lat"];
 			    $long = $gdata[$vs1_id]["long"];
+                            
+                            $lat_sub = $lat[0];
+
+                            if($lat_sub != "-" && is_numeric($lat_sub))
+                            {
+                               $lat = "N ".$lat;
+                            }else #if(is_int(substr($gps['lat'], 0,1))+0)
+                            {
+                               $lat = str_replace("-", "S ", $lat);
+                            }
+                            ######
+                            ######
+                            ######
+                            #var_dump(substr($gps['long'], 0,1));
+                            $long_sub = $long[0];
+
+                            if($long_sub != "-" && is_numeric($long_sub))
+                            {
+                               $long = "E ".$long;
+                            }else #if(is_int(substr($gps['long'], 0,1)+0))
+                            {
+                               $long = str_replace("-", "W ", $long);
+                            }
+
 			    $sats = $gdata[$vs1_id]["sats"];
 			    $date = $gdata[$vs1_id]["date"];
 			    $time = str_replace("\r\n", "", $gdata[$vs1_id]["time"]);
@@ -2402,9 +2425,34 @@ class database
 			    $esp = explode(",",$exp);
 			    $vs1_id = $esp[0];
 			    $signal = str_replace("\r\n", "", $esp[1]);
+
 			    if(!@$gdata[$vs1_id]){continue;}
-			    $lat = $gdata[$vs1_id]["lat"];
+
+                            $lat = $gdata[$vs1_id]["lat"];
 			    $long = $gdata[$vs1_id]["long"];
+                            $lat_sub = $lat[0];
+
+                            if($lat_sub != "-" && is_numeric($lat_sub))
+                            {
+                               $lat = "N ".$lat;
+                            }else #if(is_int(substr($gps['lat'], 0,1))+0)
+                            {
+                               $lat = str_replace("-", "S ", $lat);
+                            }
+                            ######
+                            ######
+                            ######
+                            #var_dump(substr($gps['long'], 0,1));
+                            $long_sub = $long[0];
+
+                            if($long_sub != "-" && is_numeric($long_sub))
+                            {
+                               $long = "E ".$long;
+                            }else #if(is_int(substr($gps['long'], 0,1)+0))
+                            {
+                               $long = str_replace("-", "W ", $long);
+                            }
+
 			    $sats = $gdata[$vs1_id]["sats"];
 			    $date = $gdata[$vs1_id]["date"];
 			    $time = str_replace("\r\n", "", $gdata[$vs1_id]["time"]);
@@ -2522,7 +2570,7 @@ class database
 		    if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);die();}
 		}
 	    }
-	    var_dump($user_aps);
+	    #var_dump($user_aps);
 	    if(is_array($user_aps))
 	    {
 		$user_ap_s = implode("-",$user_aps);
@@ -2585,11 +2633,11 @@ class database
 		echo "<p>File DONE!</p>";
 	    }
 	    $end = microtime(true);
-	    $this->Imp_ret = array(
+	    $Imp_ret = array(
 			"aps" => $total_ap,
 			"gps" => $gdatacount
 			);
-	    return $this->Imp_ret;
+	    return $Imp_ret;
 	    fclose($fileappend);
 	}
 	
@@ -2600,63 +2648,71 @@ class database
 	
 	function &convert_dm_dd($geocord_in = "")
 	{
-		$start = microtime(true);
-	//	GPS Convertion :
-		$neg=FALSE;
-		$geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
-		$geocord_front = explode(" ", $geocord_exp[0]);
-		if($geocord_exp[0][0] === "S" or $geocord_exp[0][0] === "W"){$neg = TRUE;}
-		$patterns[0] = '/N /';
-		$patterns[1] = '/E /';
-		$patterns[2] = '/S /';
-		$patterns[3] = '/W /';
-		$replacements = "";
-		$geocord_in = preg_replace($patterns, $replacements, $geocord_in);
-		$geocord_exp = explode(".", $geocord_in);
-		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
-		
-		
-		// 428.7753 ---- 428 - 7753
-		$geocord_dec = "0.".$geocord_exp[1];
-		// 428.7753 ---- 428 - 0.7753
-		$len = strlen($geocord_exp[0]);
-#		echo $len.'<BR>';
-		$geocord_min = substr($geocord_exp[0],-2,3);
-#		echo $geocord_min.'<BR>';
-		// 428.7753 ---- 4 - 28 - 0.7753
-		$geocord_min = $geocord_min+$geocord_dec;
-		// 428.7753 ---- 4 - 28.7753
-		$geocord_div = $geocord_min/60;
-		// 428.7753 ---- 4 - (28.7753)/60 = 0.4795883
-		if($len == 3)
-		{
-			$geocord_deg = substr($geocord_exp[0], 0,1);
-#			echo $geocord_deg.'<br>';
-		}elseif($len == 4)
-		{
-			$geocord_deg = substr($geocord_exp[0], 0,2);
-#			echo $geocord_deg.'<br>';
-		}elseif($len == 5)
-		{
-			$geocord_deg = substr($geocord_exp[0], 0,3);
-#			echo $geocord_deg.'<br>';
-		}elseif($len <= 2)
-		{
-			$geocord_deg = 0;
-#			echo $geocord_deg.'<br>';
-		}
-                if(!isset($geocord_deg))
-                {
-                    echo $geocord_in."\r\n";
-                    return -1;
-                }
-		$geocord_out = $geocord_deg + $geocord_div;
-		// 428.7753 ---- 4.4795883
-		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
-		$end = microtime(true);
-                
-		$geocord_out = substr($geocord_out, 0,10);
-		return $geocord_out;
+            echo "1) $geocord_in\r\n";
+            $start = microtime(true);
+    //	GPS Convertion :
+            $neg=FALSE;
+            $geocord_exp = explode(".", $geocord_in);//replace any Letter Headings with Numeric Headings
+            $geocord_front = explode(" ", $geocord_exp[0]);
+            if(substr($geocord_exp[0],0,1) == "S" || substr($geocord_exp[0],0,1) == "W" || substr($geocord_exp[0],0,1) == "-"){$neg = TRUE;}
+
+            $patterns[0] = '/N/';
+            $patterns[1] = '/E/';
+            $patterns[2] = '/S/';
+            $patterns[3] = '/W/';
+            $patterns[4] = '/ /';
+            $patterns[5] = '/-/';
+            $replacements = "";
+            $geocord_in = preg_replace($patterns, $replacements, $geocord_in);
+            
+            echo "2) $geocord_in\r\n";
+            
+            $geocord_exp = explode(".", $geocord_in);
+            #var_dump($geocord_exp);
+            
+            // 428.7753 ---- 428 - 7753
+            $geocord_dec = "0.".$geocord_exp[1];
+            // 428.7753 ---- 428 - 0.7753
+            $len = strlen($geocord_exp[0]);
+            echo "Len: $len\r\n";
+            $geocord_min = substr($geocord_exp[0],-2,3);
+            echo "Min: $geocord_min\r\n";
+            // 428.7753 ---- 4 - 28 - 0.7753
+            $geocord_min = $geocord_min+$geocord_dec;
+            // 428.7753 ---- 4 - 28.7753
+            $geocord_div = $geocord_min/60;
+            // 428.7753 ---- 4 - (28.7753)/60 = 0.4795883
+            
+            if($len == 3)
+            {
+                $geocord_deg = substr($geocord_exp[0], 0,1);
+                echo "3) $geocord_deg\r\n";
+            }elseif($len == 4)
+            {
+                $geocord_deg = substr($geocord_exp[0], 0,2);
+                echo "3) $geocord_deg\r\n";
+            }elseif($len == 5)
+            {
+                $geocord_deg = substr($geocord_exp[0], 0,3);
+                echo "3) $geocord_deg\r\n";
+            }elseif($len <= 2)
+            {
+                $geocord_deg = 0;
+                echo "3) $geocord_deg\r\n";
+            }else
+            {
+                echo $geocord_in."\r\n";
+                $r = -1;
+                return $r;
+            }
+            $geocord_out = $geocord_deg + $geocord_div;
+            // 428.7753 ---- 4.4795883
+            if($neg === TRUE){$geocord_out = "-".$geocord_out;}
+            
+            $end = microtime(true);
+            echo "4) $geocord_out\r\n";
+            $geocord_out = substr($geocord_out, 0,10);
+            return $geocord_out;
 	}
 	#========================================================================================================================#
 	#													Convert GeoCord DD to DM									   	     #
@@ -2664,51 +2720,69 @@ class database
 	
 	function &convert_dd_dm($geocord_in="")
 	{
-		$start = microtime(true);
-		//	GPS Convertion :
-#		echo $geocord_in.'<BR>';
-		$neg=FALSE;
-		$geocord_exp = explode(".", $geocord_in);
-		$geocord_front = explode(" ", $geocord_exp[0]);
-		
-		if($geocord_exp[0][0] == "S" or $geocord_exp[0][0] == "W"){$neg = TRUE;}
-		$pattern[0] = '/N /';
-		$pattern[1] = '/E /';
-		$pattern[2] = '/S /';
-		$pattern[3] = '/W /';
-		$replacements = "";
-		$geocord_exp[0] = preg_replace($pattern, $replacements, $geocord_exp[0]);
-		
-		if($geocord_exp[0][0] === "-"){$geocord_exp[0] = 0 - $geocord_exp[0];$neg = TRUE;}
-		// 4.146255 ---- 4 - 146255
+            echo "----------------\r\n";
+            $start = microtime(true);
+            //	GPS Convertion :
+            echo "1) $geocord_in\r\n";
+            $neg=FALSE;
+            $geocord_exp = explode(".", $geocord_in);
+
+            $front = $geocord_exp[0];
+            $back = $geocord_exp[1];
+
+            if(substr($front,0,1)=="-" || substr($front,0,1)=="S" || substr($front,0,1)=="W"){$neg = TRUE;}
+            echo "NEG: $neg\r\n";
+            
+            $pattern[0] = '/-/';
+            $pattern[1] = '/ /';
+            $pattern[2] = '/N/';
+            $pattern[3] = '/E/';
+            $pattern[4] = '/W/';
+            $pattern[5] = '/S/';
+            $replacements = "";
+            $front = preg_replace($pattern, $replacements, $front);
+            echo "2) $front....$back\r\n";
+            // 4.146255 ---- 4 - 146255
 #		echo $geocord_exp[1].'<br>';
-		$geocord_dec = "0.".$geocord_exp[1];
-		// 4.146255 ---- 4 - 0.146255
-#		echo $geocord_dec.'<br>';
-		$geocord_mult = $geocord_dec*60;
-		// 4.146255 ---- 4 - (0.146255)*60 = 8.7753
-#		echo $geocord_mult.'<br>';
-		$mult = explode(".",$geocord_mult);
-#		echo $len.'<br>';
-		if( strlen($mult[0]) < 2 )
-		{
-			$geocord_mult = "0".$geocord_mult;
-		}
-		// 4.146255 ---- 4 - 08.7753
-		$geocord_out = $geocord_exp[0].$geocord_mult;
-		// 4.146255 ---- 408.7753
-		$geocord_o = explode(".", $geocord_out);
-		if( strlen($geocord_o[1]) > 4 ){ $geocord_o[1] = substr($geocord_o[1], 0 , 4); $geocord_out = implode('.', $geocord_o); }
-		
-		if($neg === TRUE){$geocord_out = "-".$geocord_out;}
-		$end = microtime(true);
-		if ($GLOBALS["bench"]  == 1)
-		{
-			echo "Time is [Unix Epoc]<BR>";
-			echo "Start Time: ".$start."<BR>";
-			echo "  End Time: ".$end."<BR>";
-		}
-		return $geocord_out;
+            $geocord_dec = "0.".$back;
+            // 4.146255 ---- 4 - 0.146255
+            echo "Dec: $geocord_dec\r\n";
+            $geocord_mult = $geocord_dec*60;
+            // 4.146255 ---- 4 - (0.146255)*60 = 8.7753
+            echo "Milt: $geocord_mult\r\n";
+            $mult = explode(".",$geocord_mult);
+            $len = strlen($mult[0]);
+            echo "Len: $len\r\n";
+            if( $len < 2 )
+            {
+                $geocord_mult = "0".$geocord_mult;
+            }
+            // 4.146255 ---- 4 - 08.7753
+
+            $geocord_out = $front.$geocord_mult;
+            echo "3.1) $geocord_out\r\n";
+
+            // 4.146255 ---- 408.7753
+            $geocord_o = explode(".", $geocord_out);
+            if( strlen($geocord_o[1]) > 4 )
+            {
+                $geocord_o[1] = substr($geocord_o[1], 0 , 4);
+                $geocord_out = implode('.', $geocord_o);
+            }
+            echo "3.2) $geocord_out\r\n";
+
+            if($neg === TRUE){$geocord_out = "-".$geocord_out;}
+            echo "3.3) $geocord_out\r\n";
+
+            $end = microtime(true);
+            if ($GLOBALS["bench"]  == 1)
+            {
+                    echo "Time is [Unix Epoc]<BR>";
+                    echo "Start Time: ".$start."<BR>";
+                    echo "  End Time: ".$end."<BR>";
+            }
+            echo "----------------\r\n";
+            return $geocord_out;
 	}
 	
 	#========================================================================================================================#
@@ -2826,7 +2900,8 @@ class database
 		list($ssid_ptb) = make_ssid($newArray["ssid"]);
 		$table		=	$ssid_ptb.'-'.$newArray["mac"].'-'.$newArray["sectype"].'-'.$newArray["radio"].'-'.$newArray['chan'];
 		$table_gps	=	$table.$gps_ext;
-		$sql_gps = "select * from `$db_st`.`$table_gps` where `lat` NOT LIKE 'N 0.0000' limit 1";
+		#echo $table_gps;
+                $sql_gps = "select * from `$db_st`.`$table_gps` where `lat` NOT LIKE 'N 0.0000' limit 1";
 		$resultgps = mysql_query($sql_gps, $conn);
 		$lastgps = @mysql_fetch_array($resultgps);
 		$lat_check = explode(" ", $lastgps['lat']);
@@ -5566,1010 +5641,4 @@ class database
 	#	}
 	}
 }#END DATABASE CLASS
-
-class daemon extends database
-{
-	
-	function daemon_kml($named = 0, $verbose = 1)
-	{
-		require $GLOBALS['wifidb_tools']."/daemon/config.inc.php";
-		require $GLOBALS['wdb_install']."/lib/config.inc.php";
-		verbosed($GLOBALS['COLORS']['GREEN']."Starting Automated KMZ creation.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-		
-		$db_st = $GLOBALS['db_st'];
-		$db = $GLOBALS['db'];
-		$conn = $GLOBALS['conn'];
-		$gps_ext = $GLOBALS['gps_ext'];
-		$root = $GLOBALS['root'];
-		$hosturl = $GLOBALS['hosturl'];
-	#	$UPATH = $GLOBALS['UPATH'];
-		$open_loc 	=	$GLOBALS['open_loc'];
-		$WEP_loc 	=	$GLOBALS['WEP_loc'];
-		$WPA_loc 	=	$GLOBALS['WPA_loc'];
-		$KML_SOURCE_URL	=	$GLOBALS['KML_SOURCE_URL'];
-		
-		$start = microtime(true);
-		$good  = 0;
-		$bad   = 0;
-		$count = 0;
-		$date=date('Y-m-d');
-		#	$date = "2009-07-24";
-		
-		$daily_folder = $GLOBALS['wdb_install']."out/daemon/".$date."/";
-		$daemon_folder = $GLOBALS['wdb_install']."out/daemon/";
-		if(!(is_dir($daily_folder)))
-		{
-			echo "Make Folder $daily_folder\n";
-			mkdir($daily_folder, 0755);
-		}
-		
-		unset($filename);
-		$temp_index_kml = $daily_folder.'doc.kml';
-		$temp_daily_kml = $daily_folder.'daily_db.kml';
-		$temp_dailyL_kml = $daily_folder.'daily_db_label.kml';
-		$temp_kml = $daily_folder.'full_db.kml';
-		$temp_kml_label = $daily_folder.'full_db_label.kml';
-		$filename = $daemon_folder.'fulldb.kmz';
-		$filename_copy = $daily_folder.'fulldb.kmz';
-		
-		daemon::daemon_daily_db_exp($temp_daily_kml, $temp_dailyL_kml, $verbose);
-		
-		# do a full Db export for the day if needed
-		$temp_kml_size = dos_filesize($temp_kml);
-		if(!file_exists($temp_kml) or $temp_kml_size == '0' )
-		{
-		    daemon::daemon_full_db_exp($temp_kml, $temp_kml_label, $verbose);
-		}
-		else{verbosed($GLOBALS['COLORS']['RED']."File already exists, no need to export full DB.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");}
-		
-		verbosed($GLOBALS['COLORS']['LIGHTGRAY']."Writing Index KML for KMZ file.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-		
-		$filewrite = fopen($temp_index_kml, "w");
-		$fileappend_index = fopen($temp_index_kml, "a");
-		
-		fwrite($fileappend_index, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<kml xmlns=\"http://www.opengis.net/kml/2.2\" xmlns:gx=\"http://www.google.com/kml/ext/2.2\" xmlns:kml=\"http://www.opengis.net/kml/2.2\" xmlns:atom=\"http://www.w3.org/2005/Atom\">
-<Document>
-	<name>WiFiDB Daily KMZ</name>
-	<open>1</open>
-	<Folder>
-		<name>WiFiDB Daily DB Export</name>
-		<open>1</open>
-		<Style>
-			<ListStyle>
-				<listItemType>radioFolder</listItemType>
-				<bgColor>00ffffff</bgColor>
-				<maxSnippetLines>2</maxSnippetLines>
-			</ListStyle>
-		</Style>
-		<NetworkLink>
-			<name>daily_db.kml</name>
-			<Link>
-				<href>files/daily_db.kml</href>
-			</Link>
-		</NetworkLink>
-		<NetworkLink>
-			<name>daily_db_label.kml</name>
-			<visibility>0</visibility>
-			<Link>
-				<href>files/daily_db_label.kml</href>
-			</Link>
-		</NetworkLink>
-	</Folder>
-	<Folder>
-		<name>WiFiDB Full DB Export</name>
-		<open>1</open>
-		<Style>
-			<ListStyle>
-				<listItemType>radioFolder</listItemType>
-				<bgColor>00ffffff</bgColor>
-				<maxSnippetLines>2</maxSnippetLines>
-			</ListStyle>
-		</Style>
-		<NetworkLink>
-			<name>full_db.kml</name>
-			<Link>
-				<href>files/full_db.kml</href>
-			</Link>
-		</NetworkLink>
-		<NetworkLink>
-			<name>full_db _label.kml</name>
-			<visibility>0</visibility>
-			<Link>
-				<href>files/full_db_label.kml</href>
-			</Link>
-		</NetworkLink>
-	</Folder>
-</Document>
-</kml>
-");
-		fclose($fileappend_index);
-		
-		# Zip them all up into a KMZ file
-		verbosed($GLOBALS['COLORS']['LIGHTGRAY']."KMZ file, with everything in it: ".$filename."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-		
-		$moved = "/tmp/temp.zip";
-		$zip = new ZipArchive;
-		if ($zip->open($moved, ZIPARCHIVE::OVERWRITE) === TRUE)
-		{
-		#	$zip->addEmptyDir('files');
-			$zip->addFile($temp_index_kml, 'doc.kml');
-			$zip->addFile($temp_kml, 'files/full_db.kml');
-			$zip->addFile($temp_kml_label, 'files/full_db_label.kml');
-			
-			$zip->addFile($temp_daily_kml, 'files/daily_db.kml');
-			$zip->addFile($temp_dailyL_kml, 'files/daily_db_label.kml');
-			
-			$zip->close();
-			
-			verbosed($GLOBALS['COLORS']['GREEN']."The KMZ file is ready.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-	#		echo "Zipped up\n";
-			verbosed($GLOBALS['COLORS']['GREEN']."Starting Cleanup of Temp Files.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-			# cleanup
-			unlink($temp_index_kml);
-			unlink($temp_kml);
-			unlink($temp_kml_label);
-			unlink($temp_daily_kml);
-			unlink($temp_dailyL_kml);
-		} else {
-			verbosed($GLOBALS['COLORS']['RED']."The KMZ file is NOT ready.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-	#		echo "Blown up\n";
-		}
-
-		recurse_chown_chgrp($daemon_folder, $GLOBALS['WiFiDB_LNZ_User'], $GLOBALS['apache_grp']);
-		recurse_chmod($daemon_folder, 0755);
-		
-		copy($moved, $filename);
-		copy($filename, $filename_copy);
-
-		######## The Network Link KML file
-		$daemon_KMZ_folder = $GLOBALS['UPATH']."/out/daemon/";
-		
-		$Network_link_KML = $daemon_KMZ_folder."update.kml";
-		
-		$daemon_daily_KML = $GLOBALS['wdb_install']."/out/daemon/update.kml";
-		
-		$filewrite = fopen($daemon_daily_KML, "w");
-		$fileappend_update = fopen($daemon_daily_KML, "a");
-		
-
-		fwrite($fileappend_update, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<kml xmlns=\"http://earth.google.com/kml/2.2\">
-	<Document>
-		<name>WiFiDB *ALPHA* Auto KMZ Generation</name>
-		<Folder>
-		<name> Newest Access Point</name>
-		<open>1</open>
-		<Style>
-			<ListStyle>
-				<listItemType>radioFolder</listItemType>
-				<bgColor>00ffffff</bgColor>
-				<maxSnippetLines>2</maxSnippetLines>
-			</ListStyle>
-		</Style>
-		<NetworkLink>
-			<name>Newest AP</name>
-			<flyToView>1</flyToView>
-			<Url>
-				<href>".$daemon_KMZ_folder."newestAP.kml</href>
-				<refreshMode>onInterval</refreshMode>
-				<refreshInterval>1</refreshInterval>
-			</Url>
-		</NetworkLink>
-		<NetworkLink>
-			<name>Newest AP Label</name>
-			<flyToView>1</flyToView>
-			<Url>
-				<href>".$daemon_KMZ_folder."newestAP_label.kml</href>
-				<visibility>0</visibility>
-				<refreshMode>onInterval</refreshMode>
-				<refreshInterval>1</refreshInterval>
-			</Url>
-		</NetworkLink>
-		</Folder>
-		<name>Daemon Generated KMZ</name>
-		<open>1</open>
-		<NetworkLink>
-			<name>Daily KMZ</name>
-			<Url>
-				<href>".$daemon_KMZ_folder."fulldb.kmz</href>
-				<refreshMode>onInterval</refreshMode>
-				<refreshInterval>3600</refreshInterval>
-			</Url>
-		</NetworkLink>
-	</Document>
-</kml>");
-		fclose($fileappend_update);
-		verbosed($GLOBALS['COLORS']['GREEN']."Daily DB export complete.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-		verbosed($GLOBALS['COLORS']['LIGHTGRAY']."KML file is ready ->\n\t\t ".$Network_link_KML."\n".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-		$end = microtime(true);
-		echo "Time is [Unix Epoc]\n";
-		echo "Start Time: ".$start."\n";
-		echo "  End Time: ".$end."\n";
-#		die();
-	}
-
-
-
-	function daemon_full_db_exp($temp_kml="", $temp_kml_label="", $verbose = 0)
-	{
-		require_once "config.inc.php";
-		require_once $GLOBALS['wdb_install']."/lib/config.inc.php";
-		
-		$db_st = $GLOBALS['db_st'];
-		$db = $GLOBALS['db'];
-		$conn = $GLOBALS['conn'];
-		$wtable = $GLOBALS['wtable'];
-		$gps_ext = $GLOBALS['gps_ext'];
-		$root = $GLOBALS['root'];
-                $sep = $GLOBALS['sep'];
-		$hosturl = $GLOBALS['hosturl'];
-		$open_loc 	=	$GLOBALS['open_loc'];
-		$WEP_loc 	=	$GLOBALS['WEP_loc'];
-		$WPA_loc 	=	$GLOBALS['WPA_loc'];
-		$KML_SOURCE_URL	=	$GLOBALS['KML_SOURCE_URL'];
-		$database	=	new database();
-		// define initial write and appends
-		$filewrite = fopen($temp_kml, "w");
-		$fileappend = fopen($temp_kml, "a");
-		$filewrite_label = fopen($temp_kml_label, "w");
-		$fileappend_label = fopen($temp_kml_label, "a");
-		
-		$OData = '';
-		$WData = '';
-		$SData = '';
-		$OLLdata = '';
-		$WLLdata = '';
-		$SLLdata = '';
-		
-		$sql = "SELECT * FROM `$db`.`$wtable`";
-		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
-		$total = mysql_num_rows($result);
-		
-		$x=0;
-		$n=0;
-		$NN=0;
-		
-		verbosed($GLOBALS['COLORS']['YELLOW']."Preparing Buffer for Full DB KML", $verbose, "CLI");
-		while($ap_array = mysql_fetch_array($result))
-		{
-			$man 		= $database->manufactures($ap_array['mac']);
-			$id		= $ap_array['id'];
-			list($ssid)     = make_ssid($ap_array['ssid']);
-                        $ssid_kml       = preg_replace('/[\x00-\x1F]/', '', htmlentities($ssid, ENT_QUOTES));
-			$mac		= $ap_array['mac'];
-			$sectype	= $ap_array['sectype'];
-			$radio		= $ap_array['radio'];
-			$chan		= $ap_array['chan'];
-			$table          = $ssid.$sep.$mac.$sep.$sectype.$sep.$radio.$sep.$chan;
-			$table_gps      = $table.$gps_ext;
-                        #echo $id."\r\n".$table."\r\n";
-			$sql1           = "SELECT * FROM `$db_st`.`$table` order by `id` desc limit 1";
-                        #echo $sql1."\r\n";
-			$result1        = mysql_query($sql1, $conn);
-			$newArray       = mysql_fetch_array($result1);
-			switch($sectype)
-			{
-				case 1:
-					$type = "#openStyleDead";
-					$auth = "Open";
-					$encry = "None";
-					break;
-				case 2:
-					$type = "#wepStyleDead";
-					$auth = "Open";
-					$encry = "WEP";
-					break;
-				case 3:
-					$type = "#secureStyleDead";
-					$auth = "WPA-Personal";
-					$encry = "TKIP-PSK";
-					break;
-			}
-			switch($radio)
-			{
-				case "a":
-					$radio="802.11a";
-					break;
-				case "b":
-					$radio="802.11b";
-					break;
-				case "g":
-					$radio="802.11g";
-					break;
-				case "n":
-					$radio="802.11n";
-					break;
-				default:
-					$radio="Unknown Radio";
-					break;
-			}
-			
-			$otx = $newArray["otx"];
-			$btx = $newArray["btx"];
-			$nt = $newArray['nt'];
-			$label = $newArray['label'];
-			
-			$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
-			
-                        if(!$result_1 = mysql_query($sql_1, $conn))
-                        {
-                            echo $sql_1."\r\n";
-                        }
-			$zero = 0;
-			while($gps_table_first = mysql_fetch_array($result_1))
-			{
-                            $lat_exp = explode(" ", $gps_table_first['lat']);
-                            if(isset($lat_exp[1]))
-                            {
-                                $test = $lat_exp[1]+0;
-                            }else
-                            {
-                                $test = $lat_exp[0]+0;
-                            }
-
-                            if($test == "0"){$zero = 1; continue;}
-
-                            $date_first = $gps_table_first["date"];
-                            $time_first = $gps_table_first["time"];
-                            $fa   = $date_first." ".$time_first;
-                            $alt  = $gps_table_first['alt'];
-                            $lat  =& $database->convert_dm_dd($gps_table_first['lat']);
-                            $long =& $database->convert_dm_dd($gps_table_first['long']);
-                            if($lat == -1)
-                            {
-                                echo $table."\r\n";
-                                echo $id;
-                            }
-                            $zero = 0;
-                            break;
-			}
-			if($zero == 1)
-			{
-                            continue;
-			}
-			$NN++;
-			//=====================================================================================================//
-			
-			$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` order by `id` desc limit 1";
-			$result_2 = mysql_query($sql_2, $conn);
-			$gps_table_last = mysql_fetch_array($result_2);
-			$date_last = $gps_table_last["date"];
-			$time_last = $gps_table_last["time"];
-			$la = $date_last." ".$time_last;
-			switch($type)
-			{
-				case "#openStyleDead":
-					$OData .= "<Placemark id=\"".$mac."\">\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-					$OLLdata .= "<Placemark id=\"".$mac."_Label\">\r\n<name>".$ssid_kml."</name>\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_label\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-				break;
-				
-				case "#wepStyleDead":
-					$WData .= "<Placemark id=\"".$mac."\">\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-					$WLLdata .= "<Placemark id=\"".$mac."_Label\">\r\n<name>".$ssid_kml."</name>\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_label\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-				break;
-				
-				case "#secureStyleDead":
-					$SData .= "<Placemark id=\"".$mac."\">\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-					$SLLdata .= "<Placemark id=\"".$mac."_Label\">\r\n<name>".$ssid_kml."</name>\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_label\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-				break;
-			}
-			unset($lat);
-			unset($long);
-			unset($gps_table_first["lat"]);
-			unset($gps_table_first["long"]);
-			if($verbose)
-			{
-				#echo chr(27)."[H".chr(27)."[2J";
-				#$memUse = convert(memory_get_usage());
-				#echo "ID: $id \r\nMemory Usage: $memUse\r\n";
-				echo ".";
-			}
-		}
-		if($verbose){echo"\n";}
-		$fdata  =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n	<kml xmlns=\"$KML_SOURCE_URL\"><!--exp_all_db_kml-->\r\n		<Document>\r\n			<name>RanInt WifiDB KML</name>\r\n";
-		$fdata .= "			<Style id=\"openStyleDead\">\r\n		<IconStyle>\r\n				<scale>0.5</scale>\r\n				<Icon>\r\n			<href>".$open_loc."</href>\r\n			</Icon>\r\n			</IconStyle>\r\n			</Style>\r\n";
-		$fdata .= "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-		$fdata .= "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-		$fdata .= '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>';
-		$fdata .= "<Folder>\r\n<name>WiFiDB Access Points</name>\r\n<description>APs: ".$NN."</description>\r\n";
-		$fdata .= "<Folder>\r\n<name>Open Access Points</name>\r\n".$OData."</Folder>\r\n";
-		$fdata .= "<Folder>\r\n<name>WEP Access Points</name>\r\n".$WData."</Folder>\r\n";
-		$fdata .= "<Folder>\r\n<name>Secure Access Points</name>\r\n".$SData."</Folder>\r\n";
-		$fdata = $fdata."</Folder>\r\n	</Document>\r\n</kml>";
-		#	write temp KML file to TMP folder
-		
-		$Ldata = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-	<kml xmlns=\"http://earth.google.com/kml/2.2\">
-		<Document>
-			<Style id=\"openStyleDead\">
-			<IconStyle>
-			<scale>0.5</scale>
-			<Icon>
-			<href>http://vistumbler.sourceforge.net/images/program-images/open.png</href>
-			</Icon>
-			</IconStyle>
-			</Style>
-			<Style id=\"wepStyleDead\">
-			<IconStyle>
-			<scale>0.5</scale>
-			<Icon>
-			<href>http://vistumbler.sourceforge.net/images/program-images/secure-wep.png</href>
-			</Icon>
-			</IconStyle>
-			</Style>
-			<Style id=\"secureStyleDead\">
-			<IconStyle>
-			<scale>0.5</scale>
-			<Icon>
-			<href>http://vistumbler.sourceforge.net/images/program-images/secure.png</href>
-			</Icon>
-			</IconStyle>
-			</Style>
-			
-			<name>WiFiDB AP Labels</name>
-			<Folder>
-			<name>Labels</name>";
-			$Ldata .= "<Folder>\r\n<name>Open Access Points</name>\r\n".$OLLdata."</Folder>\r\n";
-			$Ldata .= "<Folder>\r\n<name>WEP Access Points</name>\r\n".$WLLdata."</Folder>\r\n";
-			$Ldata .= "<Folder>\r\n<name>Secure Access Points</name>\r\n".$SLLdata."</Folder>\r\n";
-			$Ldata = $Ldata."</Folder>\r\n	</Document>\r\n</kml>";
-		#	write temp KML file to TMP folder
-			
-			if(fwrite($fileappend_label, $Ldata) && fwrite($fileappend, $fdata))
-			{
-				fclose($fileappend);
-				fclose($fileappend_label);
-				return 1;
-			}
-			else{return 0;}
-	}
-
-
-	function daemon_daily_db_exp($temp_daily_kml=NULL, $temp_dailyL_kml=NULL, $verbose = 0)
-	{
-		require_once "config.inc.php";
-		require_once $GLOBALS['wdb_install']."/lib/config.inc.php";
-		
-		$date = date('Y-m-d');
-		$db_st = $GLOBALS['db_st'];
-		$db = $GLOBALS['db'];
-		$conn = $GLOBALS['conn'];
-		$wtable = $GLOBALS['wtable'];
-		$users_t = $GLOBALS['users_t'];
-		$gps_ext = $GLOBALS['gps_ext'];
-		$root = $GLOBALS['root'];
-		$hosturl = $GLOBALS['hosturl'];
-		$open_loc 	=	$GLOBALS['open_loc'];
-		$WEP_loc 	=	$GLOBALS['WEP_loc'];
-		$WPA_loc 	=	$GLOBALS['WPA_loc'];
-		$KML_SOURCE_URL	=	$GLOBALS['KML_SOURCE_URL'];
-		$database	=	new database();
-		
-#		echo "Daily KML File: ".$temp_daily_kml."\n";
-		$filewrite = fopen($temp_daily_kml, "w");
-		$fileappend_daily = fopen($temp_daily_kml, "a");
-		$filewrite_L = fopen($temp_dailyL_kml, "w");
-		$fileappend_daily_label = fopen($temp_dailyL_kml, "a");
-
-		$x=0;
-		$n=0;
-		$NN=0;
-		$APs = array();
-		# prepare the AP array so there are no duplicates
-		verbosed($GLOBALS['COLORS']['YELLOW']."Preparing Buffer for Daily KML.", $verbose, "CLI");
-#		echo $date."\n";
-		$sql = "SELECT `user_row` FROM `$db`.`files` WHERE `date` LIKE '$date%'";
-#		echo $sql."\n";
-		$result = mysql_query($sql, $conn) or die(mysql_error($conn));
-		while($user_rows = mysql_fetch_array($result))
-		{
-			$id = $user_rows['user_row'];
-			$sql11 = "SELECT `points` FROM `$db`.`$users_t` WHERE `id` = '$id'";
-	#		echo $sql11."\n";
-			$points_result = mysql_query($sql11, $conn) or die(mysql_error($conn));
-			$points = mysql_fetch_array($points_result);
-			#  1,40763:6-1,40763:6
-			$points_exp = explode("-", $points['points']);
-			
-			#  1,40763:6
-			foreach($points_exp as $point)
-			{
-				if($point == ""){continue;}
-				#  1   40763:6
-			#	echo $point." - ";
-				$point_exp = explode(",",$point);
-				$points_exp = explode(":", $point_exp[1]);
-				$APs[] = $points_exp[0];
-	#			echo $points_exp[0]."\n";
-			}
-		}
-		$APs = array_unique($APs);
-		$Odata = '';
-		$Wdata = '';
-		$Sdata = '';
-		$OLdata = '';
-		$WLdata = '';
-		$SLdata = '';
-		verbosed("Starting to gather data for Daily KML.", $verbose, "CLI");
-		foreach($APs as $ap)
-		{
-#	echo "\n\n".$ap."\n";
-			$sql0 = "SELECT * FROM `$db`.`$wtable` WHERE `id` = '$ap'";
-			$result0 = mysql_query($sql0, $conn) or die(mysql_error($conn));
-			while($ap_array = mysql_fetch_array($result0))
-			{
-				$man 		= $database->manufactures($ap_array['mac']);
-				$id			= $ap_array['id'];
-				$ssid_ptb_ = $ap_array['ssid'];
-				$ssids_ptb = str_split($ssid_ptb_,25);
-				$ssid = smart_quotes($ssids_ptb[0]);
-                                $ssid_kml = preg_replace('/[\x00-\x1F]/', '', htmlentities($ssid, ENT_QUOTES));
-				$mac		= $ap_array['mac'];
-				$sectype	= $ap_array['sectype'];
-				$radio		= $ap_array['radio'];
-				$chan		= $ap_array['chan'];
-				$table = $ssid.'-'.$mac.'-'.$sectype.'-'.$radio.'-'.$chan;
-				$table_gps = $table.$gps_ext;
-				$sql1 = "SELECT * FROM `$db_st`.`$table`";
-				$result1 = mysql_query($sql1, $conn);
-				if(!$result1){continue;}
-				$rows = mysql_num_rows($result1);
-				$sql = "SELECT * FROM `$db_st`.`$table` WHERE `id`='$rows'";
-				$result1 = mysql_query($sql, $conn);
-				$newArray = mysql_fetch_array($result1);
-				switch($sectype)
-				{
-					case 1:
-						$type = "#openStyleDead";
-						$auth = "Open";
-						$encry = "None";
-						break;
-					case 2:
-						$type = "#wepStyleDead";
-						$auth = "Open";
-						$encry = "WEP";
-						break;
-					case 3:
-						$type = "#secureStyleDead";
-						$auth = "WPA-Personal";
-						$encry = "TKIP-PSK";
-						break;
-				}
-#	echo $type."\n";
-				switch($radio)
-				{
-					case "a":
-						$radio="802.11a";
-						break;
-					case "b":
-						$radio="802.11b";
-						break;
-					case "g":
-						$radio="802.11g";
-						break;
-					case "n":
-						$radio="802.11n";
-						break;
-					default:
-						$radio="Unknown Radio";
-						break;
-				}
-				
-				$otx = $newArray["otx"];
-				$btx = $newArray["btx"];
-				$nt = $newArray['nt'];
-				$label = $newArray['label'];
-				
-				$sql6 = "SELECT * FROM `$db_st`.`$table_gps`";
-				$result6 = mysql_query($sql6, $conn);
-				$max = mysql_num_rows($result6);
-				
-				$sql_1 = "SELECT * FROM `$db_st`.`$table_gps`";
-				$result_1 = mysql_query($sql_1, $conn);
-				$zero = 0;
-#	echo $type."\n";
-				$rows_GPS = mysql_num_rows($result_1);
-				if($rows_GPS != 0)
-				{
-					while($gps_table_first = mysql_fetch_array($result_1))
-					{
-						$lat_exp = explode(" ", $gps_table_first['lat']);
-						if(@$lat_exp[1])
-						{
-							$test = $lat_exp[1]+0;
-						}else
-						{
-							$test = $gps_table_first['lat']+0;
-						}
-						if($test != TRUE)
-						{
-							$zero = 1;
-							continue;
-						}
-	#					echo $test."\n";
-						$date_first = $gps_table_first["date"];
-						$time_first = $gps_table_first["time"];
-						$fa   = $date_first." ".$time_first;
-						$alt  = $gps_table_first['alt'];
-						
-						$lat  =& $database->convert_dm_dd($gps_table_first['lat']);
-						$long =& $database->convert_dm_dd($gps_table_first['long']);
-						$zero = 0;
-						break;
-					}
-		#			echo "GPS Value of Zero Flag: ".$zero."\n";
-				}else
-				{
-					continue;
-				}
-				if($zero == 1)
-				{
-					continue;
-				}
-				$NN++;
-				//=====================================================================================================//
-				$sql_2 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id`='$max'";
-				$result_2 = mysql_query($sql_2, $conn);
-				$gps_table_last = mysql_fetch_array($result_2);
-				$date_last = $gps_table_last["date"];
-				$time_last = $gps_table_last["time"];
-				$la = $date_last." ".$time_last;
-				
-				switch($type)
-				{
-					case "#openStyleDead":
-						$Odata .= "<Placemark id=\"".$mac."\">\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-						$OLdata .= "<Placemark id=\"".$mac."_Label\">\r\n	<name>".$ssid_kml."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_label\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-					break;
-					
-					case "#wepStyleDead":
-						$Wdata .= "<Placemark id=\"".$mac."\">\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-						$WLdata .= "<Placemark id=\"".$mac."_Label\">\r\n	<name>".$ssid_kml."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_label\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-					break;
-					
-					case "#secureStyleDead":
-						$Sdata .= "<Placemark id=\"".$mac."\">\r\n<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n	<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_GPS\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-						$SLdata .= "<Placemark id=\"".$mac."_Label\">\r\n<name>".$ssid_kml."</name>\r\n	<description><![CDATA[<b>SSID: </b>".$ssid_kml."<br /><b>Mac Address: </b>".$mac."<br /><b>Network Type: </b>".$nt."<br /><b>Radio Type: </b>".$radio."<br /><b>Channel: </b>".$ap_array['chan']."<br /><b>Authentication: </b>".$auth."<br /><b>Encryption: </b>".$encry."<br /><b>Basic Transfer Rates: </b>".$btx."<br /><b>Other Transfer Rates: </b>".$otx."<br /><b>First Active: </b>".$fa."<br /><b>Last Updated: </b>".$la."<br /><b>Latitude: </b>".$lat."<br /><b>Longitude: </b>".$long."<br /><b>Manufacturer: </b>".$man."<br /><a href=\"".$hosturl."/".$root."/opt/fetch.php?id=".$id."\">WiFiDB Link</a>]]></description>\r\n<styleUrl>".$type."</styleUrl>\r\n<Point id=\"".$mac."_label\">\r\n<coordinates>".$long.",".$lat.",".$alt."</coordinates>\r\n</Point>\r\n</Placemark>\r\n";
-					break;
-				}
-				unset($lat);
-				unset($long);
-				unset($gps_table_first["lat"]);
-				unset($gps_table_first["long"]);
-			}
-			if($verbose){echo".";}
-		}
-		if($verbose){echo"\n";}
-		verbosed("Finished Preparing buffer for Daily KML.".$GLOBALS['COLORS']['LIGHTGRAY'], $verbose, "CLI");
-		
-		$Ddata  =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"$KML_SOURCE_URL\"><!--exp_all_db_kml-->\r\n<Document>\r\n<name>RanInt WifiDB KML</name>\r\n";
-		$Ddata .= "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$open_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n	</Style>\r\n";
-		$Ddata .= "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-		$Ddata .= "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-		$Ddata .= '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>';
-		$Ddata .= "<Folder>\r\n<name>WiFiDB Access Points</name>\r\n<description>APs: ".$NN."</description>\r\n";
-		$Ddata .= "<Folder>\r\n<name>Open Access Points</name>\r\n".$Odata."</Folder>\r\n";
-		$Ddata .= "<Folder>\r\n<name>WEP Access Points</name>\r\n".$Wdata."</Folder>\r\n";
-		$Ddata .= "<Folder>\r\n<name>Secure Access Points</name>\r\n".$Sdata."</Folder>\r\n";
-		$Ddata = $Ddata."</Folder>\r\n	</Document>\r\n</kml>";
-		#	write temp KML file to TMP folder
-		fwrite($fileappend_daily, $Ddata);
-		fclose($fileappend_daily);
-
-		$DLdata  =  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<kml xmlns=\"$KML_SOURCE_URL\"><!--exp_all_db_kml-->\r\n<Document>\r\n<name>RanInt WifiDB KML</name>\r\n";
-		$DLdata .= "<Style id=\"openStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$open_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n	</Style>\r\n";
-		$DLdata .= "<Style id=\"wepStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WEP_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-		$DLdata .= "<Style id=\"secureStyleDead\">\r\n<IconStyle>\r\n<scale>0.5</scale>\r\n<Icon>\r\n<href>".$WPA_loc."</href>\r\n</Icon>\r\n</IconStyle>\r\n</Style>\r\n";
-		$DLdata .= '<Style id="Location"><LineStyle><color>7f0000ff</color><width>4</width></LineStyle></Style>';
-		$DLdata .= "<Folder>\r\n<name>WiFiDB Access Points</name>\r\n<description>APs: ".$NN."</description>\r\n";
-		$DLdata .= "<Folder>\r\n<name>Open Access Points</name>\r\n".$OLdata."</Folder>\r\n";
-		$DLdata .= "<Folder>\r\n<name>WEP Access Points</name>\r\n".$WLdata."</Folder>\r\n";
-		$DLdata .= "<Folder>\r\n<name>Secure Access Points</name>\r\n".$SLdata."</Folder>\r\n";
-		$DLdata = $DLdata."</Folder>\r\n	</Document>\r\n</kml>";
-		#	write temp KML file to TMP folder
-		fwrite($fileappend_daily_label, $DLdata);
-		fclose($fileappend_daily_label);
-	}
-
-
-####################
-	function getdaemonstats( $verbose = 1 )
-	{
-		$return =0;
-		$WFDBD_PID = $GLOBALS['pid_file_loc'].'imp_expd.pid';
-		$os = PHP_OS;
-		if ( $os[0] == 'L')
-		{
-			$output = array();
-			if(file_exists($WFDBD_PID))
-			{
-				$pid_open = file($WFDBD_PID);
-			#	echo $pid_open[0]."<br>";
-				exec('ps vp '.$pid_open[0] , $output, $sta);
-				if(isset($output[1]))
-				{
-					if($verbose){
-					$start = trim($output[1], " ");
-					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
-					$mem = $match[0][0];
-					
-					preg_match_all("/(php.*)/", $start, $matc);
-					$CMD = $matc[0][0];
-					
-					preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
-					$time = $mat[0][0];
-					
-					$patterns[1] = '/  /';
-					$patterns[2] = '/ /';
-					$ps_stats = preg_replace($patterns , "|" , $start);
-					$ps_Sta_exp = explode("|", $ps_stats);
-					$return = 1;
-					?>
-					<tr class="style4">
-						<th>PID</th>
-						<th>TIME</th>
-						<th>Memory</th>
-						<th>CMD</th>
-					</tr>
-					<tr align="center" bgcolor="green">
-						<td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td>
-						<td><?php echo $time;?></td>
-						<td><?php echo $mem."%";?></td>
-						<td><?php echo $CMD;?></td>
-					</tr>
-					<?php
-					}
-					return 1;
-				}else
-				{
-					if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php }
-					return 0;
-				}
-			}else
-			{
-				if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Daemon is not running!</td><?php }
-				return 0;
-			}
-		}elseif( $os[0] == 'W')
-		{
-			$output = array();
-			if(file_exists($WFDBD_PID))
-			{
-				$pid_open = file($WFDBD_PID);
-				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
-				if(isset($output[2]))
-				{
-					if($verbose){
-					?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
-					$ps_stats = explode("," , $output[2]);
-					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
-					}
-					return 1;
-				}else
-				{
-					if($verbose){
-					?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr>
-					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Daemon is not running!</td><?php
-					}
-					return 0;
-				}
-			}else
-			{
-				if($verbose){
-				?><tr class="style4"><th colspan="4">Windows Based Import / Export Daemon</th></tr>
-				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Daemon is not running!</td><?php
-				}
-				return 0;
-			}
-		}else
-		{
-			if($verbose){
-			?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Daemon</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Daemon is not running!</td><?php
-			}
-			return 0;
-		}
-	}
-	
-####################
-	function getdbdaemonstats( $verbose = 1 )
-	{
-		$return =0;
-		$WFDBD_PID = $GLOBALS['pid_file_loc'].'dbstatsd.pid';
-		$os = PHP_OS;
-		if ( $os[0] == 'L')
-		{
-			$output = array();
-			if(file_exists($WFDBD_PID))
-			{
-				$pid_open = file($WFDBD_PID);
-				exec('ps vp '.$pid_open[0] , $output, $sta);
-				if(isset($output[1]))
-				{
-					if($verbose){
-					$start = trim($output[1], " ");
-					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
-					$mem = $match[0][0];
-					
-					preg_match_all("/(php.*)/", $start, $matc);
-					$CMD = $matc[0][0];
-					
-					preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
-					$time = $mat[0][0];
-					
-					$patterns[1] = '/  /';
-					$patterns[2] = '/ /';
-					$ps_stats = preg_replace($patterns , "|" , $start);
-					$ps_Sta_exp = explode("|", $ps_stats);
-					?>
-					<tr class="style4">
-						<th>PID</th>
-						<th>TIME</th>
-						<th>Memory</th>
-						<th>CMD</th>
-					</tr>
-					<tr align="center" bgcolor="green">
-						<td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td>
-						<td><?php echo $time;?></td>
-						<td><?php echo $mem."%";?></td>
-						<td><?php echo $CMD;?></td>
-					</tr>
-					<?php
-					}
-					return 1;
-				}else
-				{
-					if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php }
-					return 0;
-				}
-			}else
-			{
-				if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Database Statistics Daemon is not running!</td><?php }
-				return 0;
-			}
-		}elseif( $os[0] == 'W')
-		{
-			$output = array();
-			if(file_exists($WFDBD_PID))
-			{
-				$pid_open = file($WFDBD_PID);
-				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
-				if(isset($output[2]))
-				{
-					if($verbose){
-					?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
-					$ps_stats = explode("," , $output[2]);
-					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
-					}
-					return 1;
-				}else
-				{
-					if($verbose){
-					?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
-					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php
-					}
-					return 0;
-				}
-			}else
-			{
-				if($verbose)
-				{
-				?><tr class="style4"><th colspan="4">Windows Based Database Statistics Daemon</th></tr>
-				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Database Statistics Daemon is not running!</td><?php
-				}
-				return 0;
-			}
-		}else
-		{
-			if($verbose)
-			{
-			?><tr class="style4"><th colspan="4">Unkown OS Based Database Statistics Daemon</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Database Statistics Daemon is not running!</td><?php
-			}
-			return 0;
-		}
-	}
-
-	
-####################
-	function getperfdaemonstats( $verbose = 1)
-	{
-		$return =0;
-		$WFDBD_PID = $GLOBALS['pid_file_loc'].'daemonperfd.pid';
-		$os = PHP_OS;
-		if ( $os[0] == 'L')
-		{
-			$output = array();
-			if(file_exists($WFDBD_PID))
-			{
-				$pid_open = file($WFDBD_PID);
-				exec('ps vp '.$pid_open[0] , $output, $sta);
-				if(isset($output[1]))
-				{
-					if($verbose){
-					$start = trim($output[1], " ");
-					preg_match_all("/(\d+?)(\.)(\d+?)/", $start, $match);
-					$mem = $match[0][0];
-					
-					preg_match_all("/(php.*)/", $start, $matc);
-					$CMD = $matc[0][0];
-					
-					preg_match_all("/(\d+)(\:)(\d+)/", $start, $mat);
-					$time = $mat[0][0];
-					
-					$patterns[1] = '/  /';
-					$patterns[2] = '/ /';
-					$ps_stats = preg_replace($patterns , "|" , $start);
-					$ps_Sta_exp = explode("|", $ps_stats);
-					$return =1;
-					?>
-					<tr class="style4">
-						<th>PID</th>
-						<th>TIME</th>
-						<th>Memory</th>
-						<th>CMD</th>
-					</tr>
-					<tr align="center" bgcolor="green">
-						<td><?php echo str_replace(' ?',"",$ps_Sta_exp[0]);?></td>
-						<td><?php echo $time;?></td>
-						<td><?php echo $mem."%";?></td>
-						<td><?php echo $CMD;?></td>
-					</tr>
-					<?php
-					}
-					return 1;
-				}else
-				{
-					if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php }
-					return 0;
-				}
-			}else
-			{
-				if($verbose){ ?><tr align="center" bgcolor="red"><td colspan="4">Linux Based Import / Export Performance Monitor is not running!</td><?php }
-				return 0;
-			}
-		}elseif( $os[0] == 'W')
-		{
-			$output = array();
-			if(file_exists($WFDBD_PID))
-			{
-				$pid_open = file($WFDBD_PID);
-				exec('tasklist /V /FI "PID eq '.$pid_open[0].'" /FO CSV' , $output, $sta);
-				if(isset($output[2]))
-				{
-					if($verbose){
-					?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr><tr><th>Proc</th><th>PID</th><th>Memory</th><th>CPU Time</th></tr><?php
-					$ps_stats = explode("," , $output[2]);
-					$return =1;
-					?><tr align="center" bgcolor="green"><td><?php echo str_replace('"',"",$ps_stats[0]);?></td><td><?php echo str_replace('"',"",$ps_stats[1]);?></td><td><?php echo str_replace('"',"",$ps_stats[4]).','.str_replace('"',"",$ps_stats[5]);?></td><td><?php echo str_replace('"',"",$ps_stats[8]);?></td></tr><?php
-					}
-					return 1;
-				}else
-				{
-					if($verbose){
-					?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr>
-					<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Performance Monitor is not running!</td><?php
-					}
-					return 0;
-				}
-			}else
-			{
-				if($verbose){?><tr class="style4"><th colspan="4">Windows Based Import / Export Performance Monitor</th></tr>
-				<tr align="center" bgcolor="red"><td colspan="4">Windows Based Import / Export Performance Monitor is not running!</td><?php
-				}
-				return 0;
-			}
-		}else
-		{
-			if($verbose)
-			{
-			?><tr class="style4"><th colspan="4">Unkown OS Based Import / Export Performance Monitor</th></tr>
-			<tr align="center" bgcolor="red"><td colspan="4">Unkown OS Based Import / Export Performance Monitor is not running!</td><?php
-			}
-			return 0;
-		}
-	}
-#END DAEMON CLASS
-}
 ?>

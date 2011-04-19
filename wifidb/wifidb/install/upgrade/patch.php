@@ -11,8 +11,49 @@ include($half_path.'/lib/config.inc.php');
 <tr class="style4"><TH colspan="2">Upgrade DB for all versions <b>--&#60;</b> 0.20 Build 1</TH>
 <tr class="style4"><th colspan="2">Upgrade Database Tables</th></tr>
 <tr class="style4"><th>Status</th><th>Step of Upgrade</th></tr>
-
 <?php
+
+/*
+
+CREATE TABLE  `wifi`.`live_gps` (
+`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
+`lat` VARCHAR( 255 ) NOT NULL ,
+`long` VARCHAR( 255 ) NOT NULL ,
+`sats` INT( 25 ) NOT NULL ,
+`hdp` VARCHAR( 255 ) NOT NULL ,
+`alt` VARCHAR( 255 ) NOT NULL ,
+`geo` VARCHAR( 255 ) NOT NULL ,
+`kmh` VARCHAR( 255 ) NOT NULL ,
+`mph` VARCHAR( 255 ) NOT NULL ,
+`track` VARCHAR( 255 ) NOT NULL ,
+`date` VARCHAR( 255 ) NOT NULL ,
+`time` VARCHAR( 255 ) NOT NULL ,
+PRIMARY KEY (  `id` ) ,
+INDEX (  `id` )
+) ENGINE = INNODB;
+
+
+
+
+
+CREATE TABLE  `wifi`.`live_aps` (
+`id` INT( 255 ) NOT NULL AUTO_INCREMENT ,
+`ssid` VARCHAR( 255 ) NOT NULL ,
+`mac` VARCHAR( 255 ) NOT NULL ,
+`auth` INT( 25 ) NOT NULL ,
+`encry` VARCHAR( 255 ) NOT NULL ,
+`sectype` VARCHAR( 255 ) NOT NULL ,
+`chan` VARCHAR( 255 ) NOT NULL ,
+`radio` VARCHAR( 255 ) NOT NULL ,
+`sig` VARCHAR( 255 ) NOT NULL ,
+`username` VARCHAR( 255 ) NOT NULL ,
+PRIMARY KEY (  `id` ) ,
+INDEX (  `id` )
+) ENGINE = INNODB;
+*/
+
+
+
 global $wifidb_smtp, $wifidb_email_updates, $reserved_users;
 $ENG = "InnoDB";
 $date = date("Y-m-d");
@@ -251,7 +292,8 @@ ADD `admincode` VARCHAR( 5 ) NOT NULL ,
 ADD `adminname` VARCHAR( 64 ) NOT NULL ,
 ADD `iso3166-2` VARCHAR( 3 ) NOT NULL ,
 ADD `lat` VARCHAR( 32 ) NOT NULL DEFAULT 'N 0.0000' ,
-ADD `long` VARCHAR( 32 ) NOT NULL DEFAULT 'E 0.0000' ";
+ADD `long` VARCHAR( 32 ) NOT NULL DEFAULT 'E 0.0000',
+ADD `active` tinyint(1) NOT NULL DEFAULT 0";
 $alter = mysql_query($alter_sql, $conn1);
 if($alter)
 {echo "<tr class=\"good\"><td>Success..........</td><td>To alter <b>`$wifi`</b>.`wtable` to add location filter data for KML's</td></tr>\r\n";}
