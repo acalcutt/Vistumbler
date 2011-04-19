@@ -1,9 +1,10 @@
 #RequireAdmin
-#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=Icons\icon.ico
-#AutoIt3Wrapper_Outfile=Vistumbler.exe
+#region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_icon=Icons\icon.ico
+#AutoIt3Wrapper_outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
+
 ;License Information------------------------------------
 ;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -15,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 15'
+$version = 'v10.1 Beta 16'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/04/10'
+$last_modified = '2011/04/18'
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -362,7 +363,6 @@ Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
 Dim $AutoSelectHS = IniRead($settings, 'Vistumbler', 'AutoSelectHS', 0)
-Dim $UseWiFiDbGpsLocate = IniRead($settings, 'Vistumbler', 'UseWiFiDbGpsLocate', 0)
 Dim $DefFiltID = IniRead($settings, 'Vistumbler', 'DefFiltID', '-1')
 Dim $AutoScan = IniRead($settings, 'Vistumbler', 'AutoScan', '0')
 
@@ -432,6 +432,9 @@ Dim $GoogleEarth_EXE = IniRead($settings, 'AutoKML', 'GoogleEarth_EXE', 'C:\Prog
 Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_URL', 'http://www.randomintervals.com/wifi/')
 Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_URL', 'http://www.vistumbler.net/wifidb/')
 Dim $PhilsLocateURL = IniRead($settings, 'PhilsWifiTools', 'Locate_URL', 'http://locate.vistumbler.net/')
+Dim $UseWiFiDbGpsLocate = IniRead($settings, 'PhilsWifiTools', 'UseWiFiDbGpsLocate', 0)
+Dim $AutoUpApsToWifiDB = IniRead($settings, 'PhilsWifiTools', 'AutoUpApsToWifiDB', 0)
+Dim $AutoUpApsToWifiDBTime = IniRead($settings, 'PhilsWifiTools', 'AutoUpApsToWifiDBTime', 60)
 
 Dim $column_Line = IniRead($settings, 'Columns', 'Column_Line', 0)
 Dim $column_Active = IniRead($settings, 'Columns', 'Column_Active', 1)
@@ -1087,6 +1090,8 @@ $AutoScanMenu = GUICtrlCreateMenuItem($Text_AutoScanApsOnLaunch, $Options)
 If $AutoScan = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $Options)
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$UseWiFiDbAutoUploadButton = GUICtrlCreateMenuItem('Auto WiFiDB Upload Active APs' & ' (' & $Text_Experimental & ')', $Options)
+If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
@@ -1299,6 +1304,7 @@ GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
 GUICtrlSetOnEvent($AutoScanMenu, '_AutoScanToggle')
 GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
+GUICtrlSetOnEvent($UseWiFiDbAutoUploadButton, '_WifiDbAutoUploadToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
@@ -1377,6 +1383,7 @@ $kml_track_timer = TimerInit()
 $ReleaseMemory_Timer = TimerInit()
 $Speech_Timer = TimerInit()
 $WiFiDbLocate_Timer = TimerInit()
+$wifidb_au_timer = TimerInit()
 While 1
 	;Set TimeStamps (UTC Values)
 	$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ') ;UTC Time
@@ -1501,6 +1508,14 @@ While 1
 		If TimerDiff($kml_track_timer) >= ($AutoKmlTrackTime * 1000) And $AutoKmlTrackTime <> 0 And ProcessExists($AutoKmlTrackProcess) = 0 Then
 			$AutoKmlTrackProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=k /f="' & $GoogleEarth_TrackFile & '" /p', '', @SW_HIDE)
 			$kml_track_timer = TimerInit()
+		EndIf
+	EndIf
+
+	;Upload Active APs to WiFiDB (if enabled)
+	If $AutoUpApsToWifiDB = 1 Then
+		If TimerDiff($wifidb_au_timer) >= ($AutoUpApsToWifiDBTime * 1000) Then
+			_UploadActiveApsToWifidb()
+			$wifidb_au_timer = TimerInit()
 		EndIf
 	EndIf
 
@@ -2994,6 +3009,17 @@ Func _WifiDbLocateToggle();Turns wifi gps locate on or off
 	EndIf
 EndFunc   ;==>_WifiDbLocateToggle
 
+Func _WifiDbAutoUploadToggle()
+	If $AutoUpApsToWifiDB = 1 Then
+		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
+		$AutoUpApsToWifiDB = 0
+	Else
+		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
+		$AutoUpApsToWifiDB = 1
+		$wifidb_au_timer = TimerInit()
+	EndIf
+EndFunc   ;==>_WifiDbAutoUploadToggle
+
 Func _ShowDbToggle();Turns Estimated DB value on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ShowDbToggle()') ;#Debug Display
 	If $ShowEstimatedDB = 1 Then
@@ -4478,6 +4504,51 @@ Func _ClearWifiGpsDetails();Clears all GPS Details information
 	EndIf
 EndFunc   ;==>_ClearWifiGpsDetails
 
+Func _UploadActiveApsToWifidb()
+	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, SECTYPE, NETTYPE, RADTYPE, BTX, OTX, LastHistID, LABEL FROM AP WHERE Active='1'"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $exp = 1 To $FoundApMatch
+		$ExpApID = $ApMatchArray[$exp][1]
+		$ExpBSSID = StringReplace($ApMatchArray[$exp][2], ":", "")
+		$ExpSSID = $ApMatchArray[$exp][3]
+		$ExpCHAN = $ApMatchArray[$exp][4]
+		$ExpAUTH = $ApMatchArray[$exp][5]
+		$ExpENCR = $ApMatchArray[$exp][6]
+		$ExpSECTYPE = $ApMatchArray[$exp][7]
+		$ExpNET = $ApMatchArray[$exp][8]
+		$ExpRAD = $ApMatchArray[$exp][9]
+		$ExpBTX = $ApMatchArray[$exp][10]
+		$ExpOTX = $ApMatchArray[$exp][11]
+		$ExpLastID = $ApMatchArray[$exp][12]
+		$ExpLAB = $ApMatchArray[$exp][13]
+
+		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpLastGpsSig = $HistMatchArray[1][1]
+		$ExpLastGpsID = $HistMatchArray[1][2]
+		$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsID & "'"
+		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ExpLastGpsLat = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][1], "N", ""), "S", "-"), " ", "")
+		$ExpLastGpsLon = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][2], "E", ""), "W", "-"), " ", "")
+		$ExpLastGpsSat = $GpsMatchArray[1][3]
+		$ExpLastGpsHDP = $GpsMatchArray[1][4]
+		$ExpLastGpsAlt = $GpsMatchArray[1][5]
+		$ExpLastGpsGeo = $GpsMatchArray[1][6]
+		$ExpLastGpsMPH = $GpsMatchArray[1][7]
+		$ExpLastGpsKMH = $GpsMatchArray[1][8]
+		$ExpLastGpsTAngle = $GpsMatchArray[1][9]
+		$ExpLastGpsDate = $GpsMatchArray[1][10]
+		$ExpLastGpsTime = $GpsMatchArray[1][11]
+
+		$url_root = $PhilsWdbURL & 'opt/live.php?';PhilsLocateURL & '?'
+		$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsKMH & "&Track=" & $ExpLastGpsTAngle
+		ConsoleWrite($url_root & $url_data & @CRLF)
+		$webpagesource = _INetGetSource($url_root & $url_data)
+		ConsoleWrite($webpagesource & @CRLF)
+	Next
+EndFunc   ;==>_UploadActiveApsToWifidb
+
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTION
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5027,8 +5098,8 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 				;Get Last Found Time From LastHistID
 				$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ExpLastGpsId = $HistMatchArray[1][1]
-				$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsId & "'"
+				$ExpLastGpsID = $HistMatchArray[1][1]
+				$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsID & "'"
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
 				;Write summary csv line
@@ -5412,7 +5483,6 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
 	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
 	IniWrite($settings, "Vistumbler", 'AutoSelectHS', $AutoSelectHS)
-	IniWrite($settings, "Vistumbler", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
 	IniWrite($settings, "Vistumbler", 'DefFiltID', $DefFiltID)
 	IniWrite($settings, "Vistumbler", 'AutoScan', $AutoScan)
 
@@ -5486,6 +5556,9 @@ Func _WriteINI()
 	IniWrite($settings, 'PhilsWifiTools', 'Graph_URL', $PhilsGraphURL)
 	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_URL', $PhilsWdbURL)
 	IniWrite($settings, 'PhilsWifiTools', 'Locate_URL', $PhilsLocateURL)
+	IniWrite($settings, "PhilsWifiTools", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
+	IniWrite($settings, 'PhilsWifiTools', 'AutoUpApsToWifiDB', $AutoUpApsToWifiDB)
+	IniWrite($settings, 'PhilsWifiTools', 'AutoUpApsToWifiDBTime', $AutoUpApsToWifiDBTime)
 
 	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
 	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
