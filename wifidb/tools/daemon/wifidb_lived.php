@@ -84,15 +84,18 @@ while(1)
             if($live_table['username'] != "UNKNOWN")
             {
                 $daemon->live_export($live_table['username']);
+                $daemon->live_migrate($live_table['username']);
             }else
             {
-                $daemon->live_export("UNKNOWN", 1);
+                $daemon->live_export("UNKNOWN", $live_table['id']);
+                $daemon->live_migrate("UNKNOWN", $live_table['id']);
             }
         }else
         {
-
+            
         }
     }
+    sleep(60);
 }
 
 

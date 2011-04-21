@@ -1,7 +1,158 @@
 <?php
 class daemon
 {
-    public function daemon_kml($named = 0, $verbose = 1)
+    function live_migrate($arg1, $arg2)
+    {
+        if($arg1 == "UNKNOWN")
+        {
+            $sql = "SELECT * FROM `$db`.`$live_aps` where `id` = '$arg2'";
+        }else
+        {
+            $sql = "SELECT * FROM `$db`.`$live_aps` where `username` = '$arg1'";
+        }
+    }
+####################
+    function live_export($arg1, $arg2)
+    {
+        if($arg1 == "UNKNOWN")
+        {
+            $sql = "SELECT * FROM `$db`.`$live_aps` where `id` = '$arg2'";
+        }else
+        {
+            $sql = "SELECT * FROM `$db`.`$live_aps` where `username` = '$arg1' ORDER BY `LA` DESC";
+        }
+        $result1 =  $conn->query($sql) or die($conn->error);
+        echo "Rows: ".$result1->num_rows."\r\n";
+        $nn =-1;
+        $n =1;	# GPS Array KEY -has to start at 1 vistumbler will error out if the first GPS point has a key of 0
+        while($list_array = $result1->fetch_array(1))
+        {
+                if($list_array["points"] == ''){continue;}
+                $points = explode("-", $list_array['points']);
+                $title = $list_array['title'];
+        #	echo "Starting AP Export.\r\n";
+                foreach($points as $point)
+                {
+        #		echo $point."\r\n";
+                        $nn++;
+                        $point_exp = explode(",", $point);
+                        $pnt = explode(":", $point_exp[1]);
+                        $rows = $pnt[1];
+                        $APID = $pnt[0];
+                        $sql	= "SELECT * FROM `$db`.`$wtable` WHERE `id` = '$APID' LIMIT 1";
+                        $result2   =   $conn->query($sql, $conn) or die($conn->error);
+                        $ap_array = $result2->fetch_array(1);
+                        #var_dump($ap_array);
+                        $manuf = @database::manufactures($ap_array['mac']);
+                        switch($ap_array['sectype'])
+                                {
+                                        case 1:
+                                                $type = "#openStyleDead";
+                                                $auth = "Open";
+                                                $encry = "None";
+                                                break;
+                                        case 2:
+                                                $type = "#wepStyleDead";
+                                                $auth = "Open";
+                                                $encry = "WEP";
+                                                break;
+                                        case 3:
+                                                $type = "#secureStyleDead";
+                                                $auth = "WPA-Personal";
+                                                $encry = "TKIP-PSK";
+                                                break;
+                                }
+                        switch($ap_array['radio'])
+                                {
+                                        case "a":
+                                                $radio="802.11a";
+                                                break;
+                                        case "b":
+                                                $radio="802.11b";
+                                                break;
+                                        case "g":
+                                                $radio="802.11g";
+                                                break;
+                                        case "n":
+                                                $radio="802.11n";
+                                                break;
+                                        default:
+                                                $radio="Unknown Radio";
+                                                break;
+                                }
+        #		echo $ap_array['id']." -- ".$ap_array['ssid']."\r\n";
+                        $ssid_edit = html_entity_decode($ap_array['ssid']);
+                        list($ssid_t, $ssid_f, $ssid)  = make_ssid($ssid_edit);
+                #	$ssid_t = $ssid_array[0];
+                #	$ssid_f = $ssid_array[1];
+                #	$ssid = $ssid_array[2];
+                        $table	=	$ssid_t.'-'.$ap_array['mac'].'-'.$ap_array['sectype'].'-'.$ap_array['radio'].'-'.$ap_array['chan'];
+                        $sql1 = "SELECT * FROM `$db_st`.`$table` WHERE `id` = '$rows'";
+                        $result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+                        $newArray = mysql_fetch_array($result1);
+#					echo $nn."<BR>";
+                        $otx	= $newArray["otx"];
+                        $btx	= $newArray["btx"];
+                        $nt		= $newArray['nt'];
+                        $label	= $newArray['label'];
+                        $signal	= $newArray['sig'];
+                        $aps[$nn]	= array(
+                                                                'id'		=>	$ap_array['id'],
+                                                                'ssid'		=>	$ssid_t,
+                                                                'mac'		=>	$ap_array['mac'],
+                                                                'sectype'	=>	$ap_array['sectype'],
+                                                                'r'			=>	$radio,
+                                                                'radio'		=>	$ap_array['radio'],
+                                                                'chan'		=>	$ap_array['chan'],
+                                                                'man'		=>	$manuf,
+                                                                'type'		=>	$type,
+                                                                'auth'		=>	$auth,
+                                                                'encry'		=>	$encry,
+                                                                'label'		=>	$label,
+                                                                'nt'		=>	$nt,
+                                                                'btx'		=>	$btx,
+                                                                'otx'		=>	$otx,
+                                                                'sig'		=>	$signal
+                                                                );
+
+                        $sig		=	$aps[$nn]['sig'];
+                        $signals	=	explode("-", $sig);
+#				echo $sig."<BR>";
+                        $table_gps		=	$aps[$nn]['ssid'].'-'.$aps[$nn]['mac'].'-'.$aps[$nn]['sectype'].'-'.$aps[$nn]['radio'].'-'.$aps[$nn]['chan'].$gps_ext;
+        #		echo $table_gps."\r\n";
+                        foreach($signals as $key=>$val)
+                        {
+                                $sig_exp = explode(",", $val);
+                                $gps_id	= $sig_exp[0];
+
+                                $sql1 = "SELECT * FROM `$db_st`.`$table_gps` WHERE `id` = '$gps_id'";
+                                $result1 = mysql_query($sql1, $conn) or die(mysql_error($conn));
+                                $gps_table = mysql_fetch_array($result1);
+                                $gps_array[$n]	=	array(
+                                                                                "lat" => $gps_table['lat'],
+                                                                                "long" => $gps_table['long'],
+                                                                                "sats" => $gps_table['sats'],
+                                                                                "hdp" => $gps_table['hdp'],
+                                                                                "alt" => $gps_table['alt'],
+                                                                                "geo" => $gps_table['geo'],
+                                                                                "kmh" => $gps_table['kmh'],
+                                                                                "mph" => $gps_table['mph'],
+                                                                                "track" => $gps_table['track'],
+                                                                                "date" => $gps_table['date'],
+                                                                                "time" => $gps_table['time']
+                                                                                );
+                                $n++;
+                                $signals[] = $n.",".$sig_exp[1];
+                        }
+                        echo $nn."-".$n."==";
+                        $sig_new = implode("-", $signals);
+                        $aps[$nn]['sig'] = $sig_new;
+                        unset($signals);
+                }
+        }
+    }
+####################
+    function daemon_kml($named = 0, $verbose = 1)
     {
         require $GLOBALS['wifidb_tools']."/daemon/config.inc.php";
         require $GLOBALS['wdb_install']."/lib/config.inc.php";
@@ -217,9 +368,7 @@ class daemon
         echo "  End Time: ".$end."\n";
 #		die();
     }
-
-
-
+####################
     function daemon_full_db_exp($temp_kml="", $temp_kml_label="", $verbose = 0)
     {
         require_once "config.inc.php";
