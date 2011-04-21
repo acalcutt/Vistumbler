@@ -1930,10 +1930,10 @@ class database
 	    $signals	 = array();
 	    $sats_id	 = array();
 	    $db_gps	 = array();
-	    echo $source."\r\n";
+	    //echo $source."\r\n";
 	    $return	 = explode("\n", utf8_decode(file_get_contents($source)));
 	    #$return	= explode("\n", utf8_decode(implode("\n", file($source))));
-	    echo $return[0]."\r\n";
+	    //echo $return[0]."\r\n";
 	    $count = count($return);
 	    echo $count."\r\n";
 	    ####
@@ -2033,7 +2033,7 @@ class database
 			    }
 			}
 		    }
-		    echo "########################################\r\n$source\r\n";
+		    echo "########################################\r\n";//$source\r\n";
 		    $SETFLAGTEST = TRUE;
 		    $wifi = explode("|",$ret, 13);
 		    if($wifi[0] == "" && $wifi[1] == "" && $wifi[5] == "" && $wifi[6] == "" && $wifi[7] == ""){continue;}
@@ -2122,7 +2122,7 @@ class database
 			AND `chan` = '$chan'
 			AND `sectype` = '$sectype'
 			AND `radio` = '$radios' LIMIT 1";
-		    echo $pt_sql."\r\n";
+		    //echo $pt_sql."\r\n";
 
 		    $result = mysql_query($pt_sql, $conn) or die(mysql_error($conn));
 		    $rows = mysql_num_rows($result);

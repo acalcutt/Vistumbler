@@ -16,12 +16,13 @@ $live_gps = "live_gps";
 // AP Detail Variables
 list($ssid_, $ssids) = make_ssid(@$_GET['SSID']);
 $macs   =   (@$_GET['Mac'] ? filter_input(INPUT_GET, 'Mac', FILTER_SANITIZE_ENCODED, array(16,32) ) : "00:00:00:00:00:00");
-$mac    =   implode(":", str_split(str_replace(":","",$macs), 2));
-$auth   =   (@$_GET['Auth'] ? filter_input(INPUT_GET, 'Auth', FILTER_SANITIZE_ENCODED, array(16,32) ) : "Open");
-$encry  =   (@$_GET['Encry'] ? filter_input(INPUT_GET, 'Encry', FILTER_SANITIZE_ENCODED, array(16,32) ) : "None");
+$mac    =   str_replace(":","",$macs);
 $radio  =   (@$_GET['Rad'] ? filter_input(INPUT_GET, 'Rad', FILTER_SANITIZE_ENCODED, array(16,32) ) : "802.11u");
 $sectype=   (@$_GET['SecType'] ? filter_input(INPUT_GET, 'SecType', FILTER_SANITIZE_NUMBER_INT) : 0);
 $chan   =   (@$_GET['Chn'] ? filter_input(INPUT_GET, 'Chn', FILTER_SANITIZE_NUMBER_INT) : 0);
+//Other AP Info
+$auth   =   (@$_GET['Auth'] ? filter_input(INPUT_GET, 'Auth', FILTER_SANITIZE_ENCODED, array(16,32) ) : "Open");
+$encry  =   (@$_GET['Encry'] ? filter_input(INPUT_GET, 'Encry', FILTER_SANITIZE_ENCODED, array(16,32) ) : "None");
 $BTx    =   (@$_GET['BTx'] ? filter_input(INPUT_GET, 'BTx', FILTER_SANITIZE_ENCODED, array(16,32) ) : "0.0");
 $OTx    =   (@$_GET['OTx'] ? filter_input(INPUT_GET, 'OTx', FILTER_SANITIZE_ENCODED, array(16,32) ) : "0.0");
 $NT     =   (@$_GET['NT'] ? filter_input(INPUT_GET, 'NT', FILTER_SANITIZE_ENCODED, array(16,32) ) : "Unknown");
@@ -138,7 +139,7 @@ if(@$array['id'])
 
             $sig = $all_sigs."|".$signal."-".$conn->insert_id;
 
-            $sql = "UPDATE `$db`.`live_aps` SET `sig` = '$sig' WHERE `id` = '$AP_id'";
+            $sql = "UPDATE `$db`.`live_aps` SET `sig` = '$sig', `LA` = '$date $time' WHERE `id` = '$AP_id'";
             //echo $sql."<br /><br />";
             $conn->query($sql) or printf($conn->error);
 
@@ -165,8 +166,8 @@ if(@$array['id'])
     //","<br />", $sql."<br /><br />");
     $conn->query($sql) or printf($conn->error);
 
-    $sql = "INSERT INTO  `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype`, `lat`, `long`, `active`)
-    VALUES ('', '$ssids', '$mac','$chan', '$radios', '$auth', '$encry', '$sectype', '$lat',  '$long', '1' ) ";
+    $sql = "INSERT INTO  `$db`.`$wtable` ( `id`, `ssid`, `mac`, `chan`, `radio`, `auth`, `encry`, `sectype`, `BTx`, `OTx`, `NT`, `Label`, `LA`, `lat`, `long`, `active`)
+                                  VALUES ('', '$ssids', '$mac','$chan', '$radios', '$auth', '$encry', '$sectype', '$BTx', '$OTx', '$NT', '$label', '$date $time', '$lat',  '$long', '1' ) ";
     //echo str_replace("
     //","<br />", $sql."<br /><br />");
     $conn->query($sql) or printf($conn->error);

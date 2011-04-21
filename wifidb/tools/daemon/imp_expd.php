@@ -2,8 +2,8 @@
 //Now this is not what I would call a 'true' 'daemon' by any sorts,
 //I mean it does have a php script (/tools/rund.php) that can turn 
 //the daemon on and off. But it is a php script that is running 
-//perpetually in the background. I am hoping to get a C++ version working 
-//sometime soon, until then I am using php.
+//perpetually in the background. I am hoping to get a C or something
+//else working sometime soon, until then I am using php.
 
 #error_reporting(E_ALL|E_STRICT);
 
@@ -33,7 +33,7 @@ if(!file_exists($GLOBALS['pid_file_loc']))
 $dim = @DIRECTORY_SEPERATOR;
 
 date_default_timezone_set("UTC");
-ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
+ini_set("memory_limit","3072M"); //lots of objects need lots of memory, that and shitty programing from a fucking idiot of a developer
 
 $conn				= 	$GLOBALS['conn'];
 $db				= 	$GLOBALS['db'];
@@ -117,9 +117,10 @@ if($time_interval_to_check < '30'){$time_interval_to_check = '30';} //its really
 																	
 $finished = 0;
 
-$database	=	new database;
+$database   =   new database();
+$daemon     =   new daemon();
 
-var_dump($wdb_install);
+//var_dump($wdb_install);
 //Main loop
 echo $daemon_console_log."\r\n";
 $daemon_console_log = $daemon_console_log.'/imp_expd_console.log';
@@ -184,7 +185,7 @@ while(1)
             {
                 verbosed("This file needs to be converted to VS1 first. Please wait while the computer does the work for you.", $verbose, $screen_output, 1);
                 $update_tmp = "UPDATE `$db`.`$files_tmp` SET `importing` = '1', `ap` = '@#@#_CONVERTING TO VS1_@#@#' WHERE `id` = '$remove_file'";
-                echo $update_tmp."\r\n";
+               // echo $update_tmp."\r\n";
                 mysql_query($update_tmp, $conn);
                 $cource = $database->convert_vs1($source);
                 $dest = $wdb_install.'import/up/convert/'.str_replace("%20", " ", $files_array['file']);
@@ -200,7 +201,7 @@ while(1)
                 $hash1 = hash_file('md5', $con_file);
                 $size1 = format_size(dos_filesize($con_file));
                 $update_tmp = "UPDATE `$db`.`$files_tmp` SET `file` = '".$files_array['file']."', `hash` = '$hash1', `size` = '$size1' WHERE `id` = '$remove_file'";
-                echo $update_tmp."\r\n";
+               // echo $update_tmp."\r\n";
                 if(mysql_query($update_tmp, $conn))
                 {
                     verbosed("Conversion completed.", $verbose, $screen_output, 1);
@@ -210,9 +211,9 @@ while(1)
                 }
             }
 #	echo $source."\r\n".$files_array['file'];
-            echo $source."\r\n";
+           // echo $source."\r\n";
             $return  = file($source);
-            echo $return[0]."\r\n";
+          //  echo $return[0]."\r\n";
             $count = count($return);
             $testing_return = explode("|",$return[0]);
             $txt_or_vs1_count = count($testing_return);
@@ -358,7 +359,6 @@ while(1)
             $message = "Finished Import of all files in table, go and import something else. While your doing that I'm going to sleep for ".($time_interval_to_check/60)." minutes.";
             logd("Starting Automated KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
             verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Starting Automated KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-            $daemon = new daemon();
             $daemon->daemon_kml($named = 0, $verbose);
             mail_users("Generation of Full Database KML File.\r\n".$host_url."/".$root."/out/daemon/update.kml\r\n\r\n-WiFiDB Service", $subject, "kmz", 0);
         }
@@ -370,7 +370,6 @@ while(1)
 	{
 	    logd("Running Daily Full DB KML Export.", $log_interval, 0,  $GLOBALS['log_level']);
 	    verbosed($GLOBALS['COLORS'][$GOOD_IED_COLOR]."Running Daily Full DB KML Export.".$GLOBALS['COLORS'][$OTHER_IED_COLOR], $verbose, $screen_output, 1);
-            $daemon = new daemon();
             $daemon->daemon_kml($named = 0, $verbose);
 	}
         unset($daemon);
