@@ -2215,7 +2215,8 @@ class database
                             {
                                $long = str_replace("-", "W ", $long);
                             }
-
+                            if($lat == "N 0.0000" || $lat == "N 0000.0000")
+                            {$skip_update = 1;}
 			    $sats = $gdata[$vs1_id]["sats"];
 			    $date = $gdata[$vs1_id]["date"];
 			    $time = str_replace("\r\n", "", $gdata[$vs1_id]["time"]);
@@ -2287,6 +2288,23 @@ class database
 			    }
 			    if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
 			}
+                        if(!@$skip_update)
+                        {
+                            $sql = "UPDATE `$db`.`$wtable` SET `lat` = '$lat', `long` = '$long' WHERE `id` = '$APid'";
+                            $result = mysql_query($sql, $conn);
+                            if(!$result)
+                            {
+                                logd($failed_gps_update.".\r\n".mysql_error($conn), $log_interval, 0,  $log_level);
+                                if($out=="CLI")
+                                {
+                                    verbosed($GLOBALS['COLORS']['RED'].$failed_gps_update.".\n".$GLOBALS['COLORS']['LIGHTGRAY'].mysql_error($conn), $verbose, "CLI");
+                                }elseif($out=="HTML")
+                                {
+                                    verbosed("<p>".$failed_gps_update."</p>".mysql_error($conn), $verbose, "HTML");
+                                }
+                                if($out == "HTML"){footer($_SERVER['SCRIPT_FILENAME']);}die();
+                            }
+                        }
 			$sqlit_ = "SELECT * FROM `$db_st`.`$table`";
 			$sqlit_res = mysql_query($sqlit_, $conn) or die(mysql_error($conn));
 			$sqlit_num_rows = mysql_num_rows($sqlit_res);
@@ -2362,7 +2380,7 @@ class database
 			    $skip_pt_insert = 1;
 			}
 			# pointers
-			$sqlp = "INSERT INTO `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype` ) VALUES ( '', '$ssids', '$macs','$chan', '$radios', '$auth', '$encry', '$sectype')";
+			$sqlp = "INSERT INTO `$db`.`$wtable` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype`, `lat`, `long` ) VALUES ( '', '$ssids', '$macs','$chan', '$radios', '$auth', '$encry', '$sectype', '$lat', '$long')";
 			if (mysql_query($sqlp, $conn))
 			{
 			    $user_aps[$user_n]="0,".mysql_insert_id($conn).":1";

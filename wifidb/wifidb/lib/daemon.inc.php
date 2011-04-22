@@ -380,6 +380,7 @@ class daemon
         $this->db = $GLOBALS['db'];
         $this->conn = new mysqli($GLOBALS['host'], $GLOBALS['db_user'], $GLOBALS['db_pwd']);
         $this->settings = $GLOBALS['settings_tb'];
+        $this->wtable = $GLOBALS['wtable'];
         $this->users_imports = $GLOBALS['users_t'];
         $this->verbose = $GLOBALS['verbose'];
         $this->open_loc 	=	$GLOBALS['open_loc'];
@@ -394,7 +395,7 @@ class daemon
         $this->filewrite_label = fopen($temp_kml_label, "w");
         $this->fileappend_label = fopen($temp_kml_label, "a");
         
-        $this->sql = "SELECT * FROM `$this->db`.`$this->settings` where `id`='2'";
+        $this->sql = "SELECT * FROM `$this->db`.`$this->wtable` WHERE `lat` != 'N 0.0000'";
         $this->result = $this->conn->query($this->sql);
         $this->total_ = $this->result->fetch_array(1);
         $this->total = $this->total_['size'];
@@ -538,9 +539,10 @@ class daemon
         fwrite($this->fileappend, $this->data);
         fwrite($this->fileappend_label, $this->data);
 
-        $this->sql = "SELECT * FROM `$this->db`.`$this->wtable` where `sectype`='$search'";
+        $this->sql = "SELECT * FROM `$this->db`.`$this->wtable` WHERE `sectype`='$search' AND `lat` != 'N 0.0000'";
         $this->result = $this->conn->query($this->sql);
-
+        echo $this->sql."\r\n";
+        sleep(1);
         $this->rows = $this->result->num_rows;
 
         fwrite($fileappend, "<description>APs: ".$this->rows."</description>\r\n");
