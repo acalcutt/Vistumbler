@@ -10128,14 +10128,14 @@ Func _rad2deg($radian) ;convert radians to degrees
 EndFunc   ;==>_rad2deg
 
 Func _SignalPercentToDb($InSig);Estimated value
-	$max_signal = -30 ;(dBm)
+	$max_signal = -20 ;(dBm)
 	$disassociation_signal = -85 ;(dBm)
 	$dBm = ((($max_signal - $disassociation_signal) * $InSig) - (20 * $max_signal) + (100 * $disassociation_signal)) / 80
 	Return (Round($dBm))
 EndFunc   ;==>_SignalPercentToDb
 
 Func _DbToSignalPercent($InDB);Estimated value
-	$max_signal = -30 ;(dBm)
+	$max_signal = -20 ;(dBm)
 	$disassociation_signal = -85 ;(dBm)
 	$SIG = 100 - 80 * ($max_signal - $InDB) / ($max_signal - $disassociation_signal)
 	If $SIG < 0 Then $SIG = 0
