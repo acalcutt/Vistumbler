@@ -1,9 +1,9 @@
 #RequireAdmin
-#region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Icons\icon.ico
-#AutoIt3Wrapper_outfile=Vistumbler.exe
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 
 ;License Information------------------------------------
 ;Copyright (C) 2011 Andrew Calcutt
@@ -206,6 +206,7 @@ Dim $TreeviewAPs
 
 Dim $NetworkAdapters[1]
 Dim $wlanhandle = _Wlan_OpenHandle()
+Dim $noadaptersid
 
 Dim $AeroOn
 Dim $TreeviewAPs_left, $TreeviewAPs_width, $TreeviewAPs_top, $TreeviewAPs_height
@@ -10019,7 +10020,7 @@ Func _AddInterfaces()
 			$DefaultApapterID = $adapterid
 			GUICtrlSetState($menuid, $GUI_CHECKED)
 		EndIf
-		If $menuid = 0 Then GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
+		If $menuid = 0 Then $noadaptersid = GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
 	Else
 		;Get network interfaces and add the to the interface menu
 		Local $DefaultApapterDesc
@@ -10042,7 +10043,7 @@ Func _AddInterfaces()
 			$DefaultApapterDesc = $adapterdesc
 			GUICtrlSetState($menuid, $GUI_CHECKED)
 		EndIf
-		If $menuid = 0 Then GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
+		If $menuid = 0 Then $noadaptersid = GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
 		$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
 		;Find adapterid
 		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
@@ -10098,6 +10099,7 @@ Func _RefreshInterfaces()
 		$menuid = $NetworkAdapters[$ri]
 		GUICtrlDelete($menuid)
 	Next
+	GUICtrlDelete($noadaptersid)
 	;Add updated interfaces
 	_AddInterfaces()
 EndFunc   ;==>_RefreshInterfaces
