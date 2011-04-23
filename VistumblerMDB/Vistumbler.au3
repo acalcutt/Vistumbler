@@ -1,9 +1,9 @@
 #RequireAdmin
-#region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Icons\icon.ico
-#AutoIt3Wrapper_outfile=Vistumbler.exe
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 
 ;License Information------------------------------------
 ;Copyright (C) 2011 Andrew Calcutt
@@ -1410,9 +1410,10 @@ While 1
 				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
 				GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
 			EndIf
-			$WiFiDbLocate_Timer = TimerInit()
-			$UpdatedWiFiDbGPS = 1
 		EndIf
+		$WiFiDbLocate_Timer = TimerInit()
+		$UpdatedWiFiDbGPS = 1
+		ConsoleWrite($GetWifidbGpsSuccess & @CRLF)
 	EndIf
 
 	;Get GPS Information (if enabled)
@@ -1523,7 +1524,9 @@ While 1
 	;Upload Active APs to WiFiDB (if enabled)
 	If $AutoUpApsToWifiDB = 1 Then
 		If TimerDiff($wifidb_au_timer) >= ($AutoUpApsToWifiDBTime * 1000) Then
-			_UploadActiveApsToWifidb()
+			$run = FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=w /u="' & $PhilsLiveApURL & '" /wa="' & $WifiDb_User & '" /wk="' & $WifiDb_ApiKey & '"'
+			ConsoleWrite($run & @CRLF)
+			$WifiDbUploadProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
 			$wifidb_au_timer = TimerInit()
 		EndIf
 	EndIf
@@ -4474,7 +4477,7 @@ Func _LocateGpsInWifidb()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs
 	Local $return = 0
-	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
+	$query = "SELECT BSSID, Signal FROM AP WHERE Active='1' And BSSID<>''"
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundBssidMatch = UBound($BssidMatchArray) - 1
 	If $FoundBssidMatch <> 0 Then
@@ -4512,51 +4515,6 @@ Func _ClearWifiGpsDetails();Clears all GPS Details information
 		$WifidbGPS_Update = TimerInit()
 	EndIf
 EndFunc   ;==>_ClearWifiGpsDetails
-
-Func _UploadActiveApsToWifidb()
-	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, SECTYPE, NETTYPE, RADTYPE, BTX, OTX, LastHistID, LABEL FROM AP WHERE Active='1'"
-	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundApMatch = UBound($ApMatchArray) - 1
-	For $exp = 1 To $FoundApMatch
-		$ExpApID = $ApMatchArray[$exp][1]
-		$ExpBSSID = StringReplace($ApMatchArray[$exp][2], ":", "")
-		$ExpSSID = $ApMatchArray[$exp][3]
-		$ExpCHAN = $ApMatchArray[$exp][4]
-		$ExpAUTH = $ApMatchArray[$exp][5]
-		$ExpENCR = $ApMatchArray[$exp][6]
-		$ExpSECTYPE = $ApMatchArray[$exp][7]
-		$ExpNET = $ApMatchArray[$exp][8]
-		$ExpRAD = $ApMatchArray[$exp][9]
-		$ExpBTX = $ApMatchArray[$exp][10]
-		$ExpOTX = $ApMatchArray[$exp][11]
-		$ExpLastID = $ApMatchArray[$exp][12]
-		$ExpLAB = $ApMatchArray[$exp][13]
-
-		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ExpLastGpsSig = $HistMatchArray[1][1]
-		$ExpLastGpsID = $HistMatchArray[1][2]
-		$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsID & "'"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ExpLastGpsLat = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][1], "N", ""), "S", "-"), " ", "")
-		$ExpLastGpsLon = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][2], "E", ""), "W", "-"), " ", "")
-		$ExpLastGpsSat = $GpsMatchArray[1][3]
-		$ExpLastGpsHDP = $GpsMatchArray[1][4]
-		$ExpLastGpsAlt = $GpsMatchArray[1][5]
-		$ExpLastGpsGeo = $GpsMatchArray[1][6]
-		$ExpLastGpsMPH = $GpsMatchArray[1][7]
-		$ExpLastGpsKMH = $GpsMatchArray[1][8]
-		$ExpLastGpsTAngle = $GpsMatchArray[1][9]
-		$ExpLastGpsDate = $GpsMatchArray[1][10]
-		$ExpLastGpsTime = $GpsMatchArray[1][11]
-
-		$url_root = $PhilsLiveApURL
-		$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsKMH & "&Track=" & $ExpLastGpsTAngle
-		ConsoleWrite($url_root & $url_data & @CRLF)
-		$webpagesource = _INetGetSource($url_root & $url_data)
-	Next
-	ConsoleWrite('-------------------------------------------------------------------------------------------------------------------' & @CRLF)
-EndFunc   ;==>_UploadActiveApsToWifidb
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTION

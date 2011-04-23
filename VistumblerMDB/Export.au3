@@ -3,21 +3,23 @@
 #AutoIt3Wrapper_icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2010 Andrew Calcutt
+;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
 ;AutoIt Version: v3.3.6.1
 $Script_Author = 'Andrew Calcutt'
-$Script_Name = 'Vistumbler Save'
+$Script_Name = 'Vistumbler Exporter'
 $Script_Website = 'http://www.Vistumbler.net'
-$Script_Function = 'Reads the vistumbler DB and exports a KML based on input options'
-$version = 'v2'
-$last_modified = '2010/07/11'
+$Script_Function = 'Reads the vistumbler DB and exports based on input options'
+$version = 'v3'
+$last_modified = '2011/04/23'
+HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
+#include <INet.au3>
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $DB_OBJ
@@ -55,6 +57,9 @@ Dim $MapActiveAPs = 0
 Dim $MapDeadAPs = 0
 Dim $MapAccessPoints = 0
 Dim $MapTrack = 0
+Dim $url
+Dim $WifiDb_User
+Dim $WifiDb_ApiKey
 
 For $loop = 1 To $CmdLine[0]
 	If StringInStr($CmdLine[$loop], '/f') Then
@@ -84,22 +89,85 @@ For $loop = 1 To $CmdLine[0]
 		$MapDeadAPs = 1
 		$MapAccessPoints = 1
 	EndIf
+	If StringInStr($CmdLine[$loop], '/u') Then
+		$urlsplit = StringSplit($CmdLine[$loop], "=")
+		If $urlsplit[0] = 2 Then $url = $urlsplit[2]
+	EndIf
+	If StringInStr($CmdLine[$loop], '/wa') Then
+		$wasplit = StringSplit($CmdLine[$loop], "=")
+		If $wasplit[0] = 2 Then $WifiDb_User = $wasplit[2]
+	EndIf
+	If StringInStr($CmdLine[$loop], '/wk') Then
+		$wksplit = StringSplit($CmdLine[$loop], "=")
+		If $wksplit[0] = 2 Then $WifiDb_ApiKey = $wksplit[2]
+	EndIf
 Next
 
-If $filename <> '' Then
-	_AccessConnectConn($VistumblerDB, $DB_OBJ)
-	If $filetype = 'd' Then
-		_ExportDetailedTXT($filename)
-	ElseIf $filetype = 'z' Then
-		_ExportVSZ($filename)
-	ElseIf $filetype = 's' Then
-		_ExportToTXT($filename)
-	ElseIf $filetype = 'k' Then
-		_AutoSaveKml($filename, $MapTrack, $MapAccessPoints, $MapActiveAPs, $MapDeadAPs)
-	EndIf
-	_AccessCloseConn($DB_OBJ)
+_AccessConnectConn($VistumblerDB, $DB_OBJ)
+If $filetype = 'd' Then
+	_ExportDetailedTXT($filename)
+ElseIf $filetype = 'z' Then
+	_ExportVSZ($filename)
+ElseIf $filetype = 's' Then
+	_ExportToTXT($filename)
+ElseIf $filetype = 'k' Then
+	_AutoSaveKml($filename, $MapTrack, $MapAccessPoints, $MapActiveAPs, $MapDeadAPs)
+ElseIf $filetype = 'w' Then
+	_UploadActiveApsToWifidb()
 EndIf
+_AccessCloseConn($DB_OBJ)
 Exit
+
+Func _UploadActiveApsToWifidb()
+	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, SECTYPE, NETTYPE, RADTYPE, BTX, OTX, LastHistID, LABEL FROM AP WHERE Active='1' And BSSID<>''"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $exp = 1 To $FoundApMatch
+		$ExpApID = $ApMatchArray[$exp][1]
+		$ExpBSSID = StringReplace($ApMatchArray[$exp][2], ":", "")
+		$ExpSSID = $ApMatchArray[$exp][3]
+		$ExpCHAN = $ApMatchArray[$exp][4]
+		$ExpAUTH = $ApMatchArray[$exp][5]
+		$ExpENCR = $ApMatchArray[$exp][6]
+		$ExpSECTYPE = $ApMatchArray[$exp][7]
+		$ExpNET = $ApMatchArray[$exp][8]
+		$ExpRAD = $ApMatchArray[$exp][9]
+		$ExpBTX = $ApMatchArray[$exp][10]
+		$ExpOTX = $ApMatchArray[$exp][11]
+		$ExpLastID = $ApMatchArray[$exp][12]
+		$ExpLAB = $ApMatchArray[$exp][13]
+
+		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundHistMatch = UBound($HistMatchArray) - 1
+		If $FoundHistMatch = 1 Then
+			$ExpLastGpsSig = $HistMatchArray[1][1]
+			$ExpLastGpsID = $HistMatchArray[1][2]
+			$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsID & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundGpsMatch = UBound($GpsMatchArray) - 1
+			If $FoundGpsMatch = 1 Then
+				$ExpLastGpsLat = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][1], "N", ""), "S", "-"), " ", "")
+				$ExpLastGpsLon = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][2], "E", ""), "W", "-"), " ", "")
+				$ExpLastGpsSat = $GpsMatchArray[1][3]
+				$ExpLastGpsHDP = $GpsMatchArray[1][4]
+				$ExpLastGpsAlt = $GpsMatchArray[1][5]
+				$ExpLastGpsGeo = $GpsMatchArray[1][6]
+				$ExpLastGpsMPH = $GpsMatchArray[1][7]
+				$ExpLastGpsKMH = $GpsMatchArray[1][8]
+				$ExpLastGpsTAngle = $GpsMatchArray[1][9]
+				$ExpLastGpsDate = $GpsMatchArray[1][10]
+				$ExpLastGpsTime = $GpsMatchArray[1][11]
+
+				$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsMPH & "&MPH=" & $ExpLastGpsKMH & "&Track=" & $ExpLastGpsTAngle
+				If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then $url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
+				;FileWrite("templog.txt", StringLen($url & '?' & $url_data) & ' - ' & $url & '?' & $url_data & @CRLF)
+				$webpagesource = _INetGetSource($url & '?' & $url_data)
+				;FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
+			EndIf
+		EndIf
+	Next
+EndFunc   ;==>_UploadActiveApsToWifidb
 
 Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 1.0")
@@ -144,12 +212,12 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 		$ExpLAB = $ApMatchArray[$exp][12]
 		$ExpFirstID = $ApMatchArray[$exp][13]
 		$ExpLastID = $ApMatchArray[$exp][14]
-		$ExpAPID = $ApMatchArray[$exp][15]
+		$ExpApID = $ApMatchArray[$exp][15]
 		$ExpHighGpsID = $ApMatchArray[$exp][16]
 		$ExpGidSid = ''
 
 		;Create GID,SIG String
-		$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
+		$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpApID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundHistMatch = UBound($HistMatchArray) - 1
 		For $epgs = 1 To $FoundHistMatch
@@ -189,7 +257,7 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		$ExpLAB = $ApMatchArray[$exp][11]
 		$ExpFirstID = $ApMatchArray[$exp][12]
 		$ExpLastID = $ApMatchArray[$exp][13]
-		$ExpAPID = $ApMatchArray[$exp][14]
+		$ExpApID = $ApMatchArray[$exp][14]
 		$ExpHighGpsID = $ApMatchArray[$exp][15]
 
 		;Get High GPS Signal
@@ -219,13 +287,13 @@ Func _ExportToTXT($savefile);writes vistumbler data to a txt file
 		;Get Last Found Time From LastHistID
 		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ExpLastGpsId = $HistMatchArray[1][1]
+		$ExpLastGpsID = $HistMatchArray[1][1]
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFistsGpsId & "'"
 		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
 
 		;Get Signal History
-		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpAPID & "'"
+		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpApID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundHistMatch = UBound($HistMatchArray) - 1
 		For $esh = 1 To $FoundHistMatch
@@ -261,59 +329,59 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapAPs = 1, $MapActive = 1, $MapDead 
 			 & '<description>' & 'Vistumbler AutoKML' & ' - By ' & 'Andrew Calcutt' & '</description>' & @CRLF _
 			 & '<name>' & 'Vistumbler AutoKML' & ' ' & 'V1.0' & '</name>' & @CRLF
 	If $MapAPs = 1 Then
-			If $MapActive = 1 Then
-				$file &= '<Style id="secureStyle">' & @CRLF _
-						 & '<IconStyle>' & @CRLF _
-						 & '<scale>.5</scale>' & @CRLF _
-						 & '<Icon>' & @CRLF _
-						 & '<href>' & $ImageDir & 'secure.png</href>' & @CRLF _
-						 & '</Icon>' & @CRLF _
-						 & '</IconStyle>' & @CRLF _
-						 & '</Style>' & @CRLF _
-						 & '<Style id="wepStyle">' & @CRLF _
-						 & '<IconStyle>' & @CRLF _
-						 & '<scale>.5</scale>' & @CRLF _
-						 & '<Icon>' & @CRLF _
-						 & '<href>' & $ImageDir & 'secure-wep.png</href>' & @CRLF _
-						 & '</Icon>' & @CRLF _
-						 & '</IconStyle>' & @CRLF _
-						 & '</Style>' & @CRLF _
-						 & '<Style id="openStyle">' & @CRLF _
-						 & '<IconStyle>' & @CRLF _
-						 & '<scale>.5</scale>' & @CRLF _
-						 & '<Icon>' & @CRLF _
-						 & '<href>' & $ImageDir & 'open.png</href>' & @CRLF _
-						 & '</Icon>' & @CRLF _
-						 & '</IconStyle>' & @CRLF _
-						 & '</Style>' & @CRLF
+		If $MapActive = 1 Then
+			$file &= '<Style id="secureStyle">' & @CRLF _
+					 & '<IconStyle>' & @CRLF _
+					 & '<scale>.5</scale>' & @CRLF _
+					 & '<Icon>' & @CRLF _
+					 & '<href>' & $ImageDir & 'secure.png</href>' & @CRLF _
+					 & '</Icon>' & @CRLF _
+					 & '</IconStyle>' & @CRLF _
+					 & '</Style>' & @CRLF _
+					 & '<Style id="wepStyle">' & @CRLF _
+					 & '<IconStyle>' & @CRLF _
+					 & '<scale>.5</scale>' & @CRLF _
+					 & '<Icon>' & @CRLF _
+					 & '<href>' & $ImageDir & 'secure-wep.png</href>' & @CRLF _
+					 & '</Icon>' & @CRLF _
+					 & '</IconStyle>' & @CRLF _
+					 & '</Style>' & @CRLF _
+					 & '<Style id="openStyle">' & @CRLF _
+					 & '<IconStyle>' & @CRLF _
+					 & '<scale>.5</scale>' & @CRLF _
+					 & '<Icon>' & @CRLF _
+					 & '<href>' & $ImageDir & 'open.png</href>' & @CRLF _
+					 & '</Icon>' & @CRLF _
+					 & '</IconStyle>' & @CRLF _
+					 & '</Style>' & @CRLF
 
-			EndIf
-			If $MapDead = 1 Then
-				$file &= '<Style id="secureDeadStyle">' & @CRLF _
-						 & '<IconStyle>' & @CRLF _
-						 & '<scale>.5</scale>' & @CRLF _
-						 & '<Icon>' & @CRLF _
-						 & '<href>' & $ImageDir & 'secure_dead.png</href>' & @CRLF _
-						 & '</Icon>' & @CRLF _
-						 & '</IconStyle>' & @CRLF _
-						 & '</Style>' & @CRLF _
-						 & '<Style id="wepDeadStyle">' & @CRLF _
-						 & '<IconStyle>' & @CRLF _
-						 & '<scale>.5</scale>' & @CRLF _
-						 & '<Icon>' & @CRLF _
-						 & '<href>' & $ImageDir & 'secure-wep_dead.png</href>' & @CRLF _
-						 & '</Icon>' & @CRLF _
-						 & '</IconStyle>' & @CRLF _
-						 & '</Style>' & @CRLF _
-						 & '<Style id="openDeadStyle">' & @CRLF _
-						 & '<IconStyle>' & @CRLF _
-						 & '<scale>.5</scale>' & @CRLF _
-						 & '<Icon>' & @CRLF _
-						 & '<href>' & $ImageDir & 'open_dead.png</href>' & @CRLF _
-						 & '</Icon>' & @CRLF _
-						 & '</IconStyle>' & @CRLF _
-						 & '</Style>' & @CRLF
-			EndIf
+		EndIf
+		If $MapDead = 1 Then
+			$file &= '<Style id="secureDeadStyle">' & @CRLF _
+					 & '<IconStyle>' & @CRLF _
+					 & '<scale>.5</scale>' & @CRLF _
+					 & '<Icon>' & @CRLF _
+					 & '<href>' & $ImageDir & 'secure_dead.png</href>' & @CRLF _
+					 & '</Icon>' & @CRLF _
+					 & '</IconStyle>' & @CRLF _
+					 & '</Style>' & @CRLF _
+					 & '<Style id="wepDeadStyle">' & @CRLF _
+					 & '<IconStyle>' & @CRLF _
+					 & '<scale>.5</scale>' & @CRLF _
+					 & '<Icon>' & @CRLF _
+					 & '<href>' & $ImageDir & 'secure-wep_dead.png</href>' & @CRLF _
+					 & '</Icon>' & @CRLF _
+					 & '</IconStyle>' & @CRLF _
+					 & '</Style>' & @CRLF _
+					 & '<Style id="openDeadStyle">' & @CRLF _
+					 & '<IconStyle>' & @CRLF _
+					 & '<scale>.5</scale>' & @CRLF _
+					 & '<Icon>' & @CRLF _
+					 & '<href>' & $ImageDir & 'open_dead.png</href>' & @CRLF _
+					 & '</Icon>' & @CRLF _
+					 & '</IconStyle>' & @CRLF _
+					 & '</Style>' & @CRLF
+		EndIf
 	EndIf
 	If $MapGpsTrack = 1 Then
 		$file &= '<Style id="Location">' & @CRLF _
@@ -358,7 +426,7 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapAPs = 1, $MapActive = 1, $MapDead 
 					;$ExpFirstID = $ApMatchArray[$exp][13] - 0
 					;$ExpLastID = $ApMatchArray[$exp][14] - 0
 					$ExpActive = $ApMatchArray[$exp][13]
-					$ExpSecType = $ApMatchArray[$exp][14]
+					$ExpSECTYPE = $ApMatchArray[$exp][14]
 					;Get Gps ID of HighGpsHistId
 					$query = "SELECT GpsID FROM Hist Where HistID = '" & $ExpHighGpsHistID & "'"
 					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -372,52 +440,52 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapAPs = 1, $MapActive = 1, $MapDead 
 						If $FoundGpsMatch <> 0 Then
 							$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][1])
 							$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][2])
-								If $ExpSecType = 1 Then
-									$file_open &= '<Placemark>' & @CRLF _
-											 & '<name></name>' & @CRLF _
-											 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
-											 ;& '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
-									If $ExpActive = 1 Then
-										$file_open &= '<styleUrl>#openStyle</styleUrl>' & @CRLF
-									ElseIf $ExpActive = 0 Then
-										$file_open &= '<styleUrl>#openDeadStyle</styleUrl>' & @CRLF
-									EndIf
-									$file_open &= '<Point>' & @CRLF _
-											 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
-											 & '</Point>' & @CRLF _
-											 & '</Placemark>' & @CRLF
-								ElseIf $ExpSecType = 2 Then
-									$file_wep &= '<Placemark>' & @CRLF _
-											 & '<name></name>' & @CRLF _
-											& '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
-											;& '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
-									If $ExpActive = 1 Then
-										$file_wep &= '<styleUrl>#wepStyle</styleUrl>' & @CRLF
-									ElseIf $ExpActive = 0 Then
-										$file_wep &= '<styleUrl>#wepDeadStyle</styleUrl>' & @CRLF
-									EndIf
-									$file_wep &= '<Point>' & @CRLF _
-											 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
-											 & '</Point>' & @CRLF _
-											 & '</Placemark>' & @CRLF
-								ElseIf $ExpSecType = 3 Then
-									$file_sec &= '<Placemark>' & @CRLF _
-											 & '<name></name>' & @CRLF _
-											 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
-											; & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
-									If $ExpActive = 1 Then
-										$file_sec &= '<styleUrl>#secureStyle</styleUrl>' & @CRLF
-									ElseIf $ExpActive = 0 Then
-										$file_sec &= '<styleUrl>#secureDeadStyle</styleUrl>' & @CRLF
-									EndIf
-									$file_sec &= '<Point>' & @CRLF _
-											 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
-											 & '</Point>' & @CRLF _
-											 & '</Placemark>' & @CRLF
+							If $ExpSECTYPE = 1 Then
+								$file_open &= '<Placemark>' & @CRLF _
+										 & '<name></name>' & @CRLF _
+										 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
+								;& '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
+								If $ExpActive = 1 Then
+									$file_open &= '<styleUrl>#openStyle</styleUrl>' & @CRLF
+								ElseIf $ExpActive = 0 Then
+									$file_open &= '<styleUrl>#openDeadStyle</styleUrl>' & @CRLF
 								EndIf
+								$file_open &= '<Point>' & @CRLF _
+										 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
+										 & '</Point>' & @CRLF _
+										 & '</Placemark>' & @CRLF
+							ElseIf $ExpSECTYPE = 2 Then
+								$file_wep &= '<Placemark>' & @CRLF _
+										 & '<name></name>' & @CRLF _
+										 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
+								;& '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
+								If $ExpActive = 1 Then
+									$file_wep &= '<styleUrl>#wepStyle</styleUrl>' & @CRLF
+								ElseIf $ExpActive = 0 Then
+									$file_wep &= '<styleUrl>#wepDeadStyle</styleUrl>' & @CRLF
+								EndIf
+								$file_wep &= '<Point>' & @CRLF _
+										 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
+										 & '</Point>' & @CRLF _
+										 & '</Placemark>' & @CRLF
+							ElseIf $ExpSECTYPE = 3 Then
+								$file_sec &= '<Placemark>' & @CRLF _
+										 & '<name></name>' & @CRLF _
+										 & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
+								; & '<description><![CDATA[<b>' & $Column_Names_SSID & ': </b>' & $ExpSSID & '<br /><b>' & $Column_Names_BSSID & ': </b>' & $ExpBSSID & '<br /><b>' & $Column_Names_NetworkType & ': </b>' & $ExpNET & '<br /><b>' & $Column_Names_RadioType & ': </b>' & $ExpRAD & '<br /><b>' & $Column_Names_Channel & ': </b>' & $ExpCHAN & '<br /><b>' & $Column_Names_Authentication & ': </b>' & $ExpAUTH & '<br /><b>' & $Column_Names_Encryption & ': </b>' & $ExpENCR & '<br /><b>' & $Column_Names_BasicTransferRates & ': </b>' & $ExpBTX & '<br /><b>' & $Column_Names_OtherTransferRates & ': </b>' & $ExpOTX & '<br /><b>' & $Column_Names_FirstActive & ': </b>' & $ExpFirstDateTime & '<br /><b>' & $Column_Names_LastActive & ': </b>' & $ExpLastDateTime & '<br /><b>' & $Column_Names_Latitude & ': </b>' & $ExpLat & '<br /><b>' & $Column_Names_Longitude & ': </b>' & $ExpLon & '<br /><b>' & $Column_Names_MANUF & ': </b>' & $ExpMANU & '<br />]]></description>' & @CRLF
+								If $ExpActive = 1 Then
+									$file_sec &= '<styleUrl>#secureStyle</styleUrl>' & @CRLF
+								ElseIf $ExpActive = 0 Then
+									$file_sec &= '<styleUrl>#secureDeadStyle</styleUrl>' & @CRLF
+								EndIf
+								$file_sec &= '<Point>' & @CRLF _
+										 & '<coordinates>' & StringReplace(StringReplace(StringReplace($ExpLon, 'W', '-'), 'E', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace($ExpLat, 'S', '-'), 'N', ''), ' ', '') & ',0</coordinates>' & @CRLF _
+										 & '</Point>' & @CRLF _
+										 & '</Placemark>' & @CRLF
+							EndIf
 						EndIf
 					EndIf
-					sleep(5)
+					Sleep(5)
 				Next
 				If $file_open <> '' Then
 					$file &= '<Folder>' & @CRLF _
