@@ -19,6 +19,7 @@ $Script_Function = 'A wireless network scanner for vista and windows 7. This Pro
 $version = 'v10.1 Beta 16.5'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2011/04/18'
+HttpSetUserAgent($Script_Name)
 ;Includes------------------------------------------------
 #include <File.au3>
 #include <GuiConstants.au3>
@@ -4547,8 +4548,8 @@ Func _UploadActiveApsToWifidb()
 		$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsKMH & "&Track=" & $ExpLastGpsTAngle
 		ConsoleWrite($url_root & $url_data & @CRLF)
 		$webpagesource = _INetGetSource($url_root & $url_data)
-		ConsoleWrite($webpagesource & @CRLF)
 	Next
+	ConsoleWrite('-------------------------------------------------------------------------------------------------------------------' & @CRLF)
 EndFunc   ;==>_UploadActiveApsToWifidb
 
 ;-------------------------------------------------------------------------------------------------------------------------------
