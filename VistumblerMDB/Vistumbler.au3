@@ -16,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 16'
+$version = 'v10.1 Beta 16.5'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2011/04/18'
 ;Includes------------------------------------------------
@@ -814,6 +814,7 @@ Dim $Text_Size = IniRead($DefaultLanguagePath, 'GuiText', 'Size', 'Size')
 Dim $Text_NoMdbSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', 'No MDB Selected')
 Dim $Text_LocateInWiFiDB = IniRead($DefaultLanguagePath, 'GuiText', 'LocateInWiFiDB', 'Locate Position in WiFiDB')
 Dim $Text_AutoWiFiDbGpsLocate = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', 'Auto WiFiDB Gps Locate')
+Dim $Text_AutoWiFiDbUploadAps = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbUploadAps', 'Auto WiFiDB Upload Active AP')
 Dim $Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', 'Auto Select Connected AP')
 Dim $Text_AutoSelectHighSignal = IniRead($DefaultLanguagePath, "GuiText", 'AutoSelectHighSigAP', 'Auto Select Highest Signal AP')
 Dim $Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
@@ -1091,7 +1092,7 @@ $AutoScanMenu = GUICtrlCreateMenuItem($Text_AutoScanApsOnLaunch, $Options)
 If $AutoScan = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $Options)
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$UseWiFiDbAutoUploadButton = GUICtrlCreateMenuItem('Auto WiFiDB Upload Active APs' & ' (' & $Text_Experimental & ')', $Options)
+$UseWiFiDbAutoUploadButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbUploadAps & ' (' & $Text_Experimental & ')', $Options)
 If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
@@ -5916,6 +5917,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', $Text_NoMdbSelected)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'LocateInWiFiDB', $Text_LocateInWiFiDB)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', $Text_AutoWiFiDbGpsLocate)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbUploadAps', $Text_AutoWiFiDbUploadAps)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', $Text_AutoSelectConnectedAP)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSelectHighSigAP', $Text_AutoSelectHighSignal)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Experimental', $Text_Experimental)
@@ -7795,7 +7797,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$Tab_Misc = GUICtrlCreateTabItem($Text_Misc)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 		GUICtrlSetColor(-1, $TextColor)
-		$GroupVistSet = GUICtrlCreateGroup($Text_VistumblerSettings, 16, 30, 649, 265)
+		$GroupVistSet = GUICtrlCreateGroup($Text_VistumblerSettings, 16, 30, 649, 310)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 31, 50, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
@@ -7824,26 +7826,49 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 210, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 225, 195, 21)
-		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 31, 250, 300, 15)
+		GUICtrlCreateLabel("Max Signal (dBm)", 31, 250, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 31, 265, 195, 21)
-		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 255, 300, 15)
+		$GUI_MaxSignal_dBm = GUICtrlCreateInput($TimeBeforeMarkedDead, 31, 265, 195, 21)
+		GUICtrlCreateLabel("Disassociation Signal (dBm)", 31, 290, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_DisassociationSignal_dBm = GUICtrlCreateInput($TimeBeforeMarkedDead, 31, 305, 195, 21)
+		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 353, 250, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 353, 265, 195, 21)
+
+
+
+
+		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 295, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
-		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 270, 300, 15)
+		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 310, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
-		$GroupMiscPHP = GUICtrlCreateGroup($Text_PhilsWifiTools, 16, 300, 649, 150)
+		;Auto Refresh Group
+		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 350, 325, 110)
+		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 375, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_PHPgraphing, 31, 320, 620, 15)
+		If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 30, 395, 615, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_PhilsGraphURL = GUICtrlCreateInput($PhilsGraphURL, 31, 335, 620, 20)
-		GUICtrlCreateLabel($Text_PhilsWDB, 32, 360, 620, 15)
+		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 410, 115, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_PhilsWdbURL = GUICtrlCreateInput($PhilsWdbURL, 32, 375, 620, 20)
-		GUICtrlCreateLabel($Text_PhilsWdbLocate, 32, 400, 620, 15)
+		;Auto Save Group
+		GUICtrlCreateGroup($Text_AutoSave, 345, 350, 325, 110)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_PhilsLocateURL = GUICtrlCreateInput($PhilsLocateURL, 32, 415, 620, 20)
+		$AutoSaveBox = GUICtrlCreateCheckbox($Text_AutoSave, 360, 375, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $AutoSave = 1 Then GUICtrlSetState($AutoSaveBox, $GUI_CHECKED)
+		$AutoSaveDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 360, 395, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $AutoSaveDel = 1 Then GUICtrlSetState($AutoSaveDelBox, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_AutoSaveEvery & '(s)', 360, 415, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$AutoSaveSec = GUICtrlCreateInput($SaveTime, 360, 430, 115, 21)
+		GUICtrlSetColor(-1, $TextColor)
+
+
 		;GPS Tab
 		$Tab_Gps = GUICtrlCreateTabItem($Text_Gps)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
@@ -8168,18 +8193,6 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		;Auto Tab
 		$Tab_Auto = GUICtrlCreateTabItem($Text_Auto)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		GUICtrlCreateGroup($Text_AutoSave, 16, 40, 650, 121);Auto Save Group
-		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveBox = GUICtrlCreateCheckbox($Text_AutoSave, 30, 65, 625, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $AutoSave = 1 Then GUICtrlSetState($AutoSaveBox, $GUI_CHECKED)
-		$AutoSaveDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 30, 85, 625, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $AutoSaveDel = 1 Then GUICtrlSetState($AutoSaveDelBox, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_AutoSaveEvery & '(s)', 31, 105, 625, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveSec = GUICtrlCreateInput($SaveTime, 31, 120, 115, 21)
-		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateGroup($Text_AutoSort, 15, 165, 650, 169);Auto Sort Group
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_AutoSort = GUICtrlCreateCheckbox($Text_AutoSort, 30, 190, 625, 15)
@@ -8201,24 +8214,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_AutoSortEvery & '(s)', 30, 290, 625, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_SortTime = GUICtrlCreateInput($SortTime, 30, 305, 115, 20)
-		;Auto Refresh Group
-		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 340, 320, 125)
-		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 360, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 30, 380, 615, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 395, 115, 20)
-		GUICtrlSetColor(-1, $TextColor)
-		;Auto Refresh Group
-		GUICtrlCreateGroup($Text_AutoWiFiDbGpsLocate, 346, 340, 320, 125)
-		$GUI_WifidbLocate = GUICtrlCreateCheckbox($Text_AutoWiFiDbGpsLocate, 360, 360, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState($GUI_WifidbLocate, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 360, 380, 615, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_WiFiDbLocateRefreshTime = GUICtrlCreateInput(($WiFiDbLocateRefreshTime / 1000), 360, 395, 115, 20)
-		GUICtrlSetColor(-1, $TextColor)
+
 
 		;AutoKML Tab
 		$Tab_AutoKML = GUICtrlCreateTabItem($Text_AutoKml)
@@ -8272,7 +8268,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		;Sound Tab
 		$Tab_Sound = GUICtrlCreateTabItem($Text_Sound)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		GUICtrlCreateGroup($Text_PlaySound, 16, 40, 650, 105);Auto Save Group
+		GUICtrlCreateGroup($Text_PlaySound, 16, 40, 650, 105)
 		$GUI_NewApSound = GUICtrlCreateCheckbox($Text_PlaySound, 30, 60, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $SoundOnAP = 1 Then GUICtrlSetState($GUI_NewApSound, $GUI_CHECKED)
@@ -8332,6 +8328,49 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_Midi_PlayTime = GUICtrlCreateInput($Midi_PlayTime, 30, 405, 310, 20)
 		GUICtrlSetColor(-1, $TextColor)
+
+		;WifiDB Tab
+		$Text_WifiDB = "WifiDB"
+		$Tab_Sound = GUICtrlCreateTabItem($Text_WifiDB)
+		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
+		GUICtrlCreateGroup($Text_WifiDB, 15, 40, 650, 250)
+		GUICtrlCreateLabel("WifiDB Username", 28, 77, 88, 15)
+		GUICtrlCreateInput("", 123, 75, 185, 20)
+		GUICtrlCreateLabel("WifiDB API Key", 328, 77, 78, 15)
+		GUICtrlCreateInput("", 411, 75, 185, 20)
+		GUICtrlCreateLabel($Text_PHPgraphing, 31, 110, 620, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_PhilsGraphURL = GUICtrlCreateInput($PhilsGraphURL, 31, 125, 620, 20)
+		GUICtrlCreateLabel($Text_PhilsWDB, 32, 150, 620, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_PhilsWdbURL = GUICtrlCreateInput($PhilsWdbURL, 32, 165, 620, 20)
+		GUICtrlCreateLabel($Text_PhilsWdbLocate, 32, 190, 620, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_PhilsLocateURL = GUICtrlCreateInput($PhilsLocateURL, 32, 205, 620, 20)
+		GUICtrlCreateLabel("WifiDB Upload URL", 32, 230, 620, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_PhilsUploadURL = GUICtrlCreateInput("http://wifidb.randomintervals.com/wifidb/opt/live.php", 32, 245, 620, 20)
+
+		GUICtrlCreateGroup($Text_AutoWiFiDbGpsLocate, 15, 300, 320, 85)
+		$GUI_WifidbLocate = GUICtrlCreateCheckbox($Text_AutoWiFiDbGpsLocate, 30, 320, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState($GUI_WifidbLocate, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 30, 340, 615, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_WiFiDbLocateRefreshTime = GUICtrlCreateInput(($WiFiDbLocateRefreshTime / 1000), 30, 355, 115, 20)
+		GUICtrlSetColor(-1, $TextColor)
+
+		GUICtrlCreateGroup($Text_AutoWiFiDbUploadAps, 346, 300, 320, 85)
+		$GUI_WifidbLocate = GUICtrlCreateCheckbox($Text_AutoWiFiDbUploadAps, 360, 320, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState($GUI_WifidbLocate, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 360, 340, 615, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_WiFiDbLocateRefreshTime = GUICtrlCreateInput($AutoUpApsToWifiDBTime, 360, 355, 115, 20)
+		GUICtrlSetColor(-1, $TextColor)
+
+
+
 
 
 		GUICtrlCreateTabItem("")
@@ -8817,6 +8856,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_NoMdbSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoMdbSelected', 'No MDB Selected')
 		$Text_LocateInWiFiDB = IniRead($DefaultLanguagePath, 'GuiText', 'LocateInWiFiDB', 'Locate Position in WiFiDB')
 		$Text_AutoWiFiDbGpsLocate = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbGpsLocate', 'Auto WiFiDB Gps Locate')
+		$Text_AutoWiFiDbUploadAps = IniRead($DefaultLanguagePath, 'GuiText', 'AutoWiFiDbUploadAps', 'Auto WiFiDB Upload Active AP')
 		$Text_AutoSelectConnectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSelectConnectedAP', 'Auto Select Connected AP')
 		$Text_AutoSelectHighSignal = IniRead($DefaultLanguagePath, "GuiText", 'AutoSelectHighSigAP', 'Auto Select Highest Signal AP')
 		$Text_Experimental = IniRead($DefaultLanguagePath, 'GuiText', 'Experimental', 'Experimental')
@@ -10128,14 +10168,14 @@ Func _rad2deg($radian) ;convert radians to degrees
 EndFunc   ;==>_rad2deg
 
 Func _SignalPercentToDb($InSig);Estimated value
-	$max_signal = -20 ;(dBm)
+	$max_signal = -30 ;(dBm)
 	$disassociation_signal = -85 ;(dBm)
 	$dBm = ((($max_signal - $disassociation_signal) * $InSig) - (20 * $max_signal) + (100 * $disassociation_signal)) / 80
 	Return (Round($dBm))
 EndFunc   ;==>_SignalPercentToDb
 
 Func _DbToSignalPercent($InDB);Estimated value
-	$max_signal = -20 ;(dBm)
+	$max_signal = -30 ;(dBm)
 	$disassociation_signal = -85 ;(dBm)
 	$SIG = 100 - 80 * ($max_signal - $InDB) / ($max_signal - $disassociation_signal)
 	If $SIG < 0 Then $SIG = 0
