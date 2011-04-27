@@ -13,8 +13,8 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Exporter'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports based on input options'
-$version = 'v3'
-$last_modified = '2011/04/23'
+$version = 'v4'
+$last_modified = '2011/04/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
@@ -23,10 +23,10 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $DB_OBJ
-Dim $filetype = 'k';Default file type (d=detailed, s=summary, k=kml)
-Dim $filename = @ScriptDir & '\Temp\Save.txt'
+Dim $filetype = 'cd';Default file type (d=detailed VS1, cd=detailed CSV, cs=summary CSV, k=KML, w=WifiDB Upload)
+Dim $filename = @ScriptDir & '\Temp\Save.csv'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
-Dim $VistumblerDB = @ScriptDir & '\Temp\VistumblerDB.mdb'
+Dim $VistumblerDB = @ScriptDir & '\Temp\Vistumbler.mdb'
 Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $TmpDir = @ScriptDir & '\temp\'
 
@@ -77,10 +77,6 @@ For $loop = 1 To $CmdLine[0]
 	If StringInStr($CmdLine[$loop], '/p') Then
 		$MapTrack = 1
 	EndIf
-	If StringInStr($CmdLine[$loop], '/?') Then
-		MsgBox(0, '', '/k="path to save kml file"' & @CRLF & @CRLF & '/a	Map Active Access Points' & @CRLF & '/d	Map Dead Access Points' & @CRLF & '/t	Map GPS Track')
-		Exit
-	EndIf
 	If StringInStr($CmdLine[$loop], '/db') Then
 		$filesplit = StringSplit($CmdLine[$loop], "=")
 		If $filesplit[0] = 2 Then $VistumblerDB = $filesplit[2]
@@ -101,83 +97,44 @@ For $loop = 1 To $CmdLine[0]
 		$wksplit = StringSplit($CmdLine[$loop], "=")
 		If $wksplit[0] = 2 Then $WifiDb_ApiKey = $wksplit[2]
 	EndIf
+	If StringInStr($CmdLine[$loop], '/?') Then
+		MsgBox(0, '', 'to be filled in later. the old help was outdated an no longer relevant')
+		Exit
+	EndIf
 Next
 
-_AccessConnectConn($VistumblerDB, $DB_OBJ)
-If $filetype = 'd' Then
-	_ExportDetailedTXT($filename)
-ElseIf $filetype = 'z' Then
-	_ExportVSZ($filename)
-ElseIf $filetype = 's' Then
-	_ExportToTXT($filename)
-ElseIf $filetype = 'k' Then
-	_AutoSaveKml($filename, $MapTrack, $MapAccessPoints, $MapActiveAPs, $MapDeadAPs)
-ElseIf $filetype = 'w' Then
-	_UploadActiveApsToWifidb()
+If FileExists($VistumblerDB) Then
+	_AccessConnectConn($VistumblerDB, $DB_OBJ)
+	If $filetype = 'd' Then
+		_ExportVS1($filename)
+	ElseIf $filetype = 'z' Then
+		_ExportVSZ($filename)
+	ElseIf $filetype = 'cd' Then
+		_ExportToCSV($filename, 1)
+	ElseIf $filetype = 'cs' Then
+		_ExportToCSV($filename, 0)
+	ElseIf $filetype = 'k' Then
+		_AutoSaveKml($filename, $MapTrack, $MapAccessPoints, $MapActiveAPs, $MapDeadAPs)
+	ElseIf $filetype = 'w' Then
+		_UploadActiveApsToWifidb()
+	EndIf
+	_AccessCloseConn($DB_OBJ)
 EndIf
-_AccessCloseConn($DB_OBJ)
+
 Exit
 
-Func _UploadActiveApsToWifidb()
-	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, SECTYPE, NETTYPE, RADTYPE, BTX, OTX, LastHistID, LABEL FROM AP WHERE Active='1' And BSSID<>''"
-	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundApMatch = UBound($ApMatchArray) - 1
-	For $exp = 1 To $FoundApMatch
-		$ExpApID = $ApMatchArray[$exp][1]
-		$ExpBSSID = StringReplace($ApMatchArray[$exp][2], ":", "")
-		$ExpSSID = $ApMatchArray[$exp][3]
-		$ExpCHAN = $ApMatchArray[$exp][4]
-		$ExpAUTH = $ApMatchArray[$exp][5]
-		$ExpENCR = $ApMatchArray[$exp][6]
-		$ExpSECTYPE = $ApMatchArray[$exp][7]
-		$ExpNET = $ApMatchArray[$exp][8]
-		$ExpRAD = $ApMatchArray[$exp][9]
-		$ExpBTX = $ApMatchArray[$exp][10]
-		$ExpOTX = $ApMatchArray[$exp][11]
-		$ExpLastID = $ApMatchArray[$exp][12]
-		$ExpLAB = $ApMatchArray[$exp][13]
+;-------------------------------------------------------------------------------------------------------------------------------
+;                                                       FUNCTIONS
+;-------------------------------------------------------------------------------------------------------------------------------
 
-		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundHistMatch = UBound($HistMatchArray) - 1
-		If $FoundHistMatch = 1 Then
-			$ExpLastGpsSig = $HistMatchArray[1][1]
-			$ExpLastGpsID = $HistMatchArray[1][2]
-			$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsID & "'"
-			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundGpsMatch = UBound($GpsMatchArray) - 1
-			If $FoundGpsMatch = 1 Then
-				$ExpLastGpsLat = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][1], "N", ""), "S", "-"), " ", "")
-				$ExpLastGpsLon = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][2], "E", ""), "W", "-"), " ", "")
-				$ExpLastGpsSat = $GpsMatchArray[1][3]
-				$ExpLastGpsHDP = $GpsMatchArray[1][4]
-				$ExpLastGpsAlt = $GpsMatchArray[1][5]
-				$ExpLastGpsGeo = $GpsMatchArray[1][6]
-				$ExpLastGpsMPH = $GpsMatchArray[1][7]
-				$ExpLastGpsKMH = $GpsMatchArray[1][8]
-				$ExpLastGpsTAngle = $GpsMatchArray[1][9]
-				$ExpLastGpsDate = $GpsMatchArray[1][10]
-				$ExpLastGpsTime = $GpsMatchArray[1][11]
-
-				$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsMPH & "&MPH=" & $ExpLastGpsKMH & "&Track=" & $ExpLastGpsTAngle
-				If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then $url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
-				;FileWrite("templog.txt", StringLen($url & '?' & $url_data) & ' - ' & $url & '?' & $url_data & @CRLF)
-				$webpagesource = _INetGetSource($url & '?' & $url_data)
-				;FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
-			EndIf
-		EndIf
-	Next
-EndFunc   ;==>_UploadActiveApsToWifidb
-
-Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
-	FileWriteLine($savefile, "# Vistumbler VS1 - Detailed Export Version 1.0")
-	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
-
-	;Export GIDs
-	FileWriteLine($savefile, "# -------------------------------------------------")
-	FileWriteLine($savefile, "# GpsID|Latitude|Longitude|NumOfSatalites|Date|Time")
-	FileWriteLine($savefile, "# -------------------------------------------------")
-	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS"
+Func _ExportVS1($savefile);writes vistumbler detailed data to a txt file
+	$file = "# Vistumbler VS1 - Detailed Export Version 3.0" & @CRLF & _
+			"# Created By: " & $Script_Name & ' ' & $version & @CRLF & _
+			"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
+			"# GpsID|Latitude|Longitude|NumOfSatalites|HorizontalDilutionOfPrecision|Altitude(m)|HeightOfGeoidAboveWGS84Ellipsoid(m)|Speed(km/h)|Speed(MPH)|TrackAngle(Deg)|Date(UTC y-m-d)|Time(UTC h:m:s.ms)" & @CRLF & _
+			"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
+	;Export GPS IDs
+	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundGpsMatch = UBound($GpsMatchArray) - 1
 	For $exp = 1 To $FoundGpsMatch
@@ -185,128 +142,69 @@ Func _ExportDetailedTXT($savefile);writes vistumbler data to a txt file
 		$ExpLat = $GpsMatchArray[$exp][2]
 		$ExpLon = $GpsMatchArray[$exp][3]
 		$ExpSat = $GpsMatchArray[$exp][4]
-		$ExpDate = $GpsMatchArray[$exp][5]
-		$ExpTime = $GpsMatchArray[$exp][6]
-		FileWriteLine($savefile, $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpDate & '|' & $ExpTime)
+		$ExpHorDilPitch = $GpsMatchArray[$exp][5]
+		$ExpAlt = $GpsMatchArray[$exp][6]
+		$ExpGeo = $GpsMatchArray[$exp][7]
+		$ExpSpeedMPH = $GpsMatchArray[$exp][8]
+		$ExpSpeedKmh = $GpsMatchArray[$exp][9]
+		$ExpTrack = $GpsMatchArray[$exp][10]
+		$ExpDate = $GpsMatchArray[$exp][11]
+		$ExpTime = $GpsMatchArray[$exp][12]
+		$file &= $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime & @CRLF
 	Next
 
 	;Export AP Information
-	FileWriteLine($savefile, "# ---------------------------------------------------------------------------------------------------------------------------------------------------------")
-	FileWriteLine($savefile, "# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL")
-	FileWriteLine($savefile, "# ---------------------------------------------------------------------------------------------------------------------------------------------------------")
-	$query = "SELECT SSID, BSSID, MANU, AUTH, ENCR, SECTYPE, RADTYPE, CHAN, BTX, OTX, NETTYPE, Label, FirstHistId, LastHistID, ApID, HighGpsHistId FROM AP"
+	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
+			"# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL" & @CRLF & _
+			"# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
+
+	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
-	For $exp = 1 To $FoundApMatch
-		$ExpSSID = $ApMatchArray[$exp][1]
-		$ExpBSSID = $ApMatchArray[$exp][2]
-		$ExpMANU = $ApMatchArray[$exp][3]
-		$ExpAUTH = $ApMatchArray[$exp][4]
-		$ExpENCR = $ApMatchArray[$exp][5]
-		$ExpSECTYPE = $ApMatchArray[$exp][6]
-		$ExpRAD = $ApMatchArray[$exp][7]
-		$ExpCHAN = $ApMatchArray[$exp][8]
-		$ExpBTX = $ApMatchArray[$exp][9]
-		$ExpOTX = $ApMatchArray[$exp][10]
-		$ExpNET = $ApMatchArray[$exp][11]
-		$ExpLAB = $ApMatchArray[$exp][12]
-		$ExpFirstID = $ApMatchArray[$exp][13]
-		$ExpLastID = $ApMatchArray[$exp][14]
-		$ExpApID = $ApMatchArray[$exp][15]
-		$ExpHighGpsID = $ApMatchArray[$exp][16]
-		$ExpGidSid = ''
+	If $FoundApMatch > 0 Then
+		For $exp = 1 To $FoundApMatch
+			$ExpApID = $ApMatchArray[$exp][1]
+			$ExpSSID = $ApMatchArray[$exp][2]
+			$ExpBSSID = $ApMatchArray[$exp][3]
+			$ExpNET = $ApMatchArray[$exp][4]
+			$ExpRAD = $ApMatchArray[$exp][5]
+			$ExpCHAN = $ApMatchArray[$exp][6]
+			$ExpAUTH = $ApMatchArray[$exp][7]
+			$ExpENCR = $ApMatchArray[$exp][8]
+			$ExpSECTYPE = $ApMatchArray[$exp][9]
+			$ExpBTX = $ApMatchArray[$exp][10]
+			$ExpOTX = $ApMatchArray[$exp][11]
+			$ExpMANU = $ApMatchArray[$exp][12]
+			$ExpLAB = $ApMatchArray[$exp][13]
+			$ExpHighGpsID = $ApMatchArray[$exp][14]
+			$ExpFirstID = $ApMatchArray[$exp][15]
+			$ExpLastID = $ApMatchArray[$exp][16]
+			$ExpGidSid = ''
 
-		;Create GID,SIG String
-		$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpApID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundHistMatch = UBound($HistMatchArray) - 1
-		For $epgs = 1 To $FoundHistMatch
-			$ExpGID = $HistMatchArray[$epgs][1]
-			$ExpSig = $HistMatchArray[$epgs][2]
-			If $epgs = 1 Then
-				$ExpGidSid = $ExpGID & ',' & $ExpSig
-			Else
-				$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
-			EndIf
-		Next
-
-		FileWriteLine($savefile, $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid)
-	Next
-EndFunc   ;==>_ExportDetailedTXT
-
-Func _ExportToTXT($savefile);writes vistumbler data to a txt file
-	FileWriteLine($savefile, "# Vistumbler TXT - Export Version 1.0")
-	FileWriteLine($savefile, "# Created By: " & $Script_Name & ' ' & $version)
-	FileWriteLine($savefile, "# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
-	FileWriteLine($savefile, "# SSID|BSSID|MANUFACTURER|Highest Signal w/GPS|Authetication|Encryption|Radio Type|Channel|Latitude|Longitude|Basic Transfer Rates|Other Transfer Rates|First Seen|Last Seen|Network Type|Label|Signal History")
-	FileWriteLine($savefile, "# ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------")
-	$query = "SELECT SSID, BSSID, MANU, AUTH, ENCR, RADTYPE, CHAN, BTX, OTX, NETTYPE, Label, FirstHistId, LastHistID, ApID, HighGpsHistId FROM AP"
-	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundApMatch = UBound($ApMatchArray) - 1
-	For $exp = 1 To $FoundApMatch
-		$ExpSSID = $ApMatchArray[$exp][1]
-		$ExpBSSID = $ApMatchArray[$exp][2]
-		$ExpMANU = $ApMatchArray[$exp][3]
-		$ExpAUTH = $ApMatchArray[$exp][4]
-		$ExpENCR = $ApMatchArray[$exp][5]
-		$ExpRAD = $ApMatchArray[$exp][6]
-		$ExpCHAN = $ApMatchArray[$exp][7]
-		$ExpBTX = $ApMatchArray[$exp][8]
-		$ExpOTX = $ApMatchArray[$exp][9]
-		$ExpNET = $ApMatchArray[$exp][10]
-		$ExpLAB = $ApMatchArray[$exp][11]
-		$ExpFirstID = $ApMatchArray[$exp][12]
-		$ExpLastID = $ApMatchArray[$exp][13]
-		$ExpApID = $ApMatchArray[$exp][14]
-		$ExpHighGpsID = $ApMatchArray[$exp][15]
-
-		;Get High GPS Signal
-		If $ExpHighGpsID = 0 Then
-			$ExpHighGpsSig = 0
-			$ExpHighGpsLat = 'N 0.0000'
-			$ExpHighGpsLon = 'E 0.0000'
-		Else
-			$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpHighGpsID & "'"
+			;Create GID,SIG String
+			$query = "SELECT GpsID, Signal FROM Hist WHERE ApID = '" & $ExpApID & "'"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ExpHighGpsSig = $HistMatchArray[1][1]
-			$ExpHighGpsID = $HistMatchArray[1][2]
-			$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ExpHighGpsID & "'"
-			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ExpHighGpsLat = $GpsMatchArray[1][1]
-			$ExpHighGpsLon = $GpsMatchArray[1][2]
-		EndIf
+			$FoundHistMatch = UBound($HistMatchArray) - 1
+			For $epgs = 1 To $FoundHistMatch
+				$ExpGID = $HistMatchArray[$epgs][1]
+				$ExpSig = $HistMatchArray[$epgs][2]
+				If $epgs = 1 Then
+					$ExpGidSid = $ExpGID & ',' & $ExpSig
+				Else
+					$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
+				EndIf
+			Next
 
-		;Get First Found Time From FirstHistID
-		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpFirstID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ExpFistsGpsId = $HistMatchArray[1][1]
-		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFistsGpsId & "'"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-
-		;Get Last Found Time From LastHistID
-		$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ExpLastGpsID = $HistMatchArray[1][1]
-		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFistsGpsId & "'"
-		$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
-
-		;Get Signal History
-		$query = "SELECT Signal FROM Hist WHERE ApID = '" & $ExpApID & "'"
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundHistMatch = UBound($HistMatchArray) - 1
-		For $esh = 1 To $FoundHistMatch
-			If $esh = 1 Then
-				$ExpSigHist = $HistMatchArray[$esh][1]
-			Else
-				$ExpSigHist &= '-' & $HistMatchArray[$esh][1]
-			EndIf
+			$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
 		Next
-
-		FileWriteLine($savefile, $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpHighGpsSig & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpHighGpsLat & '|' & $ExpHighGpsLon & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $FirstDateTime & '|' & $LastDateTime & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpSigHist)
-	Next
-EndFunc   ;==>_ExportToTXT
+		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		FileWrite($savefile, $file)
+		FileClose($savefile)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+EndFunc   ;==>_ExportVS1
 
 Func _ExportVSZ($savefile)
 	$vsz_temp_file = $TmpDir & 'data.zip'
@@ -315,12 +213,107 @@ Func _ExportVSZ($savefile)
 	If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
 	If FileExists($vsz_file) Then FileDelete($vsz_file)
 	If FileExists($vs1_file) Then FileDelete($vs1_file)
-	_ExportDetailedTXT($vs1_file)
+	_ExportVS1($vs1_file)
 	_Zip_Create($vsz_temp_file)
 	_Zip_AddFile($vsz_temp_file, $vs1_file)
 	FileMove($vsz_temp_file, $vsz_file)
 	FileDelete($vs1_file)
 EndFunc   ;==>_ExportVSZ
+
+Func _ExportToCSV($savefile, $Detailed = 0);writes vistumbler data to a csv file
+	If $Detailed = 0 Then
+		$file = "SSID,BSSID,MANUFACTURER,HIGHEST SIGNAL W/GPS,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,LATITUDE,LONGITUDE,BTX,OTX,FIRST SEEN(UTC),LAST SEEN(UTC),NETWORK TYPE,LABEL" & @CRLF
+	ElseIf $Detailed = 1 Then
+		$file = "SSID,BSSID,MANUFACTURER,SIGNAL,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,BTX,OTX,NETWORK TYPE,LABEL,LATITUDE,LONGITUDE,SATELLITES,HDOP,ALTITUDE,HEIGHT OF GEOID,SPEED(km/h),SPEED(MPH),TRACK ANGLE,DATE(UTC),TIME(UTC)" & @CRLF
+	EndIf
+	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	If $FoundApMatch > 0 Then
+		For $exp = 1 To $FoundApMatch
+			$ExpApID = $ApMatchArray[$exp][1]
+			$ExpSSID = $ApMatchArray[$exp][2]
+			$ExpBSSID = $ApMatchArray[$exp][3]
+			$ExpNET = $ApMatchArray[$exp][4]
+			$ExpRAD = $ApMatchArray[$exp][5]
+			$ExpCHAN = $ApMatchArray[$exp][6]
+			$ExpAUTH = $ApMatchArray[$exp][7]
+			$ExpENCR = $ApMatchArray[$exp][8]
+			$ExpBTX = $ApMatchArray[$exp][10]
+			$ExpOTX = $ApMatchArray[$exp][11]
+			$ExpMANU = $ApMatchArray[$exp][12]
+			$ExpLAB = $ApMatchArray[$exp][13]
+			$ExpHighGpsID = $ApMatchArray[$exp][14]
+			$ExpFirstID = $ApMatchArray[$exp][15]
+			$ExpLastID = $ApMatchArray[$exp][16]
+
+			If $Detailed = 0 Then
+				;Get High GPS Signal
+				If $ExpHighGpsID = 0 Then
+					$ExpHighGpsSig = 0
+					$ExpHighGpsLat = 'N 0000.0000'
+					$ExpHighGpsLon = 'E 0000.0000'
+				Else
+					$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpHighGpsID & "'"
+					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpHighGpsSig = $HistMatchArray[1][1]
+					$ExpHighGpsID = $HistMatchArray[1][2]
+					$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID = '" & $ExpHighGpsID & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpHighGpsLat = $GpsMatchArray[1][1]
+					$ExpHighGpsLon = $GpsMatchArray[1][2]
+				EndIf
+				;Get First Found Time From FirstHistID
+				$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpFirstID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpFirstGpsId = $HistMatchArray[1][1]
+				$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpFirstGpsId & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FirstDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+				;Get Last Found Time From LastHistID
+				$query = "SELECT GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLastGpsID = $HistMatchArray[1][1]
+				$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
+				;Write summary csv line
+				$file &= StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', '') & @CRLF
+			ElseIf $Detailed = 1 Then
+				;Get All Signals and GpsIDs for current ApID
+				$query = "SELECT GpsID, Signal FROM Hist WHERE ApID='" & $ExpApID & "' And Signal<>'0' ORDER BY Date1, Time1"
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FoundHistMatch = UBound($HistMatchArray) - 1
+				For $exph = 1 To $FoundHistMatch
+					$ExpGID = $HistMatchArray[$exph][1]
+					$ExpSig = $HistMatchArray[$exph][2]
+					;Get GPS Data Based on GpsID
+					$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID='" & $ExpGID & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+					$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+					$ExpSat = $GpsMatchArray[1][3]
+					$ExpHorDilPitch = $GpsMatchArray[1][4]
+					$ExpAlt = $GpsMatchArray[1][5]
+					$ExpGeo = $GpsMatchArray[1][6]
+					$ExpSpeedMPH = $GpsMatchArray[1][7]
+					$ExpSpeedKmh = $GpsMatchArray[1][8]
+					$ExpTrack = $GpsMatchArray[1][9]
+					$ExpDate = $GpsMatchArray[1][10]
+					$ExpTime = $GpsMatchArray[1][11]
+					;Write detailed csv line
+					$file &= '"' & $ExpSSID & '",' & $ExpBSSID & ',"' & $ExpMANU & '",' & $ExpSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $ExpNET & ',"' & $ExpLAB & '",' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & ',' & $ExpDate & ',' & $ExpTime & @CRLF
+				Next
+			EndIf
+		Next
+		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		FileWrite($savefile, $file)
+		FileClose($savefile)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+EndFunc   ;==>_ExportToCSV
 
 Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapAPs = 1, $MapActive = 1, $MapDead = 1)
 	$file = '<?xml version="1.0" encoding="utf-8"?>' & @CRLF _
@@ -539,6 +532,57 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapAPs = 1, $MapActive = 1, $MapDead 
 	FileDelete($kml)
 	$filewrite = FileWrite($kml, $file)
 EndFunc   ;==>_AutoSaveKml
+
+Func _UploadActiveApsToWifidb()
+	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, SECTYPE, NETTYPE, RADTYPE, BTX, OTX, LastHistID, LABEL FROM AP WHERE Active='1' And BSSID<>''"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $exp = 1 To $FoundApMatch
+		$ExpApID = $ApMatchArray[$exp][1]
+		$ExpBSSID = StringReplace($ApMatchArray[$exp][2], ":", "")
+		$ExpSSID = $ApMatchArray[$exp][3]
+		$ExpCHAN = $ApMatchArray[$exp][4]
+		$ExpAUTH = $ApMatchArray[$exp][5]
+		$ExpENCR = $ApMatchArray[$exp][6]
+		$ExpSECTYPE = $ApMatchArray[$exp][7]
+		$ExpNET = $ApMatchArray[$exp][8]
+		$ExpRAD = $ApMatchArray[$exp][9]
+		$ExpBTX = $ApMatchArray[$exp][10]
+		$ExpOTX = $ApMatchArray[$exp][11]
+		$ExpLastID = $ApMatchArray[$exp][12]
+		$ExpLAB = $ApMatchArray[$exp][13]
+
+		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID = '" & $ExpLastID & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundHistMatch = UBound($HistMatchArray) - 1
+		If $FoundHistMatch = 1 Then
+			$ExpLastGpsSig = $HistMatchArray[1][1]
+			$ExpLastGpsID = $HistMatchArray[1][2]
+			$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID = '" & $ExpLastGpsID & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundGpsMatch = UBound($GpsMatchArray) - 1
+			If $FoundGpsMatch = 1 Then
+				$ExpLastGpsLat = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][1], "N", ""), "S", "-"), " ", "")
+				$ExpLastGpsLon = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][2], "E", ""), "W", "-"), " ", "")
+				$ExpLastGpsSat = $GpsMatchArray[1][3]
+				$ExpLastGpsHDP = $GpsMatchArray[1][4]
+				$ExpLastGpsAlt = $GpsMatchArray[1][5]
+				$ExpLastGpsGeo = $GpsMatchArray[1][6]
+				$ExpLastGpsMPH = $GpsMatchArray[1][7]
+				$ExpLastGpsKMH = $GpsMatchArray[1][8]
+				$ExpLastGpsTAngle = $GpsMatchArray[1][9]
+				$ExpLastGpsDate = $GpsMatchArray[1][10]
+				$ExpLastGpsTime = $GpsMatchArray[1][11]
+
+				$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsMPH & "&Track=" & $ExpLastGpsTAngle
+				If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then $url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
+				;FileWrite("templog.txt", StringLen($url & '?' & $url_data) & ' - ' & $url & '?' & $url_data & @CRLF)
+				$webpagesource = _INetGetSource($url & '?' & $url_data)
+				;FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
+			EndIf
+		EndIf
+	Next
+EndFunc   ;==>_UploadActiveApsToWifidb
 
 Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
 	$return = '0.0000000'
