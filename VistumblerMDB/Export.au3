@@ -13,8 +13,8 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Exporter'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports based on input options'
-$version = 'v4'
-$last_modified = '2011/04/27'
+$version = 'v5'
+$last_modified = '2011/05/12'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
@@ -57,7 +57,7 @@ Dim $MapActiveAPs = 0
 Dim $MapDeadAPs = 0
 Dim $MapAccessPoints = 0
 Dim $MapTrack = 0
-Dim $url
+Dim $apiurl
 Dim $WifiDb_User
 Dim $WifiDb_ApiKey
 
@@ -87,7 +87,7 @@ For $loop = 1 To $CmdLine[0]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/u') Then
 		$urlsplit = StringSplit($CmdLine[$loop], "=")
-		If $urlsplit[0] = 2 Then $url = $urlsplit[2]
+		If $urlsplit[0] = 2 Then $apiurl = $urlsplit[2]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/wa') Then
 		$wasplit = StringSplit($CmdLine[$loop], "=")
@@ -574,10 +574,11 @@ Func _UploadActiveApsToWifidb()
 				$ExpLastGpsDate = $GpsMatchArray[1][10]
 				$ExpLastGpsTime = $GpsMatchArray[1][11]
 
+				$url_root = $apiurl & 'live.php?'
 				$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsMPH & "&Track=" & $ExpLastGpsTAngle
 				If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then $url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
-				;FileWrite("templog.txt", StringLen($url & '?' & $url_data) & ' - ' & $url & '?' & $url_data & @CRLF)
-				$webpagesource = _INetGetSource($url & '?' & $url_data)
+				;FileWrite("templog.txt", StringLen($url_root & $url_data) & ' - ' & $url_root & $url_data & @CRLF)
+				$webpagesource = _INetGetSource($url_root & $url_data)
 				;FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
 			EndIf
 		EndIf
