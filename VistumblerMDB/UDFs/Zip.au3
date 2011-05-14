@@ -25,7 +25,7 @@ Func _Zip_Create($hFilename)
 	FileWrite($hFp, $sString)
 	If @error Then Return SetError(1,0,0)
 	FileClose($hFp)
-	
+
 	While Not FileExists($hFilename)
 		Sleep(10)
 	Wend
@@ -326,10 +326,12 @@ Func _Zip_List($hZipFile)
 	If not _IsFullPath($hZipFile) then Return SetError(4,0) ;zip file isn't a full path
 	If Not FileExists($hZipFile) Then Return SetError(1, 0, 0) ;no zip file
 	$oApp = ObjCreate("Shell.Application")
+	With $oApp
 	$hList = $oApp.Namespace($hZipFile).Items
 	For $item in $hList
 		_ArrayAdd($aArray,$item.name)
 	Next
+	EndWith
 	$aArray[0] = UBound($aArray) - 1
 	Return $aArray
 EndFunc   ;==>_Zip_List
@@ -506,7 +508,7 @@ Func _GetIcon($file, $ReturnType = 0)
 	$FileType = $FileType[UBound($FileType)-1]
 	$FileParam = RegRead("HKEY_CLASSES_ROOT\." & $FileType, "")
 	$DefaultIcon = RegRead("HKEY_CLASSES_ROOT\" & $FileParam & "\DefaultIcon", "")
-	
+
 	If Not @error Then
 		$IconSplit = StringSplit($DefaultIcon, ",")
 		ReDim $IconSplit[3]
@@ -516,7 +518,7 @@ Func _GetIcon($file, $ReturnType = 0)
 		$Iconfile = @SystemDir & "\shell32.dll"
 		$IconID = -219
 	EndIf
-	
+
 	If $ReturnType = 0 Then
 		Return $Iconfile
 	Else

@@ -1,9 +1,9 @@
 #RequireAdmin
-#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
-#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 
 ;License Information------------------------------------
 ;Copyright (C) 2011 Andrew Calcutt
