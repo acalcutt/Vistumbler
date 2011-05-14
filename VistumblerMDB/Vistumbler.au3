@@ -1,7 +1,7 @@
 #RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=Icons\icon.ico
-#AutoIt3Wrapper_Outfile=Vistumbler.exe
+#AutoIt3Wrapper_icon=Icons\icon.ico
+#AutoIt3Wrapper_outfile=Vistumbler.exe
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 
@@ -16,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 17'
+$version = 'v10.1 Beta 18 (pre-release)'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2011/05/12'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -1105,7 +1105,7 @@ $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' 
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $UseWiFiDbAutoUploadButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbUploadAps & ' (' & $Text_Experimental & ')', $Options)
 If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_DISABLE); Upload to WifiDB is not ready yet. The button will be disabled untill it is available
+;GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_DISABLE); Upload to WifiDB is not ready yet. The button will be disabled untill it is available
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
@@ -8333,7 +8333,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_WifidbUploadAps = GUICtrlCreateCheckbox($Text_AutoWiFiDbUploadAps, 360, 320, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState($GUI_WifidbUploadAps, $GUI_CHECKED)
-		GUICtrlSetState($GUI_WifidbUploadAps, $GUI_DISABLE); Upload to WifiDB is not ready yet. The checkbox will be disabled untill it is available
+		;GUICtrlSetState($GUI_WifidbUploadAps, $GUI_DISABLE); Upload to WifiDB is not ready yet. The checkbox will be disabled untill it is available
 		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 360, 340, 615, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_AutoUpApsToWifiDBTime = GUICtrlCreateInput($AutoUpApsToWifiDBTime, 360, 355, 115, 20)

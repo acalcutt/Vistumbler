@@ -13,13 +13,14 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Exporter'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports based on input options'
-$version = 'v5'
-$last_modified = '2011/05/12'
+$version = 'v6'
+$last_modified = '2011/05/14'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
 #include <INet.au3>
+#Include <String.au3>
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $DB_OBJ
@@ -63,12 +64,12 @@ Dim $WifiDb_ApiKey
 
 For $loop = 1 To $CmdLine[0]
 	If StringInStr($CmdLine[$loop], '/f') Then
-		$filesplit = StringSplit($CmdLine[$loop], "=")
-		If $filesplit[0] = 2 Then $filename = $filesplit[2]
+		$filesplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		If IsArray($filesplit) Then $filename = $filesplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/t') Then
-		$filesplit = StringSplit($CmdLine[$loop], "=")
-		If $filesplit[0] = 2 Then $filetype = $filesplit[2]
+		$filesplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		If IsArray($filesplit) Then $filetype = $filesplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/a') Then
 		$MapActiveAPs = 1
@@ -78,24 +79,24 @@ For $loop = 1 To $CmdLine[0]
 		$MapTrack = 1
 	EndIf
 	If StringInStr($CmdLine[$loop], '/db') Then
-		$filesplit = StringSplit($CmdLine[$loop], "=")
-		If $filesplit[0] = 2 Then $VistumblerDB = $filesplit[2]
+		$filesplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		If IsArray($filesplit) Then $VistumblerDB = $filesplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/d') And StringInStr($CmdLine[$loop], '/db') = 0 Then
 		$MapDeadAPs = 1
 		$MapAccessPoints = 1
 	EndIf
 	If StringInStr($CmdLine[$loop], '/u') Then
-		$urlsplit = StringSplit($CmdLine[$loop], "=")
-		If $urlsplit[0] = 2 Then $apiurl = $urlsplit[2]
+		$urlsplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		If IsArray($urlsplit) Then $apiurl = $urlsplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/wa') Then
-		$wasplit = StringSplit($CmdLine[$loop], "=")
-		If $wasplit[0] = 2 Then $WifiDb_User = $wasplit[2]
+		$wasplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		If IsArray($wasplit) Then $WifiDb_User = $wasplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/wk') Then
-		$wksplit = StringSplit($CmdLine[$loop], "=")
-		If $wksplit[0] = 2 Then $WifiDb_ApiKey = $wksplit[2]
+		$wksplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		If IsArray($wksplit) Then $WifiDb_ApiKey = $wksplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/?') Then
 		MsgBox(0, '', 'to be filled in later. the old help was outdated an no longer relevant')
