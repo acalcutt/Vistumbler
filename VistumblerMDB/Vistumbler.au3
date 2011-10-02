@@ -438,7 +438,7 @@ EndIf
 Dim $GoogleEarth_EXE = IniRead($settings, 'AutoKML', 'GoogleEarth_EXE', $defaultgooglepath)
 
 Dim $WifiDb_User = IniRead($settings, 'PhilsWifiTools', 'WifiDb_User', '')
-Dim $WifiDb_ApiKey = IniRead($settings, 'PhilsWifiTools', 'WifiDb_ApiKey', '')
+Dim $WifiDb_ApiKey = "notyetimplemented";IniRead($settings, 'PhilsWifiTools', 'WifiDb_ApiKey', '')
 Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_SURL', 'https://www.randomintervals.com/wifi/')
 Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_SURL', 'https://wifidb.vistumbler.net/wifidb/')
 Dim $PhilsApiURL = IniRead($settings, 'PhilsWifiTools', 'API_SURL', 'https://api.vistumbler.net/')
@@ -600,7 +600,7 @@ Dim $Text_SetSearchWords = IniRead($DefaultLanguagePath, 'GuiText', 'SetSearchWo
 Dim $Text_SetMacLabel = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacLabel', 'Set Labels by Mac')
 Dim $Text_SetMacManu = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacManu', 'Set Manufactures by Mac')
 
-Dim $Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'Graph URL')
+Dim $Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'Graph AP Signal to Image')
 Dim $Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'WiFiDB URL')
 Dim $Text_PhilsWdbLocate = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWdbLocate', 'WifiDB Locate URL')
 Dim $Text_UploadDataToWifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'UploadDataToWiFiDB', 'Upload Data to WiFiDB')
@@ -1101,11 +1101,6 @@ $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AutoScanMenu = GUICtrlCreateMenuItem($Text_AutoScanApsOnLaunch, $Options)
 If $AutoScan = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $Options)
-If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$UseWiFiDbAutoUploadButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbUploadAps & ' (' & $Text_Experimental & ')', $Options)
-If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-;GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_DISABLE); Upload to WifiDB is not ready yet. The button will be disabled until it is available
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
@@ -1181,20 +1176,30 @@ $RefreshInterfaces = GUICtrlCreateMenuItem($Text_RefreshInterfaces, $Interfaces)
 GUICtrlSetOnEvent($RefreshInterfaces, '_RefreshInterfaces')
 _AddInterfaces()
 
-$Extra = GUICtrlCreateMenu($Text_Extra)
-$OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $Extra)
-$GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $Extra)
-$GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $Extra)
-$OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $Extra)
-$ViewInPhilsPHP = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $Extra)
-$ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $Extra)
-$LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $Extra)
-$UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $Extra)
+$ExtraMenu = GUICtrlCreateMenu($Text_Extra)
+$GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $ExtraMenu)
+$GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $ExtraMenu)
+$OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $ExtraMenu)
+$OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $ExtraMenu)
+
+$WifidbMenu = GUICtrlCreateMenu($Text_WifiDB)
+$UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $WifidbMenu)
+If @OSVersion = "WIN_XP" Then GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_DISABLE)
+If @OSVersion = "WIN_XP" Then $UseWiFiDbGpsLocate = 0
+If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
+$UseWiFiDbAutoUploadButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbUploadAps & ' (' & $Text_Experimental & ')', $WifidbMenu)
+If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
+;GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_DISABLE); Upload to WifiDB is not ready yet. The button will be disabled until it is available
+$ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
+$LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
+$ViewLiveInWDB = GUICtrlCreateMenuItem('View Live APs in WifiDB' & ' (' & $Text_Experimental & ')', $WifidbMenu)
+$ViewInPhilsGraph = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $WifidbMenu)
 
 $Help = GUICtrlCreateMenu($Text_Help)
 $VistumblerHome = GUICtrlCreateMenuItem($Text_VistumblerHome, $Help)
 $VistumblerForum = GUICtrlCreateMenuItem($Text_VistumblerForum, $Help)
 $VistumblerWiki = GUICtrlCreateMenuItem($Text_VistumblerWiki, $Help)
+$UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $Help)
 $UpdateVistumbler = GUICtrlCreateMenuItem($Text_CheckForUpdates, $Help)
 
 $SupportVistumbler = GUICtrlCreateMenu($Text_SupportVistumbler)
@@ -1317,8 +1322,6 @@ GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
 GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
 GUICtrlSetOnEvent($AutoScanMenu, '_AutoScanToggle')
-GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
-GUICtrlSetOnEvent($UseWiFiDbAutoUploadButton, '_WifiDbAutoUploadToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
@@ -1345,19 +1348,26 @@ GUICtrlSetOnEvent($SetSearchWords, '_SettingsGUI_SW')
 GUICtrlSetOnEvent($SetAuto, '_SettingsGUI_Auto')
 GUICtrlSetOnEvent($SetSound, '_SettingsGUI_Sound')
 GUICtrlSetOnEvent($SetWifiDB, '_SettingsGUI_WifiDB')
+
 ;Extra Menu
-GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
+GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
 GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
 GUICtrlSetOnEvent($OpenKmlNetworkLink, '_StartGoogleAutoKmlRefresh')
-GUICtrlSetOnEvent($ViewInPhilsPHP, '_ViewInPhilsPHP')
+
+;WifiDB Menu
+GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
+GUICtrlSetOnEvent($UseWiFiDbAutoUploadButton, '_WifiDbAutoUploadToggle')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
 GUICtrlSetOnEvent($LocateInWDB, '_LocatePositionInWiFiDB')
-GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
+GUICtrlSetOnEvent($ViewLiveInWDB, '_ViewLiveInWDB')
+GUICtrlSetOnEvent($ViewInPhilsGraph, '_ViewInPhilsGraph')
 ;Help Menu
+
 GUICtrlSetOnEvent($VistumblerHome, '_OpenVistumblerHome')
 GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
 GUICtrlSetOnEvent($VistumblerWiki, '_OpenVistumblerWiki')
+GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
 GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
 GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
@@ -1529,9 +1539,9 @@ While 1
 	;Upload Active APs to WiFiDB (if enabled)
 	If $AutoUpApsToWifiDB = 1 Then
 		If TimerDiff($wifidb_au_timer) >= ($AutoUpApsToWifiDBTime * 1000) Then
-			$run = FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=w /u="' & $PhilsApiURL & '" /wa="' & $WifiDb_User & '" /wk="' & $WifiDb_ApiKey & '"'
+			$run = 'Export.exe' & ' /db="' & $VistumblerDB & '" /t=w /u="' & $PhilsApiURL & '" /wa="' & $WifiDb_User & '" /wk="' & $WifiDb_ApiKey & '"'
 			ConsoleWrite($run & @CRLF)
-			$WifiDbUploadProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+			$WifiDbUploadProcess = Run($run, @ScriptDir, @SW_HIDE)
 			$wifidb_au_timer = TimerInit()
 		EndIf
 	EndIf
@@ -4387,8 +4397,8 @@ EndFunc   ;==>_DeletePens
 ;                                                       PHILS FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _ViewInPhilsPHP();Sends data to phils php graphing script
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewInPhilsPHP()') ;#Debug Display
+Func _ViewInPhilsGraph();Sends data to phils php graphing script
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewInPhilsGraph()') ;#Debug Display
 	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 		$query = "SELECT ApID, SSID, BSSID, AUTH, ENCR, RADTYPE, NETTYPE, CHAN, BTX, OTX, MANU, LABEL, HighGpsHistID FROM AP WHERE ListRow = '" & $Selected & "'"
@@ -4447,7 +4457,7 @@ Func _ViewInPhilsPHP();Sends data to phils php graphing script
 	Else
 		MsgBox(0, $Text_Error, $Text_NoApSelected)
 	EndIf
-EndFunc   ;==>_ViewInPhilsPHP
+EndFunc   ;==>_ViewInPhilsGraph
 
 Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
@@ -4459,7 +4469,7 @@ Func _AddToYourWDB()
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 EndFunc   ;==>_AddToYourWDB
 
-Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
+Func _LocatePositionInWiFiDB();Finds GPS based on active acess points and opens in browser
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs
 	$query = "SELECT BSSID, Signal FROM AP WHERE Active = '1'"
@@ -4478,7 +4488,13 @@ Func _LocatePositionInWiFiDB();Send data to phils wireless ap database
 	EndIf
 EndFunc   ;==>_LocatePositionInWiFiDB
 
-Func _LocateGpsInWifidb()
+Func _ViewLiveInWDB();View wifidb live aps in browser
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewLiveInWDB()') ;#Debug Display
+	$url = $PhilsWdbURL & 'opt/live.php'
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
+EndFunc   ;==>_ViewLiveInWDB
+
+Func _LocateGpsInWifidb();Finds GPS based on active acess points based on WifiDB for use in vistumbler
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs
 	Local $return = 0
@@ -8311,6 +8327,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_WifiDB_User = GUICtrlCreateInput($WifiDb_User, 123, 75, 185, 20)
 		GUICtrlCreateLabel("WifiDB API Key", 328, 77, 78, 15)
 		$GUI_WifiDB_ApiKey = GUICtrlCreateInput($WifiDb_ApiKey, 411, 75, 185, 20)
+		GUICtrlSetState($GUI_WifiDB_ApiKey, $GUI_DISABLE);disable because wifidb api key is not yet implemented
 		GUICtrlCreateLabel($Text_PHPgraphing, 31, 110, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_PhilsGraphURL = GUICtrlCreateInput($PhilsGraphURL, 31, 125, 620, 20)
@@ -8603,7 +8620,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_ExportToVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToVS1', 'Export To VS1')
 		$Text_ExportToCSV = IniRead($DefaultLanguagePath, 'GuiText', 'ExportToCSV', 'Export To CSV')
 		$Text_ExportToVSZ = IniRead($DefaultLanguagePath, "GuiText", "ExportToVSZ", "Export To VSZ")
-		$Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'Graph URL')
+		$Text_PhilsPHPgraph = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsPHPgraph', 'Graph AP Signal to Image')
 		$Text_PhilsWDB = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWDB', 'WiFiDB URL')
 		$Text_PhilsWdbLocate = IniRead($DefaultLanguagePath, 'GuiText', 'PhilsWdbLocate', 'WifiDB Locate URL')
 		$Text_UploadDataToWifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'UploadDataToWiFiDB', 'Upload Data to WiFiDB')

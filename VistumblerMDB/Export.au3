@@ -24,6 +24,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $DB_OBJ
+Dim $Debug = 1
 Dim $filetype = 'cd';Default file type (d=detailed VS1, cd=detailed CSV, cs=summary CSV, k=KML, w=WifiDB Upload)
 Dim $filename = @ScriptDir & '\Temp\Save.csv'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
@@ -535,9 +536,11 @@ Func _AutoSaveKml($kml, $MapGpsTrack = 1, $MapAPs = 1, $MapActive = 1, $MapDead 
 EndFunc   ;==>_AutoSaveKml
 
 Func _UploadActiveApsToWifidb()
-	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, SECTYPE, NETTYPE, RADTYPE, BTX, OTX, LastHistID, LABEL FROM AP WHERE Active='1' And BSSID<>''"
+	If $Debug = 1 Then FileWrite("templog.txt", 'UploadActiveApsToWifidb----------------------------------------------------------------------------------------------' & @CRLF)
+	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, SECTYPE, NETTYPE, RADTYPE, BTX, OTX, LastHistID, LABEL FROM AP WHERE Active='1'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
+	If $Debug = 1 Then FileWrite("templog.txt", $FoundApMatch & @CRLF)
 	For $exp = 1 To $FoundApMatch
 		$ExpApID = $ApMatchArray[$exp][1]
 		$ExpBSSID = StringReplace($ApMatchArray[$exp][2], ":", "")
@@ -578,9 +581,9 @@ Func _UploadActiveApsToWifidb()
 				$url_root = $apiurl & 'live.php?'
 				$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsMPH & "&Track=" & $ExpLastGpsTAngle
 				If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then $url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
-				;FileWrite("templog.txt", StringLen($url_root & $url_data) & ' - ' & $url_root & $url_data & @CRLF)
+				If $Debug = 1 Then FileWrite("templog.txt", StringLen($url_root & $url_data) & ' - ' & $url_root & $url_data & @CRLF)
 				$webpagesource = _INetGetSource($url_root & $url_data)
-				;FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
+				If $Debug = 1 Then FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
 			EndIf
 		EndIf
 	Next
@@ -599,5 +602,17 @@ Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddd
 EndFunc   ;==>_Format_GPS_DMM_to_DDD
 
 Func _Error()
+	If $Debug = 1 Then
+		MsgBox(0, "Error", "We intercepted a COM Error !" & @CRLF & @CRLF & _
+				"err.description is: " & @TAB & $oMyError.description & @CRLF & _
+				"err.windescription:" & @TAB & $oMyError.windescription & @CRLF & _
+				"err.number is: " & @TAB & Hex($oMyError.number, 8) & @CRLF & _
+				"err.lastdllerror is: " & @TAB & $oMyError.lastdllerror & @CRLF & _
+				"err.scriptline is: " & @TAB & $oMyError.scriptline & @CRLF & _
+				"err.source is: " & @TAB & $oMyError.source & @CRLF & _
+				"err.helpfile is: " & @TAB & $oMyError.helpfile & @CRLF & _
+				"err.helpcontext is: " & @TAB & $oMyError.helpcontext _
+				)
+	EndIf
 	Exit
 EndFunc   ;==>_Error
