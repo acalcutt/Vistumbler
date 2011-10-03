@@ -1,4 +1,5 @@
 <?php
+include('../lib/daemon.inc.php');
 include('../lib/database.inc.php');
 include('../lib/config.inc.php');
 
@@ -301,7 +302,7 @@ if(is_string($func))
 			<table border="1" width="90%">
 			<tr class="style4"><th colspan="4">Daemon Status:</TH></tr>
 			<?php
-			$daemon->getdaemonstats();
+			$daemon->getdaemonstats('imp_expd');
 			?>
 			</table>
 			<br>

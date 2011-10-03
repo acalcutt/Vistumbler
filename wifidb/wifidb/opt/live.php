@@ -1,331 +1,131 @@
 <?php
 $ft_start = microtime(1);
 error_reporting(E_ALL|E_STRICT);
-$startdate="14-Apr-2011";
-$lastedit="19-Apr-2011";
-$ver = "1.0.0";
-
-global $screen_output;
-$screen_output = "CLI";
-
+$startdate="1-Oct-2011";
+$lastedit="1-Oct-2011";
 include('../lib/config.inc.php');
-#include('../lib/database.inc.php');
+include('../lib/database.inc.php');
+pageheader("Access Point Info Page");
+$theme = $GLOBALS['theme'];
+
+$ord	=	@filter_input(INPUT_GET, 'ord', FILTER_SANITIZE_SPECIAL_CHARS);
+$sort	=	@filter_input(INPUT_GET, 'sort', FILTER_SANITIZE_SPECIAL_CHARS);
+$from	=	@filter_input(INPUT_GET, 'from', FILTER_SANITIZE_NUMBER_INT)+0;
+$from	=	$from+0;
+$from_	=	$from+0;
+$inc	=	@filter_input(INPUT_GET, 'to', FILTER_SANITIZE_NUMBER_INT)+0;
+$inc	=	$inc+0;
+if ($from=="" or !is_int($from)){$from=0;}
+if ($from_=="" or !is_int($from_)){$from_=0;}
+if ($inc=="" or !is_int($inc)){$inc=100;}
+if ($ord=="" or !is_string($ord)){$ord="ASC";}
+if ($sort=="" or !is_string($sort)){$sort="chan";}
+?>
+<SCRIPT LANGUAGE="JavaScript">
+    // Row Hide function.
+    // by tcadieux
+    function expandcontract(tbodyid,ClickIcon)
+{
+        if (document.getElementById(ClickIcon).innerHTML == "+")
+        {
+                document.getElementById(tbodyid).style.display = "";
+                document.getElementById(ClickIcon).innerHTML = "-";
+        }else{
+                document.getElementById(tbodyid).style.display = "none";
+                document.getElementById(ClickIcon).innerHTML = "+";
+        }
+}
+</SCRIPT>
+<table border="1" width="100%" cellspacing="0">
+<tr class="style4">
+    <td>Expand Graph</td>
+    <td>Expand Map</td>
+    <td>SSID<a href="?sort=SSID&ord=ASC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"border="0" src="../themes/<?php echo $theme; ?>/img/down.png"></a><a href="?sort=SSID&ord=DESC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/up.png"></a></td>
+    <td>MAC<a href="?sort=mac&ord=ASC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/down.png"></a><a href="?sort=mac&ord=DESC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/up.png"></a></td>
+    <td>Chan<a href="?sort=chan&ord=ASC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/down.png"></a><a href="?sort=chan&ord=DESC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/up.png"></a></td>
+    <td>Radio Type<a href="?sort=radio&ord=ASC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0" src="../themes/<?php echo $theme; ?>/img/down.png"></a><a href="?sort=radio&ord=DESC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/up.png"></a></td>
+    <td>Authentication<a href="?sort=auth&ord=ASC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0" src="../themes/<?php echo $theme; ?>/img/down.png"></a><a href="?sort=auth&ord=DESC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/up.png"></a></td>
+    <td>Encryption<a href="?sort=encry&ord=ASC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0" src="../themes/<?php echo $theme; ?>/img/down.png"></a><a href="?sort=encry&ord=DESC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/up.png"></a></td>
+    <td>Username<a href="?sort=username&ord=ASC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0" src="../themes/<?php echo $theme; ?>/img/down.png"></a><a href="?sort=username&ord=DESC&from=<?php echo $from; ?>&to=<?php echo $inc; ?>"><img height="15" width="15" border="0"src="../themes/<?php echo $theme; ?>/img/up.png"></a></td>
+</tr>
+<?php
+
+##########
+
 $live_aps = "live_aps";
 $live_gps = "live_gps";
-
-// AP Detail Variables
-list($ssid_, $ssids) = make_ssid(@$_GET['SSID']);
-$macs   =   (@$_GET['Mac'] ? filter_input(INPUT_GET, 'Mac', FILTER_SANITIZE_ENCODED, array(16,32) ) : "00:00:00:00:00:00");
-$mac    =   str_replace(":","",$macs);
-$radio  =   (@$_GET['Rad'] ? filter_input(INPUT_GET, 'Rad', FILTER_SANITIZE_ENCODED, array(16,32) ) : "802.11u");
-$sectype=   (@$_GET['SecType'] ? filter_input(INPUT_GET, 'SecType', FILTER_SANITIZE_NUMBER_INT) : 0);
-$chan   =   (@$_GET['Chn'] ? filter_input(INPUT_GET, 'Chn', FILTER_SANITIZE_NUMBER_INT) : 0);
-//Other AP Info
-$auth   =   (@$_GET['Auth'] ? filter_input(INPUT_GET, 'Auth', FILTER_SANITIZE_ENCODED, array(16,32) ) : "Open");
-$encry  =   (@$_GET['Encry'] ? filter_input(INPUT_GET, 'Encry', FILTER_SANITIZE_ENCODED, array(16,32) ) : "None");
-$BTx    =   (@$_GET['BTx'] ? filter_input(INPUT_GET, 'BTx', FILTER_SANITIZE_ENCODED, array(16,32) ) : "0.0");
-$OTx    =   (@$_GET['OTx'] ? filter_input(INPUT_GET, 'OTx', FILTER_SANITIZE_ENCODED, array(16,32) ) : "0.0");
-$NT     =   (@$_GET['NT'] ? filter_input(INPUT_GET, 'NT', FILTER_SANITIZE_ENCODED, array(16,32) ) : "Unknown");
-$label  =   (@$_GET['Label'] ? filter_input(INPUT_GET, 'Label', FILTER_SANITIZE_ENCODED, array(16,32)) : "No Label");
-$sig    =   (@$_GET['Sig'] ? filter_input(INPUT_GET, 'Sig', FILTER_SANITIZE_STRING, array(4,8)) : "0");
-
-// GPS Variables
-$lat    =   (@$_GET['Lat'] ? filter_input(INPUT_GET, 'Lat', FILTER_SANITIZE_ENCODED, array(16,32) ) : "N 0000.0000");
-$long   =   (@$_GET['Long'] ? filter_input(INPUT_GET, 'Long', FILTER_SANITIZE_ENCODED, array(16,32) ) : "E 0000.0000");
-$sats   =   (@$_GET['Sats'] ? filter_input(INPUT_GET, 'Sats', FILTER_SANITIZE_NUMBER_INT) : "0" );
-$hdp    =   (@$_GET['HDP'] ? filter_input(INPUT_GET, 'HDP', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
-$alt    =   (@$_GET['ALT'] ? filter_input(INPUT_GET, 'ALT', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
-$geo    =   (@$_GET['GEO'] ? filter_input(INPUT_GET, 'GEO', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
-$kmh    =   (@$_GET['KMH'] ? filter_input(INPUT_GET, 'KMH', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
-$mph    =   (@$_GET['MPH'] ? filter_input(INPUT_GET, 'MPH', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
-$track  =   (@$_GET['Track'] ? filter_input(INPUT_GET, 'Track', FILTER_SANITIZE_NUMBER_FLOAT) : "0" );
-$date   =   (@$_GET['Date'] ? filter_input(INPUT_GET, 'Date', FILTER_SANITIZE_STRING, array(16,32)) : date("Y-m-d") );
-$time   =   (@$_GET['Time'] ? filter_input(INPUT_GET, 'Time', FILTER_SANITIZE_STRING, array(16,32)) : date("H:i:s") );
-
-//Username and API Key
-$username   =   ( @$_GET['username'] ? filter_input(INPUT_GET, 'username', FILTER_SANITIZE_STRING, array(16,32)) : "UNKOWN" );
-$apikey     =   ( @$_GET['apikey'] ? filter_input(INPUT_GET, 'apikey', FILTER_SANITIZE_STRING, array(16,32)) : "NONE" );
-
-#dump($username);
-
-switch(strtolower($radio))
+$row_color = 0;
+date_default_timezone_set('UTC');
+$date = date("Y-m-d H:i:s.u", time()-1800);
+#echo $date;
+$sql = "SELECT id,ssid,mac,radio,chan,auth,encry,username,Label FROM $db.$live_aps WHERE la >= '$date' ORDER BY `$sort` $ord LIMIT $from, $inc";
+$result = mysql_query($sql, $conn);
+if(mysql_num_rows($result) != 0)
 {
-    case "802.11a":
-        $radios = "a";
-        break;
-    case "802.11b":
-        $radios = "b";
-        break;
-    case "802.11g":
-        $radios = "g";
-        break;
-    case "802.11n":
-        $radios = "n";
-        break;
-    case "802.11u":
-        $radios = "U";
-        break;
-}
-
-$table = $ssid_.$sep.$macs.$sep.$sectype.$sep.$radios.$sep.$chan.$gps_ext;
-
-$conn = new mysqli($host, $db_user, $db_pwd);
-$sql = "SELECT id,ssid,mac,chan,sectype,auth,encry,radio FROM
-        `$db`.`$wtable`
-        WHERE `mac` = '$mac'
-        AND `ssid` = '$ssids'
-        AND `chan` = '$chan'
-        AND `sectype` = '$sectype'
-        AND `radio` = '$radios' LIMIT 1";
-//echo $sql."<br />";
-$result = $conn->query($sql) or printf($conn->error);
-$array = $result->fetch_array(1);
-if(@$array['id'])
-{
-    $AP_id = $array['id'];
-    echo "It's an old AP :/<br />";
-
-    $sql = "SELECT sig FROM
-        `$db`.`$live_aps`
-        WHERE `mac` = '$mac'
-        AND `ssid` = '$ssids'
-        AND `chan` = '$chan'
-        AND `sectype` = '$sectype'
-        AND `radio` = '$radios' LIMIT 1";
-
-    $result->free();
-    $result = $conn->query($sql) or printf($conn->error);
-    $array = $result->fetch_array(1);
-    $all_sigs = $array['sig'];
-
-    $sig_exp = explode("|", $all_sigs);
-    
-    $sig_c = count($sig_exp)-1;
-    if(!$sig_c)
+    $tablerowid = 0;
+    while($array = mysql_fetch_assoc($result))
     {
-        $sig_exp_id = explode("-", $array['sig']);
-        $id = $sig_exp_id[1];
-        $signal = $sig_exp_id[0];
-    }else
-    {
-        $sig_exp_id = explode("-", $sig_exp[$sig_c]);
-        $id = $sig_exp_id[1];
-        $signal = $sig_exp_id[0];
-    }
+        $tablerowid++;
+        $tablerowid2 = $tablerowid+1;
+        if($row_color == 1)
+        {$row_color = 0; $color = "light";}
+        else{$row_color = 1; $color = "dark";}
+        $id = $array['id'];
+        $ssid = $array['ssid'];
+        $mac = $array['mac'];
+        $mac_exp = str_split($mac,2);
+        $mac = implode(":",$mac_exp);
+        $chan = $array['chan'];
+        $radio = $array['radio'];
+        $auth = $array['auth'];
+        $encry = $array['encry'];
+        if($radio=="a")
+        {$radio="802.11a";}
+        elseif($radio=="b")
+        {$radio="802.11b";}
+        elseif($radio=="g")
+        {$radio="802.11g";}
+        elseif($radio=="n")
+        {$radio="802.11n";}
+        else
+        {$radio="Unknown Radio";}
 
-    $sql = "SELECT * FROM `$db`.`$live_gps` WHERE `id` = '$id'";
-    $result->free();
-    $result = $conn->query($sql) or printf($conn->error);
-    $array = $result->fetch_array(1);
+        ?>
+            <tr class="<?php echo $color; ?>">
+                <td align="center" onclick="expandcontract('Row<?php echo $tablerowid;?>','ClickIcon<?php echo $tablerowid;?>')" id="ClickIcon<?php echo $tablerowid;?>" style="cursor: pointer; cursor: hand;">+</td>
+                <td align="center" onclick="expandcontract('Row<?php echo $tablerowid2;?>','ClickIcon<?php echo $tablerowid2;?>')" id="ClickIcon<?php echo $tablerowid2;?>" style="cursor: pointer; cursor: hand;">+</td>
+                <td><a class="links" href="liveap.php?out=html&id=<?php echo $id; ?>"><?php echo $ssid; ?></a></td>
+                <td><?php echo $mac; ?></td>
+                <td><?php echo $chan; ?></td>
+                <td><?php echo $radio; ?></td>
+                <td><?php echo $auth; ?></td>
+                <td><?php echo $encry; ?></td>
+                <td><?php echo $array['username']; ?></td>
+            </tr>
+            <tr>
+               <tbody id="Row<?php echo $tablerowid;?>" style="display:none">
+               <td colspan="9"><iframe width="100%" height="500px"src="liveap.php?out=img&id=<?php echo $id; ?>"></iframe></td>
+               </tbody>
+               <tbody id="Row<?php echo $tablerowid2;?>" style="display:none">
+               <td colspan="9"><iframe width="100%" height="500px"src="liveap.php?out=maps&id=<?php echo $id; ?>"></iframe></td>
+               </tbody>
+            </tr>
 
-    list($lat, $long) = format_gps($lat, $long);
-
-    if( (!strcmp($array['lat'], $lat)) && (!strcmp($array['long'], $long)) )
-    {
-        echo "Lat/Long are the same, move a litte you lazy bastard.<br />";
-    }else
-    {
-        echo "Lat/Long are different, what aboot the Sats and Date/Time, Eh?<br />";
-        $url_time   = strtotime($date." ".$time);
-        $db_time    = strtotime($array['date']." ".$array['time']);
-        if(($url_time - $db_time) > 2)
-        {
-            echo "Oooo its time is newer o_0, lets go insert it<br />";
-            $sql = "INSERT INTO `$db`.`$live_gps` (`id`, `lat`, `long`, `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track`, `date`, `time`)
-            VALUES ('', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time');";
-           // echo str_replace("
-           // ","<br />", $sql."<br /><br />");
-            $conn->query($sql) or printf($conn->error);
-
-            $sig = $all_sigs."|".$signal."-".$conn->insert_id;
-
-            $sql = "UPDATE `$db`.`live_aps` SET `sig` = '$sig', `LA` = '$date $time' WHERE `id` = '$AP_id'";
-            //echo $sql."<br /><br />";
-            $conn->query($sql) or printf($conn->error);
-
-        }else
-        {
-            echo "What are you thinking? You cant have more then a second resolution. >:(<br />";
-        }
+        <?php
+        $tablerowid = $tablerowid2;
+        #break;
     }
 }else
 {
-    echo "Add new AP. :]<br />";
-
-    list($lat, $long) = format_gps($lat, $long);
-    
-    $sql = "INSERT INTO `$db`.`$live_gps` (`id`, `lat`, `long`, `sats`, `hdp`, `alt`, `geo`, `kmh`, `mph`, `track`, `date`, `time`)
-    VALUES ('', '$lat', '$long', '$sats', '$hdp', '$alt', '$geo', '$kmh', '$mph', '$track', '$date', '$time');";
-    //echo str_replace("
-    //","<br />", $sql."<br /><br />");
-    $conn->query($sql) or printf($conn->error);
-    $sig = $sig."-".$conn->insert_id;
-    $sql = "INSERT INTO  `$db`.`$live_aps` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype`, `sig`, `username`)
-    VALUES ('', '$ssids', '$mac','$chan', '$radios', '$auth', '$encry', '$sectype', '$sig',  '$username' ) ";
-    //echo str_replace("
-    //","<br />", $sql."<br /><br />");
-    $conn->query($sql) or printf($conn->error);
-
-    $sql = "INSERT INTO  `$db`.`$wtable` ( `id`, `ssid`, `mac`, `chan`, `radio`, `auth`, `encry`, `sectype`, `BTx`, `OTx`, `NT`, `Label`, `LA`, `lat`, `long`, `active`)
-                                  VALUES ('', '$ssids', '$mac','$chan', '$radios', '$auth', '$encry', '$sectype', '$BTx', '$OTx', '$NT', '$label', '$date $time', '$lat',  '$long', '1' ) ";
-    //echo str_replace("
-    //","<br />", $sql."<br /><br />");
-    $conn->query($sql) or printf($conn->error);
-
+    	?>
+            <tr>
+                    <td align="center" colspan="9">
+                            <b>There are no Access Points imported as of yet, go grab some with Vistumbler and import them.<br />
+                            Come on... you know you want too.</b>
+                    </td>
+            </tr>
+	<?php
 }
-
-$ft_stop = microtime(1);
-echo "Total Memory Usage: ".memory_get_usage(1)."<br />";
-echo "1 Time: ".($ft_stop-$ft_start);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function format_gps($lat, $long)
-{
-    $lat = str_replace("%20", " ", $lat);
-    $long = str_replace("%20", " ", $long);
-    
-    $lat_sub = $lat[0];
-    if($lat_sub != "-" && is_numeric($lat_sub))
-    {
-       $lat = "N ".$lat;
-    }else #if(is_int(substr($gps['lat'], 0,1))+0)
-    {
-       $lat = str_replace("-", "S ", $lat);
-    }
-
-    $long_sub = $long[0];
-    if($long_sub != "-" && is_numeric($long_sub))
-    {
-       $long = "E ".$long;
-    }else #if(is_int(substr($gps['long'], 0,1)+0))
-    {
-       $long = str_replace("-", "W ", $long);
-    }
-
-    $out = array($lat, $long);
-    return $out;
-}
-
-
-
-function make_ssid($ssid_in = '')
-{
-    $ssid_in = preg_replace('/[\x00-\x1F\x7F]/', '', $ssid_in);
-
-    if($ssid_in == ""){$ssid_in="UNNAMED";}
-    #var_dump($exp)."</br>";
-    #if($ssid_len < 1){$ssid_in="UNNAMED";}
-
-    ###########
-    ## Make File Safe SSID
-    $file_safe_ssid = smart_quotes($ssid_in);
-    ###########
-
-    ###########
-    ## Make Row and HTML safe SSID
-    $ssid_in_dupe = $ssid_in;
-    $ssid_in = htmlentities($ssid_in, ENT_QUOTES);
-    $ssid_safe_full_length = mysql_real_escape_string($ssid_in_dupe);
-    ###########
-
-    ###########
-    ## Make Table safe SSID
-    $ssid_sized = str_split($ssid_in_dupe, 25); //split SSID in two on is 25 char.
-    $replace = array(' ', '`', '.', "'", '"', "/", "\\");
-    #echo $ssid_sized[0];
-    $ssid_table_safe = str_replace($replace,'_',$ssid_sized[0]); //Use the 25 char word for the APs table name, this is due to a limitation in MySQL table name lengths,
-    ###########
-
-    ###########
-    ## Return
-    #echo $ssid_table_safe;
-    $A = array(0=>$ssid_table_safe, 1=>$ssid_safe_full_length , 2=> $ssid_in, 3=>$file_safe_ssid, 4=>$ssid_in_dupe);
-    return $A;
-    ###########
-}
-function smart_quotes($text="") // Used for SSID Sanatization
-{
-	$pattern = '/"((.)*?)"/i';
-	$strip = array(
-			0=>";",
-			1=>"`",
-			2=>"&", #
-			3=>"!", #
-			4=>"/", #
-			5=>"\\", #
-			6=>"'",
-			7=>'"',
-			8=>" "
-			);
-	$text = preg_replace($pattern,"&#147;\\1&#148;",$text);
-	$text = str_replace($strip,"_",$text);
-	return $text;
-}
-function dump($value="" , $level=0)
-{
-  if ($level==-1)
-  {
-    $trans[' ']='&there4;';
-    $trans["\t"]='&rArr;';
-    $trans["\n"]='&para;;';
-    $trans["\r"]='&lArr;';
-    $trans["\0"]='&oplus;';
-    return strtr(htmlspecialchars($value),$trans);
-  }
-  if ($level==0) echo '<pre>';
-  $type= gettype($value);
-  echo $type;
-  if ($type=='string')
-  {
-    echo '('.strlen($value).')';
-    $value= dump($value,-1);
-  }
-  elseif ($type=='boolean') $value= ($value?'true':'false');
-  elseif ($type=='object')
-  {
-    $props= get_class_vars(get_class($value));
-    echo '('.count($props).') <u>'.get_class($value).'</u>';
-    foreach($props as $key=>$val)
-    {
-      echo "\n".str_repeat("\t",$level+1).$key.' => ';
-      dump($value->$key,$level+1);
-    }
-    $value= '';
-  }
-  elseif ($type=='array')
-  {
-    echo '('.count($value).')';
-    foreach($value as $key=>$val)
-    {
-      echo "\n".str_repeat("\t",$level+1).dump($key,-1).' => ';
-      dump($val,$level+1);
-    }
-    $value= '';
-  }
-  echo " <b>$value</b>";
-  if ($level==0) echo '</pre>';
-}
+?></table><?php
+footer($_SERVER['SCRIPT_FILENAME']);
 ?>

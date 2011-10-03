@@ -5578,7 +5578,8 @@ $manufactures=array(
 "0015FE"=>"SCHILLING ROBOTICS LLC",
 "0015FF"=>"Novatel Wireless, Inc.",
 "001600"=>"CelleBrite Mobile Synchronization",
-"001601"=>"Buffalo Inc.",
+"001601"=>"Buffalo Inc.",
+
 "001602"=>"CEYON TECHNOLOGY CO.,LTD.",
 "001603"=>"COOLKSKY Co., LTD",
 "001604"=>"Sigpro",
@@ -11119,7 +11120,8 @@ $manufactures=array(
 "008099"=>"KLOCKNER MOELLER IPC",
 "00809A"=>"NOVUS NETWORKS LTD",
 "00809B"=>"JUSTSYSTEM CORPORATION",
-"00809C"=>"LUXCOM, INC.",
+"00809C"=>"LUXCOM, INC.",
+
 "00809D"=>"Commscraft Ltd.",
 "00809E"=>"DATUS GMBH",
 "00809F"=>"ALCATEL BUSINESS SYSTEMS",
@@ -13536,4 +13538,5 @@ $manufactures=array(
 "FCE23F"=>"CLAY PAKY SPA",
 "FCFAF7"=>"Shanghai Baud Data Communication Co.,Ltd.",
 "FCFBFB"=>"Cisco Systems"
-);?>
+);
+?>

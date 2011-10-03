@@ -946,7 +946,7 @@ class daemon
         if($daemon_pid == NULL )return -1;
         #
         $return =0;
-        $WFDBD_PID = $GLOBALS['pid_file_loc'].$daemon_pid; // dbstatsd.pid | imp_expd.pid | daemonperfd.pid
+        $WFDBD_PID = $GLOBALS['pid_file_loc'].$daemon_pid.".pid"; // dbstatsd.pid | imp_expd.pid | daemonperfd.pid
         $os = PHP_OS;
         if ( $os[0] == 'L')
         {
