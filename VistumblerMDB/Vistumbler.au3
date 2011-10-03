@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 19.1 (test version)'
+$version = 'v10.1 Beta 19.2 (test version)'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/10/01'
+$last_modified = '2011/10/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -850,6 +850,11 @@ Dim $Text_OncePerLoop = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerLoop', 
 Dim $Text_OncePerAP = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAP', 'Once per ap')
 Dim $Text_OncePerAPwSound = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAPwSound', 'Once per ap with volume based on signal')
 Dim $Text_WifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB', 'WifiDB')
+Dim $Text_Warning = IniRead($DefaultLanguagePath, 'GuiText', 'Warning', 'Warning')
+Dim $Text_WifiDBLocateWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBLocateWarning', 'This feature sends active access point information to the WifiDB API URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
+Dim $Text_WifiDBAutoUploadWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBAutoUploadWarning', 'This feature sends active access point information to the WifiDB URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
+Dim $Text_WifiDBOpenLiveAPWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', 'Open WifiDB Live AP Webpage')
+Dim $Text_WifiDBOpenMainWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', 'Open WifiDB Main Webpage')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1193,8 +1198,8 @@ If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_
 ;GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_DISABLE); Upload to WifiDB is not ready yet. The button will be disabled until it is available
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
-$ViewLiveInWDB = GUICtrlCreateMenuItem('Open WifiDB Live AP Webpage' & ' (' & $Text_Experimental & ')', $WifidbMenu)
-$ViewWDBWebpage = GUICtrlCreateMenuItem('Open WifiDB Main Webpage', $WifidbMenu)
+$ViewLiveInWDB = GUICtrlCreateMenuItem($Text_WifiDBOpenLiveAPWebpage & ' (' & $Text_Experimental & ')', $WifidbMenu)
+$ViewWDBWebpage = GUICtrlCreateMenuItem($Text_WifiDBOpenMainWebpage, $WifidbMenu)
 $ViewInPhilsGraph = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $WifidbMenu)
 
 $Help = GUICtrlCreateMenu($Text_Help)
@@ -3033,8 +3038,11 @@ Func _WifiDbLocateToggle();Turns wifi gps locate on or off
 		$LatitudeWifidb = 'N 0000.0000'
 		$LongitudeWifidb = 'E 0000.0000'
 	Else
-		GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
-		$UseWiFiDbGpsLocate = 1
+		$UploadWarn = MsgBox(4, $Text_Warning, $Text_WifiDBLocateWarning)
+		If $UploadWarn = 6 Then
+			GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
+			$UseWiFiDbGpsLocate = 1
+		EndIf
 	EndIf
 EndFunc   ;==>_WifiDbLocateToggle
 
@@ -3043,9 +3051,12 @@ Func _WifiDbAutoUploadToggle()
 		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
 		$AutoUpApsToWifiDB = 0
 	Else
-		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
-		$AutoUpApsToWifiDB = 1
-		$wifidb_au_timer = TimerInit()
+		$UploadWarn = MsgBox(4, $Text_Warning, $Text_WifiDBAutoUploadWarning)
+		If $UploadWarn = 6 Then
+			GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
+			$AutoUpApsToWifiDB = 1
+			$wifidb_au_timer = TimerInit()
+		EndIf
 	EndIf
 EndFunc   ;==>_WifiDbAutoUploadToggle
 
@@ -4502,8 +4513,6 @@ Func _ViewWDBWebpage();View wifidb live aps in browser
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
 EndFunc   ;==>_ViewWDBWebpage
 
-
-
 Func _LocateGpsInWifidb();Finds GPS based on active acess points based on WifiDB for use in vistumbler
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs
@@ -5943,6 +5952,12 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerLoop', $Text_OncePerLoop)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerAP', $Text_OncePerAP)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'OncePerAPwSound', $Text_OncePerAPwSound)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDB', $Text_WifiDB)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Warning', $Text_Warning)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBLocateWarning', $Text_WifiDBLocateWarning)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBAutoUploadWarning', $Text_WifiDBAutoUploadWarning)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', $Text_WifiDBOpenLiveAPWebpage)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', $Text_WifiDBOpenMainWebpage)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -8873,6 +8888,12 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_OncePerLoop = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerLoop', 'Once per loop')
 		$Text_OncePerAP = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAP', 'Once per ap')
 		$Text_OncePerAPwSound = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAPwSound', 'Once per ap with volume based on signal')
+		$Text_WifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB', 'WifiDB')
+		$Text_Warning = IniRead($DefaultLanguagePath, 'GuiText', 'Warning', 'Warning')
+		$Text_WifiDBLocateWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBLocateWarning', 'This feature sends active access point information to the WifiDB API URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
+		$Text_WifiDBAutoUploadWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBAutoUploadWarning', 'This feature sends active access point information to the WifiDB URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
+		$Text_WifiDBOpenLiveAPWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', 'Open WifiDB Live AP Webpage')
+		$Text_WifiDBOpenMainWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', 'Open WifiDB Main Webpage')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
