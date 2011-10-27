@@ -1,128 +1,103 @@
 <?php
+$ft_start = microtime(1);
+ini_set('memory_limit','1G');
+error_reporting(E_ALL && E_STRICT);
+$startdate="16-Oct-2011";
+$lastedit="16-Oct-2011";
+global $screen_output;
+$screen_output = "CLI";
 include('../lib/config.inc.php');
 include('../lib/database.inc.php');
-echo '<title>Wireless DataBase *Alpha*'.$ver["wifidb"].' --> Access Point Map Page</title>';
+
+$n=0;
+$nn=0;
+$maps_compile_a = array();
+$sql = "SELECT id, ssid, mac, auth, encry, chan, radio, sectype FROM `$db`.`$wtable`";
+$result = mysql_query($sql, $conn);
+while($array = mysql_fetch_assoc($result))
+{
+    #var_dump($array);
+    echo $array['id']."\r\n";
+    $ssid = $array['ssid'];
+    $macaddress = $array['mac'];
+    $mac = str_split($macaddress,2);
+    $mac_full = implode(":", $mac);
+    $radio = $array['radio'];
+    list($ssid_ptb) = make_ssid($array["ssid"]);
+    $table  = $ssid_ptb.'-'.$array["mac"].'-'.$array["sectype"].'-'.$array["radio"].'-'.$array['chan'].$gps_ext;
+    #echo $table_gps."\r\n";
+    $sql1 = "SELECT * FROM `$db_st`.`$table` WHERE `lat`!= 'N 0000.0000' ORDER BY `date` DESC, `sats` DESC LIMIT 1";
+    #echo $sql1."\r\n";
+    #die();
+    $result1 = mysql_query($sql1, $conn);
+    echo mysql_error($conn);
+    echo mysql_num_rows($result1)."\r\n";
+    
+    if(mysql_num_rows($result1) < 1){$nn++;continue;}
+    $array_gps = mysql_fetch_array($result1);
+    $lat = @database::convert_dm_dd($array_gps['lat']);
+    $long = @database::convert_dm_dd($array_gps['long']);
+    if($lat == "0"){$nn++;continue;}
+    echo $lat." - ".$long."\r\n";
+    
+    switch($array['sectype'])
+    {
+        case 1:
+            $img = "open";
+            break;
+        case 2:
+            $img = "wep";
+            break;
+        case 3:
+            $img = "secure";
+            break;
+    }
+    $maps_compile_a[] = "
+                       var myLatLng$n = new google.maps.LatLng($lat, $long);
+                       var beachMarker$n = new google.maps.Marker({position: myLatLng$n, map: map, icon: $img, title: \"$ssid\"});\r\n";
+    $n++;
+}
+#var_dump($maps_compile_a);
+$maps_compile = implode("", $maps_compile_a);
+#exit();
+
+$body = '<html>
+    <head>
+        <meta name="viewport" content="initial-scale=1.0, user-scalable=yes" />
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+        <link href="https://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
+        <style type="text/css">
+            .maps_label {background-color:#ffffff;font-weight:bold;border:2px #006699 solid;}
+        </style>
+        <script type="text/javascript">
+            function initialize()
+            {
+                var myOptions = {
+                  zoom: 16,
+                  center: new google.maps.LatLng(<?php echo $lat; ?>, <?php echo $long; ?>),
+                  mapTypeId: google.maps.MapTypeId.ROADMAP
+                }
+                var open = \'http://vistumbler.sourceforge.net/images/program-images/open.png\';
+                var wep = \'http://vistumbler.sourceforge.net/images/program-images/secure-wep.png\';
+                var secure = \'http://vistumbler.sourceforge.net/images/program-images/secure.png\';
+                var map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+                '.$maps_compile.'
+                }
+            window.onload = initialize;
+        </script>
+    </head>
+    <body>
+        <div style="width:100%;height:100%;" id="map_canvas"></div>
+    </body>
+</html>';
+
+
+file_put_contents('../out/maps.html', $body);
+
+$ft_stop = microtime(1);
+echo $ft_stop-$ft_start."\r\n";
+echo $n."\r\n".$nn;
+
+
 ?>
-<link rel="stylesheet" href="../css/site4.0.css">
-<body topmargin="10" leftmargin="0" rightmargin="0" bottommargin="10" marginwidth="10" marginheight="10">
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2">
-	<tr>
-		<td bgcolor="#315573">
-		<p align="center"><b><font size="5" face="Arial" color="#FFFFFF">
-		Wireless DataBase *Alpha* <?php echo $ver["wifidb"]; ?></font>
-		<font color="#FFFFFF" size="2">
-            <a class="links" href="/">[Root] </a>/ <a class="links" href="/wifidb/">[WifiDB] </a>/
-		</font></b>
-		</td>
-	</tr>
-</table>
-</div>
-<div align="center">
-<table border="0" width="75%" cellspacing="10" cellpadding="2" height="90">
-	<tr>
-<td width="17%" bgcolor="#304D80" valign="top">
-<?php
-$conn = mysql_connect($host, $db_user, $db_pwd);
-mysql_select_db($db,$conn);
-$sqls = "SELECT * FROM links ORDER BY ID ASC";
-$result = mysql_query($sqls, $conn) or die(mysql_error());
-while ($newArray = mysql_fetch_array($result))
-{
-	$testField = $newArray['links'];
-    echo "<p>$testField</p>";
-}
-?>
-
-</td>
-		<td width="80%" bgcolor="#A9C6FA" valign="top" align="center">
-			<p align="center">
-<?php
-$id=$_GET['id'];
-
-$conn = mysql_connect($host, $db_user, $db_pwd);
-mysql_select_db($db,$conn);
-$sqls = "SELECT * FROM wifi WHERE id=$id";
-$result = mysql_query($sqls, $conn) or die(mysql_error());
-while ($newArray = mysql_fetch_array($result))
-{
-$ssid=$newArray['ssid'];
-$mac=$newArray['mac'];
-$chan=$newArray['chan'];
-$macs=explode(':',$mac);
-$MAC=implode('-',$macs);
-$centerlat_form=$newArray['lat'];
-$centerlong_form=$newArray['long'];
-}
-$longs=explode(" ",$centerlong_form,2);
-$lats=explode(" ",$centerlat_form,2);
-if ($longs[0]=="W")
-{$longs[0]="-";}else{$longs[0]="";}
-if ($lats[0]=="S")
-{$lats[0]="-";}else{$lats[0]="";}
-$latss=implode("",$lats);
-$longss=implode("",$longs);
-#echo "<a href=\"http://www.google.com/maps?f=q&hl=en&geocode=&time=&date=&ttype=&q=42%C2%B0+7'33.07%22N+71%C2%B051'49.98%22W&ie=UTF8&ll=".$latss.",".$longss."&spn=0.001293,0.002494&t=k&z=19&om=1\">Google Maps</a><br>";
-
-$radius_form=20;
-// make sure we have the information we need
-if ((!$latss || !$longss) ||
-    (!$latss && !$radius_form) )
-{
-  echo "WHAT ARE YOU DOIN MAN!<BR>You cant just run this script all by itself, you need data man DATA!!!!!!!!!!!!!!!!!!!!<br>Now go back and do it right damnit<br><br>       -RanInt Dev/Admin/God";
-  exit(1);
-}
-
-// convert coordinates to radians
-$lat1 = deg2rad($latss);
-$long1 = deg2rad($longss);
-$lat2 = deg2rad($latss);
-$long2 = deg2rad($longss);
-
-// get the difference between lat/long coords
-$dlat = $lat2-$lat1;
-$dlong = $long2-$long1;
-
-// if the radius of the circle wasn't given, we need to calculate it
-if (!$radius_form) {
-  // compute distance of great circle
-  $a = pow((sin($dlat/2)), 2) + cos($lat1) * cos($lat2) *
-       pow((sin($dlong/2)), 2);
-  $c = 2 * atan2(sqrt($a), sqrt(1-$a));
-  // get distance between points (in meters)
-  $d = 6378137 * $c;
-} else {
-  $d = $radius_form;
-}
-
-$d_rad = $d/6378137;
-$file_ext = $MAC.'_'.$ssid.'_'.$chan.'.kml';
-$filename = ('files/kml/'.$file_ext);
-
-// define initial write and appends
-$filewrite = fopen($filename, "w");
-$fileappend = fopen($filename, "a");
-
-// open file and write header:
-fwrite($filewrite, "<Folder>\n<name></name>\n<visibility>1</visibility>\n<Placemark>\n<name></name>\n<visibility>1</visibility>\n<Style>\n<geomColor>ff0000ff</geomColor>\n<geomScale>1</geomScale></Style>\n<LineString>\n<coordinates>\n");
-// loop through the array and write path linestrings
-for($i=0; $i<=360; $i++) {
-  $radial = deg2rad($i);
-  $lat_rad = asin(sin($lat1)*cos($d_rad) + cos($lat1)*sin($d_rad)*cos($radial));
-  $dlon_rad = atan2(sin($radial)*sin($d_rad)*cos($lat1),
-                    cos($d_rad)-sin($lat1)*sin($lat_rad));
-  $lon_rad = fmod(($long1+$dlon_rad + M_PI), 2*M_PI) - M_PI;
-  fwrite( $fileappend, rad2deg($lon_rad).",".rad2deg($lat_rad).",0 ");
-  }
-// write everything else and clean up
-fwrite( $fileappend, "</coordinates>\n</LineString>\n</Placemark>\n</Folder>");
-fwrite( $fileappend, " ");
-fclose( $fileappend );
-if(file_exists($filename)) {
-  echo ('<p>Your WAP ('.$MAC.'_'.$ssid.'_'.$chan.'.kml)Google Earth File is <a href="$filename">right here</a><br>Thanks to <a href="http://bbs.keyhole.com/ubb/showthreaded.php?Number=23634" target="_blank">ink_polaroid</a> for the circle generator.</p>');
-} else {
-  echo( "If you can see this, something is wrong..." );
-}
-
-$filename = $_SERVER['SCRIPT_FILENAME'];
-footer($filename);?>

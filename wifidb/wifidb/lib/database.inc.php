@@ -99,11 +99,18 @@ if(!@include($config_loc))
 	$server_name = str_replace("/", "", str_replace("http://", "", (@$GLOBALS['hosturl']!='' ? $GLOBALS['hosturl'] : $_SERVER['SERVER_NAME'])));
 	if($GLOBALS['root'] == '' or $GLOBALS['root'] == '/')
 	{
-		$UPATH = 'http://'.$server_name;
+		$UPATH = $server_name;
 	}else
 	{
-		$UPATH = 'http://'.$server_name.'/'.$root;
+		$UPATH = $server_name.'/'.$root;
 	}
+        if($secure)
+        {
+            $UPATH = "https://".$UPATH;
+        }else
+        {
+            $UPATH = "http://".$UPATH;
+        }
 	if(PHP_OS == "WINNT")
 	{$dim="\\";}else{$dim = "/";}
 	$path = getcwd();
@@ -2896,7 +2903,7 @@ class database
 		$macaddress = $newArray['mac'];
 		$manuf = database::manufactures($macaddress);
 		$mac = str_split($macaddress,2);
-		$mac_full = $mac[0].":".$mac[1].":".$mac[2].":".$mac[3].":".$mac[4].":".$mac[5];
+		$mac_full = implode(":", $mac);
 		$radio = $newArray['radio'];
 		if($radio == "a")
 			{$radio = "802.11a";}
@@ -2919,21 +2926,21 @@ class database
 		$lat_c = $lat_check[1]+0;
 		if($lat_c != "0"){$gps_yes = 1;}else{$gps_yes = 0;}
 		?>
-				<SCRIPT LANGUAGE="JavaScript">
-				// Row Hide function.
-				// by tcadieux
-				function expandcontract(tbodyid,ClickIcon)
-				{
-					if (document.getElementById(ClickIcon).innerHTML == "+")
-					{
-						document.getElementById(tbodyid).style.display = "";
-						document.getElementById(ClickIcon).innerHTML = "-";
-					}else{
-						document.getElementById(tbodyid).style.display = "none";
-						document.getElementById(ClickIcon).innerHTML = "+";
-					}
-				}
-				</SCRIPT>
+                <SCRIPT LANGUAGE="JavaScript">
+                // Row Hide function.
+                // by tcadieux
+                function expandcontract(tbodyid,ClickIcon)
+                {
+                        if (document.getElementById(ClickIcon).innerHTML == "+")
+                        {
+                                document.getElementById(tbodyid).style.display = "";
+                                document.getElementById(ClickIcon).innerHTML = "-";
+                        }else{
+                                document.getElementById(tbodyid).style.display = "none";
+                                document.getElementById(ClickIcon).innerHTML = "+";
+                        }
+                }
+                </SCRIPT>
                 <h1><?php echo htmlentities($newArray['ssid'], ENT_QUOTES);
 		if($gps_yes)
 		{

@@ -235,7 +235,7 @@ class graphs
             $this->imagegrid($img,$wid,$Height,19.99,$grid);
             while($count>0)
             {
-                if($nn==$counting+1){break;}
+                #if($nn==$counting+1){break;}
                 imageline($img, $y ,459-($signal[$n]*4), $y=$y+6 ,459-($signal[$nn]*4) ,$col);
                 imageline($img, $u ,460-($signal[$n]*4), $u=$u+6 ,460-($signal[$nn]*4) ,$col);
                 imageline($img, $yy ,459-($signal[$n]*4), $yy=$yy+6 ,459-($signal[$nn]*4) ,$col);

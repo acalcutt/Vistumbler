@@ -45,7 +45,7 @@ $date           =   filter_input(INPUT_GET, 'Date', FILTER_SANITIZE_STRING, arra
 $time           =   filter_input(INPUT_GET, 'Time', FILTER_SANITIZE_STRING, array(16,32));
 
 //Username and API Key
-$username   =   ( @$_GET['username'] ? filter_input(INPUT_GET, 'username', FILTER_SANITIZE_STRING, array(16,32)) : "UNKOWN" );
+$username   =   ( @$_GET['username'] ? filter_input(INPUT_GET, 'username', FILTER_SANITIZE_STRING, array(16,32)) : "UNKNOWN" );
 #dump($username);
 $apikey     =   ( @$_GET['apikey'] ? filter_input(INPUT_GET, 'apikey', FILTER_SANITIZE_STRING, array(16,32)) : "NONE" );
 
@@ -113,7 +113,7 @@ if($ap['id'])
     {
         $ins_sig = $ap['sig'].'|'.$sig.'-'.$conn->insert_id;
         $id = $ap['id'];
-        $sql = "UPDATE `$db`.`$live_aps` SET sig='$ins_sig', la='$date $time' WHERE id='$id'";
+        $sql = "UPDATE `$db`.`$live_aps` SET sig='$ins_sig', lu = '$date $time' WHERE id='$id'";
         #echo $sql."</br>";
         if($conn->query($sql))
         {
@@ -157,8 +157,8 @@ if($ap['id'])
 
     if($conn->query($sql))
     {
-        $sql = "INSERT INTO  `$db`.`$live_aps` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype`, `sig`, `username`, `BTx`, `OTx`, `NT`, `Label`, `la`)
-        VALUES ('', '$ssids', '$mac','$chan', '$radios', '$auth', '$encry', '$sectype', '$sig-$conn->insert_id',  '$username', '$BTx', '$OTx', '$NT', '$label', '$date $time')";
+        $sql = "INSERT INTO  `$db`.`$live_aps` ( `id` , `ssid` , `mac` ,  `chan`, `radio`,`auth`,`encry`, `sectype`, `sig`, `username`, `BTx`, `OTx`, `NT`, `Label`, `fa`, `lu`)
+        VALUES ('', '$ssids', '$mac','$chan', '$radios', '$auth', '$encry', '$sectype', '$sig-$conn->insert_id',  '$username', '$BTx', '$OTx', '$NT', '$label', '$date $time', '$date $time')";
         #echo str_replace("
         #","<br />", $sql."<br /><br />");
         if($conn->query($sql))
