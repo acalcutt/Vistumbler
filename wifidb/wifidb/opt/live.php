@@ -46,22 +46,22 @@ if ($sort=="" or !is_string($sort)){$sort="chan";}
             Select Window of time to view:
         </td>
         <td>
-            <a href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=1800">30 Minutes</a>
+            <a class="links" href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=1800">30 Minutes</a>
         </td>
         <td>
-            <a href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=3600">60 Minutes</a>
+            <a class="links" href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=3600">60 Minutes</a>
         </td>
         <td>
-            <a href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=7200">2 Hours</a>
+            <a class="links" href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=7200">2 Hours</a>
         </td>
         <td>
-            <a href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=21600">6 Hours</a>
+            <a class="links" href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=21600">6 Hours</a>
         </td>
         <td>
-            <a href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=86400">1 Day</a>
+            <a class="links" href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=86400">1 Day</a>
         </td>
         <td>
-            <a href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=604800">1 Week</a>
+            <a class="links" href="?sort=<?php echo $sort; ?>&ord=<?php echo $ord; ?>&from=<?php echo $from; ?>&to=<?php echo $to; ?>&view=604800">1 Week</a>
         </td>
     </tr>
 </table>

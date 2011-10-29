@@ -4,6 +4,9 @@
 .sub_head{
 	background-color:#508FAE;
 }
+.main_bg_color{
+    background-color: #145285;
+}
 #leftcolumn{
 float:left;
 width:90%;
