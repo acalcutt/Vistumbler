@@ -852,7 +852,7 @@ Dim $Text_OncePerAPwSound = IniRead($DefaultLanguagePath, 'GuiText', 'OncePerAPw
 Dim $Text_WifiDB = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB', 'WifiDB')
 Dim $Text_Warning = IniRead($DefaultLanguagePath, 'GuiText', 'Warning', 'Warning')
 Dim $Text_WifiDBLocateWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBLocateWarning', 'This feature sends active access point information to the WifiDB API URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
-Dim $Text_WifiDBAutoUploadWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBAutoUploadWarning', 'This feature sends active access point information to the WifiDB URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
+Dim $Text_WifiDBAutoUploadWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBAutoUploadWarning', 'This feature sends active access point information to the WifiDB API URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
 Dim $Text_WifiDBOpenLiveAPWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', 'Open WifiDB Live AP Webpage')
 Dim $Text_WifiDBOpenMainWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', 'Open WifiDB Main Webpage')
 
