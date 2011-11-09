@@ -24,7 +24,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $DB_OBJ
-Dim $Debug = 1
+Dim $Debug = 0
 Dim $filetype = 'cd';Default file type (d=detailed VS1, cd=detailed CSV, cs=summary CSV, k=KML, w=WifiDB Upload)
 Dim $filename = @ScriptDir & '\Temp\Save.csv'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
