@@ -12,19 +12,22 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v6'
+$version = 'v7'
 $origional_date = '2010/09/01'
-$last_modified = '2010/12/12'
+$last_modified = '2011/10/09'
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
 #Include <Array.au3>
 
+Dim $TmpDir = @TempDir & '\Vistumbler\'
+DirCreate($TmpDir)
+
 Dim $Errors
 Dim $NewFiles
 Dim $LoadVersionFile
-Dim $NewVersionFile = @ScriptDir & '\temp\versions.ini'
+Dim $NewVersionFile = $TmpDir & 'versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
 Dim $VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
@@ -88,7 +91,6 @@ If $LoadVersionFile <> '' And FileExists($LoadVersionFile) Then
 	GUICtrlSetData($UpdateEdit, $data)
 Else
 	FileDelete($NewVersionFile)
-	DirCreate(@ScriptDir & '\temp\')
 	If $CheckForBetaUpdates = 1 Then
 		$data = $Text_DownloadingBetaVerFile & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
@@ -130,7 +132,7 @@ If FileExists($NewVersionFile) Then
 						Next
 					EndIf
 						$sourcefile = $VIEWSVN_ROOT & $filename_web & '?revision=' & $version
-						$desttmpfile = @ScriptDir & '\' & $filename & '.tmp'
+						$desttmpfile = $TmpDir & $filename & '.tmp'
 						$destfile = @ScriptDir & '\' & $filename
 						GUICtrlSetData($datalabel, 'Downloading ' & $filename)
 						$get = InetGet($sourcefile, $desttmpfile, 1)

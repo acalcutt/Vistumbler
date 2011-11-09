@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 19.2 (test version)'
+$version = 'v10.1 Beta 20'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/10/03'
+$last_modified = '2011/10/09'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -47,11 +47,11 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\UnixTime.au3"
 ;Set/Create Folders--------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
-Dim $DefaultSaveDir = @ScriptDir & '\Save\'
+Dim $DefaultSaveDir = @MyDocumentsDir & '\Vistumbler\'
 Dim $LanguageDir = @ScriptDir & '\Languages\'
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ImageDir = @ScriptDir & '\Images\'
-Dim $TmpDir = @ScriptDir & '\temp\'
+Dim $TmpDir = @TempDir & '\Vistumbler\'
 Dim $IconDir = @ScriptDir & '\Icons\'
 DirCreate($SettingsDir)
 DirCreate($DefaultSaveDir)
@@ -246,7 +246,7 @@ Dim $GUI_COPY, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy
 
 Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
-$NewVersionFile = @ScriptDir & '\temp\versions.ini'
+$NewVersionFile = $TmpDir & 'versions.ini'
 $VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
 
 Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
@@ -855,6 +855,7 @@ Dim $Text_WifiDBLocateWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB
 Dim $Text_WifiDBAutoUploadWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBAutoUploadWarning', 'This feature sends active access point information to the WifiDB API URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
 Dim $Text_WifiDBOpenLiveAPWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', 'Open WifiDB Live AP Webpage')
 Dim $Text_WifiDBOpenMainWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', 'Open WifiDB Main Webpage')
+Dim $Text_FilePath = IniRead($DefaultLanguagePath, 'GuiText', 'FilePath', 'File Path')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -863,8 +864,42 @@ If $AutoCheckForUpdates = 1 Then
 	EndIf
 EndIf
 
-$MDBfiles = _FileListToArray($TmpDir, '*.MDB', 1);Find all files in the folder that end in .MDB
-If IsArray($MDBfiles) Then
+Dim $MDBfiles[1][4]
+$MDBfiles[0][0] = 0
+;Add MDB Files from temp dir
+$tempMDB = _FileListToArray($TmpDir, '*.MDB', 1);Find all files in the folder that end in .MDB
+If IsArray($tempMDB) Then
+	For $af = 1 To $tempMDB[0]
+		$mdbfile = $tempMDB[$af]
+		If _FileInUse($TmpDir & $mdbfile) = 0 Then
+			ReDim $MDBfiles[UBound($MDBfiles) + 1][4]
+			$ArraySize = UBound($MDBfiles) - 1
+			$MDBfiles[0][0] = $ArraySize;Array Size
+			$MDBfiles[$ArraySize][0] = $ArraySize;ID
+			$MDBfiles[$ArraySize][1] = $mdbfile;File Name
+			$MDBfiles[$ArraySize][2] = $TmpDir & $mdbfile;File Path
+			$MDBfiles[$ArraySize][3] = (FileGetSize($TmpDir & $mdbfile) / 1024) & 'kb'
+		EndIf
+	Next
+EndIf
+;Add MDB Files from save dir
+$saveMDB = _FileListToArray($SaveDir, '*.MDB', 1);Find all files in the folder that end in .MDB
+If IsArray($saveMDB) Then
+	For $af = 1 To $saveMDB[0]
+		$mdbfile = $saveMDB[$af]
+		If _FileInUse($SaveDir & $mdbfile) = 0 Then
+			ReDim $MDBfiles[UBound($MDBfiles) + 1][4]
+			$ArraySize = UBound($MDBfiles) - 1
+			$MDBfiles[0][0] = $ArraySize;Array Size
+			$MDBfiles[$ArraySize][0] = $ArraySize;ID
+			$MDBfiles[$ArraySize][1] = $mdbfile;File Name
+			$MDBfiles[$ArraySize][2] = $SaveDir & $mdbfile;File Path
+			$MDBfiles[$ArraySize][3] = (FileGetSize($SaveDir & $mdbfile) / 1024) & 'kb'
+		EndIf
+	Next
+EndIf
+;Show MDB Recover GUI if MDB files exist
+If $MDBfiles[0][0] > 0 Then
 	Opt("GUIOnEventMode", 0)
 	$FoundMdbFile = 0
 	$RecoverMdbGui = GUICreate($Text_RecoverMsg, 461, 210, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
@@ -873,61 +908,61 @@ If IsArray($MDBfiles) Then
 	$Recover_Rec = GUICtrlCreateButton($Text_RecoverSelected, 235, 150, 215, 25)
 	$Recover_Exit = GUICtrlCreateButton($Text_Exit, 10, 180, 215, 25)
 	$Recover_New = GUICtrlCreateButton($Text_NewSession, 235, 180, 215, 25)
-	$Recover_List = GUICtrlCreateListView(StringReplace($Text_File, '&', '') & "|" & $Text_Size, 10, 8, 440, 136, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	$Recover_List = GUICtrlCreateListView(StringReplace($Text_File, '&', '') & "|" & $Text_Size & "|" & $Text_FilePath, 10, 8, 440, 136, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	_GUICtrlListView_SetColumnWidth($Recover_List, 0, 335)
 	_GUICtrlListView_SetColumnWidth($Recover_List, 1, 100)
+	_GUICtrlListView_SetColumnWidth($Recover_List, 2, 600)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
-	For $FoundMDB = 1 To $MDBfiles[0]
-		$mdbfile = $MDBfiles[$FoundMDB]
-		If _FileInUse($TmpDir & $mdbfile) = 0 Then
-			$FoundMdbFile = 1
-			$mdbsize = (FileGetSize($TmpDir & $mdbfile) / 1024) & 'kb'
-			$ListRow = _GUICtrlListView_InsertItem($Recover_List, "", 0)
-			_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbfile, 0)
-			_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbsize, 1)
-		EndIf
+	For $FoundMDB = 1 To $MDBfiles[0][0]
+		$mdbfile = $MDBfiles[$FoundMDB][1]
+		$mdbpath = $MDBfiles[$FoundMDB][2]
+		$mdbsize = $MDBfiles[$FoundMDB][3]
+		$ListRow = _GUICtrlListView_InsertItem($Recover_List, "", 0)
+		_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbfile, 0)
+		_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbsize, 1)
+		_GUICtrlListView_SetItemText($Recover_List, $ListRow, $mdbpath, 2)
 	Next
-	If $FoundMdbFile = 0 Then
-		$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
-		$VistumblerDbName = $ldatetimestamp & '.mdb'
-	Else
-		GUISetState(@SW_SHOW)
-		While 1
-			$nMsg = GUIGetMsg()
-			Switch $nMsg
-				Case $GUI_EVENT_CLOSE
-					$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
-					$VistumblerDbName = $ldatetimestamp & '.mdb'
-					ExitLoop
-				Case $Recover_New
-					$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
-					$VistumblerDbName = $ldatetimestamp & '.mdb'
-					ExitLoop
-				Case $Recover_Exit
-					Exit
-				Case $Recover_Rec
-					$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
-					If $Selected = '-1' Then
-						MsgBox(0, $Text_Error, $Text_NoMdbSelected)
-					Else
-						$mdbfilename = _GUICtrlListView_GetItemText($Recover_List, $Selected)
-						$VistumblerDB = $TmpDir & $mdbfilename
-						$VistumblerDbName = $mdbfilename
-						ExitLoop
+	GUISetState(@SW_SHOW)
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE
+				$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
+				$VistumblerDbName = $ldatetimestamp & '.mdb'
+				ExitLoop
+			Case $Recover_New
+				$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
+				$VistumblerDbName = $ldatetimestamp & '.mdb'
+				ExitLoop
+			Case $Recover_Exit
+				Exit
+			Case $Recover_Rec
+				$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
+				If $Selected = '-1' Then
+					MsgBox(0, $Text_Error, $Text_NoMdbSelected)
+				Else
+					$VistumblerDbName = _GUICtrlListView_GetItemText($Recover_List, $Selected, 0)
+					$VistumblerDB = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
+					$mdbfolder = StringTrimRight($mdbpath, StringInStr($mdbpath, "\", 1, -1) - 1)
+					If $mdbfolder <> $TmpDir Then
+						$newmdbpath = _TempFile($TmpDir, StringTrimRight($VistumblerDbName, 4) & "__", ".mdb", 4)
+						FileCopy($VistumblerDB, $newmdbpath, 9)
+						$VistumblerDbName = StringTrimLeft($newmdbpath, StringInStr($newmdbpath, "\", 1, -1))
+						$VistumblerDB = $newmdbpath
 					EndIf
-				Case $Recover_Del
-					$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
-					If $Selected = '-1' Then
-						MsgBox(0, $Text_Error, $Text_NoMdbSelected)
-					Else
-						$fn = _GUICtrlListView_GetItemText($Recover_List, $Selected)
-						$fn_fullpath = $TmpDir & $fn
-						FileDelete($fn_fullpath)
-						_GUICtrlListView_DeleteItem(GUICtrlGetHandle($Recover_List), $Selected)
-					EndIf
-			EndSwitch
-		WEnd
-	EndIf
+					ExitLoop
+				EndIf
+			Case $Recover_Del
+				$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
+				If $Selected = '-1' Then
+					MsgBox(0, $Text_Error, $Text_NoMdbSelected)
+				Else
+					$fn_fullpath = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
+					FileDelete($fn_fullpath)
+					_GUICtrlListView_DeleteItem(GUICtrlGetHandle($Recover_List), $Selected)
+				EndIf
+		EndSwitch
+	WEnd
 	GUIDelete($RecoverMdbGui)
 	Opt("GUIOnEventMode", 1)
 Else
@@ -2716,7 +2751,11 @@ Func _Exit()
 	FileDelete($GoogleEarth_TrackFile)
 	FileDelete($tempfile)
 	FileDelete($tempfile_showint)
-	If $SaveDbOnExit <> 1 Then FileDelete($VistumblerDB)
+	If $SaveDbOnExit = 1 Then
+		FileMove($VistumblerDB, $SaveDir, 9);Move to save directory for later use
+	Else
+		FileDelete($VistumblerDB)
+	EndIf
 	If $AutoSaveDel = 1 Then FileDelete($AutoSaveFile)
 	If $UseGPS = 1 Then ;If GPS is active, stop it so the COM port does not stay open
 		_TurnOffGPS()
@@ -5958,6 +5997,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBAutoUploadWarning', $Text_WifiDBAutoUploadWarning)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', $Text_WifiDBOpenLiveAPWebpage)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', $Text_WifiDBOpenMainWebpage)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilePath', $Text_FilePath)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -8894,6 +8934,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_WifiDBAutoUploadWarning = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBAutoUploadWarning', 'This feature sends active access point information to the WifiDB URL specified in the Vistumbler WifiDB Settings. If you do not want to send data to the wifidb, do not enable this feature. Do you want to continue to enable this feature?')
 		$Text_WifiDBOpenLiveAPWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', 'Open WifiDB Live AP Webpage')
 		$Text_WifiDBOpenMainWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', 'Open WifiDB Main Webpage')
+		$Text_FilePath = IniRead($DefaultLanguagePath, 'GuiText', 'FilePath', 'File Path')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -9595,12 +9636,13 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 	If $SpeakSignal = 1 Then; If the signal speaking is turned on
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
-			$query = "SELECT LastHistID, Active FROM AP WHERE ListRow = '" & $Selected & "'"
+			$query = "SELECT LastHistID, Active, SSID FROM AP WHERE ListRow = '" & $Selected & "'"
 			$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$FoundApMatch = UBound($ApMatchArray) - 1
 			If $FoundApMatch <> 0 Then
 				$PlayHistID = $ApMatchArray[1][1]
 				$ApIsActive = $ApMatchArray[1][2]
+				$ApSSID = $ApMatchArray[1][3]
 				$query = "SELECT Signal FROM Hist WHERE HistID = '" & $PlayHistID & "'"
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$FoundHistMatch = UBound($HistMatchArray) - 1
@@ -9611,17 +9653,20 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 						$say = '0'
 					EndIf
 					If ProcessExists($SayProcess) = 0 Then;If Say.exe is still running, skip opening it again
-						If $SpeakType = 1 Then
+						If $SpeakType = 1 Then ;Use Sound Files
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1'
 							If $SpeakSigSayPecent = 1 Then $run &= ' /p'
 							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
 							If @error Then $ErrorFlag = 1
-						ElseIf $SpeakType = 2 Then
+						ElseIf $SpeakType = 2 Then ;Use Microsoft Sound API
+							$SayNameBefore = 0
+							If $SayNameBefore = 1 Then $say = $ApSSID & ' ' & $say
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=2'
+							ConsoleWrite($run & @CRLF)
 							If $SpeakSigSayPecent = 1 Then $run &= ' /p'
 							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
 							If @error Then $ErrorFlag = 1
-						ElseIf $SpeakType = 3 Then
+						ElseIf $SpeakType = 3 Then ;Use midi files
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=3 /i=' & $Midi_Instument & ' /w=' & $Midi_PlayTime
 							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
 							If @error Then $ErrorFlag = 1
@@ -9679,7 +9724,6 @@ EndFunc   ;==>_StartUpdate
 
 Func _CheckForUpdates()
 	$UpdatesAvalible = 0
-	DirCreate(@ScriptDir & '\temp\')
 	FileDelete($NewVersionFile)
 	If $CheckForBetaUpdates = 1 Then
 		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
