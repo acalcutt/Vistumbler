@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 20'
+$version = 'v10.1 Beta 20.1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/10/09'
+$last_modified = '2011/11/11'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -122,6 +122,8 @@ Dim $ManuDB_OBJ
 Dim $LabDB_OBJ
 Dim $InstDB_OBJ
 Dim $FiltDB_OBJ
+Dim $AddApRecordArray[22]
+Dim $AddTreeRecordArray[17]
 Dim $APID = 0
 Dim $HISTID = 0
 Dim $GPS_ID = 0
@@ -1842,7 +1844,31 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			;Add History Information
 			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & StringFormat("%08i", $APID) & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
 			;Add AP Data into the AP table
-			_AddRecord($VistumblerDB, "AP", $DB_OBJ, StringFormat("%08i", $APID) & '|' & $ListRow & '|' & $AP_StatusNum & '|' & $BSSID & '|' & $SSID & '|' & StringFormat("%03i", $CHAN) & '|' & $AUTH & '|' & $ENCR & '|' & $SecType & '|' & $NETTYPE & '|' & $RADTYPE & '|' & $BTX & '|' & $OtX & '|' & $DBHighGpsHistId & '|' & $NewGpsId & '|' & $HISTID & '|' & $HISTID & '|' & $MANUF & '|' & $LABEL & '|' & StringFormat("%03i", $SIG) & '|' & StringFormat("%03i", $SIG))
+			ReDim $AddApRecordArray[22]
+			$AddApRecordArray[0] = 21
+			$AddApRecordArray[1] = StringFormat("%08i", $APID)
+			$AddApRecordArray[2] = $ListRow
+			$AddApRecordArray[3] = $AP_StatusNum
+			$AddApRecordArray[4] = $BSSID
+			$AddApRecordArray[5] = $SSID
+			$AddApRecordArray[6] = StringFormat("%03i", $CHAN)
+			$AddApRecordArray[7] = $AUTH
+			$AddApRecordArray[8] = $ENCR
+			$AddApRecordArray[9] = $SecType
+			$AddApRecordArray[10] = $NETTYPE
+			$AddApRecordArray[11] = $RADTYPE
+			$AddApRecordArray[12] = $BTX
+			$AddApRecordArray[13] = $OtX
+			$AddApRecordArray[14] = $DBHighGpsHistId
+			$AddApRecordArray[15] = $NewGpsId
+			$AddApRecordArray[16] = $HISTID
+			$AddApRecordArray[17] = $HISTID
+			$AddApRecordArray[18] = $MANUF
+			$AddApRecordArray[19] = $LABEL
+			$AddApRecordArray[20] = StringFormat("%03i", $SIG)
+			$AddApRecordArray[21] = StringFormat("%03i", $SIG)
+			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $AddApRecordArray)
+
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
 			$Found_APID = $ApMatchArray[1][1]
 			$Found_ListRow = $ApMatchArray[1][2]
@@ -2205,6 +2231,24 @@ Func _AddTreeviewItem($RootTree, $Treeview, $tree, $SubTreeName, $ImpApID, $ImpS
 	$st_manu = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_MANUF & ' : ' & $ImpMANU, $subtreeviewposition)
 	$st_lab = _GUICtrlTreeView_InsertItem($Treeview, $Column_Names_Label & ' : ' & $ImpLAB, $subtreeviewposition)
 	;Write treeview position information to DB
+	ReDim $AddTreeRecordArray[17]
+	$AddTreeRecordArray[0] = 16
+	$AddTreeRecordArray[1] = $ImpApID
+	$AddTreeRecordArray[2] = $RootTree
+	$AddTreeRecordArray[3] = $SubTreeName
+	$AddTreeRecordArray[4] = $treeviewposition
+	$AddTreeRecordArray[5] = $subtreeviewposition
+	$AddTreeRecordArray[6] = $st_ssid
+	$AddTreeRecordArray[7] = $st_bssid
+	$AddTreeRecordArray[8] = $st_chan
+	$AddTreeRecordArray[9] = $st_net
+	$AddTreeRecordArray[10] = $st_encr
+	$AddTreeRecordArray[11] = $st_rad
+	$AddTreeRecordArray[12] = $st_auth
+	$AddTreeRecordArray[13] = $st_btx
+	$AddTreeRecordArray[14] = $st_otx
+	$AddTreeRecordArray[15] = $st_manu
+	$AddTreeRecordArray[16] = $st_lab
 	_AddRecord($VistumblerDB, "TreeviewPos", $DB_OBJ, $ImpApID & '|' & $RootTree & '|' & $SubTreeName & '|' & $treeviewposition & '|' & $subtreeviewposition & '|' & $st_ssid & '|' & $st_bssid & '|' & $st_chan & '|' & $st_net & '|' & $st_encr & '|' & $st_rad & '|' & $st_auth & '|' & $st_btx & '|' & $st_otx & '|' & $st_manu & '|' & $st_lab)
 EndFunc   ;==>_AddTreeviewItem
 
