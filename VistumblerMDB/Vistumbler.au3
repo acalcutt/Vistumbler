@@ -2249,7 +2249,7 @@ Func _AddTreeviewItem($RootTree, $Treeview, $tree, $SubTreeName, $ImpApID, $ImpS
 	$AddTreeRecordArray[14] = $st_otx
 	$AddTreeRecordArray[15] = $st_manu
 	$AddTreeRecordArray[16] = $st_lab
-	_AddRecord($VistumblerDB, "TreeviewPos", $DB_OBJ, $ImpApID & '|' & $RootTree & '|' & $SubTreeName & '|' & $treeviewposition & '|' & $subtreeviewposition & '|' & $st_ssid & '|' & $st_bssid & '|' & $st_chan & '|' & $st_net & '|' & $st_encr & '|' & $st_rad & '|' & $st_auth & '|' & $st_btx & '|' & $st_otx & '|' & $st_manu & '|' & $st_lab)
+	_AddRecord($VistumblerDB, "TreeviewPos", $DB_OBJ, $AddTreeRecordArray)
 EndFunc   ;==>_AddTreeviewItem
 
 Func _TreeViewRemove($ImpApID)
