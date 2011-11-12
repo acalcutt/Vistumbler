@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.1 Beta 21'
+$version = 'v10.11' ; Binary release for a binary day 11/11/11
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/11/11'
+$last_modified = '2011/11/11'; Ones and zeros everywhere....and I thought I saw a 2
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -945,7 +945,10 @@ If $MDBfiles[0][0] > 0 Then
 				Else
 					$VistumblerDbName = _GUICtrlListView_GetItemText($Recover_List, $Selected, 0)
 					$VistumblerDB = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
-					$mdbfolder = StringTrimRight($mdbpath, StringInStr($mdbpath, "\", 1, -1) - 1)
+					$mdbfolder = StringTrimRight($VistumblerDB, (StringLen($VistumblerDB) - StringInStr($VistumblerDB, "\", 1, -1)))
+
+					ConsoleWrite($mdbfolder & @CRLF)
+					ConsoleWrite($TmpDir & @CRLF)
 					If $mdbfolder <> $TmpDir Then
 						$newmdbpath = _TempFile($TmpDir, StringTrimRight($VistumblerDbName, 4) & "__", ".mdb", 4)
 						FileCopy($VistumblerDB, $newmdbpath, 9)
