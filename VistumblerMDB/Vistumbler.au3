@@ -9118,12 +9118,6 @@ Func _ApplySettingsGUI();Applys settings
 		;Auto KML
 		If GUICtrlRead($AutoSaveKML) = 4 And $AutoKML = 1 Then _AutoKmlToggle()
 		If GUICtrlRead($AutoSaveKML) = 1 And $AutoKML = 0 Then _AutoKmlToggle()
-		If GUICtrlRead($GUI_OpenKmlNetLink) = 1 Then
-			$OpenKmlNetLink = 1
-			If $AutoKML = 1 Then _StartGoogleAutoKmlRefresh()
-		Else
-			$OpenKmlNetLink = 0
-		EndIf
 
 		$GoogleEarth_EXE = GUICtrlRead($GUI_GoogleEXE)
 		$AutoKmlActiveTime = GUICtrlRead($GUI_AutoKmlActiveTime)
@@ -9141,6 +9135,14 @@ Func _ApplySettingsGUI();Applys settings
 		$AutoKML_Heading = GUICtrlRead($GUI_AutoKml_Heading)
 		$AutoKML_Range = GUICtrlRead($GUI_AutoKml_Range)
 		$AutoKML_Tilt = GUICtrlRead($GUI_AutoKml_Tilt)
+
+		If GUICtrlRead($GUI_OpenKmlNetLink) = 1 Then
+			$OpenKmlNetLink = 1
+			If $AutoKML = 1 Then _StartGoogleAutoKmlRefresh()
+		Else
+			$OpenKmlNetLink = 0
+		EndIf
+
 		;AutoSort
 		If GUICtrlRead($GUI_SortDirection) = $Text_Ascending Then
 			$SortDirection = 0
