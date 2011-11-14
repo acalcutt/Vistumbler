@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.11' ; Binary release for a binary day 11/11/11
+$version = 'v10.2 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/11/11'; Ones and zeros everywhere....and I thought I saw a 2
+$last_modified = '2011/11/14'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -45,30 +45,40 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\FileInUse.au3"
 #include "UDFs\WinGetPosEx.au3"
 #include "UDFs\UnixTime.au3"
-;Set/Create Folders--------------------------------------
+;Set setting folder--------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
-Dim $DefaultSaveDir = @MyDocumentsDir & '\Vistumbler\'
+DirCreate($SettingsDir)
+;Set Settings file
+Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
+IniWrite($settings, "Vistumbler", "Name", $Script_Name)
+IniWrite($settings, "Vistumbler", "Version", $version)
+;Set if Vistumbler Should run in portable mode (keep all directories in the vistumbler folder)
+Dim $PortableMode = IniRead($settings, 'Vistumbler', 'PortableMode', 0)
+;Set directories
+If $PortableMode = 0 Then ;Use Local User %temp% directory for temp and users my document folder for save
+	Dim $DefaultSaveDir = @MyDocumentsDir & '\Vistumbler\'
+	Dim $TmpDir = @TempDir & '\Vistumbler\'
+Else;Use folders inside the Vistumbler directory
+	Dim $DefaultSaveDir = @ScriptDir & '\Save\'
+	Dim $TmpDir = @ScriptDir & '\temp\'
+EndIf
 Dim $LanguageDir = @ScriptDir & '\Languages\'
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ImageDir = @ScriptDir & '\Images\'
-Dim $TmpDir = @TempDir & '\Vistumbler\'
 Dim $IconDir = @ScriptDir & '\Icons\'
+;Create directories
 DirCreate($SettingsDir)
 DirCreate($DefaultSaveDir)
-DirCreate($SettingsDir)
+DirCreate($TmpDir)
 DirCreate($LanguageDir)
 DirCreate($SoundDir)
 DirCreate($ImageDir)
-DirCreate($TmpDir)
+DirCreate($IconDir)
 ;Cleanup Old Temp Files----------------------------------
 _CleanupFiles($TmpDir, '*.tmp')
 _CleanupFiles($TmpDir, '*.ldb')
 _CleanupFiles($TmpDir, '*.ini')
 _CleanupFiles($TmpDir, '*.kml')
-;Set Settings file
-Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
-IniWrite($settings, "Vistumbler", "Name", $Script_Name)
-IniWrite($settings, "Vistumbler", "Version", $version)
 ;Associate VS1 with Vistumbler
 If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
 	RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
@@ -478,7 +488,7 @@ Dim $column_Width_Active = IniRead($settings, 'Column_Width', 'Column_Active', 6
 Dim $column_Width_SSID = IniRead($settings, 'Column_Width', 'Column_SSID', 150)
 Dim $column_Width_BSSID = IniRead($settings, 'Column_Width', 'Column_BSSID', 110)
 Dim $column_Width_MANUF = IniRead($settings, 'Column_Width', 'Column_Manufacturer', 110)
-Dim $column_Width_Signal = IniRead($settings, 'Column_Width', 'Column_Signal', 60)
+Dim $column_Width_Signal = IniRead($settings, 'Column_Width', 'Column_Signal', 75)
 Dim $column_Width_HighSignal = IniRead($settings, 'Column_Width', 'Column_HighSignal', 75)
 Dim $column_Width_Channel = IniRead($settings, 'Column_Width', 'Column_Channel', 70)
 Dim $column_Width_Authentication = IniRead($settings, 'Column_Width', 'Column_Authentication', 105)
@@ -1075,7 +1085,7 @@ EndIf
 
 $var = IniReadSection($settings, "Columns")
 If @error Then
-	$headers = '#|Active|Mac Address|SSID|Signal|Channel|Authentication|Encryption|Network Type|Latitude|Longitude|Manufacturer|Label|Radio Type|Lat (dd mm ss)|Lon (dd mm ss)|Lat (ddmm.mmmm)|Lon (ddmm.mmmm)|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated|'
+	$headers = '#|Active|Mac Address|SSID|Signal|High Signal|Channel|Authentication|Encryption|Network Type|Latitude|Longitude|Manufacturer|Label|Radio Type|Lat (dd mm ss)|Lon (dd mm ss)|Lat (ddmm.mmmm)|Lon (ddmm.mmmm)|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated|'
 Else
 	For $a = 0 To ($var[0][0] - 1)
 		For $b = 1 To $var[0][0]
@@ -5553,6 +5563,7 @@ Func _WriteINI()
 		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
 	EndIf
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
+	IniWrite($settings, "Vistumbler", 'PortableMode', $PortableMode)
 	IniWrite($settings, "Vistumbler", "UseNativeWifi", $UseNativeWifi)
 	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
 	IniWrite($settings, "Vistumbler", "CheckForBetaUpdates", $CheckForBetaUpdates)
