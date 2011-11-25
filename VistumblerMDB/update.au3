@@ -152,7 +152,7 @@ If FileExists($NewVersionFile) Then
 								FileDelete($destfile)
 							EndIf
 							MsgBox(0, $ExistingFile, $ExistingFile)
-							If FileMove($desttmpfile, $destfile) = 1 Then
+							If FileMove($desttmpfile, $destfile, 9) = 1 Then
 								If $ExistingFile = 0 Then
 									$data = $Text_NewFile & ':' & $filename & @CRLF & $data
 									$NewFiles &= $Text_NewFile & ':' & $filename & @CRLF
