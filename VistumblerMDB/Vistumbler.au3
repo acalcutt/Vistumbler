@@ -9805,7 +9805,7 @@ Func _CheckForUpdates()
 						$destfile = @ScriptDir & '\' & $filename
 						$get = InetGet($sourcefile, $desttmpfile, 1)
 						If $get <> 0 And FileGetSize($desttmpfile) <> 0 Then ;Download Successful
-							If FileMove($desttmpfile, $destfile) = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $fversion)
+							If FileMove($desttmpfile, $destfile, 9) = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $fversion)
 						EndIf
 						FileDelete($desttmpfile)
 					Else
