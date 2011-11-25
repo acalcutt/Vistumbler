@@ -12,7 +12,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v7.1'
+$version = 'v7.2'
 $origional_date = '2010/09/01'
 $last_modified = '2011/11/25'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -151,7 +151,6 @@ If FileExists($NewVersionFile) Then
 								$ExistingFile = 1
 								FileDelete($destfile)
 							EndIf
-							MsgBox(0, $ExistingFile, $ExistingFile)
 							If FileMove($desttmpfile, $destfile, 9) = 1 Then
 								If $ExistingFile = 0 Then
 									$data = $Text_NewFile & ':' & $filename & @CRLF & $data
