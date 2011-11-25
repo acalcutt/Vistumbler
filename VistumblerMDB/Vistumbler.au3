@@ -16,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.2 Beta 1'
+$version = 'v10.2 Beta 2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2011/11/14'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -9801,7 +9801,7 @@ Func _CheckForUpdates()
 				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $fversion Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
 					If $filename = 'update.exe' Then ;Download updated update.exe
 						$sourcefile = $VIEWSVN_ROOT & $filename & '?revision=' & $fversion
-						$desttmpfile = @ScriptDir & '\' & $filename & '.tmp'
+						$desttmpfile = $TmpDir & $filename & '.tmp'
 						$destfile = @ScriptDir & '\' & $filename
 						$get = InetGet($sourcefile, $desttmpfile, 1)
 						If $get <> 0 And FileGetSize($desttmpfile) <> 0 Then ;Download Successful

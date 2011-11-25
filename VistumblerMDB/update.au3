@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2010 Andrew Calcutt
+;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -12,9 +12,10 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v7'
+$version = 'v7.1'
 $origional_date = '2010/09/01'
-$last_modified = '2011/10/09'
+$last_modified = '2011/11/25'
+HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
@@ -129,6 +130,7 @@ If FileExists($NewVersionFile) Then
 								$dirstruct &= '\' & $struct[$cp]
 							EndIf
 							DirCreate(@ScriptDir & '\' & $dirstruct)
+							DirCreate($TmpDir & $dirstruct)
 						Next
 					EndIf
 						$sourcefile = $VIEWSVN_ROOT & $filename_web & '?revision=' & $version
@@ -149,6 +151,7 @@ If FileExists($NewVersionFile) Then
 								$ExistingFile = 1
 								FileDelete($destfile)
 							EndIf
+							MsgBox(0, $ExistingFile, $ExistingFile)
 							If FileMove($desttmpfile, $destfile) = 1 Then
 								If $ExistingFile = 0 Then
 									$data = $Text_NewFile & ':' & $filename & @CRLF & $data
