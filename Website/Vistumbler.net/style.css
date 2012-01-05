@@ -1,4 +1,9 @@
-﻿.cell_top_mid {
+body {
+border-width: 0px;
+background-color: #145285
+}
+
+.cell_top_mid {
 	border-width: 0px;
 	background-image: url('images/cell_top_middle.png');
 	background-repeat: repeat-x;
@@ -77,6 +82,9 @@ a:visited {
 }
 .center {
 	text-align: center;
+}
+.leftalign {
+	text-align: left;
 }
 .inside_text_bold {
 	text-align: left;
@@ -209,6 +217,11 @@ table.update ha {
 	font-family: Arial;
 	color: #FFFFFF;
 }
+
+.verchanges_text{
+	color: #FFFFFF;
+}
+
 .title_pane.td{
 	background-color: #315573;
 }
@@ -224,4 +237,8 @@ table.update ha {
 	width: 80%;
 	vertical-align: top;
 	text-align: center;
+}
+
+img {
+border: none;
 }
