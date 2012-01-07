@@ -22,15 +22,14 @@
 		
 		</script>
 		<!-- End Analytics Tracking Code-->
-		<!-- Google +1 Button -->
-		<script type="text/javascript">
-			if ("http:" == document.location.protocol) 
-			{
-				document.write('<script type="text/javascript" src="https://apis.google.com/js/plusone.js"><\/script>');
-			}
-		</script>	
-		<!-- End Google +1 Button -->
-	</head>
+<!-- Place this render call where appropriate -->
+<script type="text/javascript">
+  (function() {
+    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+    po.src = 'https://apis.google.com/js/plusone.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+  })();
+</script>	</head>
 	<body class="body">
 		<table style="width: 90%; height: 100%" class="no_border" align="center">
 			<tr>
@@ -44,12 +43,8 @@
 						<table style="width: 100px">
 										<tr>
 											<td>
-												<script type="text/javascript">
-													if ("http:" == document.location.protocol) 
-													{
-														document.write('<div><g:plusone><\/g:plusone><\/div>');
-													}
-												</script>
+<!-- Place this tag where you want the +1 button to render -->
+<div class="g-plusone" data-href="http://www.vistumbler.net"></div>
 											</td>
 										</tr>
 										<tr>
@@ -57,13 +52,8 @@
 										</tr>
 										<tr>
 											<td>
-												<script type="text/javascript">
-													if ("http:" == document.location.protocol) 
-													{
-														document.write('<div id="fb-root"><\/div><script src="https://connect.facebook.net/en_US/all.js#appId=228605660484046&amp;xfbml=1"><\/script><fb:like href="http://www.vistumbler.net" send="false" layout="button_count" width="450" show_faces="false" font=""><\/fb:like>');
-													}
-												</script>	
-											</td>
+												<iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.vistumbler.net&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:21px;" allowTransparency="true"></iframe>											</td>
+											</td>	
 										</tr>
 						</table>
 						</td>
@@ -92,10 +82,8 @@
 							<td class="cell_color">
 								<div class="inside_dark_header">Navigation</div>
 								<div class="inside_text_bold"><a class="inside_text_bold" href="index.html">Home</a></div>
-								<div class="inside_text_bold">
-									<a href="https://forum.techidiots.net/forum/">Forum</a></div>
-								<div class="inside_text_bold">
-									<a href="https://live.wifidb.net/wifidb/">WiFiDB</a></div>
+								<div class="inside_text_bold"><a href="https://forum.techidiots.net/forum/">Forum</a></div>
+								<div class="inside_text_bold"><a href="https://live.wifidb.net/wifidb/">WiFiDB</a></div>
 								<div class="inside_text_bold"><a href="http://sourceforge.net/apps/mediawiki/vistumbler/">Wiki</a></div>
 								<div class="inside_text_bold"><a href="http://vistumbler.svn.sourceforge.net/viewvc/vistumbler/">SVN</a> (<a href="https://sourceforge.net/scm/?type=svn&amp;group_id=235720">Info</a>)</div>								
 								<div class="inside_text_bold"><a href="https://sourceforge.net/projects/vistumbler/">Sourceforge Page</a></div>
@@ -103,7 +91,7 @@
 								<div class="inside_text_bold"><a href="verhist.html">Version History</a></div>
 								<div class="inside_dark_header">Other Projects</div>
 								<div class="inside_text_bold"><a href="http://uns.randomintervals.com/">UNS Home</a></div>
-								<div class="inside_text_bold"><a href="http://www.randomintervals.com/wifidb/">WifiDB Home</a></div>
+								<div class="inside_text_bold"><a href="http://www.wifidb.net">WifiDB Home</a></div>
 								<div class="inside_text_bold"><a href="http://mysticache.techidiots.net">Mysticache Home</a></div>
 								<div class="inside_text_bold"><a href="http://www.techidiots.net/project-pages">TechIdiots Projects</a></div>
 								<div class="inside_text_bold"><a href="http://www.techidiots.net/">TechIdiots.net</a></div>
@@ -136,7 +124,6 @@
 								<div class="inside_dark_header">Store</div>
 								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products">All Products</a></div>
 								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-235">Shirts</a></div>
-								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-128">Bumper Stickers</a></div>
 								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-144">Mousepads</a></div>
 								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-217">Stickers</a></div>
 								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-147">Magnets</a></div>
