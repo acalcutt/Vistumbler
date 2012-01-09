@@ -1034,6 +1034,22 @@ If FileExists($VistumblerDB) Then
 		$query = "UPDATE AP SET HighSignal = '0'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	EndIf
+	;Fix missing CountryCode field in AP table (MDB backward compatibitly fix)
+	If _FieldExists($VistumblerDB, 'AP', 'CountryCode') <> 1 Then
+		_CreateField($VistumblerDB, "AP", "CountryCode", "TEXT(100)", $DB_OBJ)
+	EndIf
+	;Fix missing CountryName field in AP table (MDB backward compatibitly fix)
+	If _FieldExists($VistumblerDB, 'AP', 'CountryName') <> 1 Then
+		_CreateField($VistumblerDB, "AP", "CountryName", "TEXT(100)", $DB_OBJ)
+	EndIf
+	;Fix missing AdminCode field in AP table (MDB backward compatibitly fix)
+	If _FieldExists($VistumblerDB, 'AP', 'AdminCode') <> 1 Then
+		_CreateField($VistumblerDB, "AP", "AdminCode", "TEXT(100)", $DB_OBJ)
+	EndIf
+	;Fix missing AdminName field in AP table (MDB backward compatibitly fix)
+	If _FieldExists($VistumblerDB, 'AP', 'AdminName') <> 1 Then
+		_CreateField($VistumblerDB, "AP", "AdminName", "TEXT(100)", $DB_OBJ)
+	EndIf
 	;Fix missing TreeviewPos table (MDB backward compatibitly fix)
 	_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
 	_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
@@ -1235,8 +1251,10 @@ $ExtraMenu = GUICtrlCreateMenu($Text_Extra)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $ExtraMenu)
 $GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $ExtraMenu)
 $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $ExtraMenu)
+$UpdateGeolocations = GUICtrlCreateMenuItem("Update Geolocations", $ExtraMenu)
 $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $ExtraMenu)
 $UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $ExtraMenu)
+
 
 $WifidbMenu = GUICtrlCreateMenu($Text_WifiDB)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $WifidbMenu)
@@ -1408,6 +1426,7 @@ GUICtrlSetOnEvent($SetWifiDB, '_SettingsGUI_WifiDB')
 ;Extra Menu
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
 GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
+GUICtrlSetOnEvent($UpdateGeolocations, '_GeoLocateAllAps')
 GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
 GUICtrlSetOnEvent($OpenKmlNetworkLink, '_StartGoogleAutoKmlRefresh')
 
@@ -2689,7 +2708,7 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($VistumblerDB, "Graph", $DB_OBJ)
 	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
@@ -10517,3 +10536,52 @@ EndFunc   ;==>_CleanupFiles
 	;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	EndFunc   ;==>_DeleteListviewRow
 #ce
+
+Func _GeoLocateAllAps()
+	$query = "SELECT ApID, HighGpsHistId FROM AP WHERE HighGpsHistId<>'0'"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ApMatch = UBound($ApMatchArray) - 1
+	For $ugn = 1 To $ApMatch
+		ConsoleWrite($ugn & "/" & $ApMatch & @CRLF)
+		$Ap_ApID = $ApMatchArray[$ugn][1]
+		$Ap_HighGpsHist = $ApMatchArray[$ugn][2]
+		ConsoleWrite("APID:" & $Ap_ApID & @CRLF)
+		ConsoleWrite("HighGpsHist:" & $Ap_HighGpsHist & @CRLF)
+		$query = "SELECT GpsID FROM Hist WHERE HistID='" & $Ap_HighGpsHist & "'"
+		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$HistMatch = UBound($ApMatchArray) - 1
+		If $HistMatch <> 0 Then
+			$Ap_GpsID = $HistMatchArray[1][1]
+			ConsoleWrite("GpsID:" & $Ap_GpsID & @CRLF)
+			$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID='" & $Ap_GpsID & "'"
+			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$GpsMatch = UBound($ApMatchArray) - 1
+			If $GpsMatch <> 0 Then
+				$Ap_Lat = $GpsMatchArray[1][1]
+				$Ap_Lon = $GpsMatchArray[1][2]
+				$GeoInfo = _GeoLocate($Ap_Lat, $Ap_Lon)
+				ConsoleWrite("GeoInfo:" & $GeoInfo & @CRLF)
+				If $GeoInfo <> 0 Then
+					$GeoInfoSplit = StringSplit($GeoInfo, "|")
+					_ArrayDisplay($GeoInfoSplit)
+					;$query = " AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
+					;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				EndIf
+			EndIf
+		EndIf
+	Next
+EndFunc   ;==>_GeoLocateAllAps
+
+Func _GeoLocate($lat, $lon)
+	Local $return = 0
+	$lat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lat), "N", ""), "S", "-"), " ", "")
+	$lon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lon), "E", ""), "W", "-"), " ", "")
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GeoLocate()') ;#Debug Display
+
+	$url = $PhilsApiURL & 'geonames.php?lat=' & $lat & '&long=' & $lon
+	ConsoleWrite($url & @CRLF)
+	$webpagesource = _INetGetSource($url)
+	ConsoleWrite($webpagesource & @CRLF)
+	If StringInStr($webpagesource, '|') Then $return = $webpagesource
+	Return ($return)
+EndFunc   ;==>_GeoLocate
