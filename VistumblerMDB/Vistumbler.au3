@@ -1734,7 +1734,7 @@ Func _ScanAccessPoints()
 		Local $NewAP = 0
 		;Dump data from netsh
 		FileDelete($tempfile);delete old temp file
-		_RunDOS($netsh & ' wlan show networks mode=bssid interface="' & $DefaultApapter & '" > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+		_RunDos($netsh & ' wlan show networks mode=bssid interface="' & $DefaultApapter & '" > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
 		$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Array
 		;Go through data and pull AP information
 		If $arrayadded = 1 Then
@@ -9626,9 +9626,9 @@ Func _GuessNetshSearchwords()
 	$count = 0
 	FileDelete($tempfile)
 	If $DefaultApapter = $Text_Default Then
-		_RunDOS('netsh wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+		_RunDos('netsh wlan show networks mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
 	Else
-		_RunDOS($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
+		_RunDos($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
 	EndIf
 
 	$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
@@ -10443,7 +10443,7 @@ Func _SelectConnectedAp()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SelectConnectedAp()') ;#Debug Display
 	$return = 0
 	FileDelete($tempfile_showint)
-	_RunDOS($netsh & ' wlan show interfaces interface="' & $DefaultApapter & '" > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
+	_RunDos($netsh & ' wlan show interfaces interface="' & $DefaultApapter & '" > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
 	$showintarraysize = _FileReadToArray($tempfile_showint, $TempFileArrayShowInt);read the tempfile into the '$TempFileArrayShowInt' Araay
 	If $showintarraysize = 1 Then
 		For $strip_ws = 1 To $TempFileArrayShowInt[0]
@@ -10567,6 +10567,7 @@ Func _GeoLocateAllAps()
 					;$query = " AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
 					;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				EndIf
+				ConsoleWrite("---------------------------------------------------" & @CRLF)
 			EndIf
 		EndIf
 	Next
@@ -10577,11 +10578,10 @@ Func _GeoLocate($lat, $lon)
 	$lat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lat), "N", ""), "S", "-"), " ", "")
 	$lon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lon), "E", ""), "W", "-"), " ", "")
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GeoLocate()') ;#Debug Display
-
 	$url = $PhilsApiURL & 'geonames.php?lat=' & $lat & '&long=' & $lon
 	ConsoleWrite($url & @CRLF)
-	$webpagesource = _INetGetSource($url)
-	ConsoleWrite($webpagesource & @CRLF)
+	$webpagesource = _INetGetSource($url, 'True')
+	ConsoleWrite('err' & @error & '     ' & $webpagesource & @CRLF)
 	If StringInStr($webpagesource, '|') Then $return = $webpagesource
 	Return ($return)
 EndFunc   ;==>_GeoLocate
