@@ -3,7 +3,7 @@
 #include <Array.au3>
 #include <INet.au3>
 #include <SQLite.au3>
-Dim $RetryAttempts = 5 ;Number of times to retry getting location
+Dim $RetryAttempts = 1 ;Number of times to retry getting location
 Dim $DBhndl
 Dim $TmpDir = @ScriptDir & '\temp\'
 $ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
@@ -34,7 +34,7 @@ Func _SearchForPlaceMark($spath)
 			ElseIf StringLower($PathNodesArray[$spa]) = "placemark" Then
 				$PlacemarkPath = $spath & "/*[" & $spa & "]"
 				$PlacemarkNodes = _XMLGetChildNodes($PlacemarkPath)
-				Local $PName, $PDesc, $PStyle, $PLat, $Plon, $PCountryCode, $PCountryName, $PAreaName
+				Local $PName, $PDesc, $PStyle, $PLat, $Plon, $PCountryCode, $PCountryName, $PAreaCode, $PAreaName, $PArea2Name
 				For $pma = 1 to $PlacemarkNodes[0]
 					;ConsoleWrite($spa & '-' & $pma & ' : ')
 					If StringLower($PlacemarkNodes[$pma]) = "name" Then
@@ -60,17 +60,13 @@ Func _SearchForPlaceMark($spath)
 								$Plon = $LatLonArr[1]
 								$PLat = $LatLonArr[2]
 								For $gl = 1 to $RetryAttempts
-									$LocationArr = _GeonamesGetGpsLocation($PLat, $Plon)
+									$LocationArr = _WifiDBGeonames($PLat, $Plon)
 									$PCountryCode = $LocationArr[1]
 									$PCountryName = $LocationArr[2]
-									$PAreaName = $LocationArr[3]
-									If $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Then ExitLoop
-									$LocationArr = _GoogleGetGpsLocation($PLat, $Plon)
-									$PCountryCode = $LocationArr[1]
-									$PCountryName = StringReplace($LocationArr[2], "USA", "United States")
-									$PAreaName = $LocationArr[3]
-									If $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Then ExitLoop
-									;Sleep(5000)
+									$PAreaCode = $LocationArr[3]
+									$PAreaName = $LocationArr[4]
+									$PArea2Name = $LocationArr[5]
+									If $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaCode <> "" Or $PAreaName <> "" Or $PArea2Name <> "" Then ExitLoop
 								Next
 								ConsoleWrite($PCountryCode &  ' - ' & $PCountryName &  ' - ' & $PAreaName & @CRLF)
 								;Sleep($RequestSleepTime);sleep because google returns results better
@@ -79,8 +75,8 @@ Func _SearchForPlaceMark($spath)
 					EndIf
 				Next
 				If $PName <> "" Or $PCountryCode <> "" Or $PCountryName <> "" Or $PAreaName <> "" Or $PDesc <> "" Then
-					ConsoleWrite('"' & $PName  & '" - "' & $PCountryCode & '" - "' & $PCountryName & '" - "' & $PAreaName & '" - "' & $PStyle & '" - "' & $PLat & '" - "' & $Plon & '" - "' & $PDesc & '"' & @CRLF)
-					$query = "INSERT INTO KMLDATA(Name,Desc,Style,Latitude,Longitude,CountryCode,CountryName,AreaName) VALUES ('" & $PName & "','" & $PDesc & "','" & $PStyle & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaName & "');"
+					ConsoleWrite('"' & $PName  & '" - "' & $PCountryCode & '" - "' & $PCountryName & '" - "' & $PAreaCode & '" - "' & $PAreaName & '" - "' & $PArea2Name & '" - "' & $PStyle & '" - "' & $PLat & '" - "' & $Plon & '" - "' & $PDesc & '"' & @CRLF)
+					$query = "INSERT INTO KMLDATA(Name,Desc,Style,Latitude,Longitude,CountryCode,CountryName,AreaCode,AreaName,Area2Name) VALUES ('" & $PName & "','" & $PDesc & "','" & $PStyle & "','" & $PLat & "','" & $Plon & "','" & $PCountryCode & "','" & $PCountryName & "','" & $PAreaCode & "','" & $PAreaName & "','" & $PArea2Name & "');"
 					_SQLite_Exec($DBhndl, $query)
 				EndIf
 			EndIf
@@ -150,11 +146,27 @@ Func _GeonamesGetGpsLocation($gllat, $gllon)
 	Return $aResult
 EndFunc
 
+Func _WifiDBGeonames($lat, $lon)
+	Local $aResult[6]
+	Local $CountryName, $CountryName, $AdminName, $AdminCode, $AdminName2
+	$url = 'http://192.168.1.27/wifidb/api/geonames.php?lat=' & $lat & '&long=' & $lon
+	ConsoleWrite($url & @CRLF)
+	$webpagesource = _INetGetSource($url, 'True')
+	If StringInStr($webpagesource, "|") Then
+		$GeoInfoSplit = StringSplit($webpagesource, "|")
+		$aResult[1] = $GeoInfoSplit[1];$GL_CountryCode
+		$aResult[2] = $GeoInfoSplit[2];$GL_CountryName
+		$aResult[3] = $GeoInfoSplit[3];$GL_AdminCode
+		$aResult[4] = $GeoInfoSplit[4];$GL_AdminName
+		$aResult[5] = $GeoInfoSplit[5];$GL_Admin2Name
+	EndIf
+	Return($aResult)
+EndFunc
 
 Func _SetUpDbTables($dbfile)
 	_SQLite_Startup()
 	$DBhndl = _SQLite_Open($dbfile)
 	_SQLite_Exec($DBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
 	ConsoleWrite(@error & @CRLF)
-	_SQLite_Exec($DBhndl, "CREATE TABLE KMLDATA (Name,Desc,Style,Latitude,Longitude,CountryCode,CountryName,AreaName)")
+	_SQLite_Exec($DBhndl, "CREATE TABLE KMLDATA (Name,Desc,Style,Latitude,Longitude,CountryCode,CountryName,AreaCode,AreaName,Area2Name)")
 EndFunc   ;==>_SetUpDbTables
