@@ -1,10 +1,10 @@
 #RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Icons\icon.ico
-#AutoIt3Wrapper_outfile=Vistumbler.exe
+#AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Outfile=Vistumbler.exe
+#AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
-
 ;License Information------------------------------------
 ;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.2'
+$version = 'v10.3 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2011/11/25'
+$last_modified = '2012/02/11'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -124,12 +124,14 @@ Dim $VistumblerDB
 Dim $VistumblerDbName
 Dim $ManuDB = $SettingsDir & 'Manufacturers.mdb'
 Dim $LabDB = $SettingsDir & 'Labels.mdb'
+Dim $CamDB = $SettingsDir & 'Cameras.mdb'
 Dim $InstDB = $SettingsDir & 'Instruments.mdb'
 Dim $FiltDB = $SettingsDir & 'Filters.mdb'
 
 Dim $DB_OBJ
 Dim $ManuDB_OBJ
 Dim $LabDB_OBJ
+Dim $CamDB_OBJ
 Dim $InstDB_OBJ
 Dim $FiltDB_OBJ
 Dim $AddApRecordArray[22]
@@ -137,6 +139,7 @@ Dim $AddTreeRecordArray[17]
 Dim $APID = 0
 Dim $HISTID = 0
 Dim $GPS_ID = 0
+Dim $CamID = 0
 Dim $Recover = 0
 
 Dim $MoveMode = False
@@ -238,14 +241,14 @@ Dim $ExportKMLGUI, $GUI_TrackColor
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
-Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1
+Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
 Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
-Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $ImpLanFile
-Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel
+Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
+Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL, $GUI_PhilsApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFilter
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
@@ -380,6 +383,8 @@ Dim $DefFiltID = IniRead($settings, 'Vistumbler', 'DefFiltID', '-1')
 Dim $AutoScan = IniRead($settings, 'Vistumbler', 'AutoScan', '0')
 Dim $dBmMaxSignal = IniRead($settings, 'Vistumbler', 'dBmMaxSignal', '-30')
 Dim $dBmDissociationSignal = IniRead($settings, 'Vistumbler', 'dBmDissociationSignal', '-85')
+Dim $DownloadImages = IniRead($settings, 'Vistumbler', 'DownloadImages', '0')
+Dim $DownloadImagesTime = IniRead($settings, 'Vistumbler', 'DownloadImagesTime', 5000)
 
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
@@ -868,7 +873,12 @@ Dim $Text_WifiDBAutoUploadWarning = IniRead($DefaultLanguagePath, 'GuiText', 'Wi
 Dim $Text_WifiDBOpenLiveAPWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', 'Open WifiDB Live AP Webpage')
 Dim $Text_WifiDBOpenMainWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', 'Open WifiDB Main Webpage')
 Dim $Text_FilePath = IniRead($DefaultLanguagePath, 'GuiText', 'FilePath', 'File Path')
-
+Dim $Text_CameraName = IniRead($DefaultLanguagePath, 'GuiText', 'CameraName', 'Camera Name')
+Dim $Text_CameraURL = IniRead($DefaultLanguagePath, 'GuiText', 'CameraURL', 'Camera URL')
+Dim $Text_Cameras = IniRead($DefaultLanguagePath, 'GuiText', 'Cameras', 'Camera(s)')
+Dim $Text_AddCamera = IniRead($DefaultLanguagePath, 'GuiText', 'AddCamera', 'Add Camera')
+Dim $Text_RemoveCamera = IniRead($DefaultLanguagePath, 'GuiText', 'RemoveCamera', 'Remove Camera')
+Dim $Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
 		$updatemsg = MsgBox(4, $Text_Update, $Text_UpdateMsg)
@@ -941,10 +951,12 @@ If $MDBfiles[0][0] > 0 Then
 			Case $GUI_EVENT_CLOSE
 				$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 				$VistumblerDbName = $ldatetimestamp & '.mdb'
+				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
 				ExitLoop
 			Case $Recover_New
 				$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 				$VistumblerDbName = $ldatetimestamp & '.mdb'
+				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
 				ExitLoop
 			Case $Recover_Exit
 				Exit
@@ -955,15 +967,18 @@ If $MDBfiles[0][0] > 0 Then
 				Else
 					$VistumblerDbName = _GUICtrlListView_GetItemText($Recover_List, $Selected, 0)
 					$VistumblerDB = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
+					$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
+					ConsoleWrite($VistumblerDB & @CRLF)
+					ConsoleWrite($VistumblerCamFolder & @CRLF)
+					;If this MDB/ZIP is not in the temp folder, move it there and rename it
 					$mdbfolder = StringTrimRight($VistumblerDB, (StringLen($VistumblerDB) - StringInStr($VistumblerDB, "\", 1, -1)))
-
-					ConsoleWrite($mdbfolder & @CRLF)
-					ConsoleWrite($TmpDir & @CRLF)
 					If $mdbfolder <> $TmpDir Then
-						$newmdbpath = _TempFile($TmpDir, StringTrimRight($VistumblerDbName, 4) & "__", ".mdb", 4)
-						FileCopy($VistumblerDB, $newmdbpath, 9)
-						$VistumblerDbName = StringTrimLeft($newmdbpath, StringInStr($newmdbpath, "\", 1, -1))
-						$VistumblerDB = $newmdbpath
+						$OldVistumblerDB = $VistumblerDB
+						$VistumblerDB = _TempFile($TmpDir, StringTrimRight($VistumblerDbName, 4) & "__", ".mdb", 4)
+						$VistumblerDbName = StringTrimLeft($VistumblerDB, StringInStr($VistumblerDB, "\", 1, -1))
+						FileCopy($OldVistumblerDB, $VistumblerDB, 9)
+						$OldVistumblerCamFolder = $VistumblerCamFolder
+						$VistumblerCamFolder = StringTrimRight($VistumblerDB, 4) & '\'
 					EndIf
 					ExitLoop
 				EndIf
@@ -972,8 +987,10 @@ If $MDBfiles[0][0] > 0 Then
 				If $Selected = '-1' Then
 					MsgBox(0, $Text_Error, $Text_NoMdbSelected)
 				Else
-					$fn_fullpath = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
-					FileDelete($fn_fullpath)
+					$db_fullpath = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
+					FileDelete($db_fullpath)
+					$zip_fullpath = StringTrimRight($db_fullpath, 4) & '.zip'
+					FileDelete($zip_fullpath)
 					_GUICtrlListView_DeleteItem(GUICtrlGetHandle($Recover_List), $Selected)
 				EndIf
 		EndSwitch
@@ -983,7 +1000,12 @@ If $MDBfiles[0][0] > 0 Then
 Else
 	$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 	$VistumblerDbName = $ldatetimestamp & '.mdb'
+	$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
 EndIf
+
+ConsoleWrite($VistumblerDB & @CRLF)
+ConsoleWrite($VistumblerCamFolder & @CRLF)
+
 
 If FileExists($VistumblerDB) Then
 	$Recover = 1
@@ -1050,12 +1072,25 @@ If FileExists($VistumblerDB) Then
 	If _FieldExists($VistumblerDB, 'AP', 'AdminName') <> 1 Then
 		_CreateField($VistumblerDB, "AP", "AdminName", "TEXT(100)", $DB_OBJ)
 	EndIf
+	;Fix missing Admin2Name field in AP table (MDB backward compatibitly fix)
+	If _FieldExists($VistumblerDB, 'AP', 'Admin2Name') <> 1 Then
+		_CreateField($VistumblerDB, "AP", "Admin2Name", "TEXT(100)", $DB_OBJ)
+	EndIf
 	;Fix missing TreeviewPos table (MDB backward compatibitly fix)
 	_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
 	_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
 	_CreatMultipleFields($VistumblerDB, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
+	;Fix missing CAM table (MDB backward compatibitly fix)
+	If _TableExists($DB_OBJ, $VistumblerDB, 'CAM') <> 1 Then
+		_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
+		_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)')
+	EndIf
 Else
 	_SetUpDbTables($VistumblerDB)
+EndIf
+
+If Not FileExists($VistumblerCamFolder) Then
+	DirCreate($VistumblerCamFolder)
 EndIf
 
 ;Connect to manufacturer database
@@ -1075,6 +1110,17 @@ Else
 	_AccessConnectConn($LabDB, $LabDB_OBJ)
 	_CreateTable($LabDB, 'Labels', $LabDB_OBJ)
 	_CreatMultipleFields($LabDB, 'Labels', $LabDB_OBJ, 'BSSID TEXT(12)|Label TEXT(255)')
+EndIf
+;Connect to camera database
+If FileExists($CamDB) Then
+	_AccessConnectConn($CamDB, $CamDB_OBJ)
+Else
+	_CreateDB($CamDB)
+	_AccessConnectConn($CamDB, $CamDB_OBJ)
+	_CreateTable($CamDB, 'Cameras', $CamDB_OBJ)
+	_CreatMultipleFields($CamDB, 'Cameras', $CamDB_OBJ, 'CamName TEXT(255)|CamUrl TEXT(255)')
+
+	$query = "SELECT CamName, CamUrl FROM Cameras"
 EndIf
 ;Connect to Instrument database
 If FileExists($InstDB) Then
@@ -1180,6 +1226,8 @@ $GUI_MidiActiveAps = GUICtrlCreateMenuItem($Text_PlayMidiSounds, $Options)
 If $Midi_PlayForActiveAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GUI_DownloadImages = GUICtrlCreateMenuItem("Download Images(" & $Text_Experimental & ")", $Options)
+If $DownloadImages = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GuiUseNativeWifi = GUICtrlCreateMenuItem($Text_UseNativeWifi, $Options)
 If $UseNativeWifi = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
@@ -1188,6 +1236,7 @@ $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $DebugMenu)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugComGUI = GUICtrlCreateMenuItem($Text_DisplayComErrors, $DebugMenu)
 If $DebugCom = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+
 
 $ViewMenu = GUICtrlCreateMenu($Text_View)
 $FilterMenu = GUICtrlCreateMenu($Text_Filters, $ViewMenu)
@@ -1241,6 +1290,7 @@ $SetColumnWidths = GUICtrlCreateMenuItem($Text_SetColumnWidths, $SettingsMenu)
 $SetAuto = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_AutoSort, $SettingsMenu)
 $SetSound = GUICtrlCreateMenuItem($Text_Sound, $SettingsMenu)
 $SetWifiDB = GUICtrlCreateMenuItem($Text_WifiDB, $SettingsMenu)
+$SetCamera = GUICtrlCreateMenuItem("Set Cameras", $SettingsMenu)
 
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
 $RefreshInterfaces = GUICtrlCreateMenuItem($Text_RefreshInterfaces, $Interfaces)
@@ -1403,6 +1453,7 @@ GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
 GUICtrlSetOnEvent($GuiUseNativeWifi, '_NativeWifiToggle')
 GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
 GUICtrlSetOnEvent($DebugComGUI, '_DebugComToggle')
+GUICtrlSetOnEvent($GUI_DownloadImages, '_DownloadImagesToggle')
 ;View Menu
 GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
@@ -1422,7 +1473,7 @@ GUICtrlSetOnEvent($SetSearchWords, '_SettingsGUI_SW')
 GUICtrlSetOnEvent($SetAuto, '_SettingsGUI_Auto')
 GUICtrlSetOnEvent($SetSound, '_SettingsGUI_Sound')
 GUICtrlSetOnEvent($SetWifiDB, '_SettingsGUI_WifiDB')
-
+GUICtrlSetOnEvent($SetCamera, '_SettingsGUI_Cam')
 ;Extra Menu
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
 GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
@@ -1484,6 +1535,7 @@ $ReleaseMemory_Timer = TimerInit()
 $Speech_Timer = TimerInit()
 $WiFiDbLocate_Timer = TimerInit()
 $wifidb_au_timer = TimerInit()
+$cam_timer = TimerInit()
 While 1
 	;Set TimeStamps (UTC Values)
 	$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ') ;UTC Time
@@ -1590,6 +1642,12 @@ While 1
 			$UpdatedSpeechSig = 1
 			$Speech_Timer = TimerInit()
 		EndIf
+	EndIf
+
+	;Get Webcam Images
+	If $DownloadImages = 1 And TimerDiff($cam_timer) >= $DownloadImagesTime Then
+		_ImageDownloader()
+		$cam_timer = TimerInit()
 	EndIf
 
 	;Export KML files for AutoKML Google Earth Tracking (if enabled)
@@ -2707,11 +2765,13 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'LoadedFiles', $DB_OBJ)
 	_CreateTable($VistumblerDB, "Graph", $DB_OBJ)
 	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
+	_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)|')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -2829,8 +2889,11 @@ Func _Exit()
 	FileDelete($tempfile_showint)
 	If $SaveDbOnExit = 1 Then
 		FileMove($VistumblerDB, $SaveDir, 9);Move to save directory for later use
+		;FileMove($VistumblerCamZip, $SaveDir, 9);Move to save directory for later use
 	Else
 		FileDelete($VistumblerDB)
+		FileDelete($VistumblerCamFolder & "*")
+		DirRemove($VistumblerCamFolder, 1)
 	EndIf
 	If $AutoSaveDel = 1 Then FileDelete($AutoSaveFile)
 	If $UseGPS = 1 Then ;If GPS is active, stop it so the COM port does not stay open
@@ -3185,6 +3248,17 @@ Func _ShowDbToggle();Turns Estimated DB value on or off
 		$ShowEstimatedDB = 1
 	EndIf
 EndFunc   ;==>_ShowDbToggle
+
+Func _DownloadImagesToggle();Turns Estimated DB value on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DownloadImagesToggle()') ;#Debug Display
+	If $DownloadImages = 1 Then
+		GUICtrlSetState($GUI_DownloadImages, $GUI_UNCHECKED)
+		$DownloadImages = 0
+	Else
+		GUICtrlSetState($GUI_DownloadImages, $GUI_CHECKED)
+		$DownloadImages = 1
+	EndIf
+EndFunc   ;==>_DownloadImagesToggle
 
 Func _ResetSizes()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ResetSizes()') ;#Debug Display
@@ -5530,7 +5604,7 @@ Func _ExportVSZ()
 		If FileExists($vs1_file) Then FileDelete($vs1_file)
 		_ExportVS1($vs1_file)
 		_Zip_Create($vsz_temp_file)
-		_Zip_AddFile($vsz_temp_file, $vs1_file)
+		_Zip_AddItem($vsz_temp_file, $vs1_file)
 		FileMove($vsz_temp_file, $vsz_file)
 		FileDelete($vs1_file)
 	EndIf
@@ -6075,6 +6149,12 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', $Text_WifiDBOpenLiveAPWebpage)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', $Text_WifiDBOpenMainWebpage)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FilePath', $Text_FilePath)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'CameraName', $Text_CameraName)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'CameraURL', $Text_CameraURL)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Cameras', $Text_Cameras)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AddCamera', $Text_AddCamera)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'RemoveCamera', $Text_RemoveCamera)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'EditCamera', $Text_EditCamera)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -7918,6 +7998,11 @@ Func _SettingsGUI_WifiDB();Opens GUI to Auto tab
 	_SettingsGUI(9)
 EndFunc   ;==>_SettingsGUI_WifiDB
 
+Func _SettingsGUI_Cam();Opens GUI to Auto tab
+	$Apply_Cam = 1
+	_SettingsGUI(10)
+EndFunc   ;==>_SettingsGUI_Cam
+
 Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 	If $SettingsOpen = 1 Then
 		WinActivate($Text_VistumblerSettings)
@@ -8498,6 +8583,37 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_AutoUpApsToWifiDBTime = GUICtrlCreateInput($AutoUpApsToWifiDBTime, 360, 355, 115, 20)
 		GUICtrlSetColor(-1, $TextColor)
+
+
+		;Camera tab
+		$Tab_Cam = GUICtrlCreateTabItem($Text_Cameras)
+		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
+		GUICtrlCreateLabel($Text_CameraName, 34, 39, 195, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_Cam_NewID = GUICtrlCreateInput("", 34, 56, 195, 21)
+		GUICtrlCreateLabel($Text_CameraURL, 244, 39, 410, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_Cam_NewLOC = GUICtrlCreateInput("", 244, 56, 410, 21)
+		GUICtrlSetColor(-1, $TextColor)
+		$Add_Cam = GUICtrlCreateButton($Text_AddCamera, 24, 90, 201, 25, 0)
+		$Remove_Cam = GUICtrlCreateButton($Text_RemoveCamera, 239, 90, 201, 25, 0)
+		$Edit_Cam = GUICtrlCreateButton($Text_EditCamera, 456, 90, 201, 25, 0)
+		$GUI_Cam_List = GUICtrlCreateListView($Text_CameraName & "|" & $Text_CameraURL, 24, 125, 634, 326, $LVS_REPORT, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+		GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+		_GUICtrlListView_SetColumnWidth($GUI_Cam_List, 0, 160)
+		_GUICtrlListView_SetColumnWidth($GUI_Cam_List, 1, 450)
+		;Add Manufacturers to list
+		$query = "SELECT CamName, CamUrl FROM Cameras"
+		$CamMatchArray = _RecordSearch($CamDB, $query, $CamDB_OBJ)
+		$FoundCamMatch = UBound($CamMatchArray) - 1
+		GUICtrlSetData($msgdisplay, $Text_VistumblerSettings & ' - Loading ' & $FoundCamMatch & ' ' & $Text_Cameras)
+		For $c = 1 To $FoundCamMatch
+			$camname = $CamMatchArray[$c][1]
+			$camurl = $CamMatchArray[$c][2]
+			GUICtrlCreateListViewItem('"' & $camname & '"|' & $camurl, $GUI_Cam_List)
+		Next
+		GUICtrlSetData($msgdisplay, '')
+
 		GUICtrlCreateTabItem("");END OF TABS
 
 		$GUI_Set_Apply = GUICtrlCreateButton($Text_Apply, 610, 470, 73, 25, 0)
@@ -8516,7 +8632,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		If $StartTab = 7 Then GUICtrlSetState($Tab_Auto, $GUI_SHOW)
 		If $StartTab = 8 Then GUICtrlSetState($Tab_Sound, $GUI_SHOW)
 		If $StartTab = 9 Then GUICtrlSetState($Tab_WifiDB, $GUI_SHOW)
-
+		If $StartTab = 10 Then GUICtrlSetState($Tab_Cam, $GUI_SHOW)
 
 		GUICtrlSetOnEvent($Add_MANU, '_AddManu')
 		GUICtrlSetOnEvent($Edit_MANU, '_EditManu')
@@ -8524,6 +8640,9 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetOnEvent($Add_Lab, '_AddLabel')
 		GUICtrlSetOnEvent($Edit_Lab, '_EditLabel')
 		GUICtrlSetOnEvent($Remove_Lab, '_RemoveLabel')
+		GUICtrlSetOnEvent($Add_Cam, '_AddCam')
+		GUICtrlSetOnEvent($Edit_Cam, '_EditCam')
+		GUICtrlSetOnEvent($Remove_Cam, '_RemoveCam')
 
 		GUICtrlSetOnEvent($browse1, '_BrowseSave')
 		GUICtrlSetOnEvent($Browse2, '_BrowseAutoSave')
@@ -9012,6 +9131,12 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_WifiDBOpenLiveAPWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenLiveAPWebpage', 'Open WifiDB Live AP Webpage')
 		$Text_WifiDBOpenMainWebpage = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDBOpenMainWebpage', 'Open WifiDB Main Webpage')
 		$Text_FilePath = IniRead($DefaultLanguagePath, 'GuiText', 'FilePath', 'File Path')
+		$Text_CameraName = IniRead($DefaultLanguagePath, 'GuiText', 'CameraName', 'Camera Name')
+		$Text_CameraURL = IniRead($DefaultLanguagePath, 'GuiText', 'CameraURL', 'Camera URL')
+		$Text_Cameras = IniRead($DefaultLanguagePath, 'GuiText', 'Cameras', 'Cameras')
+		$Text_AddCamera = IniRead($DefaultLanguagePath, 'GuiText', 'AddCamera', 'Add Camera')
+		$Text_RemoveCamera = IniRead($DefaultLanguagePath, 'GuiText', 'RemoveCamera', 'Remove Camera')
+		$Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -9224,8 +9349,19 @@ Func _ApplySettingsGUI();Applys settings
 		If GUICtrlRead($GUI_WifidbUploadAps) = 1 And $AutoUpApsToWifiDB = 0 Then _WifiDbAutoUploadToggle()
 		$AutoUpApsToWifiDBTime = GUICtrlRead($GUI_AutoUpApsToWifiDBTime)
 	EndIf
-
-	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1
+	If $Apply_Cam = 1 Then
+		;Remove all current cameras in the array
+		$query = "DELETE * FROM Cameras"
+		_ExecuteMDB($CamDB, $CamDB_OBJ, $query)
+		;Rewrite cameras from listview into the array
+		$itemcount = _GUICtrlListView_GetItemCount($GUI_Cam_List) - 1; Get List Size
+		For $findloop = 0 To $itemcount
+			$o_camname = StringReplace(_GUICtrlListView_GetItemText($GUI_Cam_List, $findloop, 0), '"', '')
+			$o_camurl = _GUICtrlListView_GetItemText($GUI_Cam_List, $findloop, 1)
+			_AddRecord($CamDB, "Cameras", $CamDB_OBJ, $o_camname & '|' & $o_camurl)
+		Next
+	EndIf
+	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
 	If $RestartVistumbler = 1 Then MsgBox(0, $Text_Restart, $Text_RestartMsg)
 EndFunc   ;==>_ApplySettingsGUI
 
@@ -9437,6 +9573,8 @@ Func _SetWidthValue_Label()
 	_SetWidthValue($CWCB_Label, $CWIB_Label, $column_Width_Label, $settings, 'Column_Width', 'Column_Label', 100)
 EndFunc   ;==>_SetWidthValue_Label
 
+
+
 Func _AddManu();Adds new manucaturer to settings gui manufacturer list
 	$Apply_Manu = 1
 	$StrippedMac = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace(GUICtrlRead($GUI_Manu_NewMac), ':', ''), '-', ''), '"', ''), ' ', ''))
@@ -9482,6 +9620,12 @@ Func _EditManu();Opens edit manufacturer window
 	EndIf
 EndFunc   ;==>_EditManu
 
+Func _RemoveManu();Removed manufactuer from list
+	$Apply_Manu = 1
+	$EditLine = _GUICtrlListView_GetNextItem($GUI_Manu_List)
+	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem($GUI_Manu_List, $EditLine)
+EndFunc   ;==>_RemoveManu
+
 Func _EditManu_Close();Close edit manufacturer window
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditManu_Close
@@ -9493,12 +9637,6 @@ Func _EditManu_Ok();Apply edit manufacture window settings and close it
 	_GUICtrlListView_SetItemText($GUI_Manu_List, $EditLine, GUICtrlRead($EditMac_GUI), 1)
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditManu_Ok
-
-Func _RemoveManu();Removed manufactuer from list
-	$Apply_Manu = 1
-	$EditLine = _GUICtrlListView_GetNextItem($GUI_Manu_List)
-	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem($GUI_Manu_List, $EditLine)
-EndFunc   ;==>_RemoveManu
 
 Func _AddLabel();Adds new label to settings gui label list
 	$Apply_Lab = 1
@@ -9545,6 +9683,14 @@ Func _EditLabel();Opens edit label window
 	EndIf
 EndFunc   ;==>_EditLabel
 
+Func _RemoveLabel();Close edit label window
+	$Apply_Lab = 1
+	$EditLine = _GUICtrlListView_GetNextItem($GUI_Lab_List)
+	ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
+	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem($GUI_Lab_List, $EditLine)
+EndFunc   ;==>_RemoveLabel
+
+
 Func _EditLabel_Close();Close edit label window
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditLabel_Close
@@ -9557,11 +9703,68 @@ Func _EditLabel_Ok();Apply edit label window settings and close it
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditLabel_Ok
 
-Func _RemoveLabel();Close edit label window
-	$Apply_Lab = 1
-	$EditLine = _GUICtrlListView_GetNextItem($GUI_Lab_List)
-	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem($GUI_Lab_List, $EditLine)
-EndFunc   ;==>_RemoveLabel
+Func _AddCam();Adds new Camcaturer to settings gui Camfacturer list
+	$Apply_Cam = 1
+	$AddID = '"' & GUICtrlRead($GUI_Cam_NewID) & '"'
+	$AddLOC = GUICtrlRead($GUI_Cam_NewLOC)
+	$arraysearch = -1
+	$itemcount = _GUICtrlListView_GetItemCount($GUI_Cam_List) - 1; Get List Size
+	For $findloop = 0 To $itemcount; Find cam in list; If found, set $arraysearch with position
+		If _GUICtrlListView_GetItemText($GUI_Cam_List, $findloop, 0) = $AddID Then
+			$arraysearch = $findloop
+			ExitLoop
+		EndIf
+	Next
+	If $arraysearch = -1 Then
+		$arraysearch = _GUICtrlListView_InsertItem($GUI_Cam_List, 0, '')
+		_GUICtrlListView_SetItemText($GUI_Cam_List, $arraysearch, $AddID, 0)
+		_GUICtrlListView_SetItemText($GUI_Cam_List, $arraysearch, $AddLOC, 1)
+	Else
+		$overwrite_entry = MsgBox(4, $Text_Overwrite & '?', "Camera Already Exists. Do you want to overwrite it.")
+		If $overwrite_entry = 6 Then
+			_GUICtrlListView_SetItemText($GUI_Cam_List, $arraysearch, $AddID, 0)
+			_GUICtrlListView_SetItemText($GUI_Cam_List, $arraysearch, $AddLOC, 1)
+		EndIf
+	EndIf
+EndFunc   ;==>_AddCam
+
+Func _EditCam();Opens edit Camfacturer window
+	$EditLine = _GUICtrlListView_GetNextItem($GUI_Cam_List)
+	If $EditLine <> $LV_ERR Then
+		$EditCamID = StringTrimRight(StringTrimLeft(_GUICtrlListView_GetItemText($GUI_Cam_List, $EditLine, 0), 1), 1)
+		$EditCamLoc = _GUICtrlListView_GetItemText($GUI_Cam_List, $EditLine, 1)
+		$EditCamGUIForm = GUICreate("Add Camera", 625, 86, -1, -1)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateLabel("Camera ID", 16, 16, 69, 17)
+		$GUI_Edit_CamID = GUICtrlCreateInput($EditCamID, 88, 16, 137, 21)
+		GUICtrlCreateLabel("Camera URL", 230, 16, 70, 17)
+		$GUI_Edit_CamLOC = GUICtrlCreateInput($EditCamLoc, 305, 16, 300, 21)
+		$EditCam_OK = GUICtrlCreateButton($Text_Ok, 200, 48, 97, 25, 0)
+		$EditCam_Can = GUICtrlCreateButton($Text_Cancel, 312, 48, 97, 25, 0)
+		GUISetState(@SW_SHOW)
+		GUICtrlSetOnEvent($EditCam_OK, "_EditCam_Ok")
+		GUICtrlSetOnEvent($EditCam_Can, "_EditCam_Close")
+	EndIf
+EndFunc   ;==>_EditCam
+
+Func _RemoveCam();Removed Camfactuer from list
+	$Apply_Cam = 1
+	$EditLine = _GUICtrlListView_GetNextItem($GUI_Cam_List)
+	ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
+	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem(GUICtrlGetHandle($GUI_Cam_List), $EditLine)
+EndFunc   ;==>_RemoveCam
+
+Func _EditCam_Close();Close edit Camfacturer window
+	GUIDelete($EditCamGUIForm)
+EndFunc   ;==>_EditCam_Close
+
+Func _EditCam_Ok();Apply edit Camfacture window settings and close it
+	$Apply_Cam = 1
+	_GUICtrlListView_SetItemText($GUI_Cam_List, $EditLine, GUICtrlRead($GUI_Edit_CamID), 0)
+	_GUICtrlListView_SetItemText($GUI_Cam_List, $EditLine, GUICtrlRead($GUI_Edit_CamLOC), 1)
+	GUIDelete($EditMacGUIForm)
+EndFunc   ;==>_EditCam_Ok
+
 
 Func _SetWidthValue(ByRef $wcheckbox, ByRef $winput, $wcurrentwidth, $wsettings, $wsection, $wvalue, $wdef);Enable or disable a column in settings gui. reset width
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetWidthValue()') ;#Debug Display
@@ -10561,11 +10764,15 @@ Func _GeoLocateAllAps()
 				$Ap_Lon = $GpsMatchArray[1][2]
 				$GeoInfo = _GeoLocate($Ap_Lat, $Ap_Lon)
 				ConsoleWrite("GeoInfo:" & $GeoInfo & @CRLF)
-				If $GeoInfo <> 0 Then
+				If $GeoInfo <> "0" Then
 					$GeoInfoSplit = StringSplit($GeoInfo, "|")
-					_ArrayDisplay($GeoInfoSplit)
-					;$query = " AP SET ListRow = ListRow - 1 WHERE ListRow > '" & $fListRow & "'"
-					;_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+					$GL_CountryCode = $GeoInfoSplit[1]
+					$GL_CountryName = $GeoInfoSplit[2]
+					$GL_AdminCode = $GeoInfoSplit[3]
+					$GL_AdminName = $GeoInfoSplit[4]
+					$GL_Admin2Name = $GeoInfoSplit[5]
+					$query = "UPDATE AP SET CountryCode='" & $GL_CountryCode & "', CountryName='" & $GL_CountryName & "' , AdminCode='" & $GL_AdminCode & "' , AdminName='" & $GL_AdminName & "' , Admin2Name='" & $GL_Admin2Name & "' WHERE ApID='" & $Ap_ApID & "'"
+					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				EndIf
 				ConsoleWrite("---------------------------------------------------" & @CRLF)
 			EndIf
@@ -10579,9 +10786,29 @@ Func _GeoLocate($lat, $lon)
 	$lon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lon), "E", ""), "W", "-"), " ", "")
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GeoLocate()') ;#Debug Display
 	$url = $PhilsApiURL & 'geonames.php?lat=' & $lat & '&long=' & $lon
-	ConsoleWrite($url & @CRLF)
 	$webpagesource = _INetGetSource($url, 'True')
-	ConsoleWrite('err' & @error & '     ' & $webpagesource & @CRLF)
 	If StringInStr($webpagesource, '|') Then $return = $webpagesource
 	Return ($return)
 EndFunc   ;==>_GeoLocate
+
+Func _ImageDownloader()
+	$query = "SELECT CamName, CamUrl FROM Cameras"
+	$CamMatchArray = _RecordSearch($CamDB, $query, $CamDB_OBJ)
+	$FoundCamMatch = UBound($CamMatchArray) - 1
+	For $c = 1 To $FoundCamMatch
+		$camname = $CamMatchArray[$c][1]
+		$camurl = $CamMatchArray[$c][2]
+		$filename = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC & '_' & $camname & '.jpg'
+		$tmpfile = $TmpDir & $filename
+		$destfile = $VistumblerCamFolder & $filename
+		ConsoleWrite($camname & ' - ' & $camurl & ' - ' & $tmpfile & @CRLF)
+		$get = InetGet($camurl, $tmpfile, 0)
+		ConsoleWrite($get & @CRLF)
+		If $get <> 0 Then
+			$CamID += 1
+			_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $GPS_ID & '|' & $camname & '|' & $filename)
+			FileMove($tmpfile, $destfile)
+		EndIf
+		If FileExists($tmpfile) Then FileDelete($tmpfile)
+	Next
+EndFunc   ;==>_ImageDownloader
