@@ -140,6 +140,7 @@ Dim $APID = 0
 Dim $HISTID = 0
 Dim $GPS_ID = 0
 Dim $CamID = 0
+Dim $CamGroupID = 0
 Dim $Recover = 0
 
 Dim $MoveMode = False
@@ -221,7 +222,8 @@ Dim $ListviewAPs
 Dim $TreeviewAPs
 
 Dim $NetworkAdapters[1]
-Dim $wlanhandle = _Wlan_OpenHandle()
+;Dim $wlanhandle = _Wlan_OpenHandle()
+_Wlan_StartSession()
 Dim $noadaptersid
 
 Dim $AeroOn
@@ -1083,7 +1085,7 @@ If FileExists($VistumblerDB) Then
 	;Fix missing CAM table (MDB backward compatibitly fix)
 	If _TableExists($DB_OBJ, $VistumblerDB, 'CAM') <> 1 Then
 		_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
-		_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)')
+		_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|CamGroupID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
 	EndIf
 Else
 	_SetUpDbTables($VistumblerDB)
@@ -1196,6 +1198,7 @@ $ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
 $ExportToGPX = GUICtrlCreateMenuItem($Text_AllAPs, $ExportGpxMenu)
 $ExportNS1Menu = GUICtrlCreateMenu($Text_ExportToNS1, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportNS1Menu)
+$ExportCamFile = GUICtrlCreateMenuItem("Export cam file", $Export)
 $ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 ;Edit Menu
@@ -1433,6 +1436,7 @@ GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
 GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
 GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
 GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
+GUICtrlSetOnEvent($ExportCamFile, '_ExportCamFile')
 GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
 ;Edit Menu
@@ -1740,19 +1744,20 @@ Func _ScanAccessPoints()
 	Local $FoundAPs = 0
 	Local $FilterMatches = 0
 	If $UseNativeWifi = 1 Then
-		$aplist = _Wlan_GetAvailableNetworkList(2, $DefaultApapterID, $wlanhandle)
+		$aplist = _Wlan_GetNetworks(False, 0, 0)
+		;_ArrayDisplay($aplist)
 		$aplistsize = UBound($aplist) - 1
 		For $add = 0 To $aplistsize
-			$RadioType = ''
-			$BasicTransferRates = ''
+			$RadioType = $aplist[$add][12]
+			$BasicTransferRates = $aplist[$add][11]
 			$OtherTransferRates = ''
-			$BSSID = ''
+			$BSSID = $aplist[$add][10]
 			$Channel = ''
-			$SSID = $aplist[$add][0]
-			$NetworkType = $aplist[$add][1]
-			$Signal = $aplist[$add][3]
-			$Authentication = $aplist[$add][4]
-			$Encryption = $aplist[$add][5]
+			$SSID = $aplist[$add][1]
+			$NetworkType = $aplist[$add][2]
+			$Signal = $aplist[$add][5]
+			$Authentication = $aplist[$add][7]
+			$Encryption = $aplist[$add][8]
 			$FoundAPs += 1
 			;Add new GPS ID
 			If $FoundAPs = 1 Then
@@ -2771,7 +2776,7 @@ Func _SetUpDbTables($dbfile)
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|CamGroupID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -2916,7 +2921,7 @@ Func ScanToggle();Turns AP scanning on or off
 		GUICtrlSetData($ScanButton, $Text_StopScanAps)
 		$save_timer = TimerInit()
 		;Refresh Wireless networks
-		_Wlan_Scan($DefaultApapterID, $wlanhandle)
+		_Wlan_Scan()
 	EndIf
 EndFunc   ;==>ScanToggle
 
@@ -4754,7 +4759,7 @@ Func _RefreshNetworks() ;Refresh Wireless networks
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RefreshNetworks() ') ;#Debug Display
 	If $Scan = 1 And $RefreshNetworks = 1 Then
 		If TimerDiff($RefreshTimer) >= $RefreshTime Then
-			_Wlan_Scan($DefaultApapterID, $wlanhandle)
+			_Wlan_Scan()
 			$RefreshTimer = TimerInit()
 		EndIf
 	EndIf
@@ -10387,7 +10392,7 @@ Func _AddInterfaces()
 	Local $found_adapter = 0
 	Local $menuid = 0
 	If $UseNativeWifi = 1 Then
-		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$wlaninterfaces = _Wlan_EnumInterfaces()
 		$numofint = UBound($wlaninterfaces) - 1
 		For $antm = 0 To $numofint
 			$adapterid = $wlaninterfaces[$antm][0]
@@ -10398,12 +10403,14 @@ Func _AddInterfaces()
 			If $DefaultApapter = $adaptername Then
 				$found_adapter = 1
 				$DefaultApapterID = $adapterid
+				_Wlan_SelectInterface($DefaultApapterID)
 				GUICtrlSetState($menuid, $GUI_CHECKED)
 			EndIf
 		Next
 		If $menuid <> 0 And $found_adapter = 0 Then
 			$DefaultApapter = $adaptername
 			$DefaultApapterID = $adapterid
+			_Wlan_SelectInterface($DefaultApapterID)
 			GUICtrlSetState($menuid, $GUI_CHECKED)
 		EndIf
 		If $menuid = 0 Then $noadaptersid = GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
@@ -10432,10 +10439,11 @@ Func _AddInterfaces()
 		If $menuid = 0 Then $noadaptersid = GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
 		$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
 		;Find adapterid
-		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$wlaninterfaces = _Wlan_EnumInterfaces()
 		$numofint = UBound($wlaninterfaces) - 1
 		For $antm = 0 To $numofint
 			If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
+			_Wlan_SelectInterface($DefaultApapterID)
 		Next
 	EndIf
 EndFunc   ;==>_AddInterfaces
@@ -10453,12 +10461,13 @@ Func _InterfaceChanged()
 	$DefaultApapter = $das[1]
 	;If Using Native Wifi, Find DefaultAdapterId
 	If $UseNativeWifi = 1 Then
-		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		$wlaninterfaces = _Wlan_EnumInterfaces()
 		$numofint = UBound($wlaninterfaces) - 1
 		For $antm = 0 To $numofint
 			$adapterid = $wlaninterfaces[$antm][0]
 			$adaptername = $wlaninterfaces[$antm][1]
 			If $DefaultApapter = $adaptername Then $DefaultApapterID = $adapterid
+			_Wlan_SelectInterface($DefaultApapterID)
 		Next
 	Else
 		Dim $DefaultApapterID = '', $DefaultApapterDesc = ''
@@ -10470,11 +10479,12 @@ Func _InterfaceChanged()
 			If $DefaultApapter = $adaptername Then $DefaultApapterDesc = $adapterdesc
 		Next
 		;Find adapterid
-		$wlanhandle = _Wlan_OpenHandle()
-		$wlaninterfaces = _Wlan_EnumInterfaces($wlanhandle)
+		;$wlanhandle = _Wlan_OpenHandle()
+		$wlaninterfaces = _Wlan_EnumInterfaces()
 		$numofint = UBound($wlaninterfaces) - 1
 		For $antm = 0 To $numofint
 			If $DefaultApapterDesc = $wlaninterfaces[$antm][1] Then $DefaultApapterID = $wlaninterfaces[$antm][0]
+			_Wlan_SelectInterface($DefaultApapterID)
 		Next
 	EndIf
 EndFunc   ;==>_InterfaceChanged
@@ -10795,20 +10805,71 @@ Func _ImageDownloader()
 	$query = "SELECT CamName, CamUrl FROM Cameras"
 	$CamMatchArray = _RecordSearch($CamDB, $query, $CamDB_OBJ)
 	$FoundCamMatch = UBound($CamMatchArray) - 1
-	For $c = 1 To $FoundCamMatch
-		$camname = $CamMatchArray[$c][1]
-		$camurl = $CamMatchArray[$c][2]
-		$filename = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC & '_' & $camname & '.jpg'
-		$tmpfile = $TmpDir & $filename
-		$destfile = $VistumblerCamFolder & $filename
-		ConsoleWrite($camname & ' - ' & $camurl & ' - ' & $tmpfile & @CRLF)
-		$get = InetGet($camurl, $tmpfile, 0)
-		ConsoleWrite($get & @CRLF)
-		If $get <> 0 Then
-			$CamID += 1
-			_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $GPS_ID & '|' & $camname & '|' & $filename)
-			FileMove($tmpfile, $destfile)
-		EndIf
-		If FileExists($tmpfile) Then FileDelete($tmpfile)
-	Next
+	If $FoundCamMatch > 0 Then
+		$CamGroupID += 1
+		$dtfilebase = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+		For $c = 1 To $FoundCamMatch
+			$camname = $CamMatchArray[$c][1]
+			$camurl = $CamMatchArray[$c][2]
+			$filename = $dtfilebase & '_' & 'camgroup-' & $CamGroupID & '_' & $camname & '.jpg'
+			$tmpfile = $TmpDir & $filename
+			$destfile = $VistumblerCamFolder & $filename
+			ConsoleWrite($camname & ' - ' & $camurl & ' - ' & $tmpfile & @CRLF)
+			$get = InetGet($camurl, $tmpfile, 0)
+			ConsoleWrite($get & @CRLF)
+			If $get <> 0 Then
+				ConsoleWrite($GPS_ID & @CRLF)
+				$CamID += 1
+				_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $CamGroupID & '|' & $GPS_ID & '|' & $camname & '|' & $filename & '|' & $datestamp & '|' & $timestamp)
+				FileMove($tmpfile, $destfile)
+			EndIf
+			If FileExists($tmpfile) Then FileDelete($tmpfile)
+		Next
+	EndIf
 EndFunc   ;==>_ImageDownloader
+
+Func _ExportCamFile()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
+	$file = ""
+	$filename = FileSaveDialog('Save Camera File', $SaveDir, 'Vistumbler Camera File (*.VS2)', '', $ldatetimestamp & '.VS2')
+	$query = "SELECT CamID, CamGroupID, GpsID, CamName, CamFile, Date1, Time1 FROM CAM"
+	$CamMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundCamMatch = UBound($CamMatchArray) - 1
+	If $FoundCamMatch > 0 Then
+		For $exp = 1 To $FoundCamMatch
+			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundCamMatch)
+			;Ap Info
+			$ExpCamID = $CamMatchArray[$exp][1]
+			$ExpCamGroupID = $CamMatchArray[$exp][2]
+			$ExpGpsID = $CamMatchArray[$exp][3]
+			$ExpCamName = $CamMatchArray[$exp][4]
+			$ExpCamFile = $CamMatchArray[$exp][5]
+			$ExpCamDate = $CamMatchArray[$exp][6]
+			$ExpCamTime = $CamMatchArray[$exp][7]
+			;GPS Information
+			If $ExpGpsID <> 0 Then
+				$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID='" & $ExpGpsID & "'"
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpSat = $GpsMatchArray[1][3]
+				$ExpHorDilPitch = $GpsMatchArray[1][4]
+				$ExpAlt = $GpsMatchArray[1][5]
+				$ExpGeo = $GpsMatchArray[1][6]
+				$ExpSpeedMPH = $GpsMatchArray[1][7]
+				$ExpSpeedKmh = $GpsMatchArray[1][8]
+				$ExpTrack = $GpsMatchArray[1][9]
+			Else
+				Dim $ExpLat, $ExpLon, $ExpSat, $ExpHorDilPitch, $ExpAlt, $ExpGeo, $ExpSpeedMPH, $ExpSpeedKmh, $ExpTrack, $ExpDate, $ExpTime
+			EndIf
+			ConsoleWrite($ExpCamID & ',' & $ExpCamGroupID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF)
+			$file &= $ExpCamID & ',' & $ExpCamGroupID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF
+		Next
+		$filename = FileOpen($filename, 128 + 2);Open in UTF-8 write mode
+		FileWrite($filename, $file)
+		FileClose($filename)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+EndFunc   ;==>_ExportCamFile
