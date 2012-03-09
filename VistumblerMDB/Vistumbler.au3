@@ -6,7 +6,7 @@
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2011 Andrew Calcutt
+;Copyright (C) 2012 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -18,7 +18,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
 $version = 'v10.3 Beta 2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/02/20'
+$last_modified = '2012/03/04'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -248,9 +248,9 @@ Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, 
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
-Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates
+Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
-Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC
+Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL, $GUI_PhilsApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFilter
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
@@ -385,8 +385,6 @@ Dim $DefFiltID = IniRead($settings, 'Vistumbler', 'DefFiltID', '-1')
 Dim $AutoScan = IniRead($settings, 'Vistumbler', 'AutoScan', '0')
 Dim $dBmMaxSignal = IniRead($settings, 'Vistumbler', 'dBmMaxSignal', '-30')
 Dim $dBmDissociationSignal = IniRead($settings, 'Vistumbler', 'dBmDissociationSignal', '-85')
-Dim $DownloadImages = IniRead($settings, 'Vistumbler', 'DownloadImages', '0')
-Dim $DownloadImagesTime = IniRead($settings, 'Vistumbler', 'DownloadImagesTime', 5000)
 
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
@@ -436,6 +434,12 @@ Dim $SigMapTimeBeforeMarkedDead = IniRead($settings, 'KmlSettings', 'SigMapTimeB
 Dim $TrackColor = IniRead($settings, 'KmlSettings', 'TrackColor', '7F0000FF')
 Dim $CirSigMapColor = IniRead($settings, 'KmlSettings', 'CirSigMapColor', 'FF0055FF')
 Dim $CirRangeMapColor = IniRead($settings, 'KmlSettings', 'CirRangeMapColor', 'FF00AA00')
+
+Dim $CamTrigger = IniRead($settings, 'Cam', 'CamTrigger', 0)
+Dim $CamTriggerScript = IniRead($settings, 'Cam', 'CamTriggerScript', "")
+Dim $CamTriggerTime = IniRead($settings, 'Cam', 'CamTriggerTime', 10000)
+Dim $DownloadImages = IniRead($settings, 'Cam', 'DownloadImages', 0)
+Dim $DownloadImagesTime = IniRead($settings, 'Cam', 'DownloadImagesTime', 10000)
 
 Dim $AutoKML = IniRead($settings, 'AutoKML', 'AutoKML', 0)
 Dim $AutoKML_Alt = IniRead($settings, 'AutoKML', 'AutoKML_Alt', '4000')
@@ -1231,6 +1235,8 @@ $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GUI_DownloadImages = GUICtrlCreateMenuItem("Download Images(" & $Text_Experimental & ")", $Options)
 If $DownloadImages = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GUI_CamTriggerMenu = GUICtrlCreateMenuItem("Enable camera trigger script(" & $Text_Experimental & ")", $Options)
+If $CamTrigger = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GuiUseNativeWifi = GUICtrlCreateMenuItem($Text_UseNativeWifi, $Options)
 If $UseNativeWifi = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
@@ -1307,7 +1313,7 @@ $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $ExtraMenu)
 $UpdateGeolocations = GUICtrlCreateMenuItem("Update Geolocations", $ExtraMenu)
 $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $ExtraMenu)
 $UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $ExtraMenu)
-
+$GUI_ImportImageFolder = GUICtrlCreateMenuItem("Import Image Folder (" & $Text_Experimental & ")", $ExtraMenu)
 
 $WifidbMenu = GUICtrlCreateMenu($Text_WifiDB)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $WifidbMenu)
@@ -1458,6 +1464,7 @@ GUICtrlSetOnEvent($GuiUseNativeWifi, '_NativeWifiToggle')
 GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
 GUICtrlSetOnEvent($DebugComGUI, '_DebugComToggle')
 GUICtrlSetOnEvent($GUI_DownloadImages, '_DownloadImagesToggle')
+GUICtrlSetOnEvent($GUI_CamTriggerMenu, '_CamTriggerToggle')
 ;View Menu
 GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
@@ -1499,6 +1506,7 @@ GUICtrlSetOnEvent($VistumblerHome, '_OpenVistumblerHome')
 GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
 GUICtrlSetOnEvent($VistumblerWiki, '_OpenVistumblerWiki')
 GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
+GUICtrlSetOnEvent($GUI_ImportImageFolder, '_GUI_ImportImageFiles')
 GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
 GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
@@ -1540,6 +1548,7 @@ $Speech_Timer = TimerInit()
 $WiFiDbLocate_Timer = TimerInit()
 $wifidb_au_timer = TimerInit()
 $cam_timer = TimerInit()
+$camtrig_timer = TimerInit()
 While 1
 	;Set TimeStamps (UTC Values)
 	$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ') ;UTC Time
@@ -1652,6 +1661,12 @@ While 1
 	If $DownloadImages = 1 And TimerDiff($cam_timer) >= $DownloadImagesTime Then
 		_ImageDownloader()
 		$cam_timer = TimerInit()
+	EndIf
+
+	;Trigger Camera Script
+	If $CamTrigger = 1 And TimerDiff($camtrig_timer) >= $CamTriggerTime Then
+		_CamTrigger()
+		$camtrig_timer = TimerInit()
 	EndIf
 
 	;Export KML files for AutoKML Google Earth Tracking (if enabled)
@@ -3264,6 +3279,17 @@ Func _DownloadImagesToggle();Turns Estimated DB value on or off
 		$DownloadImages = 1
 	EndIf
 EndFunc   ;==>_DownloadImagesToggle
+
+Func _CamTriggerToggle();Turns cam trigger on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CamTriggerToggle()') ;#Debug Display
+	If $CamTrigger = 1 Then
+		GUICtrlSetState($GUI_CamTriggerMenu, $GUI_UNCHECKED)
+		$CamTrigger = 0
+	Else
+		GUICtrlSetState($GUI_CamTriggerMenu, $GUI_CHECKED)
+		$CamTrigger = 1
+	EndIf
+EndFunc   ;==>_CamTriggerToggle
 
 Func _ResetSizes()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ResetSizes()') ;#Debug Display
@@ -5728,6 +5754,11 @@ Func _WriteINI()
 	IniWrite($settings, "MIDI", 'Midi_Instument', $Midi_Instument)
 	IniWrite($settings, "MIDI", 'Midi_PlayTime', $Midi_PlayTime)
 	IniWrite($settings, "MIDI", 'Midi_PlayForActiveAps', $Midi_PlayForActiveAps)
+
+	IniWrite($settings, 'Cam', 'CamTriggerScript', $CamTriggerScript)
+	IniWrite($settings, 'Cam', 'CamTriggerTime', $CamTriggerTime)
+	IniWrite($settings, 'Cam', 'DownloadImages', $DownloadImages)
+	IniWrite($settings, 'Cam', 'DownloadImagesTime', $DownloadImagesTime)
 
 	IniWrite($settings, 'AutoKML', 'AutoKML', $AutoKML)
 	IniWrite($settings, 'AutoKML', 'AutoKML_Alt', $AutoKML_Alt)
@@ -8603,11 +8634,11 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$Add_Cam = GUICtrlCreateButton($Text_AddCamera, 24, 90, 201, 25, 0)
 		$Remove_Cam = GUICtrlCreateButton($Text_RemoveCamera, 239, 90, 201, 25, 0)
 		$Edit_Cam = GUICtrlCreateButton($Text_EditCamera, 456, 90, 201, 25, 0)
-		$GUI_Cam_List = GUICtrlCreateListView($Text_CameraName & "|" & $Text_CameraURL, 24, 125, 634, 326, $LVS_REPORT, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+		$GUI_Cam_List = GUICtrlCreateListView($Text_CameraName & "|" & $Text_CameraURL, 24, 125, 634, 150, $LVS_REPORT, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 		GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 		_GUICtrlListView_SetColumnWidth($GUI_Cam_List, 0, 160)
 		_GUICtrlListView_SetColumnWidth($GUI_Cam_List, 1, 450)
-		;Add Manufacturers to list
+		;Add cameras to list
 		$query = "SELECT CamName, CamUrl FROM Cameras"
 		$CamMatchArray = _RecordSearch($CamDB, $query, $CamDB_OBJ)
 		$FoundCamMatch = UBound($CamMatchArray) - 1
@@ -8618,7 +8649,18 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 			GUICtrlCreateListViewItem('"' & $camname & '"|' & $camurl, $GUI_Cam_List)
 		Next
 		GUICtrlSetData($msgdisplay, '')
-
+		GUICtrlCreateGroup("Camera Trigger Script", 15, 300, 650, 150)
+		$Gui_CamTrigger = GUICtrlCreateCheckbox("Enable camera trigger script", 31, 320, 185, 17)
+		If $CamTrigger = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateLabel("Camera Trigger Script (exe,bat)", 31, 345, 620, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_CamTriggerScript = GUICtrlCreateInput($CamTriggerScript, 31, 360, 515, 21)
+		GUICtrlCreateLabel($Text_RefreshTime, 31, 385, 620, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_CamTriggerTime = GUICtrlCreateInput($CamTriggerTime, 31, 400, 515, 21)
+		$csbrowse1 = GUICtrlCreateButton($Text_Browse, 556, 360, 97, 20, 0)
 		GUICtrlCreateTabItem("");END OF TABS
 
 		$GUI_Set_Apply = GUICtrlCreateButton($Text_Apply, 610, 470, 73, 25, 0)
@@ -8657,6 +8699,8 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetOnEvent($cbrowse2, '_ColorBrowse2')
 		GUICtrlSetOnEvent($cbrowse3, '_ColorBrowse3')
 
+		GUICtrlSetOnEvent($csbrowse1, '_CamScriptBrowse')
+
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseSettingsGUI')
 		GUICtrlSetOnEvent($GUI_Set_Can, '_CloseSettingsGUI')
 		GUICtrlSetOnEvent($GUI_Set_Apply, '_ApplySettingsGUI')
@@ -8694,6 +8738,13 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUISetState(@SW_SHOW)
 	EndIf
 EndFunc   ;==>_SettingsGUI
+
+Func _CamScriptBrowse()
+	$camscriptfile = FileOpenDialog("Select camera script file", @ScriptDir, "Cam Script File (*.exe;*.bat)", 1 + 4)
+	If Not @error Then
+		GUICtrlSetData($GUI_CamTriggerScript, $camscriptfile)
+	EndIf
+EndFunc   ;==>_CamScriptBrowse
 
 Func _ColorBrowse1()
 	$color = _ChooseColor(2, $BackgroundColor, 2, $SetMisc)
@@ -9365,6 +9416,11 @@ Func _ApplySettingsGUI();Applys settings
 			$o_camurl = _GUICtrlListView_GetItemText($GUI_Cam_List, $findloop, 1)
 			_AddRecord($CamDB, "Cameras", $CamDB_OBJ, $o_camname & '|' & $o_camurl)
 		Next
+		;Set Cam Script
+		If GUICtrlRead($Gui_CamTrigger) = 4 And $CamTrigger = 1 Then _CamTriggerToggle()
+		If GUICtrlRead($Gui_CamTrigger) = 1 And $CamTrigger = 0 Then _CamTriggerToggle()
+		$CamTriggerScript = GUICtrlRead($GUI_CamTriggerScript)
+		$CamTriggerTime = GUICtrlRead($GUI_CamTriggerTime)
 	EndIf
 	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
 	If $RestartVistumbler = 1 Then MsgBox(0, $Text_Restart, $Text_RestartMsg)
@@ -9738,11 +9794,11 @@ Func _EditCam();Opens edit Camfacturer window
 	If $EditLine <> $LV_ERR Then
 		$EditCamID = StringTrimRight(StringTrimLeft(_GUICtrlListView_GetItemText($GUI_Cam_List, $EditLine, 0), 1), 1)
 		$EditCamLoc = _GUICtrlListView_GetItemText($GUI_Cam_List, $EditLine, 1)
-		$EditCamGUIForm = GUICreate("Add Camera", 625, 86, -1, -1)
+		$EditCamGUIForm = GUICreate($Text_AddCamera, 625, 86, -1, -1)
 		GUISetBkColor($BackgroundColor)
-		GUICtrlCreateLabel("Camera ID", 16, 16, 69, 17)
+		GUICtrlCreateLabel($Text_CameraName, 16, 16, 69, 17)
 		$GUI_Edit_CamID = GUICtrlCreateInput($EditCamID, 88, 16, 137, 21)
-		GUICtrlCreateLabel("Camera URL", 230, 16, 70, 17)
+		GUICtrlCreateLabel($Text_CameraURL, 230, 16, 70, 17)
 		$GUI_Edit_CamLOC = GUICtrlCreateInput($EditCamLoc, 305, 16, 300, 21)
 		$EditCam_OK = GUICtrlCreateButton($Text_Ok, 200, 48, 97, 25, 0)
 		$EditCam_Can = GUICtrlCreateButton($Text_Cancel, 312, 48, 97, 25, 0)
@@ -9752,24 +9808,25 @@ Func _EditCam();Opens edit Camfacturer window
 	EndIf
 EndFunc   ;==>_EditCam
 
-Func _RemoveCam();Removed Camfactuer from list
-	$Apply_Cam = 1
-	$EditLine = _GUICtrlListView_GetNextItem($GUI_Cam_List)
-	ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
-	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem(GUICtrlGetHandle($GUI_Cam_List), $EditLine)
-EndFunc   ;==>_RemoveCam
-
 Func _EditCam_Close();Close edit Camfacturer window
 	GUIDelete($EditCamGUIForm)
 EndFunc   ;==>_EditCam_Close
 
 Func _EditCam_Ok();Apply edit Camfacture window settings and close it
 	$Apply_Cam = 1
-	_GUICtrlListView_SetItemText($GUI_Cam_List, $EditLine, GUICtrlRead($GUI_Edit_CamID), 0)
-	_GUICtrlListView_SetItemText($GUI_Cam_List, $EditLine, GUICtrlRead($GUI_Edit_CamLOC), 1)
+	$AddID = '"' & GUICtrlRead($GUI_Edit_CamID) & '"'
+	$AddLOC = GUICtrlRead($GUI_Edit_CamLOC)
+	_GUICtrlListView_SetItemText($GUI_Cam_List, $EditLine, $AddID, 0)
+	_GUICtrlListView_SetItemText($GUI_Cam_List, $EditLine, $AddLOC, 1)
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditCam_Ok
 
+Func _RemoveCam();Removed Camfactuer from list
+	$Apply_Cam = 1
+	$EditLine = _GUICtrlListView_GetNextItem($GUI_Cam_List)
+	ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
+	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem(GUICtrlGetHandle($GUI_Cam_List), $EditLine)
+EndFunc   ;==>_RemoveCam
 
 Func _SetWidthValue(ByRef $wcheckbox, ByRef $winput, $wcurrentwidth, $wsettings, $wsection, $wvalue, $wdef);Enable or disable a column in settings gui. reset width
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetWidthValue()') ;#Debug Display
@@ -10830,12 +10887,15 @@ EndFunc   ;==>_ImageDownloader
 
 Func _ExportCamFile()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
-	$file = ""
-	$filename = FileSaveDialog('Save Camera File', $SaveDir, 'Vistumbler Camera File (*.VS2)', '', $ldatetimestamp & '.VS2')
+	$file = "CamID,CamGroupID,CamName,CamFile,Date,Time,Latitude,Longitude,NumberOfSats,ExpHorDilPitch,Altitude,HeightOfGeoid,SpeedKmh,SpeedMPH,Track" & @CRLF
+	$filename = FileSaveDialog('Save Camera File', $SaveDir, 'Vistumbler Camera File (*.VSCZ)', '', $ldatetimestamp & '.VSCZ')
 	$query = "SELECT CamID, CamGroupID, GpsID, CamName, CamFile, Date1, Time1 FROM CAM"
 	$CamMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundCamMatch = UBound($CamMatchArray) - 1
 	If $FoundCamMatch > 0 Then
+		$datafiletmp = $TmpDir & 'Data.csv'
+		$exporttmp = $TmpDir & 'Export.zip'
+		_Zip_Create($exporttmp, 1)
 		For $exp = 1 To $FoundCamMatch
 			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundCamMatch)
 			;Ap Info
@@ -10849,6 +10909,7 @@ Func _ExportCamFile()
 			;GPS Information
 			If $ExpGpsID <> 0 Then
 				$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID='" & $ExpGpsID & "'"
+				ConsoleWrite($query & @CRLF)
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
@@ -10860,16 +10921,106 @@ Func _ExportCamFile()
 				$ExpSpeedKmh = $GpsMatchArray[1][8]
 				$ExpTrack = $GpsMatchArray[1][9]
 			Else
-				Dim $ExpLat, $ExpLon, $ExpSat, $ExpHorDilPitch, $ExpAlt, $ExpGeo, $ExpSpeedMPH, $ExpSpeedKmh, $ExpTrack, $ExpDate, $ExpTime
+				Dim $ExpLat = "0.0000000", $ExpLon = "0.0000000", $ExpSat = "00", $ExpHorDilPitch = "0", $ExpAlt = "0", $ExpGeo = "0", $ExpSpeedMPH = "0", $ExpSpeedKmh = "0", $ExpTrack = "0"
 			EndIf
 			ConsoleWrite($ExpCamID & ',' & $ExpCamGroupID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF)
 			$file &= $ExpCamID & ',' & $ExpCamGroupID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF
 		Next
-		$filename = FileOpen($filename, 128 + 2);Open in UTF-8 write mode
-		FileWrite($filename, $file)
-		FileClose($filename)
+		;Add cam data to zip
+		$filetmp = FileOpen($datafiletmp, 128 + 2);Open in UTF-8 write mode
+		FileWrite($filetmp, $file)
+		FileClose($filetmp)
+		ConsoleWrite($datafiletmp & @CRLF)
+		ConsoleWrite(_Zip_AddItem($exporttmp, $datafiletmp) & '-' & @error & @CRLF)
+		;Add cam images to zip
+		$camjpgs = _FileListToArray($VistumblerCamFolder, '*.jpg', 1);Find all files in the folder that end in .jpg
+		If IsArray($camjpgs) Then
+			For $af = 1 To $camjpgs[0]
+				$camjpg = $camjpgs[$af]
+				ConsoleWrite($VistumblerCamFolder & $camjpg & @CRLF)
+				ConsoleWrite(_Zip_AddItem($exporttmp, $VistumblerCamFolder & $camjpg) & '-' & @error & @CRLF)
+			Next
+		EndIf
+		;Save tmp export
+		FileMove($exporttmp, $filename)
+		FileDelete($datafiletmp)
+		FileDelete($exporttmp)
 		Return (1)
 	Else
 		Return (0)
 	EndIf
 EndFunc   ;==>_ExportCamFile
+
+Func _CamTrigger()
+	ConsoleWrite($CamTriggerScript & @CRLF)
+	If FileExists($CamTriggerScript) Then
+		Run($CamTriggerScript)
+	EndIf
+EndFunc   ;==>_CamTrigger
+
+Func _GUI_ImportImageFiles()
+	$Form1 = GUICreate("Import Images from folder", 401, 224, 192, 114)
+	GUICtrlCreateGroup("Import Images from folder", 8, 8, 385, 209)
+	GUICtrlCreateLabel("Image Group Name", 23, 38, 344, 15)
+	$GUI_ImgGroupName = GUICtrlCreateInput("", 23, 53, 353, 21)
+	GUICtrlCreateLabel("Image Directory", 23, 78, 344, 15)
+	$GUI_ImpImgDir = GUICtrlCreateInput("", 23, 93, 265, 21)
+	$GUI_ImpBrowse = GUICtrlCreateButton("Browse", 296, 93, 81, 20)
+	GUICtrlCreateLabel("Skew Image time (in Seconds)", 23, 118, 344, 15)
+	$GUI_ImpImgSkewTime = GUICtrlCreateInput("0", 23, 133, 353, 21)
+
+	$Button_ImgImp = GUICtrlCreateButton("Import", 88, 168, 97, 33)
+	$Button_ImgCan = GUICtrlCreateButton("Cancel", 194, 168, 97, 33)
+	GUICtrlCreateGroup("", -99, -99, 1, 1)
+	GUICtrlSetOnEvent($Button_ImgImp, '_ImportImageFiles')
+	GUISetState(@SW_SHOW)
+EndFunc   ;==>_GUI_ImportImageFiles
+
+Func _ImportImageFiles()
+	$ImgGroupName = GUICtrlRead($GUI_ImgGroupName)
+	$ImgDir = GUICtrlRead($GUI_ImpImgDir)
+	$ImgSkewTime = GUICtrlRead($GUI_ImpImgSkewTime)
+	If FileExists($ImgDir) Then
+		If StringTrimLeft($ImgDir, StringLen($ImgDir) - 1) <> "\" Then $ImgDir = $ImgDir & "\" ;If directory does not have training \ then add it
+		$ImgArray = _FileListToArray($ImgDir)
+		If Not @error Then
+			For $ii = 1 To $ImgArray[0]
+				$imgpath = $ImgDir & $ImgArray[$ii]
+				$imgtimearr = FileGetTime($imgpath, 1)
+				ConsoleWrite($imgpath & " " & FileGetTime($imgpath, 1, 1) & @CRLF)
+				If IsArray($imgtimearr) Then
+					$ImgDate = $imgtimearr[0] & '-' & $imgtimearr[1] & '-' & $imgtimearr[2]
+					$ImgTime = $imgtimearr[3] & ':' & $imgtimearr[4] & ':' & $imgtimearr[5]
+					ConsoleWrite($ImgDate & ' ' & $ImgTime & @CRLF)
+					$tSystem = _Date_Time_EncodeSystemTime($imgtimearr[1], $imgtimearr[2], $imgtimearr[0], $imgtimearr[3], $imgtimearr[4], $imgtimearr[5])
+					$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
+					$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
+					$dts2 = StringSplit($dts1[1], '/')
+					$mon = $dts2[1]
+					$day = $dts2[2]
+					$year = $dts2[3]
+					$ImgDateUTC = $year & '-' & $mon & '-' & $day
+					$ImgTimeUTC = $dts1[2]
+					$query = "SELECT TOP 1 GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "*'"
+					ConsoleWrite($query & @CRLF)
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$FoundGpsMatch = UBound($GpsMatchArray) - 1
+					If $FoundGpsMatch = 0 Then ;If Gps is not found then add it
+						ConsoleWrite("Not found: " & $ImgDate & " " & $ImgTime & @CRLF)
+					Else
+						$ImgGpsId = $GpsMatchArray[1][1]
+						ConsoleWrite($ImgGpsId & @CRLF)
+					EndIf
+					#cs
+						$array[0] = year (four digits)
+						$array[1] = month (range 01 - 12)
+						$array[2] = day (range 01 - 31)
+						$array[3] = hour (range 00 - 23)
+						$array[4] = min (range 00 - 59)
+						$array[5] = sec (range 00 - 59)
+					#ce
+				EndIf
+			Next
+		EndIf
+	EndIf
+EndFunc   ;==>_ImportImageFiles
