@@ -11001,7 +11001,7 @@ Func _ImportImageFiles()
 					$year = $dts2[3]
 					$ImgDateUTC = $year & '-' & $mon & '-' & $day
 					$ImgTimeUTC = $dts1[2]
-					$query = "SELECT TOP 1 GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "*'"
+					$query = "SELECT TOP 1 GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "%'"
 					ConsoleWrite($query & @CRLF)
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$FoundGpsMatch = UBound($GpsMatchArray) - 1
