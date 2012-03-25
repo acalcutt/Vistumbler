@@ -2,6 +2,7 @@
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
+#AutoIt3Wrapper_Res_Fileversion=10.3.2.0
 #AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
@@ -240,6 +241,7 @@ Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_Spea
 
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
 Dim $ExportKMLGUI, $GUI_TrackColor
+Dim $GUI_ImportImageFiles
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
@@ -2791,7 +2793,7 @@ Func _SetUpDbTables($dbfile)
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|CamGroupID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|ImgMD5 TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -6739,6 +6741,7 @@ EndFunc   ;==>_ImportCSV
 Func _ImportNS1($NS1file)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportNS1()') ;#Debug Display
 	$netstumblerfile = FileOpen($NS1file, 0)
+
 	If $netstumblerfile <> -1 Then
 		;Get Total number of lines
 		$totallines = 0
@@ -6754,6 +6757,7 @@ Func _ImportNS1($NS1file)
 		For $Load = 1 To $totallines
 			$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
 			If @error = -1 Then ExitLoop
+			ConsoleWrite($linein & @CRLF)
 			If StringInStr($linein, "# $DateGMT:") Then $Date = StringTrimLeft($linein, 12);If the date tag is found, set date
 			If StringLeft($linein, 1) <> "#" Then ;If the line is not commented out, get AP information
 				$array = StringSplit($linein, "	");Seperate AP information
@@ -6818,7 +6822,7 @@ Func _ImportNS1($NS1file)
 						If $NewApAdded <> 0 Then $AddAP += 1
 					EndIf
 				Else
-					ExitLoop
+					;ExitLoop
 				EndIf
 			EndIf
 
@@ -10863,12 +10867,11 @@ Func _ImageDownloader()
 	$CamMatchArray = _RecordSearch($CamDB, $query, $CamDB_OBJ)
 	$FoundCamMatch = UBound($CamMatchArray) - 1
 	If $FoundCamMatch > 0 Then
-		$CamGroupID += 1
 		$dtfilebase = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
 		For $c = 1 To $FoundCamMatch
 			$camname = $CamMatchArray[$c][1]
 			$camurl = $CamMatchArray[$c][2]
-			$filename = $dtfilebase & '_' & 'camgroup-' & $CamGroupID & '_' & $camname & '.jpg'
+			$filename = $dtfilebase & '_' & 'gpsid-' & $GPS_ID & '_' & $camname & '.jpg'
 			$tmpfile = $TmpDir & $filename
 			$destfile = $VistumblerCamFolder & $filename
 			ConsoleWrite($camname & ' - ' & $camurl & ' - ' & $tmpfile & @CRLF)
@@ -10876,9 +10879,16 @@ Func _ImageDownloader()
 			ConsoleWrite($get & @CRLF)
 			If $get <> 0 Then
 				ConsoleWrite($GPS_ID & @CRLF)
-				$CamID += 1
-				_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $CamGroupID & '|' & $GPS_ID & '|' & $camname & '|' & $filename & '|' & $datestamp & '|' & $timestamp)
-				FileMove($tmpfile, $destfile)
+				$imgmd5 = _MD5ForFile($destfile)
+				$query = "SELECT TOP 1 CamID FROM Cam WHERE ImgMD5='" & $imgmd5 & "'"
+				ConsoleWrite($query & @CRLF)
+				$ImgMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FoundImgMatch = UBound($ImgMatchArray) - 1
+				If $FoundImgMatch = 0 Then ;If Img is not found, add it
+					$CamID += 1
+					_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $GPS_ID & '|' & $camname & '|' & $filename & '|' & $datestamp & '|' & $timestamp)
+					FileMove($tmpfile, $destfile)
+				EndIf
 			EndIf
 			If FileExists($tmpfile) Then FileDelete($tmpfile)
 		Next
@@ -10889,7 +10899,7 @@ Func _ExportCamFile()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
 	$file = "CamID,CamGroupID,CamName,CamFile,Date,Time,Latitude,Longitude,NumberOfSats,ExpHorDilPitch,Altitude,HeightOfGeoid,SpeedKmh,SpeedMPH,Track" & @CRLF
 	$filename = FileSaveDialog('Save Camera File', $SaveDir, 'Vistumbler Camera File (*.VSCZ)', '', $ldatetimestamp & '.VSCZ')
-	$query = "SELECT CamID, CamGroupID, GpsID, CamName, CamFile, Date1, Time1 FROM CAM"
+	$query = "SELECT CamID, GpsID, CamName, CamFile, Date1, Time1 FROM CAM"
 	$CamMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundCamMatch = UBound($CamMatchArray) - 1
 	If $FoundCamMatch > 0 Then
@@ -10900,12 +10910,11 @@ Func _ExportCamFile()
 			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundCamMatch)
 			;Ap Info
 			$ExpCamID = $CamMatchArray[$exp][1]
-			$ExpCamGroupID = $CamMatchArray[$exp][2]
-			$ExpGpsID = $CamMatchArray[$exp][3]
-			$ExpCamName = $CamMatchArray[$exp][4]
-			$ExpCamFile = $CamMatchArray[$exp][5]
-			$ExpCamDate = $CamMatchArray[$exp][6]
-			$ExpCamTime = $CamMatchArray[$exp][7]
+			$ExpGpsID = $CamMatchArray[$exp][2]
+			$ExpCamName = $CamMatchArray[$exp][3]
+			$ExpCamFile = $CamMatchArray[$exp][4]
+			$ExpCamDate = $CamMatchArray[$exp][5]
+			$ExpCamTime = $CamMatchArray[$exp][6]
 			;GPS Information
 			If $ExpGpsID <> 0 Then
 				$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID='" & $ExpGpsID & "'"
@@ -10923,8 +10932,8 @@ Func _ExportCamFile()
 			Else
 				Dim $ExpLat = "0.0000000", $ExpLon = "0.0000000", $ExpSat = "00", $ExpHorDilPitch = "0", $ExpAlt = "0", $ExpGeo = "0", $ExpSpeedMPH = "0", $ExpSpeedKmh = "0", $ExpTrack = "0"
 			EndIf
-			ConsoleWrite($ExpCamID & ',' & $ExpCamGroupID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF)
-			$file &= $ExpCamID & ',' & $ExpCamGroupID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF
+			ConsoleWrite($ExpCamID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF)
+			$file &= $ExpCamID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF
 		Next
 		;Add cam data to zip
 		$filetmp = FileOpen($datafiletmp, 128 + 2);Open in UTF-8 write mode
@@ -10959,7 +10968,7 @@ Func _CamTrigger()
 EndFunc   ;==>_CamTrigger
 
 Func _GUI_ImportImageFiles()
-	$Form1 = GUICreate("Import Images from folder", 401, 224, 192, 114)
+	$GUI_ImportImageFiles = GUICreate("Import Images from folder", 401, 224, 192, 114)
 	GUICtrlCreateGroup("Import Images from folder", 8, 8, 385, 209)
 	GUICtrlCreateLabel("Image Group Name", 23, 38, 344, 15)
 	$GUI_ImgGroupName = GUICtrlCreateInput("", 23, 53, 353, 21)
@@ -10986,41 +10995,51 @@ Func _ImportImageFiles()
 		If Not @error Then
 			For $ii = 1 To $ImgArray[0]
 				$imgpath = $ImgDir & $ImgArray[$ii]
-				$imgtimearr = FileGetTime($imgpath, 1)
-				ConsoleWrite($imgpath & " " & FileGetTime($imgpath, 1, 1) & @CRLF)
-				If IsArray($imgtimearr) Then
-					$ImgDate = $imgtimearr[0] & '-' & $imgtimearr[1] & '-' & $imgtimearr[2]
-					$ImgTime = $imgtimearr[3] & ':' & $imgtimearr[4] & ':' & $imgtimearr[5]
-					ConsoleWrite($ImgDate & ' ' & $ImgTime & @CRLF)
-					$tSystem = _Date_Time_EncodeSystemTime($imgtimearr[1], $imgtimearr[2], $imgtimearr[0], $imgtimearr[3], $imgtimearr[4], $imgtimearr[5])
-					$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
-					$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
-					$dts2 = StringSplit($dts1[1], '/')
-					$mon = $dts2[1]
-					$day = $dts2[2]
-					$year = $dts2[3]
-					$ImgDateUTC = $year & '-' & $mon & '-' & $day
-					$ImgTimeUTC = $dts1[2]
-					$query = "SELECT TOP 1 GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "%'"
-					ConsoleWrite($query & @CRLF)
-					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$FoundGpsMatch = UBound($GpsMatchArray) - 1
-					If $FoundGpsMatch = 0 Then ;If Gps is not found then add it
-						ConsoleWrite("Not found: " & $ImgDate & " " & $ImgTime & @CRLF)
-					Else
-						$ImgGpsId = $GpsMatchArray[1][1]
-						ConsoleWrite($ImgGpsId & @CRLF)
+				$imgmd5 = _MD5ForFile($imgpath)
+				;Check if image already exists
+				$query = "SELECT TOP 1 CamID FROM Cam WHERE ImgMD5='" & $imgmd5 & "'"
+				ConsoleWrite($query & @CRLF)
+				$ImgMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FoundImgMatch = UBound($ImgMatchArray) - 1
+				If $FoundImgMatch = 0 Then ;If Img is not found, add it
+					$imgtimearr = FileGetTime($imgpath, 1)
+					ConsoleWrite($imgpath & " " & FileGetTime($imgpath, 1, 1) & @CRLF)
+					If IsArray($imgtimearr) Then ;Use time to match image up with gps point
+						;Convert Time from local time to UTC and into the format vistumbler uses
+						$tSystem = _Date_Time_EncodeSystemTime($imgtimearr[1], $imgtimearr[2], $imgtimearr[0], $imgtimearr[3], $imgtimearr[4], $imgtimearr[5])
+						$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
+						$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
+						$dts2 = StringSplit($dts1[1], '/')
+						$mon = $dts2[1]
+						$day = $dts2[2]
+						$year = $dts2[3]
+						$ImgDateUTC = $year & '-' & $mon & '-' & $day ;Image Date in UTC year-month-day format
+						$ImgTimeUTC = $dts1[2];Image time in UTC Hour:minute:second
+						;Find matching GPS point
+						$query = "SELECT TOP 1 GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "%'"
+						ConsoleWrite($query & @CRLF)
+						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+						$FoundGpsMatch = UBound($GpsMatchArray) - 1
+						If $FoundGpsMatch <> 0 Then ;If a gps id match was found, import the image
+							$ImgGpsId = $GpsMatchArray[1][1]
+							$dtfilebase = $ImgDateUTC & ' ' & StringReplace($ImgTimeUTC, ":", "-")
+							$filename = $dtfilebase & '_' & 'gpsid-' & $ImgGpsId & '_' & $ImgGroupName & '.jpg'
+							$destfile = $VistumblerCamFolder & $filename
+							If FileCopy($imgpath, $destfile, 1) = 1 Then
+								$CamID += 1
+								_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $ImgGpsId & '|' & $ImgGroupName & '|' & $filename & '|' & $imgmd5 & '|' & $ImgDateUTC & '|' & $ImgTimeUTC)
+							EndIf
+						Else ; just echo it out for now
+							ConsoleWrite("No gps match found for image " & $imgpath & @CRLF)
+						EndIf
+
 					EndIf
-					#cs
-						$array[0] = year (four digits)
-						$array[1] = month (range 01 - 12)
-						$array[2] = day (range 01 - 31)
-						$array[3] = hour (range 00 - 23)
-						$array[4] = min (range 00 - 59)
-						$array[5] = sec (range 00 - 59)
-					#ce
 				EndIf
 			Next
 		EndIf
 	EndIf
 EndFunc   ;==>_ImportImageFiles
+
+Func _GUI_ImportImageFiles_Close()
+	GUIDelete($GUI_ImportImageFiles)
+EndFunc   ;==>_GUI_ImportImageFiles_Close
