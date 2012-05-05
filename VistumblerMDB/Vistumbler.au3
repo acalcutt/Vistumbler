@@ -17,9 +17,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 2'
+$version = 'v10.3 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/03/04'
+$last_modified = '2012/05/05'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -975,9 +975,6 @@ If $MDBfiles[0][0] > 0 Then
 				Else
 					$VistumblerDbName = _GUICtrlListView_GetItemText($Recover_List, $Selected, 0)
 					$VistumblerDB = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
-					$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
-					ConsoleWrite($VistumblerDB & @CRLF)
-					ConsoleWrite($VistumblerCamFolder & @CRLF)
 					;If this MDB/ZIP is not in the temp folder, move it there and rename it
 					$mdbfolder = StringTrimRight($VistumblerDB, (StringLen($VistumblerDB) - StringInStr($VistumblerDB, "\", 1, -1)))
 					If $mdbfolder <> $TmpDir Then
@@ -985,8 +982,9 @@ If $MDBfiles[0][0] > 0 Then
 						$VistumblerDB = _TempFile($TmpDir, StringTrimRight($VistumblerDbName, 4) & "__", ".mdb", 4)
 						$VistumblerDbName = StringTrimLeft($VistumblerDB, StringInStr($VistumblerDB, "\", 1, -1))
 						FileCopy($OldVistumblerDB, $VistumblerDB, 9)
-						$OldVistumblerCamFolder = $VistumblerCamFolder
+						$OldVistumblerCamFolder = StringTrimRight($OldVistumblerDB, 4) & '\'
 						$VistumblerCamFolder = StringTrimRight($VistumblerDB, 4) & '\'
+						DirCopy($OldVistumblerCamFolder, $VistumblerCamFolder, 1)
 					EndIf
 					ExitLoop
 				EndIf
@@ -1795,7 +1793,7 @@ Func _ScanAccessPoints()
 				;If AP Matches filter, increment $FilterMatches
 				If $FoundLoadApMatch = 1 Then $FilterMatches += 1
 				;Play per-ap new ap sound
-				If $SoundPerAP = 1 Then
+				If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
 					If $NewSoundSigBased = 1 Then
 						$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
 						$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
@@ -1878,7 +1876,7 @@ Func _ScanAccessPoints()
 							;If AP Matches filter, increment $FilterMatches
 							If $FoundLoadApMatch = 1 Then $FilterMatches += 1
 							;Play per-ap new AP sound
-							If $SoundPerAP = 1 Then
+							If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
 								If $NewSoundSigBased = 1 Then
 									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
 									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
@@ -2911,7 +2909,7 @@ Func _Exit()
 	FileDelete($tempfile_showint)
 	If $SaveDbOnExit = 1 Then
 		FileMove($VistumblerDB, $SaveDir, 9);Move to save directory for later use
-		;FileMove($VistumblerCamZip, $SaveDir, 9);Move to save directory for later use
+		DirMove($VistumblerCamFolder, $SaveDir & StringTrimRight($VistumblerDbName, 4) & "\", 1)
 	Else
 		FileDelete($VistumblerDB)
 		FileDelete($VistumblerCamFolder & "*")
@@ -6885,6 +6883,7 @@ EndFunc   ;==>_ImportMdbOk
 Func _ImportWardriveDb3($DB3file)
 	_SQLite_Startup()
 	$WardriveImpDB = _SQLite_Open($DB3file, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
+	_SQLite_Exec($WardriveImpDB, "pragma integrity_check");Speed vs Data security. Speed Wins for now.
 	Local $NetworkMatchArray, $iRows, $iColumns, $iRval
 	$query = "SELECT bssid, ssid, capabilities, level, frequency, lat, lon, alt, timestamp FROM networks"
 	$iRval = _SQLite_GetTable2d($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
