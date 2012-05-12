@@ -17,7 +17,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 3'
+$version = 'v10.3 Beta 4'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2012/05/05'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -959,12 +959,12 @@ If $MDBfiles[0][0] > 0 Then
 			Case $GUI_EVENT_CLOSE
 				$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 				$VistumblerDbName = $ldatetimestamp & '.mdb'
-				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
+				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\images\'
 				ExitLoop
 			Case $Recover_New
 				$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 				$VistumblerDbName = $ldatetimestamp & '.mdb'
-				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
+				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\images\'
 				ExitLoop
 			Case $Recover_Exit
 				Exit
@@ -975,6 +975,7 @@ If $MDBfiles[0][0] > 0 Then
 				Else
 					$VistumblerDbName = _GUICtrlListView_GetItemText($Recover_List, $Selected, 0)
 					$VistumblerDB = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
+					$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\images\'
 					;If this MDB/ZIP is not in the temp folder, move it there and rename it
 					$mdbfolder = StringTrimRight($VistumblerDB, (StringLen($VistumblerDB) - StringInStr($VistumblerDB, "\", 1, -1)))
 					If $mdbfolder <> $TmpDir Then
@@ -983,7 +984,7 @@ If $MDBfiles[0][0] > 0 Then
 						$VistumblerDbName = StringTrimLeft($VistumblerDB, StringInStr($VistumblerDB, "\", 1, -1))
 						FileCopy($OldVistumblerDB, $VistumblerDB, 9)
 						$OldVistumblerCamFolder = StringTrimRight($OldVistumblerDB, 4) & '\'
-						$VistumblerCamFolder = StringTrimRight($VistumblerDB, 4) & '\'
+						$VistumblerCamFolder = StringTrimRight($VistumblerDB, 4) & '\images\'
 						DirCopy($OldVistumblerCamFolder, $VistumblerCamFolder, 1)
 					EndIf
 					ExitLoop
@@ -1006,7 +1007,7 @@ If $MDBfiles[0][0] > 0 Then
 Else
 	$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 	$VistumblerDbName = $ldatetimestamp & '.mdb'
-	$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
+	$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\images\'
 EndIf
 
 ConsoleWrite($VistumblerDB & @CRLF)
@@ -1014,83 +1015,8 @@ ConsoleWrite($VistumblerCamFolder & @CRLF)
 
 
 If FileExists($VistumblerDB) Then
-	$Recover = 1
-	$APID = 0
 	_AccessConnectConn($VistumblerDB, $DB_OBJ)
-	$query = "SELECT HistID FROM Hist"
-	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$HISTID = UBound($HistMatchArray) - 1
-	$query = "SELECT GpsID FROM GPS"
-	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$GPS_ID = UBound($GpsMatchArray) - 1
-	$query = "DELETE * FROM TreeviewPos"
-	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	;Fix missing GPS table fields (MDB backward compatibitly fix)
-	If _FieldExists($VistumblerDB, 'GPS', 'TrackAngle') <> 1 Then
-		;Create new fields
-		_CreateField($VistumblerDB, "GPS", "HorDilPitch", "TEXT(255)", $DB_OBJ)
-		_CreateField($VistumblerDB, "GPS", "Alt", "TEXT(255)", $DB_OBJ)
-		_CreateField($VistumblerDB, "GPS", "Geo", "TEXT(255)", $DB_OBJ)
-		_CreateField($VistumblerDB, "GPS", "SpeedInKmh", "TEXT(255)", $DB_OBJ)
-		_CreateField($VistumblerDB, "GPS", "SpeedInMPH", "TEXT(255)", $DB_OBJ)
-		_CreateField($VistumblerDB, "GPS", "TrackAngle", "TEXT(255)", $DB_OBJ)
-		$query = "UPDATE GPS SET HorDilPitch = '0', Alt = '0', Geo = '0', SpeedInKmh = '0', SpeedInMPH = '0', TrackAngle = '0'"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		;Move date and time to proper position in the table (the long way....since I could not get renaming of the field to work)
-		_CreateField($VistumblerDB, "GPS", "Date2", "TEXT(255)", $DB_OBJ)
-		_CreateField($VistumblerDB, "GPS", "Time2", "TEXT(255)", $DB_OBJ)
-		$query = "UPDATE GPS SET Date2 = Date1, Time2 = Time1"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		_DropField($VistumblerDB, "GPS", "Date1", $DB_OBJ)
-		_DropField($VistumblerDB, "GPS", "Time1", $DB_OBJ)
-		_CreateField($VistumblerDB, "GPS", "Date1", "TEXT(255)", $DB_OBJ)
-		_CreateField($VistumblerDB, "GPS", "Time1", "TEXT(255)", $DB_OBJ)
-		$query = "UPDATE GPS SET Date1 = Date2, Time1 = Time2"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		_DropField($VistumblerDB, "GPS", "Date2", $DB_OBJ)
-		_DropField($VistumblerDB, "GPS", "Time2", $DB_OBJ)
-	EndIf
-	;Fix missing Signal field in AP table (MDB backward compatibitly fix)
-	If _FieldExists($VistumblerDB, 'AP', 'Signal') <> 1 Then
-		_CreateField($VistumblerDB, "AP", "Signal", "TEXT(3)", $DB_OBJ)
-		$query = "UPDATE AP SET Signal = '0'"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	EndIf
-	;Fix missing High Signal field in AP table (MDB backward compatibitly fix)
-	If _FieldExists($VistumblerDB, 'AP', 'HighSignal') <> 1 Then
-		_CreateField($VistumblerDB, "AP", "HighSignal", "TEXT(3)", $DB_OBJ)
-		$query = "UPDATE AP SET HighSignal = '0'"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	EndIf
-	;Fix missing CountryCode field in AP table (MDB backward compatibitly fix)
-	If _FieldExists($VistumblerDB, 'AP', 'CountryCode') <> 1 Then
-		_CreateField($VistumblerDB, "AP", "CountryCode", "TEXT(100)", $DB_OBJ)
-	EndIf
-	;Fix missing CountryName field in AP table (MDB backward compatibitly fix)
-	If _FieldExists($VistumblerDB, 'AP', 'CountryName') <> 1 Then
-		_CreateField($VistumblerDB, "AP", "CountryName", "TEXT(100)", $DB_OBJ)
-	EndIf
-	;Fix missing AdminCode field in AP table (MDB backward compatibitly fix)
-	If _FieldExists($VistumblerDB, 'AP', 'AdminCode') <> 1 Then
-		_CreateField($VistumblerDB, "AP", "AdminCode", "TEXT(100)", $DB_OBJ)
-	EndIf
-	;Fix missing AdminName field in AP table (MDB backward compatibitly fix)
-	If _FieldExists($VistumblerDB, 'AP', 'AdminName') <> 1 Then
-		_CreateField($VistumblerDB, "AP", "AdminName", "TEXT(100)", $DB_OBJ)
-	EndIf
-	;Fix missing Admin2Name field in AP table (MDB backward compatibitly fix)
-	If _FieldExists($VistumblerDB, 'AP', 'Admin2Name') <> 1 Then
-		_CreateField($VistumblerDB, "AP", "Admin2Name", "TEXT(100)", $DB_OBJ)
-	EndIf
-	;Fix missing TreeviewPos table (MDB backward compatibitly fix)
-	_DropTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
-	_CreateTable($VistumblerDB, 'TreeviewPos', $DB_OBJ)
-	_CreatMultipleFields($VistumblerDB, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
-	;Fix missing CAM table (MDB backward compatibitly fix)
-	If _TableExists($DB_OBJ, $VistumblerDB, 'CAM') <> 1 Then
-		_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
-		_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|CamGroupID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
-	EndIf
+	$Recover = 1
 Else
 	_SetUpDbTables($VistumblerDB)
 EndIf
@@ -1314,6 +1240,7 @@ $UpdateGeolocations = GUICtrlCreateMenuItem("Update Geolocations", $ExtraMenu)
 $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $ExtraMenu)
 $UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $ExtraMenu)
 $GUI_ImportImageFolder = GUICtrlCreateMenuItem("Import Image Folder (" & $Text_Experimental & ")", $ExtraMenu)
+$GUI_CleanupNonMatchingImages = GUICtrlCreateMenuItem("Cleanup non-matching images (" & $Text_Experimental & ")", $ExtraMenu)
 
 $WifidbMenu = GUICtrlCreateMenu($Text_WifiDB)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $WifidbMenu)
@@ -1507,6 +1434,7 @@ GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
 GUICtrlSetOnEvent($VistumblerWiki, '_OpenVistumblerWiki')
 GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
 GUICtrlSetOnEvent($GUI_ImportImageFolder, '_GUI_ImportImageFiles')
+GUICtrlSetOnEvent($GUI_CleanupNonMatchingImages, '_RemoveNonMatchingImages')
 GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
 GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
@@ -2549,12 +2477,15 @@ Func _ClearAllAp()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearAllAp()') ;#Debug Display
 	;Reset Variables
 	$APID = 0
+	$CamID = 0
 	$GPS_ID = 0
 	$HISTID = 0
 	;Clear DB
-	$query = "DELETE * FROM GPS"
-	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "DELETE * FROM AP"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM Cam"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM GPS"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	$query = "DELETE * FROM Hist"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -2677,88 +2608,31 @@ EndFunc   ;==>_FixListIcons
 Func _RecoverMDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RecoverMDB()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $Text_RecoveringMDB)
-	;Start - Fix dates of old mdb format (MDB backward compatibitly fix)
-	$query = "SELECT Date1 FROM GPS WHERE GpsID='1'"
-	$LoadGpsMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundGpsMatch = UBound($LoadGpsMatch) - 1
-	If $FoundGpsMatch = 1 Then
-		$fgms = StringSplit($LoadGpsMatch[1][1], '-')
-		If StringLen($fgms[1]) <> 4 Then
-			;--Fix date in GPS table
-			$query = "SELECT GpsID, Date1 FROM GPS"
-			$LoadGpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundLoadGpsMatch = UBound($LoadGpsMatchArray) - 1
-			For $impg = 1 To $FoundLoadGpsMatch
-				$igpsid = $LoadGpsMatchArray[$impg][1]
-				$igs = StringSplit($LoadGpsMatchArray[$impg][2], '-')
-				If StringLen($igs[1]) <> 4 Then
-					GUICtrlSetData($msgdisplay, $Text_FixingGpsTableDates & ' ' & $impg & '/' & $FoundLoadGpsMatch)
-					$query = "UPDATE GPS SET Date1='" & $igs[3] & "-" & $igs[1] & "-" & $igs[2] & "' WHERE GpsID='" & $igpsid & "'"
-					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-				Else
-					ExitLoop
-				EndIf
-			Next
-			;--Fix date in Hist table
-			$query = "SELECT HistID, Date1 FROM Hist"
-			$LoadGpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundLoadGpsMatch = UBound($LoadGpsMatchArray) - 1
-			For $impg = 1 To $FoundLoadGpsMatch
-				$ihistid = $LoadGpsMatchArray[$impg][1]
-				$igs = StringSplit($LoadGpsMatchArray[$impg][2], '-')
-				If StringLen($igs[1]) <> 4 Then
-					GUICtrlSetData($msgdisplay, $Text_FixingHistTableDates & ' ' & $impg & '/' & $FoundLoadGpsMatch)
-					$query = "UPDATE Hist SET Date1='" & $igs[3] & "-" & $igs[1] & "-" & $igs[2] & "' WHERE HistID='" & $ihistid & "'"
-					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-				Else
-					ExitLoop
-				EndIf
-			Next
-		EndIf
-	EndIf
-	;End - Fix dates of old mdb format (MDB backward compatibitly fix)
-	;Start - Fix times of old mdb format (MDB backward compatibitly fix)
-	$query = "SELECT Time1 FROM GPS WHERE GpsID='1'"
-	$LoadGpsMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundGpsMatch = UBound($LoadGpsMatch) - 1
-	If $FoundGpsMatch = 1 Then
-		If StringInStr($LoadGpsMatch[1][1], '.') = 0 Then
-			;--Fix time in GPS table
-			$query = "SELECT GpsID, Time1 FROM GPS"
-			$LoadGpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundLoadGpsMatch = UBound($LoadGpsMatchArray) - 1
-			For $impg = 1 To $FoundLoadGpsMatch
-				If StringInStr($LoadGpsMatchArray[$impg][2], '.') = 0 Then
-					GUICtrlSetData($msgdisplay, $Text_FixingGpsTableTimes & ' ' & $impg & '/' & $FoundLoadGpsMatch)
-					$query = "UPDATE GPS SET Time1='" & $LoadGpsMatchArray[$impg][2] & '.000' & "' WHERE GpsID='" & $LoadGpsMatchArray[$impg][1] & "'"
-					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-				Else
-					ExitLoop
-				EndIf
-			Next
-		EndIf
-	EndIf
-	;End - Fix times of old mdb format (MDB backward compatibitly fix)
-	;Start - Fix Missing Signal in Hist Table (MDB backward compatibitly fix)
-	$query = "SELECT HistID FROM Hist WHERE Signal=''"
-	$LoadSigMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundSigMatch = UBound($LoadSigMatch) - 1
-	If $FoundSigMatch <> 0 Then
-		GUICtrlSetData($msgdisplay, $Text_FixHistSignals)
-		$query = "UPDATE Hist SET Signal='0' WHERE Signal=''"
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	EndIf
-	;End - Fix Missing Signal in Hist Table (MDB backward compatibitly fix)
-	GUICtrlSetData($msgdisplay, $Text_RecoveringMDB)
-	;Reset all listview positions in DB
-	$query = "UPDATE AP SET ListRow = '-1', Active = '0', Signal = '000'"
-	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	;Get total APIDs
-	$query = "SELECT ApID FROM AP"
+	$query = "Select COUNT(ApID) FROM AP"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$APID = UBound($ApMatchArray) - 1
-	;Delete all old treeview information
+	$APID = $ApMatchArray[1][1]
+	ConsoleWrite("APID:" & $APID & @CRLF)
+	;Get  total HistIDs
+	$query = "Select COUNT(HistID) FROM Hist"
+	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$HISTID = $HistMatchArray[1][1]
+	ConsoleWrite("HISTID:" & $HISTID & @CRLF)
+	;Get total GPSIDs
+	$query = "Select COUNT(GpsID) FROM GPS"
+	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$GPS_ID = $GpsMatchArray[1][1]
+	ConsoleWrite("GPS_ID:" & $GPS_ID & @CRLF)
+	;Get total CamIDs
+	$query = "Select COUNT(CamID) FROM Cam"
+	$CamIDCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$CamID = $CamIDCountArray[1][1]
+	ConsoleWrite("CamID:" & $CamID & @CRLF)
+	;Remove treeview postion table
 	$query = "DELETE * FROM TreeviewPos"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	;Reset Listview positions
+	$query = "UPDATE AP SET ListRow='-1'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	;Add APs into Listview and Treeview
 	_FilterReAddMatchingNotInList()
@@ -2791,7 +2665,7 @@ Func _SetUpDbTables($dbfile)
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|ImgMD5 TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
+	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|CamGroup TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|ImgMD5 TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -10896,9 +10770,9 @@ EndFunc   ;==>_ImageDownloader
 
 Func _ExportCamFile()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
-	$file = "CamID,CamGroupID,CamName,CamFile,Date,Time,Latitude,Longitude,NumberOfSats,ExpHorDilPitch,Altitude,HeightOfGeoid,SpeedKmh,SpeedMPH,Track" & @CRLF
+	$file = "CamID,CamGroup,CamGpsID,CamName,CamFile,Date,Time,Latitude,Longitude,NumberOfSats,ExpHorDilPitch,Altitude,HeightOfGeoid,SpeedKmh,SpeedMPH,Track" & @CRLF
 	$filename = FileSaveDialog('Save Camera File', $SaveDir, 'Vistumbler Camera File (*.VSCZ)', '', $ldatetimestamp & '.VSCZ')
-	$query = "SELECT CamID, GpsID, CamName, CamFile, Date1, Time1 FROM CAM"
+	$query = "SELECT CamID, CamGroup, GpsID, CamName, CamFile, Date1, Time1 FROM CAM"
 	$CamMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundCamMatch = UBound($CamMatchArray) - 1
 	If $FoundCamMatch > 0 Then
@@ -10909,11 +10783,12 @@ Func _ExportCamFile()
 			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundCamMatch)
 			;Ap Info
 			$ExpCamID = $CamMatchArray[$exp][1]
-			$ExpGpsID = $CamMatchArray[$exp][2]
-			$ExpCamName = $CamMatchArray[$exp][3]
-			$ExpCamFile = $CamMatchArray[$exp][4]
-			$ExpCamDate = $CamMatchArray[$exp][5]
-			$ExpCamTime = $CamMatchArray[$exp][6]
+			$ExpCamGroup = $CamMatchArray[$exp][2]
+			$ExpGpsID = $CamMatchArray[$exp][3]
+			$ExpCamName = $CamMatchArray[$exp][4]
+			$ExpCamFile = $CamMatchArray[$exp][5]
+			$ExpCamDate = $CamMatchArray[$exp][6]
+			$ExpCamTime = $CamMatchArray[$exp][7]
 			;GPS Information
 			If $ExpGpsID <> 0 Then
 				$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID='" & $ExpGpsID & "'"
@@ -10931,8 +10806,8 @@ Func _ExportCamFile()
 			Else
 				Dim $ExpLat = "0.0000000", $ExpLon = "0.0000000", $ExpSat = "00", $ExpHorDilPitch = "0", $ExpAlt = "0", $ExpGeo = "0", $ExpSpeedMPH = "0", $ExpSpeedKmh = "0", $ExpTrack = "0"
 			EndIf
-			ConsoleWrite($ExpCamID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF)
-			$file &= $ExpCamID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF
+			ConsoleWrite($ExpCamID & ',' & $ExpCamGroup & ',' & $ExpGpsID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF)
+			$file &= $ExpCamID & ',' & $ExpCamGroup & ',' & $ExpGpsID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF
 		Next
 		;Add cam data to zip
 		$filetmp = FileOpen($datafiletmp, 128 + 2);Open in UTF-8 write mode
@@ -10940,15 +10815,8 @@ Func _ExportCamFile()
 		FileClose($filetmp)
 		ConsoleWrite($datafiletmp & @CRLF)
 		ConsoleWrite(_Zip_AddItem($exporttmp, $datafiletmp) & '-' & @error & @CRLF)
-		;Add cam images to zip
-		$camjpgs = _FileListToArray($VistumblerCamFolder, '*.jpg', 1);Find all files in the folder that end in .jpg
-		If IsArray($camjpgs) Then
-			For $af = 1 To $camjpgs[0]
-				$camjpg = $camjpgs[$af]
-				ConsoleWrite($VistumblerCamFolder & $camjpg & @CRLF)
-				ConsoleWrite(_Zip_AddItem($exporttmp, $VistumblerCamFolder & $camjpg) & '-' & @error & @CRLF)
-			Next
-		EndIf
+		;Add cam images folder to zip
+		_Zip_AddItem($exporttmp, $VistumblerCamFolder)
 		;Save tmp export
 		FileMove($exporttmp, $filename)
 		FileDelete($datafiletmp)
@@ -10981,6 +10849,7 @@ Func _GUI_ImportImageFiles()
 	$Button_ImgCan = GUICtrlCreateButton("Cancel", 194, 168, 97, 33)
 	GUICtrlCreateGroup("", -99, -99, 1, 1)
 	GUICtrlSetOnEvent($Button_ImgImp, '_ImportImageFiles')
+	GUICtrlSetOnEvent($Button_ImgCan, '_GUI_ImportImageFiles_Close')
 	GUISetState(@SW_SHOW)
 EndFunc   ;==>_GUI_ImportImageFiles
 
@@ -10992,6 +10861,10 @@ Func _ImportImageFiles()
 		If StringTrimLeft($ImgDir, StringLen($ImgDir) - 1) <> "\" Then $ImgDir = $ImgDir & "\" ;If directory does not have training \ then add it
 		$ImgArray = _FileListToArray($ImgDir)
 		If Not @error Then
+			$query = "Select COUNT(CamID) FROM Cam WHERE CamName = '" & $ImgGroupName & "'"
+			$CamCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$CamCount = $CamCountArray[1][1]
+			ConsoleWrite($CamCount & @CRLF)
 			For $ii = 1 To $ImgArray[0]
 				$imgpath = $ImgDir & $ImgArray[$ii]
 				$imgmd5 = _MD5ForFile($imgpath)
@@ -11001,10 +10874,11 @@ Func _ImportImageFiles()
 				$ImgMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$FoundImgMatch = UBound($ImgMatchArray) - 1
 				If $FoundImgMatch = 0 Then ;If Img is not found, add it
-					$imgtimearr = FileGetTime($imgpath, 1)
+					$imgtimearr = FileGetTime($imgpath, 0)
 					ConsoleWrite($imgpath & " " & FileGetTime($imgpath, 1, 1) & @CRLF)
 					If IsArray($imgtimearr) Then ;Use time to match image up with gps point
 						;Convert Time from local time to UTC and into the format vistumbler uses
+						ConsoleWrite($imgtimearr[1] & '-' & $imgtimearr[2] & '-' & $imgtimearr[0] & ' ' & $imgtimearr[3] & ':' & $imgtimearr[4] & ':' & $imgtimearr[5] & @CRLF)
 						$tSystem = _Date_Time_EncodeSystemTime($imgtimearr[1], $imgtimearr[2], $imgtimearr[0], $imgtimearr[3], $imgtimearr[4], $imgtimearr[5])
 						$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
 						$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
@@ -11014,6 +10888,7 @@ Func _ImportImageFiles()
 						$year = $dts2[3]
 						$ImgDateUTC = $year & '-' & $mon & '-' & $day ;Image Date in UTC year-month-day format
 						$ImgTimeUTC = $dts1[2];Image time in UTC Hour:minute:second
+						ConsoleWrite($ImgDateUTC & ' ' & $ImgTimeUTC & @CRLF)
 						;Find matching GPS point
 						$query = "SELECT TOP 1 GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "%'"
 						ConsoleWrite($query & @CRLF)
@@ -11026,12 +10901,12 @@ Func _ImportImageFiles()
 							$destfile = $VistumblerCamFolder & $filename
 							If FileCopy($imgpath, $destfile, 1) = 1 Then
 								$CamID += 1
-								_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $ImgGpsId & '|' & $ImgGroupName & '|' & $filename & '|' & $imgmd5 & '|' & $ImgDateUTC & '|' & $ImgTimeUTC)
+								$CamCount += 1
+								_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $CamCount & '|' & $ImgGpsId & '|' & $ImgGroupName & '|' & $filename & '|' & $imgmd5 & '|' & $ImgDateUTC & '|' & $ImgTimeUTC)
 							EndIf
 						Else ; just echo it out for now
 							ConsoleWrite("No gps match found for image " & $imgpath & @CRLF)
 						EndIf
-
 					EndIf
 				EndIf
 			Next
@@ -11042,3 +10917,12 @@ EndFunc   ;==>_ImportImageFiles
 Func _GUI_ImportImageFiles_Close()
 	GUIDelete($GUI_ImportImageFiles)
 EndFunc   ;==>_GUI_ImportImageFiles_Close
+
+Func _RemoveNonMatchingImages()
+	$query = "SELECT CamName FROM Cam"
+	ConsoleWrite($query & @CRLF)
+	$CamNameArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$CamNameMatch = UBound($CamNameArray) - 1
+	If $CamNameMatch = 0 Then ;If Img is not found, add it
+	EndIf ;==>_RemoveNonMatchingImages
+EndFunc   ;==>_RemoveNonMatchingImages
