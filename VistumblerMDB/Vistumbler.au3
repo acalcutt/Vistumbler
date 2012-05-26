@@ -12,14 +12,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.6.1
+;AutoIt Version: v3.3.8.0
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 4'
+$version = 'v10.3 Beta 5'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/05/05'
+$last_modified = '2012/05/25'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -959,12 +959,12 @@ If $MDBfiles[0][0] > 0 Then
 			Case $GUI_EVENT_CLOSE
 				$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 				$VistumblerDbName = $ldatetimestamp & '.mdb'
-				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\images\'
+				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
 				ExitLoop
 			Case $Recover_New
 				$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 				$VistumblerDbName = $ldatetimestamp & '.mdb'
-				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\images\'
+				$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
 				ExitLoop
 			Case $Recover_Exit
 				Exit
@@ -975,7 +975,7 @@ If $MDBfiles[0][0] > 0 Then
 				Else
 					$VistumblerDbName = _GUICtrlListView_GetItemText($Recover_List, $Selected, 0)
 					$VistumblerDB = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
-					$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\images\'
+					$VistumblerCamFolder = StringTrimRight($VistumblerDB, 4) & '\'
 					;If this MDB/ZIP is not in the temp folder, move it there and rename it
 					$mdbfolder = StringTrimRight($VistumblerDB, (StringLen($VistumblerDB) - StringInStr($VistumblerDB, "\", 1, -1)))
 					If $mdbfolder <> $TmpDir Then
@@ -984,7 +984,7 @@ If $MDBfiles[0][0] > 0 Then
 						$VistumblerDbName = StringTrimLeft($VistumblerDB, StringInStr($VistumblerDB, "\", 1, -1))
 						FileCopy($OldVistumblerDB, $VistumblerDB, 9)
 						$OldVistumblerCamFolder = StringTrimRight($OldVistumblerDB, 4) & '\'
-						$VistumblerCamFolder = StringTrimRight($VistumblerDB, 4) & '\images\'
+						$VistumblerCamFolder = StringTrimRight($VistumblerDB, 4) & '\'
 						DirCopy($OldVistumblerCamFolder, $VistumblerCamFolder, 1)
 					EndIf
 					ExitLoop
@@ -996,8 +996,8 @@ If $MDBfiles[0][0] > 0 Then
 				Else
 					$db_fullpath = _GUICtrlListView_GetItemText($Recover_List, $Selected, 2)
 					FileDelete($db_fullpath)
-					$zip_fullpath = StringTrimRight($db_fullpath, 4) & '.zip'
-					FileDelete($zip_fullpath)
+					$folder_fullpath = StringTrimRight($db_fullpath, 4) & '\'
+					DirRemove($folder_fullpath, 1)
 					_GUICtrlListView_DeleteItem(GUICtrlGetHandle($Recover_List), $Selected)
 				EndIf
 		EndSwitch
@@ -1007,7 +1007,7 @@ If $MDBfiles[0][0] > 0 Then
 Else
 	$VistumblerDB = $TmpDir & $ldatetimestamp & '.mdb'
 	$VistumblerDbName = $ldatetimestamp & '.mdb'
-	$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\images\'
+	$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
 EndIf
 
 ConsoleWrite($VistumblerDB & @CRLF)
@@ -2612,6 +2612,7 @@ Func _RecoverMDB()
 	$query = "Select COUNT(ApID) FROM AP"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$APID = $ApMatchArray[1][1]
+	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & "0 / " & $APID)
 	ConsoleWrite("APID:" & $APID & @CRLF)
 	;Get  total HistIDs
 	$query = "Select COUNT(HistID) FROM Hist"
@@ -2631,8 +2632,8 @@ Func _RecoverMDB()
 	;Remove treeview postion table
 	$query = "DELETE * FROM TreeviewPos"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	;Reset Listview positions
-	$query = "UPDATE AP SET ListRow='-1'"
+	;Reset Listview positions and set all access points to inactive
+	$query = "UPDATE AP SET ListRow='-1', Active='0', Signal='000'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	;Add APs into Listview and Treeview
 	_FilterReAddMatchingNotInList()
@@ -2703,6 +2704,7 @@ EndFunc   ;==>_SetLabels
 
 Func _UpdateListMacLabels()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateListMacLabels()') ;#Debug Display
+	GUICtrlSetData($msgdisplay, "Updating manufacturers")
 	$query = "SELECT BSSID, MANU, LABEL, ListRow, ApID FROM AP"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
@@ -9363,6 +9365,8 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			Else
 				If $q_field = "CHAN" Or $q_field = "Signal" Then
 					$q_query &= "(" & $q_field & " = '" & StringFormat("%03i", $FilterValues) & "')"
+				ElseIf $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+					$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
 				Else
 					$q_query &= "(" & $q_field & " = '" & $FilterValues & "')"
 				EndIf
@@ -9432,6 +9436,8 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			Else
 				If $q_field = "CHAN" Or $q_field = "Signal" Then
 					$q_query &= "(" & $q_field & " <> '" & StringFormat("%03i", $FilterValues) & "')"
+				ElseIf $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+					$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
 				Else
 					$q_query &= "(" & $q_field & " <> '" & $FilterValues & "')"
 				EndIf
