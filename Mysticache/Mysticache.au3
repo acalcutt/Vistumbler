@@ -2225,10 +2225,10 @@ Func _ImportGPX()
 	$GPXfile = FileOpenDialog("Import from GPX", '', "GPS eXchange Format" & ' (*.GPX)', 1)
 	$result = _XMLFileOpen($GPXfile)
 	$path = "/*[1]"
-	$WptArray = _XMLGetChildNodes($path)
-	If IsArray($WptArray) Then
-		For $X = 1 To $WptArray[0]
-			If $WptArray[$X] = "wpt" Then
+	$GpxArray = _XMLGetChildNodes($path)
+	If IsArray($GpxArray) Then
+		For $X = 1 To $GpxArray[0]
+			If $GpxArray[$X] = "wpt" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> wpt" & @CRLF)
 				Local $ImpLat, $ImpLon, $ImpGCID, $ImpNotes, $ImpName, $ImpLink, $ImpAuth, $ImpType, $ImpDif, $ImpTer
 				Local $aKeys[1], $aValues[1] ;Arrays used for attributes
@@ -2312,7 +2312,7 @@ Func _ImportGPX()
 					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPGCID & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 				EndIf
 
-			ElseIf $WptArray[$X] = "trk" Then
+			ElseIf $GpxArray[$X] = "trk" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> trk" & @CRLF)
 				Local $TrackName, $TrackDesc
 				$TrkDataPath = $path & "/*[" & $X & "]"
@@ -2357,7 +2357,7 @@ Func _ImportGPX()
 													EndIf
 												Next
 											EndIf
-											ConsoleWrite('Name:' & $TrackName & ' desc:' & $TrackDesc & ' lat:' & $TrackLat & ' lon:' & $TrackLon & ' ele:' & $TrackElev & ' datetime:' & $TrackDateTime)
+											ConsoleWrite('Name:' & $TrackName & ' desc:' & $TrackDesc & ' lat:' & $TrackLat & ' lon:' & $TrackLon & ' ele:' & $TrackElev & ' datetime:' & $TrackDateTime & @CRLF)
 										EndIf
 									Next
 								EndIf
@@ -2372,15 +2372,15 @@ Func _ImportGPX()
 EndFunc   ;==>_ImportGPX
 
 Func _ImportLOC()
-	$GPXfile = FileOpenDialog("Import from LOC", '', "LOC File" & ' (*.LOC)', 1)
-	$result = _XMLFileOpen($GPXfile)
+	$Locfile = FileOpenDialog("Import from LOC", '', "LOC File" & ' (*.LOC)', 1)
+	$result = _XMLFileOpen($Locfile)
 	$path = "/*[1]"
-	$WptArray = _XMLGetChildNodes($path)
-	If IsArray($WptArray) Then
-		For $X = 1 To $WptArray[0]
+	$LocArray = _XMLGetChildNodes($path)
+	If IsArray($LocArray) Then
+		For $X = 1 To $LocArray[0]
 			Local $ImpLat = "", $ImpLon = "", $ImpGCID = "", $ImpNotes = "", $ImpName = "", $ImpLink = "", $ImpAuth = "", $ImpType = "", $ImpDif = "", $ImpTer = ""
 			ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpGCID & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpLink & @CRLF)
-			If $WptArray[$X] = "waypoint" Then
+			If $LocArray[$X] = "waypoint" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> wpt" & @CRLF)
 				ConsoleWrite($path & "/*[" & $X & "]" & @CRLF)
 				$WptDataPath = $path & "/*[" & $X & "]"
