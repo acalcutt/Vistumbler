@@ -2228,10 +2228,10 @@ Func _ImportGPX()
 	$WptArray = _XMLGetChildNodes($path)
 	If IsArray($WptArray) Then
 		For $X = 1 To $WptArray[0]
-			Local $ImpLat, $ImpLon, $ImpGCID, $ImpNotes, $ImpName, $ImpLink, $ImpAuth, $ImpType, $ImpDif, $ImpTer
-			Local $aKeys[1], $aValues[1] ;Arrays used for attributes
 			If $WptArray[$X] = "wpt" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> wpt" & @CRLF)
+				Local $ImpLat, $ImpLon, $ImpGCID, $ImpNotes, $ImpName, $ImpLink, $ImpAuth, $ImpType, $ImpDif, $ImpTer
+				Local $aKeys[1], $aValues[1] ;Arrays used for attributes
 				_XMLGetAllAttrib($path & "/*[" & $X & "]", $aKeys, $aValues) ;Retrieve all attributes
 				If Not @error Then
 					For $y = 0 To UBound($aKeys) - 1
@@ -2312,6 +2312,59 @@ Func _ImportGPX()
 					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPGCID & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 				EndIf
 
+			ElseIf $WptArray[$X] = "trk" Then
+				ConsoleWrite("! -------------------------------------------------------------------------------------------> trk" & @CRLF)
+				Local $TrackName, $TrackDesc
+				$TrkDataPath = $path & "/*[" & $X & "]"
+				$TrkDataArray = _XMLGetChildNodes($TrkDataPath)
+				ConsoleWrite($TrkDataPath & @CRLF)
+				If IsArray($TrkDataArray) Then
+					For $X1 = 1 To $TrkDataArray[0]
+						$TrkFieldPath = $TrkDataPath & "/*[" & $X1 & "]"
+						$TrkFieldValueArray = _XMLGetValue($TrkDataPath & "/*[" & $X1 & "]")
+						ConsoleWrite($TrkFieldPath & @CRLF)
+						If IsArray($TrkFieldValueArray) Then
+							If $TrkDataArray[$X1] = "name" Then $TrackName = $TrkFieldValueArray[1]
+							If $TrkDataArray[$X1] = "desc" Then $TrackDesc = $TrkFieldValueArray[1]
+							If $TrkDataArray[$X1] = "trkseg" Then
+								;$TrkSegPath = $TrkFieldPath & "/*[" & $X1 & "]"
+								$TrkSegArray = _XMLGetChildNodes($TrkFieldPath)
+								If IsArray($TrkSegArray) Then
+									For $X2 = 1 To $TrkSegArray[0]
+										Local $TrackLat, $TrackLon, $TrackElev, $TrackDateTime
+										If $TrkSegArray[$X2] = "trkpt" Then
+											$TrkptPath = $TrkFieldPath & "/*[" & $X2 & "]"
+											ConsoleWrite($TrkptPath & @CRLF)
+											Local $aKeys[1], $aValues[1] ;Arrays used for attributes
+											_XMLGetAllAttrib($TrkptPath, $aKeys, $aValues) ;Retrieve all attributes
+											If Not @error Then
+												For $y = 0 To UBound($aKeys) - 1
+												;ConsoleWrite($aKeys[$Y] & "=" & $aValues[$Y] & ", ") ;Output all attributes
+												If $aKeys[$y] = "lat" Then $TrackLat = $aValues[$y]
+												If $aKeys[$y] = "lon" Then $TrackLon = $aValues[$y]
+												_XMLGetAllAttrib($TrkptPath, $aKeys, $aValues) ;Retrieve all attributes
+												Next
+											EndIf
+											$TrkptArray = _XMLGetChildNodes($TrkptPath)
+											If IsArray($TrkptArray) Then
+												For $X3 = 1 To $TrkptArray[0]
+													$TrkptFieldPath = $TrkptPath & "/*[" & $X3 & "]"
+													$TrkptFieldValueArray = _XMLGetValue($TrkptFieldPath)
+													ConsoleWrite($TrkptFieldPath & @CRLF)
+													If IsArray($TrkptFieldValueArray) Then
+														If $TrkptArray[$X3] = "ele" Then $TrackElev = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "time" Then $TrackDateTime = $TrkptFieldValueArray[1]
+													EndIf
+												Next
+											EndIf
+											ConsoleWrite('Name:' & $TrackName & ' desc:' & $TrackDesc & ' lat:' & $TrackLat & ' lon:' & $TrackLon & ' ele:' & $TrackElev & ' datetime:' & $TrackDateTime)
+										EndIf
+									Next
+								EndIf
+							EndIf
+						EndIf
+					Next
+				EndIf
 			EndIf
 		Next
 
