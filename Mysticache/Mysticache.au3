@@ -7,9 +7,9 @@ Opt("GUIOnEventMode", 1);Change to OnEvent mode
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Mysticache'
 $Script_Website = 'http://www.techidiots.net'
-$version = 'v2.0 Beta 2'
+$version = 'v3.0 Alpha 1'
 $Script_Start_Date = '2009/10/22'
-$last_modified = '2009/12/07'
+$last_modified = '2012/06/12'
 $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $last_modified
 ;Includes------------------------------------------------
 #include <Date.au3>
@@ -37,7 +37,9 @@ Next
 
 ;Variables-----------------------------------------------
 Dim $WPID = 0
-Dim $GPS_ID = 0
+Dim $GPSID = 0
+Dim $TRACKID = 0
+Dim $TRACKSEGID = 0
 
 Dim $UseGPS = 0
 Dim $TurnOffGPS = 0
@@ -316,11 +318,6 @@ EndIf
 
 If FileExists($MysticacheDB) Then
 	$Recover = 1
-	$WPID = 0
-	_AccessConnectConn($MysticacheDB, $DB_OBJ)
-	$query = "SELECT GpsID FROM GPS"
-	$GpsMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
-	$GPS_ID = UBound($GpsMatchArray) - 1
 Else
 	_SetUpDbTables($MysticacheDB)
 EndIf
@@ -422,6 +419,9 @@ If $SaveGpsHistory = 1 Then GUICtrlSetState($But_SaveGpsHistory, $GUI_CHECKED)
 $But_AddWaypointsToTop = GUICtrlCreateMenuItem("Add new waypoints to top of list", $Options)
 If $AddDirection = 0 Then GUICtrlSetState($But_AddWaypointsToTop, $GUI_CHECKED)
 
+$View = GUICtrlCreateMenu("View")
+$ViewWaypoints = GUICtrlCreateMenuitem("Waypoints", $Edit)
+$ViewTrack = GUICtrlCreateMenuItem($Text_Copy, $Edit)
 
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
 $SetGPS = GUICtrlCreateMenuItem("GPS Settings", $SettingsMenu)
@@ -570,8 +570,10 @@ While 1
 	If $UseGPS = 1 And $UpdatedGPS = 0 Then
 		$GetGpsSuccess = _GetGPS();Scan for GPS if GPS enabled
 		If $GetGpsSuccess = 1 And $SaveGpsHistory = 1 Then
-			$GPS_ID += 1
-			_AddRecord($MysticacheDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
+			$TRACKSEGID += 1
+			_AddRecord($MysticacheDB, "TRACKSEG", $DB_OBJ, $TRACKSEGID & '|0|' & $Latitude & '|' & $Longitude & '|' & $Alt & '|' & $datestamp & 'T' & $timestamp & 'Z' & '||' & $TrackAngle & '|' & $Geo & '||' & $NumberOfSatalites & '|' & $HorDilPitch & '|||||' & $SpeedInKmH & '||||' & $Script_Name & '||||')
+			;$GPSID += 1
+			;_AddRecord($MysticacheDB, "GPS", $DB_OBJ, $GPSID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
 		EndIf
 		If $GetGpsSuccess = 1 Then $UpdatedGPS = 1
 	EndIf
@@ -865,13 +867,40 @@ Func _SetUpDbTables($dbfile)
 	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetUpDbTables()') ;#Debug Display
 	_CreateDB($dbfile)
 	_AccessConnectConn($dbfile, $DB_OBJ)
-	_CreateTable($dbfile, 'GPS', $DB_OBJ)
+	;_CreateTable($dbfile, 'GPS', $DB_OBJ)
 	_CreateTable($dbfile, 'WP', $DB_OBJ)
-	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreateTable($dbfile, 'TRACK', $DB_OBJ)
+	_CreateTable($dbfile, 'TRACKSEG', $DB_OBJ)
+	;_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'WP', $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|GCID TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(255)|Bearing TEXT(255)|Distance TEXT(255)|Link TEXT(255)|Author TEXT(255)|Type TEXT(255)|Difficulty TEXT(255)|Terrain TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TRACK', $DB_OBJ, 'TRACKID TEXT(255)|TrackName TEXT(255)|TrackDesc TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TRACKSEG', $DB_OBJ, 'TRACKSEGID TEXT(255)|TRACKID TEXT(255)|lat TEXT(20)|lon TEXT(20)|ele TEXT(255)|time1 TEXT(255)|magvar TEXT(255)|course TEXT(255)|geoidheight TEXT(255)|fix TEXT(255)|sat TEXT(255)|hdop TEXT(255)|vdop TEXT(255)|pdop TEXT(255)|ageofgpsdata TEXT(255)|dgpsid TEXT(255)|speed TEXT(255)|name TEXT(255)|cmt TEXT(255)|desc1 TEXT(255)|src TEXT(255)|url TEXT(255)|urlname TEXT(255)|sym TEXT(255)|type TEXT(255)')
+	;Create Default GPS Track
+	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|Mysticache generated track')
 EndFunc   ;==>_SetUpDbTables
 
 Func _RecoverMDB()
+	_AccessConnectConn($MysticacheDB, $DB_OBJ)
+	;Get total GPSIDs
+	$query = "Select COUNT(GpsID) FROM GPS"
+	$GpsMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+	$GPSID = $GpsMatchArray[1][1]
+	;Get total WPIDs
+	$query = "Select COUNT(WPID) FROM WP"
+	$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+	$WPID = $WpMatchArray[1][1]
+	ConsoleWrite("WPID:" & $WPID & @CRLF)
+	;Get total TRACKIDs
+	$query = "Select COUNT(TRACKID) FROM TRACK"
+	$TrackMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+	$TRACKID = $TrackMatchArray[1][1]
+	ConsoleWrite("TRACKID:" & $TRACKID & @CRLF)
+	;Get total TRACKSEGIDs
+	$query = "Select COUNT(TRACKSEGID) FROM TRACSEG"
+	$TackSegMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+	$TRACKSEGID = $TackSegMatchArray[1][1]
+	ConsoleWrite("TRACKSEGID:" & $TRACKSEGID & @CRLF)
+
 	$query = "UPDATE WP SET ListRow = '-1'"
 	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 	$query = "SELECT WPID, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link, Author, Type, Difficulty, Terrain FROM WP"
@@ -892,8 +921,6 @@ Func _RecoverMDB()
 			$WPType = $WpMatchArray[$rl][11]
 			$WPDif = $WpMatchArray[$rl][12]
 			$WPTer = $WpMatchArray[$rl][13]
-
-			$WPID += 1
 			;Add APs to top of list
 			If $AddDirection = 0 Then
 				$query = "UPDATE WP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
@@ -1035,7 +1062,7 @@ EndFunc   ;==>_ClearAll
 Func _ClearAllWp()
 	;Reset Variables
 	$WPID = 0
-	$GPS_ID = 0
+	$GPSID = 0
 	;Clear DB
 	$query = "DELETE * FROM GPS"
 	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
@@ -2223,10 +2250,12 @@ EndFunc   ;==>_DrawCompassCircle
 
 Func _ImportGPX()
 	$GPXfile = FileOpenDialog("Import from GPX", '', "GPS eXchange Format" & ' (*.GPX)', 1)
+	ConsoleWrite($GPXfile & @CRLF)
 	$result = _XMLFileOpen($GPXfile)
 	$path = "/*[1]"
 	$GpxArray = _XMLGetChildNodes($path)
 	If IsArray($GpxArray) Then
+		_ArrayDisplay($GpxArray)
 		For $X = 1 To $GpxArray[0]
 			If $GpxArray[$X] = "wpt" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> wpt" & @CRLF)
@@ -2327,11 +2356,14 @@ Func _ImportGPX()
 							If $TrkDataArray[$X1] = "name" Then $TrackName = $TrkFieldValueArray[1]
 							If $TrkDataArray[$X1] = "desc" Then $TrackDesc = $TrkFieldValueArray[1]
 							If $TrkDataArray[$X1] = "trkseg" Then
-								;$TrkSegPath = $TrkFieldPath & "/*[" & $X1 & "]"
+								;Add Track Information to table
+								$TRACKID += 1
+								_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, $TRACKID & '|' & $TrackName & '|' & $TrackDesc)
+								;Get Track Segment
 								$TrkSegArray = _XMLGetChildNodes($TrkFieldPath)
 								If IsArray($TrkSegArray) Then
 									For $X2 = 1 To $TrkSegArray[0]
-										Local $TrackLat, $TrackLon, $TrackElev, $TrackDateTime
+										Local $TrackLat, $TrackLon, $TrackElev, $TrackTime, $TrackMagvar, $TrackCourse, $TrackGeoidHeight, $TrackFix, $TrackSat, $TrackHdop, $TrackVdop, $TrackPdop, $TrackAgeOfGpsData, $TrackDgpsid, $TrackSpeed, $TrackptName, $TrackCmt, $TrackDesc, $TrackSrc, $TrackUrl, $TrackUrlName, $TrackSym, $TrackType
 										If $TrkSegArray[$X2] = "trkpt" Then
 											$TrkptPath = $TrkFieldPath & "/*[" & $X2 & "]"
 											ConsoleWrite($TrkptPath & @CRLF)
@@ -2340,8 +2372,8 @@ Func _ImportGPX()
 											If Not @error Then
 												For $y = 0 To UBound($aKeys) - 1
 												;ConsoleWrite($aKeys[$Y] & "=" & $aValues[$Y] & ", ") ;Output all attributes
-												If $aKeys[$y] = "lat" Then $TrackLat = $aValues[$y]
-												If $aKeys[$y] = "lon" Then $TrackLon = $aValues[$y]
+												If $aKeys[$y] = "lat" Then $TrackLat = _Format_GPS_All_to_DMM(StringFormat('%0.7f', $aValues[$y]), "N", "S")
+												If $aKeys[$y] = "lon" Then $TrackLon = _Format_GPS_All_to_DMM(StringFormat('%0.7f', $aValues[$y]), "E", "W")
 												_XMLGetAllAttrib($TrkptPath, $aKeys, $aValues) ;Retrieve all attributes
 												Next
 											EndIf
@@ -2353,11 +2385,32 @@ Func _ImportGPX()
 													ConsoleWrite($TrkptFieldPath & @CRLF)
 													If IsArray($TrkptFieldValueArray) Then
 														If $TrkptArray[$X3] = "ele" Then $TrackElev = $TrkptFieldValueArray[1]
-														If $TrkptArray[$X3] = "time" Then $TrackDateTime = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "time" Then $TrackTime = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "magvar" Then $TrackMagvar = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "corse" Then $TrackCourse = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "geoidheight" Then $TrackGeoidHeight = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "fix" Then $TrackFix = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "sat" Then $TrackSat = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "hdop" Then $TrackHdop = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "vdop" Then $TrackVdop = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "pdop" Then $TrackPdop = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "ageofgpsdata" Then $TrackAgeOfGpsData = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "dgpsid" Then $TrackDgpsid = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "speed" Then $TrackSpeed = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "name" Then $TrackptName = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "cmt" Then $TrackCmt = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "desc" Then $TrackDesc = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "src" Then $TrackSrc = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "url" Then $TrackUrl = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "urlname" Then $TrackUrlName = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "sym" Then $TrackSym = $TrkptFieldValueArray[1]
+														If $TrkptArray[$X3] = "type" Then $TrackType = $TrkptFieldValueArray[1]
 													EndIf
 												Next
 											EndIf
-											ConsoleWrite('Name:' & $TrackName & ' desc:' & $TrackDesc & ' lat:' & $TrackLat & ' lon:' & $TrackLon & ' ele:' & $TrackElev & ' datetime:' & $TrackDateTime & @CRLF)
+											$TRACKSEGID += 1
+											_AddRecord($MysticacheDB, "TRACKSEG", $DB_OBJ, $TRACKSEGID & '|' & $TRACKID & '|' & $TrackLat & '|' & $TrackLon & '|' & $TrackElev & '|' & $TrackTime & '|' & $TrackMagvar & '|' & $TrackCourse & '|' & $TrackGeoidHeight & '|' & $TrackFix & '|' & $TrackSat & '|' & $TrackHdop & '|' & $TrackVdop & '|' & $TrackPdop & '|' & $TrackAgeOfGpsData & '|' & $TrackDgpsid & '|' & $TrackSpeed & '|' & $TrackptName & '|' & $TrackCmt & '|' & $TrackDesc & '|' & $TrackSrc & '|' & $TrackUrl & '|' & $TrackUrlName & '|' & $TrackSym & '|' & $TrackType)
+											ConsoleWrite('Name:' & $TrackName & ' desc:' & $TrackDesc & ' lat:' & $TrackLat & ' lon:' & $TrackLon & ' ele:' & $TrackElev & ' datetime:' & $TrackTime & @CRLF)
 										EndIf
 									Next
 								EndIf
@@ -2645,30 +2698,80 @@ Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	EndIf
 
 	If $MapGpsTrack = 1 Then
-		$query = "SELECT Latitude, Longitude, Alt, Date1, Time1, SpeedInKmH FROM GPS WHERE Latitude <> 'N 0.0000' And Longitude <> 'E 0.0000' ORDER BY Date1, Time1"
-		$GpsMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
-		$FoundGpsMatch = UBound($GpsMatchArray) - 1
-		If $FoundGpsMatch <> 0 Then
-			$file &= '<trk>' & @CRLF _
-					 & '<name>GPS Track</name>' & @CRLF _
-					 & '<trkseg>' & @CRLF
-			For $exp = 1 To $FoundGpsMatch
-				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1]), 'S', '-'), 'N', ''), ' ', '')
-				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2]), 'W', '-'), 'E', ''), ' ', '')
-				$ExpAlt = _MetersToFeet($GpsMatchArray[$exp][3])
-				$ExpDate = $GpsMatchArray[$exp][4]
-				$ExpTime = $GpsMatchArray[$exp][5]
-				$ExpSpeedKmh = $GpsMatchArray[$exp][6]
-				If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
-					$FoundApWithGps = 1
-					$file &= '<trkpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
-							 & '<ele>' & $ExpAlt & '</ele>' & @CRLF _
-							 & '<time>' & $ExpDate & 'T' & $ExpTime & 'Z</time>' & @CRLF _
-							 & '</trkpt>' & @CRLF
+		$query = "SELECT TRACKID, TrackName, TrackDesc FROM TRACK"
+		ConsoleWrite($query & @CRLF)
+		$TrackMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+		$FoundTrackMatch = UBound($TrackMatchArray) - 1
+		If $FoundTrackMatch <> 0 Then
+			For $trk = 1 To $FoundTrackMatch
+				$ExpTrkID = $TrackMatchArray[$trk][1]
+				$ExpTrkName = $TrackMatchArray[$trk][2]
+				$ExpTrkDesc = $TrackMatchArray[$trk][3]
+				$query = "SELECT lat, lon, ele, time1, magvar, course, geoidheight, fix, sat, hdop, vdop, pdop, ageofgpsdata, dgpsid, speed, name, cmt, desc1, src, url, urlname, sym, type FROM TRACKSEG WHERE lat <> 'N 0.0000' And lon <> 'E 0.0000' And TRACKID = '" & $ExpTrkID & "' ORDER BY TRACKSEGID"
+				ConsoleWrite($query & @CRLF)
+				$GpsMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
+				$FoundGpsMatch = UBound($GpsMatchArray) - 1
+				If $FoundGpsMatch <> 0 Then
+					$file &= '<trk>' & @CRLF
+					If $ExpTrkName <> "" Then $file &= '<name>' & $ExpTrkName & '</name>' & @CRLF
+					If $ExpTrkDesc <> "" Then $file &= '<desc>' & $ExpTrkDesc & '</desc>' & @CRLF
+					$file &= '<trkseg>' & @CRLF
+					For $exp = 1 To $FoundGpsMatch
+						$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1]), 'S', '-'), 'N', ''), ' ', '')
+						$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2]), 'W', '-'), 'E', ''), ' ', '')
+						$ExpEle = Round($GpsMatchArray[$exp][3])
+						$ExpTime = $GpsMatchArray[$exp][4]
+						$ExpMagvar = $GpsMatchArray[$exp][5]
+						$ExpCorse = $GpsMatchArray[$exp][6]
+						$ExpGeoidHeight = $GpsMatchArray[$exp][7]
+						$ExpFix = $GpsMatchArray[$exp][8]
+						$ExpSat = $GpsMatchArray[$exp][9]
+						$ExpHdop = $GpsMatchArray[$exp][10]
+						$ExpVdop = $GpsMatchArray[$exp][11]
+						$ExpPdop = $GpsMatchArray[$exp][12]
+						$ExpAgeOfGpsData = $GpsMatchArray[$exp][13]
+						$ExpDgpsid = $GpsMatchArray[$exp][14]
+						$ExpSpeed = $GpsMatchArray[$exp][15]
+						$ExpName = $GpsMatchArray[$exp][16]
+						$ExpCmt = $GpsMatchArray[$exp][17]
+						$ExpDesc = $GpsMatchArray[$exp][18]
+						$ExpSrc = $GpsMatchArray[$exp][19]
+						$ExpUrl = $GpsMatchArray[$exp][20]
+						$ExpUrlName = $GpsMatchArray[$exp][21]
+						$ExpSym = $GpsMatchArray[$exp][22]
+						$ExpType = $GpsMatchArray[$exp][23]
+
+						If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
+							$FoundApWithGps = 1
+							$file &= '<trkpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF
+							If $ExpEle <> "" Then $file &= '<ele>' & $ExpEle & '</ele>' & @CRLF
+							If $ExpTime <> "" Then $file &= '<time>' & $ExpTime & '</time>' & @CRLF
+							If $ExpMagvar <> "" Then $file &= '<magvar>' & $ExpMagvar & '</magvar>' & @CRLF
+							If $ExpCorse <> "" Then $file &= '<course>' & $ExpCorse & '</course>' & @CRLF
+							If $ExpGeoidHeight <> "" Then $file &= '<geoidheigh>' & $ExpGeoidHeight & '</geoidheigh>' & @CRLF
+							If $ExpFix <> "" Then $file &= '<fix>' & $ExpFix & '</fix>' & @CRLF
+							If $ExpSat <> "" Then $file &= '<sat>' & $ExpSat & '</sat>' & @CRLF
+							If $ExpHdop <> "" Then $file &= '<hdop>' & $ExpHdop & '</hdop>' & @CRLF
+							If $ExpVdop <> "" Then $file &= '<vdop>' & $ExpVdop & '</vdop>' & @CRLF
+							If $ExpPdop <> "" Then $file &= '<pdop>' & $ExpPdop & '</pdop>' & @CRLF
+							If $ExpAgeOfGpsData <> "" Then $file &= '<ageofdgpsdata>' & $ExpAgeOfGpsData & '</ageofdgpsdata>' & @CRLF
+							If $ExpDgpsid <> "" Then $file &= '<dgpsid>' & $ExpDgpsid & '</dgpsid>' & @CRLF
+							If $ExpSpeed <> "" Then $file &= '<speed>' & $ExpSpeed & '</speed>' & @CRLF
+							If $ExpName <> "" Then $file &= '<name>' & $ExpName & '</name>' & @CRLF
+							If $ExpCmt <> "" Then $file &= '<cmt>' & $ExpCmt & '</cmt>' & @CRLF
+							If $ExpDesc <> "" Then $file &= '<desc>' & $ExpDesc & '</desc>' & @CRLF
+							If $ExpSrc <> "" Then $file &= '<src>' & $ExpSrc & '</src>' & @CRLF
+							If $ExpUrl <> "" Then $file &= '<url>' & $ExpUrl & '</url>' & @CRLF
+							If $ExpUrlName <> "" Then $file &= '<urlname>' & $ExpUrlName & '</urlname>' & @CRLF
+							If $ExpSym <> "" Then $file &= '<sym>' & $ExpSym & '</sym>' & @CRLF
+							If $ExpType <> "" Then $file &= '<type>' & $ExpType & '</type>' & @CRLF
+							$file &= '</trkpt>' & @CRLF
+						EndIf
+					Next
+					$file &= '</trkseg>' & @CRLF _
+							 & '</trk>' & @CRLF
 				EndIf
 			Next
-			$file &= '</trkseg>' & @CRLF _
-					 & '</trk>' & @CRLF
 		EndIf
 	EndIf
 	$file &= '</gpx>' & @CRLF
