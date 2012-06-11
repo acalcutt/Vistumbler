@@ -1,5 +1,6 @@
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Images\mysticache.ico
+#AutoIt3Wrapper_Icon=Images\mysticache.ico
+#AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
 ;--------------------------------------------------------
@@ -902,8 +903,8 @@ Func _RecoverMDB()
 	If $FoundWpMatch <> 0 Then ;If WP is not found then add it
 		For $rl = 1 To $FoundWpMatch
 			$WPWPID = $WpMatchArray[$rl][1]
-			$WPDesc = $WpMatchArray[$rl][2]
-			$WPName = $WpMatchArray[$rl][3]
+			$WPName = $WpMatchArray[$rl][2]
+			$WPDesc = $WpMatchArray[$rl][3]
 			$WPNotes = $WpMatchArray[$rl][4]
 			$WPLat = $WpMatchArray[$rl][5]
 			$WPLon = $WpMatchArray[$rl][6]
@@ -1165,8 +1166,8 @@ Func _AddWaypointGUI()
 EndFunc   ;==>_AddWaypointGUI
 
 Func _AddWaypoint()
-	$WPDesc = GUICtrlRead($GUI_AddName)
-	$WPName = GUICtrlRead($GUI_AddDesc)
+	$WPName = GUICtrlRead($GUI_AddName)
+	$WPDesc = GUICtrlRead($GUI_AddDesc)
 	$WPNotes = GUICtrlRead($GUI_AddNotes)
 	$WPLink = GUICtrlRead($GUI_AddLink)
 	$WPAuth = GUICtrlRead($GUI_AddAuthor)
@@ -1195,7 +1196,7 @@ Func _AddWaypoint()
 	EndIf
 	$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 	$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
-	$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPDesc, "'", "''") & "' And Desc1 = '" & StringReplace($WPName, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
+	$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPName, "'", "''") & "' And Desc1 = '" & StringReplace($WPDesc, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
 	$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 	$FoundWpMatch = UBound($WpMatchArray) - 1
 	If $FoundWpMatch = 0 Then ;If WP is not found then add it
@@ -2277,11 +2278,11 @@ Func _ImportGPX()
 						$WptFieldPath = $WptDataPath & "/*[" & $X1 & "]"
 						$WptFieldValueArray = _XMLGetValue($WptDataPath & "/*[" & $X1 & "]")
 						If IsArray($WptFieldValueArray) Then
-							If $WptDataArray[$X1] = "name" Then $ImpDesc = $WptFieldValueArray[1]
+							If $WptDataArray[$X1] = "name" Then $ImpName = $WptFieldValueArray[1]
 							If $WptDataArray[$X1] = "desc" Then
 								If StringInStr($WptFieldValueArray[1], ' by ') Then
 									$descarr1 = StringSplit($WptFieldValueArray[1], ' by ', 1)
-									$ImpName = $descarr1[1]
+									$ImpDesc = $descarr1[1]
 									If StringInStr($descarr1[2], ', ') Then
 										$descarr2 = StringSplit($descarr1[2], ', ', 1)
 										$ImpAuth = $descarr2[1]
@@ -2299,7 +2300,7 @@ Func _ImportGPX()
 									$ImpNotes = $WptFieldValueArray[1]
 								EndIf
 							EndIf
-							If $WptDataArray[$X1] = "urlname" Then $ImpName = $WptFieldValueArray[1]
+							If $WptDataArray[$X1] = "urlname" Then $ImpDesc = $WptFieldValueArray[1]
 							If $WptDataArray[$X1] = "url" Then $ImpLink = $WptFieldValueArray[1]
 							If $WptDataArray[$X1] = "Notes" Then $ImpNotes = $WptFieldValueArray[1]
 						EndIf
@@ -2307,8 +2308,8 @@ Func _ImportGPX()
 				EndIf
 				ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpDesc & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpAuth & " - " & $ImpType & " - " & $ImpDif & " - " & $ImpTer & @CRLF)
 
-				$WPDesc = $ImpName
-				$WPName = $ImpDesc
+				$WPName = $ImpName
+				$WPDesc = $ImpDesc
 				$WPNotes = $ImpNotes
 				$WPLink = $ImpLink
 				$WPAuth = $ImpAuth
@@ -2447,7 +2448,7 @@ Func _ImportLOC()
 							If $WptDataArray[$X1] = "name" Then
 								If StringInStr($WptFieldValueArray[1], ' by ') Then
 									$descarr1 = StringSplit($WptFieldValueArray[1], ' by ', 1)
-									$ImpName = $descarr1[1]
+									$ImpDesc = $descarr1[1]
 									If StringInStr($descarr1[2], ' (') Then
 										$descarr2 = StringSplit($descarr1[2], ' (', 1)
 										$ImpAuth = $descarr2[1]
@@ -2465,12 +2466,12 @@ Func _ImportLOC()
 								If Not @error Then
 									For $y = 0 To UBound($aKeys) - 1
 										;ConsoleWrite($aKeys[$Y] & "=" & $aValues[$Y] & ", ") ;Output all attributes
-										If $aKeys[$y] = "id" Then $ImpDesc = $aValues[$y]
+										If $aKeys[$y] = "id" Then $ImpName = $aValues[$y]
 									Next
 								EndIf
 							EndIf
 							If $WptDataArray[$X1] = "type" Then $ImpType = $WptFieldValueArray[1]
-							If $WptDataArray[$X1] = "urlName" Then $ImpName = $WptFieldValueArray[1]
+							If $WptDataArray[$X1] = "urlName" Then $ImpDesc = $WptFieldValueArray[1]
 							If $WptDataArray[$X1] = "Notes" Then $ImpNotes = $WptFieldValueArray[1]
 							If $WptDataArray[$X1] = "CacheType" Then $ImpType = $WptFieldValueArray[1]
 							If $WptDataArray[$X1] = "link" Then $ImpLink = $WptFieldValueArray[1]
@@ -2490,8 +2491,8 @@ Func _ImportLOC()
 				EndIf
 				ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpDesc & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpLink & @CRLF)
 
-				$WPDesc = $ImpName
-				$WPName = $ImpDesc
+				$WPName = $ImpName
+				$WPDesc = $ImpDesc
 				$WPNotes = $ImpNotes
 				$WPLink = $ImpLink
 				$WPAuth = $ImpAuth
@@ -2503,7 +2504,7 @@ Func _ImportLOC()
 				$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 				$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 
-				$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPDesc, "'", "''") & "' And Desc1 = '" & StringReplace($WPName, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
+				$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPName, "'", "''") & "' And Desc1 = '" & StringReplace($WPDesc, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
 				$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 				$FoundWpMatch = UBound($WpMatchArray) - 1
 				If $FoundWpMatch = 0 Then ;If WP is not found then add it
