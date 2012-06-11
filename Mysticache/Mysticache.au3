@@ -1,5 +1,5 @@
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=Images\mysticache.ico
+#AutoIt3Wrapper_icon=Images\mysticache.ico
 #AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
@@ -24,6 +24,7 @@ $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & $la
 #include "UDFs\CommMG.au3"
 #include "UDFs\FileInUse.au3"
 #include "UDFs\_XMLDomWrapper.au3"
+#include "UDFs\WinGetPosEx.au3"
 ;Get Date/Time-------------------------------------------
 $dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ')
 $datestamp = $dt[1]
@@ -35,7 +36,10 @@ For $loop = 1 To $CmdLine[0]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.gpx' Then $Load = $CmdLine[$loop]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.loc' Then $Load = $CmdLine[$loop]
 Next
-
+;Options-------------------------------------------------
+Opt("TrayIconHide", 1);Hide icon in system tray
+Opt("GUIOnEventMode", 1);Change to OnEvent mode
+Opt("GUIResizeMode", 802)
 ;Variables-----------------------------------------------
 Dim $WPID = 0
 Dim $TRACKID = 0
@@ -52,6 +56,7 @@ Dim $SaveDbOnExit = 0
 Dim $Recover = 0
 Dim $ClearAllWps = 0
 Dim $Redraw = 0
+Dim $VMode = 1
 Dim $RefreshLoopTime = 500
 Dim $SortColumn = -1
 Dim $ErrorFlag_sound = 'error.wav'
@@ -426,22 +431,15 @@ $ViewTrack = GUICtrlCreateMenuItem("Tracks", $View)
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
 $SetGPS = GUICtrlCreateMenuItem("GPS Settings", $SettingsMenu)
 
-
 $Export = GUICtrlCreateMenu($Text_Export)
 $ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
 $ExportToGPX = GUICtrlCreateMenuItem("All Waypoints", $ExportGpxMenu)
 $ExportLocMenu = GUICtrlCreateMenu("Export To LOC", $Export)
 $ExportToLoc = GUICtrlCreateMenuItem("All Waypoints", $ExportLocMenu)
-;$ExportTXTMenu = GUICtrlCreateMenu($Text_ExportToTXT, $Export)
-;$ExportToTXT = GUICtrlCreateMenuItem("All Waypoints", $ExportTXTMenu)
-;$ExportVS1Menu = GUICtrlCreateMenu($Text_ExportToVS1, $Export)
-;$ExportToVS1 = GUICtrlCreateMenuItem("All Waypoints", $ExportVS1Menu)
 $ExportCsvMenu = GUICtrlCreateMenu($Text_ExportToCSV, $Export)
 $ExportToCsv = GUICtrlCreateMenuItem("All Waypoints", $ExportCsvMenu)
 $ExportKmlMenu = GUICtrlCreateMenu($Text_ExportToKML, $Export)
 $ExportToKML = GUICtrlCreateMenuItem("All Waypoints", $ExportKmlMenu)
-;$CreateApSignalMap = GUICtrlCreateMenuItem("Selected Waypoint", $ExportKmlMenu)
-
 
 $Extra = GUICtrlCreateMenu("Extra")
 $GpsDetails = GUICtrlCreateMenuItem("Gps Details", $Extra)
@@ -450,19 +448,15 @@ $OpenSaveFolder = GUICtrlCreateMenuItem("Open Save Folder", $Extra)
 $OpenWptLink = GUICtrlCreateMenuItem("Open Waypoint Link", $Extra)
 $AddToMysticacheDB = GUICtrlCreateMenuItem("Upload Data to MysticacheDB", $Extra)
 
-$DataChild = GUICreate("", 895, 595, 0, 60, BitOR($WS_CHILD, $WS_TABSTOP), $WS_EX_CONTROLPARENT, $MysticacheGUI)
-GUISetBkColor($BackgroundColor)
-$ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
-GUICtrlSetBkColor(-1, $ControlBackgroundColor)
-GUISetState()
-
-$ControlChild = GUICreate("", 970, 65, 0, 0, $WS_CHILD, $WS_EX_CONTROLPARENT, $MysticacheGUI) ; Create Child window for controls
-GUISetBkColor($BackgroundColor)
 $But_UseGPS = GUICtrlCreateButton($Text_UseGPS, 15, 8, 120, 20, 0)
 $AddWpButton = GUICtrlCreateButton("Add Waypoint", 15, 35, 120, 20, 0)
 $EditWpButton = GUICtrlCreateButton("Edit Waypoint", 140, 35, 120, 20, 0)
 $DelWpButton = GUICtrlCreateButton("Delete Waypoint", 265, 35, 120, 20, 0)
 $SetDestButton = GUICtrlCreateButton("Use as Destination", 390, 35, 120, 20, 0)
+
+$ListviewWPs = GUICtrlCreateListView($headers, 2, 70, 978, 602, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+GUISetState()
 
 $Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 520, 0, 440, 60)
 $Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("", 530, 15, 17, 17)
@@ -476,20 +470,11 @@ GUICtrlCreateLabel("Longitude:", 705, 37, 50, 17)
 $cLon = GUICtrlCreateInput($DcLon, 760, 35, 100, 21)
 $But_GetCurrentGps = GUICtrlCreateButton("Get Current GPS", 865, 35, 90, 21, $WS_GROUP)
 
-;$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 155, 25, 300, 15)
-;GUICtrlSetColor(-1, $TextColor)
 $Lab_StartGPS = GUICtrlCreateLabel("", 140, 5, 380, 15)
 GUICtrlSetColor(-1, $TextColor)
 $Lab_DestGPS = GUICtrlCreateLabel("Dest GPS:     Not Set Yet", 140, 20, 380, 15)
 GUICtrlSetColor(-1, $TextColor)
-;$debugdisplay = GUICtrlCreateLabel('', 765, 10, 200, 15)
-;GUICtrlSetColor(-1, $TextColor)
-;$msgdisplay = GUICtrlCreateLabel('', 155, 40, 610, 15)
-;GUICtrlSetColor(-1, $TextColor)
 
-GUISetState(@SW_SHOW)
-
-GUISwitch($MysticacheGUI)
 _SetControlSizes()
 _SetListviewWidths()
 GUISetState(@SW_SHOW)
@@ -524,6 +509,9 @@ GUICtrlSetOnEvent($ExitMysticache, '_Exit')
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 ;GUICtrlSetOnEvent($Copy, '_CopyAP')
 
+;View Menu
+GUICtrlSetOnEvent($ViewWaypoints, '_ToggleWaypointView')
+
 ;Optons Menu
 GUICtrlSetOnEvent($But_SaveGpsHistory, '_SaveGpsHistoryToggle')
 GUICtrlSetOnEvent($But_AddWaypointsToTop, '_AddWpPosToggle')
@@ -547,7 +535,7 @@ GUICtrlSetOnEvent($OpenWptLink, '_OpenWptLink')
 GUICtrlSetOnEvent($AddToMysticacheDB, '_AddToMysticacheDB')
 
 ;Other
-GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
+GUICtrlSetOnEvent($ListviewWPs, '_SortColumnToggle')
 
 ;Set Listview Widths
 _SetListviewWidths()
@@ -680,19 +668,30 @@ Func _WinMoved();Checks if window has moved. Returns 1 if it has
 EndFunc   ;==>_WinMoved
 
 Func _SetControlSizes();Sets control positions in GUI based on the windows current size
-	$a = WinGetPos($MysticacheGUI)
-	WinMove($DataChild, "", 0, 60, $a[2] - 10, $a[3] - 115)
-	$b = WinGetPos($DataChild) ;get child window size
-	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
+	$a = _WinGetPosEx($MysticacheGUI) ;get mysticache window size
+	$AeroOn = @extended
+	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3]
 	If $sizes <> $sizes_old Or $Redraw = 1 Then
-		$Redraw = 0
-		$ListviewAPs_left = ($b[2] * 0.01)
-		$ListviewAPs_width = ($b[2] * 0.99) - $ListviewAPs_left
-		$ListviewAPs_top = ($b[3] * 0.01)
-		$ListviewAPs_height = ($b[3] * 0.99) - $ListviewAPs_top
+		$DataChild_Left = 2
+		$DataChild_Width = $a[2]
+		$DataChild_Top = 70
+		$DataChild_Height = $a[3] - $DataChild_Top
+		If $AeroOn = 1 Then ;Fix Widths for Aero
+			$DataChild_Width -= 16
+			$DataChild_Height -= 58
+		Else
+			$DataChild_Width -= 9
+			$DataChild_Height -= 48
+		EndIf
 
-		GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-		GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+		$Redraw = 0
+		$ListviewWPs_left = $DataChild_Left
+		$ListviewWPs_width = $DataChild_Width - $ListviewWPs_left
+		$ListviewWPs_top = $DataChild_Top
+		$ListviewWPs_height = $DataChild_Height
+
+		GUICtrlSetPos($ListviewWPs, $ListviewWPs_left, $ListviewWPs_top, $ListviewWPs_width, $ListviewWPs_height)
+		GUICtrlSetState($ListviewWPs, $GUI_FOCUS)
 	EndIf
 	$sizes_old = $sizes
 EndFunc   ;==>_SetControlSizes
@@ -727,7 +726,7 @@ Func _SaveSettings()
 	IniWrite($settings, "Language", "Language", $DefaultLanguage)
 	IniWrite($settings, "Language", "LanguageFile", $DefaultLanguageFile)
 
-	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
+	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewWPs), '|')
 	;_ArrayDisplay($currentcolumn)
 	For $c = 1 To $currentcolumn[0]
 		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
@@ -924,7 +923,7 @@ Func _RecoverMDB()
 				$DBAddPos = -1
 			EndIf
 			;Add Into ListView
-			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
+			$ListRow = _GUICtrlListView_InsertItem($ListviewWPs, $WPID, $DBAddPos)
 			_ListViewAdd($ListRow, $WPWPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($WPLat), _GpsFormat($WPLon), $WPBrng, $WPDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 			$query = "UPDATE WP SET ListRow='" & $ListRow & "' WHERE WPID='" & $WPWPID & "'"
 			_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
@@ -933,9 +932,9 @@ Func _RecoverMDB()
 EndFunc   ;==>_RecoverMDB
 
 Func _FixLineNumbers();Update Listview Row Numbers in DataArray
-	$ListViewSize = _GUICtrlListView_GetItemCount($ListviewAPs) - 1; Get List Size
+	$ListViewSize = _GUICtrlListView_GetItemCount($ListviewWPs) - 1; Get List Size
 	For $lisviewrow = 0 To $ListViewSize
-		$APNUM = _GUICtrlListView_GetItemText($ListviewAPs, $lisviewrow, $column_Line)
+		$APNUM = _GUICtrlListView_GetItemText($ListviewWPs, $lisviewrow, $column_Line)
 		$query = "UPDATE WP SET ListRow = '" & $lisviewrow & "' WHERE WPID = '" & $APNUM & "'"
 		_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 	Next
@@ -946,52 +945,52 @@ EndFunc   ;==>_FixLineNumbers
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _ListViewAdd($line, $Add_Line = '', $Add_Name = '', $Add_Desc = '', $Add_Notes = '', $Add_Latitude = '', $Add_Longitude = '', $Add_Bearing = '', $Add_Distance = '', $Add_Link = '', $Add_Auth = '', $Add_Type = '', $Add_Dif = '', $Add_Ter = '')
-	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Line, $column_Line)
-	If $Add_Name <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Name, $column_Name)
-	If $Add_Desc <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Desc, $column_Desc)
-	If $Add_Notes <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Notes, $column_Notes)
-	If $Add_Latitude <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Latitude, $column_Latitude)
-	If $Add_Longitude <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Longitude, $column_Longitude)
-	If $Add_Bearing <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Bearing, $column_Bearing)
-	If $Add_Distance <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Distance, $column_Distance)
-	If $Add_Link <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Link, $column_Link)
-	If $Add_Auth <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Auth, $column_Author)
-	If $Add_Type <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Type, $column_Type)
-	If $Add_Dif <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Dif, $column_Difficulty)
-	If $Add_Ter <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Ter, $column_Terrain)
+	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Line, $column_Line)
+	If $Add_Name <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Name, $column_Name)
+	If $Add_Desc <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Desc, $column_Desc)
+	If $Add_Notes <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Notes, $column_Notes)
+	If $Add_Latitude <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Latitude, $column_Latitude)
+	If $Add_Longitude <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Longitude, $column_Longitude)
+	If $Add_Bearing <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Bearing, $column_Bearing)
+	If $Add_Distance <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Distance, $column_Distance)
+	If $Add_Link <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Link, $column_Link)
+	If $Add_Auth <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Auth, $column_Author)
+	If $Add_Type <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Type, $column_Type)
+	If $Add_Dif <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Dif, $column_Difficulty)
+	If $Add_Ter <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Ter, $column_Terrain)
 EndFunc   ;==>_ListViewAdd
 
 Func _SetListviewWidths()
 	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Line - 0, $column_Width_Line - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Name - 0, $column_Width_Name - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Desc - 0, $column_Width_Desc - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Notes - 0, $column_Width_Notes - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Latitude - 0, $column_Width_Latitude - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Longitude - 0, $column_Width_Longitude - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Bearing - 0, $column_Width_Bearing - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Distance - 0, $column_Width_Distance - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Link - 0, $column_Width_Link - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Author - 0, $column_Width_Author - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Type - 0, $column_Width_Type - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Difficulty - 0, $column_Width_Difficulty - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Terrain - 0, $column_Width_Terrain - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Line - 0, $column_Width_Line - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Name - 0, $column_Width_Name - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Desc - 0, $column_Width_Desc - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Notes - 0, $column_Width_Notes - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Latitude - 0, $column_Width_Latitude - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Longitude - 0, $column_Width_Longitude - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Bearing - 0, $column_Width_Bearing - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Distance - 0, $column_Width_Distance - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Link - 0, $column_Width_Link - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Author - 0, $column_Width_Author - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Type - 0, $column_Width_Type - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Difficulty - 0, $column_Width_Difficulty - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Terrain - 0, $column_Width_Terrain - 0)
 EndFunc   ;==>_SetListviewWidths
 
 Func _GetListviewWidths()
-	$column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0)
-	$column_Width_Name = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Name - 0)
-	$column_Width_Desc = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Desc - 0)
-	$column_Width_Notes = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Notes - 0)
-	$column_Width_Latitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0)
-	$column_Width_Longitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0)
-	$column_Width_Bearing = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Bearing - 0)
-	$column_Width_Distance = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Distance - 0)
-	$column_Width_Link = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Link - 0)
-	$column_Width_Author = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Author - 0)
-	$column_Width_Type = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Type - 0)
-	$column_Width_Difficulty = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Difficulty - 0)
-	$column_Width_Terrain = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Terrain - 0)
+	$column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Line - 0)
+	$column_Width_Name = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Name - 0)
+	$column_Width_Desc = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Desc - 0)
+	$column_Width_Notes = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Notes - 0)
+	$column_Width_Latitude = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Latitude - 0)
+	$column_Width_Longitude = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Longitude - 0)
+	$column_Width_Bearing = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Bearing - 0)
+	$column_Width_Distance = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Distance - 0)
+	$column_Width_Link = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Link - 0)
+	$column_Width_Author = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Author - 0)
+	$column_Width_Type = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Type - 0)
+	$column_Width_Difficulty = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Difficulty - 0)
+	$column_Width_Terrain = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Terrain - 0)
 EndFunc   ;==>_GetListviewWidths
 
 Func _HeaderSort($column);Sort a column in ap list
@@ -1005,13 +1004,13 @@ Func _HeaderSort($column);Sort a column in ap list
 	Else
 		$Direction[$column] = 0
 	EndIf
-	_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column)
+	_GUICtrlListView_SimpleSort($ListviewWPs, $v_sort, $column)
 	_FixLineNumbers()
 	$SortColumn = -1
 EndFunc   ;==>_HeaderSort
 
 Func _SortColumnToggle(); Sets the ap list column header that was clicked
-	$SortColumn = GUICtrlGetState($ListviewAPs)
+	$SortColumn = GUICtrlGetState($ListviewWPs)
 EndFunc   ;==>_SortColumnToggle
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -1033,7 +1032,7 @@ Func _AddWpPosToggle()
 EndFunc   ;==>_AddWpPosToggle
 
 Func _OpenWptLink()
-	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what WP is selected in the list. returns -1 is nothing is selected
+	$Selected = _GUICtrlListView_GetNextItem($ListviewWPs); find what WP is selected in the list. returns -1 is nothing is selected
 	If $Selected <> -1 Then
 		;Get WPID and ListRow
 		$query = "SELECT Link FROM WP WHERE ListRow='" & $Selected & "'"
@@ -1068,14 +1067,11 @@ Func _ClearAllWp()
 	;Create Default GPS Track
 	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|Mysticache generated track')
 	;Clear Listview
-	GUISwitch($DataChild)
 	_GetListviewWidths()
-	GUICtrlDelete($ListviewAPs)
-	$ListviewAPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	$ListviewWPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 	_SetListviewWidths()
-	;GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
-	GUISwitch($MysticacheGUI)
+	;GUICtrlSetOnEvent($ListviewWPs, '_SortColumnToggle')
 	$Redraw = 1
 	_SetControlSizes()
 	$ClearAllWps = 0
@@ -1101,12 +1097,30 @@ Func _SaveGpsHistoryToggle()
 	EndIf
 EndFunc   ;==>_SaveGpsHistoryToggle
 
+Func _ToggleWaypointView()
+	If $VMode = 1 Then
+		$VMode = 2
+		GUICtrlSetState($AddWpButton, $GUI_HIDE)
+		GUICtrlSetState($EditWpButton, $GUI_HIDE)
+		GUICtrlSetState($DelWpButton, $GUI_HIDE)
+		GUICtrlSetState($SetDestButton, $GUI_HIDE)
+		GUICtrlSetState($ListviewWPs, $GUI_HIDE)
+	ElseIf $VMode = 2 Then
+		$VMode = 1
+		GUICtrlSetState($AddWpButton, $GUI_SHOW)
+		GUICtrlSetState($EditWpButton, $GUI_SHOW)
+		GUICtrlSetState($DelWpButton, $GUI_SHOW)
+		GUICtrlSetState($SetDestButton, $GUI_SHOW)
+		GUICtrlSetState($ListviewWPs, $GUI_SHOW)
+	EndIf
+EndFunc
+
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;BUTTON FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _SetDestination()
-	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	$Selected = _GUICtrlListView_GetNextItem($ListviewWPs); find what AP is selected in the list. returns -1 is nothing is selected
 	If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
 		$query = "SELECT Latitude, Longitude FROM WP WHERE ListRow='" & $Selected & "'"
 		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
@@ -1117,7 +1131,7 @@ Func _SetDestination()
 	Else
 		MsgBox(0, "Error", "No waypoint selected")
 	EndIf
-	GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+	GUICtrlSetState($ListviewWPs, $GUI_FOCUS)
 EndFunc   ;==>_SetDestination
 
 Func _AddWaypointGUI()
@@ -1210,7 +1224,7 @@ Func _AddWaypoint()
 			$DBAddPos = -1
 		EndIf
 		;Add Into ListView
-		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
+		$ListRow = _GUICtrlListView_InsertItem($ListviewWPs, $WPID, $DBAddPos)
 		_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 		_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPDesc & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 
@@ -1224,12 +1238,12 @@ EndFunc   ;==>_AddWaypoint
 Func _CloseAddWaypointGUI()
 	GUIDelete($AddWaypoingGui)
 	$AddWaypoingGuiOpen = 0
-	GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+	GUICtrlSetState($ListviewWPs, $GUI_FOCUS)
 EndFunc   ;==>_CloseAddWaypointGUI
 
 Func _EditWaypointGUI()
 	If $EditWaypoingGuiOpen = 0 Then
-		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+		$Selected = _GUICtrlListView_GetNextItem($ListviewWPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
 			$query = "SELECT WPID, ListRow, Name, Desc1, Notes, Latitude, Longitude, Bearing, Distance, Link, Type, Difficulty, Terrain, Author FROM WP WHERE ListRow='" & $Selected & "'"
 			$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
@@ -1299,7 +1313,7 @@ EndFunc   ;==>_EditWaypointGUI
 Func _CloseEditWaypointGUI()
 	GUIDelete($EditWaypoingGui)
 	$EditWaypoingGuiOpen = 0
-	GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+	GUICtrlSetState($ListviewWPs, $GUI_FOCUS)
 EndFunc   ;==>_CloseEditWaypointGUI
 
 Func _EditWaypoint()
@@ -1343,7 +1357,7 @@ Func _EditWaypoint()
 EndFunc   ;==>_EditWaypoint
 
 Func _DeleteWaypoint()
-	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what WP is selected in the list. returns -1 is nothing is selected
+	$Selected = _GUICtrlListView_GetNextItem($ListviewWPs); find what WP is selected in the list. returns -1 is nothing is selected
 	If $Selected <> -1 Then
 		;Get WPID and ListRow
 		$query = "SELECT WPID, ListRow FROM WP WHERE ListRow='" & $Selected & "'"
@@ -1351,7 +1365,7 @@ Func _DeleteWaypoint()
 		$DelWPID = $WpMatchArray[1][1]
 		$DelListRow = $WpMatchArray[1][2]
 		;Delete Waypoint from Listview
-		_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $DelListRow)
+		_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewWPs), $DelListRow)
 		;Delete Waypoint from DB
 		$query = "DELETE FROM WP WHERE WPID='" & $DelWPID & "'"
 		_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
@@ -2334,7 +2348,7 @@ Func _ImportGPX()
 						$DBAddPos = -1
 					EndIf
 					;Add Into ListView
-					$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
+					$ListRow = _GUICtrlListView_InsertItem($ListviewWPs, $WPID, $DBAddPos)
 
 					_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 					ConsoleWrite($WPID & '|' & $ListRow & '|' & $WPDesc & '|' & $WPName & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer & @CRLF)
@@ -2517,7 +2531,7 @@ Func _ImportLOC()
 						$DBAddPos = -1
 					EndIf
 					;Add Into ListView
-					$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
+					$ListRow = _GUICtrlListView_InsertItem($ListviewWPs, $WPID, $DBAddPos)
 
 					_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPDesc & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
