@@ -37,7 +37,6 @@ Next
 
 ;Variables-----------------------------------------------
 Dim $WPID = 0
-Dim $GPSID = 0
 Dim $TRACKID = 0
 Dim $TRACKSEGID = 0
 
@@ -84,7 +83,7 @@ Dim $SpeedInKmH = '0'
 Dim $TrackAngle = '0'
 
 Dim $AddWaypoingGuiOpen = 0
-Dim $AddWaypoingGui, $Rad_DestGPS_LatLon, $Rad_DestGPS_BrngDist, $GUI_AddName, $GUI_AddGCID, $GUI_AddNotes, $GUI_AddAuthor, $GUI_AddLink, $GUI_AddType, $GUI_AddDifficulty, $GUI_AddTerrain, $dLat, $dLon, $dBrng, $dDist, $dWPID, $dListRow
+Dim $AddWaypoingGui, $Rad_DestGPS_LatLon, $Rad_DestGPS_BrngDist, $GUI_AddName, $GUI_AddDesc, $GUI_AddNotes, $GUI_AddAuthor, $GUI_AddLink, $GUI_AddType, $GUI_AddDifficulty, $GUI_AddTerrain, $dLat, $dLon, $dBrng, $dDist, $dWPID, $dListRow
 Dim $EditWaypoingGui, $EditWaypoingGuiOpen
 
 Dim $winpos_old, $winpos, $sizes, $sizes_old
@@ -169,7 +168,7 @@ EndIf
 
 Dim $column_Name_Line = IniRead($settings, 'Column_Names', 'Column_Line', "#")
 Dim $column_Name_Name = IniRead($settings, 'Column_Names', 'Column_Name', "Name")
-Dim $column_Name_GCID = IniRead($settings, 'Column_Names', 'Column_GCID', "GC #")
+Dim $column_Name_Desc = IniRead($settings, 'Column_Names', 'Column_Desc', "Description")
 Dim $column_Name_Notes = IniRead($settings, 'Column_Names', 'Column_Notes', "Notes")
 Dim $column_Name_Latitude = IniRead($settings, 'Column_Names', 'Column_Latitude', "Latitude")
 Dim $column_Name_Longitude = IniRead($settings, 'Column_Names', 'Column_Longitude', "Longitude")
@@ -182,8 +181,8 @@ Dim $column_Name_Difficulty = IniRead($settings, 'Column_Names', 'Column_Difficu
 Dim $column_Name_Terrain = IniRead($settings, 'Column_Names', 'Column_Terrain', "Terrain")
 
 Dim $column_Width_Line = IniRead($settings, 'Column_Width', 'Column_Line', 35)
-Dim $column_Width_Name = IniRead($settings, 'Column_Width', 'Column_Name', 200)
-Dim $column_Width_GCID = IniRead($settings, 'Column_Width', 'Column_GCID', 75)
+Dim $column_Width_Name = IniRead($settings, 'Column_Width', 'Column_Name', 100)
+Dim $column_Width_Desc = IniRead($settings, 'Column_Width', 'Column_Desc', 200)
 Dim $column_Width_Notes = IniRead($settings, 'Column_Width', 'Column_Notes', 250)
 Dim $column_Width_Latitude = IniRead($settings, 'Column_Width', 'Column_Latitude', 100)
 Dim $column_Width_Longitude = IniRead($settings, 'Column_Width', 'Column_Longitude', 100)
@@ -334,7 +333,7 @@ Else
 	Else
 		Dim $column_Line = IniRead($settings, 'Columns', 'Column_Line', 0)
 		Dim $column_Name = IniRead($settings, 'Columns', 'Column_Name', 1)
-		Dim $column_GCID = IniRead($settings, 'Columns', 'Column_GCID', 2)
+		Dim $column_Desc = IniRead($settings, 'Columns', 'Column_Desc', 2)
 		Dim $column_Notes = IniRead($settings, 'Columns', 'Column_Notes', 3)
 		Dim $column_Latitude = IniRead($settings, 'Columns', 'Column_Latitude', 4)
 		Dim $column_Longitude = IniRead($settings, 'Columns', 'Column_Longitude', 5)
@@ -360,7 +359,7 @@ EndIf
 If $UseDefaultHeaders <> 0 Then
 	Dim $column_Line = 0
 	Dim $column_Name = 1
-	Dim $column_GCID = 2
+	Dim $column_Desc = 2
 	Dim $column_Notes = 3
 	Dim $column_Latitude = 4
 	Dim $column_Longitude = 5
@@ -372,7 +371,7 @@ If $UseDefaultHeaders <> 0 Then
 	Dim $column_Difficulty = 11
 	Dim $column_Terrain = 12
 
-	$headers = '#|Name|GC #|Notes|Latitude|Longitude|Bearing|Distance|Link|Author|Type|Difficulty|Terrain'
+	$headers = '#|Name|Description|Notes|Latitude|Longitude|Bearing|Distance|Link|Author|Type|Difficulty|Terrain'
 EndIf
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -420,8 +419,8 @@ $But_AddWaypointsToTop = GUICtrlCreateMenuItem("Add new waypoints to top of list
 If $AddDirection = 0 Then GUICtrlSetState($But_AddWaypointsToTop, $GUI_CHECKED)
 
 $View = GUICtrlCreateMenu("View")
-$ViewWaypoints = GUICtrlCreateMenuitem("Waypoints", $Edit)
-$ViewTrack = GUICtrlCreateMenuItem($Text_Copy, $Edit)
+$ViewWaypoints = GUICtrlCreateMenuitem("Waypoints", $View)
+$ViewTrack = GUICtrlCreateMenuItem("Tracks", $View)
 
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
 $SetGPS = GUICtrlCreateMenuItem("GPS Settings", $SettingsMenu)
@@ -572,8 +571,6 @@ While 1
 		If $GetGpsSuccess = 1 And $SaveGpsHistory = 1 Then
 			$TRACKSEGID += 1
 			_AddRecord($MysticacheDB, "TRACKSEG", $DB_OBJ, $TRACKSEGID & '|0|' & $Latitude & '|' & $Longitude & '|' & $Alt & '|' & $datestamp & 'T' & $timestamp & 'Z' & '||' & $TrackAngle & '|' & $Geo & '||' & $NumberOfSatalites & '|' & $HorDilPitch & '|||||' & $SpeedInKmH & '||||' & $Script_Name & '||||')
-			;$GPSID += 1
-			;_AddRecord($MysticacheDB, "GPS", $DB_OBJ, $GPSID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
 		EndIf
 		If $GetGpsSuccess = 1 Then $UpdatedGPS = 1
 	EndIf
@@ -734,7 +731,7 @@ Func _SaveSettings()
 	For $c = 1 To $currentcolumn[0]
 		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
 		If $column_Name = $currentcolumn[$c] Then $save_column_Name = $c - 1
-		If $column_GCID = $currentcolumn[$c] Then $save_column_GCID = $c - 1
+		If $column_Desc = $currentcolumn[$c] Then $save_column_Desc = $c - 1
 		If $column_Notes = $currentcolumn[$c] Then $save_column_Notes = $c - 1
 		If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
 		If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
@@ -749,7 +746,7 @@ Func _SaveSettings()
 
 	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
 	IniWrite($settings, "Columns", "Column_Name", $save_column_Name)
-	IniWrite($settings, "Columns", "Column_GCID", $save_column_GCID)
+	IniWrite($settings, "Columns", "Column_Desc", $save_column_Desc)
 	IniWrite($settings, "Columns", "Column_Notes", $save_column_Notes)
 	IniWrite($settings, "Columns", "Column_Latitude", $save_column_Latitude)
 	IniWrite($settings, "Columns", "Column_Longitude", $save_column_Longitude)
@@ -764,7 +761,7 @@ Func _SaveSettings()
 	_GetListviewWidths()
 	IniWrite($settings, "Column_Width", "Column_Line", $column_Width_Line)
 	IniWrite($settings, "Column_Width", "Column_Name", $column_Width_Name)
-	IniWrite($settings, "Column_Width", "Column_GCID", $column_Width_GCID)
+	IniWrite($settings, "Column_Width", "Column_Desc", $column_Width_Desc)
 	IniWrite($settings, "Column_Width", "Column_Notes", $column_Width_Notes)
 	IniWrite($settings, "Column_Width", "Column_Latitude", $column_Width_Latitude)
 	IniWrite($settings, "Column_Width", "Column_Longitude", $column_Width_Longitude)
@@ -779,7 +776,7 @@ Func _SaveSettings()
 
 	IniWrite($settings, "Column_Names", "Column_Line", $column_Name_Line)
 	IniWrite($settings, "Column_Names", "Column_Name", $column_Name_Name)
-	IniWrite($settings, "Column_Names", "Column_GCID", $column_Name_GCID)
+	IniWrite($settings, "Column_Names", "Column_Desc", $column_Name_Desc)
 	IniWrite($settings, "Column_Names", "Column_Notes", $column_Name_Notes)
 	IniWrite($settings, "Column_Names", "Column_Latitude", $column_Name_Latitude)
 	IniWrite($settings, "Column_Names", "Column_Longitude", $column_Name_Longitude)
@@ -872,7 +869,7 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'TRACK', $DB_OBJ)
 	_CreateTable($dbfile, 'TRACKSEG', $DB_OBJ)
 	;_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'WP', $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|GCID TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(255)|Bearing TEXT(255)|Distance TEXT(255)|Link TEXT(255)|Author TEXT(255)|Type TEXT(255)|Difficulty TEXT(255)|Terrain TEXT(255)')
+	_CreatMultipleFields($dbfile, 'WP', $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|Desc1 TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(255)|Bearing TEXT(255)|Distance TEXT(255)|Link TEXT(255)|Author TEXT(255)|Type TEXT(255)|Difficulty TEXT(255)|Terrain TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TRACK', $DB_OBJ, 'TRACKID TEXT(255)|TrackName TEXT(255)|TrackDesc TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TRACKSEG', $DB_OBJ, 'TRACKSEGID TEXT(255)|TRACKID TEXT(255)|lat TEXT(20)|lon TEXT(20)|ele TEXT(255)|time1 TEXT(255)|magvar TEXT(255)|course TEXT(255)|geoidheight TEXT(255)|fix TEXT(255)|sat TEXT(255)|hdop TEXT(255)|vdop TEXT(255)|pdop TEXT(255)|ageofgpsdata TEXT(255)|dgpsid TEXT(255)|speed TEXT(255)|name TEXT(255)|cmt TEXT(255)|desc1 TEXT(255)|src TEXT(255)|url TEXT(255)|urlname TEXT(255)|sym TEXT(255)|type TEXT(255)')
 	;Create Default GPS Track
@@ -881,10 +878,6 @@ EndFunc   ;==>_SetUpDbTables
 
 Func _RecoverMDB()
 	_AccessConnectConn($MysticacheDB, $DB_OBJ)
-	;Get total GPSIDs
-	$query = "Select COUNT(GpsID) FROM GPS"
-	$GpsMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
-	$GPSID = $GpsMatchArray[1][1]
 	;Get total WPIDs
 	$query = "Select COUNT(WPID) FROM WP"
 	$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
@@ -903,14 +896,14 @@ Func _RecoverMDB()
 
 	$query = "UPDATE WP SET ListRow = '-1'"
 	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
-	$query = "SELECT WPID, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link, Author, Type, Difficulty, Terrain FROM WP"
+	$query = "SELECT WPID, Name, Desc1, Notes, Latitude, Longitude, Bearing, Distance, Link, Author, Type, Difficulty, Terrain FROM WP"
 	$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 	$FoundWpMatch = UBound($WpMatchArray) - 1
 	If $FoundWpMatch <> 0 Then ;If WP is not found then add it
 		For $rl = 1 To $FoundWpMatch
 			$WPWPID = $WpMatchArray[$rl][1]
-			$WPName = $WpMatchArray[$rl][2]
-			$WPGCID = $WpMatchArray[$rl][3]
+			$WPDesc = $WpMatchArray[$rl][2]
+			$WPName = $WpMatchArray[$rl][3]
 			$WPNotes = $WpMatchArray[$rl][4]
 			$WPLat = $WpMatchArray[$rl][5]
 			$WPLon = $WpMatchArray[$rl][6]
@@ -931,7 +924,7 @@ Func _RecoverMDB()
 			EndIf
 			;Add Into ListView
 			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
-			_ListViewAdd($ListRow, $WPID, $WPName, $WPGCID, $WPNotes, _GpsFormat($WPLat), _GpsFormat($WPLon), $WPBrng, $WPDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+			_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($WPLat), _GpsFormat($WPLon), $WPBrng, $WPDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 			$query = "UPDATE WP SET ListRow='" & $ListRow & "' WHERE WPID='" & $WPWPID & "'"
 			_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 		Next
@@ -951,10 +944,10 @@ EndFunc   ;==>_FixLineNumbers
 ;LISTVIEW FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _ListViewAdd($line, $Add_Line = '', $Add_Name = '', $Add_GCID = '', $Add_Notes = '', $Add_Latitude = '', $Add_Longitude = '', $Add_Bearing = '', $Add_Distance = '', $Add_Link = '', $Add_Auth = '', $Add_Type = '', $Add_Dif = '', $Add_Ter = '')
+Func _ListViewAdd($line, $Add_Line = '', $Add_Name = '', $Add_Desc = '', $Add_Notes = '', $Add_Latitude = '', $Add_Longitude = '', $Add_Bearing = '', $Add_Distance = '', $Add_Link = '', $Add_Auth = '', $Add_Type = '', $Add_Dif = '', $Add_Ter = '')
 	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Line, $column_Line)
 	If $Add_Name <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Name, $column_Name)
-	If $Add_GCID <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_GCID, $column_GCID)
+	If $Add_Desc <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Desc, $column_Desc)
 	If $Add_Notes <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Notes, $column_Notes)
 	If $Add_Latitude <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Latitude, $column_Latitude)
 	If $Add_Longitude <> '' Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Longitude, $column_Longitude)
@@ -971,7 +964,7 @@ Func _SetListviewWidths()
 	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Line - 0, $column_Width_Line - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Name - 0, $column_Width_Name - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_GCID - 0, $column_Width_GCID - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Desc - 0, $column_Width_Desc - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Notes - 0, $column_Width_Notes - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Latitude - 0, $column_Width_Latitude - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Longitude - 0, $column_Width_Longitude - 0)
@@ -987,7 +980,7 @@ EndFunc   ;==>_SetListviewWidths
 Func _GetListviewWidths()
 	$column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0)
 	$column_Width_Name = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Name - 0)
-	$column_Width_GCID = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_GCID - 0)
+	$column_Width_Desc = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Desc - 0)
 	$column_Width_Notes = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Notes - 0)
 	$column_Width_Latitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0)
 	$column_Width_Longitude = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0)
@@ -1062,12 +1055,17 @@ EndFunc   ;==>_ClearAll
 Func _ClearAllWp()
 	;Reset Variables
 	$WPID = 0
-	$GPSID = 0
+	$TRACKID = 0
+	$TRACKSEGID = 0
 	;Clear DB
-	$query = "DELETE * FROM GPS"
-	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 	$query = "DELETE * FROM WP"
 	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM TRACK"
+	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+	$query = "DELETE * FROM TRACKSEG"
+	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+	;Create Default GPS Track
+	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|Mysticache generated track')
 	;Clear Listview
 	GUISwitch($DataChild)
 	_GetListviewWidths()
@@ -1131,7 +1129,7 @@ Func _AddWaypointGUI()
 		GUICtrlCreateLabel("Name:", 20, 31, 55, 17)
 		$GUI_AddName = GUICtrlCreateInput("", 80, 29, 401, 21)
 		GUICtrlCreateLabel("GC #:", 20, 63, 55, 17)
-		$GUI_AddGCID = GUICtrlCreateInput("", 80, 61, 401, 21)
+		$GUI_AddDesc = GUICtrlCreateInput("", 80, 61, 401, 21)
 		GUICtrlCreateLabel("Notes:", 20, 95, 55, 17)
 		$GUI_AddNotes = GUICtrlCreateInput("", 80, 93, 401, 21)
 		GUICtrlCreateLabel("Author:", 20, 128, 55, 17)
@@ -1167,8 +1165,8 @@ Func _AddWaypointGUI()
 EndFunc   ;==>_AddWaypointGUI
 
 Func _AddWaypoint()
-	$WPName = GUICtrlRead($GUI_AddName)
-	$WPGCID = GUICtrlRead($GUI_AddGCID)
+	$WPDesc = GUICtrlRead($GUI_AddName)
+	$WPName = GUICtrlRead($GUI_AddDesc)
 	$WPNotes = GUICtrlRead($GUI_AddNotes)
 	$WPLink = GUICtrlRead($GUI_AddLink)
 	$WPAuth = GUICtrlRead($GUI_AddAuthor)
@@ -1197,7 +1195,7 @@ Func _AddWaypoint()
 	EndIf
 	$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 	$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
-	$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPName, "'", "''") & "' And GCID = '" & StringReplace($WPGCID, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
+	$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPDesc, "'", "''") & "' And Desc1 = '" & StringReplace($WPName, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
 	$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 	$FoundWpMatch = UBound($WpMatchArray) - 1
 	If $FoundWpMatch = 0 Then ;If WP is not found then add it
@@ -1212,8 +1210,8 @@ Func _AddWaypoint()
 		EndIf
 		;Add Into ListView
 		$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
-		_ListViewAdd($ListRow, $WPID, $WPName, $WPGCID, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
-		_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPGCID & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
+		_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+		_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPDesc & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 
 		_CloseAddWaypointGUI()
 	Else
@@ -1232,12 +1230,12 @@ Func _EditWaypointGUI()
 	If $EditWaypoingGuiOpen = 0 Then
 		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
-			$query = "SELECT WPID, ListRow, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link, Type, Difficulty, Terrain, Author FROM WP WHERE ListRow='" & $Selected & "'"
+			$query = "SELECT WPID, ListRow, Name, Desc1, Notes, Latitude, Longitude, Bearing, Distance, Link, Type, Difficulty, Terrain, Author FROM WP WHERE ListRow='" & $Selected & "'"
 			$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 			$DB_WPID = $WpMatchArray[1][1]
 			$DB_ListRow = $WpMatchArray[1][2]
 			$DB_Name = $WpMatchArray[1][3]
-			$DB_GCID = $WpMatchArray[1][4]
+			$DB_Desc = $WpMatchArray[1][4]
 			$DB_Notes = $WpMatchArray[1][5]
 			$DB_Latitude = _GpsFormat($WpMatchArray[1][6])
 			$DB_Longitude = _GpsFormat($WpMatchArray[1][7])
@@ -1259,8 +1257,8 @@ Func _EditWaypointGUI()
 			GUICtrlCreateGroup("Waypoint Details", 10, 8, 481, 217)
 			GUICtrlCreateLabel("Name:", 20, 31, 55, 17)
 			$GUI_AddName = GUICtrlCreateInput($DB_Name, 80, 29, 401, 21)
-			GUICtrlCreateLabel("GC #:", 20, 63, 55, 17)
-			$GUI_AddGCID = GUICtrlCreateInput($DB_GCID, 80, 61, 401, 21)
+			GUICtrlCreateLabel("Desc:", 20, 63, 55, 17)
+			$GUI_AddDesc = GUICtrlCreateInput($DB_Desc, 80, 61, 401, 21)
 			GUICtrlCreateLabel("Notes:", 20, 95, 55, 17)
 			$GUI_AddNotes = GUICtrlCreateInput($DB_Notes, 80, 93, 401, 21)
 			GUICtrlCreateLabel("Author:", 20, 128, 55, 17)
@@ -1307,7 +1305,7 @@ Func _EditWaypoint()
 	$WPWPID = $dWPID
 	$WPListrow = $dListRow
 	$WPName = GUICtrlRead($GUI_AddName)
-	$WPGCID = GUICtrlRead($GUI_AddGCID)
+	$WPDesc = GUICtrlRead($GUI_AddDesc)
 	$WPNotes = GUICtrlRead($GUI_AddNotes)
 	$WPLink = GUICtrlRead($GUI_AddLink)
 	$WPAuth = GUICtrlRead($GUI_AddAuthor)
@@ -1336,8 +1334,8 @@ Func _EditWaypoint()
 	$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 	$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 
-	_ListViewAdd($WPListrow, $WPWPID, $WPName, $WPGCID, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
-	$query = "UPDATE WP SET Name='" & StringReplace($WPName, "'", "''") & "', GCID='" & StringReplace($WPGCID, "'", "''") & "', Notes='" & StringReplace($WPNotes, "'", "''") & "', Latitude='" & $DestLat & "', Longitude='" & $DestLon & "', Bearing='" & $DestBrng & "', Distance='" & $DestDist & "' WHERE WPID='" & $WPWPID & "'"
+	_ListViewAdd($WPListrow, $WPWPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+	$query = "UPDATE WP SET Name = '" & StringReplace($WPName, "'", "''") & "', Desc1 = '" & StringReplace($WPDesc, "'", "''") & "', Notes = '" & StringReplace($WPNotes, "'", "''") & "', Latitude = '" & $DestLat & "', Longitude = '" & $DestLon & "', Bearing = '" & $DestBrng & "', Distance = '" & $DestDist & "' WHERE WPID = '" & $WPWPID & "'"
 	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 
 	_CloseEditWaypointGUI()
@@ -2259,7 +2257,7 @@ Func _ImportGPX()
 		For $X = 1 To $GpxArray[0]
 			If $GpxArray[$X] = "wpt" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> wpt" & @CRLF)
-				Local $ImpLat, $ImpLon, $ImpGCID, $ImpNotes, $ImpName, $ImpLink, $ImpAuth, $ImpType, $ImpDif, $ImpTer
+				Local $ImpLat, $ImpLon, $ImpDesc, $ImpNotes, $ImpName, $ImpLink, $ImpAuth, $ImpType, $ImpDif, $ImpTer
 				Local $aKeys[1], $aValues[1] ;Arrays used for attributes
 				_XMLGetAllAttrib($path & "/*[" & $X & "]", $aKeys, $aValues) ;Retrieve all attributes
 				If Not @error Then
@@ -2279,7 +2277,7 @@ Func _ImportGPX()
 						$WptFieldPath = $WptDataPath & "/*[" & $X1 & "]"
 						$WptFieldValueArray = _XMLGetValue($WptDataPath & "/*[" & $X1 & "]")
 						If IsArray($WptFieldValueArray) Then
-							If $WptDataArray[$X1] = "name" Then $ImpGCID = $WptFieldValueArray[1]
+							If $WptDataArray[$X1] = "name" Then $ImpDesc = $WptFieldValueArray[1]
 							If $WptDataArray[$X1] = "desc" Then
 								If StringInStr($WptFieldValueArray[1], ' by ') Then
 									$descarr1 = StringSplit($WptFieldValueArray[1], ' by ', 1)
@@ -2307,10 +2305,10 @@ Func _ImportGPX()
 						EndIf
 					Next
 				EndIf
-				ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpGCID & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpAuth & " - " & $ImpType & " - " & $ImpDif & " - " & $ImpTer & @CRLF)
+				ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpDesc & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpAuth & " - " & $ImpType & " - " & $ImpDif & " - " & $ImpTer & @CRLF)
 
-				$WPName = $ImpName
-				$WPGCID = $ImpGCID
+				$WPDesc = $ImpName
+				$WPName = $ImpDesc
 				$WPNotes = $ImpNotes
 				$WPLink = $ImpLink
 				$WPAuth = $ImpAuth
@@ -2322,7 +2320,7 @@ Func _ImportGPX()
 				$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 				$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 
-				$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPName, "'", "''") & "' And GCID = '" & StringReplace($WPGCID, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
+				$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPName, "'", "''") & "' And Desc1 = '" & StringReplace($WPDesc, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
 				$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 				$FoundWpMatch = UBound($WpMatchArray) - 1
 				If $FoundWpMatch = 0 Then ;If WP is not found then add it
@@ -2337,8 +2335,11 @@ Func _ImportGPX()
 					EndIf
 					;Add Into ListView
 					$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
-					_ListViewAdd($ListRow, $WPID, $WPName, $WPGCID, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
-					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPGCID & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
+
+					_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+					ConsoleWrite($WPID & '|' & $ListRow & '|' & $WPDesc & '|' & $WPName & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer & @CRLF)
+					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPDesc & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
+
 				EndIf
 
 			ElseIf $GpxArray[$X] = "trk" Then
@@ -2431,8 +2432,8 @@ Func _ImportLOC()
 	$LocArray = _XMLGetChildNodes($path)
 	If IsArray($LocArray) Then
 		For $X = 1 To $LocArray[0]
-			Local $ImpLat = "", $ImpLon = "", $ImpGCID = "", $ImpNotes = "", $ImpName = "", $ImpLink = "", $ImpAuth = "", $ImpType = "", $ImpDif = "", $ImpTer = ""
-			ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpGCID & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpLink & @CRLF)
+			Local $ImpLat = "", $ImpLon = "", $ImpDesc = "", $ImpNotes = "", $ImpName = "", $ImpLink = "", $ImpAuth = "", $ImpType = "", $ImpDif = "", $ImpTer = ""
+			ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpDesc & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpLink & @CRLF)
 			If $LocArray[$X] = "waypoint" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> wpt" & @CRLF)
 				ConsoleWrite($path & "/*[" & $X & "]" & @CRLF)
@@ -2464,7 +2465,7 @@ Func _ImportLOC()
 								If Not @error Then
 									For $y = 0 To UBound($aKeys) - 1
 										;ConsoleWrite($aKeys[$Y] & "=" & $aValues[$Y] & ", ") ;Output all attributes
-										If $aKeys[$y] = "id" Then $ImpGCID = $aValues[$y]
+										If $aKeys[$y] = "id" Then $ImpDesc = $aValues[$y]
 									Next
 								EndIf
 							EndIf
@@ -2487,10 +2488,10 @@ Func _ImportLOC()
 						EndIf
 					Next
 				EndIf
-				ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpGCID & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpLink & @CRLF)
+				ConsoleWrite($ImpLat & " - " & $ImpLon & " - " & $ImpDesc & " - " & $ImpNotes & " - " & $ImpName & " - " & $ImpLink & @CRLF)
 
-				$WPName = $ImpName
-				$WPGCID = $ImpGCID
+				$WPDesc = $ImpName
+				$WPName = $ImpDesc
 				$WPNotes = $ImpNotes
 				$WPLink = $ImpLink
 				$WPAuth = $ImpAuth
@@ -2502,7 +2503,7 @@ Func _ImportLOC()
 				$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 				$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 
-				$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPName, "'", "''") & "' And GCID = '" & StringReplace($WPGCID, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
+				$query = "SELECT TOP 1 WPID FROM WP WHERE Name = '" & StringReplace($WPDesc, "'", "''") & "' And Desc1 = '" & StringReplace($WPName, "'", "''") & "' And Latitude = '" & $DestLat & "' And Longitude = '" & $DestLon & "'"
 				$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 				$FoundWpMatch = UBound($WpMatchArray) - 1
 				If $FoundWpMatch = 0 Then ;If WP is not found then add it
@@ -2517,8 +2518,9 @@ Func _ImportLOC()
 					EndIf
 					;Add Into ListView
 					$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
-					_ListViewAdd($ListRow, $WPID, $WPName, $WPGCID, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
-					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPGCID & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
+
+					_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPDesc & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 				EndIf
 
 			EndIf
@@ -2569,7 +2571,7 @@ Func _SaveKml($kml, $MapGpsTrack = 1, $MapGpsWpts = 1)
 				 & '</Style>' & @CRLF
 	EndIf
 	If $MapGpsWpts = 1 Then
-		$query = "SELECT WPID, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link FROM WP"
+		$query = "SELECT WPID, Name, Desc1, Notes, Latitude, Longitude, Bearing, Distance, Link FROM WP"
 		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 		$FoundWpMatch = UBound($WpMatchArray) - 1
 		If $FoundWpMatch <> 0 Then
@@ -2664,7 +2666,7 @@ Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 			 & '<desc>Geocache file generated by ' & $Script_Name & '</desc>' & @CRLF _
 			 & '<author>' & $Script_Name & '</author>' & @CRLF
 	If $MapGpsWpts = 1 Then
-		$query = "SELECT WPID, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link, Author, Type, Difficulty, Terrain FROM WP"
+		$query = "SELECT WPID, Name, Desc1, Notes, Latitude, Longitude, Bearing, Distance, Link, Author, Type, Difficulty, Terrain FROM WP"
 		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 		$FoundWpMatch = UBound($WpMatchArray) - 1
 		If $FoundWpMatch <> 0 Then
@@ -2804,7 +2806,7 @@ Func _SaveLOC($gpx, $MapGpsWpts = 1)
 	$file = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' & @CRLF _
 			 & '<loc version="1.0" src="' & $Script_Name & '">' & @CRLF
 	If $MapGpsWpts = 1 Then
-		$query = "SELECT WPID, Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link, Author, Type, Difficulty, Terrain FROM WP"
+		$query = "SELECT WPID, Name, Desc1, Notes, Latitude, Longitude, Bearing, Distance, Link, Author, Type, Difficulty, Terrain FROM WP"
 		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 		$FoundWpMatch = UBound($WpMatchArray) - 1
 		If $FoundWpMatch <> 0 Then
@@ -2865,17 +2867,17 @@ Func _ExportCsvDataGui($Filter = 0);Saves data to a selected file
 EndFunc   ;==>_ExportCsvDataGui
 
 Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
-	FileWriteLine($savefile, "Name, GCID, Notes, Start Latitude, Start Longitude, Waypoint Latitude, Waypoint Longitude, Bearing, Distance, Link")
+	FileWriteLine($savefile, "Name, Desc, Notes, Start Latitude, Start Longitude, Waypoint Latitude, Waypoint Longitude, Bearing, Distance, Link")
 	;If $Filter = 1 Then
 	;	$query = $AddQuery
 	;Else
-	$query = "SELECT Name, GCID, Notes, Latitude, Longitude, Bearing, Distance, Link FROM WP"
+	$query = "SELECT Name, Desc1, Notes, Latitude, Longitude, Bearing, Distance, Link FROM WP"
 	;EndIf
 	$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 	$FoundWpMatch = UBound($WpMatchArray) - 1
 	For $exp = 1 To $FoundWpMatch
 		$ExpName = '"' & $WpMatchArray[$exp][1] & '"'
-		$ExpGCID = '"' & $WpMatchArray[$exp][2] & '"'
+		$ExpDesc = '"' & $WpMatchArray[$exp][2] & '"'
 		$ExpNotes = '"' & $WpMatchArray[$exp][3] & '"'
 		$ExpStartLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($StartLat), 'S', '-'), 'N', ''), ' ', '')
 		$ExpStartLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($StartLon), 'W', '-'), 'E', ''), ' ', '')
@@ -2885,7 +2887,7 @@ Func _ExportToCSV($savefile, $Filter = 0);writes vistumbler data to a txt file
 		$ExpDist = $WpMatchArray[$exp][7]
 		$ExpLink = '"' & $WpMatchArray[$exp][8] & '"'
 
-		FileWriteLine($savefile, $ExpName & ',' & $ExpGCID & ',' & $ExpNotes & ',' & $ExpStartLat & ',' & $ExpStartLon & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpBrng & ',' & $ExpDist & ',' & $ExpLink)
+		FileWriteLine($savefile, $ExpName & ',' & $ExpDesc & ',' & $ExpNotes & ',' & $ExpStartLat & ',' & $ExpStartLon & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpBrng & ',' & $ExpDist & ',' & $ExpLink)
 	Next
 EndFunc   ;==>_ExportToCSV
 
