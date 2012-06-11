@@ -2254,7 +2254,6 @@ Func _ImportGPX()
 	$path = "/*[1]"
 	$GpxArray = _XMLGetChildNodes($path)
 	If IsArray($GpxArray) Then
-		_ArrayDisplay($GpxArray)
 		For $X = 1 To $GpxArray[0]
 			If $GpxArray[$X] = "wpt" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> wpt" & @CRLF)
@@ -2348,12 +2347,12 @@ Func _ImportGPX()
 				Local $TrackName, $TrackDesc
 				$TrkDataPath = $path & "/*[" & $X & "]"
 				$TrkDataArray = _XMLGetChildNodes($TrkDataPath)
-				ConsoleWrite($TrkDataPath & @CRLF)
+				;ConsoleWrite($TrkDataPath & @CRLF)
 				If IsArray($TrkDataArray) Then
 					For $X1 = 1 To $TrkDataArray[0]
 						$TrkFieldPath = $TrkDataPath & "/*[" & $X1 & "]"
 						$TrkFieldValueArray = _XMLGetValue($TrkDataPath & "/*[" & $X1 & "]")
-						ConsoleWrite($TrkFieldPath & @CRLF)
+						;ConsoleWrite($TrkFieldPath & @CRLF)
 						If IsArray($TrkFieldValueArray) Then
 							If $TrkDataArray[$X1] = "name" Then $TrackName = $TrkFieldValueArray[1]
 							If $TrkDataArray[$X1] = "desc" Then $TrackDesc = $TrkFieldValueArray[1]
@@ -2368,7 +2367,7 @@ Func _ImportGPX()
 										Local $TrackLat, $TrackLon, $TrackElev, $TrackTime, $TrackMagvar, $TrackCourse, $TrackGeoidHeight, $TrackFix, $TrackSat, $TrackHdop, $TrackVdop, $TrackPdop, $TrackAgeOfGpsData, $TrackDgpsid, $TrackSpeed, $TrackptName, $TrackCmt, $TrackDesc, $TrackSrc, $TrackUrl, $TrackUrlName, $TrackSym, $TrackType
 										If $TrkSegArray[$X2] = "trkpt" Then
 											$TrkptPath = $TrkFieldPath & "/*[" & $X2 & "]"
-											ConsoleWrite($TrkptPath & @CRLF)
+											;ConsoleWrite($TrkptPath & @CRLF)
 											Local $aKeys[1], $aValues[1] ;Arrays used for attributes
 											_XMLGetAllAttrib($TrkptPath, $aKeys, $aValues) ;Retrieve all attributes
 											If Not @error Then
@@ -2384,7 +2383,7 @@ Func _ImportGPX()
 												For $X3 = 1 To $TrkptArray[0]
 													$TrkptFieldPath = $TrkptPath & "/*[" & $X3 & "]"
 													$TrkptFieldValueArray = _XMLGetValue($TrkptFieldPath)
-													ConsoleWrite($TrkptFieldPath & @CRLF)
+													;ConsoleWrite($TrkptFieldPath & @CRLF)
 													If IsArray($TrkptFieldValueArray) Then
 														If $TrkptArray[$X3] = "ele" Then $TrackElev = $TrkptFieldValueArray[1]
 														If $TrkptArray[$X3] = "time" Then $TrackTime = $TrkptFieldValueArray[1]
@@ -2422,7 +2421,7 @@ Func _ImportGPX()
 				EndIf
 			EndIf
 		Next
-
+		MsgBox(0, "Done", "Import complete")
 	EndIf
 EndFunc   ;==>_ImportGPX
 
@@ -2526,7 +2525,7 @@ Func _ImportLOC()
 
 			EndIf
 		Next
-
+		MsgBox(0, "Done", "Import complete")
 	EndIf
 EndFunc   ;==>_ImportLOC
 
@@ -2674,7 +2673,7 @@ Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 			For $exp = 1 To $FoundWpMatch
 				$ExpWPID = $WpMatchArray[$exp][1]
 				$ExpName = _XMLSanitize($WpMatchArray[$exp][2])
-				$ExpGPID = _XMLSanitize($WpMatchArray[$exp][3])
+				$ExpDesc = _XMLSanitize($WpMatchArray[$exp][3])
 				$ExpNotes = _XMLSanitize($WpMatchArray[$exp][4])
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][5]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][6]), 'W', '-'), 'E', ''), ' ', '')
@@ -2689,10 +2688,10 @@ Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 
 				If $ExpLat <> '0.0000000' And $ExpLon <> '-0.0000000' Then
 					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
-							 & '<name>' & $ExpGPID & '</name>' & @CRLF _
-							 & '<desc>' & $ExpName & ' by ' & $ExpAuth & ', ' & $ExpType & ' (' & $ExpDif & '/' & $ExpTer & ')</desc>' & @CRLF _
+							 & '<name>' & $ExpName & '</name>' & @CRLF _
+							 & '<desc>' & $ExpDesc & ' by ' & $ExpAuth & ', ' & $ExpType & ' (' & $ExpDif & '/' & $ExpTer & ')</desc>' & @CRLF _
 							 & '<url>' & $ExpLink & '</url>' & @CRLF _
-							 & '<urlname>' & $ExpName & '</urlname>' & @CRLF _
+							 & '<urlname>' & $ExpDesc & '</urlname>' & @CRLF _
 							 & '<Notes>' & $ExpNotes & '</Notes>' & @CRLF _
 							 & '</wpt>' & @CRLF
 				EndIf
@@ -2814,7 +2813,7 @@ Func _SaveLOC($gpx, $MapGpsWpts = 1)
 			For $exp = 1 To $FoundWpMatch
 				$ExpWPID = $WpMatchArray[$exp][1]
 				$ExpName = $WpMatchArray[$exp][2]
-				$ExpGPID = _XMLSanitize($WpMatchArray[$exp][3])
+				$ExpDesc = _XMLSanitize($WpMatchArray[$exp][3])
 				$ExpNotes = _XMLSanitize($WpMatchArray[$exp][4])
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][5]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($WpMatchArray[$exp][6]), 'W', '-'), 'E', ''), ' ', '')
@@ -2828,11 +2827,11 @@ Func _SaveLOC($gpx, $MapGpsWpts = 1)
 
 				If $ExpLat <> '0.0000000' And $ExpLon <> '-0.0000000' Then
 					$file &= '	<waypoint>' & @CRLF _
-							 & '		<name id="' & $ExpGPID & '"><![CDATA[' & $ExpName & ' by ' & $ExpAuth & ' (' & $ExpDif & '/' & $ExpTer & ')]]></name>' & @CRLF _
+							 & '		<name id="' & $ExpName & '"><![CDATA[' & $ExpDesc & ' by ' & $ExpAuth & ' (' & $ExpDif & '/' & $ExpTer & ')]]></name>' & @CRLF _
 							 & '		<coord lat="' & $ExpLat & '" lon="' & $ExpLon & '"/>' & @CRLF _
 							 & '		<type>Geocache</type>' & @CRLF _
 							 & '		<link text="Waypoint Details">' & $ExpLink & '</link>' & @CRLF
-					If $ExpName <> '' Then $file &= '		<urlname>' & _XMLSanitize($ExpName) & '</urlname>' & @CRLF
+					If $ExpName <> '' Then $file &= '		<urlname>' & _XMLSanitize($ExpDesc) & '</urlname>' & @CRLF
 					If $ExpNotes <> '' Then $file &= '		<Notes>' & $ExpNotes & '</Notes>' & @CRLF
 					If $ExpType <> '' Then $file &= '		<CacheType>' & $ExpType & '</CacheType>' & @CRLF
 					$file &= '	</waypoint>' & @CRLF
