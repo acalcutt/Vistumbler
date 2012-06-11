@@ -890,7 +890,7 @@ Func _RecoverMDB()
 	$TRACKID = $TrackMatchArray[1][1]
 	ConsoleWrite("TRACKID:" & $TRACKID & @CRLF)
 	;Get total TRACKSEGIDs
-	$query = "Select COUNT(TRACKSEGID) FROM TRACSEG"
+	$query = "Select COUNT(TRACKSEGID) FROM TRACKSEG"
 	$TackSegMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 	$TRACKSEGID = $TackSegMatchArray[1][1]
 	ConsoleWrite("TRACKSEGID:" & $TRACKSEGID & @CRLF)
@@ -925,7 +925,7 @@ Func _RecoverMDB()
 			EndIf
 			;Add Into ListView
 			$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $WPID, $DBAddPos)
-			_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($WPLat), _GpsFormat($WPLon), $WPBrng, $WPDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+			_ListViewAdd($ListRow, $WPWPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($WPLat), _GpsFormat($WPLon), $WPBrng, $WPDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 			$query = "UPDATE WP SET ListRow='" & $ListRow & "' WHERE WPID='" & $WPWPID & "'"
 			_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 		Next
