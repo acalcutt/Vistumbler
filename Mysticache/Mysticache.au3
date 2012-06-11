@@ -1,6 +1,6 @@
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Images\mysticache.ico
-#AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
+#AutoIt3Wrapper_Icon=Images\mysticache.ico
+#AutoIt3Wrapper_res_requestedExecutionLevel=asInvoker
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 Opt("GUIOnEventMode", 1);Change to OnEvent mode
 ;--------------------------------------------------------
@@ -425,7 +425,8 @@ $But_AddWaypointsToTop = GUICtrlCreateMenuItem("Add new waypoints to top of list
 If $AddDirection = 0 Then GUICtrlSetState($But_AddWaypointsToTop, $GUI_CHECKED)
 
 $View = GUICtrlCreateMenu("View")
-$ViewWaypoints = GUICtrlCreateMenuitem("Waypoints", $View)
+$ViewWaypoints = GUICtrlCreateMenuItem("Waypoints", $View)
+GUICtrlSetState($ViewWaypoints, $GUI_CHECKED)
 $ViewTrack = GUICtrlCreateMenuItem("Tracks", $View)
 
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
@@ -449,14 +450,23 @@ $OpenWptLink = GUICtrlCreateMenuItem("Open Waypoint Link", $Extra)
 $AddToMysticacheDB = GUICtrlCreateMenuItem("Upload Data to MysticacheDB", $Extra)
 
 $But_UseGPS = GUICtrlCreateButton($Text_UseGPS, 15, 8, 120, 20, 0)
+;Waypoint Controls
 $AddWpButton = GUICtrlCreateButton("Add Waypoint", 15, 35, 120, 20, 0)
 $EditWpButton = GUICtrlCreateButton("Edit Waypoint", 140, 35, 120, 20, 0)
 $DelWpButton = GUICtrlCreateButton("Delete Waypoint", 265, 35, 120, 20, 0)
 $SetDestButton = GUICtrlCreateButton("Use as Destination", 390, 35, 120, 20, 0)
-
 $ListviewWPs = GUICtrlCreateListView($headers, 2, 70, 978, 602, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
-GUISetState()
+;Track Controls
+$AddTrkButton = GUICtrlCreateButton("Add Track", 15, 35, 120, 20, 0)
+GUICtrlSetState($AddTrkButton, $GUI_HIDE)
+$EditTrkButton = GUICtrlCreateButton("Edit Track", 140, 35, 120, 20, 0)
+GUICtrlSetState($EditTrkButton, $GUI_HIDE)
+$DelTrkButton = GUICtrlCreateButton("Delete Track", 265, 35, 120, 20, 0)
+GUICtrlSetState($DelTrkButton, $GUI_HIDE)
+$ListviewTrks = GUICtrlCreateListView("Name|Desc", 2, 70, 978, 602, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+GUICtrlSetState($ListviewTrks, $GUI_HIDE)
+GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 
 $Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 520, 0, 440, 60)
 $Rad_StartGPS_CurrentPos = GUICtrlCreateRadio("", 530, 15, 17, 17)
@@ -511,6 +521,7 @@ GUICtrlSetOnEvent($ClearAll, '_ClearAll')
 
 ;View Menu
 GUICtrlSetOnEvent($ViewWaypoints, '_ToggleWaypointView')
+GUICtrlSetOnEvent($ViewTrack, '_ToggleTrackView')
 
 ;Optons Menu
 GUICtrlSetOnEvent($But_SaveGpsHistory, '_SaveGpsHistoryToggle')
@@ -864,16 +875,14 @@ Func _SetUpDbTables($dbfile)
 	;If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetUpDbTables()') ;#Debug Display
 	_CreateDB($dbfile)
 	_AccessConnectConn($dbfile, $DB_OBJ)
-	;_CreateTable($dbfile, 'GPS', $DB_OBJ)
 	_CreateTable($dbfile, 'WP', $DB_OBJ)
 	_CreateTable($dbfile, 'TRACK', $DB_OBJ)
 	_CreateTable($dbfile, 'TRACKSEG', $DB_OBJ)
-	;_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'WP', $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|Desc1 TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(255)|Bearing TEXT(255)|Distance TEXT(255)|Link TEXT(255)|Author TEXT(255)|Type TEXT(255)|Difficulty TEXT(255)|Terrain TEXT(255)')
-	_CreatMultipleFields($dbfile, 'TRACK', $DB_OBJ, 'TRACKID TEXT(255)|TrackName TEXT(255)|TrackDesc TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TRACK', $DB_OBJ, 'TRACKID TEXT(255)|name TEXT(255)|desc1 TEXT(255)|cmt TEXT(255)|src TEXT(255)|url TEXT(255)|urlname TEXT(255)|number1 TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TRACKSEG', $DB_OBJ, 'TRACKSEGID TEXT(255)|TRACKID TEXT(255)|lat TEXT(20)|lon TEXT(20)|ele TEXT(255)|time1 TEXT(255)|magvar TEXT(255)|course TEXT(255)|geoidheight TEXT(255)|fix TEXT(255)|sat TEXT(255)|hdop TEXT(255)|vdop TEXT(255)|pdop TEXT(255)|ageofgpsdata TEXT(255)|dgpsid TEXT(255)|speed TEXT(255)|name TEXT(255)|cmt TEXT(255)|desc1 TEXT(255)|src TEXT(255)|url TEXT(255)|urlname TEXT(255)|sym TEXT(255)|type TEXT(255)')
 	;Create Default GPS Track
-	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|Mysticache generated track')
+	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|||' & $Script_Name & '|||')
 EndFunc   ;==>_SetUpDbTables
 
 Func _RecoverMDB()
@@ -1046,7 +1055,7 @@ Func _OpenWptLink()
 	Else
 		MsgBox(0, "Error", "No waypoint selected")
 	EndIf
-EndFunc
+EndFunc   ;==>_OpenWptLink
 
 Func _ClearAll();Clear all WPs
 	$ClearAllWps = 1
@@ -1065,7 +1074,7 @@ Func _ClearAllWp()
 	$query = "DELETE * FROM TRACKSEG"
 	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 	;Create Default GPS Track
-	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|Mysticache generated track')
+	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|||' & $Script_Name & '|||')
 	;Clear Listview
 	_GetListviewWidths()
 	$ListviewWPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
@@ -1075,17 +1084,17 @@ Func _ClearAllWp()
 	$Redraw = 1
 	_SetControlSizes()
 	$ClearAllWps = 0
-EndFunc   ;==>_ClearAllAp
+EndFunc   ;==>_ClearAllWp
 
 Func _AddToMysticacheDB()
-	$DbFile = $SaveDir & $ldatetimestamp & '.GPX'
-	FileDelete($DbFile)
-	If _SaveGPX($DbFile, 0, 1) = 1 Then
+	$dbfile = $SaveDir & $ldatetimestamp & '.GPX'
+	FileDelete($dbfile)
+	If _SaveGPX($dbfile, 0, 1) = 1 Then
 		$url_root = $PhilsWdbURL & 'login.php?return=/wifidb/cp/?func%3Dboeyes%26boeye_func%3Dimport_gpx%26'
-		$url_data = "file%3D" & $DbFile
+		$url_data = "file%3D" & $dbfile
 		Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 	EndIf
-EndFunc   ;==>_AddToYourWDB
+EndFunc   ;==>_AddToMysticacheDB
 
 Func _SaveGpsHistoryToggle()
 	If $SaveGpsHistory = 1 Then
@@ -1097,23 +1106,39 @@ Func _SaveGpsHistoryToggle()
 	EndIf
 EndFunc   ;==>_SaveGpsHistoryToggle
 
+Func _ToggleTrackView()
+	$VMode = 2
+	GUICtrlSetState($ViewTrack, $GUI_CHECKED)
+	GUICtrlSetState($ViewWaypoints, $GUI_UNCHECKED)
+	;Hide waypoint gui items
+	GUICtrlSetState($AddWpButton, $GUI_HIDE)
+	GUICtrlSetState($EditWpButton, $GUI_HIDE)
+	GUICtrlSetState($DelWpButton, $GUI_HIDE)
+	GUICtrlSetState($SetDestButton, $GUI_HIDE)
+	GUICtrlSetState($ListviewWPs, $GUI_HIDE)
+	;Show track gui items
+	GUICtrlSetState($AddTrkButton, $GUI_SHOW)
+	GUICtrlSetState($EditTrkButton, $GUI_SHOW)
+	GUICtrlSetState($DelTrkButton, $GUI_SHOW)
+	GUICtrlSetState($ListviewTrks, $GUI_SHOW)
+EndFunc   ;==>_ToggleTrackView
+
 Func _ToggleWaypointView()
-	If $VMode = 1 Then
-		$VMode = 2
-		GUICtrlSetState($AddWpButton, $GUI_HIDE)
-		GUICtrlSetState($EditWpButton, $GUI_HIDE)
-		GUICtrlSetState($DelWpButton, $GUI_HIDE)
-		GUICtrlSetState($SetDestButton, $GUI_HIDE)
-		GUICtrlSetState($ListviewWPs, $GUI_HIDE)
-	ElseIf $VMode = 2 Then
-		$VMode = 1
-		GUICtrlSetState($AddWpButton, $GUI_SHOW)
-		GUICtrlSetState($EditWpButton, $GUI_SHOW)
-		GUICtrlSetState($DelWpButton, $GUI_SHOW)
-		GUICtrlSetState($SetDestButton, $GUI_SHOW)
-		GUICtrlSetState($ListviewWPs, $GUI_SHOW)
-	EndIf
-EndFunc
+	$VMode = 1
+	GUICtrlSetState($ViewWaypoints, $GUI_CHECKED)
+	GUICtrlSetState($ViewTrack, $GUI_UNCHECKED)
+	;Show waypoint gui items
+	GUICtrlSetState($AddWpButton, $GUI_SHOW)
+	GUICtrlSetState($EditWpButton, $GUI_SHOW)
+	GUICtrlSetState($DelWpButton, $GUI_SHOW)
+	GUICtrlSetState($SetDestButton, $GUI_SHOW)
+	GUICtrlSetState($ListviewWPs, $GUI_SHOW)
+	;Hide track gui items
+	GUICtrlSetState($AddTrkButton, $GUI_HIDE)
+	GUICtrlSetState($EditTrkButton, $GUI_HIDE)
+	GUICtrlSetState($DelTrkButton, $GUI_HIDE)
+	GUICtrlSetState($ListviewTrks, $GUI_HIDE)
+EndFunc   ;==>_ToggleWaypointView
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;BUTTON FUNCTIONS
@@ -1399,7 +1424,7 @@ Func _DeleteWaypoint()
 	Else
 		MsgBox(0, "Error", "No waypoint selected")
 	EndIf
-EndFunc
+EndFunc   ;==>_DeleteWaypoint
 
 Func _GetCurrentGps()
 	GUICtrlSetData($cLat, _GpsFormat($Latitude))
@@ -2358,7 +2383,7 @@ Func _ImportGPX()
 
 			ElseIf $GpxArray[$X] = "trk" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> trk" & @CRLF)
-				Local $TrackName, $TrackDesc
+				Local $TrackName, $TrackDesc, $TrackCmt, $TrackSrc, $TrackUrl, $TrackUrlName, $TrackNum
 				$TrkDataPath = $path & "/*[" & $X & "]"
 				$TrkDataArray = _XMLGetChildNodes($TrkDataPath)
 				;ConsoleWrite($TrkDataPath & @CRLF)
@@ -2370,10 +2395,15 @@ Func _ImportGPX()
 						If IsArray($TrkFieldValueArray) Then
 							If $TrkDataArray[$X1] = "name" Then $TrackName = $TrkFieldValueArray[1]
 							If $TrkDataArray[$X1] = "desc" Then $TrackDesc = $TrkFieldValueArray[1]
+							If $TrkDataArray[$X1] = "cmt" Then $TrackCmt = $TrkFieldValueArray[1]
+							If $TrkDataArray[$X1] = "src" Then $TrackSrc = $TrkFieldValueArray[1]
+							If $TrkDataArray[$X1] = "url" Then $TrackUrl = $TrkFieldValueArray[1]
+							If $TrkDataArray[$X1] = "urlname" Then $TrackUrlName = $TrkFieldValueArray[1]
+							If $TrkDataArray[$X1] = "number" Then $TrackNum = $TrkFieldValueArray[1]
 							If $TrkDataArray[$X1] = "trkseg" Then
 								;Add Track Information to table
 								$TRACKID += 1
-								_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, $TRACKID & '|' & $TrackName & '|' & $TrackDesc)
+								_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, $TRACKID & '|' & $TrackName & '|' & $TrackDesc & '|' & $TrackCmt & '|' & $TrackSrc & '|' & $TrackUrl & '|' & $TrackUrlName & '|' & $TrackNum)
 								;Get Track Segment
 								$TrkSegArray = _XMLGetChildNodes($TrkFieldPath)
 								If IsArray($TrkSegArray) Then
@@ -2386,10 +2416,10 @@ Func _ImportGPX()
 											_XMLGetAllAttrib($TrkptPath, $aKeys, $aValues) ;Retrieve all attributes
 											If Not @error Then
 												For $y = 0 To UBound($aKeys) - 1
-												;ConsoleWrite($aKeys[$Y] & "=" & $aValues[$Y] & ", ") ;Output all attributes
-												If $aKeys[$y] = "lat" Then $TrackLat = _Format_GPS_All_to_DMM(StringFormat('%0.7f', $aValues[$y]), "N", "S")
-												If $aKeys[$y] = "lon" Then $TrackLon = _Format_GPS_All_to_DMM(StringFormat('%0.7f', $aValues[$y]), "E", "W")
-												_XMLGetAllAttrib($TrkptPath, $aKeys, $aValues) ;Retrieve all attributes
+													;ConsoleWrite($aKeys[$Y] & "=" & $aValues[$Y] & ", ") ;Output all attributes
+													If $aKeys[$y] = "lat" Then $TrackLat = _Format_GPS_All_to_DMM(StringFormat('%0.7f', $aValues[$y]), "N", "S")
+													If $aKeys[$y] = "lon" Then $TrackLon = _Format_GPS_All_to_DMM(StringFormat('%0.7f', $aValues[$y]), "E", "W")
+													_XMLGetAllAttrib($TrkptPath, $aKeys, $aValues) ;Retrieve all attributes
 												Next
 											EndIf
 											$TrkptArray = _XMLGetChildNodes($TrkptPath)
@@ -2676,9 +2706,9 @@ Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 	FileDelete($gpx)
 	$file = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>' & @CRLF _
 			 & '<gpx creator="' & $Script_Name & '" version="1.1">' & @CRLF _
-			 & '<name>' & $ldatetimestamp & '</name>' & @CRLF _
-			 & '<desc>Geocache file generated by ' & $Script_Name & '</desc>' & @CRLF _
-			 & '<author>' & $Script_Name & '</author>' & @CRLF
+			 & '	<name>' & $ldatetimestamp & '</name>' & @CRLF _
+			 & '	<desc>Geocache file generated by ' & $Script_Name & '</desc>' & @CRLF _
+			 & '	<author>' & $Script_Name & '</author>' & @CRLF
 	If $MapGpsWpts = 1 Then
 		$query = "SELECT WPID, Name, Desc1, Notes, Latitude, Longitude, Bearing, Distance, Link, Author, Type, Difficulty, Terrain FROM WP"
 		$WpMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
@@ -2701,37 +2731,48 @@ Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 
 
 				If $ExpLat <> '0.0000000' And $ExpLon <> '-0.0000000' Then
-					$file &= '<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF _
-							 & '<name>' & $ExpName & '</name>' & @CRLF _
-							 & '<desc>' & $ExpDesc & ' by ' & $ExpAuth & ', ' & $ExpType & ' (' & $ExpDif & '/' & $ExpTer & ')</desc>' & @CRLF _
-							 & '<url>' & $ExpLink & '</url>' & @CRLF _
-							 & '<urlname>' & $ExpDesc & '</urlname>' & @CRLF _
-							 & '<Notes>' & $ExpNotes & '</Notes>' & @CRLF _
-							 & '</wpt>' & @CRLF
+					$file &= '	<wpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF
+					If $ExpName <> "" Then $file &= '		<name>' & $ExpName & '</name>' & @CRLF
+					If $ExpDesc <> "" Then $file &= '		<desc>' & $ExpDesc & ' by ' & $ExpAuth & ', ' & $ExpType & ' (' & $ExpDif & '/' & $ExpTer & ')</desc>' & @CRLF
+					If $ExpLink <> "" Then $file &= '		<url>' & $ExpLink & '</url>' & @CRLF
+					If $ExpDesc <> "" Then $file &= '		<urlname>' & $ExpDesc & '</urlname>' & @CRLF
+					If $ExpNotes <> "" Then $file &= '		<Notes>' & $ExpNotes & '</Notes>' & @CRLF
+					$file &= '	</wpt>' & @CRLF
 				EndIf
 			Next
 		EndIf
 	EndIf
 
 	If $MapGpsTrack = 1 Then
-		$query = "SELECT TRACKID, TrackName, TrackDesc FROM TRACK"
+		$query = "SELECT TRACKID, name, desc1, cmt, src, url, urlname, number1 FROM TRACK"
 		ConsoleWrite($query & @CRLF)
 		$TrackMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 		$FoundTrackMatch = UBound($TrackMatchArray) - 1
 		If $FoundTrackMatch <> 0 Then
 			For $trk = 1 To $FoundTrackMatch
 				$ExpTrkID = $TrackMatchArray[$trk][1]
-				$ExpTrkName = $TrackMatchArray[$trk][2]
-				$ExpTrkDesc = $TrackMatchArray[$trk][3]
+				$ExpTrkName = _XMLSanitize($TrackMatchArray[$trk][2])
+				$ExpTrkDesc = _XMLSanitize($TrackMatchArray[$trk][3])
+				$ExpTrkCmt = _XMLSanitize($TrackMatchArray[$trk][4])
+				$ExpTrkSrc = _XMLSanitize($TrackMatchArray[$trk][5])
+				$ExpTrkUrl = _XMLSanitize($TrackMatchArray[$trk][6])
+				$ExpTrkUrlname = _XMLSanitize($TrackMatchArray[$trk][7])
+				$ExpTrkNumber1 = _XMLSanitize($TrackMatchArray[$trk][8])
 				$query = "SELECT lat, lon, ele, time1, magvar, course, geoidheight, fix, sat, hdop, vdop, pdop, ageofgpsdata, dgpsid, speed, name, cmt, desc1, src, url, urlname, sym, type FROM TRACKSEG WHERE lat <> 'N 0.0000' And lon <> 'E 0.0000' And TRACKID = '" & $ExpTrkID & "' ORDER BY TRACKSEGID"
 				ConsoleWrite($query & @CRLF)
 				$GpsMatchArray = _RecordSearch($MysticacheDB, $query, $DB_OBJ)
 				$FoundGpsMatch = UBound($GpsMatchArray) - 1
 				If $FoundGpsMatch <> 0 Then
-					$file &= '<trk>' & @CRLF
-					If $ExpTrkName <> "" Then $file &= '<name>' & $ExpTrkName & '</name>' & @CRLF
-					If $ExpTrkDesc <> "" Then $file &= '<desc>' & $ExpTrkDesc & '</desc>' & @CRLF
-					$file &= '<trkseg>' & @CRLF
+					$file &= '	<trk>' & @CRLF
+					If $ExpTrkName <> "" Then $file &= '		<name>' & $ExpTrkName & '</name>' & @CRLF
+					If $ExpTrkDesc <> "" Then $file &= '		<desc>' & $ExpTrkDesc & '</desc>' & @CRLF
+					If $ExpTrkCmt <> "" Then $file &= '		<cmt>' & $ExpTrkCmt & '</cmt>' & @CRLF
+					If $ExpTrkSrc <> "" Then $file &= '		<src>' & $ExpTrkSrc & '</src>' & @CRLF
+					If $ExpTrkUrl <> "" Then $file &= '		<url>' & $ExpTrkUrl & '</url>' & @CRLF
+					If $ExpTrkUrlname <> "" Then $file &= '		<urlname>' & $ExpTrkUrlname & '</urlname>' & @CRLF
+					If $ExpTrkNumber1 <> "" Then $file &= '		<number>' & $ExpTrkNumber1 & '</number>' & @CRLF
+
+					$file &= '		<trkseg>' & @CRLF
 					For $exp = 1 To $FoundGpsMatch
 						$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][1]), 'S', '-'), 'N', ''), ' ', '')
 						$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[$exp][2]), 'W', '-'), 'E', ''), ' ', '')
@@ -2759,40 +2800,42 @@ Func _SaveGPX($gpx, $MapGpsTrack = 1, $MapGpsWpts = 1)
 
 						If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
 							$FoundApWithGps = 1
-							$file &= '<trkpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF
-							If $ExpEle <> "" Then $file &= '<ele>' & $ExpEle & '</ele>' & @CRLF
-							If $ExpTime <> "" Then $file &= '<time>' & $ExpTime & '</time>' & @CRLF
-							If $ExpMagvar <> "" Then $file &= '<magvar>' & $ExpMagvar & '</magvar>' & @CRLF
-							If $ExpCorse <> "" Then $file &= '<course>' & $ExpCorse & '</course>' & @CRLF
-							If $ExpGeoidHeight <> "" Then $file &= '<geoidheigh>' & $ExpGeoidHeight & '</geoidheigh>' & @CRLF
-							If $ExpFix <> "" Then $file &= '<fix>' & $ExpFix & '</fix>' & @CRLF
-							If $ExpSat <> "" Then $file &= '<sat>' & $ExpSat & '</sat>' & @CRLF
-							If $ExpHdop <> "" Then $file &= '<hdop>' & $ExpHdop & '</hdop>' & @CRLF
-							If $ExpVdop <> "" Then $file &= '<vdop>' & $ExpVdop & '</vdop>' & @CRLF
-							If $ExpPdop <> "" Then $file &= '<pdop>' & $ExpPdop & '</pdop>' & @CRLF
-							If $ExpAgeOfGpsData <> "" Then $file &= '<ageofdgpsdata>' & $ExpAgeOfGpsData & '</ageofdgpsdata>' & @CRLF
-							If $ExpDgpsid <> "" Then $file &= '<dgpsid>' & $ExpDgpsid & '</dgpsid>' & @CRLF
-							If $ExpSpeed <> "" Then $file &= '<speed>' & $ExpSpeed & '</speed>' & @CRLF
-							If $ExpName <> "" Then $file &= '<name>' & $ExpName & '</name>' & @CRLF
-							If $ExpCmt <> "" Then $file &= '<cmt>' & $ExpCmt & '</cmt>' & @CRLF
-							If $ExpDesc <> "" Then $file &= '<desc>' & $ExpDesc & '</desc>' & @CRLF
-							If $ExpSrc <> "" Then $file &= '<src>' & $ExpSrc & '</src>' & @CRLF
-							If $ExpUrl <> "" Then $file &= '<url>' & $ExpUrl & '</url>' & @CRLF
-							If $ExpUrlName <> "" Then $file &= '<urlname>' & $ExpUrlName & '</urlname>' & @CRLF
-							If $ExpSym <> "" Then $file &= '<sym>' & $ExpSym & '</sym>' & @CRLF
-							If $ExpType <> "" Then $file &= '<type>' & $ExpType & '</type>' & @CRLF
-							$file &= '</trkpt>' & @CRLF
+							$file &= '			<trkpt lat="' & $ExpLat & '" lon="' & $ExpLon & '">' & @CRLF
+							If $ExpEle <> "" Then $file &= '				<ele>' & $ExpEle & '</ele>' & @CRLF
+							If $ExpTime <> "" Then $file &= '				<time>' & $ExpTime & '</time>' & @CRLF
+							If $ExpMagvar <> "" Then $file &= '				<magvar>' & $ExpMagvar & '</magvar>' & @CRLF
+							If $ExpCorse <> "" Then $file &= '				<course>' & $ExpCorse & '</course>' & @CRLF
+							If $ExpGeoidHeight <> "" Then $file &= '				<geoidheigh>' & $ExpGeoidHeight & '</geoidheigh>' & @CRLF
+							If $ExpFix <> "" Then $file &= '				<fix>' & $ExpFix & '</fix>' & @CRLF
+							If $ExpSat <> "" Then $file &= '				<sat>' & $ExpSat & '</sat>' & @CRLF
+							If $ExpHdop <> "" Then $file &= '				<hdop>' & $ExpHdop & '</hdop>' & @CRLF
+							If $ExpVdop <> "" Then $file &= '				<vdop>' & $ExpVdop & '</vdop>' & @CRLF
+							If $ExpPdop <> "" Then $file &= '				<pdop>' & $ExpPdop & '</pdop>' & @CRLF
+							If $ExpAgeOfGpsData <> "" Then $file &= '				<ageofdgpsdata>' & $ExpAgeOfGpsData & '</ageofdgpsdata>' & @CRLF
+							If $ExpDgpsid <> "" Then $file &= '				<dgpsid>' & $ExpDgpsid & '</dgpsid>' & @CRLF
+							If $ExpSpeed <> "" Then $file &= '				<speed>' & $ExpSpeed & '</speed>' & @CRLF
+							If $ExpName <> "" Then $file &= '				<name>' & $ExpName & '</name>' & @CRLF
+							If $ExpCmt <> "" Then $file &= '				<cmt>' & $ExpCmt & '</cmt>' & @CRLF
+							If $ExpDesc <> "" Then $file &= '				<desc>' & $ExpDesc & '</desc>' & @CRLF
+							If $ExpSrc <> "" Then $file &= '				<src>' & $ExpSrc & '</src>' & @CRLF
+							If $ExpUrl <> "" Then $file &= '				<url>' & $ExpUrl & '</url>' & @CRLF
+							If $ExpUrlName <> "" Then $file &= '				<urlname>' & $ExpUrlName & '</urlname>' & @CRLF
+							If $ExpSym <> "" Then $file &= '				<sym>' & $ExpSym & '</sym>' & @CRLF
+							If $ExpType <> "" Then $file &= '				<type>' & $ExpType & '</type>' & @CRLF
+							$file &= '			</trkpt>' & @CRLF
 						EndIf
 					Next
-					$file &= '</trkseg>' & @CRLF _
-							 & '</trk>' & @CRLF
+					$file &= '		</trkseg>' & @CRLF _
+							 & '	</trk>' & @CRLF
 				EndIf
 			Next
 		EndIf
 	EndIf
 	$file &= '</gpx>' & @CRLF
 
+	$gpx = FileOpen($gpx, 128 + 2);Open in UTF-8 write mode
 	$filewrite = FileWrite($gpx, $file)
+	FileClose($gpx)
 	If $filewrite = 0 Then
 		Return (0)
 	Else
