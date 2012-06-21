@@ -172,33 +172,51 @@ If FileExists($DefaultLanguagePath) = 0 Then
 	$DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
 EndIf
 
-Dim $column_Name_Line = IniRead($settings, 'Column_Names', 'Column_Line', "#")
-Dim $column_Name_Name = IniRead($settings, 'Column_Names', 'Column_Name', "Name")
-Dim $column_Name_Desc = IniRead($settings, 'Column_Names', 'Column_Desc', "Description")
-Dim $column_Name_Notes = IniRead($settings, 'Column_Names', 'Column_Notes', "Notes")
-Dim $column_Name_Latitude = IniRead($settings, 'Column_Names', 'Column_Latitude', "Latitude")
-Dim $column_Name_Longitude = IniRead($settings, 'Column_Names', 'Column_Longitude', "Longitude")
-Dim $column_Name_Bearing = IniRead($settings, 'Column_Names', 'Column_Bearing', "Bearing")
-Dim $column_Name_Distance = IniRead($settings, 'Column_Names', 'Column_Distance', "Distance")
-Dim $column_Name_Link = IniRead($settings, 'Column_Names', 'Column_Link', "Link")
-Dim $column_Name_Author = IniRead($settings, 'Column_Names', 'Column_Author', "Author")
-Dim $column_Name_Type = IniRead($settings, 'Column_Names', 'Column_Type', "Type")
-Dim $column_Name_Difficulty = IniRead($settings, 'Column_Names', 'Column_Difficulty', "Difficulty")
-Dim $column_Name_Terrain = IniRead($settings, 'Column_Names', 'Column_Terrain', "Terrain")
+Dim $wp_column_Name_Line = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Line', "#")
+Dim $wp_column_Name_Name = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Name', "Name")
+Dim $wp_column_Name_Desc = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Desc', "Description")
+Dim $wp_column_Name_Notes = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Notes', "Notes")
+Dim $wp_column_Name_Latitude = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Latitude', "Latitude")
+Dim $wp_column_Name_Longitude = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Longitude', "Longitude")
+Dim $wp_column_Name_Bearing = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Bearing', "Bearing")
+Dim $wp_column_Name_Distance = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Distance', "Distance")
+Dim $wp_column_Name_Link = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Link', "Link")
+Dim $wp_column_Name_Author = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Author', "Author")
+Dim $wp_column_Name_Type = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Type', "Type")
+Dim $wp_column_Name_Difficulty = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Difficulty', "Difficulty")
+Dim $wp_column_Name_Terrain = IniRead($settings, 'Wp_Column_Names', 'Wp_Column_Terrain', "Terrain")
 
-Dim $column_Width_Line = IniRead($settings, 'Column_Width', 'Column_Line', 35)
-Dim $column_Width_Name = IniRead($settings, 'Column_Width', 'Column_Name', 100)
-Dim $column_Width_Desc = IniRead($settings, 'Column_Width', 'Column_Desc', 200)
-Dim $column_Width_Notes = IniRead($settings, 'Column_Width', 'Column_Notes', 250)
-Dim $column_Width_Latitude = IniRead($settings, 'Column_Width', 'Column_Latitude', 100)
-Dim $column_Width_Longitude = IniRead($settings, 'Column_Width', 'Column_Longitude', 100)
-Dim $column_Width_Bearing = IniRead($settings, 'Column_Width', 'Column_Bearing', 100)
-Dim $column_Width_Distance = IniRead($settings, 'Column_Width', 'Column_Distance', 100)
-Dim $column_Width_Link = IniRead($settings, 'Column_Width', 'Column_Link', 100)
-Dim $column_Width_Author = IniRead($settings, 'Column_Width', 'Column_Author', 100)
-Dim $column_Width_Type = IniRead($settings, 'Column_Width', 'Column_Type', 100)
-Dim $column_Width_Difficulty = IniRead($settings, 'Column_Width', 'Column_Difficulty', 100)
-Dim $column_Width_Terrain = IniRead($settings, 'Column_Width', 'Column_Terrain', 100)
+Dim $wp_column_Width_Line = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Line', 35)
+Dim $wp_column_Width_Name = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Name', 100)
+Dim $wp_column_Width_Desc = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Desc', 200)
+Dim $wp_column_Width_Notes = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Notes', 250)
+Dim $wp_column_Width_Latitude = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Latitude', 100)
+Dim $wp_column_Width_Longitude = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Longitude', 100)
+Dim $wp_column_Width_Bearing = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Bearing', 100)
+Dim $wp_column_Width_Distance = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Distance', 100)
+Dim $wp_column_Width_Link = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Link', 100)
+Dim $wp_column_Width_Author = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Author', 100)
+Dim $wp_column_Width_Type = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Type', 100)
+Dim $wp_column_Width_Difficulty = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Difficulty', 100)
+Dim $wp_column_Width_Terrain = IniRead($settings, 'Wp_Column_Width', 'Wp_Column_Terrain', 100)
+
+Dim $trk_column_Name_Line = IniRead($settings, 'Trk_Column_Names', 'Trk_Column_Line', "#")
+Dim $trk_column_Name_Name = IniRead($settings, 'Trk_Column_Names', 'Trk_Column_Name', "Name")
+Dim $trk_column_Name_Desc = IniRead($settings, 'Trk_Column_Names', 'Trk_Column_Desc', "Description")
+Dim $trk_column_Name_Comments = IniRead($settings, 'Trk_Column_Names', 'Trk_Column_Comments', "Comments")
+Dim $trk_column_Name_Source = IniRead($settings, 'Trk_Column_Names', 'Trk_Column_Source', "Source")
+Dim $trk_column_Name_Url = IniRead($settings, 'Trk_Column_Names', 'Trk_Column_Url', "Url")
+Dim $trk_column_Name_UrlName = IniRead($settings, 'Trk_Column_Names', 'Trk_Column_UrlName', "Url Name")
+Dim $trk_column_Name_Number = IniRead($settings, 'Trk_Column_Names', 'Trk_Column_Number', "Number")
+
+Dim $trk_column_Width_Line = IniRead($settings, 'Trk_Column_Width', 'Trk_Column_Line', 35)
+Dim $trk_column_Width_Name = IniRead($settings, 'Trk_Column_Width', 'Trk_Column_Name', 100)
+Dim $trk_column_Width_Desc = IniRead($settings, 'Trk_Column_Width', 'Trk_Column_Desc', 200)
+Dim $trk_column_Width_Comments = IniRead($settings, 'Trk_Column_Width', 'Trk_Column_Comments', 200)
+Dim $trk_column_Width_Source = IniRead($settings, 'Trk_Column_Width', 'Trk_Column_Source', 200)
+Dim $trk_column_Width_Url = IniRead($settings, 'Trk_Column_Width', 'Trk_Column_Url', 100)
+Dim $trk_column_Width_UrlName = IniRead($settings, 'Trk_Column_Width', 'Trk_Column_UrlName', 100)
+Dim $trk_column_Width_Number = IniRead($settings, 'Trk_Column_Width', 'Trk_Column_Number', 35)
 
 Dim $Text_File = IniRead($DefaultLanguagePath, 'GuiText', 'File', '&File')
 Dim $Text_SaveAsTXT = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAsTXT', 'Save As TXT')
@@ -327,34 +345,35 @@ Else
 	_SetUpDbTables($MysticacheDB)
 EndIf
 
-Dim $UseDefaultHeaders = 0
-Dim $headers
-$cnames = IniReadSection($settings, "Column_Names")
+;Set Waypoint listview headers
+Dim $UseDefaultWpHeaders = 0
+Dim $wp_headers
+$wpcnames = IniReadSection($settings, "Wp_Column_Names")
 If @error Then
-	$UseDefaultHeaders = 1
+	$UseDefaultWpHeaders = 1
 Else
-	$var = IniReadSection($settings, "Columns")
+	$var = IniReadSection($settings, "Wp_Columns")
 	If @error Then
-		$UseDefaultHeaders = 2
+		$UseDefaultWpHeaders = 2
 	Else
-		Dim $column_Line = IniRead($settings, 'Columns', 'Column_Line', 0)
-		Dim $column_Name = IniRead($settings, 'Columns', 'Column_Name', 1)
-		Dim $column_Desc = IniRead($settings, 'Columns', 'Column_Desc', 2)
-		Dim $column_Notes = IniRead($settings, 'Columns', 'Column_Notes', 3)
-		Dim $column_Latitude = IniRead($settings, 'Columns', 'Column_Latitude', 4)
-		Dim $column_Longitude = IniRead($settings, 'Columns', 'Column_Longitude', 5)
-		Dim $column_Bearing = IniRead($settings, 'Columns', 'Column_Bearing', 6)
-		Dim $column_Distance = IniRead($settings, 'Columns', 'Column_Distance', 7)
-		Dim $column_Link = IniRead($settings, 'Columns', 'Column_Link', 8)
-		Dim $column_Author = IniRead($settings, 'Columns', 'Column_Author', 9)
-		Dim $column_Type = IniRead($settings, 'Columns', 'Column_Type', 10)
-		Dim $column_Difficulty = IniRead($settings, 'Columns', 'Column_Difficulty', 11)
-		Dim $column_Terrain = IniRead($settings, 'Columns', 'Column_Terrain', 12)
+		Dim $wp_column_Line = IniRead($settings, 'Wp_Columns', 'Wp_Column_Line', 0)
+		Dim $wp_column_Name = IniRead($settings, 'Wp_Columns', 'Wp_Column_Name', 1)
+		Dim $wp_column_Desc = IniRead($settings, 'Wp_Columns', 'Wp_Column_Desc', 2)
+		Dim $wp_column_Notes = IniRead($settings, 'Wp_Columns', 'Wp_Column_Notes', 3)
+		Dim $wp_column_Latitude = IniRead($settings, 'Wp_Columns', 'Wp_Column_Latitude', 4)
+		Dim $wp_column_Longitude = IniRead($settings, 'Wp_Columns', 'Wp_Column_Longitude', 5)
+		Dim $wp_column_Bearing = IniRead($settings, 'Wp_Columns', 'Wp_Column_Bearing', 6)
+		Dim $wp_column_Distance = IniRead($settings, 'Wp_Columns', 'Wp_Column_Distance', 7)
+		Dim $wp_column_Link = IniRead($settings, 'Wp_Columns', 'Wp_Column_Link', 8)
+		Dim $wp_column_Author = IniRead($settings, 'Wp_Columns', 'Wp_Column_Author', 9)
+		Dim $wp_column_Type = IniRead($settings, 'Wp_Columns', 'Wp_Column_Type', 10)
+		Dim $wp_column_Difficulty = IniRead($settings, 'Wp_Columns', 'Wp_Column_Difficulty', 11)
+		Dim $wp_column_Terrain = IniRead($settings, 'Wp_Columns', 'Wp_Column_Terrain', 12)
 		For $a = 0 To ($var[0][0] - 1)
-			If $a <> 0 Then $headers &= '|'
+			If $a <> 0 Then $wp_headers &= '|'
 			For $b = 1 To $var[0][0]
 				If $a = $var[$b][1] Then
-					$headers &= IniRead($settings, 'Column_Names', $var[$b][0], '')
+					$wp_headers &= IniRead($settings, 'Wp_Column_Names', $var[$b][0], '')
 					ExitLoop
 				EndIf
 			Next
@@ -362,22 +381,64 @@ Else
 	EndIf
 EndIf
 
-If $UseDefaultHeaders <> 0 Then
-	Dim $column_Line = 0
-	Dim $column_Name = 1
-	Dim $column_Desc = 2
-	Dim $column_Notes = 3
-	Dim $column_Latitude = 4
-	Dim $column_Longitude = 5
-	Dim $column_Bearing = 6
-	Dim $column_Distance = 7
-	Dim $column_Link = 8
-	Dim $column_Author = 9
-	Dim $column_Type = 10
-	Dim $column_Difficulty = 11
-	Dim $column_Terrain = 12
+If $UseDefaultWpHeaders <> 0 Then
+	Dim $wp_column_Line = 0
+	Dim $wp_column_Name = 1
+	Dim $wp_column_Desc = 2
+	Dim $wp_column_Notes = 3
+	Dim $wp_column_Latitude = 4
+	Dim $wp_column_Longitude = 5
+	Dim $wp_column_Bearing = 6
+	Dim $wp_column_Distance = 7
+	Dim $wp_column_Link = 8
+	Dim $wp_column_Author = 9
+	Dim $wp_column_Type = 10
+	Dim $wp_column_Difficulty = 11
+	Dim $wp_column_Terrain = 12
+	$wp_headers = $wp_column_Name_Line & "|" & $wp_column_Name_Name & "|" & $wp_column_Name_Desc & "|" & $wp_column_Name_Notes & "|" & $wp_column_Name_Latitude & "|" & $wp_column_Name_Longitude & "|" & $wp_column_Name_Bearing & "|" & $wp_column_Name_Distance & "|" & $wp_column_Name_Link & "|" & $wp_column_Name_Author & "|" & $wp_column_Name_Type & "|" & $wp_column_Name_Difficulty & "|" & $wp_column_Name_Terrain
+EndIf
 
-	$headers = '#|Name|Description|Notes|Latitude|Longitude|Bearing|Distance|Link|Author|Type|Difficulty|Terrain'
+;Set Track listview headers
+Dim $UseDefaultTrkHeaders = 0
+Dim $trk_headers
+$trkcnames = IniReadSection($settings, "Trk_Column_Names")
+If @error Then
+	$UseDefaultTrkHeaders = 1
+Else
+	$var = IniReadSection($settings, "Trk_Columns")
+	If @error Then
+		$UseDefaultTrkHeaders = 2
+	Else
+		Dim $trk_column_Line = IniRead($settings, 'Trk_Columns', 'Trk_Column_Line', 0)
+		Dim $trk_column_Name = IniRead($settings, 'Trk_Columns', 'Trk_Column_Name', 1)
+		Dim $trk_column_Desc = IniRead($settings, 'Trk_Columns', 'Trk_Column_Desc', 2)
+		Dim $trk_column_Comments = IniRead($settings, 'Trk_Columns', 'Trk_Column_Comments', 3)
+		Dim $trk_column_Source = IniRead($settings, 'Trk_Columns', 'Trk_Column_Source', 4)
+		Dim $trk_column_Url = IniRead($settings, 'Trk_Columns', 'Trk_Column_Url', 5)
+		Dim $trk_column_UrlName = IniRead($settings, 'Trk_Columns', 'Trk_Column_UrlName', 6)
+		Dim $trk_column_Number = IniRead($settings, 'Trk_Columns', 'Trk_Column_Number', 7)
+		For $a = 0 To ($var[0][0] - 1)
+			If $a <> 0 Then $trk_headers &= '|'
+			For $b = 1 To $var[0][0]
+				If $a = $var[$b][1] Then
+					$trk_headers &= IniRead($settings, 'Trk_Column_Names', $var[$b][0], '')
+					ExitLoop
+				EndIf
+			Next
+		Next
+	EndIf
+EndIf
+
+If $UseDefaultTrkHeaders <> 0 Then
+	Dim $trk_column_Line = 0
+	Dim $trk_column_Name = 1
+	Dim $trk_column_Desc = 2
+	Dim $trk_column_Comments = 3
+	Dim $trk_column_Source = 4
+	Dim $trk_column_Url = 5
+	Dim $trk_column_UrlName = 6
+	Dim $trk_column_Number = 7
+	$trk_headers = $trk_column_Name_Line & '|' & $trk_column_Name_Name & '|' & $trk_column_Name_Desc & '|' & $trk_column_Name_Comments & '|' & $trk_column_Name_Source & '|' & $trk_column_Name_Url & '|' & $trk_column_Name_UrlName & '|' & $trk_column_Name_Name
 EndIf
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -455,7 +516,7 @@ $AddWpButton = GUICtrlCreateButton("Add Waypoint", 15, 35, 120, 20, 0)
 $EditWpButton = GUICtrlCreateButton("Edit Waypoint", 140, 35, 120, 20, 0)
 $DelWpButton = GUICtrlCreateButton("Delete Waypoint", 265, 35, 120, 20, 0)
 $SetDestButton = GUICtrlCreateButton("Use as Destination", 390, 35, 120, 20, 0)
-$ListviewWPs = GUICtrlCreateListView($headers, 2, 70, 978, 602, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+$ListviewWPs = GUICtrlCreateListView($wp_headers, 2, 70, 978, 602, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 ;Track Controls
 $AddTrkButton = GUICtrlCreateButton("Add Track", 15, 35, 120, 20, 0)
@@ -464,8 +525,8 @@ $EditTrkButton = GUICtrlCreateButton("Edit Track", 140, 35, 120, 20, 0)
 GUICtrlSetState($EditTrkButton, $GUI_HIDE)
 $DelTrkButton = GUICtrlCreateButton("Delete Track", 265, 35, 120, 20, 0)
 GUICtrlSetState($DelTrkButton, $GUI_HIDE)
-$ListviewTrks = GUICtrlCreateListView("Name|Desc", 2, 70, 978, 602, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
-GUICtrlSetState($ListviewTrks, $GUI_HIDE)
+$ListviewTrk = GUICtrlCreateListView($trk_headers, 2, 70, 978, 602, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+GUICtrlSetState($ListviewTrk, $GUI_HIDE)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 
 $Grp_StartGPS = GUICtrlCreateGroup("Start GPS Position", 520, 0, 440, 60)
@@ -486,7 +547,8 @@ $Lab_DestGPS = GUICtrlCreateLabel("Dest GPS:     Not Set Yet", 140, 20, 380, 15)
 GUICtrlSetColor(-1, $TextColor)
 
 _SetControlSizes()
-_SetListviewWidths()
+_SetListviewWidthsWp()
+_SetListviewWidthsTrk()
 GUISetState(@SW_SHOW)
 
 ;Button-Events-------------------------------------------
@@ -546,10 +608,10 @@ GUICtrlSetOnEvent($OpenWptLink, '_OpenWptLink')
 GUICtrlSetOnEvent($AddToMysticacheDB, '_AddToMysticacheDB')
 
 ;Other
-GUICtrlSetOnEvent($ListviewWPs, '_SortColumnToggle')
+GUICtrlSetOnEvent($ListviewWPs, '_SortColumnToggleWp')
 
 ;Set Listview Widths
-_SetListviewWidths()
+_SetListviewWidthsWp()
 
 If $Recover = 1 Then _RecoverMDB()
 
@@ -640,7 +702,7 @@ While 1
 
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
 	If $Close = 1 Then _ExitMysticache($SaveDbOnExit) ;If the close flag has been set, exit visumbler
-	If $SortColumn <> -1 Then _HeaderSort($SortColumn);Sort clicked listview column
+	If $SortColumn <> -1 Then _HeaderSortWp($SortColumn);Sort clicked listview column
 	If $ClearAllWps = 1 Then _ClearAllWp();Clear all Waypoint
 
 	If TimerDiff($begin) >= $RefreshLoopTime Then
@@ -737,68 +799,105 @@ Func _SaveSettings()
 	IniWrite($settings, "Language", "Language", $DefaultLanguage)
 	IniWrite($settings, "Language", "LanguageFile", $DefaultLanguageFile)
 
-	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewWPs), '|')
-	;_ArrayDisplay($currentcolumn)
-	For $c = 1 To $currentcolumn[0]
-		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
-		If $column_Name = $currentcolumn[$c] Then $save_column_Name = $c - 1
-		If $column_Desc = $currentcolumn[$c] Then $save_column_Desc = $c - 1
-		If $column_Notes = $currentcolumn[$c] Then $save_column_Notes = $c - 1
-		If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
-		If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
-		If $column_Bearing = $currentcolumn[$c] Then $save_column_Bearing = $c - 1
-		If $column_Distance = $currentcolumn[$c] Then $save_column_Distance = $c - 1
-		If $column_Link = $currentcolumn[$c] Then $save_column_Link = $c - 1
-		If $column_Author = $currentcolumn[$c] Then $save_column_Author = $c - 1
-		If $column_Type = $currentcolumn[$c] Then $save_column_Type = $c - 1
-		If $column_Difficulty = $currentcolumn[$c] Then $save_column_Difficulty = $c - 1
-		If $column_Terrain = $currentcolumn[$c] Then $save_column_Terrain = $c - 1
+	$currentwpcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewWPs), '|')
+	For $c = 1 To $currentwpcolumn[0]
+		If $wp_column_Line = $currentwpcolumn[$c] Then $save_wp_column_Line = $c - 1
+		If $wp_column_Name = $currentwpcolumn[$c] Then $save_wp_column_Name = $c - 1
+		If $wp_column_Desc = $currentwpcolumn[$c] Then $save_wp_column_Desc = $c - 1
+		If $wp_column_Notes = $currentwpcolumn[$c] Then $save_wp_column_Notes = $c - 1
+		If $wp_column_Latitude = $currentwpcolumn[$c] Then $save_wp_column_Latitude = $c - 1
+		If $wp_column_Longitude = $currentwpcolumn[$c] Then $save_wp_column_Longitude = $c - 1
+		If $wp_column_Bearing = $currentwpcolumn[$c] Then $save_wp_column_Bearing = $c - 1
+		If $wp_column_Distance = $currentwpcolumn[$c] Then $save_wp_column_Distance = $c - 1
+		If $wp_column_Link = $currentwpcolumn[$c] Then $save_wp_column_Link = $c - 1
+		If $wp_column_Author = $currentwpcolumn[$c] Then $save_wp_column_Author = $c - 1
+		If $wp_column_Type = $currentwpcolumn[$c] Then $save_wp_column_Type = $c - 1
+		If $wp_column_Difficulty = $currentwpcolumn[$c] Then $save_wp_column_Difficulty = $c - 1
+		If $wp_column_Terrain = $currentwpcolumn[$c] Then $save_wp_column_Terrain = $c - 1
 	Next
 
-	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
-	IniWrite($settings, "Columns", "Column_Name", $save_column_Name)
-	IniWrite($settings, "Columns", "Column_Desc", $save_column_Desc)
-	IniWrite($settings, "Columns", "Column_Notes", $save_column_Notes)
-	IniWrite($settings, "Columns", "Column_Latitude", $save_column_Latitude)
-	IniWrite($settings, "Columns", "Column_Longitude", $save_column_Longitude)
-	IniWrite($settings, "Columns", "Column_Bearing", $save_column_Bearing)
-	IniWrite($settings, "Columns", "Column_Distance", $save_column_Distance)
-	IniWrite($settings, "Columns", "Column_Link", $save_column_Link)
-	IniWrite($settings, "Columns", "Column_Author", $save_column_Author)
-	IniWrite($settings, "Columns", "Column_Type", $save_column_Type)
-	IniWrite($settings, "Columns", "Column_Difficulty", $save_column_Difficulty)
-	IniWrite($settings, "Columns", "Column_Terrain", $save_column_Terrain)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Line", $save_wp_column_Line)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Name", $save_wp_column_Name)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Desc", $save_wp_column_Desc)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Notes", $save_wp_column_Notes)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Latitude", $save_wp_column_Latitude)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Longitude", $save_wp_column_Longitude)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Bearing", $save_wp_column_Bearing)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Distance", $save_wp_column_Distance)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Link", $save_wp_column_Link)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Author", $save_wp_column_Author)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Type", $save_wp_column_Type)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Difficulty", $save_wp_column_Difficulty)
+	IniWrite($settings, "Wp_Columns", "Wp_Column_Terrain", $save_wp_column_Terrain)
 
-	_GetListviewWidths()
-	IniWrite($settings, "Column_Width", "Column_Line", $column_Width_Line)
-	IniWrite($settings, "Column_Width", "Column_Name", $column_Width_Name)
-	IniWrite($settings, "Column_Width", "Column_Desc", $column_Width_Desc)
-	IniWrite($settings, "Column_Width", "Column_Notes", $column_Width_Notes)
-	IniWrite($settings, "Column_Width", "Column_Latitude", $column_Width_Latitude)
-	IniWrite($settings, "Column_Width", "Column_Longitude", $column_Width_Longitude)
-	IniWrite($settings, "Column_Width", "Column_Bearing", $column_Width_Bearing)
-	IniWrite($settings, "Column_Width", "Column_Distance", $column_Width_Distance)
-	IniWrite($settings, "Column_Width", "Column_Link", $column_Width_Link)
-	IniWrite($settings, "Column_Width", "Column_Author", $column_Width_Author)
-	IniWrite($settings, "Column_Width", "Column_Type", $column_Width_Type)
-	IniWrite($settings, "Column_Width", "Column_Difficulty", $column_Width_Difficulty)
-	IniWrite($settings, "Column_Width", "Column_Terrain", $column_Width_Terrain)
+	_GetListviewWidthsWp()
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Line", $wp_column_Width_Line)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Name", $wp_column_Width_Name)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Desc", $wp_column_Width_Desc)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Notes", $wp_column_Width_Notes)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Latitude", $wp_column_Width_Latitude)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Longitude", $wp_column_Width_Longitude)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Bearing", $wp_column_Width_Bearing)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Distance", $wp_column_Width_Distance)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Link", $wp_column_Width_Link)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Author", $wp_column_Width_Author)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Type", $wp_column_Width_Type)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Difficulty", $wp_column_Width_Difficulty)
+	IniWrite($settings, "Wp_Column_Width", "Wp_Column_Terrain", $wp_column_Width_Terrain)
 
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Line", $wp_column_Name_Line)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Name", $wp_column_Name_Name)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Desc", $wp_column_Name_Desc)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Notes", $wp_column_Name_Notes)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Latitude", $wp_column_Name_Latitude)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Longitude", $wp_column_Name_Longitude)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Bearing", $wp_column_Name_Bearing)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Distance", $wp_column_Name_Distance)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Link", $wp_column_Name_Link)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Author", $wp_column_Name_Author)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Type", $wp_column_Name_Type)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Difficulty", $wp_column_Name_Difficulty)
+	IniWrite($settings, "Wp_Column_Names", "Wp_Column_Terrain", $wp_column_Name_Terrain)
 
-	IniWrite($settings, "Column_Names", "Column_Line", $column_Name_Line)
-	IniWrite($settings, "Column_Names", "Column_Name", $column_Name_Name)
-	IniWrite($settings, "Column_Names", "Column_Desc", $column_Name_Desc)
-	IniWrite($settings, "Column_Names", "Column_Notes", $column_Name_Notes)
-	IniWrite($settings, "Column_Names", "Column_Latitude", $column_Name_Latitude)
-	IniWrite($settings, "Column_Names", "Column_Longitude", $column_Name_Longitude)
-	IniWrite($settings, "Column_Names", "Column_Bearing", $column_Name_Bearing)
-	IniWrite($settings, "Column_Names", "Column_Distance", $column_Name_Distance)
-	IniWrite($settings, "Column_Names", "Column_Link", $column_Name_Link)
-	IniWrite($settings, "Column_Names", "Column_Author", $column_Name_Author)
-	IniWrite($settings, "Column_Names", "Column_Type", $column_Name_Type)
-	IniWrite($settings, "Column_Names", "Column_Difficulty", $column_Name_Difficulty)
-	IniWrite($settings, "Column_Names", "Column_Terrain", $column_Name_Terrain)
+	$currenttrkcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewTrk), '|')
+	For $c = 1 To $currenttrkcolumn[0]
+		If $trk_column_Line = $currenttrkcolumn[$c] Then $save_trk_column_Line = $c - 1
+		If $trk_column_Name = $currenttrkcolumn[$c] Then $save_trk_column_Name = $c - 1
+		If $trk_column_Desc = $currenttrkcolumn[$c] Then $save_trk_column_Desc = $c - 1
+		If $trk_column_Comments = $currenttrkcolumn[$c] Then $save_trk_column_Comments = $c - 1
+		If $trk_column_Source = $currenttrkcolumn[$c] Then $save_trk_column_Source = $c - 1
+		If $trk_column_Url = $currenttrkcolumn[$c] Then $save_trk_column_Url = $c - 1
+		If $trk_column_UrlName = $currenttrkcolumn[$c] Then $save_trk_column_UrlName = $c - 1
+		If $trk_column_Number = $currenttrkcolumn[$c] Then $save_trk_column_Number = $c - 1
+	Next
 
+	IniWrite($settings, "Trk_Columns", "Trk_Column_Line", $save_trk_column_Line)
+	IniWrite($settings, "Trk_Columns", "Trk_Column_Name", $save_trk_column_Name)
+	IniWrite($settings, "Trk_Columns", "Trk_Column_Desc", $save_trk_column_Desc)
+	IniWrite($settings, "Trk_Columns", "Trk_Column_Comments", $save_trk_column_Comments)
+	IniWrite($settings, "Trk_Columns", "Trk_Column_Source", $save_trk_column_Source)
+	IniWrite($settings, "Trk_Columns", "Trk_Column_Url", $save_trk_column_Url)
+	IniWrite($settings, "Trk_Columns", "Trk_Column_UrlName", $save_trk_column_UrlName)
+	IniWrite($settings, "Trk_Columns", "Trk_Column_Number", $save_trk_column_Number)
+
+	_GetListviewWidthsTrk()
+	IniWrite($settings, "Trk_Column_Width", "Trk_Column_Line", $trk_column_Width_Line)
+	IniWrite($settings, "Trk_Column_Width", "Trk_Column_Name", $trk_column_Width_Name)
+	IniWrite($settings, "Trk_Column_Width", "Trk_Column_Desc", $trk_column_Width_Desc)
+	IniWrite($settings, "Trk_Column_Width", "Trk_Column_Comments", $trk_column_Width_Comments)
+	IniWrite($settings, "Trk_Column_Width", "Trk_Column_Source", $trk_column_Width_Source)
+	IniWrite($settings, "Trk_Column_Width", "Trk_Column_Url", $trk_column_Width_Url)
+	IniWrite($settings, "Trk_Column_Width", "Trk_Column_UrlName", $trk_column_Width_UrlName)
+	IniWrite($settings, "Trk_Column_Width", "Trk_Column_Number", $trk_column_Width_Number)
+
+	IniWrite($settings, "Trk_Column_Names", "Trk_Column_Line", $trk_column_Name_Line)
+	IniWrite($settings, "Trk_Column_Names", "Trk_Column_Name", $trk_column_Name_Name)
+	IniWrite($settings, "Trk_Column_Names", "Trk_Column_Desc", $trk_column_Name_Desc)
+	IniWrite($settings, "Trk_Column_Names", "Trk_Column_Comments", $trk_column_Name_Comments)
+	IniWrite($settings, "Trk_Column_Names", "Trk_Column_Source", $trk_column_Name_Source)
+	IniWrite($settings, "Trk_Column_Names", "Trk_Column_Url", $trk_column_Name_Url)
+	IniWrite($settings, "Trk_Column_Names", "Trk_Column_UrlName", $trk_column_Name_UrlName)
+	IniWrite($settings, "Trk_Column_Names", "Trk_Column_Number", $trk_column_Name_Number)
 
 	IniWrite($settings, 'WindowPositions', 'State', $State)
 	IniWrite($settings, 'WindowPositions', 'Position', $Position)
@@ -862,7 +961,7 @@ Func _UpdateDestBrng()
 				$UpdDist = ''
 			EndIf
 
-			_ListViewAdd($DB_ListRow, '', '', '', '', '', '', $UpdBrng, $UpdDist, '', '', '', '', '')
+			_ListViewAddWp($DB_ListRow, '', '', '', '', '', '', $UpdBrng, $UpdDist, '', '', '', '', '')
 		Next
 	EndIf
 EndFunc   ;==>_UpdateDestBrng
@@ -879,10 +978,10 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'TRACK', $DB_OBJ)
 	_CreateTable($dbfile, 'TRACKSEG', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'WP', $DB_OBJ, 'WPID TEXT(255)|ListRow TEXT(255)|Name TEXT(255)|Desc1 TEXT(255)|Notes TEXT(255)|Latitude TEXT(255)|Longitude TEXT(255)|Bearing TEXT(255)|Distance TEXT(255)|Link TEXT(255)|Author TEXT(255)|Type TEXT(255)|Difficulty TEXT(255)|Terrain TEXT(255)')
-	_CreatMultipleFields($dbfile, 'TRACK', $DB_OBJ, 'TRACKID TEXT(255)|name TEXT(255)|desc1 TEXT(255)|cmt TEXT(255)|src TEXT(255)|url TEXT(255)|urlname TEXT(255)|number1 TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TRACK', $DB_OBJ, 'TRACKID TEXT(255)|ListRow TEXT(255)|name TEXT(255)|desc1 TEXT(255)|cmt TEXT(255)|src TEXT(255)|url TEXT(255)|urlname TEXT(255)|number1 TEXT(255)')
 	_CreatMultipleFields($dbfile, 'TRACKSEG', $DB_OBJ, 'TRACKSEGID TEXT(255)|TRACKID TEXT(255)|lat TEXT(20)|lon TEXT(20)|ele TEXT(255)|time1 TEXT(255)|magvar TEXT(255)|course TEXT(255)|geoidheight TEXT(255)|fix TEXT(255)|sat TEXT(255)|hdop TEXT(255)|vdop TEXT(255)|pdop TEXT(255)|ageofgpsdata TEXT(255)|dgpsid TEXT(255)|speed TEXT(255)|name TEXT(255)|cmt TEXT(255)|desc1 TEXT(255)|src TEXT(255)|url TEXT(255)|urlname TEXT(255)|sym TEXT(255)|type TEXT(255)')
 	;Create Default GPS Track
-	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|||' & $Script_Name & '|||')
+	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|||' & $Script_Name & '|||')
 EndFunc   ;==>_SetUpDbTables
 
 Func _RecoverMDB()
@@ -933,7 +1032,7 @@ Func _RecoverMDB()
 			EndIf
 			;Add Into ListView
 			$ListRow = _GUICtrlListView_InsertItem($ListviewWPs, $WPID, $DBAddPos)
-			_ListViewAdd($ListRow, $WPWPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($WPLat), _GpsFormat($WPLon), $WPBrng, $WPDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+			_ListViewAddWp($ListRow, $WPWPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($WPLat), _GpsFormat($WPLon), $WPBrng, $WPDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 			$query = "UPDATE WP SET ListRow='" & $ListRow & "' WHERE WPID='" & $WPWPID & "'"
 			_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 		Next
@@ -943,7 +1042,7 @@ EndFunc   ;==>_RecoverMDB
 Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 	$ListViewSize = _GUICtrlListView_GetItemCount($ListviewWPs) - 1; Get List Size
 	For $lisviewrow = 0 To $ListViewSize
-		$APNUM = _GUICtrlListView_GetItemText($ListviewWPs, $lisviewrow, $column_Line)
+		$APNUM = _GUICtrlListView_GetItemText($ListviewWPs, $lisviewrow, $wp_column_Line)
 		$query = "UPDATE WP SET ListRow = '" & $lisviewrow & "' WHERE WPID = '" & $APNUM & "'"
 		_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 	Next
@@ -953,56 +1052,56 @@ EndFunc   ;==>_FixLineNumbers
 ;LISTVIEW FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _ListViewAdd($line, $Add_Line = '', $Add_Name = '', $Add_Desc = '', $Add_Notes = '', $Add_Latitude = '', $Add_Longitude = '', $Add_Bearing = '', $Add_Distance = '', $Add_Link = '', $Add_Auth = '', $Add_Type = '', $Add_Dif = '', $Add_Ter = '')
-	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Line, $column_Line)
-	If $Add_Name <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Name, $column_Name)
-	If $Add_Desc <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Desc, $column_Desc)
-	If $Add_Notes <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Notes, $column_Notes)
-	If $Add_Latitude <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Latitude, $column_Latitude)
-	If $Add_Longitude <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Longitude, $column_Longitude)
-	If $Add_Bearing <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Bearing, $column_Bearing)
-	If $Add_Distance <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Distance, $column_Distance)
-	If $Add_Link <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Link, $column_Link)
-	If $Add_Auth <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Auth, $column_Author)
-	If $Add_Type <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Type, $column_Type)
-	If $Add_Dif <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Dif, $column_Difficulty)
-	If $Add_Ter <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Ter, $column_Terrain)
-EndFunc   ;==>_ListViewAdd
+Func _ListViewAddWp($line, $Add_Line = '', $Add_Name = '', $Add_Desc = '', $Add_Notes = '', $Add_Latitude = '', $Add_Longitude = '', $Add_Bearing = '', $Add_Distance = '', $Add_Link = '', $Add_Auth = '', $Add_Type = '', $Add_Dif = '', $Add_Ter = '')
+	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Line, $wp_column_Line)
+	If $Add_Name <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Name, $wp_column_Name)
+	If $Add_Desc <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Desc, $wp_column_Desc)
+	If $Add_Notes <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Notes, $wp_column_Notes)
+	If $Add_Latitude <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Latitude, $wp_column_Latitude)
+	If $Add_Longitude <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Longitude, $wp_column_Longitude)
+	If $Add_Bearing <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Bearing, $wp_column_Bearing)
+	If $Add_Distance <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Distance, $wp_column_Distance)
+	If $Add_Link <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Link, $wp_column_Link)
+	If $Add_Auth <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Auth, $wp_column_Author)
+	If $Add_Type <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Type, $wp_column_Type)
+	If $Add_Dif <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Dif, $wp_column_Difficulty)
+	If $Add_Ter <> '' Then _GUICtrlListView_SetItemText($ListviewWPs, $line, $Add_Ter, $wp_column_Terrain)
+EndFunc   ;==>_ListViewAddWp
 
-Func _SetListviewWidths()
+Func _SetListviewWidthsWp()
 	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Line - 0, $column_Width_Line - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Name - 0, $column_Width_Name - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Desc - 0, $column_Width_Desc - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Notes - 0, $column_Width_Notes - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Latitude - 0, $column_Width_Latitude - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Longitude - 0, $column_Width_Longitude - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Bearing - 0, $column_Width_Bearing - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Distance - 0, $column_Width_Distance - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Link - 0, $column_Width_Link - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Author - 0, $column_Width_Author - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Type - 0, $column_Width_Type - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Difficulty - 0, $column_Width_Difficulty - 0)
-	_GUICtrlListView_SetColumnWidth($ListviewWPs, $column_Terrain - 0, $column_Width_Terrain - 0)
-EndFunc   ;==>_SetListviewWidths
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Line - 0, $wp_column_Width_Line - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Name - 0, $wp_column_Width_Name - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Desc - 0, $wp_column_Width_Desc - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Notes - 0, $wp_column_Width_Notes - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Latitude - 0, $wp_column_Width_Latitude - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Longitude - 0, $wp_column_Width_Longitude - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Bearing - 0, $wp_column_Width_Bearing - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Distance - 0, $wp_column_Width_Distance - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Link - 0, $wp_column_Width_Link - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Author - 0, $wp_column_Width_Author - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Type - 0, $wp_column_Width_Type - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Difficulty - 0, $wp_column_Width_Difficulty - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewWPs, $wp_column_Terrain - 0, $wp_column_Width_Terrain - 0)
+EndFunc   ;==>_SetListviewWidthsWp
 
-Func _GetListviewWidths()
-	$column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Line - 0)
-	$column_Width_Name = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Name - 0)
-	$column_Width_Desc = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Desc - 0)
-	$column_Width_Notes = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Notes - 0)
-	$column_Width_Latitude = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Latitude - 0)
-	$column_Width_Longitude = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Longitude - 0)
-	$column_Width_Bearing = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Bearing - 0)
-	$column_Width_Distance = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Distance - 0)
-	$column_Width_Link = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Link - 0)
-	$column_Width_Author = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Author - 0)
-	$column_Width_Type = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Type - 0)
-	$column_Width_Difficulty = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Difficulty - 0)
-	$column_Width_Terrain = _GUICtrlListView_GetColumnWidth($ListviewWPs, $column_Terrain - 0)
-EndFunc   ;==>_GetListviewWidths
+Func _GetListviewWidthsWp()
+	$wp_column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Line - 0)
+	$wp_column_Width_Name = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Name - 0)
+	$wp_column_Width_Desc = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Desc - 0)
+	$wp_column_Width_Notes = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Notes - 0)
+	$wp_column_Width_Latitude = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Latitude - 0)
+	$wp_column_Width_Longitude = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Longitude - 0)
+	$wp_column_Width_Bearing = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Bearing - 0)
+	$wp_column_Width_Distance = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Distance - 0)
+	$wp_column_Width_Link = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Link - 0)
+	$wp_column_Width_Author = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Author - 0)
+	$wp_column_Width_Type = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Type - 0)
+	$wp_column_Width_Difficulty = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Difficulty - 0)
+	$wp_column_Width_Terrain = _GUICtrlListView_GetColumnWidth($ListviewWPs, $wp_column_Terrain - 0)
+EndFunc   ;==>_GetListviewWidthsWp
 
-Func _HeaderSort($column);Sort a column in ap list
+Func _HeaderSortWp($column);Sort a column in ap list
 	If $Direction[$column] = 0 Then
 		Dim $v_sort = False;set descending
 	Else
@@ -1016,11 +1115,66 @@ Func _HeaderSort($column);Sort a column in ap list
 	_GUICtrlListView_SimpleSort($ListviewWPs, $v_sort, $column)
 	_FixLineNumbers()
 	$SortColumn = -1
-EndFunc   ;==>_HeaderSort
+EndFunc   ;==>_HeaderSortWp
 
-Func _SortColumnToggle(); Sets the ap list column header that was clicked
+Func _SortColumnToggleWp(); Sets the ap list column header that was clicked
 	$SortColumn = GUICtrlGetState($ListviewWPs)
-EndFunc   ;==>_SortColumnToggle
+EndFunc   ;==>_SortColumnToggleWp
+
+Func _ListViewAddTrk($line, $Add_Line = '', $Add_Name = '', $Add_Desc = '', $Add_Comments = '', $Add_Source = '', $Add_Url = '', $Add_UrlName = '', $Add_Number = '')
+	If $Add_Line <> '' Then _GUICtrlListView_SetItemText($ListviewTrk, $line, $Add_Line, $trk_column_Line)
+	If $Add_Name <> '' Then _GUICtrlListView_SetItemText($ListviewTrk, $line, $Add_Name, $trk_column_Name)
+	If $Add_Desc <> '' Then _GUICtrlListView_SetItemText($ListviewTrk, $line, $Add_Desc, $trk_column_Desc)
+	If $Add_Comments <> '' Then _GUICtrlListView_SetItemText($ListviewTrk, $line, $Add_Comments, $trk_column_Comments)
+	If $Add_Source <> '' Then _GUICtrlListView_SetItemText($ListviewTrk, $line, $Add_Source, $trk_column_Source)
+	If $Add_Url <> '' Then _GUICtrlListView_SetItemText($ListviewTrk, $line, $Add_Url, $trk_column_Url)
+	If $Add_UrlName <> '' Then _GUICtrlListView_SetItemText($ListviewTrk, $line, $Add_UrlName, $trk_column_UrlName)
+	If $Add_Number <> '' Then _GUICtrlListView_SetItemText($ListviewTrk, $line, $Add_Number, $trk_column_Number)
+EndFunc   ;==>_ListViewAddTrk
+
+Func _SetListviewWidthsTrk()
+	;Set column widths - All variables have ' - 0' after them to make this work. it would not set column widths without the ' - 0'
+	_GUICtrlListView_SetColumnWidth($ListviewTrk, $trk_column_Line - 0, $trk_column_Width_Line - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewTrk, $trk_column_Name - 0, $trk_column_Width_Name - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewTrk, $trk_column_Desc - 0, $trk_column_Width_Desc - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewTrk, $trk_column_Comments - 0, $trk_column_Width_Comments - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewTrk, $trk_column_Source - 0, $trk_column_Width_Source - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewTrk, $trk_column_Url - 0, $trk_column_Width_Url - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewTrk, $trk_column_UrlName - 0, $trk_column_Width_UrlName - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewTrk, $trk_column_Number - 0, $trk_column_Width_Number - 0)
+EndFunc   ;==>_SetListviewWidthsTrk
+
+Func _GetListviewWidthsTrk()
+	$trk_column_Width_Line = _GUICtrlListView_GetColumnWidth($ListviewTrk, $trk_column_Line - 0)
+	$trk_column_Width_Name = _GUICtrlListView_GetColumnWidth($ListviewTrk, $trk_column_Name - 0)
+	$trk_column_Width_Desc = _GUICtrlListView_GetColumnWidth($ListviewTrk, $trk_column_Desc - 0)
+	$trk_column_Width_Comments = _GUICtrlListView_GetColumnWidth($ListviewTrk, $trk_column_Comments - 0)
+	$trk_column_Width_Source = _GUICtrlListView_GetColumnWidth($ListviewTrk, $trk_column_Source - 0)
+	$trk_column_Width_Url = _GUICtrlListView_GetColumnWidth($ListviewTrk, $trk_column_Url - 0)
+	$trk_column_Width_UrlName = _GUICtrlListView_GetColumnWidth($ListviewTrk, $trk_column_UrlName - 0)
+	$trk_column_Width_Number = _GUICtrlListView_GetColumnWidth($ListviewTrk, $trk_column_Number - 0)
+EndFunc   ;==>_GetListviewWidthsTrk
+
+Func _HeaderSortTrk($column);Sort a column in ap list
+	If $Direction[$column] = 0 Then
+		Dim $v_sort = False;set descending
+	Else
+		Dim $v_sort = True;set ascending
+	EndIf
+	If $Direction[$column] = 0 Then
+		$Direction[$column] = 1
+	Else
+		$Direction[$column] = 0
+	EndIf
+	_GUICtrlListView_SimpleSort($ListviewTrk, $v_sort, $column)
+	;_FixLineNumbers()
+	$SortColumn = -1
+EndFunc   ;==>_HeaderSortTrk
+
+Func _SortColumnToggleTrk(); Sets the ap list column header that was clicked
+	$SortColumn = GUICtrlGetState($ListviewTrk)
+EndFunc   ;==>_SortColumnToggleTrk
+
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;MENU FUNCTIONS
@@ -1074,13 +1228,14 @@ Func _ClearAllWp()
 	$query = "DELETE * FROM TRACKSEG"
 	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 	;Create Default GPS Track
-	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|||' & $Script_Name & '|||')
-	;Clear Listview
-	_GetListviewWidths()
-	$ListviewWPs = GUICtrlCreateListView($headers, 260, 5, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, '0|0|' & StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & '|||' & $Script_Name & '|||')
+	;Recreate Listview
+	_GetListviewWidthsWp()
+	GUICtrlDelete($ListviewWPs)
+	$ListviewWPs = GUICtrlCreateListView($wp_headers, 2, 70, 978, 602, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
 	GUICtrlSetBkColor(-1, $ControlBackgroundColor)
-	_SetListviewWidths()
-	;GUICtrlSetOnEvent($ListviewWPs, '_SortColumnToggle')
+	_SetListviewWidthsWp()
+	;GUICtrlSetOnEvent($ListviewWPs, '_SortColumnToggleWp')
 	$Redraw = 1
 	_SetControlSizes()
 	$ClearAllWps = 0
@@ -1120,7 +1275,7 @@ Func _ToggleTrackView()
 	GUICtrlSetState($AddTrkButton, $GUI_SHOW)
 	GUICtrlSetState($EditTrkButton, $GUI_SHOW)
 	GUICtrlSetState($DelTrkButton, $GUI_SHOW)
-	GUICtrlSetState($ListviewTrks, $GUI_SHOW)
+	GUICtrlSetState($ListviewTrk, $GUI_SHOW)
 EndFunc   ;==>_ToggleTrackView
 
 Func _ToggleWaypointView()
@@ -1137,7 +1292,7 @@ Func _ToggleWaypointView()
 	GUICtrlSetState($AddTrkButton, $GUI_HIDE)
 	GUICtrlSetState($EditTrkButton, $GUI_HIDE)
 	GUICtrlSetState($DelTrkButton, $GUI_HIDE)
-	GUICtrlSetState($ListviewTrks, $GUI_HIDE)
+	GUICtrlSetState($ListviewTrk, $GUI_HIDE)
 EndFunc   ;==>_ToggleWaypointView
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -1250,7 +1405,7 @@ Func _AddWaypoint()
 		EndIf
 		;Add Into ListView
 		$ListRow = _GUICtrlListView_InsertItem($ListviewWPs, $WPID, $DBAddPos)
-		_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+		_ListViewAddWp($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 		_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPDesc & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 
 		_CloseAddWaypointGUI()
@@ -1374,7 +1529,7 @@ Func _EditWaypoint()
 	$DestBrng = StringFormat('%0.1f', _BearingBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 	$DestDist = StringFormat('%0.1f', _DistanceBetweenPoints($StartLat, $StartLon, $DestLat, $DestLon))
 
-	_ListViewAdd($WPListrow, $WPWPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+	_ListViewAddWp($WPListrow, $WPWPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 	$query = "UPDATE WP SET Name = '" & StringReplace($WPName, "'", "''") & "', Desc1 = '" & StringReplace($WPDesc, "'", "''") & "', Notes = '" & StringReplace($WPNotes, "'", "''") & "', Latitude = '" & $DestLat & "', Longitude = '" & $DestLon & "', Bearing = '" & $DestBrng & "', Distance = '" & $DestDist & "' WHERE WPID = '" & $WPWPID & "'"
 	_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 
@@ -1418,7 +1573,7 @@ Func _DeleteWaypoint()
 					_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 					$WPWPID = $NewWPID
 				EndIf
-				_ListViewAdd($WPListrow, $WPWPID, '', '', '', '', '', '', '', '', '', '', '', '')
+				_ListViewAddWp($WPListrow, $WPWPID, '', '', '', '', '', '', '', '', '', '', '', '')
 			Next
 		EndIf
 	Else
@@ -2364,7 +2519,7 @@ Func _ImportGPX()
 				$FoundWpMatch = UBound($WpMatchArray) - 1
 				If $FoundWpMatch = 0 Then ;If WP is not found then add it
 					$WPID += 1
-					;Add APs to top of list
+					;Add WPs to top of list
 					If $AddDirection = 0 Then
 						$query = "UPDATE WP SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
 						_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
@@ -2375,7 +2530,7 @@ Func _ImportGPX()
 					;Add Into ListView
 					$ListRow = _GUICtrlListView_InsertItem($ListviewWPs, $WPID, $DBAddPos)
 
-					_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+					_ListViewAddWp($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 					ConsoleWrite($WPID & '|' & $ListRow & '|' & $WPDesc & '|' & $WPName & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer & @CRLF)
 					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPDesc & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 
@@ -2403,7 +2558,17 @@ Func _ImportGPX()
 							If $TrkDataArray[$X1] = "trkseg" Then
 								;Add Track Information to table
 								$TRACKID += 1
-								_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, $TRACKID & '|' & $TrackName & '|' & $TrackDesc & '|' & $TrackCmt & '|' & $TrackSrc & '|' & $TrackUrl & '|' & $TrackUrlName & '|' & $TrackNum)
+								;Add TRKs to top of list
+								If $AddDirection = 0 Then
+									$query = "UPDATE TRACK SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
+									_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
+									$DBAddPos = 0
+								Else ;Add to bottom
+									$DBAddPos = -1
+								EndIf
+								$ListRow = _GUICtrlListView_InsertItem($ListviewTrk, $TRACKID, $DBAddPos)
+								_ListViewAddTrk($ListRow, $TRACKID, $TrackName, $TrackDesc, $TrackCmt, $TrackSrc, $TrackUrl, $TrackUrlName, $TrackNum)
+								_AddRecord($MysticacheDB, "TRACK", $DB_OBJ, $TRACKID & '|' & $ListRow & '|' & $TrackName & '|' & $TrackDesc & '|' & $TrackCmt & '|' & $TrackSrc & '|' & $TrackUrl & '|' & $TrackUrlName & '|' & $TrackNum)
 								;Get Track Segment
 								$TrkSegArray = _XMLGetChildNodes($TrkFieldPath)
 								If IsArray($TrkSegArray) Then
@@ -2563,7 +2728,8 @@ Func _ImportLOC()
 					;Add Into ListView
 					$ListRow = _GUICtrlListView_InsertItem($ListviewWPs, $WPID, $DBAddPos)
 
-					_ListViewAdd($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+					_ListViewAddWp($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
+					_ListViewAddWp($ListRow, $WPID, $WPName, $WPDesc, $WPNotes, _GpsFormat($DestLat), _GpsFormat($DestLon), $DestBrng, $DestDist, $WPLink, $WPAuth, $WPType, $WPDif, $WPTer)
 					_AddRecord($MysticacheDB, "WP", $DB_OBJ, $WPID & '|' & $ListRow & '|' & $WPName & '|' & $WPDesc & '|' & $WPNotes & '|' & $DestLat & '|' & $DestLon & '|' & $DestBrng & '|' & $DestDist & '|' & $WPLink & '|' & $WPAuth & '|' & $WPType & '|' & $WPDif & '|' & $WPTer)
 				EndIf
 
