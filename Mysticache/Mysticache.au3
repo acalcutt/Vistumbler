@@ -2538,11 +2538,12 @@ Func _ImportGPX()
 
 			ElseIf $GpxArray[$X] = "trk" Then
 				ConsoleWrite("! -------------------------------------------------------------------------------------------> trk" & @CRLF)
-				Local $TrackName, $TrackDesc, $TrackCmt, $TrackSrc, $TrackUrl, $TrackUrlName, $TrackNum
+				Local $TrackSegNum, $TrackName, $TrackDesc, $TrackCmt, $TrackSrc, $TrackUrl, $TrackUrlName, $TrackNum
 				$TrkDataPath = $path & "/*[" & $X & "]"
 				$TrkDataArray = _XMLGetChildNodes($TrkDataPath)
 				;ConsoleWrite($TrkDataPath & @CRLF)
 				If IsArray($TrkDataArray) Then
+					Local $TrackSegNum = 0
 					For $X1 = 1 To $TrkDataArray[0]
 						$TrkFieldPath = $TrkDataPath & "/*[" & $X1 & "]"
 						$TrkFieldValueArray = _XMLGetValue($TrkDataPath & "/*[" & $X1 & "]")
@@ -2557,9 +2558,10 @@ Func _ImportGPX()
 							If $TrkDataArray[$X1] = "number" Then $TrackNum = $TrkFieldValueArray[1]
 							If $TrkDataArray[$X1] = "trkseg" Then
 								;Add Track Information to table
+								$TrackSegNum += 1
+								If $TrackNum = 0 Then $TrackNum = $TrackSegNum
 								$TRACKID += 1
-								;Add TRKs to top of list
-								If $AddDirection = 0 Then
+								If $AddDirection = 0 Then ;Add TRKs to top of list
 									$query = "UPDATE TRACK SET ListRow = ListRow + 1 WHERE ListRow <> '-1'"
 									_ExecuteMDB($MysticacheDB, $DB_OBJ, $query)
 									$DBAddPos = 0
