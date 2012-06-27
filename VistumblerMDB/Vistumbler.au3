@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_UseUpx=n
 #AutoIt3Wrapper_Res_Fileversion=10.3.2.0
-#AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
+#AutoIt3Wrapper_res_requestedExecutionLevel=asInvoker
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 6'
+$version = 'v10.3 Beta 7'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/06/26'
+$last_modified = '2012/06/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1742,91 +1742,98 @@ Func _ScanAccessPoints()
 		Return ($FoundAPs)
 	Else
 		Local $NewAP = 0
+		;Delete old temp file
+		FileDelete($tempfile)
 		;Dump data from netsh
-		FileDelete($tempfile);delete old temp file
 		_RunDos($netsh & ' wlan show networks mode=bssid interface="' & $DefaultApapter & '" > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
-		$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Array
-		;Go through data and pull AP information
-		If $arrayadded = 1 Then
-			;Strip out whitespace before and after text on each line
-			For $stripws = 1 To $TempFileArray[0]
-				$TempFileArray[$stripws] = StringStripWS($TempFileArray[$stripws], 3)
-			Next
-			;Go through each line to get data
-			For $loop = 1 To $TempFileArray[0]
-				$temp = StringSplit(StringStripWS($TempFileArray[$loop], 3), ":")
-				If IsArray($temp) Then
-					If $temp[0] = 2 Then
-						If StringInStr($TempFileArray[$loop], $SearchWord_SSID) And StringInStr($TempFileArray[$loop], $SearchWord_BSSID) <> 1 Then
-							$SSID = StringStripWS($temp[2], 3)
-							Dim $NetworkType = '', $Authentication = '', $Encryption = '', $BSSID = ''
-						EndIf
-						If StringInStr($TempFileArray[$loop], $SearchWord_NetworkType) Then $NetworkType = StringStripWS($temp[2], 3)
-						If StringInStr($TempFileArray[$loop], $SearchWord_Authentication) Then $Authentication = StringStripWS($temp[2], 3)
-						If StringInStr($TempFileArray[$loop], $SearchWord_Encryption) Then $Encryption = StringStripWS($temp[2], 3)
-						If StringInStr($TempFileArray[$loop], $SearchWord_Signal) Then $Signal = StringStripWS(StringReplace($temp[2], '%', ''), 3)
-						If StringInStr($TempFileArray[$loop], $SearchWord_RadioType) Then $RadioType = StringStripWS($temp[2], 3)
-						If StringInStr($TempFileArray[$loop], $SearchWord_Channel) Then $Channel = StringStripWS($temp[2], 3)
-						If StringInStr($TempFileArray[$loop], $SearchWord_BasicRates) Then $BasicTransferRates = StringStripWS($temp[2], 3)
-						If StringInStr($TempFileArray[$loop], $SearchWord_OtherRates) Then $OtherTransferRates = StringStripWS($temp[2], 3)
-					ElseIf $temp[0] = 7 Then
-						If StringInStr($TempFileArray[$loop], $SearchWord_BSSID) Then
-							Dim $Signal = '0', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
-							$NewAP = 1
-							$BSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
+		;Open netsh temp file and go through it
+		$netshtempfile = FileOpen($tempfile, 0)
+		If $netshtempfile <> -1 Then
+			$netshfile = FileRead($netshtempfile)
+			$netshfile = StringReplace($netshfile, ":" & @CRLF, ":") ;Fix for turkish netsh file
+			$TempFileArray = StringSplit($netshfile, @CRLF)
+			If IsArray($TempFileArray) Then
+				;Strip out whitespace before and after text on each line
+				For $stripws = 1 To $TempFileArray[0]
+					$TempFileArray[$stripws] = StringStripWS($TempFileArray[$stripws], 3)
+				Next
+				;Go through each line to get data
+				For $loop = 1 To $TempFileArray[0]
+					$temp = StringSplit(StringStripWS($TempFileArray[$loop], 3), ":")
+					If IsArray($temp) Then
+						If $temp[0] = 2 Then
+							If StringInStr($TempFileArray[$loop], $SearchWord_SSID) And StringInStr($TempFileArray[$loop], $SearchWord_BSSID) <> 1 Then
+								$SSID = StringStripWS($temp[2], 3)
+								Dim $NetworkType = '', $Authentication = '', $Encryption = '', $BSSID = ''
+							EndIf
+							If StringInStr($TempFileArray[$loop], $SearchWord_NetworkType) Then $NetworkType = StringStripWS($temp[2], 3)
+							If StringInStr($TempFileArray[$loop], $SearchWord_Authentication) Then $Authentication = StringStripWS($temp[2], 3)
+							If StringInStr($TempFileArray[$loop], $SearchWord_Encryption) Then $Encryption = StringStripWS($temp[2], 3)
+							If StringInStr($TempFileArray[$loop], $SearchWord_Signal) Then $Signal = StringStripWS(StringReplace($temp[2], '%', ''), 3)
+							If StringInStr($TempFileArray[$loop], $SearchWord_RadioType) Then $RadioType = StringStripWS($temp[2], 3)
+							If StringInStr($TempFileArray[$loop], $SearchWord_Channel) Then $Channel = StringStripWS($temp[2], 3)
+							If StringInStr($TempFileArray[$loop], $SearchWord_BasicRates) Then $BasicTransferRates = StringStripWS($temp[2], 3)
+							If StringInStr($TempFileArray[$loop], $SearchWord_OtherRates) Then $OtherTransferRates = StringStripWS($temp[2], 3)
+						ElseIf $temp[0] = 7 Then
+							If StringInStr($TempFileArray[$loop], $SearchWord_BSSID) Then
+								Dim $Signal = '0', $RadioType = '', $Channel = '', $BasicTransferRates = '', $OtherTransferRates = '', $MANUF
+								$NewAP = 1
+								$BSSID = StringStripWS(StringUpper($temp[2] & ':' & $temp[3] & ':' & $temp[4] & ':' & $temp[5] & ':' & $temp[6] & ':' & $temp[7]), 3)
+							EndIf
 						EndIf
 					EndIf
-				EndIf
-				;Set Update Flag (if needed)
-				$Update = 0
-				If $loop = $TempFileArray[0] Then
-					$Update = 1
-				Else
-					If StringInStr($TempFileArray[$loop + 1], $SearchWord_SSID) Or StringInStr($TempFileArray[$loop + 1], $SearchWord_BSSID) Then $Update = 1
-				EndIf
-				;Add data into database and gui
-				If $Update = 1 And $NewAP = 1 And $BSSID <> '' Then
-					$NewAP = 0
-					If $BSSID <> "" Then
-						$FoundAPs += 1
-						;Add new GPS ID
-						If $FoundAPs = 1 Then
-							$GPS_ID += 1
-							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
-						EndIf
-						;Add new access point
-						$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
-						If $NewFound <> 0 Then
-							;Check if this AP matches the filter
-							If StringInStr($AddQuery, "WHERE") Then
-								$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
-							Else
-								$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
+					;Set Update Flag (if needed)
+					$Update = 0
+					If $loop = $TempFileArray[0] Then
+						$Update = 1
+					Else
+						If StringInStr($TempFileArray[$loop + 1], $SearchWord_SSID) Or StringInStr($TempFileArray[$loop + 1], $SearchWord_BSSID) Then $Update = 1
+					EndIf
+					;Add data into database and gui
+					If $Update = 1 And $NewAP = 1 And $BSSID <> '' Then
+						$NewAP = 0
+						If $BSSID <> "" Then
+							$FoundAPs += 1
+							;Add new GPS ID
+							If $FoundAPs = 1 Then
+								$GPS_ID += 1
+								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
 							EndIf
-							$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
-							$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
-							;If AP Matches filter, increment $FilterMatches
-							If $FoundLoadApMatch = 1 Then $FilterMatches += 1
-							;Play per-ap new AP sound
-							If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
-								If $NewSoundSigBased = 1 Then
-									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
-									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+							;Add new access point
+							$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+							If $NewFound <> 0 Then
+								;Check if this AP matches the filter
+								If StringInStr($AddQuery, "WHERE") Then
+									$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
 								Else
-									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
-									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+									$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
+								EndIf
+								$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+								$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+								;If AP Matches filter, increment $FilterMatches
+								If $FoundLoadApMatch = 1 Then $FilterMatches += 1
+								;Play per-ap new AP sound
+								If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
+									If $NewSoundSigBased = 1 Then
+										$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
+										$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+									Else
+										$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
+										$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+									EndIf
 								EndIf
 							EndIf
 						EndIf
 					EndIf
-				EndIf
-			Next
-			;Play New AP sound if sounds are enabled if per-ap sound is disabled
-			If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+				Next
+				;Play New AP sound if sounds are enabled if per-ap sound is disabled
+				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+			EndIf
+			FileClose($netshtempfile)
 			;Return number of active APs
 			Return ($FoundAPs)
 		Else
-			Return ('-1')
+			Return ("-1")
 		EndIf
 	EndIf
 EndFunc   ;==>_ScanAccessPoints
@@ -2785,7 +2792,7 @@ Func _Exit()
 	FileDelete($GoogleEarth_GpsFile)
 	FileDelete($GoogleEarth_OpenFile)
 	FileDelete($GoogleEarth_TrackFile)
-	FileDelete($tempfile)
+	;FileDelete($tempfile)
 	FileDelete($tempfile_showint)
 	If $SaveDbOnExit = 1 Then
 		FileMove($VistumblerDB, $SaveDir, 9);Move to save directory for later use
