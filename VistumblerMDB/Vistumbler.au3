@@ -2792,7 +2792,7 @@ Func _Exit()
 	FileDelete($GoogleEarth_GpsFile)
 	FileDelete($GoogleEarth_OpenFile)
 	FileDelete($GoogleEarth_TrackFile)
-	;FileDelete($tempfile)
+	FileDelete($tempfile)
 	FileDelete($tempfile_showint)
 	If $SaveDbOnExit = 1 Then
 		FileMove($VistumblerDB, $SaveDir, 9);Move to save directory for later use
