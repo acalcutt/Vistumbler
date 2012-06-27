@@ -1,7 +1,9 @@
 #RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
+#AutoIt3Wrapper_UseUpx=n
 #AutoIt3Wrapper_Res_Fileversion=10.3.2.0
 #AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
 #AutoIt3Wrapper_Run_Tidy=y
@@ -12,14 +14,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.8.0
+;AutoIt Version: v3.3.9.4
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 5'
+$version = 'v10.3 Beta 6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/05/25'
+$last_modified = '2012/06/26'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -887,6 +889,8 @@ Dim $Text_Cameras = IniRead($DefaultLanguagePath, 'GuiText', 'Cameras', 'Camera(
 Dim $Text_AddCamera = IniRead($DefaultLanguagePath, 'GuiText', 'AddCamera', 'Add Camera')
 Dim $Text_RemoveCamera = IniRead($DefaultLanguagePath, 'GuiText', 'RemoveCamera', 'Remove Camera')
 Dim $Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
+Dim $Text_UpdateUpdaterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateUpdaterMsg', 'There is an update to the vistumbler updater. Would you like to download and update it now?')
+
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
 		$updatemsg = MsgBox(4, $Text_Update, $Text_UpdateMsg)
@@ -9967,14 +9971,17 @@ Func _CheckForUpdates()
 				$fversion = $fv[$i][1]
 				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $fversion Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
 					If $filename = 'update.exe' Then ;Download updated update.exe
-						$sourcefile = $VIEWSVN_ROOT & $filename & '?revision=' & $fversion
-						$desttmpfile = $TmpDir & $filename & '.tmp'
-						$destfile = @ScriptDir & '\' & $filename
-						$get = InetGet($sourcefile, $desttmpfile, 1)
-						If $get <> 0 And FileGetSize($desttmpfile) <> 0 Then ;Download Successful
-							If FileMove($desttmpfile, $destfile, 9) = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $fversion)
+						$dloadupdatemsg = MsgBox(4, $Text_Information, $Text_UpdateUpdaterMsg)
+						If $dloadupdatemsg = 6 Then
+							$sourcefile = $VIEWSVN_ROOT & $filename & '?revision=' & $fversion
+							$desttmpfile = $TmpDir & $filename & '.tmp'
+							$destfile = @ScriptDir & '\' & $filename
+							$get = InetGet($sourcefile, $desttmpfile, 1)
+							If $get <> 0 And FileGetSize($desttmpfile) <> 0 Then ;Download Successful
+								If FileMove($desttmpfile, $destfile, 9) = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $fversion)
+							EndIf
+							FileDelete($desttmpfile)
 						EndIf
-						FileDelete($desttmpfile)
 					Else
 						$UpdatesAvalible = 1
 					EndIf

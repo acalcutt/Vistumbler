@@ -1,14 +1,16 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=Icons\icon.ico
+#AutoIt3Wrapper_Version=Beta
+#AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_UseUpx=n
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2011 Andrew Calcutt
+;Copyright (C) 2012 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.6.1
+;AutoIt Version: v3.3.9.4
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/19/2008'
 $Script_Name = 'SayText'
@@ -24,7 +26,7 @@ Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $SettingsDir = @ScriptDir & '\Settings\'
 Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
 Dim $new_AP_sound = IniRead($settings, 'Sound', 'NewAP_Sound', 'new_ap.wav')
-Dim $say = ''
+Dim $say = 'test'
 Dim $midistring = ''
 Dim $type = 2
 Dim $SayPercent = 0
@@ -69,6 +71,7 @@ If $say <> '' Or $midistring <> '' Then
 		If StringIsInt($say) = 1 And StringLen($say) <= 3 Then _SpeakSignal($say)
 	ElseIf $type = 2 Then
 		If $SayPercent = 1 Then $say &= '%'
+		ConsoleWrite( $say & @CRLF)
 		_TalkOBJ($say)
 	ElseIf $type = 3 Then
 		_PlayMidi($Instrument, $say, $MidiWaitTime)
