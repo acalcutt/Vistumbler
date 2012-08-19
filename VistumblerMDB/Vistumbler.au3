@@ -1,4 +1,4 @@
-#RequireAdmin
+;#RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 7'
+$version = 'v10.3 Beta 8'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/06/27'
+$last_modified = '2012/08/19'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -48,6 +48,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\FileInUse.au3"
 #include "UDFs\WinGetPosEx.au3"
 #include "UDFs\UnixTime.au3"
+_GDIPlus_Startup()
 ;Set setting folder--------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
 DirCreate($SettingsDir)
@@ -244,6 +245,7 @@ Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_Spea
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
+Dim $2400chanGUI
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
@@ -1245,6 +1247,7 @@ $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $ExtraMenu)
 $UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $ExtraMenu)
 $GUI_ImportImageFolder = GUICtrlCreateMenuItem("Import Image Folder (" & $Text_Experimental & ")", $ExtraMenu)
 $GUI_CleanupNonMatchingImages = GUICtrlCreateMenuItem("Cleanup non-matching images (" & $Text_Experimental & ")", $ExtraMenu)
+$GUI_2400ChannelGraph = GUICtrlCreateMenuItem("2.4Ghz Channel Graph (" & $Text_Experimental & ")", $ExtraMenu)
 
 $WifidbMenu = GUICtrlCreateMenu($Text_WifiDB)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $WifidbMenu)
@@ -1439,6 +1442,8 @@ GUICtrlSetOnEvent($VistumblerWiki, '_OpenVistumblerWiki')
 GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
 GUICtrlSetOnEvent($GUI_ImportImageFolder, '_GUI_ImportImageFiles')
 GUICtrlSetOnEvent($GUI_CleanupNonMatchingImages, '_RemoveNonMatchingImages')
+GUICtrlSetOnEvent($GUI_2400ChannelGraph, '_Channels2400_GUI')
+
 GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
 GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
@@ -2773,6 +2778,7 @@ EndFunc   ;==>_ExitVistumbler
 
 Func _Exit()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Exit()') ;#Debug Display
+	_GDIPlus_Shutdown()
 	GUISetState(@SW_HIDE, $Vistumbler)
 	_AccessCloseConn($DB_OBJ)
 	_AccessCloseConn($ManuDB_OBJ)
@@ -3621,7 +3627,7 @@ Func _CompassGUI()
 		$west = GUICtrlCreateLabel("W", 3, 45, 15, 12)
 		GUICtrlSetColor(-1, $TextColor)
 
-		_GDIPlus_Startup()
+		;_GDIPlus_Startup()
 		$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
 		$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
 		$hBrush = _GDIPlus_BrushCreateSolid($CompassColor) ;red
@@ -3649,7 +3655,7 @@ EndFunc   ;==>_CompassGUI
 Func _CloseCompassGui();closes the compass window
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseCompassGui()') ;#Debug Display
 	_GDIPlus_GraphicsDispose($CompassGraphic)
-	_GDIPlus_Shutdown()
+	;_GDIPlus_Shutdown()
 	GUIDelete($CompassGUI)
 	$CompassOpen = 0
 EndFunc   ;==>_CloseCompassGui
@@ -3673,8 +3679,8 @@ Func _SetCompassSizes();Takes the size of a hidden label in the compass window a
 	GUICtrlSetPos($west, 0, $CompassMidHeight, 15, 15)
 
 	_GDIPlus_GraphicsDispose($CompassGraphic)
-	_GDIPlus_Shutdown()
-	_GDIPlus_Startup()
+	;_GDIPlus_Shutdown()
+	;_GDIPlus_Startup()
 
 	$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
 	$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
@@ -10946,3 +10952,180 @@ Func _RemoveNonMatchingImages()
 	If $CamNameMatch = 0 Then ;If Img is not found, add it
 	EndIf ;==>_RemoveNonMatchingImages
 EndFunc   ;==>_RemoveNonMatchingImages
+
+Func _Channels2400_GUI()
+
+	$2400width = 900
+	$2400height = 400
+	$2400topborder = 20
+	$2400bottomborder = 40
+	$2400leftborder = 40
+	$2400rightborder = 20
+	$2400graphheight = $2400height - ($2400topborder + $2400bottomborder)
+	$2400graphwidth = $2400width - ($2400leftborder + $2400rightborder)
+	$2400freqwidth = $2400graphwidth / 100
+	$2400percheight = $2400graphheight / 100
+
+	$2400chanGUI = GUICreate("2.4Ghz Channel Graph", $2400width, $2400height, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+	GUISetState(@SW_SHOW, $2400chanGUI)
+	GUISetOnEvent($GUI_EVENT_CLOSE, '_Close2400GUI')
+	$2400GraphicGUI = _GDIPlus_GraphicsCreateFromHWND($2400chanGUI)
+
+	;Draw 10% labels and lines
+	For $sn = 0 To 10
+		$percent = ($sn * 10) & "%"
+		$vposition = ($2400height - $2400bottomborder) - (($2400graphheight / 10) * $sn)
+		ConsoleWrite($percent & '-' & $vposition & @CRLF)
+		_GDIPlus_GraphicsDrawString($2400GraphicGUI, $percent, 0, $vposition - 5)
+		_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition)
+	Next
+	;Draw Channel labels and lines
+	$frequency = 2412
+	$Channel = 1
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2417
+	$Channel = 2
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2422
+	$Channel = 3
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2427
+	$Channel = 4
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2432
+	$Channel = 5
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2437
+	$Channel = 6
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2442
+	$Channel = 7
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2447
+	$Channel = 8
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2452
+	$Channel = 9
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2457
+	$Channel = 10
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2462
+	$Channel = 11
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2467
+	$Channel = 12
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2472
+	$Channel = 13
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+	$frequency = 2484
+	$Channel = 14
+	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
+	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+
+
+	$query = "SELECT SSID, CHAN, Signal FROM AP WHERE Active = '1'"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $dc = 1 To $FoundApMatch
+		$Found_SSID = $ApMatchArray[$dc][1]
+		$Found_CHAN = $ApMatchArray[$dc][2]
+		$Found_Signal = $ApMatchArray[$dc][3] - 0
+		If $Found_CHAN = 1 Then
+			$Found_Freq = 2412
+		ElseIf $Found_CHAN = 2 Then
+			$Found_Freq = 2417
+		ElseIf $Found_CHAN = 3 Then
+			$Found_Freq = 2422
+		ElseIf $Found_CHAN = 4 Then
+			$Found_Freq = 2427
+		ElseIf $Found_CHAN = 5 Then
+			$Found_Freq = 2432
+		ElseIf $Found_CHAN = 6 Then
+			$Found_Freq = 2437
+		ElseIf $Found_CHAN = 7 Then
+			$Found_Freq = 2442
+		ElseIf $Found_CHAN = 8 Then
+			$Found_Freq = 2447
+		ElseIf $Found_CHAN = 9 Then
+			$Found_Freq = 2452
+		ElseIf $Found_CHAN = 10 Then
+			$Found_Freq = 2457
+		ElseIf $Found_CHAN = 11 Then
+			$Found_Freq = 2462
+		ElseIf $Found_CHAN = 12 Then
+			$Found_Freq = 2467
+		ElseIf $Found_CHAN = 13 Then
+			$Found_Freq = 2472
+		ElseIf $Found_CHAN = 14 Then
+			$Found_Freq = 2484
+		Else
+			$Found_Freq = 0
+		EndIf
+
+		If $Found_Freq <> 0 Then
+			$y_center = $2400leftborder + (($Found_Freq - 2400) * $2400freqwidth)
+			$y_left = $y_center - (11 * $2400freqwidth)
+			$y_right = $y_center + (11 * $2400freqwidth)
+			$x_sig = $2400topborder + ($2400graphheight - ($Found_Signal * $2400percheight))
+			$x_bottom = $2400topborder + $2400graphheight
+
+			Local $aPoints[4][2]
+			$aPoints[0][0] = 3
+			$aPoints[1][0] = $y_left
+			$aPoints[1][1] = $x_bottom
+			$aPoints[2][0] = $y_center
+			$aPoints[2][1] = $x_sig
+			$aPoints[3][0] = $y_right
+			$aPoints[3][1] = $x_bottom
+
+			_GDIPlus_GraphicsDrawCurve($2400GraphicGUI, $aPoints)
+		EndIf
+	Next
+
+EndFunc   ;==>_Channels2400_GUI
+
+Func _Close2400GUI()
+	GUIDelete($2400chanGUI)
+EndFunc   ;==>_Close2400GUI
