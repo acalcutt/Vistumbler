@@ -21,7 +21,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
 $version = 'v10.3 Beta 9'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/08/19'
+$last_modified = '2012/08/20'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -11151,7 +11151,7 @@ Func _Channels5000_GUI()
 
 	$5000chanGUI = GUICreate("5Ghz Channel Graph", $5000width, $5000height, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 	$5000GraphicGUI = _GDIPlus_GraphicsCreateFromHWND($5000chanGUI)
-	GUISetBkColor($ControlBackgroundColor, $2400chanGUI)
+	GUISetBkColor($ControlBackgroundColor, $5000chanGUI)
 	$Pen_GraphGrid = _GDIPlus_PenCreate(StringReplace($BackgroundColor, "0x", "0xFF"))
 	GUISetState(@SW_SHOW, $5000chanGUI)
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_Close5000GUI')
