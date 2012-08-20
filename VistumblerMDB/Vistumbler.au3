@@ -1666,14 +1666,14 @@ While 1
 	;Check 2.4Ghz Channel Graph Window Position
 	If WinActive($2400chanGUI) And $2400chanGUIOpen = 1 And $Updated2400ChanGraphPos = 0 Then
 		$p = _WinGetPosEx($2400chanGUI)
-		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $2400ChanGraphPos Then $2400ChanGraphPos = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $2400chanGUI has moved or resized, set $pompassPosition to current window size
+		If DllStructGetData($p, "Left") & ',' & DllStructGetData($p, "Right") & ',' & DllStructGetData($p, "Top") & ',' & DllStructGetData($p, "Bottom") <> $2400ChanGraphPos Then $2400ChanGraphPos = DllStructGetData($p, "Left") & ',' & DllStructGetData($p, "Right") & ',' & DllStructGetData($p, "Top") & ',' & DllStructGetData($p, "Bottom") ;If the $2400chanGUI has moved or resized, set $pompassPosition to current window size
 		$Updated2400ChanGraphPos = 1
 		ConsoleWrite($2400ChanGraphPos & @CRLF)
 	EndIf
 
 	;Check 5Ghz Channel Graph  Position
 	If WinActive($5000chanGUI) And $5000chanGUIOpen = 1 And $Updated5000ChanGraphPos = 0 Then
-		$p = _WinGetPosEx($5000chanGUI)
+		$p = _WinAPI_GetClientRect($5000chanGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $5000ChanGraphPos Then $5000ChanGraphPos = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $CompassGUI has moved or resized, set $pompassPosition to current window size
 		$Updated5000ChanGraphPos = 1
 	EndIf
