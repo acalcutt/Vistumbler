@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 8'
+$version = 'v10.3 Beta 9'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2012/08/19'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -245,7 +245,7 @@ Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_Spea
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
-Dim $2400chanGUI
+Dim $2400chanGUI, $5000chanGUI
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
@@ -1248,6 +1248,7 @@ $UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $ExtraMe
 $GUI_ImportImageFolder = GUICtrlCreateMenuItem("Import Image Folder (" & $Text_Experimental & ")", $ExtraMenu)
 $GUI_CleanupNonMatchingImages = GUICtrlCreateMenuItem("Cleanup non-matching images (" & $Text_Experimental & ")", $ExtraMenu)
 $GUI_2400ChannelGraph = GUICtrlCreateMenuItem("2.4Ghz Channel Graph (" & $Text_Experimental & ")", $ExtraMenu)
+$GUI_5000ChannelGraph = GUICtrlCreateMenuItem("5Ghz Channel Graph (" & $Text_Experimental & ")", $ExtraMenu)
 
 $WifidbMenu = GUICtrlCreateMenu($Text_WifiDB)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $WifidbMenu)
@@ -1443,6 +1444,7 @@ GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
 GUICtrlSetOnEvent($GUI_ImportImageFolder, '_GUI_ImportImageFiles')
 GUICtrlSetOnEvent($GUI_CleanupNonMatchingImages, '_RemoveNonMatchingImages')
 GUICtrlSetOnEvent($GUI_2400ChannelGraph, '_Channels2400_GUI')
+GUICtrlSetOnEvent($GUI_5000ChannelGraph, '_Channels5000_GUI')
 
 GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
@@ -3630,7 +3632,7 @@ Func _CompassGUI()
 		;_GDIPlus_Startup()
 		$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
 		$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
-		$hBrush = _GDIPlus_BrushCreateSolid($CompassColor) ;red
+		$hBrush = _GDIPlus_BrushCreateSolid($CompassColor)
 		_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, 100, 100, $hBrush)
 
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseCompassGui')
@@ -3684,7 +3686,7 @@ Func _SetCompassSizes();Takes the size of a hidden label in the compass window a
 
 	$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
 	$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
-	$hBrush = _GDIPlus_BrushCreateSolid($CompassColor) ;red
+	$hBrush = _GDIPlus_BrushCreateSolid($CompassColor)
 	_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, $CompassHeight, $CompassHeight, $hBrush)
 EndFunc   ;==>_SetCompassSizes
 
@@ -10966,10 +10968,14 @@ Func _Channels2400_GUI()
 	$2400freqwidth = $2400graphwidth / 100
 	$2400percheight = $2400graphheight / 100
 
+
+
 	$2400chanGUI = GUICreate("2.4Ghz Channel Graph", $2400width, $2400height, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+	$2400GraphicGUI = _GDIPlus_GraphicsCreateFromHWND($2400chanGUI)
+	GUISetBkColor($ControlBackgroundColor, $2400chanGUI)
+	$Pen_GraphGrid = _GDIPlus_PenCreate(StringReplace($BackgroundColor, "0x", "0xFF"))
 	GUISetState(@SW_SHOW, $2400chanGUI)
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_Close2400GUI')
-	$2400GraphicGUI = _GDIPlus_GraphicsCreateFromHWND($2400chanGUI)
 
 	;Draw 10% labels and lines
 	For $sn = 0 To 10
@@ -10977,92 +10983,92 @@ Func _Channels2400_GUI()
 		$vposition = ($2400height - $2400bottomborder) - (($2400graphheight / 10) * $sn)
 		ConsoleWrite($percent & '-' & $vposition & @CRLF)
 		_GDIPlus_GraphicsDrawString($2400GraphicGUI, $percent, 0, $vposition - 5)
-		_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition)
+		_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
 	Next
 	;Draw Channel labels and lines
 	$frequency = 2412
 	$Channel = 1
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2417
 	$Channel = 2
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2422
 	$Channel = 3
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2427
 	$Channel = 4
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2432
 	$Channel = 5
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2437
 	$Channel = 6
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2442
 	$Channel = 7
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2447
 	$Channel = 8
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2452
 	$Channel = 9
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2457
 	$Channel = 10
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2462
 	$Channel = 11
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2467
 	$Channel = 12
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2472
 	$Channel = 13
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 	$frequency = 2484
 	$Channel = 14
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
 	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder)
+	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 
 
 	$query = "SELECT SSID, CHAN, Signal FROM AP WHERE Active = '1'"
@@ -11129,3 +11135,262 @@ EndFunc   ;==>_Channels2400_GUI
 Func _Close2400GUI()
 	GUIDelete($2400chanGUI)
 EndFunc   ;==>_Close2400GUI
+
+Func _Channels5000_GUI()
+
+	$5000width = 900
+	$5000height = 400
+	$5000topborder = 20
+	$5000bottomborder = 40
+	$5000leftborder = 40
+	$5000rightborder = 20
+	$5000graphheight = $5000height - ($5000topborder + $5000bottomborder)
+	$5000graphwidth = $5000width - ($5000leftborder + $5000rightborder)
+	$5000freqwidth = $5000graphwidth / 700
+	$5000percheight = $5000graphheight / 100
+
+	$5000chanGUI = GUICreate("5Ghz Channel Graph", $5000width, $5000height, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+	$5000GraphicGUI = _GDIPlus_GraphicsCreateFromHWND($5000chanGUI)
+	GUISetBkColor($ControlBackgroundColor, $2400chanGUI)
+	$Pen_GraphGrid = _GDIPlus_PenCreate(StringReplace($BackgroundColor, "0x", "0xFF"))
+	GUISetState(@SW_SHOW, $5000chanGUI)
+	GUISetOnEvent($GUI_EVENT_CLOSE, '_Close5000GUI')
+
+
+	;Draw 10% labels and lines
+	For $sn = 0 To 10
+		$percent = ($sn * 10) & "%"
+		$vposition = ($5000height - $5000bottomborder) - (($5000graphheight / 10) * $sn)
+		ConsoleWrite($percent & '-' & $vposition & @CRLF)
+		_GDIPlus_GraphicsDrawString($5000GraphicGUI, $percent, 0, $vposition - 5)
+		_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
+	Next
+	;Draw Channel labels and lines
+	$frequency = 5180
+	$Channel = 36
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5200
+	$Channel = 40
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5220
+	$Channel = 44
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5240
+	$Channel = 48
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5260
+	$Channel = 52
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5280
+	$Channel = 56
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5300
+	$Channel = 60
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5320
+	$Channel = 64
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5500
+	$Channel = 100
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5520
+	$Channel = 104
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5540
+	$Channel = 108
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5560
+	$Channel = 112
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5580
+	$Channel = 116
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5600
+	$Channel = 120
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5620
+	$Channel = 124
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5640
+	$Channel = 128
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5660
+	$Channel = 132
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5680
+	$Channel = 136
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5700
+	$Channel = 140
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5745
+	$Channel = 149
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5765
+	$Channel = 153
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5785
+	$Channel = 157
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5805
+	$Channel = 161
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$frequency = 5825
+	$Channel = 165
+	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
+	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+
+	$query = "SELECT SSID, CHAN, Signal FROM AP WHERE Active = '1'"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $dc = 1 To $FoundApMatch
+		$Found_SSID = $ApMatchArray[$dc][1]
+		$Found_CHAN = $ApMatchArray[$dc][2]
+		$Found_Signal = $ApMatchArray[$dc][3] - 0
+		If $Found_CHAN = 36 Then
+			$Found_Freq = 5180
+		ElseIf $Found_CHAN = 40 Then
+			$Found_Freq = 5200
+		ElseIf $Found_CHAN = 44 Then
+			$Found_Freq = 5220
+		ElseIf $Found_CHAN = 48 Then
+			$Found_Freq = 5240
+		ElseIf $Found_CHAN = 52 Then
+			$Found_Freq = 5260
+		ElseIf $Found_CHAN = 56 Then
+			$Found_Freq = 5280
+		ElseIf $Found_CHAN = 60 Then
+			$Found_Freq = 5300
+		ElseIf $Found_CHAN = 64 Then
+			$Found_Freq = 5320
+		ElseIf $Found_CHAN = 100 Then
+			$Found_Freq = 5500
+		ElseIf $Found_CHAN = 104 Then
+			$Found_Freq = 5520
+		ElseIf $Found_CHAN = 108 Then
+			$Found_Freq = 5540
+		ElseIf $Found_CHAN = 112 Then
+			$Found_Freq = 5560
+		ElseIf $Found_CHAN = 116 Then
+			$Found_Freq = 5580
+		ElseIf $Found_CHAN = 120 Then
+			$Found_Freq = 5600
+		ElseIf $Found_CHAN = 124 Then
+			$Found_Freq = 5620
+		ElseIf $Found_CHAN = 128 Then
+			$Found_Freq = 5640
+		ElseIf $Found_CHAN = 132 Then
+			$Found_Freq = 5660
+		ElseIf $Found_CHAN = 136 Then
+			$Found_Freq = 5680
+		ElseIf $Found_CHAN = 140 Then
+			$Found_Freq = 5700
+		ElseIf $Found_CHAN = 149 Then
+			$Found_Freq = 5745
+		ElseIf $Found_CHAN = 153 Then
+			$Found_Freq = 5765
+		ElseIf $Found_CHAN = 157 Then
+			$Found_Freq = 5785
+		ElseIf $Found_CHAN = 161 Then
+			$Found_Freq = 5805
+		ElseIf $Found_CHAN = 165 Then
+			$Found_Freq = 5825
+		Else
+			$Found_Freq = 0
+		EndIf
+
+		If $Found_Freq <> 0 Then
+			$y_center = $5000leftborder + (($Found_Freq - 5150) * $5000freqwidth)
+			$y_left = $y_center - (10 * $5000freqwidth)
+			$y_right = $y_center + (10 * $5000freqwidth)
+			$x_sig = $5000topborder + ($5000graphheight - ($Found_Signal * $5000percheight))
+			$x_bottom = $5000topborder + $5000graphheight
+
+			Local $aPoints[4][2]
+			$aPoints[0][0] = 3
+			$aPoints[1][0] = $y_left
+			$aPoints[1][1] = $x_bottom
+			$aPoints[2][0] = $y_center
+			$aPoints[2][1] = $x_sig
+			$aPoints[3][0] = $y_right
+			$aPoints[3][1] = $x_bottom
+
+			_GDIPlus_GraphicsDrawCurve($5000GraphicGUI, $aPoints)
+		EndIf
+	Next
+
+EndFunc   ;==>_Channels5000_GUI
+
+Func _Close5000GUI()
+	GUIDelete($5000chanGUI)
+EndFunc   ;==>_Close5000GUI
