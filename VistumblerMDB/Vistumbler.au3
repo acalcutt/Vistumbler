@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 9'
+$version = 'v10.3 Beta 10'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2012/08/20'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -244,8 +244,8 @@ Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_Spea
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
-Dim $2400chanGUI, $2400GraphicGUI, $2400chanGUIOpen, $2400height, $2400width, $2400topborder, $2400bottomborder, $2400leftborder, $2400rightborder, $2400graphheight, $2400graphwidth, $2400freqwidth, $2400percheight
-Dim $5000chanGUI, $5000GraphicGUI, $5000chanGUIOpen, $5000height, $5000width, $5000topborder, $5000bottomborder, $5000leftborder, $5000rightborder, $5000graphheight, $5000graphwidth, $5000freqwidth, $5000percheight
+Dim $2400chanGUI, $2400GraphicGUI, $2400chanGUIOpen, $2400height, $2400width, $2400topborder, $2400bottomborder, $2400leftborder, $2400rightborder, $2400graphheight, $2400graphwidth, $2400freqwidth, $2400percheight, $2400backbuffer, $2400bitmap, $2400graphics
+Dim $5000chanGUI, $5000GraphicGUI, $5000chanGUIOpen, $5000height, $5000width, $5000topborder, $5000bottomborder, $5000leftborder, $5000rightborder, $5000graphheight, $5000graphwidth, $5000freqwidth, $5000percheight, $5000backbuffer, $5000bitmap, $5000graphics
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
@@ -10989,6 +10989,10 @@ Func _Channels2400_GUI()
 
 		$2400chanGUI = GUICreate("2.4Ghz Channel Graph", 800, 400, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($ControlBackgroundColor, $2400chanGUI)
+		$2400graphics = _GDIPlus_GraphicsCreateFromHWND($2400chanGUI)
+		$2400bitmap = _GDIPlus_BitmapCreateFromGraphics(800, 400, $2400graphics)
+		$2400backbuffer = _GDIPlus_ImageGetGraphicsContext($2400bitmap)
+
 		$cpsplit = StringSplit($2400ChanGraphPos, ',')
 		If $cpsplit[0] = 4 Then ;If $2400ChanGraphPos is a proper position, move and resize window
 			WinMove($2400chanGUI, '', $cpsplit[1], $cpsplit[2], $cpsplit[3], $cpsplit[4])
@@ -11029,24 +11033,22 @@ Func _Set2400ChanGraphSizes()
 	$2400freqwidth = $2400graphwidth / 100
 	$2400percheight = $2400graphheight / 100
 
-	;WinMove($2400chanGUI, '', 0, 0, $2400width, $2400height)
-	;GUICtrlSetPos($2400chanGUI, 0, 0, $2400width, $2400height)
-
-	ConsoleWrite($2400width & '---' & $2400height & @CRLF)
-	ConsoleWrite($2400graphheight & '--' & $2400graphwidth & '--' & $2400freqwidth & '--' & $2400percheight & @CRLF)
+	$2400graphics = _GDIPlus_GraphicsCreateFromHWND($2400chanGUI)
+	$2400bitmap = _GDIPlus_BitmapCreateFromGraphics($2400width, $2400height, $2400graphics)
+	$2400backbuffer = _GDIPlus_ImageGetGraphicsContext($2400bitmap)
 EndFunc   ;==>_Set2400ChanGraphSizes
 
 Func _Draw2400ChanGraph()
-	$2400GraphicGUI = _GDIPlus_GraphicsCreateFromHWND($2400chanGUI)
+	_GDIPlus_GraphicsClear($2400backbuffer)
 	;Set Background Color
-	_GDIPlus_GraphicsClear($2400GraphicGUI, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
+	_GDIPlus_GraphicsClear($2400backbuffer, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
 	;Draw 10% labels and lines
 	For $sn = 0 To 10
 		$percent = ($sn * 10) & "%"
 		$vposition = ($2400height - $2400bottomborder) - (($2400graphheight / 10) * $sn)
 		ConsoleWrite($percent & '-' & $vposition & @CRLF)
-		_GDIPlus_GraphicsDrawString($2400GraphicGUI, $percent, 0, $vposition - 5)
-		_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
+		_GDIPlus_GraphicsDrawString($2400backbuffer, $percent, 0, $vposition - 5)
+		_GDIPlus_GraphicsDrawLine($2400backbuffer, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
 	Next
 
 	;Draw Channel labels and lines
@@ -11121,15 +11123,16 @@ Func _Draw2400ChanGraph()
 			$aPoints[3][0] = $y_right
 			$aPoints[3][1] = $x_bottom
 
-			_GDIPlus_GraphicsDrawCurve($2400GraphicGUI, $aPoints)
+			_GDIPlus_GraphicsDrawCurve($2400backbuffer, $aPoints)
 		EndIf
 	Next
+	_GDIPlus_GraphicsDrawImageRect($2400graphics, $2400bitmap, 0, 0, $2400width, $2400height)
 EndFunc   ;==>_Draw2400ChanGraph
 
 Func _Draw2400ChanLine($frequency, $Channel)
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
-	_GDIPlus_GraphicsDrawString($2400GraphicGUI, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($2400GraphicGUI, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
+	_GDIPlus_GraphicsDrawString($2400backbuffer, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($2400backbuffer, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 EndFunc   ;==>_Draw2400ChanLine
 
 Func _Redraw2400Graph()
@@ -11143,6 +11146,12 @@ Func _Channels5000_GUI()
 
 		$5000chanGUI = GUICreate("5Ghz Channel Graph", 800, 400, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($ControlBackgroundColor, $5000chanGUI)
+		$5000graphics = _GDIPlus_GraphicsCreateFromHWND($5000chanGUI)
+		$5000bitmap = _GDIPlus_BitmapCreateFromGraphics(800, 400, $5000graphics)
+		$5000backbuffer = _GDIPlus_ImageGetGraphicsContext($5000bitmap)
+
+
+
 		$cpsplit = StringSplit($5000ChanGraphPos, ',')
 		If $cpsplit[0] = 4 Then ;If $5000ChanGraphPos is a proper position, move and resize window
 			WinMove($5000chanGUI, '', $cpsplit[1], $cpsplit[2], $cpsplit[3], $cpsplit[4])
@@ -11183,19 +11192,23 @@ Func _Set5000ChanGraphSizes()
 	$5000graphwidth = $5000width - ($5000leftborder + $5000rightborder)
 	$5000freqwidth = $5000graphwidth / 700 ; Freq Range 5150 - 5850 (700points)
 	$5000percheight = $5000graphheight / 100
+
+	$5000graphics = _GDIPlus_GraphicsCreateFromHWND($5000chanGUI)
+	$5000bitmap = _GDIPlus_BitmapCreateFromGraphics($5000width, $5000height, $5000graphics)
+	$5000backbuffer = _GDIPlus_ImageGetGraphicsContext($5000bitmap)
 EndFunc   ;==>_Set5000ChanGraphSizes
 
 Func _Draw5000ChanGraph()
-	$5000GraphicGUI = _GDIPlus_GraphicsCreateFromHWND($5000chanGUI)
+	_GDIPlus_GraphicsClear($5000backbuffer)
 	;Set Background Color
-	_GDIPlus_GraphicsClear($5000GraphicGUI, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
+	_GDIPlus_GraphicsClear($5000backbuffer, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
 	;Draw 10% labels and lines
 	For $sn = 0 To 10
 		$percent = ($sn * 10) & "%"
 		$vposition = ($5000height - $5000bottomborder) - (($5000graphheight / 10) * $sn)
 		ConsoleWrite($percent & '-' & $vposition & @CRLF)
-		_GDIPlus_GraphicsDrawString($5000GraphicGUI, $percent, 0, $vposition - 5)
-		_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
+		_GDIPlus_GraphicsDrawString($5000backbuffer, $percent, 0, $vposition - 5)
+		_GDIPlus_GraphicsDrawLine($5000backbuffer, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
 	Next
 	;Draw Channel labels and lines
 	_Draw5000ChanLine(5180, 36)
@@ -11298,15 +11311,16 @@ Func _Draw5000ChanGraph()
 			$aPoints[3][0] = $y_right
 			$aPoints[3][1] = $x_bottom
 
-			_GDIPlus_GraphicsDrawCurve($5000GraphicGUI, $aPoints)
+			_GDIPlus_GraphicsDrawCurve($5000backbuffer, $aPoints)
 		EndIf
 	Next
+	_GDIPlus_GraphicsDrawImageRect($5000graphics, $5000bitmap, 0, 0, $5000width, $5000height)
 EndFunc   ;==>_Draw5000ChanGraph
 
 Func _Draw5000ChanLine($frequency, $Channel)
 	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
-	_GDIPlus_GraphicsDrawString($5000GraphicGUI, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
-	_GDIPlus_GraphicsDrawLine($5000GraphicGUI, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
+	_GDIPlus_GraphicsDrawString($5000backbuffer, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawLine($5000backbuffer, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
 EndFunc   ;==>_Draw5000ChanLine
 
 Func _Redraw5000Graph()
