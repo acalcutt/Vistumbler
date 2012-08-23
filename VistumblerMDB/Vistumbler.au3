@@ -4263,11 +4263,13 @@ Func _GraphDraw()
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
+				If $HistSize < $max_graph_points Then $max_graph_points = $HistSize ;Fix to prevent graph from drawing outside its region when the are 0% marks
 				Local $graph_point_center_y, $graph_point_center_x, $Found_dts, $gloop
 				Local $GraphWidthSpacing = $Graph_width / ($HistSize - 1)
 				Local $GraphHeightSpacing = $Graph_height / 100
 				For $gs = 1 To $HistSize
 					$gloop += 1
+					If $gloop > $max_graph_points Then ExitLoop
 					ConsoleWrite("gloop:" & $gloop & @CRLF)
 					$ExpSig = $HistMatchArray[$gs][1] - 0
 					$ExpApID = $HistMatchArray[$gs][2]
@@ -4301,7 +4303,7 @@ Func _GraphDraw()
 								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
 								For $wz = 1 To $numofzeros
 									$gloop += 1
-									ConsoleWrite("----->0" & @CRLF)
+									If $gloop > $max_graph_points Then ExitLoop
 
 									$old_graph_point_center_x = $graph_point_center_x
 									$old_graph_point_center_y = $graph_point_center_y
@@ -4315,10 +4317,9 @@ Func _GraphDraw()
 
 									;Draw Line
 									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
-									If $gloop = $max_graph_points Then ExitLoop
 								Next
 							Else
-								$gloop += 1
+								If $gloop > $max_graph_points Then ExitLoop
 
 								$old_graph_point_center_x = $graph_point_center_x
 								$old_graph_point_center_y = $graph_point_center_y
@@ -4335,7 +4336,7 @@ Func _GraphDraw()
 							EndIf
 						EndIf
 					EndIf
-					If $gloop = $max_graph_points Then ExitLoop
+					ConsoleWrite($gloop & @CRLF)
 				Next
 			EndIf
 		ElseIf $Graph = 2 Then
