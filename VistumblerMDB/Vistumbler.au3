@@ -4263,18 +4263,25 @@ Func _GraphDraw()
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
-				Local $graph_point_center_y, $graph_point_center_x
+				Local $graph_point_center_y, $graph_point_center_x, $Found_dts, $gloop
 				Local $GraphWidthSpacing = $Graph_width / ($HistSize - 1)
 				Local $GraphHeightSpacing = $Graph_height / 100
 				For $gs = 1 To $HistSize
+					$gloop += 1
+					ConsoleWrite("gloop:" & $gloop & @CRLF)
 					$ExpSig = $HistMatchArray[$gs][1] - 0
 					$ExpApID = $HistMatchArray[$gs][2]
 					$ExpDate = $HistMatchArray[$gs][3]
-					$ExpTime = $HistMatchArray[$gs][4]
+
+					$Last_dts = $Found_dts
+					$ts = StringSplit($HistMatchArray[$gs][4], ":")
+					$ExpTime = ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4) ;In seconds
+					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
+
 
 					$old_graph_point_center_x = $graph_point_center_x
 					$old_graph_point_center_y = $graph_point_center_y
-					$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gs - 1))
+					$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gloop - 1))
 					$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
 
 					;Draw Point
@@ -4282,10 +4289,53 @@ Func _GraphDraw()
 					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
 					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
 
+					ConsoleWrite("Sig:" & $ExpSig & @CRLF)
+
 					;Draw Connecting line
 					If $gs <> 1 Then
+						;Draw Connecting line
 						_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
+						;Draw any gaps that may exist (AP at 0%)
+						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
+							If $GraphDeadTime = 1 Then
+								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
+								For $wz = 1 To $numofzeros
+									$gloop += 1
+									ConsoleWrite("----->0" & @CRLF)
+
+									$old_graph_point_center_x = $graph_point_center_x
+									$old_graph_point_center_y = $graph_point_center_y
+									$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gloop - 1))
+									$graph_point_center_y = $Graph_topborder + $Graph_height
+
+									;Draw Point
+									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
+									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
+									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
+
+									;Draw Line
+									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
+									If $gloop = $max_graph_points Then ExitLoop
+								Next
+							Else
+								$gloop += 1
+
+								$old_graph_point_center_x = $graph_point_center_x
+								$old_graph_point_center_y = $graph_point_center_y
+								$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gloop - 1))
+								$graph_point_center_y = $Graph_topborder + $Graph_height
+
+								;Draw Point
+								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
+								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
+								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
+
+								;Draw Line
+								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
+							EndIf
+						EndIf
 					EndIf
+					If $gloop = $max_graph_points Then ExitLoop
 				Next
 			EndIf
 		ElseIf $Graph = 2 Then
