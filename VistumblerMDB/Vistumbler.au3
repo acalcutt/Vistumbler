@@ -46,7 +46,6 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\ParseCSV.au3"
 #include "UDFs\ZIP.au3"
 #include "UDFs\FileInUse.au3"
-#include "UDFs\WinGetPosEx.au3"
 #include "UDFs\UnixTime.au3"
 ;Set setting folder--------------------------------------
 Dim $SettingsDir = @ScriptDir & '\Settings\'
@@ -1107,7 +1106,8 @@ Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' &
 $Vistumbler = GUICreate($title, 980, 692, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
 
-$a = _WinGetPosEx($Vistumbler);Get window current position
+;$a = _WinGetPosEx($Vistumbler);Get window current position
+$a = WinGetPos($Vistumbler)
 Dim $VistumblerState = IniRead($settings, 'WindowPositions', 'VistumblerState', "Window");Get last window position from the ini file
 Dim $VistumblerPosition = IniRead($settings, 'WindowPositions', 'VistumblerPosition', $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3])
 $b = StringSplit($VistumblerPosition, ",")
@@ -1630,21 +1630,21 @@ While 1
 
 	;Check Compass Window Position
 	If WinActive($CompassGUI) And $CompassOpen = 1 And $UpdatedCompassPos = 0 Then
-		$p = _WinGetPosEx($CompassGUI)
+		$p = WinGetPos($CompassGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $CompassPosition Then $CompassPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $CompassGUI has moved or resized, set $pompassPosition to current window size
 		$UpdatedCompassPos = 1
 	EndIf
 
 	;Check GPS Details Windows Position
 	If WinActive($GpsDetailsGUI) And $GpsDetailsOpen = 1 And $UpdatedGpsDetailsPos = 0 Then
-		$p = _WinGetPosEx($GpsDetailsGUI)
+		$p = WinGetPos($GpsDetailsGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
 		$UpdatedGpsDetailsPos = 1
 	EndIf
 
 	;Check 2.4Ghz Channel Graph Window Position
 	If WinExists($2400chanGUI) And $2400chanGUIOpen = 1 And $Updated2400ChanGraphPos = 0 Then
-		$p = _WinGetPosEx($2400chanGUI)
+		$p = WinGetPos($2400chanGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $2400ChanGraphPos Then $2400ChanGraphPos = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $2400chanGUI has moved or resized, set $GpsDetailsPosition to current window size
 		_Redraw2400Graph()
 		$Updated2400ChanGraphPos = 1
@@ -1652,7 +1652,7 @@ While 1
 
 	;Check 5Ghz Channel Graph  Position
 	If WinExists($5000chanGUI) And $5000chanGUIOpen = 1 And $Updated5000ChanGraphPos = 0 Then
-		$p = _WinGetPosEx($5000chanGUI)
+		$p = WinGetPos($5000chanGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $5000ChanGraphPos Then $5000ChanGraphPos = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $5000chanGUI has moved or resized, set $pompassPosition to current window size
 		_Redraw5000Graph()
 		$Updated5000ChanGraphPos = 1
@@ -3642,7 +3642,7 @@ Func _CompassGUI()
 		If $cpsplit[0] = 4 Then ;If $CompassPosition is a proper position, move and resize window
 			WinMove($CompassGUI, '', $cpsplit[1], $cpsplit[2], $cpsplit[3], $cpsplit[4])
 		Else ;Set $CompassPosition to the current window position
-			$c = _WinGetPosEx($CompassGUI)
+			$c = WinGetPos($CompassGUI)
 			$CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3]
 		EndIf
 		_SetCompassSizes()
@@ -3796,7 +3796,7 @@ Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 		If $gpsplit[0] = 4 Then ;If $GpsDetailsPosition is a proper position, move and resize window
 			WinMove($GpsDetailsGUI, '', $gpsplit[1], $gpsplit[2], $gpsplit[3], $gpsplit[4])
 		Else ;Set $GpsDetailsPosition to the current window position
-			$g = _WinGetPosEx($GpsDetailsGUI)
+			$g = WinGetPos($GpsDetailsGUI)
 			$GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3]
 		EndIf
 
@@ -4094,7 +4094,7 @@ EndFunc   ;==>_LabelSort
 
 Func _WinMoved();Checks if window has moved. Returns 1 if it has
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WinMoved()') ;#Debug Display
-	$a = _WinGetPosEx($Vistumbler)
+	$a = WinGetPos($Vistumbler)
 	$winpos_old = $winpos
 	$winpos = $a[0] & $a[1] & $a[2] & $a[3] & WinGetState($title, "")
 	If $winpos_old <> $winpos Then
@@ -4278,10 +4278,9 @@ Func _GraphDraw()
 					$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
 
 					;Draw Point
-					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x - 1, $graph_point_center_y + 1, $Pen_Red)
+					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
+					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
 					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
-					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x + 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
-					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x + 1, $graph_point_center_y - 1, $graph_point_center_x - 1, $graph_point_center_y - 1, $Pen_Red)
 
 					;Draw Connecting line
 					If $gs <> 1 Then
@@ -10770,7 +10769,7 @@ Func _Channels2400_GUI()
 		If $cpsplit[0] = 4 Then ;If $2400ChanGraphPos is a proper position, move and resize window
 			WinMove($2400chanGUI, '', $cpsplit[1], $cpsplit[2], $cpsplit[3], $cpsplit[4])
 		Else ;Set $2400ChanGraphPos to the current window position
-			$c = _WinGetPosEx($2400chanGUI)
+			$c = WinGetPos($2400chanGUI)
 			$2400ChanGraphPos = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3]
 		EndIf
 
@@ -10929,7 +10928,7 @@ Func _Channels5000_GUI()
 		If $cpsplit[0] = 4 Then ;If $5000ChanGraphPos is a proper position, move and resize window
 			WinMove($5000chanGUI, '', $cpsplit[1], $cpsplit[2], $cpsplit[3], $cpsplit[4])
 		Else ;Set $5000ChanGraphPos to the current window position
-			$c = _WinGetPosEx($5000chanGUI)
+			$c = WinGetPos($5000chanGUI)
 			$5000ChanGraphPos = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3]
 		EndIf
 
