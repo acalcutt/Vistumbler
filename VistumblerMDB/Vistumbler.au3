@@ -246,6 +246,7 @@ Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
 Dim $2400chanGUI, $2400GraphicGUI, $2400chanGUIOpen, $2400height, $2400width, $2400topborder, $2400bottomborder, $2400leftborder, $2400rightborder, $2400graphheight, $2400graphwidth, $2400freqwidth, $2400percheight, $2400backbuffer, $2400bitmap, $2400graphics
 Dim $5000chanGUI, $5000GraphicGUI, $5000chanGUIOpen, $5000height, $5000width, $5000topborder, $5000bottomborder, $5000leftborder, $5000rightborder, $5000graphheight, $5000graphwidth, $5000freqwidth, $5000percheight, $5000backbuffer, $5000bitmap, $5000graphics
+Dim $Graph_backbuffer, $Graph_height, $Graph_width, $Graph_topborder = 20, $Graph_bottomborder = 40, $Graph_leftborder = 40, $Graph_rightborder = 20
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
@@ -1098,6 +1099,7 @@ EndIf
 
 _GDIPlus_Startup()
 $Pen_GraphGrid = _GDIPlus_PenCreate(StringReplace($BackgroundColor, "0x", "0xFF"))
+$Pen_Red = _GDIPlus_PenCreate("0xFFFF0000")
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GUI
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -1281,36 +1283,9 @@ $VistumblerStore = GUICtrlCreateMenuItem($Text_VistumblerStore, $SupportVistumbl
 
 $GraphicGUI = GUICreate("", 900, 400, 10, 60, $WS_CHILD, -1, $Vistumbler)
 GUISetBkColor($ControlBackgroundColor)
-$100 = GUICtrlCreateLabel('100%', 0, 5, 35, 38)
-$90 = GUICtrlCreateLabel('  90%', 0, 44, 35, 38)
-$80 = GUICtrlCreateLabel('  80%', 0, 83, 35, 38)
-$70 = GUICtrlCreateLabel('  70%', 0, 122, 35, 38)
-$60 = GUICtrlCreateLabel('  60%', 0, 161, 35, 38)
-$50 = GUICtrlCreateLabel('  50%', 0, 199, 35, 38)
-$40 = GUICtrlCreateLabel('  40%', 0, 238, 35, 38)
-$30 = GUICtrlCreateLabel('  30%', 0, 277, 35, 38)
-$20 = GUICtrlCreateLabel('  20%', 0, 316, 35, 38)
-$10 = GUICtrlCreateLabel('  10%', 0, 355, 35, 38)
-GUICtrlSetColor($100, $TextColor)
-GUICtrlSetColor($90, $TextColor)
-GUICtrlSetColor($80, $TextColor)
-GUICtrlSetColor($70, $TextColor)
-GUICtrlSetColor($60, $TextColor)
-GUICtrlSetColor($50, $TextColor)
-GUICtrlSetColor($40, $TextColor)
-GUICtrlSetColor($30, $TextColor)
-GUICtrlSetColor($20, $TextColor)
-GUICtrlSetColor($10, $TextColor)
-GUICtrlSetResizing($100, 1)
-GUICtrlSetResizing($90, 1)
-GUICtrlSetResizing($80, 1)
-GUICtrlSetResizing($70, 1)
-GUICtrlSetResizing($60, 1)
-GUICtrlSetResizing($50, 1)
-GUICtrlSetResizing($40, 1)
-GUICtrlSetResizing($30, 1)
-GUICtrlSetResizing($20, 1)
-GUICtrlSetResizing($10, 1)
+$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
+$Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics(900, 400, $Graphic)
+$Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
 GUISwitch($Vistumbler)
 
 $ListviewAPs = GUICtrlCreateListView($headers, 260, 65, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
@@ -1591,7 +1566,8 @@ While 1
 	;Graph Selected AP
 	If $UpdatedGraph <> 1 Then
 		$UpdatedGraph = 1
-		_GraphApSignal()
+		;_GraphApSignal()
+		_GraphDraw()
 	EndIf
 
 	;Speak Signal of selected AP (if enabled)
@@ -2977,8 +2953,8 @@ EndFunc   ;==>_TurnOffGPS
 Func _GraphToggle(); Graph1 Button
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphToggle()') ;#Debug Display
 	If $Graph = 1 Then
-		_DeletePens()
-		_DrawingShutDown($GraphicGUI)
+		;_DeletePens()
+		;_DrawingShutDown($GraphicGUI)
 		$Graph = 0
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
 		GUISetState(@SW_HIDE, $GraphicGUI)
@@ -2989,8 +2965,8 @@ Func _GraphToggle(); Graph1 Button
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
 	ElseIf $Graph = 0 Then
-		_DrawingStartUp($GraphicGUI)
-		_CreatePens()
+		;_DrawingStartUp($GraphicGUI)
+		;_CreatePens()
 		$Graph = 1
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
 		GUISetState(@SW_SHOW, $GraphicGUI)
@@ -4141,37 +4117,37 @@ Func _WinMoved();Checks if window has moved. Returns 1 if it has
 EndFunc   ;==>_WinMoved
 
 Func _SetControlSizes();Sets control positions in GUI based on the windows current size
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetControlSizes()') ;#Debug Display\
-	$a = _WinGetPosEx($Vistumbler) ;get vistumbler window size
-	$AeroOn = @extended
-	$b = _WinGetPosEx($GraphicGUI) ;get graph window size
-	$sizes = $a[0] & '-' & $a[1] & '-' & $a[2] & '-' & $a[3] & '-' & $b[0] & '-' & $b[1] & '-' & $b[2] & '-' & $b[3]
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetControlSizes()') ;#Debug Display
+	$a = _WinAPI_GetClientRect($Vistumbler)
+	$b = _WinAPI_GetClientRect($GraphicGUI)
+	$sizes = DllStructGetData($a, "Right") & '-' & DllStructGetData($a, "Bottom") & '-' & DllStructGetData($b, "Right") & '-' & DllStructGetData($b, "Bottom")
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Then
 		$DataChild_Left = 2
-		$DataChild_Width = $a[2]
+		$DataChild_Width = DllStructGetData($a, "Right")
 		$DataChild_Top = 65
-		$DataChild_Height = $a[3] - $DataChild_Top
-		If $AeroOn = 1 Then ;Fix Widths for Aero
-			$DataChild_Width -= 16
-			$DataChild_Height -= 58
-		Else
-			$DataChild_Width -= 9
-			$DataChild_Height -= 48
-		EndIf
+		$DataChild_Height = DllStructGetData($a, "Bottom") - $DataChild_Top
 		If $Graph <> 0 Then
 			$Graphic_left = $DataChild_Left
-			$Graphic_width = Round($DataChild_Width - $Graphic_left)
+			$Graphic_width = $DataChild_Width - $Graphic_left
 			$Graphic_top = $DataChild_Top
-			$Graphic_height = Round(($DataChild_Height * $SplitHeightPercent))
+			$Graphic_height = $DataChild_Height * $SplitHeightPercent
+
+			$Graph_height = $Graphic_height - ($Graph_topborder + $Graph_bottomborder)
+			$Graph_width = $Graphic_width - ($Graph_leftborder + $Graph_rightborder)
 
 			$ListviewAPs_left = $DataChild_Left
-			$ListviewAPs_width = $DataChild_Width - 2
+			$ListviewAPs_width = $DataChild_Width - $ListviewAPs_left
 			$ListviewAPs_top = $DataChild_Top + ($Graphic_height + 1)
 			$ListviewAPs_height = $DataChild_Height - ($Graphic_height + 1)
 
 			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
+			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
+			$Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics($Graphic_width, $Graphic_height, $Graphic)
+			$Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
+
+
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		Else
 			$TreeviewAPs_left = $DataChild_Left
@@ -4271,31 +4247,31 @@ EndFunc   ;==>WM_NOTIFY
 Func _RedrawGraphGrid()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RedrawGraphGrid()') ;#Debug Display
 	;Set Grid Variables
-	$base_right = $Graphic_width - 1
-	$base_left = 30
-	$base_top = 10
-	$base_bottom = $Graphic_height - 1
-	$base_x = $base_right - $base_left
-	$base_y = $base_bottom - $base_top
+	;$base_right = $Graphic_width - 1
+	;$base_left = 30
+	;$base_top = 10
+	;$base_bottom = $Graphic_height - 1
+	;$base_x = $base_right - $base_left
+	;$base_y = $base_bottom - $base_top
 	;Draw Background
-	For $r = 1 To $Graphic_height
-		_SelectColor($GraphBack)
-		_DrawLine($base_left, $r, $base_right, $r)
-	Next
+	;For $r = 1 To $Graphic_height
+	;	_SelectColor($GraphBack)
+	;	_DrawLine($base_left, $r, $base_right, $r)
+	;Next
 	;Draw outside lines
-	_SelectColor($GraphGrid)
-	_DrawLine($base_left, $base_top, $base_left, $base_bottom)
-	_DrawLine($base_right, $base_top, $base_right, $base_bottom)
-	_DrawLine($base_left, $base_bottom, $base_right, $base_bottom)
-	_DrawLine($base_left, $base_top, $base_right, $base_top)
+	;_SelectColor($GraphGrid)
+	;_DrawLine($base_left, $base_top, $base_left, $base_bottom)
+	;_DrawLine($base_right, $base_top, $base_right, $base_bottom)
+	;_DrawLine($base_left, $base_bottom, $base_right, $base_bottom)
+	;_DrawLine($base_left, $base_top, $base_right, $base_top)
 	;Draw Horizontal grid lines
-	For $drawline = 1 To 10
-		$subtract_value = (($drawline * 10) * ($base_y / 100)) + $base_top
-		_DrawLine($base_right, $subtract_value, $base_left, $subtract_value)
-	Next
-	$ReGraph = 1
+	;For $drawline = 1 To 10
+	;	$subtract_value = (($drawline * 10) * ($base_y / 100)) + $base_top
+	;	_DrawLine($base_right, $subtract_value, $base_left, $subtract_value)
+	;Next
+	;$ReGraph = 1
 	;Deleted old graph points
-	ReDim $OldGraphData[1]
+	;ReDim $OldGraphData[1]
 EndFunc   ;==>_RedrawGraphGrid
 
 Func _GraphApSignal() ;Graphs GPS History from selected ap
@@ -4483,6 +4459,88 @@ Func _GraphApSignal() ;Graphs GPS History from selected ap
 		EndIf
 	EndIf
 EndFunc   ;==>_GraphApSignal
+
+Func _GraphDraw()
+	_GDIPlus_GraphicsClear($Graph_backbuffer)
+	;Set Background Color
+	_GDIPlus_GraphicsClear($Graph_backbuffer, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
+	;Draw 10% labels and lines
+	For $sn = 0 To 10
+		$percent = ($sn * 10) & "%"
+		$vposition = $Graph_topborder + ($Graph_height - (($Graph_height / 10) * $sn))
+		_GDIPlus_GraphicsDrawString($Graph_backbuffer, $percent, 0, $vposition - 5)
+		_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $Graph_leftborder, $vposition, $Graph_leftborder + $Graph_width, $vposition, $Pen_GraphGrid)
+	Next
+	;Graph Selected AP
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+		$query = "SELECT ApID FROM AP WHERE ListRow = '" & $Selected & "'"
+		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$GraphApID = $ListRowMatchArray[1][1]
+		ConsoleWrite("$Graph:" & $Graph & @CRLF)
+		If $Graph = 1 Then
+			$max_graph_points = '125'
+			$query = "SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$HistSize = UBound($HistMatchArray) - 1
+			If $HistSize <> 0 Then
+				Local $graph_point_center_y, $graph_point_center_x
+				Local $GraphWidthSpacing = $Graph_width / ($HistSize - 1)
+				Local $GraphHeightSpacing = $Graph_height / 100
+				For $gs = 1 To $HistSize
+					$ExpSig = $HistMatchArray[$gs][1] - 0
+					$ExpApID = $HistMatchArray[$gs][2]
+					$ExpDate = $HistMatchArray[$gs][3]
+					$ExpTime = $HistMatchArray[$gs][4]
+
+					$old_graph_point_center_x = $graph_point_center_x
+					$old_graph_point_center_y = $graph_point_center_y
+					$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gs - 1))
+					$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
+
+					;Draw Point
+					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x - 1, $graph_point_center_y + 1, $Pen_Red)
+					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
+					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x + 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
+					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x + 1, $graph_point_center_y - 1, $graph_point_center_x - 1, $graph_point_center_y - 1, $Pen_Red)
+
+					;Draw Connecting line
+					If $gs <> 1 Then
+						_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
+					EndIf
+				Next
+			EndIf
+		ElseIf $Graph = 2 Then
+			$max_graph_points = $Graph_width
+			$query = "SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$HistSize = UBound($HistMatchArray) - 1
+			If $HistSize <> 0 Then
+				Local $GraphWidthSpacing = $Graph_width / $max_graph_points
+				Local $GraphHeightSpacing = $Graph_height / 100
+				For $gs = 1 To $HistSize
+					$ExpSig = $HistMatchArray[$gs][1] - 0
+					$ExpApID = $HistMatchArray[$gs][2]
+					$ExpDate = $HistMatchArray[$gs][3]
+					$ExpTime = $HistMatchArray[$gs][4]
+
+					$graph_line_top_x = $Graph_leftborder + ((($HistSize - $gs) + 1) * $GraphWidthSpacing)
+					$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
+					$graph_line_bottom_x = $Graph_leftborder + ((($HistSize - $gs) + 1) * $GraphWidthSpacing)
+					$graph_line_bottom_y = $Graph_topborder + $Graph_height
+
+					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_line_top_x, $graph_line_top_y, $graph_line_bottom_x, $graph_line_bottom_y, $Pen_Red)
+				Next
+			EndIf
+		EndIf
+	EndIf
+
+	;Draw temporary image to GUI
+	_GDIPlus_GraphicsDrawImageRect($Graphic, $Graph_bitmap, 0, 0, $Graphic_width, $Graphic_height)
+
+EndFunc   ;==>_GraphDraw
+
+
 
 ;Graph API Functions - By neogia - http://www.autoitscript.com/forum/index.php?showtopic=24621&hl=GUICtrlSetGraphic+windows+api
 ;Used in place of autoit Graphic function to remove flicker when the graph gets redraw (it is slower though :-( )
