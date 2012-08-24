@@ -243,9 +243,15 @@ Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_Spea
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
+
+Dim $Graph_backbuffer, $Graph_height, $Graph_width
+Dim $CompassGUI, $Compass_graphics, $Compass_bitmap, $Compass_backbuffer, $Compass_height, $Compass_width, $Degree, $CompassGUI_width, $CompassGUI_height
 Dim $2400chanGUI, $2400GraphicGUI, $2400chanGUIOpen, $2400height, $2400width, $2400topborder, $2400bottomborder, $2400leftborder, $2400rightborder, $2400graphheight, $2400graphwidth, $2400freqwidth, $2400percheight, $2400backbuffer, $2400bitmap, $2400graphics
 Dim $5000chanGUI, $5000GraphicGUI, $5000chanGUIOpen, $5000height, $5000width, $5000topborder, $5000bottomborder, $5000leftborder, $5000rightborder, $5000graphheight, $5000graphwidth, $5000freqwidth, $5000percheight, $5000backbuffer, $5000bitmap, $5000graphics
-Dim $Graph_backbuffer, $Graph_height, $Graph_width, $Graph_topborder = 20, $Graph_bottomborder = 40, $Graph_leftborder = 40, $Graph_rightborder = 20
+Dim $Graph_topborder = 20, $Graph_bottomborder = 20, $Graph_leftborder = 40, $Graph_rightborder = 20
+Dim $Compass_topborder = 20, $Compass_bottomborder = 20, $Compass_leftborder = 20, $Compass_rightborder = 20
+Dim $2400topborder = 20, $2400bottomborder = 40, $2400leftborder = 40, $2400rightborder = 20
+Dim $5000topborder = 20, $5000bottomborder = 40, $5000leftborder = 40, $5000rightborder = 20
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
@@ -1099,6 +1105,7 @@ EndIf
 _GDIPlus_Startup()
 $Pen_GraphGrid = _GDIPlus_PenCreate(StringReplace($BackgroundColor, "0x", "0xFF"))
 $Pen_Red = _GDIPlus_PenCreate("0xFFFF0000")
+$Brush_ControlBackgroundColor = _GDIPlus_BrushCreateSolid(StringReplace($ControlBackgroundColor, "0x", "0xFF"))
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GUI
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -1454,6 +1461,7 @@ $UpdatedGPS = 0
 $UpdatedAPs = 0
 $UpdatedGraph = 0
 $UpdatedAutoKML = 0
+$UpdatedVistumblerPos = 0
 $UpdatedCompassPos = 0
 $UpdatedGpsDetailsPos = 0
 $Updated2400ChanGraphPos = 0
@@ -1557,17 +1565,11 @@ While 1
 	;Resize Controls / Control Resize Monitoring
 	_TreeviewListviewResize()
 
-	;Check If Vistumbler Window has moved to tell the graph to redraw
-	If _WinMoved() = 1 Then
-		_SetControlSizes()
-		$Redraw = 1
-	EndIf
 
 	;Graph Selected AP
-	If $UpdatedGraph <> 1 Then
-		$UpdatedGraph = 1
-		;_GraphApSignal()
+	If $UpdatedGraph = 0 Then
 		_GraphDraw()
+		$UpdatedGraph = 1
 	EndIf
 
 	;Speak Signal of selected AP (if enabled)
@@ -1629,14 +1631,17 @@ While 1
 	EndIf
 
 	;Check Compass Window Position
-	If WinActive($CompassGUI) And $CompassOpen = 1 And $UpdatedCompassPos = 0 Then
+	If WinExists($CompassGUI) Then
+		$CompassPosition_old = $CompassPosition
 		$p = WinGetPos($CompassGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $CompassPosition Then $CompassPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $CompassGUI has moved or resized, set $pompassPosition to current window size
+		If $CompassPosition <> $CompassPosition_old Then _SetCompassSizes()
+		_DrawCompass()
 		$UpdatedCompassPos = 1
 	EndIf
 
 	;Check GPS Details Windows Position
-	If WinActive($GpsDetailsGUI) And $GpsDetailsOpen = 1 And $UpdatedGpsDetailsPos = 0 Then
+	If WinExists($GpsDetailsGUI) And $GpsDetailsOpen = 1 And $UpdatedGpsDetailsPos = 0 Then
 		$p = WinGetPos($GpsDetailsGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
 		$UpdatedGpsDetailsPos = 1
@@ -1658,6 +1663,23 @@ While 1
 		$Updated5000ChanGraphPos = 1
 	EndIf
 
+	;Check Vistumbler Window Position
+	If WinExists($Vistumbler) Then
+		;Set Position
+		$p = WinGetPos($Vistumbler)
+		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $VistumblerPosition Then $VistumblerPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $VistumblerPosition has moved or resized, set $pompassPosition to current window size
+		;Set Window State
+		$ws = WinGetState($title, "")
+		If BitAND($ws, 32) Then;Set
+			$VistumblerState = "Maximized"
+		Else
+			$VistumblerState = "Window"
+		EndIf
+		$winpos_old = $winpos
+		$winpos = $VistumblerPosition & '-' & $VistumblerState
+		If $winpos <> $winpos_old Then _SetControlSizes()
+	EndIf
+
 	;Flag Actions
 	If $Close = 1 Then _ExitVistumbler() ;If the close flag has been set, exit visumbler
 	If $SortColumn <> -1 Then _HeaderSort($SortColumn);Sort clicked listview column
@@ -1675,6 +1697,7 @@ While 1
 		$UpdatedAPs = 0
 		$UpdatedGraph = 0
 		$UpdatedAutoKML = 0
+		$UpdatedVistumblerPos = 0
 		$UpdatedCompassPos = 0
 		$UpdatedGpsDetailsPos = 0
 		$Updated2400ChanGraphPos = 0
@@ -3615,22 +3638,6 @@ Func _CompassGUI()
 	If $CompassOpen = 0 Then
 		$CompassGUI = GUICreate($Text_GpsCompass, 130, 130, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($BackgroundColor)
-		$CompassBack = GUICtrlCreateLabel('', 0, 0, 130, 130)
-		GUICtrlSetState($CompassBack, $GUI_HIDE)
-		$north = GUICtrlCreateLabel("N", 50, 0, 15, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$south = GUICtrlCreateLabel("S", 50, 90, 15, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$east = GUICtrlCreateLabel("E", 93, 45, 15, 12)
-		GUICtrlSetColor(-1, $TextColor)
-		$west = GUICtrlCreateLabel("W", 3, 45, 15, 12)
-		GUICtrlSetColor(-1, $TextColor)
-
-		;_GDIPlus_Startup()
-		$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
-		$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
-		$hBrush = _GDIPlus_BrushCreateSolid($CompassColor)
-		_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, 100, 100, $hBrush)
 
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseCompassGui')
 		GUISetOnEvent($GUI_EVENT_RESIZED, '_SetCompassSizes')
@@ -3645,47 +3652,89 @@ Func _CompassGUI()
 			$c = WinGetPos($CompassGUI)
 			$CompassPosition = $c[0] & ',' & $c[1] & ',' & $c[2] & ',' & $c[3]
 		EndIf
+
 		_SetCompassSizes()
+		_DrawCompass()
 
 		$CompassOpen = 1
-	EndIf ;==>_CompassGUI
+	EndIf
 EndFunc   ;==>_CompassGUI
 
 Func _CloseCompassGui();closes the compass window
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseCompassGui()') ;#Debug Display
-	_GDIPlus_GraphicsDispose($CompassGraphic)
-	;_GDIPlus_Shutdown()
 	GUIDelete($CompassGUI)
 	$CompassOpen = 0
 EndFunc   ;==>_CloseCompassGui
 
 Func _SetCompassSizes();Takes the size of a hidden label in the compass window and determines the Width/Height of the compass
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetCompassSizes()') ;#Debug Display
-	$a = ControlGetPos("", "", $CompassBack)
-	If Not @error Then
-		$compasspos = $a[0] & $a[1] & $a[2] & $a[3]
-		If $a[2] > $a[3] Then
-			Dim $CompassHeight = $a[3] - 30
-		Else
-			Dim $CompassHeight = $a[2] - 30
-		EndIf
-	EndIf
-	$CompassMidWidth = 10 + ($CompassHeight / 2)
-	$CompassMidHeight = 10 + ($CompassHeight / 2)
-	GUICtrlSetPos($north, $CompassMidWidth, 0, 15, 15)
-	GUICtrlSetPos($south, $CompassMidWidth, $CompassHeight + 15, 15, 15)
-	GUICtrlSetPos($east, $CompassHeight + 15, $CompassMidHeight, 15, 15)
-	GUICtrlSetPos($west, 0, $CompassMidHeight, 15, 15)
+	$p = _WinAPI_GetClientRect($CompassGUI)
+	$CompassGUI_height = DllStructGetData($p, "Bottom")
+	$CompassGUI_width = DllStructGetData($p, "Right")
 
-	_GDIPlus_GraphicsDispose($CompassGraphic)
-	;_GDIPlus_Shutdown()
-	;_GDIPlus_Startup()
+	$Compass_height = $CompassGUI_height - ($Compass_topborder + $Compass_bottomborder)
+	$Compass_width = $CompassGUI_width - ($Compass_leftborder + $Compass_rightborder)
+	;If $CompassGUI_height <= $CompassGUI_width Then
+	;	$CompassGUI_width = $CompassGUI_height
+	;	$cp = WinGetPos($CompassGUI)
+	;	WinMove($CompassGUI, "", $cp[0], $cp[1], $CompassGUI_width, $CompassGUI_height,)
+	;Else
+	;	$CompassGUI_height = $CompassGUI_width
+	;	$cp = WinGetPos($CompassGUI)
+	;	WinMove($CompassGUI, "", $cp[0], $cp[1], $CompassGUI_width, $CompassGUI_height)
+	;EndIf
 
-	$CompassGraphic = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
-	$CompassColor = '0xFF' & StringTrimLeft($ControlBackgroundColor, 2)
-	$hBrush = _GDIPlus_BrushCreateSolid($CompassColor)
-	_GDIPlus_GraphicsFillEllipse($CompassGraphic, 15, 15, $CompassHeight, $CompassHeight, $hBrush)
+	$Compass_graphics = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
+	$Compass_bitmap = _GDIPlus_BitmapCreateFromGraphics($CompassGUI_width, $CompassGUI_height, $Compass_graphics)
+	$Compass_backbuffer = _GDIPlus_ImageGetGraphicsContext($Compass_bitmap)
 EndFunc   ;==>_SetCompassSizes
+
+Func _DrawCompass()
+	;Set Background Color
+	_GDIPlus_GraphicsClear($Compass_backbuffer, StringReplace($BackgroundColor, "0x", "0xFF"))
+	;Draw Circle
+	_GDIPlus_GraphicsFillEllipse($Compass_backbuffer, $Compass_leftborder, $Compass_topborder, $Compass_width, $Compass_width, $Brush_ControlBackgroundColor)
+	;Draw Compass Line
+	$Radius = ($Compass_width / 2)
+	$CenterX = ($Compass_width / 2) + $Compass_leftborder
+	$CenterY = ($Compass_width / 2) + $Compass_topborder
+	;-Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y)
+	If $Degree = 0 Or $Degree = 360 Then
+		$CircleX = $CenterX
+		$CircleY = $CenterY - $Radius
+	ElseIf $Degree > 0 And $Degree < 90 Then
+		$Radians = $Degree * 0.0174532925
+		$CircleX = $CenterX + (Sin($Radians) * $Radius)
+		$CircleY = $CenterY - (Cos($Radians) * $Radius)
+	ElseIf $Degree = 90 Then
+		$CircleX = $CenterX + $Radius
+		$CircleY = $CenterY
+	ElseIf $Degree > 90 And $Degree < 180 Then
+		$TmpDegree = $Degree - 90
+		$Radians = $TmpDegree * 0.0174532925
+		$CircleX = $CenterX + (Cos($Radians) * $Radius)
+		$CircleY = $CenterY + (Sin($Radians) * $Radius)
+	ElseIf $Degree = 180 Then
+		$CircleX = $CenterX
+		$CircleY = $CenterY + $Radius
+	ElseIf $Degree > 180 And $Degree < 270 Then
+		$TmpDegree = $Degree - 180
+		$Radians = $TmpDegree * 0.0174532925
+		$CircleX = $CenterX - (Sin($Radians) * $Radius)
+		$CircleY = $CenterY + (Cos($Radians) * $Radius)
+	ElseIf $Degree = 270 Then
+		$CircleX = $CenterX - $Radius
+		$CircleY = $CenterY
+	ElseIf $Degree > 270 And $Degree < 360 Then
+		$TmpDegree = $Degree - 270
+		$Radians = $TmpDegree * 0.0174532925
+		$CircleX = $CenterX - (Cos($Radians) * $Radius)
+		$CircleY = $CenterY - (Sin($Radians) * $Radius)
+	EndIf
+	_GDIPlus_GraphicsDrawLine($Compass_backbuffer, $CenterX, $CenterY, $CircleX, $CircleY)
+	;Draw new image to the screen
+	_GDIPlus_GraphicsDrawImageRect($Compass_graphics, $Compass_bitmap, 0, 0, $CompassGUI_width, $CompassGUI_height)
+EndFunc   ;==>_DrawCompass
 
 Func _DrawCompassLine($Degree);Draws compass in GPS Details GUI
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DrawCompassLine()') ;#Debug Display
@@ -4092,25 +4141,6 @@ EndFunc   ;==>_LabelSort
 ;                                                       WINDOW FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _WinMoved();Checks if window has moved. Returns 1 if it has
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WinMoved()') ;#Debug Display
-	$a = WinGetPos($Vistumbler)
-	$winpos_old = $winpos
-	$winpos = $a[0] & $a[1] & $a[2] & $a[3] & WinGetState($title, "")
-	If $winpos_old <> $winpos Then
-		;Set window state and position
-		$winstate = WinGetState($title, "")
-		If BitAND($winstate, 32) Then;Set
-			$VistumblerState = "Maximized"
-		Else
-			$VistumblerState = "Window"
-			$VistumblerPosition = $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3]
-		EndIf
-		Return 1 ;Set Flag that window moved
-	Else
-		Return 0 ;Set Flag that window did not move
-	EndIf
-EndFunc   ;==>_WinMoved
 
 Func _SetControlSizes();Sets control positions in GUI based on the windows current size
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetControlSizes()') ;#Debug Display
@@ -4431,10 +4461,7 @@ Func _Set2400ChanGraphSizes()
 	$2400width = DllStructGetData($p, "Right")
 	$2400height = DllStructGetData($p, "Bottom")
 	;Set Sizes
-	$2400topborder = 20
-	$2400bottomborder = 40
-	$2400leftborder = 40
-	$2400rightborder = 20
+
 	$2400graphheight = $2400height - ($2400topborder + $2400bottomborder)
 	$2400graphwidth = $2400width - ($2400leftborder + $2400rightborder)
 	$2400freqwidth = $2400graphwidth / 100
@@ -4446,7 +4473,6 @@ Func _Set2400ChanGraphSizes()
 EndFunc   ;==>_Set2400ChanGraphSizes
 
 Func _Draw2400ChanGraph()
-	_GDIPlus_GraphicsClear($2400backbuffer)
 	;Set Background Color
 	_GDIPlus_GraphicsClear($2400backbuffer, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
 	;Draw 10% labels and lines
@@ -4587,10 +4613,6 @@ Func _Set5000ChanGraphSizes()
 	$5000width = DllStructGetData($p, "Right")
 	$5000height = DllStructGetData($p, "Bottom")
 	;Set Sizes
-	$5000topborder = 20
-	$5000bottomborder = 40
-	$5000leftborder = 40
-	$5000rightborder = 20
 	$5000graphheight = $5000height - ($5000topborder + $5000bottomborder)
 	$5000graphwidth = $5000width - ($5000leftborder + $5000rightborder)
 	$5000freqwidth = $5000graphwidth / 700 ; Freq Range 5150 - 5850 (700points)
