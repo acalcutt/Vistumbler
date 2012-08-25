@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 11'
+$version = 'v10.3 Beta 12'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2012/08/25'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -3626,11 +3626,9 @@ Func _CompassGUI()
 	If $CompassOpen = 0 Then
 		$CompassGUI = GUICreate($Text_GpsCompass, 130, 130, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($BackgroundColor)
-
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseCompassGui')
 		GUISetOnEvent($GUI_EVENT_RESIZED, '_SetCompassSizes')
 		GUISetOnEvent($GUI_EVENT_RESTORE, '_SetCompassSizes')
-
 		GUISetState(@SW_SHOW)
 
 		$cpsplit = StringSplit($CompassPosition, ',')
@@ -3645,6 +3643,8 @@ Func _CompassGUI()
 		_DrawCompass()
 
 		$CompassOpen = 1
+	Else
+		WinActivate($CompassGUI)
 	EndIf
 EndFunc   ;==>_CompassGUI
 
@@ -3691,10 +3691,12 @@ Func _DrawCompass()
 	$CLeft = $CenterX - ($Compass_width / 2)
 	$CTop = $CenterY - ($Compass_height / 2)
 	_GDIPlus_GraphicsFillEllipse($Compass_backbuffer, $CLeft, $CTop, $Compass_width, $Compass_height, $Brush_ControlBackgroundColor)
-	;Draw Compass Line
-	ConsoleWrite("$CenterX:" & $CenterX & @CRLF & "$CenterY:" & $CenterY & @CRLF)
-	;-Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y)
-
+	;Draw direction lables
+	_GDIPlus_GraphicsDrawString($Compass_backbuffer, "N", $CenterX - 6, $CTop - 15)
+	_GDIPlus_GraphicsDrawString($Compass_backbuffer, "S", $CenterX - 6, ($CTop + $Compass_height))
+	_GDIPlus_GraphicsDrawString($Compass_backbuffer, "W", $CLeft - 17, $CenterY - 8)
+	_GDIPlus_GraphicsDrawString($Compass_backbuffer, "E", ($CLeft + $Compass_width), $CenterY - 8)
+	;Draw Compass Line-Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y)
 	If $Degree = 0 Or $Degree = 360 Then
 		$CircleX = $CenterX
 		$CircleY = $CenterY - $Radius
@@ -3798,6 +3800,8 @@ Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 
 		Opt("GUIResizeMode", 802)
 		$GpsDetailsOpen = 1
+	Else
+		WinActivate($GpsDetailsGUI)
 	EndIf
 EndFunc   ;==>_OpenGpsDetailsGUI
 
@@ -4388,6 +4392,8 @@ Func _Channels2400_GUI()
 
 		GUISetState(@SW_SHOW, $2400chanGUI)
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_Close2400GUI')
+		GUISetOnEvent($GUI_EVENT_RESIZED, '_Set2400ChanGraphSizes')
+		GUISetOnEvent($GUI_EVENT_RESTORE, '_Set2400ChanGraphSizes')
 
 		_Set2400ChanGraphSizes()
 		_Draw2400ChanGraph()
@@ -4425,7 +4431,6 @@ Func _Draw2400ChanGraph()
 	For $sn = 0 To 10
 		$percent = ($sn * 10) & "%"
 		$vposition = ($2400height - $2400bottomborder) - (($2400graphheight / 10) * $sn)
-		ConsoleWrite($percent & '-' & $vposition & @CRLF)
 		_GDIPlus_GraphicsDrawString($2400backbuffer, $percent, 0, $vposition - 5)
 		_GDIPlus_GraphicsDrawLine($2400backbuffer, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
 	Next
@@ -4531,6 +4536,8 @@ Func _Channels5000_GUI()
 		EndIf
 
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_Close5000GUI')
+		GUISetOnEvent($GUI_EVENT_RESIZED, '_Set5000ChanGraphSizes')
+		GUISetOnEvent($GUI_EVENT_RESTORE, '_Set5000ChanGraphSizes')
 
 		GUISetState(@SW_SHOW, $5000chanGUI)
 
@@ -4570,7 +4577,6 @@ Func _Draw5000ChanGraph()
 	For $sn = 0 To 10
 		$percent = ($sn * 10) & "%"
 		$vposition = ($5000height - $5000bottomborder) - (($5000graphheight / 10) * $sn)
-		ConsoleWrite($percent & '-' & $vposition & @CRLF)
 		_GDIPlus_GraphicsDrawString($5000backbuffer, $percent, 0, $vposition - 5)
 		_GDIPlus_GraphicsDrawLine($5000backbuffer, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
 	Next
@@ -10076,7 +10082,6 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 							$SayNameBefore = 0
 							If $SayNameBefore = 1 Then $say = $ApSSID & ' ' & $say
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=2'
-							ConsoleWrite($run & @CRLF)
 							If $SpeakSigSayPecent = 1 Then $run &= ' /p'
 							$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
 							If @error Then $ErrorFlag = 1
