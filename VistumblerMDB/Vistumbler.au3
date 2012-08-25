@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 10'
+$version = 'v10.3 Beta 11'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/08/20'
+$last_modified = '2012/08/25'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -120,7 +120,6 @@ Dim $StartArraySize
 Dim $Debug
 Dim $debugdisplay
 Dim $sErr
-Dim $CompassGraphic, $compasspos, $north, $south, $east, $west, $CompassBack, $CompassHeight
 
 Dim $VistumblerDB
 Dim $VistumblerDbName
@@ -204,7 +203,6 @@ Dim $SaveDbOnExit = 0
 Dim $ClearAllAps = 0
 Dim $UpdateAutoSave = 0
 Dim $CompassOpen = 0
-Dim $CompassGUI = 0
 Dim $SettingsOpen = 0
 Dim $SayProcess
 Dim $MidiProcess
@@ -228,10 +226,19 @@ Dim $NetworkAdapters[1]
 _Wlan_StartSession()
 Dim $noadaptersid
 
-Dim $AeroOn
 Dim $TreeviewAPs_left, $TreeviewAPs_width, $TreeviewAPs_top, $TreeviewAPs_height
 Dim $ListviewAPs_left, $ListviewAPs_width, $ListviewAPs_top, $ListviewAPs_height
 Dim $Graphic_left, $Graphic_width, $Graphic_top, $Graphic_height
+
+Dim $Graph_topborder = 20, $Graph_bottomborder = 20, $Graph_leftborder = 40, $Graph_rightborder = 20
+Dim $Compass_topborder = 20, $Compass_bottomborder = 20, $Compass_leftborder = 20, $Compass_rightborder = 20
+Dim $2400topborder = 20, $2400bottomborder = 40, $2400leftborder = 40, $2400rightborder = 20
+Dim $5000topborder = 20, $5000bottomborder = 40, $5000leftborder = 40, $5000rightborder = 20
+
+Dim $Graph_backbuffer, $Graph_height, $Graph_width
+Dim $CompassGUI, $Compass_graphics, $Compass_bitmap, $Compass_backbuffer, $Compass_height, $Compass_width, $Degree, $CompassGUI_width, $CompassGUI_height
+Dim $2400chanGUI, $2400GraphicGUI, $2400chanGUIOpen, $2400height, $2400width, $2400topborder, $2400bottomborder, $2400leftborder, $2400rightborder, $2400graphheight, $2400graphwidth, $2400freqwidth, $2400percheight, $2400backbuffer, $2400bitmap, $2400graphics
+Dim $5000chanGUI, $5000GraphicGUI, $5000chanGUIOpen, $5000height, $5000width, $5000topborder, $5000bottomborder, $5000leftborder, $5000rightborder, $5000graphheight, $5000graphwidth, $5000freqwidth, $5000percheight, $5000backbuffer, $5000bitmap, $5000graphics
 
 Dim $FixTime, $FixTime2, $FixDate
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
@@ -243,15 +250,6 @@ Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_Spea
 Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
-
-Dim $Graph_backbuffer, $Graph_height, $Graph_width
-Dim $CompassGUI, $Compass_graphics, $Compass_bitmap, $Compass_backbuffer, $Compass_height, $Compass_width, $Degree, $CompassGUI_width, $CompassGUI_height
-Dim $2400chanGUI, $2400GraphicGUI, $2400chanGUIOpen, $2400height, $2400width, $2400topborder, $2400bottomborder, $2400leftborder, $2400rightborder, $2400graphheight, $2400graphwidth, $2400freqwidth, $2400percheight, $2400backbuffer, $2400bitmap, $2400graphics
-Dim $5000chanGUI, $5000GraphicGUI, $5000chanGUIOpen, $5000height, $5000width, $5000topborder, $5000bottomborder, $5000leftborder, $5000rightborder, $5000graphheight, $5000graphwidth, $5000freqwidth, $5000percheight, $5000backbuffer, $5000bitmap, $5000graphics
-Dim $Graph_topborder = 20, $Graph_bottomborder = 20, $Graph_leftborder = 40, $Graph_rightborder = 20
-Dim $Compass_topborder = 20, $Compass_bottomborder = 20, $Compass_leftborder = 20, $Compass_rightborder = 20
-Dim $2400topborder = 20, $2400bottomborder = 40, $2400leftborder = 40, $2400rightborder = 20
-Dim $5000topborder = 20, $5000bottomborder = 40, $5000leftborder = 40, $5000rightborder = 20
 
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
@@ -1148,7 +1146,7 @@ $ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
 $ExportToGPX = GUICtrlCreateMenuItem($Text_AllAPs, $ExportGpxMenu)
 $ExportNS1Menu = GUICtrlCreateMenu($Text_ExportToNS1, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportNS1Menu)
-$ExportCamFile = GUICtrlCreateMenuItem("Export cam file", $Export)
+;$ExportCamFile = GUICtrlCreateMenuItem("Export cam file", $Export)
 $ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
 ;Edit Menu
@@ -1253,16 +1251,16 @@ GUICtrlSetOnEvent($RefreshInterfaces, '_RefreshInterfaces')
 _AddInterfaces()
 
 $ExtraMenu = GUICtrlCreateMenu($Text_Extra)
-$OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $ExtraMenu)
-$GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $ExtraMenu)
-$GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $ExtraMenu)
-$UpdateGeolocations = GUICtrlCreateMenuItem("Update Geolocations", $ExtraMenu)
-$OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $ExtraMenu)
-$UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $ExtraMenu)
-$GUI_ImportImageFolder = GUICtrlCreateMenuItem("Import Image Folder (" & $Text_Experimental & ")", $ExtraMenu)
-$GUI_CleanupNonMatchingImages = GUICtrlCreateMenuItem("Cleanup non-matching images (" & $Text_Experimental & ")", $ExtraMenu)
 $GUI_2400ChannelGraph = GUICtrlCreateMenuItem("2.4Ghz Channel Graph (" & $Text_Experimental & ")", $ExtraMenu)
 $GUI_5000ChannelGraph = GUICtrlCreateMenuItem("5Ghz Channel Graph (" & $Text_Experimental & ")", $ExtraMenu)
+$GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $ExtraMenu)
+$GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $ExtraMenu)
+$OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $ExtraMenu)
+$OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $ExtraMenu)
+$UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $ExtraMenu)
+;$GUI_ImportImageFolder = GUICtrlCreateMenuItem("Import Image Folder (" & $Text_Experimental & ")", $ExtraMenu)
+;$GUI_CleanupNonMatchingImages = GUICtrlCreateMenuItem("Cleanup non-matching images (" & $Text_Experimental & ")", $ExtraMenu)
+
 
 $WifidbMenu = GUICtrlCreateMenu($Text_WifiDB)
 $UseWiFiDbGpsLocateButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbGpsLocate & ' (' & $Text_Experimental & ')', $WifidbMenu)
@@ -1275,6 +1273,7 @@ If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewLiveInWDB = GUICtrlCreateMenuItem($Text_WifiDBOpenLiveAPWebpage & ' (' & $Text_Experimental & ')', $WifidbMenu)
+$UpdateGeolocations = GUICtrlCreateMenuItem("Update Geolocations" & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewWDBWebpage = GUICtrlCreateMenuItem($Text_WifiDBOpenMainWebpage, $WifidbMenu)
 $ViewInPhilsGraph = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $WifidbMenu)
 
@@ -1364,7 +1363,7 @@ GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
 GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
 GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
 GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
-GUICtrlSetOnEvent($ExportCamFile, '_ExportCamFile')
+;GUICtrlSetOnEvent($ExportCamFile, '_ExportCamFile')
 GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
 ;Edit Menu
@@ -1410,29 +1409,26 @@ GUICtrlSetOnEvent($SetCamera, '_SettingsGUI_Cam')
 ;Extra Menu
 GUICtrlSetOnEvent($GpsCompass, '_CompassGUI')
 GUICtrlSetOnEvent($GpsDetails, '_OpenGpsDetailsGUI')
-GUICtrlSetOnEvent($UpdateGeolocations, '_GeoLocateAllAps')
+GUICtrlSetOnEvent($GUI_2400ChannelGraph, '_Channels2400_GUI')
+GUICtrlSetOnEvent($GUI_5000ChannelGraph, '_Channels5000_GUI')
 GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
 GUICtrlSetOnEvent($OpenKmlNetworkLink, '_StartGoogleAutoKmlRefresh')
-
+GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
+;GUICtrlSetOnEvent($GUI_ImportImageFolder, '_GUI_ImportImageFiles')
+;GUICtrlSetOnEvent($GUI_CleanupNonMatchingImages, '_RemoveNonMatchingImages')
 ;WifiDB Menu
 GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
 GUICtrlSetOnEvent($UseWiFiDbAutoUploadButton, '_WifiDbAutoUploadToggle')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
 GUICtrlSetOnEvent($LocateInWDB, '_LocatePositionInWiFiDB')
 GUICtrlSetOnEvent($ViewLiveInWDB, '_ViewLiveInWDB')
+GUICtrlSetOnEvent($UpdateGeolocations, '_GeoLocateAllAps')
 GUICtrlSetOnEvent($ViewWDBWebpage, '_ViewWDBWebpage')
 GUICtrlSetOnEvent($ViewInPhilsGraph, '_ViewInPhilsGraph')
 ;Help Menu
-
 GUICtrlSetOnEvent($VistumblerHome, '_OpenVistumblerHome')
 GUICtrlSetOnEvent($VistumblerForum, '_OpenVistumblerForum')
 GUICtrlSetOnEvent($VistumblerWiki, '_OpenVistumblerWiki')
-GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
-GUICtrlSetOnEvent($GUI_ImportImageFolder, '_GUI_ImportImageFiles')
-GUICtrlSetOnEvent($GUI_CleanupNonMatchingImages, '_RemoveNonMatchingImages')
-GUICtrlSetOnEvent($GUI_2400ChannelGraph, '_Channels2400_GUI')
-GUICtrlSetOnEvent($GUI_5000ChannelGraph, '_Channels5000_GUI')
-
 GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
 GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
@@ -1461,11 +1457,6 @@ $UpdatedGPS = 0
 $UpdatedAPs = 0
 $UpdatedGraph = 0
 $UpdatedAutoKML = 0
-$UpdatedVistumblerPos = 0
-$UpdatedCompassPos = 0
-$UpdatedGpsDetailsPos = 0
-$Updated2400ChanGraphPos = 0
-$Updated5000ChanGraphPos = 0
 $UpdatedSpeechSig = 0
 $begin = TimerInit() ;Start $begin timer, used to measure loop time
 $kml_active_timer = TimerInit()
@@ -1630,37 +1621,37 @@ While 1
 		$UpdateAutoSave = 0
 	EndIf
 
+	;Check GPS Details Windows Position
+	If WinExists($GpsDetailsGUI) And $GpsDetailsOpen = 1 Then
+		$p = WinGetPos($GpsDetailsGUI)
+		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
+	EndIf
+
 	;Check Compass Window Position
-	If WinExists($CompassGUI) Then
+	If WinExists($CompassGUI) And $CompassOpen = 1 Then
 		$CompassPosition_old = $CompassPosition
 		$p = WinGetPos($CompassGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $CompassPosition Then $CompassPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $CompassGUI has moved or resized, set $pompassPosition to current window size
 		If $CompassPosition <> $CompassPosition_old Then _SetCompassSizes()
 		_DrawCompass()
-		$UpdatedCompassPos = 1
-	EndIf
-
-	;Check GPS Details Windows Position
-	If WinExists($GpsDetailsGUI) And $GpsDetailsOpen = 1 And $UpdatedGpsDetailsPos = 0 Then
-		$p = WinGetPos($GpsDetailsGUI)
-		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $GpsDetailsPosition Then $GpsDetailsPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $GpsDetails has moved or resized, set $GpsDetailsPosition to current window size
-		$UpdatedGpsDetailsPos = 1
 	EndIf
 
 	;Check 2.4Ghz Channel Graph Window Position
-	If WinExists($2400chanGUI) And $2400chanGUIOpen = 1 And $Updated2400ChanGraphPos = 0 Then
+	If WinExists($2400chanGUI) And $2400chanGUIOpen = 1 Then
+		$2400ChanGraphPos_old = $2400ChanGraphPos
 		$p = WinGetPos($2400chanGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $2400ChanGraphPos Then $2400ChanGraphPos = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $2400chanGUI has moved or resized, set $GpsDetailsPosition to current window size
-		_Redraw2400Graph()
-		$Updated2400ChanGraphPos = 1
+		If $2400ChanGraphPos <> $2400ChanGraphPos_old Then _Set2400ChanGraphSizes()
+		_Draw2400ChanGraph()
 	EndIf
 
 	;Check 5Ghz Channel Graph  Position
-	If WinExists($5000chanGUI) And $5000chanGUIOpen = 1 And $Updated5000ChanGraphPos = 0 Then
+	If WinExists($5000chanGUI) And $5000chanGUIOpen = 1 Then
+		$5000ChanGraphPos_old = $5000ChanGraphPos
 		$p = WinGetPos($5000chanGUI)
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $5000ChanGraphPos Then $5000ChanGraphPos = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $5000chanGUI has moved or resized, set $pompassPosition to current window size
-		_Redraw5000Graph()
-		$Updated5000ChanGraphPos = 1
+		If $5000ChanGraphPos <> $5000ChanGraphPos_old Then _Set5000ChanGraphSizes()
+		_Draw5000ChanGraph()
 	EndIf
 
 	;Check Vistumbler Window Position
@@ -1697,11 +1688,6 @@ While 1
 		$UpdatedAPs = 0
 		$UpdatedGraph = 0
 		$UpdatedAutoKML = 0
-		$UpdatedVistumblerPos = 0
-		$UpdatedCompassPos = 0
-		$UpdatedGpsDetailsPos = 0
-		$Updated2400ChanGraphPos = 0
-		$Updated5000ChanGraphPos = 0
 		$UpdatedSpeechSig = 0
 		GUICtrlSetData($msgdisplay, '') ;Clear Message
 		$time = TimerDiff($begin)
@@ -3355,7 +3341,9 @@ Func _GetGPS(); Recieves data from gps device
 				EndIf
 			EndIf
 		ElseIf $GpsType = 2 Then ;Use Kernel32
-			$gstring = StringStripWS(_rxwait($OpenedPort, '1000', $maxtime), 8);Read data line from GPS
+
+
+			$gstring = StringStripWS(_rxwait($OpenedPort, '100', $maxtime), 8);Read data line from GPS
 			$dataline = $gstring; & $LastGpsString
 			$LastGpsString = $gstring
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
@@ -3417,7 +3405,7 @@ Func _GetGPS(); Recieves data from gps device
 
 	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
 	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
-	_DrawCompassLine($TrackAngle)
+	$Degree = $TrackAngle
 
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
 
@@ -3668,37 +3656,45 @@ EndFunc   ;==>_CloseCompassGui
 
 Func _SetCompassSizes();Takes the size of a hidden label in the compass window and determines the Width/Height of the compass
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetCompassSizes()') ;#Debug Display
+	;---- Keep Window Square ----
+	$cs = WinGetPos($CompassGUI)
+	$cs_x = $cs[0]
+	$cs_y = $cs[1]
+	$cs_width = $cs[2]
+	$cs_height = $cs[3]
+	If $cs_height < $cs_width Then $cs_width = $cs_height
+	If $cs_height > $cs_width Then $cs_height = $cs_width
+	WinMove($CompassGUI, "", $cs_x, $cs_y, $cs_width, $cs_height)
+	;---- End Keep Window Square ----
+	;---- Redraw Circle ----
 	$p = _WinAPI_GetClientRect($CompassGUI)
 	$CompassGUI_height = DllStructGetData($p, "Bottom")
 	$CompassGUI_width = DllStructGetData($p, "Right")
-
 	$Compass_height = $CompassGUI_height - ($Compass_topborder + $Compass_bottomborder)
 	$Compass_width = $CompassGUI_width - ($Compass_leftborder + $Compass_rightborder)
-	;If $CompassGUI_height <= $CompassGUI_width Then
-	;	$CompassGUI_width = $CompassGUI_height
-	;	$cp = WinGetPos($CompassGUI)
-	;	WinMove($CompassGUI, "", $cp[0], $cp[1], $CompassGUI_width, $CompassGUI_height,)
-	;Else
-	;	$CompassGUI_height = $CompassGUI_width
-	;	$cp = WinGetPos($CompassGUI)
-	;	WinMove($CompassGUI, "", $cp[0], $cp[1], $CompassGUI_width, $CompassGUI_height)
-	;EndIf
+	If $Compass_height < $Compass_width Then $Compass_width = $Compass_height
+	If $Compass_height > $Compass_width Then $Compass_height = $Compass_width
 
 	$Compass_graphics = _GDIPlus_GraphicsCreateFromHWND($CompassGUI)
 	$Compass_bitmap = _GDIPlus_BitmapCreateFromGraphics($CompassGUI_width, $CompassGUI_height, $Compass_graphics)
 	$Compass_backbuffer = _GDIPlus_ImageGetGraphicsContext($Compass_bitmap)
+	;---- End Redraw Circle ----
 EndFunc   ;==>_SetCompassSizes
 
 Func _DrawCompass()
 	;Set Background Color
 	_GDIPlus_GraphicsClear($Compass_backbuffer, StringReplace($BackgroundColor, "0x", "0xFF"))
 	;Draw Circle
-	_GDIPlus_GraphicsFillEllipse($Compass_backbuffer, $Compass_leftborder, $Compass_topborder, $Compass_width, $Compass_width, $Brush_ControlBackgroundColor)
-	;Draw Compass Line
 	$Radius = ($Compass_width / 2)
-	$CenterX = ($Compass_width / 2) + $Compass_leftborder
-	$CenterY = ($Compass_width / 2) + $Compass_topborder
+	$CenterX = ($CompassGUI_width / 2)
+	$CenterY = ($CompassGUI_height / 2)
+	$CLeft = $CenterX - ($Compass_width / 2)
+	$CTop = $CenterY - ($Compass_height / 2)
+	_GDIPlus_GraphicsFillEllipse($Compass_backbuffer, $CLeft, $CTop, $Compass_width, $Compass_height, $Brush_ControlBackgroundColor)
+	;Draw Compass Line
+	ConsoleWrite("$CenterX:" & $CenterX & @CRLF & "$CenterY:" & $CenterY & @CRLF)
 	;-Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y)
+
 	If $Degree = 0 Or $Degree = 360 Then
 		$CircleX = $CenterX
 		$CircleY = $CenterY - $Radius
@@ -3731,60 +3727,10 @@ Func _DrawCompass()
 		$CircleX = $CenterX - (Cos($Radians) * $Radius)
 		$CircleY = $CenterY - (Sin($Radians) * $Radius)
 	EndIf
-	_GDIPlus_GraphicsDrawLine($Compass_backbuffer, $CenterX, $CenterY, $CircleX, $CircleY)
+	If $UseGPS = 1 Then _GDIPlus_GraphicsDrawLine($Compass_backbuffer, $CenterX, $CenterY, $CircleX, $CircleY)
 	;Draw new image to the screen
 	_GDIPlus_GraphicsDrawImageRect($Compass_graphics, $Compass_bitmap, 0, 0, $CompassGUI_width, $CompassGUI_height)
 EndFunc   ;==>_DrawCompass
-
-Func _DrawCompassLine($Degree);Draws compass in GPS Details GUI
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DrawCompassLine()') ;#Debug Display
-	If $CompassOpen = 1 Then
-		_SetCompassSizes()
-		$Radius = ($CompassHeight / 2) - 1
-		$CenterX = ($CompassHeight / 2) + 15
-		$CenterY = ($CompassHeight / 2) + 15
-
-		;Calculate (X, Y) based on Degrees, Radius, And Center of circle (X, Y)
-		If $Degree = 0 Or $Degree = 360 Then
-			$CircleX = $CenterX
-			$CircleY = $CenterY - $Radius
-		ElseIf $Degree > 0 And $Degree < 90 Then
-			$Radians = $Degree * 0.0174532925
-			$CircleX = $CenterX + (Sin($Radians) * $Radius)
-			$CircleY = $CenterY - (Cos($Radians) * $Radius)
-		ElseIf $Degree = 90 Then
-			$CircleX = $CenterX + $Radius
-			$CircleY = $CenterY
-		ElseIf $Degree > 90 And $Degree < 180 Then
-			$TmpDegree = $Degree - 90
-			$Radians = $TmpDegree * 0.0174532925
-			$CircleX = $CenterX + (Cos($Radians) * $Radius)
-			$CircleY = $CenterY + (Sin($Radians) * $Radius)
-		ElseIf $Degree = 180 Then
-			$CircleX = $CenterX
-			$CircleY = $CenterY + $Radius
-		ElseIf $Degree > 180 And $Degree < 270 Then
-			$TmpDegree = $Degree - 180
-			$Radians = $TmpDegree * 0.0174532925
-			$CircleX = $CenterX - (Sin($Radians) * $Radius)
-			$CircleY = $CenterY + (Cos($Radians) * $Radius)
-		ElseIf $Degree = 270 Then
-			$CircleX = $CenterX - $Radius
-			$CircleY = $CenterY
-		ElseIf $Degree > 270 And $Degree < 360 Then
-			$TmpDegree = $Degree - 270
-			$Radians = $TmpDegree * 0.0174532925
-			$CircleX = $CenterX - (Cos($Radians) * $Radius)
-			$CircleY = $CenterY - (Sin($Radians) * $Radius)
-		EndIf
-		_GDIPlus_GraphicsDrawLine($CompassGraphic, $CenterX, $CenterY, $CircleX, $CircleY)
-		;Draw Compass
-		GUICtrlSetGraphic($CompassGraphic, $GUI_GR_MOVE, $CenterX, $CenterY);Move to center of the circle
-		GUICtrlSetGraphic($CompassGraphic, $GUI_GR_LINE, $CircleX, $CircleY);Draw line from center to calculated point
-		GUICtrlSetGraphic($CompassGraphic, $GUI_GR_REFRESH);Show changes
-		;GUISwitch($Vistumbler)
-	EndIf
-EndFunc   ;==>_DrawCompassLine
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS DETAILS GUI FUNCTIONS
@@ -3793,6 +3739,7 @@ EndFunc   ;==>_DrawCompassLine
 Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenGpsDetailsGUI()') ;#Debug Display
 	If $GpsDetailsOpen = 0 Then
+		Opt("GUIResizeMode", 1)
 		$GpsDetailsGUI = GUICreate($Text_GpsDetails, 565, 190, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($BackgroundColor)
 		$GpsCurrentDataGUI = GUICtrlCreateLabel('', 8, 5, 550, 15)
@@ -3849,6 +3796,7 @@ Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 			$GpsDetailsPosition = $g[0] & ',' & $g[1] & ',' & $g[2] & ',' & $g[3]
 		EndIf
 
+		Opt("GUIResizeMode", 802)
 		$GpsDetailsOpen = 1
 	EndIf
 EndFunc   ;==>_OpenGpsDetailsGUI
@@ -4440,8 +4388,6 @@ Func _Channels2400_GUI()
 
 		GUISetState(@SW_SHOW, $2400chanGUI)
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_Close2400GUI')
-		GUISetOnEvent($GUI_EVENT_RESIZED, '_Redraw2400Graph')
-		GUISetOnEvent($GUI_EVENT_RESTORE, '_Redraw2400Graph')
 
 		_Set2400ChanGraphSizes()
 		_Draw2400ChanGraph()
@@ -4568,11 +4514,6 @@ Func _Draw2400ChanLine($frequency, $Channel)
 	_GDIPlus_GraphicsDrawLine($2400backbuffer, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 EndFunc   ;==>_Draw2400ChanLine
 
-Func _Redraw2400Graph()
-	_Set2400ChanGraphSizes()
-	_Draw2400ChanGraph()
-EndFunc   ;==>_Redraw2400Graph
-
 ;---------- 5Ghz Channel Graph Function ----------
 Func _Channels5000_GUI()
 	If $5000chanGUIOpen = 0 Then
@@ -4590,8 +4531,6 @@ Func _Channels5000_GUI()
 		EndIf
 
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_Close5000GUI')
-		GUISetOnEvent($GUI_EVENT_RESIZED, '_Redraw5000Graph')
-		GUISetOnEvent($GUI_EVENT_RESTORE, '_Redraw5000Graph')
 
 		GUISetState(@SW_SHOW, $5000chanGUI)
 
@@ -4747,11 +4686,6 @@ Func _Draw5000ChanLine($frequency, $Channel)
 	_GDIPlus_GraphicsDrawString($5000backbuffer, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
 	_GDIPlus_GraphicsDrawLine($5000backbuffer, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
 EndFunc   ;==>_Draw5000ChanLine
-
-Func _Redraw5000Graph()
-	_Set5000ChanGraphSizes()
-	_Draw5000ChanGraph()
-EndFunc   ;==>_Redraw5000Graph
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PHILS FUNCTIONS
