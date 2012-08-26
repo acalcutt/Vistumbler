@@ -1,6 +1,9 @@
-#AutoIt3Wrapper_Run_Au3check=y
-#AutoIt3Wrapper_Au3Check_Parameters=-d -w 1 -w 2 -w 3 -w 4 -w 5 -w 6
-
+#CS
+Native Wifi Functions - Version 4.1.3 - 2012-04-18
+by MattyD(mattduncan87)
+http://sourceforge.net/projects/nativewifi/
+Artistic License 2.0
+#CE
 ;--------------Enumerations-------------
 
 ;DOT11_AUTH_ALGORITHM
@@ -409,7 +412,7 @@ Func _Wlan_EnumToString($sCategory, $iEnumeration)
 				Case $WLAN_HOSTED_NETWORK_PEER_STATE_INVALID
 					Return "Invalid Peer State"
 				Case $WLAN_HOSTED_NETWORK_PEER_STATE_AUTHENTICATED
-					Return "Peer State Authenticated"
+					Return "Authenticated"
 				Case Else
 					Return SetError(3, 0, "")
 			EndSwitch
@@ -683,21 +686,13 @@ Func _Wlan_Dot11OpModeToString($iOpMode)
 EndFunc
 
 Func _Wlan_pGUIDToString($pGUID)
-	Local $tGUID, $sGUID = "{", $aGUID[5]
-	$tGUID = DllStructCreate("ulong data1; ushort data2; ushort data3; ubyte data4[8]", $pGUID)
+	Local $tGUID = DllStructCreate("ulong data1; ushort data2; ushort data3; ubyte data4[8]", $pGUID)
 
-	$aGUID[0] = Hex(DllStructGetData($tGUID, "data1"))
-	$aGUID[1] = Hex(DllStructGetData($tGUID, "data2"), 4)
-	$aGUID[2] = Hex(DllStructGetData($tGUID, "data3"), 4)
-	$aGUID[3] = Hex(StringTrimRight(DllStructGetData($tGUID, "data4"), 12), 4)
-	$aGUID[4] = StringTrimLeft(DllStructGetData($tGUID, "data4"), 6)
-
-	For $i = 0 To UBound($aGUID) - 2
-		$sGUID &= $aGUID[$i] & "-"
-	Next
-
-	$sGUID &= $aGUID[4] & "}"
-	Return $sGUID
+	Return "{" & Hex(DllStructGetData($tGUID, "data1"), 8) & "-" & _
+		Hex(DllStructGetData($tGUID, "data2"), 4) & "-" & _
+		Hex(DllStructGetData($tGUID, "data3"), 4) & "-" & _
+		Hex(StringTrimRight(DllStructGetData($tGUID, "data4"), 12), 4) & "-" & _
+		StringTrimLeft(DllStructGetData($tGUID, "data4"), 6) & "}"
 EndFunc
 
 Func _Wlan_bMACToString($bMAC)
@@ -708,6 +703,35 @@ Func _Wlan_bMACToString($bMAC)
 		$sMAC &= $aMAC[$i] & $aMAC[$i + 1] & " "
 	Next
 	Return StringTrimRight($sMAC, 1)
+EndFunc
+
+Func _Wlan_iTimestampToString($iTimeStamp)
+	Local $tTimeStamp, $aResult, $tSysTime, $sDayOfWeek
+	$tSysTime = DllStructCreate("word Year; word month; word DayOfWk; word Day; word Hour; word Min; word Sec; word mSec;")
+	$tTimeStamp = DllStructCreate("uint64 TimeStamp")
+	DllStructSetData($tTimeStamp, "TimeStamp", $iTimeStamp)
+	$aResult = DllCall("kernel32.dll", "dword", "FileTimeToSystemTime", "ptr", DllStructGetPtr($tTimeStamp), "ptr", DllStructGetPtr($tSysTime))
+	If @error Then Return SetError(1, @error, False)
+	If Not $aResult[0] Then Return False
+	Switch DllStructGetData($tSysTime, "DayOfWk")
+		Case 0
+			$sDayOfWeek = "Sun"
+		Case 1
+			$sDayOfWeek = "Mon"
+		Case 2
+			$sDayOfWeek = "Tues"
+		Case 3
+			$sDayOfWeek = "Wed"
+		Case 4
+			$sDayOfWeek = "Thurs"
+		Case 5
+			$sDayOfWeek = "Fri"
+		Case 6
+			$sDayOfWeek = "Sat"
+	EndSwitch
+	Return $sDayOfWeek & " " & DllStructGetData($tSysTime, "Day") & "/" & DllStructGetData($tSysTime, "Month") & "/" & _
+	DllStructGetData($tSysTime, "Year") & " " & DllStructGetData($tSysTime, "Hour") & ":" & DllStructGetData($tSysTime, "Min") & ":" &  _
+	DllStructGetData($tSysTime, "Sec") & " " & DllStructGetData($tSysTime, "mSec")
 EndFunc
 
 Global $hWLANAPI = DllOpen("WlanAPI.dll")
@@ -1041,7 +1065,7 @@ EndFunc
 ; Description ...: Starts the wireless Hosted Network without associating the request with the application's calling handle.
 ; Syntax.........: _WinAPI_WlanHostedNetworkForceStart($hClientHandle, ByRef $iReasonCode, $pReserved = 0)
 ; Parameters ....: $hClientHandle - The client's session handle, obtained by a previous call to the WlanOpenHandle function.
-;                  $iReasonCode - On output, A WLAN_HOSTED_NETWORK_REASON code that indicates why the funtion failed.
+;                  $iReasonCode - On output, A WLAN_HOSTED_NETWORK_REASON code that indicates why the function failed.
 ; Return values .: Success - True
 ;                  Failure - False
 ;                  @Error
@@ -1177,6 +1201,106 @@ Func _WinAPI_WlanHostedNetworkQueryProperty($hClientHandle, $iOpCode, ByRef $iDa
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: _WinAPI_WlanHostedNetworkQuerySecondaryKey
+; Description ...: Querys the secondary key that will be used by the wireless Hosted Network.
+; Syntax.........: _WinAPI_WlanHostedNetworkQuerySecondaryKey($hClientHandle, ByRef $iKeyLength, ByRef $pKeyData, ByRef $fIsPassPhrase, ByRef $fPersistent, ByRef $iReasonCode, $pReserved = 0)
+; Parameters ....: $hClientHandle - The client's session handle, obtained by a previous call to the WlanOpenHandle function.
+;                  $iKeyLength - On output, the number of valid data bytes in the key data array pointed to by $pKeyData. This count includes a terminating null character if the key is a passphrase.
+;                  $pKeyData - On output, a pointer to a UCHAR array that specifies the key material.
+;                  $fIsPassPhrase - On output, a Boolean value that indicates if the key data is in passphrase format.
+;                  $fPersistent - On output, a Boolean value that indicates if the key should be stored after one session.
+;                  $iReasonCode - On output, a WLAN_HOSTED_NETWORK_REASON code that indicates why the function failed.
+; Return values .: Success - True
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: This function is only supported from Windows 7 and Server 2008 R2.
+;                  Once started, the wireless Hosted Network will allow wireless peers to associate with this secondary security key in addition to the primary security key.
+;                  The secondary security key is always specified by the user as needed, while the primary security key is generated by the operating system with greater security strength.
+;                  The secondary security key is usually set before the wireless Hosted Network is started. Then it will be used the next time when the Hosted Network is started.
+;                  The primary key may be obtained through WlanHostedNetworkQueryProperty using the wlan_hosted_network_opcode_station_profile opcode.
+;                  Any user can set or query the secondary security key used in the Hosted Network.
+;                  The ability to enable the wireless Hosted Network may be restricted by group policy in a domain.
+; Related .......: _WinAPI_WlanHostedNetworkSetSecondaryKey
+; Link ..........: @@MsdnLink@@ WlanHostedNetworkQuerySecondaryKey
+; Example .......:
+; ===============================================================================================================================
+Func _WinAPI_WlanHostedNetworkQuerySecondaryKey($hClientHandle, ByRef $iKeyLength, ByRef $pKeyData, ByRef $fIsPassPhrase, ByRef $fPersistent, ByRef $iReasonCode, $pReserved = 0)
+	Local $aResult = DllCall($hWLANAPI, "dword", "WlanHostedNetworkQuerySecondaryKey", "hwnd", $hClientHandle, "dword*", 0, "ptr*", 0, "bool*", 0, "bool*", 0, "ptr*", 0, "ptr", $pReserved)
+	If @error Then Return SetError(1, @error, False)
+	$iReasonCode = $aResult[2]
+	If $aResult[0] Then Return SetError(2, $aResult[0], False)
+	$iKeyLength = $aResult[2]
+	$pKeyData = $aResult[3]
+	$fIsPassPhrase = $aResult[4]
+	$fPersistent = $aResult[5]
+	$iReasonCode = $aResult[6]
+	Return True
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _WinAPI_WlanHostedNetworkQueryStatus
+; Description ...: Queries the current status of the wireless Hosted Network.
+; Syntax.........: _WinAPI_WlanHostedNetworkQueryStatus($hClientHandle, $pReserved = 0)
+; Parameters ....: $hClientHandle - The client's session handle, obtained by a previous call to the WlanOpenHandle function.
+; Return values .: Success - a pointer to a WLAN_HOSTED_NETWORK_STATUS structure
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: This function is only supported from Windows 7 and Server 2008 R2.
+;                  This function allocates memory to recieve data. This should be released by calling _WinAPI_WlanFreeMemory.
+; Related .......: _WinAPI_WlanHostedNetworkQueryProperty
+; Link ..........: @@MsdnLink@@ WlanHostedNetworkQueryStatus
+;                  @@MsdnLink@@ WLAN_HOSTED_NETWORK_STATUS
+; Example .......:
+; ===============================================================================================================================
+Func _WinAPI_WlanHostedNetworkQueryStatus($hClientHandle, $pReserved = 0)
+	Local $aResult = DllCall($hWLANAPI, "dword", "WlanHostedNetworkQueryStatus", "hwnd", $hClientHandle, "ptr*", 0, "ptr", $pReserved)
+	If @error Then Return SetError(1, @error, False)
+	If $aResult[0] Then Return SetError(2, $aResult[0], False)
+	Return $aResult[2]
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _WinAPI_WlanHostedNetworkRefreshSecuritySettings
+; Description ...: Refreshes the configurable and auto-generated parts (the primary key) of the wireless Hosted Network security settings.
+; Syntax.........: _WinAPI_WlanHostedNetworkRefreshSecuritySettings($hClientHandle, ByRef $iReasonCode, $pReserved = 0)
+; Parameters ....: $hClientHandle - The client's session handle, obtained by a previous call to the WlanOpenHandle function.
+;                  $iOpCode - A WLAN_HOSTED_NETWORK_OPCODE value to identify the property to be queried (the return data type in brackets):
+;                  $iReasonCode - On output, a WLAN_HOSTED_NETWORK_REASON value that indicates why the funtion failed.
+; Return values .: Success - True
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: This function is only supported from Windows 7 and Server 2008 R2.
+;                  This function requires that Hosted Network state be transitioned to wlan_hosted_network_idle if it was currently running (wlan_hosted_network_active).
+;                  Any Hosted Network state change caused by this function would be automatically undone if the application calls WlanCloseHandle or if the process ends.
+;
+; Related .......:
+; Link ..........: @@MsdnLink@@ WlanHostedNetworkRefreshSecuritySettings
+; Example .......:
+; ===============================================================================================================================
+Func _WinAPI_WlanHostedNetworkRefreshSecuritySettings($hClientHandle, ByRef $iReasonCode, $pReserved = 0)
+	Local $aResult = DllCall($hWLANAPI, "dword", "WlanHostedNetworkRefreshSecuritySettings", "hwnd", $hClientHandle, "dword*", 0, "ptr", $pReserved)
+	If @error Then Return SetError(1, @error, False)
+	$iReasonCode = $aResult[2]
+	If $aResult[0] Then Return SetError(2, $aResult[0], False)
+	Return True
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: _WinAPI_WlanHostedNetworkSetProperty
 ; Description ...: Sets static properties of the wireless Hosted Network.
 ; Syntax.........: _WinAPI_WlanHostedNetworkSetProperty($hClientHandle, $iOpCode, $iDataSize, $pData, ByRef $iReasonCode, $pReserved = 0)
@@ -1207,6 +1331,44 @@ Func _WinAPI_WlanHostedNetworkSetProperty($hClientHandle, $iOpCode, $iDataSize, 
 	Local $aResult = DllCall($hWLANAPI, "dword", "WlanHostedNetworkSetProperty", "hwnd", $hClientHandle, "dword", $iOpCode, "dword", $iDataSize, "ptr", $pData, "dword*", 0, "ptr", $pReserved)
 	If @error Then Return SetError(1, @error, False)
 	$iReasonCode = $aResult[5]
+	If $aResult[0] Then Return SetError(2, $aResult[0], False)
+	Return True
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _WinAPI_WlanHostedNetworkSetSecondaryKey
+; Description ...: Sets a secondary key that will be used by the wireless Hosted Network.
+; Syntax.........: _WinAPI_WlanHostedNetworkSetSecondaryKey($hClientHandle, $iKeyLength, $pKeyData, $fIsPassPhrase, $fPersistent, ByRef $iReasonCode, $pReserved = 0)
+; Parameters ....: $hClientHandle - The client's session handle, obtained by a previous call to the WlanOpenHandle function.
+;                  $iKeyLength - The number of valid data bytes in the key data array pointed to by $pKeyData. This count should include a terminating null character if the key is a passphrase.
+;                  $pKeyData - A pointer to a UCHAR array that specifies the key material.
+;                  $fIsPassPhrase - A Boolean value that indicates if the key data is in passphrase format.
+;                  $fPersistent - A Boolean value that indicates if the key should be stored after one session.
+;                  $iReasonCode - On output, A WLAN_HOSTED_NETWORK_REASON code that indicates why the function failed.
+; Return values .: Success - True
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: This function is only supported from Windows 7 and Server 2008 R2.
+;                  Once started, the wireless Hosted Network will allow wireless peers to associate with this secondary security key in addition to the primary security key.
+;                  The secondary security key is always specified by the user as needed, while the primary security key is generated by the operating system with greater security strength.
+;                  The secondary security key is usually set before the wireless Hosted Network is started. Then it will be used the next time when the Hosted Network is started.
+;                  The primary key may be obtained through WlanHostedNetworkQueryProperty using the wlan_hosted_network_opcode_station_profile opcode.
+;                  Any user can set or query the secondary security key used in the Hosted Network.
+;                  The ability to enable the wireless Hosted Network may be restricted by group policy in a domain.
+; Related .......: _WinAPI_WlanHostedNetworkQuerySecondaryKey
+; Link ..........: @@MsdnLink@@ WlanHostedNetworkSetSecondaryKey
+; Example .......:
+; ===============================================================================================================================
+Func _WinAPI_WlanHostedNetworkSetSecondaryKey($hClientHandle, $iKeyLength, $pKeyData, $fIsPassPhrase, $fPersistent, ByRef $iReasonCode, $pReserved = 0)
+	Local $aResult = DllCall($hWLANAPI, "dword", "WlanHostedNetworkSetSecondaryKey", "hwnd", $hClientHandle, "dword", $iKeyLength, "ptr", $pKeyData, "bool", $fIsPassPhrase, _
+			"bool", $fPersistent, "ptr*", 0, "ptr", $pReserved)
+	If @error Then Return SetError(1, @error, False)
+	$iReasonCode = $aResult[6]
 	If $aResult[0] Then Return SetError(2, $aResult[0], False)
 	Return True
 EndFunc
@@ -3316,6 +3478,158 @@ Func _Wlan_GetInterfaceCapability()
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: _Wlan_GetNetworkInfo
+; Description ...: Retrieves list of BSSs found by an interface.
+; Syntax.........: _Wlan_GetNetworkInfo($sSSID = "", $iBSSType = $DOT11_BSS_TYPE_INFRASTRUCTURE, $fSecured = True)
+; Parameters ....: $sSSID - If specified, only BSS entries associated with the SSID are returned.
+;                  $iBSSType - The BSS type of the network.
+;                  |0 - Return both Infrastuctre and Ad Hoc entries
+;                  |$DOT11_BSS_TYPE_INFRASTRUCTURE (1) - Return only Infrastuctre entries
+;                  |$DOT11_BSS_TYPE_INDEPENDENT (2)  - Return only Ad Hoc entries
+;                  $fSecured - a Boolean that indicates whether security is enabled on the specified network.
+; Return values .: Success - An array of BSS entries
+;                  |$asBSSList[$iIndex][0] - The Phy index of the radio that detected the entry on the interface.
+;                  |$asBSSList[$iIndex][1] - The broadcasted SSID
+;                  |$asBSSList[$iIndex][2] - The MAC address of the BSS (BSSID)
+;                  |$asBSSList[$iIndex][3] - Capability flags
+;                  (ESS) - Infrastructure network
+;		           (IBSS) - Ad Hoc network
+;                  (Pollable) - Indicates the AP or peer station is pollable
+;                  (PollReq) - Indicates how the AP or peer station handles poll requests
+;                  (Priv) - Indicates the network is secured
+;                  |$asBSSList[$iIndex][4] - BSS Type (Infratructure or Ad Hoc)
+;                  |$asBSSList[$iIndex][5] - Radio type
+;                  Unknown/Any Phy Type - Unknown radio type
+;                  a - Orthogonal frequency-division multiplexing (802.11a)
+;				   b - High-rate direct-sequence spread spectrum (802.11b >= 5.5 Mbps)
+;                  g - Extended-rate PHY (802.11g)
+;                  n - High throughput (802.11n)
+;                  b* - Direct-sequence spread spectrum (802.11b < 5.5 Mbps)
+;                  Bluetooth - Frequency-hopping spread spectrum (Bluetooth)
+;                  legacy - Infrared baseband (Legacy 802.11)
+;                  IHV Phy Type (n) - Independant hardware vendor type n
+;                  $asBSSList[$iIndex][6] - Signal strength (0-100)
+;                  $asBSSList[$iIndex][7] - Received signal strength indicator (RSSI), in decibels referenced to 1.0 milliwatts (dBm)
+;                  $asBSSList[$iIndex][8] - Channel
+;                  $asBSSList[$iIndex][9] - Channel center frequency, in gigahertz (GHz)
+;                  $asBSSList[$iIndex][10] - Beacon period, in 1024 microsecond time units
+;                  $asBSSList[$iIndex][11] - Supported data transfer rates, in megabytes per second (Mbps)
+;                  $asBSSList[$iIndex][12] - Specifies if operation is within the regulatory domain as identified by the country/region (Unknown/In Regulatory Domain or Not In Regulatory Domain)
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (@extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+;                  |3 - There is no data to return.
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
+;                  If $sSSID is not secified, $fSecured is ignored.
+;                  If $sSSID is specified, $iBSSType must not be 0.
+;                  Extra profiles in the list included by specifying API flags on input are not affected by the UDFs "Filter" flag.
+; Related .......: _Wlan_GetNetworks
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Func _Wlan_GetNetworkInfo($sSSID = "", $iBSSType = $DOT11_BSS_TYPE_INFRASTRUCTURE, $fSecured = True)
+	Local $tSSID, $pSSID, $pBSSList, $tBSSList, $pBSSEntry, $tBSSEntry, $iItems, $vData
+
+	If $sSSID Then
+		$tSSID = DllStructCreate("dword;char[32]")
+		DllStructSetData($tSSID, 1, StringLen($sSSID))
+		DllStructSetData($tSSID, 2, $sSSID)
+		$pSSID = DllStructGetPtr($tSSID)
+	EndIf
+
+	$pBSSList = _WinAPI_WlanGetNetworkBssList($hClientHandle, $pGUID, $pSSID, $iBSSType, $fSecured)
+	If @error Then Return SetError(@error, @extended, _Wlan_ReportAPIError(@error, @extended, 0, @ScriptLineNumber, "_WinAPI_WlanGetNetworkBssList"))
+
+	$tBSSList = DllStructCreate("dword Size; dword Count", $pBSSList)
+
+	$iItems = DllStructGetData($tBSSList, 2)
+	If Not $iItems Then
+		_WinAPI_WlanFreeMemory($pBSSList)
+		Return SetError(3, 0, False)
+	EndIf
+
+	Local $asBSSList[$iItems][13]
+	For $i = 0 To $iItems - 1
+		$pBSSEntry = Ptr($i * 360 + Number($pBSSList) + 8)
+
+		$tBSSEntry = DllStructCreate("dword SSIDLen; char SSID[32]; long PhyID; byte BSSID[6]; dword BSSType; dword PHYType; long RSSI; long LinkQ; byte InRegDomain; " & _
+		"short BeaconPeriod; uint64 TimeStamp; uint64 HostTimeStamp; short Capability; long ChCtrFQ; long RateSetLen; short RateSet[126]; long IEOffset; long IESize", $pBSSEntry)
+
+		;Local $tBinDump = DllStructCreate("byte[360]", $pBSSEntry)
+		;ConsoleWrite(DllStructGetData($tBinDump, 1) & @CRLF)
+
+		$asBSSList[$i][0] = DllStructGetData($tBSSEntry, "PhyID")
+		$asBSSList[$i][1] = DllStructGetData($tBSSEntry, "SSID")
+		$asBSSList[$i][2] = _Wlan_bMacToString(DllStructGetData($tBSSEntry, "BSSID"))
+
+		$vData = DllStructGetData($tBSSEntry, "Capability")
+		If BitAND($vData, 1) Then $asBSSList[$i][3]&= "(ESS)"
+		If BitAND($vData, 2) Then $asBSSList[$i][3] &= "(IBSS)"
+		If BitAND($vData, 4) Then $asBSSList[$i][3] &= "(Pollable)"
+		If BitAND($vData, 8) Then $asBSSList[$i][3] &= "(PollReq)"
+		If BitAND($vData, 16) Then $asBSSList[$i][3] &= "(Priv)"
+		;$asBSSList[$i][3] &= $vData
+
+		$asBSSList[$i][4] = _Wlan_EnumToString("DOT11_BSS_TYPE", DllStructGetData($tBSSEntry, "BSSType"))
+		$asBSSList[$i][5] = _Wlan_EnumToString("DOT11_PHY_TYPE", DllStructGetData($tBSSEntry, "PHYType"))
+		$asBSSList[$i][6] = DllStructGetData($tBSSEntry, "LinkQ")
+		$asBSSList[$i][7] = DllStructGetData($tBSSEntry, "RSSI")
+		$asBSSList[$i][8] = DllStructGetData($tBSSEntry, "ChCtrFQ")
+		$asBSSList[$i][9] = $asBSSList[$i][8] / 1000000
+
+		Switch $asBSSList[$i][8]
+			Case 2412000
+				$asBSSList[$i][8] = 1
+			Case 2417000
+				$asBSSList[$i][8] = 2
+			Case 2422000
+				$asBSSList[$i][8] = 3
+			Case 2427000
+				$asBSSList[$i][8] = 4
+			Case 2432000
+				$asBSSList[$i][8] = 5
+			Case 2437000
+				$asBSSList[$i][8] = 6
+			Case 2442000
+				$asBSSList[$i][8] = 7
+			Case 2447000
+				$asBSSList[$i][8] = 8
+			Case 2452000
+				$asBSSList[$i][8] = 9
+			Case 2457000
+				$asBSSList[$i][8] = 10
+			Case 2462000
+				$asBSSList[$i][8] = 11
+		EndSwitch
+
+		$asBSSList[$i][10] = DllStructGetData($tBSSEntry, "BeaconPeriod")
+
+		For $j = 1 To DllStructGetData($tBSSEntry, "RateSetLen")
+			$asBSSList[$i][11] &= BitAND(DllStructGetData($tBSSEntry, "RateSet", $j), 0x77F) * 0.5 & ","
+		Next
+		$asBSSList[$i][11] = StringTrimRight($asBSSList[$i][11], 1)
+
+		If DllStructGetData($tBSSEntry, "InRegDomain") Then
+			$asBSSList[$i][12] = "Unknown/In Regulatory Domain"
+		Else
+			$asBSSList[$i][12] = "Not In Regulatory Domain"
+		EndIf
+
+		;$asBSSList[$i][13] = DllStructGetData($tBSSEntry, "TimeStamp");, 1) & "," & DllStructGetData($tBSSEntry, "TimeStamp", 2)
+		;$asBSSList[$i][14] = DllStructGetData($tBSSEntry, "HostTimeStamp");, 1) & "," & DllStructGetData($tBSSEntry, "HostTimeStamp", 2)
+		;$asBSSList[$i][15] = DllStructGetData($tBSSEntry, "IEOffset")
+		;$asBSSList[$i][16] = DllStructGetData($tBSSEntry, "IESize")
+	Next
+
+	_WinAPI_WlanFreeMemory($pBSSList)
+	Return $asBSSList
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: _Wlan_GetNetworks
 ; Description ...: Retrieves the list of available networks on an interface.
 ; Syntax.........: _Wlan_GetNetworks($fScan = False, $iFlags = 0, $iUDFFlags = 1)
@@ -3368,7 +3682,7 @@ EndFunc
 Func _Wlan_GetNetworks($fScan = False, $iFlags = 0, $iUDFFlags = 1)
 	Local $pNetwork, $tNetwork, $iItems
 
-	If $fScan < 0 Or $fScan = Default Then $fScan = True
+	If $fScan < 0 Or $fScan = Default Then $fScan = False
 	If $iFlags < 0 Or $fScan = Default Then $iFlags = 0
 	If $iUDFFlags < 0 Or $fScan = Default Then $iUDFFlags = 1
 
@@ -3588,6 +3902,62 @@ Func _Wlan_GetProfileList($fExteded = False)
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: _Wlan_HNInitialise
+; Description ...: Initialises settings for the Hosted Network.
+; Syntax.........: _Wlan_HNInitialise(ByRef $sReason, $sSSID = "", $sPassword = "", $fPersistentKey = False, $iMaxPeers = 100)
+; Parameters ....: $sReason - Provides a reason why the function failed. (output)
+;                  $sSSID - Specifies a desired SSID for the Hosted Network to use.
+;                  $sPassword - Specifies the desired secondary key (in a Pass Phrase format) for the Hosted Network to use.
+;                  $fPersistentKey - Specifies if the secondary key should expire at the end of the session.
+;                  $iMaxPeers - Specifies the maximum number of peers allowed to connect to the Hosted Network.
+; Return values .: Success - True
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (@extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
+;                  This function is only supported from Windows 7 and Server 2008 R2.
+;                  If $sSSID is not specified, and $iMaxPeers is ignored.
+;                  If $sPassword is not specified, $fPersistentKey is ignored.
+;                  This function should be called before calling any other Hosted network function.
+;                  If need be, both the SSID and the secondary key can be changed later through _Wlan_HNSetProperty and _Wlan_HNSetSecondaryKey repectively.
+;                  If in an Active state, this function will cause the Hosted network transition to an Idle state.
+;                  If the Hosted Network is used for the first time and no SSID is specified, a random and readable SSID is generated and the maximum number of peers defaults to 100.
+;                  If the Hosted Network is used for the first time, the operating system installs a virtual device if a capable wireless adapter is present.
+;                  The virtual device is not present in the list returned by WlanEnumInterfaces. It is used as an Access Point and cannot connect to an existing network.
+;                  The lifetime of the virtual device is tied to the physical wireless adapter. If the physical wireless adapter is disabled, this virtual device will be removed also.
+; Related .......: _Wlan_HNStart _Wlan_HNSetProperty _Wlan_HNSetSecondaryKey
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Func _Wlan_HNInitialise(ByRef $sReason, $sSSID = "", $sPassword = "", $fPersistentKey = False, $iMaxPeers = 100)
+	Local $iReasonCode, $iError, $iExtended
+
+	_WinAPI_WlanHostedNetworkInitSettings($hClientHandle, $iReasonCode)
+	If @error Then
+		$iError = @error
+		$iExtended = @extended
+		If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
+		Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkInitSettings"))
+	EndIf
+
+	If $sSSID Then
+		_Wlan_HNSetProperty($WLAN_HOSTED_NETWORK_OPCODE_CONNECTION_SETTINGS, $sReason, $sSSID, $iMaxPeers)
+		If @error Then Return SetError(@error, @extended, False)
+	EndIf
+
+	If $sPassword Then
+		_Wlan_HNSetSecondaryKey($sPassword, $sReason, True, $fPersistentKey)
+		If @error Then Return SetError(@error, @extended, False)
+	EndIf
+
+	Return True
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: _Wlan_HNQueryProperty
 ; Description ...: Queries the current static properties of the wireless Hosted Network.
 ; Syntax.........: _Wlan_HNQueryProperty($iOpCode, ByRef $iValueType)
@@ -3656,11 +4026,161 @@ Func _Wlan_HNQueryProperty($iOpCode, ByRef $iValueType)
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
+; Name...........: _Wlan_HNQuerySecondaryKey
+; Description ...: Sets the secondary key that will be used by the wireless Hosted Network.
+; Syntax.........: _Wlan_HNQuerySecondaryKey(ByRef $sReason)
+; Parameters ....: $sReason - Provides a reason why the function failed. (output)
+; Return values .: Success - An array containing information about the secondary key.
+;                  |$asKeyData[0] - The key material
+;                  |$asKeyData[1] - The key type (Pass Phrase or Network Key)
+;                  |$asKeyData[2] - Indicates if the key should be stored after one session (Persistent Key or One Session Key)
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (@extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
+;                  This function is only supported from Windows 7 and Server 2008 R2.
+;                  Once started, the wireless Hosted Network will allow wireless peers to associate with this secondary security key in addition to the primary security key.
+;                  The secondary security key is always specified by the user as needed, while the primary security key is generated by the operating system with greater security strength.
+;                  The secondary security key is usually set before the wireless Hosted Network is started. Then it will be used the next time when the Hosted Network is started.
+;                  The primary key may be obtained through _Wlan_HNQueryProperty using the $WLAN_HOSTED_NETWORK_OPCODE_STATION_PROFILE opcode.
+;                  Any user can set or query the secondary security key used in the Hosted Network.
+;                  The ability to enable the wireless Hosted Network may be restricted by group policy in a domain.
+; Related .......: _Wlan_HNSetSecondaryKey
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Func _Wlan_HNQuerySecondaryKey(ByRef $sReason)
+	Local $tKey, $iKeyLength, $pKeyData, $fIsPassPhrase, $fPersistent, $iReasonCode, $iError, $iExtended, $asKeyData[3]
+
+	_WinAPI_WlanHostedNetworkQuerySecondaryKey($hClientHandle, $iKeyLength, $pKeyData, $fIsPassPhrase, $fPersistent, $iReasonCode)
+	If @error Then
+		$iError = @error
+		$iExtended = @extended
+		If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
+		Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkQuerySecondaryKey"))
+	EndIf
+
+	$tKey = DllStructCreate("char[64]", $pKeyData)
+	$asKeyData[0] = DllStructGetData($tKey, 1)
+
+	If $fIsPassPhrase Then
+		$asKeyData[1] = "Pass Phrase"
+	Else
+		$asKeyData[1] = "Network Key"
+	EndIf
+
+	If $fPersistent Then
+		$asKeyData[2] = "Persistent Key"
+	Else
+		$asKeyData[2] = "One Session Key"
+	EndIf
+
+	Return $asKeyData
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Wlan_HNQueryStatus
+; Description ...: Queries the current status of the wireless Hosted Network.
+; Syntax.........: _Wlan_HNQueryStatus()
+; Parameters ....:
+; Return values .: Success - An informational array.
+;                  |$avHNStatus[0] - Hosted Network state (Unavailable, Idle or Active)
+;                  |$avHNStatus[1] - The Device GUID used for the Hosted Network
+;                  |$avHNStatus[2] - The BSSID (MAC Address) used by the Hosted Network
+;                  |$avHNStatus[3] - The PHY type (Physical radio type) (typically a,b,g or n)
+;                  |$avHNStatus[4] - The channel number
+;                  |$avHNStatus[5] - The number of authenticated peers
+;                  |$avHNStatus[n] - The peer MAC address
+;                  |$avHNStatus[n + 1] - The peer authentication state (Authenticated)
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (@extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+;                  |3 - There is no data to return.
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
+;                  This function is only supported from Windows 7 and Server 2008 R2.
+;                  Currently the only peer authentication state is "Authenticated".
+; Related .......: _Wlan_HNQueryProperty
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Func _Wlan_HNQueryStatus()
+	Local $tHNStatus, $pHNStatus, $tPeerState, $pPeerState, $iItems
+
+	$pHNStatus = _WinAPI_WlanHostedNetworkQueryStatus($hClientHandle)
+	If @error Then Return SetError(@error, @extended, _Wlan_ReportAPIError(@error, @extended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkQueryStatus"))
+
+	$tHNStatus = DllStructCreate("dword HNState; byte GUID[16]; byte BSSID[6]; dword PHYType; ulong ChFreq; dword PeerCount", $pHNStatus)
+	$iItems = DllStructGetData($tHNStatus, "PeerCount")
+
+	Local $avHNStatus[2 * $iItems + 6]
+	$avHNStatus[0] = _Wlan_EnumtoString("WLAN_HOSTED_NETWORK_STATE", DllStructGetData($tHNStatus, "HNState"))
+	$avHNStatus[1] = _Wlan_pGUIDToString(Ptr(Number($pHNStatus) + 4))
+	$avHNStatus[2] = _Wlan_bMACtoString(DllStructGetData($tHNStatus, "BSSID"))
+	$avHNStatus[3] = _Wlan_EnumtoString("DOT11_PHY_TYPE", DllStructGetData($tHNStatus, "PHYType"))
+	$avHNStatus[4] = DllStructGetData($tHNStatus, "CHFreq")
+	$avHNStatus[5] = $iItems
+
+	For $i = 0 To $iItems - 1
+		$pPeerState = Ptr($i * 12 + Number($pHNStatus) + 40)
+		$tPeerState = DllStructCreate("byte PeerMAC[6]; dword PeerAuthState", $pPeerState)
+		$avHNStatus[2 * $i + 6] = _Wlan_bMACtoString(DllStructGetData($tPeerState, "PeerMAC"))
+		$avHNStatus[2 * $i + 7] = _Wlan_EnumtoString("WLAN_HOSTED_NETWORK_PEER_AUTH_STATE", DllStructGetData($tPeerState, "PeerAuthState"))
+	Next
+
+	_WinAPI_WlanFreeMemory($pHNStatus)
+	Return $avHNStatus
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Wlan_HNRefreshPrimaryKey
+; Description ...: Regenerates a primary key for the hosted network.
+; Syntax.........: _Wlan_HNRefreshPrimaryKey(ByRef $sReason)
+; Parameters ....: $sReason - Provides a reason why the function failed. (output)
+; Return values .: Success - True
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (@extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
+;                  This function is only supported from Windows 7 and Server 2008 R2.
+;                  If in an active state, this fuction will cause the Hosted Network to transition to an Idle state.
+;                  A primary key is always persistent. (does not expire after stopping the Hosted Network)
+;                  The primary key can be obtained by calling _Wlan_HNQueryProperty with the $WLAN_HOSTED_NETWORK_OPCODE_STATION_PROFILE opcode.
+;                  The secondary security key is always specified by the user as needed, while the primary security key is generated by the operating system with greater security strength.
+; Related .......: _Wlan_HNSetSecondaryKey
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Func _Wlan_HNRefreshPrimaryKey(ByRef $sReason)
+	Local $iReasonCode, $iError, $iExtended
+
+	_WinAPI_WlanHostedNetworkRefreshSecuritySettings($hClientHandle, $iReasonCode)
+	If @error Then
+		$iError = @error
+		$iExtended = @extended
+		If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
+		Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkRefreshSecuritySettings"))
+	EndIf
+	Return True
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
 ; Name...........: _Wlan_HNSetProperty
 ; Description ...: Sets static properties of the wireless Hosted Network.
-; Syntax.........: _Wlan_HNSetProperty($iOpCode, ByRef $sReason, $vData, $iMaxPeers = 0)
+; Syntax.........: _Wlan_HNSetProperty($iOpCode, ByRef $sReason, $vData, $iMaxPeers = 100)
 ; Parameters ....: $iOpCode - A WLAN_HOSTED_NETWORK_OPCODE value to identify the property to set (the expected data type of $vData in brackets):
-;                  |WLAN_HOSTED_NETWORK_OPCODE_CONNECTION_SETTINGS (the SSID of the network to connect to)
+;                  |WLAN_HOSTED_NETWORK_OPCODE_CONNECTION_SETTINGS (the SSID of the network to create)
 ;                  |WLAN_HOSTED_NETWORK_OPCODE_ENABLE (Boolean)
 ;                  $sReason - Provides a reason why the function failed. (output)
 ;                  $vData - See above.
@@ -3674,12 +4194,13 @@ EndFunc
 ;                  |4 - Invalid parameter.
 ; Author ........: MattyD
 ; Modified.......:
-; Remarks .......: This function is only supported from Windows 7 and Server 2008 R2.
+; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
+;                  This function is only supported from Windows 7 and Server 2008 R2.
 ; Related .......: _Wlan_HNQueryProperty
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
-Func _Wlan_HNSetProperty($iOpCode, ByRef $sReason, $vData, $iMaxPeers = 0)
+Func _Wlan_HNSetProperty($iOpCode, ByRef $sReason, $vData, $iMaxPeers = 100)
 	Local $tData, $iReasonCode, $iError, $iExtended
 
 	Switch $iOpCode
@@ -3705,7 +4226,58 @@ Func _Wlan_HNSetProperty($iOpCode, ByRef $sReason, $vData, $iMaxPeers = 0)
 		$iError = @error
 		$iExtended = @extended
 		If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
-		Return SetError(@error, @extended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkSetProperty"))
+		Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkSetProperty"))
+	EndIf
+
+	Return True
+EndFunc
+
+; #FUNCTION# ====================================================================================================================
+; Name...........: _Wlan_HNSetSecondaryKey
+; Description ...: Sets the secondary key that will be used by the wireless Hosted Network.
+; Syntax.........: _Wlan_HNSetSecondaryKey($sKey, ByRef $sReason, $fIsPassPhrase = True, $fPersistent = False)
+; Parameters ....: $sKey - The desired key material
+;                  $sReason - Provides a reason why the function failed. (output)
+;                  $fIsPassPhrase - A Boolean value that indicates if the key data is in passphrase format.
+;                  $fPersistent - A Boolean value that indicates if the key should be stored after one session.
+; Return values .: Success - True
+;                  Failure - False
+;                  @Error
+;                  |0 - No error.
+;                  |1 - DllCall error. (@extended - DllCall error code.)
+;                  |2 - API error. (@extended - API error code. (http://msdn.microsoft.com/en-us/library/ms681381.aspx))
+; Author ........: MattyD
+; Modified.......:
+; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
+;                  This function is only supported from Windows 7 and Server 2008 R2.
+;                  Once started, the wireless Hosted Network will allow wireless peers to associate with this secondary security key in addition to the primary security key.
+;                  The secondary security key is always specified by the user as needed, while the primary security key is generated by the operating system with greater security strength.
+;                  The secondary security key is usually set before the wireless Hosted Network is started. Then it will be used the next time when the Hosted Network is started.
+;                  The primary key may be obtained through _Wlan_HNQueryProperty using the $WLAN_HOSTED_NETWORK_OPCODE_STATION_PROFILE opcode.
+;                  Any user can set or query the secondary security key used in the Hosted Network.
+;                  The ability to enable the wireless Hosted Network may be restricted by group policy in a domain.
+; Related .......: _Wlan_HNQuerySecondaryKey _Wlan_HNRefreshPrimaryKey
+; Link ..........:
+; Example .......:
+; ===============================================================================================================================
+Func _Wlan_HNSetSecondaryKey($sKey, ByRef $sReason, $fIsPassPhrase = True, $fPersistent = False)
+	Local $tKey, $iKeyLength, $iReasonCode, $iError, $iExtended
+
+	$tKey = DllStructCreate("char[64]")
+	DllStructSetData($tKey, 1, $sKey)
+
+	If $fIsPassPhrase Then
+		$iKeyLength = StringLen($sKey) + 1
+	Else
+		$iKeyLength = StringLen($sKey)
+	EndIf
+
+	_WinAPI_WlanHostedNetworkSetSecondaryKey($hClientHandle, $iKeyLength, DllStructGetPtr($tKey), $fIsPassPhrase, $fPersistent, $iReasonCode)
+	If @error Then
+		$iError = @error
+		$iExtended = @extended
+		If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
+		Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkSetSecondaryKey"))
 	EndIf
 
 	Return True
@@ -3714,7 +4286,7 @@ EndFunc
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: _Wlan_HNStart
 ; Description ...: Starts the wireless Hosted Network.
-; Syntax.........:  _Wlan_HNStart(ByRef $sReason, $fForce = False)
+; Syntax.........: _Wlan_HNStart(ByRef $sReason, $fForce = False)
 ; Parameters ....: $sReason - Provides a reason why the function failed. (output)
 ;                  $fForce - If True the Hosted Network will start without associating the request with the application's calling handle.
 ; Return values .: Success - True
@@ -3727,13 +4299,11 @@ EndFunc
 ; Modified.......:
 ; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
 ;                  This function is only supported from Windows 7 and Server 2008 R2.
-;                  When called for the first time, the operating system installs a virtual device if a capable wireless adapter is present.
-;                  The virtual device is used exclusively for performing SoftAP connections and is not present in the list returned by WlanEnumInterfaces.
-;                  The lifetime of the virtual device is tied to the physical wireless adapter. If the physical wireless adapter is disabled, this virtual device will be removed as well.
-;                  Successful calls must be matched by calls to _Wlan_HNStop. If forced to start, the Hosted Network should be forced to stop also.
+;                  This function should be preceded by _WlanHN_Init.
+;                  Successful calls should be matched by calls to _Wlan_HNStop. If forced to start, the Hosted Network should also be forced to stop.
 ;                  If the Hosted Network was not forced to start, any state change caused by this function would be automatically undone when the process ends.
 ;                  If forced to start, the user (not the owner of the process) must have the appropriate associated privilege.
-; Related .......: _Wlan_HNStop
+; Related .......: _Wlan_HNInitialise _Wlan_HNStop
 ; Link ..........:
 ; Example .......:
 ; ===============================================================================================================================
@@ -3745,7 +4315,7 @@ Func _Wlan_HNStart(ByRef $sReason, $fForce = False)
 			$iError = @error
 			$iExtended = @extended
 			If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
-			Return SetError(@error, @extended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkStartUsing"))
+			Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkStartUsing"))
 		EndIf
 	Else
 		_WinAPI_WlanHostedNetworkForceStart($hClientHandle, $iReasonCode)
@@ -3753,15 +4323,8 @@ Func _Wlan_HNStart(ByRef $sReason, $fForce = False)
 			$iError = @error
 			$iExtended = @extended
 			If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
-			Return SetError(@error, @extended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkForceStart"))
+			Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkForceStart"))
 		EndIf
-	EndIf
-	_WinAPI_WlanHostedNetworkInitSettings($hClientHandle, $iReasonCode)
-	If @error Then
-		$iError = @error
-		$iExtended = @extended
-		If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
-		Return SetError(@error, @extended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkInitSettings"))
 	EndIf
 	Return True
 EndFunc
@@ -3769,7 +4332,7 @@ EndFunc
 ; #FUNCTION# ====================================================================================================================
 ; Name...........: _Wlan_HNStop
 ; Description ...: Stops the wireless Hosted Network.
-; Syntax.........:  _Wlan_HNStop(ByRef $sReason, $fForce = False)
+; Syntax.........: _Wlan_HNStop(ByRef $sReason, $fForce = False)
 ; Parameters ....: $sReason - Provides a reason why the function failed. (output)
 ;                  $fForce - If True the Hosted Network will stop without associating the request with the application's calling handle.
 ; Return values .: Success - True
@@ -3782,6 +4345,7 @@ EndFunc
 ; Modified.......:
 ; Remarks .......: If an API error occurs and $fDebugWifi is not null, a reason for the error will be written to the console.
 ;                  This function is only supported from Windows 7 and Server 2008 R2.
+;                  If the Hosted Network is in the Idle state, this function will fail.
 ;                  If the Hosted Network was not forced to stop, any state change caused by this function would be automatically undone when the process ends.
 ; Related .......: _Wlan_HNStart
 ; Link ..........:
@@ -3795,7 +4359,7 @@ Func _Wlan_HNStop(ByRef $sReason, $fForce = False)
 			$iError = @error
 			$iExtended = @extended
 			If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
-			Return SetError(@error, @extended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkStartUsing"))
+			Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkStopUsing"))
 		EndIf
 	Else
 		_WinAPI_WlanHostedNetworkForceStop($hClientHandle, $iReasonCode)
@@ -3803,7 +4367,7 @@ Func _Wlan_HNStop(ByRef $sReason, $fForce = False)
 			$iError = @error
 			$iExtended = @extended
 			If $iReasonCode Then $sReason = _Wlan_EnumToString("WLAN_HOSTED_NETWORK_REASON", $iReasonCode)
-			Return SetError(@error, @extended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkForceStart"))
+			Return SetError($iError, $iExtended, _Wlan_ReportAPIError($iError, $iExtended, 0, @ScriptLineNumber, "_WinAPI_WlanHostedNetworkForceStop"))
 		EndIf
 	EndIf
 	Return True
@@ -3824,7 +4388,7 @@ EndFunc
 ; Example .......:
 ; ===============================================================================================================================
 Func _Wlan_OnNotifHandler()
-	Local $avNotif = _Wlan_GetNotification()
+	Local $avNotif = _Wlan_GetNotification(False)
 	If @error Then Return SetError(@error, @extended, $avNotif)
 	For $i = 0 To UBound($avOnNotif) - 1
 		If $avNotif[0] = $avOnNotif[$i][0] And $avNotif[1] = $avOnNotif[$i][1] Then
@@ -3856,7 +4420,7 @@ EndFunc
 Func _Wlan_OnNotification($iSource, $iNotif, $sFunction = "", $fInterfaceFilter = True)
 	Local $fAtten = False
 	For $i = 0 To UBound($avOnNotif) - 1
-		If $iSource = $avOnNotif[$i][0] And $iNotif = $iSource = $avOnNotif[$i][1] Then
+		If $iSource = $avOnNotif[$i][0] And $iNotif = $avOnNotif[$i][1] Then
 			If $sFunction Then ExitLoop
 			$fAtten = True
 		ElseIf $fAtten Then
@@ -4402,9 +4966,9 @@ Func _Wlan_SelectInterface($sGUID)
 EndFunc
 
 ; #FUNCTION# ====================================================================================================================
-; Name...........: _Wlan_QueryACParameter
+; Name...........: _Wlan_SetACParameter
 ; Description ...: Sets parameters of the auto configuration service.
-; Syntax.........: _Wlan_QueryACParameter($iOpCode)
+; Syntax.........: _Wlan_SetACParameter($iOpCode, $vData)
 ; Parameters ....: $iOpCode - A WLAN_AUTOCONF_OPCODE value that specifies the configuration parameter to be set (the expected data type $vData in brackets):
 ;                  |$WLAN_AUTOCONF_OPCODE_SHOW_DENIED_NETWORKS (Boolean)
 ;                  |$WLAN_AUTOCONF_OPCODE_ALLOW_EXPLICIT_CREDS (Boolean)

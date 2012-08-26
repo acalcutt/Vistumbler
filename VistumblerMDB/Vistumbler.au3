@@ -1,4 +1,4 @@
-;#RequireAdmin
+#RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 12'
+$version = 'v10.3 Beta 13'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/08/25'
+$last_modified = '2012/08/26'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -97,7 +97,7 @@ Next
 ; Set a COM Error handler--------------------------------
 $oMyError = ObjEvent("AutoIt.Error", "MyErrFunc")
 ;Set Wifi Scan Type
-Dim $UseNativeWifi = IniRead($settings, 'Vistumbler', 'UseNativeWifi', 0)
+Dim $UseNativeWifi = IniRead($settings, 'Vistumbler', 'UseNativeWifi', 1)
 If @OSVersion = "WIN_XP" Then $UseNativeWifi = 1
 ; -------------------------------------------------------
 GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
@@ -832,7 +832,10 @@ Dim $Text_NoActiveApFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoActiveAp
 Dim $Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', 'Donate')
 Dim $Text_VistumblerStore = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerStore', 'Store')
 Dim $Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
-Dim $Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
+Dim $Text_UseNativeWifiMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiMsg', 'Use Native Wifi')
+Dim $Text_UseNativeWifiXpExtMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiXpExtMsg', '(No BSSID, CHAN, OTX, BTX)')
+
+
 Dim $Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
 Dim $Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
 Dim $Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filtered', 'Filtered')
@@ -1160,6 +1163,14 @@ $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 $SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
 
 $Options = GUICtrlCreateMenu($Text_Options)
+If @OSVersion = "WIN_XP" Then;Added extened 'Use Native Wifi' message (Since XP does not support BSSID, CHAN, Basic Transfer Rate)
+	$Text_UseNativeWifi = $Text_UseNativeWifiMsg & " " & $Text_UseNativeWifiXpExtMsg
+Else
+	$Text_UseNativeWifi = $Text_UseNativeWifiMsg
+EndIf
+$GuiUseNativeWifi = GUICtrlCreateMenuItem($Text_UseNativeWifi, $Options)
+If $UseNativeWifi = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
 $RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
 If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
@@ -1181,9 +1192,6 @@ $GUI_DownloadImages = GUICtrlCreateMenuItem("Download Images(" & $Text_Experimen
 If $DownloadImages = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GUI_CamTriggerMenu = GUICtrlCreateMenuItem("Enable camera trigger script(" & $Text_Experimental & ")", $Options)
 If $CamTrigger = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GuiUseNativeWifi = GUICtrlCreateMenuItem($Text_UseNativeWifi, $Options)
-If $UseNativeWifi = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
 $DebugMenu = GUICtrlCreateMenu($Text_Debug, $Options)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $DebugMenu)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
@@ -1709,50 +1717,106 @@ Func _ScanAccessPoints()
 	Local $FilterMatches = 0
 	If $UseNativeWifi = 1 Then
 		$aplist = _Wlan_GetNetworks(False, 0, 0)
-		;_ArrayDisplay($aplist)
 		$aplistsize = UBound($aplist) - 1
 		For $add = 0 To $aplistsize
-			$RadioType = $aplist[$add][12]
-			$BasicTransferRates = $aplist[$add][11]
-			$OtherTransferRates = ''
-			$BSSID = $aplist[$add][10]
-			$Channel = ''
 			$SSID = $aplist[$add][1]
 			$NetworkType = $aplist[$add][2]
 			$Signal = $aplist[$add][5]
+			$SecurityEnabled = $aplist[$add][6]
 			$Authentication = $aplist[$add][7]
 			$Encryption = $aplist[$add][8]
-			$FoundAPs += 1
-			;Add new GPS ID
-			If $FoundAPs = 1 Then
-				$GPS_ID += 1
-				_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
-			EndIf
-			;Add new access point
-			$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
-			If $NewFound <> 0 Then
-				;Check if this AP matches the filter
-				If StringInStr($AddQuery, "WHERE") Then
-					$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
-				Else
-					$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
+			$OtherTransferRates = $aplist[$add][11]
+			$RadioType = "802.11" & $aplist[$add][12]
+			If $Signal <> 0 Then
+				$FoundAPs += 1
+				;Add new GPS ID
+				If $FoundAPs = 1 Then
+					$GPS_ID += 1
+					_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
 				EndIf
-				$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
-				$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
-				;If AP Matches filter, increment $FilterMatches
-				If $FoundLoadApMatch = 1 Then $FilterMatches += 1
-				;Play per-ap new ap sound
-				If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
-					If $NewSoundSigBased = 1 Then
-						$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
-						$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
-					Else
-						$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
-						$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+				;Add new access point(s)
+				If @OSVersion = "WIN_XP" Then
+					$Channel = ""
+					$BasicTransferRates = ""
+					$BSSID = $aplist[$add][10]
+					$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+					If $NewFound <> 0 Then
+						;Check if this AP matches the filter
+						If StringInStr($AddQuery, "WHERE") Then
+							$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
+						Else
+							$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
+						EndIf
+						$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+						$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+						;If AP Matches filter, increment $FilterMatches
+						If $FoundLoadApMatch = 1 Then $FilterMatches += 1
+						;Play per-ap new ap sound
+						If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
+							If $NewSoundSigBased = 1 Then
+								$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
+								$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+							Else
+								$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
+								$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+							EndIf
+						EndIf
 					EndIf
+				Else
+					If $SecurityEnabled = "Security Enabled" Then
+						$Secured = True
+					Else
+						$Secured = False
+					EndIf
+					If $NetworkType = "Infrastructure" Then
+						$BssType = $DOT11_BSS_TYPE_INFRASTRUCTURE
+					Else
+						$BssType = $DOT11_BSS_TYPE_INDEPENDENT
+					EndIf
+					ConsoleWrite($SSID & ' - ' & $BssType & ' - ' & $Secured & @CRLF)
+					$apinfo = _Wlan_GetNetworkInfo($SSID, $BssType, $Secured)
+					;_ArrayDisplay($apinfo)
+					$apinfosize = UBound($apinfo) - 1
+					For $addinfo = 0 To $apinfosize
+						$BSSID = StringReplace($apinfo[$addinfo][2], " ", ":")
+						$Channel = _NativeWifiChanFix($apinfo[$addinfo][8])
+						$BasicTransferRates = $apinfo[$addinfo][11]
+						ConsoleWrite($Channel & @CRLF)
+						$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+						If $NewFound <> 0 Then
+							;Check if this AP matches the filter
+							If StringInStr($AddQuery, "WHERE") Then
+								$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
+							Else
+								$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
+							EndIf
+							$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+							$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+							;If AP Matches filter, increment $FilterMatches
+							If $FoundLoadApMatch = 1 Then $FilterMatches += 1
+							;Play per-ap new ap sound
+							If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
+								If $NewSoundSigBased = 1 Then
+									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
+									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+								Else
+									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
+									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+								EndIf
+							EndIf
+						EndIf
+					Next
 				EndIf
 			EndIf
 		Next
+
+
+
+
+
+
+
+
 		;Play New AP sound if sounds are enabled if per-ap sound is disabled
 		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
 		;Return number of active APs
@@ -6195,7 +6259,8 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', $Text_VistumblerDonate)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerStore', $Text_VistumblerStore)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', $Text_SupportVistumbler)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', $Text_UseNativeWifi)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifiMsg', $Text_UseNativeWifiMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNativeWifiXpExtMsg', $Text_UseNativeWifiXpExtMsg)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterMsg', $Text_FilterMsg)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SetFilters', $Text_SetFilters)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Filtered', $Text_Filtered)
@@ -9201,7 +9266,8 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_VistumblerDonate = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerDonate', 'Donate')
 		$Text_VistumblerStore = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerStore', 'Store')
 		$Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportVistumbler', '*Support Vistumbler*')
-		$Text_UseNativeWifi = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifi', 'Use Native Wifi (No BSSID, CHAN, OTX, BTX, or RADTYPE)')
+		$Text_UseNativeWifiMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiMsg', 'Use Native Wifi')
+		$Text_UseNativeWifiXpExtMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiXpExtMsg', '(No BSSID, CHAN, OTX, BTX)')
 		$Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as a wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
 		$Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
 		$Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
@@ -11127,4 +11193,62 @@ Func _RemoveNonMatchingImages()
 	If $CamNameMatch = 0 Then ;If Img is not found, add it
 	EndIf ;==>_RemoveNonMatchingImages
 EndFunc   ;==>_RemoveNonMatchingImages
+
+Func _NativeWifiChanFix($InChan)
+	$OutChan = $InChan
+	If StringLen($InChan) > 3 Then
+		If $InChan = 5180000 Then
+			$OutChan = 36
+		ElseIf $InChan = 5200000 Then
+			$OutChan = 40
+		ElseIf $InChan = 5220000 Then
+			$OutChan = 44
+		ElseIf $InChan = 5240000 Then
+			$OutChan = 48
+		ElseIf $InChan = 5260000 Then
+			$OutChan = 52
+		ElseIf $InChan = 5280000 Then
+			$OutChan = 56
+		ElseIf $InChan = 5300000 Then
+			$OutChan = 60
+		ElseIf $InChan = 5320000 Then
+			$OutChan = 64
+		ElseIf $InChan = 5500000 Then
+			$OutChan = 100
+		ElseIf $InChan = 5520000 Then
+			$OutChan = 104
+		ElseIf $InChan = 5540000 Then
+			$OutChan = 108
+		ElseIf $InChan = 5560000 Then
+			$OutChan = 112
+		ElseIf $InChan = 5580000 Then
+			$OutChan = 116
+		ElseIf $InChan = 5600000 Then
+			$OutChan = 120
+		ElseIf $InChan = 5620000 Then
+			$OutChan = 124
+		ElseIf $InChan = 5640000 Then
+			$OutChan = 128
+		ElseIf $InChan = 5660000 Then
+			$OutChan = 132
+		ElseIf $InChan = 5680000 Then
+			$OutChan = 136
+		ElseIf $InChan = 5700000 Then
+			$OutChan = 140
+		ElseIf $InChan = 5745000 Then
+			$OutChan = 149
+		ElseIf $InChan = 5765000 Then
+			$OutChan = 153
+		ElseIf $InChan = 5785000 Then
+			$OutChan = 157
+		ElseIf $InChan = 5805000 Then
+			$OutChan = 161
+		ElseIf $InChan = 5825000 Then
+			$OutChan = 165
+		Else
+			$OutChan = 0
+		EndIf
+	EndIf
+	Return ($OutChan)
+EndFunc   ;==>_NativeWifiChanFix
 
