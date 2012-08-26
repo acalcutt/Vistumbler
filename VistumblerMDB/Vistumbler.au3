@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 13'
+$version = 'v10.3 Beta 14'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2012/08/26'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -1779,7 +1779,7 @@ Func _ScanAccessPoints()
 					$apinfosize = UBound($apinfo) - 1
 					For $addinfo = 0 To $apinfosize
 						$BSSID = StringReplace($apinfo[$addinfo][2], " ", ":")
-						$Channel = _NativeWifiChanFix($apinfo[$addinfo][8])
+						$Channel = $apinfo[$addinfo][8]
 						$BasicTransferRates = $apinfo[$addinfo][11]
 						ConsoleWrite($Channel & @CRLF)
 						$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
@@ -2754,7 +2754,7 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
 	_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(3)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)|')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(10)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)|')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
@@ -11191,64 +11191,5 @@ Func _RemoveNonMatchingImages()
 	$CamNameArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$CamNameMatch = UBound($CamNameArray) - 1
 	If $CamNameMatch = 0 Then ;If Img is not found, add it
-	EndIf ;==>_RemoveNonMatchingImages
-EndFunc   ;==>_RemoveNonMatchingImages
-
-Func _NativeWifiChanFix($InChan)
-	$OutChan = $InChan
-	If StringLen($InChan) > 3 Then
-		If $InChan = 5180000 Then
-			$OutChan = 36
-		ElseIf $InChan = 5200000 Then
-			$OutChan = 40
-		ElseIf $InChan = 5220000 Then
-			$OutChan = 44
-		ElseIf $InChan = 5240000 Then
-			$OutChan = 48
-		ElseIf $InChan = 5260000 Then
-			$OutChan = 52
-		ElseIf $InChan = 5280000 Then
-			$OutChan = 56
-		ElseIf $InChan = 5300000 Then
-			$OutChan = 60
-		ElseIf $InChan = 5320000 Then
-			$OutChan = 64
-		ElseIf $InChan = 5500000 Then
-			$OutChan = 100
-		ElseIf $InChan = 5520000 Then
-			$OutChan = 104
-		ElseIf $InChan = 5540000 Then
-			$OutChan = 108
-		ElseIf $InChan = 5560000 Then
-			$OutChan = 112
-		ElseIf $InChan = 5580000 Then
-			$OutChan = 116
-		ElseIf $InChan = 5600000 Then
-			$OutChan = 120
-		ElseIf $InChan = 5620000 Then
-			$OutChan = 124
-		ElseIf $InChan = 5640000 Then
-			$OutChan = 128
-		ElseIf $InChan = 5660000 Then
-			$OutChan = 132
-		ElseIf $InChan = 5680000 Then
-			$OutChan = 136
-		ElseIf $InChan = 5700000 Then
-			$OutChan = 140
-		ElseIf $InChan = 5745000 Then
-			$OutChan = 149
-		ElseIf $InChan = 5765000 Then
-			$OutChan = 153
-		ElseIf $InChan = 5785000 Then
-			$OutChan = 157
-		ElseIf $InChan = 5805000 Then
-			$OutChan = 161
-		ElseIf $InChan = 5825000 Then
-			$OutChan = 165
-		Else
-			$OutChan = 0
-		EndIf
 	EndIf
-	Return ($OutChan)
-EndFunc   ;==>_NativeWifiChanFix
-
+EndFunc   ;==>_RemoveNonMatchingImages
