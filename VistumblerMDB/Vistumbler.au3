@@ -1774,7 +1774,6 @@ Func _ScanAccessPoints()
 				Else
 					$BssType = $DOT11_BSS_TYPE_INDEPENDENT
 				EndIf
-				ConsoleWrite($SSID & ' - ' & $BssType & ' - ' & $Secured & @CRLF)
 				$apinfo = _Wlan_GetNetworkInfo($SSID, $BssType, $Secured)
 				$apinfosize = UBound($apinfo) - 1
 				For $addinfo = 0 To $apinfosize
@@ -4303,7 +4302,6 @@ Func _GraphDraw()
 		$query = "SELECT ApID FROM AP WHERE ListRow = '" & $Selected & "'"
 		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$GraphApID = $ListRowMatchArray[1][1]
-		ConsoleWrite("$Graph:" & $Graph & @CRLF)
 		If $Graph = 1 Then
 			$max_graph_points = '125'
 			$query = "SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
