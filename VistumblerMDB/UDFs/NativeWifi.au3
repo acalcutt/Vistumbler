@@ -3,6 +3,8 @@ Native Wifi Functions - Version 4.1.3 - 2012-04-18
 by MattyD(mattduncan87)
 http://sourceforge.net/projects/nativewifi/
 Artistic License 2.0
+
+Edited 2012-08-26 by acalcutt1 - Added International 2.4Ghz channels and 5Ghz channels to _Wlan_GetNetworkInfo()
 #CE
 ;--------------Enumerations-------------
 
@@ -3604,6 +3606,60 @@ Func _Wlan_GetNetworkInfo($sSSID = "", $iBSSType = $DOT11_BSS_TYPE_INFRASTRUCTUR
 				$asBSSList[$i][8] = 10
 			Case 2462000
 				$asBSSList[$i][8] = 11
+			Case 2467000
+				$asBSSList[$i][8] = 12
+			Case 2472000
+				$asBSSList[$i][8] = 13
+			Case 2484000
+				$asBSSList[$i][8] = 14
+			Case 5180000
+				$asBSSList[$i][8] = 36
+			Case 5200000
+				$asBSSList[$i][8] = 40
+			Case 5220000
+				$asBSSList[$i][8] = 44
+			Case 5240000
+				$asBSSList[$i][8] = 48
+			Case 5260000
+				$asBSSList[$i][8] = 52
+			Case 5280000
+				$asBSSList[$i][8] = 56
+			Case 5300000
+				$asBSSList[$i][8] = 60
+			Case 5320000
+				$asBSSList[$i][8] = 64
+			Case 5500000
+				$asBSSList[$i][8] = 100
+			Case 5520000
+				$asBSSList[$i][8] = 104
+			Case 5540000
+				$asBSSList[$i][8] = 108
+			Case 5560000
+				$asBSSList[$i][8] = 112
+			Case 5580000
+				$asBSSList[$i][8] = 116
+			Case 5600000
+				$asBSSList[$i][8] = 120
+			Case 5620000
+				$asBSSList[$i][8] = 124
+			Case 5640000
+				$asBSSList[$i][8] = 128
+			Case 5660000
+				$asBSSList[$i][8] = 132
+			Case 5680000
+				$asBSSList[$i][8] = 136
+			Case 5700000
+				$asBSSList[$i][8] = 140
+			Case 5745000
+				$asBSSList[$i][8] = 149
+			Case 5765000
+				$asBSSList[$i][8] = 153
+			Case 5785000
+				$asBSSList[$i][8] = 157
+			Case 5805000
+				$asBSSList[$i][8] = 161
+			Case 5825000
+				$asBSSList[$i][8] = 165
 		EndSwitch
 
 		$asBSSList[$i][10] = DllStructGetData($tBSSEntry, "BeaconPeriod")
