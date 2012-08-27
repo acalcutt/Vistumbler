@@ -1724,21 +1724,21 @@ Func _ScanAccessPoints()
 			$SecurityEnabled = $aplist[$add][6]
 			$Authentication = $aplist[$add][7]
 			$Encryption = $aplist[$add][8]
-			$OtherTransferRates = $aplist[$add][11]
 			$RadioType = "802.11" & $aplist[$add][12]
-			;Add new access point(s)
-			If @OSVersion = "WIN_XP" Then ;WinXP Does not support _Wlan_GetNetworkInfo, so fall back to olf functionality
-				$BasicTransferRates = ""
-				$BSSID = $aplist[$add][10]
-				$Channel = ""
-				$Signal = $aplist[$add][5]
-				If $Signal <> 0 Then
-					$FoundAPs += 1
-					;Add new GPS ID
-					If $FoundAPs = 1 Then
-						$GPS_ID += 1
-						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
-					EndIf
+			$Signal = $aplist[$add][5]
+			If $Signal <> 0 Then
+				$FoundAPs += 1
+				;Add new GPS ID
+				If $FoundAPs = 1 Then
+					$GPS_ID += 1
+					_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
+				EndIf
+				;Add new access point(s)
+				If @OSVersion = "WIN_XP" Then ;WinXP Does not support _Wlan_GetNetworkInfo, so fall back to olf functionality
+					$BasicTransferRates = $aplist[$add][11]
+					$OtherTransferRates = ""
+					$BSSID = $aplist[$add][10]
+					$Channel = ""
 					$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
 					If $NewFound <> 0 Then
 						;Check if this AP matches the filter
@@ -1762,32 +1762,39 @@ Func _ScanAccessPoints()
 							EndIf
 						EndIf
 					EndIf
-				EndIf
-			Else ;Uses _Wlan_GetNetworkInfo and get extended information
-				If $SecurityEnabled = "Security Enabled" Then
-					$Secured = True
-				Else
-					$Secured = False
-				EndIf
-				If $NetworkType = "Infrastructure" Then
-					$BssType = $DOT11_BSS_TYPE_INFRASTRUCTURE
-				Else
-					$BssType = $DOT11_BSS_TYPE_INDEPENDENT
-				EndIf
-				$apinfo = _Wlan_GetNetworkInfo($SSID, $BssType, $Secured)
-				$apinfosize = UBound($apinfo) - 1
-				For $addinfo = 0 To $apinfosize
-					$BasicTransferRates = $apinfo[$addinfo][11]
-					$BSSID = StringReplace($apinfo[$addinfo][2], " ", ":")
-					$Channel = $apinfo[$addinfo][8]
-					$Signal = $apinfo[$addinfo][6]
-					If $Signal <> 0 Then
-						$FoundAPs += 1
-						;Add new GPS ID
-						If $FoundAPs = 1 Then
-							$GPS_ID += 1
-							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
-						EndIf
+				Else ;Uses _Wlan_GetNetworkInfo and get extended information
+					If $SecurityEnabled = "Security Enabled" Then
+						$Secured = True
+					Else
+						$Secured = False
+					EndIf
+					If $NetworkType = "Infrastructure" Then
+						$BssType = $DOT11_BSS_TYPE_INFRASTRUCTURE
+					Else
+						$BssType = $DOT11_BSS_TYPE_INDEPENDENT
+					EndIf
+					$apinfo = _Wlan_GetNetworkInfo($SSID, $BssType, $Secured)
+					$apinfosize = UBound($apinfo) - 1
+					For $addinfo = 0 To $apinfosize
+						$BSSID = StringReplace($apinfo[$addinfo][2], " ", ":")
+						$Channel = $apinfo[$addinfo][8]
+						$Signal = $apinfo[$addinfo][6]
+						;Split Other Transfer Rates from Basic Transfer Rates
+						Local $highchan = 0, $otrswitch = 0, $BasicTransferRates = "", $OtherTransferRates = ""
+						$tr_split = StringSplit($apinfo[$addinfo][11], ",")
+						For $trs = 1 To $tr_split[0]
+							$transferrate = $tr_split[$trs] - 0
+							If ($transferrate > $highchan) And ($otrswitch = 0) Then
+								$highchan = $transferrate
+								If $BasicTransferRates <> "" Then $BasicTransferRates &= ","
+								$BasicTransferRates &= $transferrate
+							Else
+								$otrswitch = 1
+								If $OtherTransferRates <> "" Then $OtherTransferRates &= ","
+								$OtherTransferRates &= $transferrate
+							EndIf
+						Next
+						;End Split Other Transfer Rates from Basic Transfer Rates
 						$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
 						If $NewFound <> 0 Then
 							;Check if this AP matches the filter
@@ -1811,8 +1818,8 @@ Func _ScanAccessPoints()
 								EndIf
 							EndIf
 						EndIf
-					EndIf
-				Next
+					Next
+				EndIf
 			EndIf
 		Next
 		;Play New AP sound if sounds are enabled if per-ap sound is disabled
