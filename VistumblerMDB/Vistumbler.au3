@@ -1025,8 +1025,8 @@ Else
 	$VistumblerCamFolder = $TmpDir & $ldatetimestamp & '\'
 EndIf
 
-ConsoleWrite($VistumblerDB & @CRLF)
-ConsoleWrite($VistumblerCamFolder & @CRLF)
+;ConsoleWrite($VistumblerDB & @CRLF)
+;ConsoleWrite($VistumblerCamFolder & @CRLF)
 
 
 If FileExists($VistumblerDB) Then
@@ -1497,7 +1497,7 @@ While 1
 		EndIf
 		$WiFiDbLocate_Timer = TimerInit()
 		$UpdatedWiFiDbGPS = 1
-		ConsoleWrite($GetWifidbGpsSuccess & @CRLF)
+		;ConsoleWrite($GetWifidbGpsSuccess & @CRLF)
 	EndIf
 
 	;Get GPS Information (if enabled)
@@ -1616,7 +1616,7 @@ While 1
 	If $AutoUpApsToWifiDB = 1 Then
 		If TimerDiff($wifidb_au_timer) >= ($AutoUpApsToWifiDBTime * 1000) Then
 			$run = 'Export.exe' & ' /db="' & $VistumblerDB & '" /t=w /u="' & $PhilsApiURL & '" /wa="' & $WifiDb_User & '" /wk="' & $WifiDb_ApiKey & '"'
-			ConsoleWrite($run & @CRLF)
+			;ConsoleWrite($run & @CRLF)
 			$WifiDbUploadProcess = Run($run, @ScriptDir, @SW_HIDE)
 			$wifidb_au_timer = TimerInit()
 		EndIf
@@ -1717,6 +1717,7 @@ Func _ScanAccessPoints()
 	Local $FilterMatches = 0
 	If $UseNativeWifi = 1 Then
 		$aplist = _Wlan_GetNetworks(False, 0, 0)
+		;_ArrayDisplay($aplist)
 		$aplistsize = UBound($aplist) - 1
 		For $add = 0 To $aplistsize
 			$SSID = $aplist[$add][1]
@@ -1774,47 +1775,53 @@ Func _ScanAccessPoints()
 						$BssType = $DOT11_BSS_TYPE_INDEPENDENT
 					EndIf
 					$apinfo = _Wlan_GetNetworkInfo($SSID, $BssType, $Secured)
+					;If $SSID = "" Then _ArrayDisplay($apinfo)
 					$apinfosize = UBound($apinfo) - 1
 					For $addinfo = 0 To $apinfosize
+						$InfoSSID = $apinfo[$addinfo][1]
 						$BSSID = StringReplace($apinfo[$addinfo][2], " ", ":")
 						$Channel = $apinfo[$addinfo][8]
 						$Signal = $apinfo[$addinfo][6]
-						;Split Other Transfer Rates from Basic Transfer Rates
-						Local $highchan = 0, $otrswitch = 0, $BasicTransferRates = "", $OtherTransferRates = ""
-						$tr_split = StringSplit($apinfo[$addinfo][11], ",")
-						For $trs = 1 To $tr_split[0]
-							$transferrate = $tr_split[$trs] - 0
-							If ($transferrate > $highchan) And ($otrswitch = 0) Then
-								$highchan = $transferrate
-								If $BasicTransferRates <> "" Then $BasicTransferRates &= ","
-								$BasicTransferRates &= $transferrate
-							Else
-								$otrswitch = 1
-								If $OtherTransferRates <> "" Then $OtherTransferRates &= ","
-								$OtherTransferRates &= $transferrate
-							EndIf
-						Next
-						;End Split Other Transfer Rates from Basic Transfer Rates
-						$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
-						If $NewFound <> 0 Then
-							;Check if this AP matches the filter
-							If StringInStr($AddQuery, "WHERE") Then
-								$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
-							Else
-								$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
-							EndIf
-							$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
-							$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
-							;If AP Matches filter, increment $FilterMatches
-							If $FoundLoadApMatch = 1 Then $FilterMatches += 1
-							;Play per-ap new ap sound
-							If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
-								If $NewSoundSigBased = 1 Then
-									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
-									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+						$RSSI = $apinfo[$addinfo][7]
+						If $SSID = $InfoSSID And $Signal <> 0 Then ;$SSID = $InfoSSID check is a temporary workaround for blank SSIDs
+							;ConsoleWrite($SSID & ' - ' & $Signal & ' - ' & $RSSI & ' - ' & _SignalPercentToDb($Signal) & @CRLF)
+							;Split Other Transfer Rates from Basic Transfer Rates
+							Local $highchan = 0, $otrswitch = 0, $BasicTransferRates = "", $OtherTransferRates = ""
+							$tr_split = StringSplit($apinfo[$addinfo][11], ",")
+							For $trs = 1 To $tr_split[0]
+								$transferrate = $tr_split[$trs] - 0
+								If ($transferrate > $highchan) And ($otrswitch = 0) Then
+									$highchan = $transferrate
+									If $BasicTransferRates <> "" Then $BasicTransferRates &= ","
+									$BasicTransferRates &= $transferrate
 								Else
-									$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
-									$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+									$otrswitch = 1
+									If $OtherTransferRates <> "" Then $OtherTransferRates &= ","
+									$OtherTransferRates &= $transferrate
+								EndIf
+							Next
+							;End Split Other Transfer Rates from Basic Transfer Rates
+							$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+							If $NewFound <> 0 Then
+								;Check if this AP matches the filter
+								If StringInStr($AddQuery, "WHERE") Then
+									$fquery = $AddQuery & " AND ApID = '" & StringFormat("%08i", $NewFound) & "'"
+								Else
+									$fquery = $AddQuery & " WHERE ApID = '" & StringFormat("%08i", $NewFound) & "'"
+								EndIf
+								$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+								$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+								;If AP Matches filter, increment $FilterMatches
+								If $FoundLoadApMatch = 1 Then $FilterMatches += 1
+								;Play per-ap new ap sound
+								If $SoundPerAP = 1 And $FoundLoadApMatch = 1 Then
+									If $NewSoundSigBased = 1 Then
+										$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $Signal & '" /t=5'
+										$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+									Else
+										$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="100" /t=5'
+										$SayProcess = Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
+									EndIf
 								EndIf
 							EndIf
 						EndIf
@@ -2710,22 +2717,22 @@ Func _RecoverMDB()
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$APID = $ApMatchArray[1][1]
 	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & "0 / " & $APID)
-	ConsoleWrite("APID:" & $APID & @CRLF)
+	;ConsoleWrite("APID:" & $APID & @CRLF)
 	;Get  total HistIDs
 	$query = "Select COUNT(HistID) FROM Hist"
 	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$HISTID = $HistMatchArray[1][1]
-	ConsoleWrite("HISTID:" & $HISTID & @CRLF)
+	;ConsoleWrite("HISTID:" & $HISTID & @CRLF)
 	;Get total GPSIDs
 	$query = "Select COUNT(GpsID) FROM GPS"
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$GPS_ID = $GpsMatchArray[1][1]
-	ConsoleWrite("GPS_ID:" & $GPS_ID & @CRLF)
+	;ConsoleWrite("GPS_ID:" & $GPS_ID & @CRLF)
 	;Get total CamIDs
 	$query = "Select COUNT(CamID) FROM Cam"
 	$CamIDCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$CamID = $CamIDCountArray[1][1]
-	ConsoleWrite("CamID:" & $CamID & @CRLF)
+	;ConsoleWrite("CamID:" & $CamID & @CRLF)
 	;Remove treeview postion table
 	$query = "DELETE * FROM TreeviewPos"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -4007,7 +4014,7 @@ Func _ListSort($DbCol, $SortOrder)
 EndFunc   ;==>_ListSort
 
 Func _SortDbQueryToList($query, $listpos)
-	ConsoleWrite($query & @CRLF)
+	;ConsoleWrite($query & @CRLF)
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $wlv = 1 To $FoundApMatch
@@ -4079,7 +4086,7 @@ EndFunc   ;==>_SortDbQueryToList
 
 Func _GetDbColNameByListColName($colName)
 	Local $DbSortCol = ""
-	ConsoleWrite($colName & @CRLF)
+	;ConsoleWrite($colName & @CRLF)
 	If $colName = $Column_Names_Line Then
 		$DbSortCol = "ApID"
 	ElseIf $colName = $Column_Names_Active Then
@@ -4882,7 +4889,7 @@ Func _LocateGpsInWifidb();Finds GPS based on active acess points based on WifiDB
 		Next
 		$url_root = $PhilsApiURL & 'locate.php?'
 		$url_data = "ActiveBSSIDs=" & $ActiveMacs
-		ConsoleWrite($url_root & $url_data & @CRLF)
+		;ConsoleWrite($url_root & $url_data & @CRLF)
 		$webpagesource = _INetGetSource($url_root & $url_data)
 		If StringInStr($webpagesource, '|') Then
 			$wifigpsdata = StringSplit($webpagesource, "|")
@@ -6893,7 +6900,7 @@ Func _ImportNS1($NS1file)
 		For $Load = 1 To $totallines
 			$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
 			If @error = -1 Then ExitLoop
-			ConsoleWrite($linein & @CRLF)
+			;ConsoleWrite($linein & @CRLF)
 			If StringInStr($linein, "# $DateGMT:") Then $Date = StringTrimLeft($linein, 12);If the date tag is found, set date
 			If StringLeft($linein, 1) <> "#" Then ;If the line is not commented out, get AP information
 				$array = StringSplit($linein, "	");Seperate AP information
@@ -9893,7 +9900,7 @@ EndFunc   ;==>_EditLabel
 Func _RemoveLabel();Close edit label window
 	$Apply_Lab = 1
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Lab_List)
-	ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
+	;ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
 	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem($GUI_Lab_List, $EditLine)
 EndFunc   ;==>_RemoveLabel
 
@@ -9970,7 +9977,7 @@ EndFunc   ;==>_EditCam_Ok
 Func _RemoveCam();Removed Camfactuer from list
 	$Apply_Cam = 1
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Cam_List)
-	ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
+	;ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
 	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem(GUICtrlGetHandle($GUI_Cam_List), $EditLine)
 EndFunc   ;==>_RemoveCam
 
@@ -10960,17 +10967,17 @@ Func _GeoLocateAllAps()
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$ApMatch = UBound($ApMatchArray) - 1
 	For $ugn = 1 To $ApMatch
-		ConsoleWrite($ugn & "/" & $ApMatch & @CRLF)
+		;ConsoleWrite($ugn & "/" & $ApMatch & @CRLF)
 		$Ap_ApID = $ApMatchArray[$ugn][1]
 		$Ap_HighGpsHist = $ApMatchArray[$ugn][2]
-		ConsoleWrite("APID:" & $Ap_ApID & @CRLF)
-		ConsoleWrite("HighGpsHist:" & $Ap_HighGpsHist & @CRLF)
+		;ConsoleWrite("APID:" & $Ap_ApID & @CRLF)
+		;ConsoleWrite("HighGpsHist:" & $Ap_HighGpsHist & @CRLF)
 		$query = "SELECT GpsID FROM Hist WHERE HistID='" & $Ap_HighGpsHist & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$HistMatch = UBound($ApMatchArray) - 1
 		If $HistMatch <> 0 Then
 			$Ap_GpsID = $HistMatchArray[1][1]
-			ConsoleWrite("GpsID:" & $Ap_GpsID & @CRLF)
+			;ConsoleWrite("GpsID:" & $Ap_GpsID & @CRLF)
 			$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID='" & $Ap_GpsID & "'"
 			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$GpsMatch = UBound($ApMatchArray) - 1
@@ -10978,7 +10985,7 @@ Func _GeoLocateAllAps()
 				$Ap_Lat = $GpsMatchArray[1][1]
 				$Ap_Lon = $GpsMatchArray[1][2]
 				$GeoInfo = _GeoLocate($Ap_Lat, $Ap_Lon)
-				ConsoleWrite("GeoInfo:" & $GeoInfo & @CRLF)
+				;ConsoleWrite("GeoInfo:" & $GeoInfo & @CRLF)
 				If $GeoInfo <> "0" Then
 					$GeoInfoSplit = StringSplit($GeoInfo, "|")
 					$GL_CountryCode = $GeoInfoSplit[1]
@@ -10989,7 +10996,7 @@ Func _GeoLocateAllAps()
 					$query = "UPDATE AP SET CountryCode='" & $GL_CountryCode & "', CountryName='" & $GL_CountryName & "' , AdminCode='" & $GL_AdminCode & "' , AdminName='" & $GL_AdminName & "' , Admin2Name='" & $GL_Admin2Name & "' WHERE ApID='" & $Ap_ApID & "'"
 					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				EndIf
-				ConsoleWrite("---------------------------------------------------" & @CRLF)
+				;ConsoleWrite("---------------------------------------------------" & @CRLF)
 			EndIf
 		EndIf
 	Next
@@ -11018,14 +11025,14 @@ Func _ImageDownloader()
 			$filename = $dtfilebase & '_' & 'gpsid-' & $GPS_ID & '_' & $camname & '.jpg'
 			$tmpfile = $TmpDir & $filename
 			$destfile = $VistumblerCamFolder & $filename
-			ConsoleWrite($camname & ' - ' & $camurl & ' - ' & $tmpfile & @CRLF)
+			;ConsoleWrite($camname & ' - ' & $camurl & ' - ' & $tmpfile & @CRLF)
 			$get = InetGet($camurl, $tmpfile, 0)
-			ConsoleWrite($get & @CRLF)
+			;ConsoleWrite($get & @CRLF)
 			If $get <> 0 Then
-				ConsoleWrite($GPS_ID & @CRLF)
+				;ConsoleWrite($GPS_ID & @CRLF)
 				$imgmd5 = _MD5ForFile($destfile)
 				$query = "SELECT TOP 1 CamID FROM Cam WHERE ImgMD5='" & $imgmd5 & "'"
-				ConsoleWrite($query & @CRLF)
+				;ConsoleWrite($query & @CRLF)
 				$ImgMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$FoundImgMatch = UBound($ImgMatchArray) - 1
 				If $FoundImgMatch = 0 Then ;If Img is not found, add it
@@ -11063,7 +11070,7 @@ Func _ExportCamFile()
 			;GPS Information
 			If $ExpGpsID <> 0 Then
 				$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID='" & $ExpGpsID & "'"
-				ConsoleWrite($query & @CRLF)
+				;ConsoleWrite($query & @CRLF)
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
@@ -11077,15 +11084,15 @@ Func _ExportCamFile()
 			Else
 				Dim $ExpLat = "0.0000000", $ExpLon = "0.0000000", $ExpSat = "00", $ExpHorDilPitch = "0", $ExpAlt = "0", $ExpGeo = "0", $ExpSpeedMPH = "0", $ExpSpeedKmh = "0", $ExpTrack = "0"
 			EndIf
-			ConsoleWrite($ExpCamID & ',' & $ExpCamGroup & ',' & $ExpGpsID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF)
+			;ConsoleWrite($ExpCamID & ',' & $ExpCamGroup & ',' & $ExpGpsID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF)
 			$file &= $ExpCamID & ',' & $ExpCamGroup & ',' & $ExpGpsID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF
 		Next
 		;Add cam data to zip
 		$filetmp = FileOpen($datafiletmp, 128 + 2);Open in UTF-8 write mode
 		FileWrite($filetmp, $file)
 		FileClose($filetmp)
-		ConsoleWrite($datafiletmp & @CRLF)
-		ConsoleWrite(_Zip_AddItem($exporttmp, $datafiletmp) & '-' & @error & @CRLF)
+		;ConsoleWrite($datafiletmp & @CRLF)
+		;ConsoleWrite(_Zip_AddItem($exporttmp, $datafiletmp) & '-' & @error & @CRLF)
 		;Add cam images folder to zip
 		_Zip_AddItem($exporttmp, $VistumblerCamFolder)
 		;Save tmp export
@@ -11099,7 +11106,7 @@ Func _ExportCamFile()
 EndFunc   ;==>_ExportCamFile
 
 Func _CamTrigger()
-	ConsoleWrite($CamTriggerScript & @CRLF)
+	;ConsoleWrite($CamTriggerScript & @CRLF)
 	If FileExists($CamTriggerScript) Then
 		Run($CamTriggerScript)
 	EndIf
@@ -11135,21 +11142,21 @@ Func _ImportImageFiles()
 			$query = "Select COUNT(CamID) FROM Cam WHERE CamName = '" & $ImgGroupName & "'"
 			$CamCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$CamCount = $CamCountArray[1][1]
-			ConsoleWrite($CamCount & @CRLF)
+			;ConsoleWrite($CamCount & @CRLF)
 			For $ii = 1 To $ImgArray[0]
 				$imgpath = $ImgDir & $ImgArray[$ii]
 				$imgmd5 = _MD5ForFile($imgpath)
 				;Check if image already exists
 				$query = "SELECT TOP 1 CamID FROM Cam WHERE ImgMD5='" & $imgmd5 & "'"
-				ConsoleWrite($query & @CRLF)
+				;ConsoleWrite($query & @CRLF)
 				$ImgMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$FoundImgMatch = UBound($ImgMatchArray) - 1
 				If $FoundImgMatch = 0 Then ;If Img is not found, add it
 					$imgtimearr = FileGetTime($imgpath, 0)
-					ConsoleWrite($imgpath & " " & FileGetTime($imgpath, 1, 1) & @CRLF)
+					;ConsoleWrite($imgpath & " " & FileGetTime($imgpath, 1, 1) & @CRLF)
 					If IsArray($imgtimearr) Then ;Use time to match image up with gps point
 						;Convert Time from local time to UTC and into the format vistumbler uses
-						ConsoleWrite($imgtimearr[1] & '-' & $imgtimearr[2] & '-' & $imgtimearr[0] & ' ' & $imgtimearr[3] & ':' & $imgtimearr[4] & ':' & $imgtimearr[5] & @CRLF)
+						;ConsoleWrite($imgtimearr[1] & '-' & $imgtimearr[2] & '-' & $imgtimearr[0] & ' ' & $imgtimearr[3] & ':' & $imgtimearr[4] & ':' & $imgtimearr[5] & @CRLF)
 						$tSystem = _Date_Time_EncodeSystemTime($imgtimearr[1], $imgtimearr[2], $imgtimearr[0], $imgtimearr[3], $imgtimearr[4], $imgtimearr[5])
 						$rTime = _Date_Time_TzSpecificLocalTimeToSystemTime(DllStructGetPtr($tSystem))
 						$dts1 = StringSplit(_Date_Time_SystemTimeToDateTimeStr($rTime), ' ')
@@ -11159,10 +11166,10 @@ Func _ImportImageFiles()
 						$year = $dts2[3]
 						$ImgDateUTC = $year & '-' & $mon & '-' & $day ;Image Date in UTC year-month-day format
 						$ImgTimeUTC = $dts1[2];Image time in UTC Hour:minute:second
-						ConsoleWrite($ImgDateUTC & ' ' & $ImgTimeUTC & @CRLF)
+						;ConsoleWrite($ImgDateUTC & ' ' & $ImgTimeUTC & @CRLF)
 						;Find matching GPS point
 						$query = "SELECT TOP 1 GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "%'"
-						ConsoleWrite($query & @CRLF)
+						;ConsoleWrite($query & @CRLF)
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 						$FoundGpsMatch = UBound($GpsMatchArray) - 1
 						If $FoundGpsMatch <> 0 Then ;If a gps id match was found, import the image
@@ -11176,7 +11183,7 @@ Func _ImportImageFiles()
 								_AddRecord($VistumblerDB, "Cam", $DB_OBJ, $CamID & '|' & $CamCount & '|' & $ImgGpsId & '|' & $ImgGroupName & '|' & $filename & '|' & $imgmd5 & '|' & $ImgDateUTC & '|' & $ImgTimeUTC)
 							EndIf
 						Else ; just echo it out for now
-							ConsoleWrite("No gps match found for image " & $imgpath & @CRLF)
+							;ConsoleWrite("No gps match found for image " & $imgpath & @CRLF)
 						EndIf
 					EndIf
 				EndIf
@@ -11191,7 +11198,7 @@ EndFunc   ;==>_GUI_ImportImageFiles_Close
 
 Func _RemoveNonMatchingImages()
 	$query = "SELECT CamName FROM Cam"
-	ConsoleWrite($query & @CRLF)
+	;ConsoleWrite($query & @CRLF)
 	$CamNameArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$CamNameMatch = UBound($CamNameArray) - 1
 	If $CamNameMatch = 0 Then ;If Img is not found, add it
