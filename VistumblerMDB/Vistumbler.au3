@@ -1786,8 +1786,8 @@ Func _ScanAccessPoints()
 						$RSSI = $apinfo[$addinfo][7]
 						$TypeMatch = BitOR(BitAND($BssType = $DOT11_BSS_TYPE_INFRASTRUCTURE, StringInStr($Flags, "(ESS)") <> 0), BitAND($BssType = $DOT11_BSS_TYPE_INDEPENDENT, StringInStr($Flags, "(IBSS)") <> 0))
 						$SecMatch = BitOR(BitAND($Secured = True, StringInStr($Flags, "(Priv)") <> 0), BitAND($Secured = False, StringInStr($Flags, "(Priv)") = 0))
-						ConsoleWrite($SSID & ' - ' & $InfoSSID & ' - ' & $Signal & ' - ' & $BSSID & ' - ' & $Flags & ' - ' & $Secured & ' - ' & $SecMatch & ' - ' & $TypeMatch & @CRLF)
-						If $Signal <> 0 And $SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1 Then ;"$SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1" check is a temporary workaround for blank SSIDs
+						;ConsoleWrite($SSID & ' - ' & $InfoSSID & ' - ' & $Signal & ' - ' & $BSSID & ' - ' & $Flags & ' - ' & $Secured & ' - ' & $SecMatch & ' - ' & $TypeMatch & @CRLF)
+						If $Signal <> 0 And $SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1 Then ;"$SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1" check is a temporary workaround for blank SSIDse
 							;ConsoleWrite($SSID & ' - ' & $Signal & ' - ' & $RSSI & ' - ' & _SignalPercentToDb($Signal) & @CRLF)
 							;Split Other Transfer Rates from Basic Transfer Rates
 							Local $highchan = 0, $otrswitch = 0, $BasicTransferRates = "", $OtherTransferRates = ""
