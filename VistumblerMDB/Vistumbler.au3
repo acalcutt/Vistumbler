@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 14'
+$version = 'v10.3 Beta 15'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/08/26'
+$last_modified = '2012/08/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1780,10 +1780,14 @@ Func _ScanAccessPoints()
 					For $addinfo = 0 To $apinfosize
 						$InfoSSID = $apinfo[$addinfo][1]
 						$BSSID = StringReplace($apinfo[$addinfo][2], " ", ":")
+						$Flags = $apinfo[$addinfo][3]
 						$Channel = $apinfo[$addinfo][8]
 						$Signal = $apinfo[$addinfo][6]
 						$RSSI = $apinfo[$addinfo][7]
-						If $SSID = $InfoSSID And $Signal <> 0 Then ;$SSID = $InfoSSID check is a temporary workaround for blank SSIDs
+						$TypeMatch = BitOR(BitAND($BssType = $DOT11_BSS_TYPE_INFRASTRUCTURE, StringInStr($Flags, "(ESS)") <> 0), BitAND($BssType = $DOT11_BSS_TYPE_INDEPENDENT, StringInStr($Flags, "(IBSS)") <> 0))
+						$SecMatch = BitOR(BitAND($Secured = True, StringInStr($Flags, "(Priv)") <> 0), BitAND($Secured = False, StringInStr($Flags, "(Priv)") = 0))
+						ConsoleWrite($SSID & ' - ' & $InfoSSID & ' - ' & $Signal & ' - ' & $BSSID & ' - ' & $Flags & ' - ' & $Secured & ' - ' & $SecMatch & ' - ' & $TypeMatch & @CRLF)
+						If $Signal <> 0 And $SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1 Then ;"$SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1" check is a temporary workaround for blank SSIDs
 							;ConsoleWrite($SSID & ' - ' & $Signal & ' - ' & $RSSI & ' - ' & _SignalPercentToDb($Signal) & @CRLF)
 							;Split Other Transfer Rates from Basic Transfer Rates
 							Local $highchan = 0, $otrswitch = 0, $BasicTransferRates = "", $OtherTransferRates = ""
