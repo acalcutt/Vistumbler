@@ -2202,7 +2202,7 @@ Func _MarkDeadAPs()
 		If ($Current_dts - $Found_dts) > $TimeBeforeMarkedDead Then
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
-			_UpdateIcon($Found_ListRow, 0, 1)
+			_UpdateIcon($Found_ListRow, 0, $Found_SecType)
 			$query = "UPDATE AP SET Active = '0', Signal = '000' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
@@ -2536,41 +2536,42 @@ Func _FilterReAddMatchingNotInList()
 			$DBAddPos = -1
 		EndIf
 		;Add Into ListView, Set icon color
+		$ImpLine = Round($ImpApID)
 		If $ImpSig >= 1 And $ImpSig <= 20 Then
 			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 1)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 1)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 7)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 7)
 			EndIf
 		ElseIf $ImpSig >= 21 And $ImpSig <= 40 Then
 			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 2)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 2)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 8)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 8)
 			EndIf
 		ElseIf $ImpSig >= 41 And $ImpSig <= 60 Then
 			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 3)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 3)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 9)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 9)
 			EndIf
 		ElseIf $ImpSig >= 61 And $ImpSig <= 80 Then
 			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 4)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 4)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 10)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 10)
 			EndIf
 		ElseIf $ImpSig >= 81 And $ImpSig <= 100 Then
 			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 5)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 5)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 11)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 11)
 			EndIf
 		Else
 			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 0)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 0)
 			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpApID, $DBAddPos, 6)
+				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 6)
 			EndIf
 		EndIf
 		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB, $ImpHighSignal)
