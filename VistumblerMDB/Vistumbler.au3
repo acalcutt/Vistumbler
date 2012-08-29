@@ -488,23 +488,25 @@ Dim $column_BSSID = IniRead($settings, 'Columns', 'Column_BSSID', 2)
 Dim $column_SSID = IniRead($settings, 'Columns', 'Column_SSID', 3)
 Dim $column_Signal = IniRead($settings, 'Columns', 'Column_Signal', 4)
 Dim $column_HighSignal = IniRead($settings, 'Columns', 'Column_HighSignal', 5)
-Dim $column_Channel = IniRead($settings, 'Columns', 'Column_Channel', 6)
-Dim $column_Authentication = IniRead($settings, 'Columns', 'Column_Authentication', 7)
-Dim $column_Encryption = IniRead($settings, 'Columns', 'Column_Encryption', 8)
-Dim $column_NetworkType = IniRead($settings, 'Columns', 'Column_NetworkType', 9)
-Dim $column_Latitude = IniRead($settings, 'Columns', 'Column_Latitude', 10)
-Dim $column_Longitude = IniRead($settings, 'Columns', 'Column_Longitude', 11)
-Dim $column_MANUF = IniRead($settings, 'Columns', 'Column_Manufacturer', 12)
-Dim $column_Label = IniRead($settings, 'Columns', 'Column_Label', 13)
-Dim $column_RadioType = IniRead($settings, 'Columns', 'Column_RadioType', 14)
-Dim $column_LatitudeDMS = IniRead($settings, 'Columns', 'Column_LatitudeDMS', 15)
-Dim $column_LongitudeDMS = IniRead($settings, 'Columns', 'Column_LongitudeDMS', 16)
-Dim $column_LatitudeDMM = IniRead($settings, 'Columns', 'Column_LatitudeDMM', 17)
-Dim $column_LongitudeDMM = IniRead($settings, 'Columns', 'Column_LongitudeDMM', 18)
-Dim $column_BasicTransferRates = IniRead($settings, 'Columns', 'Column_BasicTransferRates', 19)
-Dim $column_OtherTransferRates = IniRead($settings, 'Columns', 'Column_OtherTransferRates', 20)
-Dim $column_FirstActive = IniRead($settings, 'Columns', 'Column_FirstActive', 21)
-Dim $column_LastActive = IniRead($settings, 'Columns', 'Column_LastActive', 22)
+Dim $column_RSSI = IniRead($settings, 'Columns', 'Column_RSSI', 6)
+Dim $column_HighRSSI = IniRead($settings, 'Columns', 'Column_HighRSSI', 7)
+Dim $column_Channel = IniRead($settings, 'Columns', 'Column_Channel', 8)
+Dim $column_Authentication = IniRead($settings, 'Columns', 'Column_Authentication', 9)
+Dim $column_Encryption = IniRead($settings, 'Columns', 'Column_Encryption', 10)
+Dim $column_NetworkType = IniRead($settings, 'Columns', 'Column_NetworkType', 11)
+Dim $column_Latitude = IniRead($settings, 'Columns', 'Column_Latitude', 12)
+Dim $column_Longitude = IniRead($settings, 'Columns', 'Column_Longitude', 13)
+Dim $column_MANUF = IniRead($settings, 'Columns', 'Column_Manufacturer', 14)
+Dim $column_Label = IniRead($settings, 'Columns', 'Column_Label', 15)
+Dim $column_RadioType = IniRead($settings, 'Columns', 'Column_RadioType', 16)
+Dim $column_LatitudeDMS = IniRead($settings, 'Columns', 'Column_LatitudeDMS', 17)
+Dim $column_LongitudeDMS = IniRead($settings, 'Columns', 'Column_LongitudeDMS', 18)
+Dim $column_LatitudeDMM = IniRead($settings, 'Columns', 'Column_LatitudeDMM', 19)
+Dim $column_LongitudeDMM = IniRead($settings, 'Columns', 'Column_LongitudeDMM', 20)
+Dim $column_BasicTransferRates = IniRead($settings, 'Columns', 'Column_BasicTransferRates', 21)
+Dim $column_OtherTransferRates = IniRead($settings, 'Columns', 'Column_OtherTransferRates', 22)
+Dim $column_FirstActive = IniRead($settings, 'Columns', 'Column_FirstActive', 23)
+Dim $column_LastActive = IniRead($settings, 'Columns', 'Column_LastActive', 24)
 
 Dim $column_Width_Line = IniRead($settings, 'Column_Width', 'Column_Line', 60)
 Dim $column_Width_Active = IniRead($settings, 'Column_Width', 'Column_Active', 60)
@@ -513,6 +515,8 @@ Dim $column_Width_BSSID = IniRead($settings, 'Column_Width', 'Column_BSSID', 110
 Dim $column_Width_MANUF = IniRead($settings, 'Column_Width', 'Column_Manufacturer', 110)
 Dim $column_Width_Signal = IniRead($settings, 'Column_Width', 'Column_Signal', 75)
 Dim $column_Width_HighSignal = IniRead($settings, 'Column_Width', 'Column_HighSignal', 75)
+Dim $column_Width_RSSI = IniRead($settings, 'Column_Width', 'Column_RSSI', 75)
+Dim $column_Width_HighRSSI = IniRead($settings, 'Column_Width', 'Column_HighRSSI', 75)
 Dim $column_Width_Channel = IniRead($settings, 'Column_Width', 'Column_Channel', 70)
 Dim $column_Width_Authentication = IniRead($settings, 'Column_Width', 'Column_Authentication', 105)
 Dim $column_Width_Encryption = IniRead($settings, 'Column_Width', 'Column_Encryption', 105)
@@ -548,6 +552,8 @@ Dim $Column_Names_BSSID = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_
 Dim $Column_Names_MANUF = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Manufacturer', 'Manufacturer')
 Dim $Column_Names_Signal = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Signal', 'Signal')
 Dim $Column_Names_HighSignal = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_HighSignal', 'High Signal')
+Dim $Column_Names_RSSI = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_RSSI', 'RSSI')
+Dim $Column_Names_HighRSSI = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_HighRSSI', 'High RSSI')
 Dim $Column_Names_Channel = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Channel', 'Channel')
 Dim $Column_Names_Authentication = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Authentication', 'Authentication')
 Dim $Column_Names_Encryption = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Encryption', 'Encryption')
@@ -1094,7 +1100,7 @@ EndIf
 
 $var = IniReadSection($settings, "Columns")
 If @error Then
-	$headers = '#|Active|Mac Address|SSID|Signal|High Signal|Channel|Authentication|Encryption|Network Type|Latitude|Longitude|Manufacturer|Label|Radio Type|Lat (dd mm ss)|Lon (dd mm ss)|Lat (ddmm.mmmm)|Lon (ddmm.mmmm)|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated|'
+	$headers = '#|Active|Mac Address|SSID|Signal|High Signal|RSSI|High RSSI|Channel|Authentication|Encryption|Network Type|Latitude|Longitude|Manufacturer|Label|Radio Type|Lat (dd mm ss)|Lon (dd mm ss)|Lat (ddmm.mmmm)|Lon (ddmm.mmmm)|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated|'
 Else
 	For $a = 0 To ($var[0][0] - 1)
 		For $b = 1 To $var[0][0]
@@ -1947,10 +1953,12 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 		$AP_Status = $Text_Active
 		$AP_StatusNum = 1
 		$AP_DisplaySig = $SIG
+		$AP_DisplayRSSI = $RSSI
 	Else
 		$AP_Status = $Text_Dead
 		$AP_StatusNum = 0
 		$AP_DisplaySig = '0'
+		$AP_DisplayRSSI = '0'
 	EndIf
 	;Get Current GPS/Date/Time Information
 	$query = "SELECT TOP 1 Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = '" & $NewGpsId & "'"
@@ -2134,13 +2142,15 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			If $New = 0 And $Found_Active = 0 Then
 				$Exp_AP_Status = -1
 				$Exp_AP_DisplaySig = -1
+				$Exp_AP_DisplayRSSI = -1
 			Else
 				$Exp_AP_Status = $AP_Status
 				$Exp_AP_DisplaySig = $AP_DisplaySig
+				$Exp_AP_DisplayRSSI = $AP_DisplayRSSI
 			EndIf
 			If $Found_ListRow <> -1 Then
 				;Update AP Listview data
-				_ListViewAdd($Found_ListRow, -1, $Exp_AP_Status, -1, -1, -1, -1, $Exp_AP_DisplaySig, -1, -1, -1, -1, -1, $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, -1, -1, $ExpHighSig)
+				_ListViewAdd($Found_ListRow, -1, $Exp_AP_Status, -1, -1, -1, -1, $Exp_AP_DisplaySig, $ExpHighSig, $Exp_AP_DisplayRSSI, $ExpHighRSSI, -1, -1, -1, -1, -1, $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, -1, -1)
 				;Update Signal Icon
 				_UpdateIcon($Found_ListRow, $Exp_AP_DisplaySig, $Found_SecType)
 			EndIf
@@ -2230,7 +2240,7 @@ Func _MarkDeadAPs()
 	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveCount & " / " & $APID)
 EndFunc   ;==>_MarkDeadAPs
 
-Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add_SSID = -1, $Add_Authentication = -1, $Add_Encryption = -1, $Add_Signal = -1, $Add_Channel = -1, $Add_RadioType = -1, $Add_BasicTransferRates = -1, $Add_OtherTransferRates = -1, $Add_NetworkType = -1, $Add_FirstAcvtive = -1, $Add_LastActive = -1, $Add_LatitudeDMM = -1, $Add_LongitudeDMM = -1, $Add_MANU = -1, $Add_Label = -1, $Add_HighSignal = -1)
+Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add_SSID = -1, $Add_Authentication = -1, $Add_Encryption = -1, $Add_Signal = -1, $Add_HighSignal = -1, $Add_RSSI = -1, $Add_HighRSSI = -1, $Add_Channel = -1, $Add_RadioType = -1, $Add_BasicTransferRates = -1, $Add_OtherTransferRates = -1, $Add_NetworkType = -1, $Add_FirstAcvtive = -1, $Add_LastActive = -1, $Add_LatitudeDMM = -1, $Add_LongitudeDMM = -1, $Add_MANU = -1, $Add_Label = -1)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ListViewAdd()') ;#Debug Display
 
 	If $Add_Active <> -1 Then $Add_Active = StringReplace(StringReplace($Add_Active, "1", $Text_Active), "0", $Text_Dead)
@@ -2247,29 +2257,15 @@ Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add
 		$LonDDD = -1
 	EndIf
 
-	If $Add_Signal <> -1 Then
-		If $Add_Signal = 0 Or $ShowEstimatedDB = 0 Then
-			$AddDb = ""
-		Else
-			$AddDb = '(' & _SignalPercentToDb($Add_Signal) & 'dB)'
-		EndIf
-	EndIf
-
-	If $Add_HighSignal <> -1 Then
-		If $Add_HighSignal = 0 Or $ShowEstimatedDB = 0 Then
-			$AddHighDb = ""
-		Else
-			$AddHighDb = '(' & _SignalPercentToDb($Add_HighSignal) & 'dB)'
-		EndIf
-	EndIf
-
 	If $Add_Line <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Line), $column_Line)
 	If $Add_Active <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Active, $column_Active)
 	If $Add_SSID <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_SSID, $column_SSID)
 	If $Add_BSSID <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_BSSID, $column_BSSID)
 	If $Add_MANU <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF)
-	If $Add_Signal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Signal) & '% ' & $AddDb, $column_Signal)
-	If $Add_HighSignal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_HighSignal) & '% ' & $AddHighDb, $column_HighSignal)
+	If $Add_Signal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Signal) & '% ', $column_Signal)
+	If $Add_HighSignal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_HighSignal) & '% ', $column_HighSignal)
+	If $Add_RSSI <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RSSI, $column_RSSI)
+	If $Add_HighSignal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_HighRSSI, $column_HighRSSI)
 	If $Add_Authentication <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Authentication, $column_Authentication)
 	If $Add_Encryption <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Encryption, $column_Encryption)
 	If $Add_RadioType <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RadioType, $column_RadioType)
@@ -2304,6 +2300,8 @@ Func _SetListviewWidths()
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_MANUF - 0, $column_Width_MANUF - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Signal - 0, $column_Width_Signal - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_HighSignal - 0, $column_Width_HighSignal - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_RSSI - 0, $column_Width_RSSI - 0)
+	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_HighRSSI - 0, $column_Width_HighRSSI - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Authentication - 0, $column_Width_Authentication - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_Encryption - 0, $column_Width_Encryption - 0)
 	_GUICtrlListView_SetColumnWidth($ListviewAPs, $column_RadioType - 0, $column_Width_RadioType - 0)
@@ -2331,6 +2329,8 @@ Func _GetListviewWidths()
 	$column_Width_MANUF = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0)
 	$column_Width_Signal = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0)
 	$column_Width_HighSignal = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighSignal - 0)
+	$column_Width_RSSI = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RSSI - 0)
+	$column_Width_HighRSSI = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighRSSI - 0)
 	$column_Width_Authentication = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0)
 	$column_Width_Encryption = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0)
 	$column_Width_RadioType = _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0)
@@ -2503,6 +2503,7 @@ Func _FilterReAddMatchingNotInList()
 		$ImpLastGpsID = $LoadApMatchArray[$imp][17]
 		$ImpActive = $LoadApMatchArray[$imp][18]
 		$ImpHighSignal = $LoadApMatchArray[$imp][19]
+		$ImpHighRSSI = $LoadApMatchArray[$imp][20]
 		;Get GPS Position
 		If $ImpHighGpsHistID = 0 Then
 			$ImpLat = 'N 0000.0000'
@@ -2524,11 +2525,12 @@ Func _FilterReAddMatchingNotInList()
 		$ImpTime = $HistMatchArray[1][2]
 		$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
 		;Get Last Time
-		$query = "SELECT Date1, Time1, Signal FROM Hist WHERE HistID = '" & $ImpLastHistID & "'"
+		$query = "SELECT Date1, Time1, Signal, RSSI FROM Hist WHERE HistID = '" & $ImpLastHistID & "'"
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$ImpDate = $HistMatchArray[1][1]
 		$ImpTime = $HistMatchArray[1][2]
 		$ImpSig = $HistMatchArray[1][3]
+		$ImpRSSI = $HistMatchArray[1][4]
 		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
 		;If AP is not active, mark as dead and set signal to 0
 		If $ImpActive <> 0 And $ImpSig <> 0 Then
@@ -2585,7 +2587,7 @@ Func _FilterReAddMatchingNotInList()
 				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 6)
 			EndIf
 		EndIf
-		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB, $ImpHighSignal)
+		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
 		$query = "UPDATE AP SET ListRow='" & $ListRow & "' WHERE ApID='" & $ImpApID & "'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		;Add Into TreeView
@@ -2627,6 +2629,8 @@ Func _ClearAllAp()
 		If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
 		If $column_Signal = $currentcolumn[$c] Then $save_column_Signal = $c - 1
 		If $column_HighSignal = $currentcolumn[$c] Then $save_column_HighSignal = $c - 1
+		If $column_RSSI = $currentcolumn[$c] Then $save_column_RSSI = $c - 1
+		If $column_HighRSSI = $currentcolumn[$c] Then $save_column_HighRSSI = $c - 1
 		If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
 		If $column_Authentication = $currentcolumn[$c] Then $save_column_Authentication = $c - 1
 		If $column_Encryption = $currentcolumn[$c] Then $save_column_Encryption = $c - 1
@@ -2652,6 +2656,8 @@ Func _ClearAllAp()
 	$column_SSID = $save_column_SSID
 	$column_Signal = $save_column_Signal
 	$column_HighSignal = $save_column_HighSignal
+	$column_RSSI = $save_column_RSSI
+	$column_HighRSSI = $save_column_HighRSSI
 	$column_Channel = $save_column_Channel
 	$column_Authentication = $save_column_Authentication
 	$column_Encryption = $save_column_Encryption
@@ -4004,26 +4010,26 @@ Func _ListSort($DbCol, $SortOrder)
 		If $DbCol = "Latitude" Or $DbCol = "Longitude" Then ; Sort by Latitude Or Longitude
 			;Add results that have no GPS postion first if DESC
 			If $SortDir = "DESC" Then
-				$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal FROM AP WHERE HighGpsHistID='0' And ListRow<>'-1' ORDER BY ApID " & $SortDir
+				$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE HighGpsHistID='0' And ListRow<>'-1' ORDER BY ApID " & $SortDir
 				$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 			EndIf
 			;Add sorted results with GPS
-			If $DbCol = "Latitude" Then $query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal FROM (AP INNER JOIN Hist ON AP.HighGpsHistId = Hist.HistID) INNER JOIN GPS ON Hist.GpsID = GPS.GPSID WHERE ListRow<>'-1' ORDER BY GPS.Latitude " & $SortDir & ", GPS.Longitude " & $SortDir & ", AP.ApID " & $SortDir
-			If $DbCol = "Longitude" Then $query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal FROM (AP INNER JOIN Hist ON AP.HighGpsHistId = Hist.HistID) INNER JOIN GPS ON Hist.GpsID = GPS.GPSID WHERE ListRow<>'-1' ORDER BY GPS.Longitude " & $SortDir & ", GPS.Latitude " & $SortDir & ", AP.ApID " & $SortDir
+			If $DbCol = "Latitude" Then $query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI FROM (AP INNER JOIN Hist ON AP.HighGpsHistId = Hist.HistID) INNER JOIN GPS ON Hist.GpsID = GPS.GPSID WHERE ListRow<>'-1' ORDER BY GPS.Latitude " & $SortDir & ", GPS.Longitude " & $SortDir & ", AP.ApID " & $SortDir
+			If $DbCol = "Longitude" Then $query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI FROM (AP INNER JOIN Hist ON AP.HighGpsHistId = Hist.HistID) INNER JOIN GPS ON Hist.GpsID = GPS.GPSID WHERE ListRow<>'-1' ORDER BY GPS.Longitude " & $SortDir & ", GPS.Latitude " & $SortDir & ", AP.ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 			;Add results that have no GPS postion last if ASC
 			If $SortDir = "ASC" Then
-				$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal FROM AP WHERE HighGpsHistID='0' And ListRow<>'-1' ORDER BY ApID " & $SortDir
+				$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE HighGpsHistID='0' And ListRow<>'-1' ORDER BY ApID " & $SortDir
 				$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 			EndIf
 		ElseIf $DbCol = "FirstActive" Then ; Sort by First Active Time
-			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.FirstHistID = Hist.HistID WHERE ListRow<>'-1' ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
+			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.FirstHistID = Hist.HistID WHERE ListRow<>'-1' ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 		ElseIf $DbCol = "LastActive" Then ; Sort by Last Active Time
-			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.LastHistID = Hist.HistID WHERE ListRow<>'-1' ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
+			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.LastHistID = Hist.HistID WHERE ListRow<>'-1' ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 		Else ; Sort by any other column
-			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal FROM AP WHERE ListRow<>'-1' ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
+			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>'-1' ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 		EndIf
 	EndIf
@@ -4057,6 +4063,8 @@ Func _SortDbQueryToList($query, $listpos)
 			$Found_Active = $ApMatchArray[$wlv][19]
 			$Found_Signal = $ApMatchArray[$wlv][20]
 			$Found_HighSignal = $ApMatchArray[$wlv][21]
+			$Found_RSSI = $ApMatchArray[$wlv][22]
+			$Found_HighRSSI = $ApMatchArray[$wlv][23]
 
 			;Get First Time
 			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID='" & $Found_FirstHistID & "'"
@@ -4087,7 +4095,7 @@ Func _SortDbQueryToList($query, $listpos)
 			EndIf
 
 			;Write changes to listview
-			_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL, $Found_HighSignal)
+			_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
 
 			;Update ListRow Icon
 			_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
@@ -4113,6 +4121,12 @@ Func _GetDbColNameByListColName($colName)
 		$DbSortCol = "SSID"
 	ElseIf $colName = $Column_Names_Signal Then
 		$DbSortCol = "Signal"
+	ElseIf $colName = $Column_Names_HighSignal Then
+		$DbSortCol = "HighSignal"
+	ElseIf $colName = $Column_Names_Signal Then
+		$DbSortCol = "RSSI"
+	ElseIf $colName = $Column_Names_HighSignal Then
+		$DbSortCol = "HighRSSI"
 	ElseIf $colName = $Column_Names_Channel Then
 		$DbSortCol = "CHAN"
 	ElseIf $colName = $Column_Names_Authentication Then
@@ -4147,8 +4161,6 @@ Func _GetDbColNameByListColName($colName)
 		$DbSortCol = "FirstActive"
 	ElseIf $colName = $Column_Names_LastActive Then
 		$DbSortCol = "LastActive"
-	ElseIf $colName = $Column_Names_HighSignal Then
-		$DbSortCol = "HighSignal"
 	EndIf
 	Return ($DbSortCol)
 EndFunc   ;==>_GetDbColNameByListColName
@@ -5809,6 +5821,8 @@ Func _WriteINI()
 		If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
 		If $column_Signal = $currentcolumn[$c] Then $save_column_Signal = $c - 1
 		If $column_HighSignal = $currentcolumn[$c] Then $save_column_HighSignal = $c - 1
+		If $column_RSSI = $currentcolumn[$c] Then $save_column_RSSI = $c - 1
+		If $column_HighRSSI = $currentcolumn[$c] Then $save_column_HighRSSI = $c - 1
 		If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
 		If $column_Authentication = $currentcolumn[$c] Then $save_column_Authentication = $c - 1
 		If $column_Encryption = $currentcolumn[$c] Then $save_column_Encryption = $c - 1
@@ -5964,6 +5978,8 @@ Func _WriteINI()
 	IniWrite($settings, "Columns", "Column_SSID", $save_column_SSID)
 	IniWrite($settings, "Columns", "Column_Signal", $save_column_Signal)
 	IniWrite($settings, "Columns", "Column_HighSignal", $save_column_HighSignal)
+	IniWrite($settings, "Columns", "Column_RSSI", $save_column_RSSI)
+	IniWrite($settings, "Columns", "Column_HighRSSI", $save_column_HighRSSI)
 	IniWrite($settings, "Columns", "Column_Channel", $save_column_Channel)
 	IniWrite($settings, "Columns", "Column_Authentication", $save_column_Authentication)
 	IniWrite($settings, "Columns", "Column_Encryption", $save_column_Encryption)
@@ -5988,6 +6004,8 @@ Func _WriteINI()
 	IniWrite($settings, "Column_Width", "Column_SSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0))
 	IniWrite($settings, "Column_Width", "Column_Signal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0))
 	IniWrite($settings, "Column_Width", "Column_HighSignal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighSignal - 0))
+	IniWrite($settings, "Column_Width", "Column_RSSI", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RSSI - 0))
+	IniWrite($settings, "Column_Width", "Column_HighRSSI", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighRSSI - 0))
 	IniWrite($settings, "Column_Width", "Column_Channel", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0))
 	IniWrite($settings, "Column_Width", "Column_Authentication", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0))
 	IniWrite($settings, "Column_Width", "Column_Encryption", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0))
@@ -6014,6 +6032,8 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Manufacturer", $Column_Names_MANUF)
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Signal", $Column_Names_Signal)
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_HighSignal", $Column_Names_HighSignal)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_RSSI", $Column_Names_RSSI)
+	IniWrite($DefaultLanguagePath, "Column_Names", "Column_HighRSSI", $Column_Names_HighRSSI)
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Authentication", $Column_Names_Authentication)
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Encryption", $Column_Names_Encryption)
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_RadioType", $Column_Names_RadioType)
@@ -8674,7 +8694,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_SortBy, 30, 330, 625, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_SortBy = GUICtrlCreateCombo($Column_Names_SSID, 30, 345, 615, 21)
-		GUICtrlSetData(-1, $Column_Names_NetworkType & "|" & $Column_Names_Authentication & "|" & $Column_Names_Encryption & "|" & $Column_Names_BSSID & "|" & $Column_Names_Signal & "|" & $Column_Names_HighSignal & "|" & $Column_Names_RadioType & "|" & $Column_Names_Channel & "|" & $Column_Names_BasicTransferRates & "|" & $Column_Names_OtherTransferRates & "|" & $Column_Names_Latitude & "|" & $Column_Names_Longitude & "|" & $Column_Names_LatitudeDMM & "|" & $Column_Names_LongitudeDMM & "|" & $Column_Names_LatitudeDMS & "|" & $Column_Names_LongitudeDMS & "|" & $Column_Names_FirstActive & "|" & $Column_Names_LastActive & "|" & $Column_Names_Active & "|" & $Column_Names_MANUF, $SortBy)
+		GUICtrlSetData(-1, $Column_Names_NetworkType & "|" & $Column_Names_Authentication & "|" & $Column_Names_Encryption & "|" & $Column_Names_BSSID & "|" & $Column_Names_Signal & "|" & $Column_Names_HighSignal & "|" & $Column_Names_RSSI & "|" & $Column_Names_HighRSSI & "|" & $Column_Names_RadioType & "|" & $Column_Names_Channel & "|" & $Column_Names_BasicTransferRates & "|" & $Column_Names_OtherTransferRates & "|" & $Column_Names_Latitude & "|" & $Column_Names_Longitude & "|" & $Column_Names_LatitudeDMM & "|" & $Column_Names_LongitudeDMM & "|" & $Column_Names_LatitudeDMS & "|" & $Column_Names_LongitudeDMS & "|" & $Column_Names_FirstActive & "|" & $Column_Names_LastActive & "|" & $Column_Names_Active & "|" & $Column_Names_MANUF, $SortBy)
 		If $SortDirection = 1 Then
 			$SortDirectionDefault = $Text_Decending
 		Else
@@ -9050,6 +9070,8 @@ Func _ApplySettingsGUI();Applys settings
 		$Column_Names_MANUF = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Manufacturer', 'Manufacturer')
 		$Column_Names_Signal = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Signal', 'Signal')
 		$Column_Names_HighSignal = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_HighSignal', 'High Signal')
+		$Column_Names_RSSI = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_RSSI', 'RSSI')
+		$Column_Names_HighRSSI = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_HighRSSI', 'High RSSI')
 		$Column_Names_Authentication = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Authentication', 'Authentication')
 		$Column_Names_Encryption = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Encryption', 'Encryption')
 		$Column_Names_RadioType = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_RadioType', 'Radio Type')
@@ -10569,7 +10591,7 @@ Func _FilterChanged()
 EndFunc   ;==>_FilterChanged
 
 Func _CreateFilterQuerys()
-	$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal FROM AP"
+	$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal, HighRSSI FROM AP"
 	$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 	If $DefFiltID <> '-1' Then
 		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
