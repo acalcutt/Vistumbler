@@ -6624,7 +6624,7 @@ Func _ImportVS1($VS1file)
 							$ImpGID = $GidSigSplit[1]
 							$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
 							If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
-							$ImpRSSI = $ImpSig
+							$ImpRSSI = _SignalPercentToDb($ImpSig)
 							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
 							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 							$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
