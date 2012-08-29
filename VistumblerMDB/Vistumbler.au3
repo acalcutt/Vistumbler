@@ -1739,8 +1739,9 @@ Func _ScanAccessPoints()
 					$BasicTransferRates = $aplist[$add][11]
 					$OtherTransferRates = ""
 					$BSSID = $aplist[$add][10]
+					$RSSI = _SignalPercentToDb($Signal)
 					$Channel = ""
-					$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+					$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal, $RSSI)
 					If $NewFound <> 0 Then
 						;Check if this AP matches the filter
 						If StringInStr($AddQuery, "WHERE") Then
@@ -1805,7 +1806,7 @@ Func _ScanAccessPoints()
 								EndIf
 							Next
 							;End Split Other Transfer Rates from Basic Transfer Rates
-							$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+							$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal, $RSSI)
 							If $NewFound <> 0 Then
 								;Check if this AP matches the filter
 								If StringInStr($AddQuery, "WHERE") Then
@@ -1897,7 +1898,8 @@ Func _ScanAccessPoints()
 								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $Latitude & '|' & $Longitude & '|' & $NumberOfSatalites & '|' & $HorDilPitch & '|' & $Alt & '|' & $Geo & '|' & $SpeedInMPH & '|' & $SpeedInKmH & '|' & $TrackAngle & '|' & $datestamp & '|' & $timestamp)
 							EndIf
 							;Add new access point
-							$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal)
+							$RSSI = _SignalPercentToDb($Signal)
+							$NewFound = _AddApData(1, $GPS_ID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $Signal, $RSSI)
 							If $NewFound <> 0 Then
 								;Check if this AP matches the filter
 								If StringInStr($AddQuery, "WHERE") Then
@@ -1939,7 +1941,7 @@ EndFunc   ;==>_ScanAccessPoints
 ;                                                       ADD DB/LISTVIEW/TREEVIEW FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG)
+Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG, $RSSI)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApData()') ;#Debug Display
 	If $New = 1 And $SIG <> 0 Then
 		$AP_Status = $Text_Active
@@ -1962,7 +1964,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	$NewApFound = 0
 	If $GpsMatchArray <> 0 Then ;If GPS ID Is Found
 		;Query AP table for New AP
-		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active, SecType, HighSignal FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $CHAN) & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
+		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active, SecType, HighSignal, HighRSSI FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $CHAN) & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
@@ -1988,9 +1990,9 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$DBHighGpsHistId = '0'
 			EndIf
 			;Add History Information
-			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & StringFormat("%08i", $APID) & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
+			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & StringFormat("%08i", $APID) & '|' & $NewGpsId & '|' & $SIG & '|' & $RSSI & '|' & $New_Date & '|' & $New_Time)
 			;Add AP Data into the AP table
-			ReDim $AddApRecordArray[22]
+			ReDim $AddApRecordArray[24]
 			$AddApRecordArray[0] = 21
 			$AddApRecordArray[1] = StringFormat("%08i", $APID)
 			$AddApRecordArray[2] = $ListRow
@@ -2013,6 +2015,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$AddApRecordArray[19] = $LABEL
 			$AddApRecordArray[20] = StringFormat("%03i", $SIG)
 			$AddApRecordArray[21] = StringFormat("%03i", $SIG)
+			$AddApRecordArray[22] = $RSSI
+			$AddApRecordArray[23] = $RSSI
 			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $AddApRecordArray)
 
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
@@ -2025,6 +2029,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$Found_Active = $ApMatchArray[1][7]
 			$Found_SecType = $ApMatchArray[1][8]
 			$Found_HighSignal = Round($ApMatchArray[1][9])
+			$Found_HighRSSI = Round($ApMatchArray[1][10])
 			$HISTID += 1
 			;Set Last Time and First Time
 			If $New = 1 Then ;If this is a new access point, use new information
@@ -2109,8 +2114,14 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			Else
 				$ExpHighSig = $Found_HighSignal
 			EndIf
+			;If High Signal has changed, update it
+			If $RSSI > $Found_HighRSSI Then
+				$ExpHighRSSI = $RSSI
+			Else
+				$ExpHighRSSI = $Found_HighRSSI
+			EndIf
 			;Update AP in DB. Set Active, LastGpsID, and LastHistID
-			$query = "UPDATE AP SET Active = '" & $AP_StatusNum & "', LastGpsID = '" & $ExpGpsID & "', LastHistId = '" & $ExpLastHistID & "',Signal = '" & StringFormat("%03i", $SIG) & "',HighSignal = '" & StringFormat("%03i", $ExpHighSig) & "' WHERE ApId = '" & $Found_APID & "'"
+			$query = "UPDATE AP SET Active = '" & $AP_StatusNum & "', LastGpsID = '" & $ExpGpsID & "', LastHistId = '" & $ExpLastHistID & "',Signal = '" & StringFormat("%03i", $SIG) & "',HighSignal = '" & StringFormat("%03i", $ExpHighSig) & "',RSSI = '" & $RSSI & "',HighRSSI = '" & $ExpHighRSSI & "' WHERE ApId = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Update AP in DB. Set FirstHistID
 			If $ExpFirstHistID <> -1 Then
@@ -2118,7 +2129,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			EndIf
 			;Add new history ID
-			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $NewGpsId & '|' & $SIG & '|' & $New_Date & '|' & $New_Time)
+			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $NewGpsId & '|' & $SIG & '|' & $RSSI & '|' & $New_Date & '|' & $New_Time)
 			;Update List information
 			If $New = 0 And $Found_Active = 0 Then
 				$Exp_AP_Status = -1
@@ -2771,8 +2782,8 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
 	_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(10)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)|')
-	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(10)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)|RSSI TEXT(4)|HighRSSI TEXT(4)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)')
+	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|RSSI TEXT(4)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
 	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|CamGroup TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|ImgMD5 TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
@@ -6613,13 +6624,14 @@ Func _ImportVS1($VS1file)
 							$ImpGID = $GidSigSplit[1]
 							$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
 							If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
+							$ImpRSSI = $ImpSig
 							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID = '" & $ImpGID & "'"
 							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 							$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
 							If $TempGidMatchArrayMatch <> 0 Then
 								$NewGID = $TempGidMatchArray[1][1]
 								;Add AP Info to DB, Listview, and Treeview
-								$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig)
+								$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig, $ImpRSSI)
 								If $NewApAdded <> 0 Then $AddAP += 1
 							EndIf
 						EndIf
@@ -6631,6 +6643,7 @@ Func _ImportVS1($VS1file)
 					$SSID = StringStripWS($loadlist[1], 3)
 					$BSSID = StringStripWS($loadlist[2], 3)
 					$HighGpsSignal = StringReplace(StringStripWS($loadlist[4], 3), '%', '')
+					$RSSI = _SignalPercentToDb($HighGpsSignal)
 					$Authentication = StringStripWS($loadlist[5], 3)
 					$Encryption = StringStripWS($loadlist[6], 3)
 					$RadioType = StringStripWS($loadlist[7], 3)
@@ -6670,7 +6683,7 @@ Func _ImportVS1($VS1file)
 						$LoadGID = $GpsMatchArray[1][1]
 					EndIf
 					;Add First AP Info to DB, Listview, and Treeview
-					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
+					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal, $RSSI)
 					If $NewApAdded <> 0 Then $AddAP += 1
 					;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
@@ -6685,7 +6698,7 @@ Func _ImportVS1($VS1file)
 						$LoadGID = $GpsMatchArray[1][1]
 					EndIf
 					;Add Last AP Info to DB, Listview, and Treeview
-					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal)
+					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal, $RSSI)
 					If $NewApAdded <> 0 Then $AddAP += 1
 				Else
 					;ExitLoop
@@ -6742,6 +6755,7 @@ Func _ImportCSV($CSVfile)
 				$ImpMANU = $CSVArray[$lc][2]
 				If StringLeft($ImpMANU, 1) = '"' And StringRight($ImpMANU, 1) = '"' Then $ImpMANU = StringTrimLeft(StringTrimRight($ImpMANU, 1), 1)
 				$ImpSig = $CSVArray[$lc][3]
+				$ImpRSSI = _SignalPercentToDb($ImpSig)
 				$ImpAUTH = $CSVArray[$lc][4]
 				$ImpENCR = $CSVArray[$lc][5]
 				$ImpRAD = $CSVArray[$lc][6]
@@ -6776,7 +6790,7 @@ Func _ImportCSV($CSVfile)
 					$ImpGID = $GpsMatchArray[1][1]
 				EndIf
 
-				$NewApAdded = _AddApData(0, $ImpGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpSig)
+				$NewApAdded = _AddApData(0, $ImpGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpSig, $ImpRSSI)
 				If $NewApAdded <> 0 Then $AddAP += 1
 
 				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $iSize) Then
@@ -6808,6 +6822,7 @@ Func _ImportCSV($CSVfile)
 				$ImpMANU = $CSVArray[$lc][2]
 				If StringLeft($ImpMANU, 1) = '"' And StringRight($ImpMANU, 1) = '"' Then $ImpMANU = StringTrimLeft(StringTrimRight($ImpMANU, 1), 1)
 				$ImpHighSig = $CSVArray[$lc][3]
+				$ImpRSSI = _SignalPercentToDb($ImpHighSig)
 				$ImpAUTH = $CSVArray[$lc][4]
 				$ImpENCR = $CSVArray[$lc][5]
 				$ImpRAD = $CSVArray[$lc][6]
@@ -6844,7 +6859,7 @@ Func _ImportCSV($CSVfile)
 					$LoadGID = $GpsMatchArray[1][1]
 				EndIf
 				;Add First AP Info to DB, Listview, and Treeview
-				$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpHighSig)
+				$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpHighSig, $ImpRSSI)
 				If $NewApAdded <> 0 Then $AddAP += 1
 				;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
@@ -6859,7 +6874,7 @@ Func _ImportCSV($CSVfile)
 					$LoadGID = $GpsMatchArray[1][1]
 				EndIf
 				;Add Last AP Info to DB, Listview, and Treeview
-				$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpHighSig)
+				$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, $ImpBTX, $ImpOTX, $ImpHighSig, $ImpRSSI)
 				If $NewApAdded <> 0 Then $AddAP += 1
 
 				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $iSize) Then
@@ -6950,6 +6965,7 @@ Func _ImportNS1($NS1file)
 						If StringInStr($time, '.') = 0 Then $time &= '.000'
 						$Signal = $snrarray1[2]
 						If $Signal < 0 Then $Signal = '0'
+						$RSSI = _SignalPercentToDb($Signal)
 						$LoadLatitude = _Format_GPS_All_to_DMM(StringReplace($array[1], "N 360.0000000", "N 0.0000000"))
 						$LoadLongitude = _Format_GPS_All_to_DMM(StringReplace($array[2], "E 720.0000000", "E 0.0000000"))
 						$Channel = $array[13]
@@ -6966,7 +6982,7 @@ Func _ImportNS1($NS1file)
 							$LoadGID = $GpsMatchArray[1][1]
 						EndIf
 						;Add Last AP Info to DB, Listview
-						$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal)
+						$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal, $RSSI)
 						If $NewApAdded <> 0 Then $AddAP += 1
 					EndIf
 				Else
@@ -7047,7 +7063,8 @@ Func _ImportWardriveDb3($DB3file)
 		$Found_BSSID = StringUpper($NetworkMatchArray[$NewAP][0])
 		$Found_SSID = $NetworkMatchArray[$NewAP][1]
 		$Found_Capabilies = $NetworkMatchArray[$NewAP][2]
-		$Found_Signal = _DbToSignalPercent($NetworkMatchArray[$NewAP][3])
+		$Found_RSSI = $NetworkMatchArray[$NewAP][3]
+		$Found_Signal = _DbToSignalPercent($Found_RSSI)
 		$Found_Frequency = $NetworkMatchArray[$NewAP][4]
 		$Found_Lat = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][5], "N", "S")
 		$Found_Lon = _Format_GPS_DDD_to_DMM($NetworkMatchArray[$NewAP][6], "E", "W")
@@ -7153,7 +7170,7 @@ Func _ImportWardriveDb3($DB3file)
 		EndIf
 
 		;Add AP data into Vistumbler DB
-		$NewApAdded = _AddApData(0, $NewGpsId, $Found_BSSID, $Found_SSID, $Found_CHAN, $Found_AUTH, $Found_ENCR, $Found_NETTYPE, "802.11g", "Unknown", "Unknown", $Found_Signal)
+		$NewApAdded = _AddApData(0, $NewGpsId, $Found_BSSID, $Found_SSID, $Found_CHAN, $Found_AUTH, $Found_ENCR, $Found_NETTYPE, "802.11g", "Unknown", "Unknown", $Found_Signal, $Found_RSSI)
 		If $NewApAdded <> 0 Then $AddAP += 1
 
 		If TimerDiff($UpdateTimer) > 600 Or ($NewAP = $WardriveAPs) Then
