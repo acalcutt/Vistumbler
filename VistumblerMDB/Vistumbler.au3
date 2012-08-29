@@ -6963,27 +6963,29 @@ Func _ImportNS1($NS1file)
 						$BSSID = StringUpper(StringTrimLeft(StringTrimRight($array[5], 2), 2))
 						$time = StringTrimRight($array[6], 6)
 						If StringInStr($time, '.') = 0 Then $time &= '.000'
-						$Signal = $snrarray1[2]
-						If $Signal < 0 Then $Signal = '0'
-						$RSSI = _SignalPercentToDb($Signal)
-						$LoadLatitude = _Format_GPS_All_to_DMM(StringReplace($array[1], "N 360.0000000", "N 0.0000000"))
-						$LoadLongitude = _Format_GPS_All_to_DMM(StringReplace($array[2], "E 720.0000000", "E 0.0000000"))
-						$Channel = $array[13]
+						$ImpNsSig = $snrarray1[2]
+						If $ImpNsSig <> "-32618" Then
+							$RSSI = $ImpNsSig - 95 ;Subtact 95 from the wi-scan export's "Sig" number to get the actual rssi (http://www.netstumbler.org/netstumbler/determining-rssi-t11729.html)
+							$Signal = _DbToSignalPercent($RSSI)
+							$LoadLatitude = _Format_GPS_All_to_DMM(StringReplace($array[1], "N 360.0000000", "N 0.0000000"))
+							$LoadLongitude = _Format_GPS_All_to_DMM(StringReplace($array[2], "E 720.0000000", "E 0.0000000"))
+							$Channel = $array[13]
 
-						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $Date & "' And Time1 = '" & $time & "'"
-						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-						$FoundGpsMatch = UBound($GpsMatchArray) - 1
-						If $FoundGpsMatch = 0 Then
-							$AddGID += 1
-							$GPS_ID += 1
-							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|00|0|0|0|0|0|0|' & $Date & '|' & $time)
-							$LoadGID = $GPS_ID
-						ElseIf $FoundGpsMatch = 1 Then
-							$LoadGID = $GpsMatchArray[1][1]
+							$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $Date & "' And Time1 = '" & $time & "'"
+							$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+							$FoundGpsMatch = UBound($GpsMatchArray) - 1
+							If $FoundGpsMatch = 0 Then
+								$AddGID += 1
+								$GPS_ID += 1
+								_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|00|0|0|0|0|0|0|' & $Date & '|' & $time)
+								$LoadGID = $GPS_ID
+							ElseIf $FoundGpsMatch = 1 Then
+								$LoadGID = $GpsMatchArray[1][1]
+							EndIf
+							;Add Last AP Info to DB, Listview
+							$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal, $RSSI)
+							If $NewApAdded <> 0 Then $AddAP += 1
 						EndIf
-						;Add Last AP Info to DB, Listview
-						$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $Type, $Text_Unknown, $Text_Unknown, $Text_Unknown, $Signal, $RSSI)
-						If $NewApAdded <> 0 Then $AddAP += 1
 					EndIf
 				Else
 					;ExitLoop
