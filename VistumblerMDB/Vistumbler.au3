@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 15'
+$version = 'v10.3 Beta 16'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/08/27'
+$last_modified = '2012/08/29'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -387,7 +387,7 @@ Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 0)
 Dim $DebugCom = IniRead($settings, 'Vistumbler', 'DebugCom', 0)
 Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
-Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
+;Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
 Dim $AutoSelectHS = IniRead($settings, 'Vistumbler', 'AutoSelectHS', 0)
@@ -1241,8 +1241,8 @@ $AutoSelectHighSignal = GUICtrlCreateMenuItem($Text_AutoSelectHighSignal, $ViewM
 If $AutoSelectHS = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $ViewMenu)
 If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $ViewMenu)
-If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+;$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $ViewMenu)
+;If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $ViewMenu)
 If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
@@ -1406,7 +1406,7 @@ GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
 GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
 GUICtrlSetOnEvent($AutoSelectHighSignal, '_AutoSelHighSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
-GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
+;GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 ;Settings Menu
 GUICtrlSetOnEvent($SetMisc, '_SettingsGUI_Misc')
@@ -1794,7 +1794,7 @@ Func _ScanAccessPoints()
 						$TypeMatch = BitOR(BitAND($BssType = $DOT11_BSS_TYPE_INFRASTRUCTURE, StringInStr($Flags, "(ESS)") <> 0), BitAND($BssType = $DOT11_BSS_TYPE_INDEPENDENT, StringInStr($Flags, "(IBSS)") <> 0))
 						$SecMatch = BitOR(BitAND($Secured = True, StringInStr($Flags, "(Priv)") <> 0), BitAND($Secured = False, StringInStr($Flags, "(Priv)") = 0))
 						;ConsoleWrite($SSID & ' - ' & $InfoSSID & ' - ' & $Signal & ' - ' & $BSSID & ' - ' & $Flags & ' - ' & $Secured & ' - ' & $SecMatch & ' - ' & $TypeMatch & @CRLF)
-						If $Signal <> 0 And $SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1 Then ;"$SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1" check is a temporary workaround for blank SSIDse
+						If $Signal <> 0 And $RSSI < 0 And $SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1 Then ;"$SSID = $InfoSSID And $SecMatch = 1 And $TypeMatch = 1" check is a temporary workaround for blank SSIDse
 							;ConsoleWrite($SSID & ' - ' & $Signal & ' - ' & $RSSI & ' - ' & _SignalPercentToDb($Signal) & @CRLF)
 							;Split Other Transfer Rates from Basic Transfer Rates
 							Local $highchan = 0, $otrswitch = 0, $BasicTransferRates = "", $OtherTransferRates = ""
@@ -1958,7 +1958,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 		$AP_Status = $Text_Dead
 		$AP_StatusNum = 0
 		$AP_DisplaySig = '0'
-		$AP_DisplayRSSI = '0'
+		$AP_DisplayRSSI = '-100'
 	EndIf
 	;Get Current GPS/Date/Time Information
 	$query = "SELECT TOP 1 Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = '" & $NewGpsId & "'"
@@ -2223,8 +2223,9 @@ Func _MarkDeadAPs()
 		If ($Current_dts - $Found_dts) > $TimeBeforeMarkedDead Then
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
+			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '-100 dBm', $column_RSSI)
 			_UpdateIcon($Found_ListRow, 0, $Found_SecType)
-			$query = "UPDATE AP SET Active = '0', Signal = '000' WHERE ApID = '" & $Found_APID & "'"
+			$query = "UPDATE AP SET Active = '0', Signal = '000', RSSI = '-100' WHERE ApID = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
 	Next
@@ -2264,8 +2265,8 @@ Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add
 	If $Add_MANU <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_MANU, $column_MANUF)
 	If $Add_Signal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_Signal) & '% ', $column_Signal)
 	If $Add_HighSignal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, Round($Add_HighSignal) & '% ', $column_HighSignal)
-	If $Add_RSSI <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RSSI, $column_RSSI)
-	If $Add_HighSignal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_HighRSSI, $column_HighRSSI)
+	If $Add_RSSI <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RSSI & ' dBm', $column_RSSI)
+	If $Add_HighSignal <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_HighRSSI & ' dBm', $column_HighRSSI)
 	If $Add_Authentication <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Authentication, $column_Authentication)
 	If $Add_Encryption <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_Encryption, $column_Encryption)
 	If $Add_RadioType <> -1 Then _GUICtrlListView_SetItemText($ListviewAPs, $line, $Add_RadioType, $column_RadioType)
@@ -2788,8 +2789,8 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
 	_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(10)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal TEXT(3)|RSSI TEXT(4)|HighRSSI TEXT(4)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)')
-	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|RSSI TEXT(4)|Date1 TEXT(50)|Time1 TEXT(50)')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(10)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal INTEGER|RSSI INTEGER|HighRSSI TEXT(4)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)')
+	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|RSSI INTEGER|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
 	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID TEXT(255)|CamGroup TEXT(255)|GpsID TEXT(255)|CamName TEXT(255)|CamFile TEXT(255)|ImgMD5 TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
@@ -3257,16 +3258,18 @@ Func _WifiDbAutoUploadToggle()
 	EndIf
 EndFunc   ;==>_WifiDbAutoUploadToggle
 
-Func _ShowDbToggle();Turns Estimated DB value on or off
+#cs
+	Func _ShowDbToggle();Turns Estimated DB value on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ShowDbToggle()') ;#Debug Display
 	If $ShowEstimatedDB = 1 Then
-		GUICtrlSetState($ShowEstDb, $GUI_UNCHECKED)
-		$ShowEstimatedDB = 0
+	GUICtrlSetState($ShowEstDb, $GUI_UNCHECKED)
+	$ShowEstimatedDB = 0
 	Else
-		GUICtrlSetState($ShowEstDb, $GUI_CHECKED)
-		$ShowEstimatedDB = 1
+	GUICtrlSetState($ShowEstDb, $GUI_CHECKED)
+	$ShowEstimatedDB = 1
 	EndIf
-EndFunc   ;==>_ShowDbToggle
+	EndFunc   ;==>_ShowDbToggle
+#ce
 
 Func _DownloadImagesToggle();Turns Estimated DB value on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DownloadImagesToggle()') ;#Debug Display
@@ -4001,6 +4004,7 @@ EndFunc   ;==>_HeaderSort
 
 Func _ListSort($DbCol, $SortOrder)
 	If $DbCol <> "" Then
+		ConsoleWrite($DbCol & @CRLF)
 		Local $ListRowPos = -1
 		If $SortOrder = 1 Then
 			$SortDir = "DESC"
@@ -4027,6 +4031,10 @@ Func _ListSort($DbCol, $SortOrder)
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 		ElseIf $DbCol = "LastActive" Then ; Sort by Last Active Time
 			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.LastHistID = Hist.HistID WHERE ListRow<>'-1' ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
+			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
+		ElseIf $DbCol = "RSSI" Or $DbCol = "HighRSSI" Then ; Sort by Last Active Time
+			ConsoleWrite('----' & @CRLF)
+			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>'-1' ORDER BY CInt(" & $DbCol & ") " & $SortDir & ", ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 		Else ; Sort by any other column
 			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>'-1' ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
@@ -4123,9 +4131,9 @@ Func _GetDbColNameByListColName($colName)
 		$DbSortCol = "Signal"
 	ElseIf $colName = $Column_Names_HighSignal Then
 		$DbSortCol = "HighSignal"
-	ElseIf $colName = $Column_Names_Signal Then
+	ElseIf $colName = $Column_Names_RSSI Then
 		$DbSortCol = "RSSI"
-	ElseIf $colName = $Column_Names_HighSignal Then
+	ElseIf $colName = $Column_Names_HighRSSI Then
 		$DbSortCol = "HighRSSI"
 	ElseIf $colName = $Column_Names_Channel Then
 		$DbSortCol = "CHAN"
@@ -5879,7 +5887,7 @@ Func _WriteINI()
 	IniWrite($settings, 'Vistumbler', 'DebugCom', $DebugCom)
 	IniWrite($settings, 'Vistumbler', 'GraphDeadTime', $GraphDeadTime)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
-	IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
+	;IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
 	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
 	IniWrite($settings, "Vistumbler", 'AutoSelectHS', $AutoSelectHS)
