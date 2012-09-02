@@ -1,4 +1,4 @@
-#RequireAdmin
+;#RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
@@ -1781,16 +1781,20 @@ Func _ScanAccessPoints()
 					Else
 						$BssType = $DOT11_BSS_TYPE_INDEPENDENT
 					EndIf
+
 					$apinfo = _Wlan_GetNetworkInfo($SSID, $BssType, $Secured)
-					;If $SSID = "" Then _ArrayDisplay($apinfo)
+					;_ArrayDisplay($apinfo)
 					$apinfosize = UBound($apinfo) - 1
 					For $addinfo = 0 To $apinfosize
 						$InfoSSID = $apinfo[$addinfo][1]
 						$BSSID = StringReplace($apinfo[$addinfo][2], " ", ":")
 						$Flags = $apinfo[$addinfo][3]
-						$Channel = $apinfo[$addinfo][8]
+						$NetworkType = $apinfo[$addinfo][4]
+						$RadioType = "802.11" & $apinfo[$addinfo][5]
 						$Signal = $apinfo[$addinfo][6]
 						$RSSI = $apinfo[$addinfo][7]
+						$Channel = $apinfo[$addinfo][8]
+
 						$TypeMatch = BitOR(BitAND($BssType = $DOT11_BSS_TYPE_INFRASTRUCTURE, StringInStr($Flags, "(ESS)") <> 0), BitAND($BssType = $DOT11_BSS_TYPE_INDEPENDENT, StringInStr($Flags, "(IBSS)") <> 0))
 						$SecMatch = BitOR(BitAND($Secured = True, StringInStr($Flags, "(Priv)") <> 0), BitAND($Secured = False, StringInStr($Flags, "(Priv)") = 0))
 						;ConsoleWrite($SSID & ' - ' & $InfoSSID & ' - ' & $Signal & ' - ' & $BSSID & ' - ' & $Flags & ' - ' & $Secured & ' - ' & $SecMatch & ' - ' & $TypeMatch & @CRLF)
