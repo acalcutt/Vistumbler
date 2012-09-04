@@ -385,6 +385,7 @@ Dim $RefreshNetworks = IniRead($settings, 'Vistumbler', 'AutoRefreshNetworks', 1
 Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'AutoRefreshTime', 1000)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 0)
 Dim $DebugCom = IniRead($settings, 'Vistumbler', 'DebugCom', 0)
+Dim $UseRssiInGraphs = IniRead($settings, 'Vistumbler', 'UseRssiInGraphs', 0)
 Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
 ;Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
@@ -1243,6 +1244,8 @@ $AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $ViewMenu)
 If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
 ;$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $ViewMenu)
 ;If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$UseRssiInGraphsGUI = GUICtrlCreateMenuItem("Use RSSI in graphs", $ViewMenu)
+If $UseRssiInGraphs = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $ViewMenu)
 If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
@@ -1407,6 +1410,7 @@ GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
 GUICtrlSetOnEvent($AutoSelectHighSignal, '_AutoSelHighSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
 ;GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
+GUICtrlSetOnEvent($UseRssiInGraphsGUI, '_UseRssiInGraphsToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 ;Settings Menu
 GUICtrlSetOnEvent($SetMisc, '_SettingsGUI_Misc')
@@ -3208,6 +3212,17 @@ Func _GraphDeadTimeToggle();Sets if new aps are added to the top or bottom of th
 	EndIf
 EndFunc   ;==>_GraphDeadTimeToggle
 
+Func _UseRssiInGraphsToggle();Sets if new aps are added to the top or bottom of the list
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UseRssiInGraphsToggle') ;#Debug Display
+	If $UseRssiInGraphs = 1 Then
+		GUICtrlSetState($UseRssiInGraphsGUI, $GUI_UNCHECKED)
+		$UseRssiInGraphs = 0
+	Else
+		GUICtrlSetState($UseRssiInGraphsGUI, $GUI_CHECKED)
+		$UseRssiInGraphs = 1
+	EndIf
+EndFunc   ;==>_UseRssiInGraphsToggle
+
 Func _AutoSaveToggle();Turns auto save on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveToggle()') ;#Debug Display
 	If $AutoSave = 1 Then
@@ -4344,13 +4359,23 @@ Func _GraphDraw()
 	_GDIPlus_GraphicsClear($Graph_backbuffer)
 	;Set Background Color
 	_GDIPlus_GraphicsClear($Graph_backbuffer, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
-	;Draw 10% labels and lines
-	For $sn = 0 To 10
-		$percent = ($sn * 10) & "%"
-		$vposition = $Graph_topborder + ($Graph_height - (($Graph_height / 10) * $sn))
-		_GDIPlus_GraphicsDrawString($Graph_backbuffer, $percent, 0, $vposition - 5)
-		_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $Graph_leftborder, $vposition, $Graph_leftborder + $Graph_width, $vposition, $Pen_GraphGrid)
-	Next
+	;Draw % or dBm labels and lines
+	If $UseRssiInGraphs = 1 Then;Draw dBm labels
+		For $sn = 0 To 10
+			$RSSI = ($sn * - 10)
+			$vposition = $Graph_topborder + (($Graph_height / 10) * $sn)
+			_GDIPlus_GraphicsDrawString($Graph_backbuffer, $RSSI, 0, $vposition - 5)
+			_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $Graph_leftborder, $vposition, $Graph_leftborder + $Graph_width, $vposition, $Pen_GraphGrid)
+		Next
+	Else;Draw % labels
+		For $sn = 0 To 10
+			$percent = ($sn * 10) & "%"
+			$vposition = $Graph_topborder + ($Graph_height - (($Graph_height / 10) * $sn))
+			_GDIPlus_GraphicsDrawString($Graph_backbuffer, $percent, 0, $vposition - 5)
+			_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $Graph_leftborder, $vposition, $Graph_leftborder + $Graph_width, $vposition, $Pen_GraphGrid)
+		Next
+	EndIf
+
 	;Graph Selected AP
 	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
@@ -4359,7 +4384,7 @@ Func _GraphDraw()
 		$GraphApID = $ListRowMatchArray[1][1]
 		If $Graph = 1 Then
 			$max_graph_points = '125'
-			$query = "SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
+			$query = "SELECT TOP " & $max_graph_points & " Signal, RSSI, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
@@ -4371,11 +4396,12 @@ Func _GraphDraw()
 					$gloop += 1
 					If $gloop > $max_graph_points Then ExitLoop
 					$ExpSig = $HistMatchArray[$gs][1] - 0
-					$ExpApID = $HistMatchArray[$gs][2]
-					$ExpDate = $HistMatchArray[$gs][3]
+					$ExpRSSI = $HistMatchArray[$gs][2]
+					$ExpApID = $HistMatchArray[$gs][3]
+					$ExpDate = $HistMatchArray[$gs][4]
 
 					$Last_dts = $Found_dts
-					$ts = StringSplit($HistMatchArray[$gs][4], ":")
+					$ts = StringSplit($HistMatchArray[$gs][5], ":")
 					$ExpTime = ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4) ;In seconds
 					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
 
@@ -4383,7 +4409,12 @@ Func _GraphDraw()
 					$old_graph_point_center_x = $graph_point_center_x
 					$old_graph_point_center_y = $graph_point_center_y
 					$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gloop - 1))
-					$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
+					If $UseRssiInGraphs = 1 Then
+						$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
+						ConsoleWrite($graph_point_center_y & @CRLF)
+					Else
+						$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
+					EndIf
 
 					;Draw Point
 					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
@@ -4416,6 +4447,7 @@ Func _GraphDraw()
 									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
 								Next
 							Else
+								$gloop += 1
 								If $gloop > $max_graph_points Then ExitLoop
 
 								$old_graph_point_center_x = $graph_point_center_x
@@ -4437,7 +4469,7 @@ Func _GraphDraw()
 			EndIf
 		ElseIf $Graph = 2 Then
 			$max_graph_points = $Graph_width
-			$query = "SELECT TOP " & $max_graph_points & " Signal, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
+			$query = "SELECT TOP " & $max_graph_points & " Signal, RSSI, ApID, Date1, Time1 FROM Hist WHERE ApID = '" & $GraphApID & "' And Signal <> '0' ORDER BY Date1, Time1 Desc"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
@@ -4448,17 +4480,22 @@ Func _GraphDraw()
 					$gloop += 1
 					If $gloop > $max_graph_points Then ExitLoop
 					$ExpSig = $HistMatchArray[$gs][1] - 0
-					$ExpApID = $HistMatchArray[$gs][2]
-					$ExpDate = $HistMatchArray[$gs][3]
+					$ExpRSSI = $HistMatchArray[$gs][2]
+					$ExpApID = $HistMatchArray[$gs][3]
+					$ExpDate = $HistMatchArray[$gs][4]
 
 					$Last_dts = $Found_dts
-					$ts = StringSplit($HistMatchArray[$gs][4], ":")
+					$ts = StringSplit($HistMatchArray[$gs][5], ":")
 					$ExpTime = ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4) ;In seconds
 					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
 
 					;Draw line for signal strength
+					If $UseRssiInGraphs = 1 Then
+						$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
+					Else
+						$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
+					EndIf
 					$graph_line_top_x = ($Graph_leftborder + $Graph_width) - ($gloop * $GraphWidthSpacing)
-					$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
 					$graph_line_bottom_x = ($Graph_leftborder + $Graph_width) - ($gloop * $GraphWidthSpacing)
 					$graph_line_bottom_y = $Graph_topborder + $Graph_height
 					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_line_top_x, $graph_line_top_y, $graph_line_bottom_x, $graph_line_bottom_y, $Pen_Red)
@@ -4544,12 +4581,21 @@ Func _Draw2400ChanGraph()
 	;Set Background Color
 	_GDIPlus_GraphicsClear($2400backbuffer, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
 	;Draw 10% labels and lines
-	For $sn = 0 To 10
-		$percent = ($sn * 10) & "%"
-		$vposition = ($2400height - $2400bottomborder) - (($2400graphheight / 10) * $sn)
-		_GDIPlus_GraphicsDrawString($2400backbuffer, $percent, 0, $vposition - 5)
-		_GDIPlus_GraphicsDrawLine($2400backbuffer, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
-	Next
+	If $UseRssiInGraphs = 1 Then
+		For $sn = 0 To 10
+			$RSSI = ($sn * - 10)
+			$vposition = $2400topborder + (($2400graphheight / 10) * $sn)
+			_GDIPlus_GraphicsDrawString($2400backbuffer, $RSSI, 0, $vposition - 5)
+			_GDIPlus_GraphicsDrawLine($2400backbuffer, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
+		Next
+	Else
+		For $sn = 0 To 10
+			$percent = ($sn * 10) & "%"
+			$vposition = ($2400height - $2400bottomborder) - (($2400graphheight / 10) * $sn)
+			_GDIPlus_GraphicsDrawString($2400backbuffer, $percent, 0, $vposition - 5)
+			_GDIPlus_GraphicsDrawLine($2400backbuffer, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
+		Next
+	EndIf
 
 	;Draw Channel labels and lines
 	_Draw2400ChanLine(2412, 1)
@@ -4568,13 +4614,14 @@ Func _Draw2400ChanGraph()
 	_Draw2400ChanLine(2484, 14)
 
 	;Draw Channel labels and lines
-	$query = "SELECT SSID, CHAN, Signal FROM AP WHERE Active = '1'"
+	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active = '1'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $dc = 1 To $FoundApMatch
 		$Found_SSID = $ApMatchArray[$dc][1]
 		$Found_CHAN = $ApMatchArray[$dc][2]
 		$Found_Signal = $ApMatchArray[$dc][3] - 0
+		$Found_RSSI = $ApMatchArray[$dc][4]
 		If $Found_CHAN = 1 Then
 			$Found_Freq = 2412
 		ElseIf $Found_CHAN = 2 Then
@@ -4611,8 +4658,12 @@ Func _Draw2400ChanGraph()
 			$y_center = $2400leftborder + (($Found_Freq - 2400) * $2400freqwidth)
 			$y_left = $y_center - (11 * $2400freqwidth)
 			$y_right = $y_center + (11 * $2400freqwidth)
-			$x_sig = $2400topborder + ($2400graphheight - ($Found_Signal * $2400percheight))
 			$x_bottom = $2400topborder + $2400graphheight
+			If $UseRssiInGraphs = 1 Then
+				$x_sig = $2400topborder + ($2400graphheight - ((100 + $Found_RSSI) * $2400percheight))
+			Else
+				$x_sig = $2400topborder + ($2400graphheight - ($Found_Signal * $2400percheight))
+			EndIf
 
 			Local $aPoints[4][2]
 			$aPoints[0][0] = 3
@@ -4690,12 +4741,21 @@ Func _Draw5000ChanGraph()
 	;Set Background Color
 	_GDIPlus_GraphicsClear($5000backbuffer, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
 	;Draw 10% labels and lines
-	For $sn = 0 To 10
-		$percent = ($sn * 10) & "%"
-		$vposition = ($5000height - $5000bottomborder) - (($5000graphheight / 10) * $sn)
-		_GDIPlus_GraphicsDrawString($5000backbuffer, $percent, 0, $vposition - 5)
-		_GDIPlus_GraphicsDrawLine($5000backbuffer, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
-	Next
+	If $UseRssiInGraphs = 1 Then
+		For $sn = 0 To 10
+			$RSSI = ($sn * - 10)
+			$vposition = $5000topborder + (($5000graphheight / 10) * $sn)
+			_GDIPlus_GraphicsDrawString($5000backbuffer, $RSSI, 0, $vposition - 5)
+			_GDIPlus_GraphicsDrawLine($5000backbuffer, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
+		Next
+	Else
+		For $sn = 0 To 10
+			$percent = ($sn * 10) & "%"
+			$vposition = ($5000height - $5000bottomborder) - (($5000graphheight / 10) * $sn)
+			_GDIPlus_GraphicsDrawString($5000backbuffer, $percent, 0, $vposition - 5)
+			_GDIPlus_GraphicsDrawLine($5000backbuffer, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
+		Next
+	EndIf
 	;Draw Channel labels and lines
 	_Draw5000ChanLine(5180, 36)
 	_Draw5000ChanLine(5200, 40)
@@ -4722,13 +4782,14 @@ Func _Draw5000ChanGraph()
 	_Draw5000ChanLine(5805, 161)
 	_Draw5000ChanLine(5825, 165)
 
-	$query = "SELECT SSID, CHAN, Signal FROM AP WHERE Active = '1'"
+	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active = '1'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $dc = 1 To $FoundApMatch
 		$Found_SSID = $ApMatchArray[$dc][1]
 		$Found_CHAN = $ApMatchArray[$dc][2]
 		$Found_Signal = $ApMatchArray[$dc][3] - 0
+		$Found_RSSI = $ApMatchArray[$dc][4]
 		If $Found_CHAN = 36 Then
 			$Found_Freq = 5180
 		ElseIf $Found_CHAN = 40 Then
@@ -4787,6 +4848,11 @@ Func _Draw5000ChanGraph()
 			$y_right = $y_center + (10 * $5000freqwidth)
 			$x_sig = $5000topborder + ($5000graphheight - ($Found_Signal * $5000percheight))
 			$x_bottom = $5000topborder + $5000graphheight
+			If $UseRssiInGraphs = 1 Then
+				$x_sig = $5000topborder + ($5000graphheight - ((100 + $Found_RSSI) * $5000percheight))
+			Else
+				$x_sig = $5000topborder + ($5000graphheight - ($Found_Signal * $5000percheight))
+			EndIf
 
 			Local $aPoints[4][2]
 			$aPoints[0][0] = 3
@@ -5984,6 +6050,7 @@ Func _WriteINI()
 	IniWrite($settings, 'Vistumbler', 'Debug', $Debug)
 	IniWrite($settings, 'Vistumbler', 'DebugCom', $DebugCom)
 	IniWrite($settings, 'Vistumbler', 'GraphDeadTime', $GraphDeadTime)
+	IniWrite($settings, 'Vistumbler', 'UseRssiInGraphs', $UseRssiInGraphs)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
 	;IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
