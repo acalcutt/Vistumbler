@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 17'
+$version = 'v10.3 Beta 18'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/09/02'
+$last_modified = '2012/09/04'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -222,7 +222,6 @@ Dim $ListviewAPs
 Dim $TreeviewAPs
 
 Dim $NetworkAdapters[1]
-;Dim $wlanhandle = _Wlan_OpenHandle()
 _Wlan_StartSession()
 Dim $noadaptersid
 
@@ -385,10 +384,9 @@ Dim $RefreshNetworks = IniRead($settings, 'Vistumbler', 'AutoRefreshNetworks', 1
 Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'AutoRefreshTime', 1000)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 0)
 Dim $DebugCom = IniRead($settings, 'Vistumbler', 'DebugCom', 0)
-Dim $UseRssiInGraphs = IniRead($settings, 'Vistumbler', 'UseRssiInGraphs', 0)
+Dim $UseRssiInGraphs = IniRead($settings, 'Vistumbler', 'UseRssiInGraphs', 1)
 Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
-;Dim $ShowEstimatedDB = IniRead($settings, 'Vistumbler', 'ShowEstimatedDB', 0)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
 Dim $AutoSelectHS = IniRead($settings, 'Vistumbler', 'AutoSelectHS', 0)
@@ -652,6 +650,7 @@ Dim $Text_ActualLoopTime = IniRead($DefaultLanguagePath, 'GuiText', 'ActualLoopT
 Dim $Text_Longitude = IniRead($DefaultLanguagePath, 'GuiText', 'Longitude', 'Longitude')
 Dim $Text_Latitude = IniRead($DefaultLanguagePath, 'GuiText', 'Latitude', 'Latitude')
 Dim $Text_ActiveAPs = IniRead($DefaultLanguagePath, 'GuiText', 'ActiveAPs', 'Active APs')
+Dim $Text_Graph = IniRead($DefaultLanguagePath, 'GuiText', 'Graph', 'Graph')
 Dim $Text_Graph1 = IniRead($DefaultLanguagePath, 'GuiText', 'Graph1', 'Graph1')
 Dim $Text_Graph2 = IniRead($DefaultLanguagePath, 'GuiText', 'Graph2', 'Graph2')
 Dim $Text_NoGraph = IniRead($DefaultLanguagePath, 'GuiText', 'NoGraph', 'No Graph')
@@ -907,7 +906,14 @@ Dim $Text_Cameras = IniRead($DefaultLanguagePath, 'GuiText', 'Cameras', 'Camera(
 Dim $Text_AddCamera = IniRead($DefaultLanguagePath, 'GuiText', 'AddCamera', 'Add Camera')
 Dim $Text_RemoveCamera = IniRead($DefaultLanguagePath, 'GuiText', 'RemoveCamera', 'Remove Camera')
 Dim $Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
+Dim $Text_DownloadImages = IniRead($DefaultLanguagePath, 'GuiText', 'DownloadImages', 'Download Images')
+Dim $Text_EnableCamTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', 'Enable camera trigger script')
+Dim $Text_SetCameras = IniRead($DefaultLanguagePath, 'GuiText', 'SetCameras', 'Set Cameras')
 Dim $Text_UpdateUpdaterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateUpdaterMsg', 'There is an update to the vistumbler updater. Would you like to download and update it now?')
+Dim $Text_UseRssiInGraphs = IniRead($DefaultLanguagePath, 'GuiText', 'UseRssiInGraphs', 'Use RSSI in graphs')
+Dim $Text_2400ChannelGraph = IniRead($DefaultLanguagePath, 'GuiText', '2400ChannelGraph', '2.4Ghz Channel Graph')
+Dim $Text_5000ChannelGraph = IniRead($DefaultLanguagePath, 'GuiText', '5000ChannelGraph', '5Ghz Channel Graph')
+Dim $Text_UpdateGeolocations = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateGeolocations', 'Update Geolocations')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1195,9 +1201,9 @@ $GUI_MidiActiveAps = GUICtrlCreateMenuItem($Text_PlayMidiSounds, $Options)
 If $Midi_PlayForActiveAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $MenuSaveGpsWithNoAps = GUICtrlCreateMenuItem($Text_SaveAllGpsData, $Options)
 If $SaveGpsWithNoAps = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GUI_DownloadImages = GUICtrlCreateMenuItem("Download Images(" & $Text_Experimental & ")", $Options)
+$GUI_DownloadImages = GUICtrlCreateMenuItem($Text_DownloadImages & " (" & $Text_Experimental & ")", $Options)
 If $DownloadImages = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GUI_CamTriggerMenu = GUICtrlCreateMenuItem("Enable camera trigger script(" & $Text_Experimental & ")", $Options)
+$GUI_CamTriggerMenu = GUICtrlCreateMenuItem($Text_EnableCamTriggerScript & " (" & $Text_Experimental & ")", $Options)
 If $CamTrigger = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugMenu = GUICtrlCreateMenu($Text_Debug, $Options)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $DebugMenu)
@@ -1234,6 +1240,12 @@ EndIf
 If $FoundFilter = 0 Then $DefFiltID = '-1'
 _CreateFilterQuerys()
 
+;View Menu
+$GraphViewOptions = GUICtrlCreateMenu($Text_Graph, $ViewMenu)
+$UseRssiInGraphsGUI = GUICtrlCreateMenuItem($Text_UseRssiInGraphs, $GraphViewOptions)
+If $UseRssiInGraphs = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $GraphViewOptions)
+If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AutoSortGUI = GUICtrlCreateMenuItem($Text_AutoSort, $ViewMenu)
 If $AutoSort = 1 Then GUICtrlSetState($AutoSortGUI, $GUI_CHECKED)
 $AutoSelectMenuButton = GUICtrlCreateMenuItem($Text_AutoSelectConnectedAP, $ViewMenu)
@@ -1242,13 +1254,8 @@ $AutoSelectHighSignal = GUICtrlCreateMenuItem($Text_AutoSelectHighSignal, $ViewM
 If $AutoSelectHS = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $ViewMenu)
 If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
-;$ShowEstDb = GUICtrlCreateMenuItem($Text_ShowSignalDB, $ViewMenu)
-;If $ShowEstimatedDB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$UseRssiInGraphsGUI = GUICtrlCreateMenuItem("Use RSSI in graphs", $ViewMenu)
-If $UseRssiInGraphs = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $ViewMenu)
-If $GraphDeadTime = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
+;Settings Menu
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
 $SetMisc = GUICtrlCreateMenuItem($Text_VistumblerSettings, $SettingsMenu)
 $SetGPS = GUICtrlCreateMenuItem($Text_GpsSettings, $SettingsMenu)
@@ -1260,7 +1267,7 @@ $SetColumnWidths = GUICtrlCreateMenuItem($Text_SetColumnWidths, $SettingsMenu)
 $SetAuto = GUICtrlCreateMenuItem($Text_AutoKml & ' / ' & $Text_AutoSort, $SettingsMenu)
 $SetSound = GUICtrlCreateMenuItem($Text_Sound, $SettingsMenu)
 $SetWifiDB = GUICtrlCreateMenuItem($Text_WifiDB, $SettingsMenu)
-$SetCamera = GUICtrlCreateMenuItem("Set Cameras", $SettingsMenu)
+$SetCamera = GUICtrlCreateMenuItem($Text_SetCameras, $SettingsMenu)
 
 $Interfaces = GUICtrlCreateMenu($Text_Interface)
 $RefreshInterfaces = GUICtrlCreateMenuItem($Text_RefreshInterfaces, $Interfaces)
@@ -1268,8 +1275,8 @@ GUICtrlSetOnEvent($RefreshInterfaces, '_RefreshInterfaces')
 _AddInterfaces()
 
 $ExtraMenu = GUICtrlCreateMenu($Text_Extra)
-$GUI_2400ChannelGraph = GUICtrlCreateMenuItem("2.4Ghz Channel Graph (" & $Text_Experimental & ")", $ExtraMenu)
-$GUI_5000ChannelGraph = GUICtrlCreateMenuItem("5Ghz Channel Graph (" & $Text_Experimental & ")", $ExtraMenu)
+$GUI_2400ChannelGraph = GUICtrlCreateMenuItem($Text_2400ChannelGraph & " (" & $Text_Experimental & ")", $ExtraMenu)
+$GUI_5000ChannelGraph = GUICtrlCreateMenuItem($Text_5000ChannelGraph & " (" & $Text_Experimental & ")", $ExtraMenu)
 $GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $ExtraMenu)
 $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $ExtraMenu)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $ExtraMenu)
@@ -1290,7 +1297,7 @@ If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewLiveInWDB = GUICtrlCreateMenuItem($Text_WifiDBOpenLiveAPWebpage & ' (' & $Text_Experimental & ')', $WifidbMenu)
-$UpdateGeolocations = GUICtrlCreateMenuItem("Update Geolocations" & ' (' & $Text_Experimental & ')', $WifidbMenu)
+$UpdateGeolocations = GUICtrlCreateMenuItem($Text_UpdateGeolocations & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewWDBWebpage = GUICtrlCreateMenuItem($Text_WifiDBOpenMainWebpage, $WifidbMenu)
 $ViewInPhilsGraph = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $WifidbMenu)
 
@@ -4528,11 +4535,10 @@ EndFunc   ;==>_GraphDraw
 
 ;---------- 2.4Ghz Channel Graph Function ----------
 Func _Channels2400_GUI()
-
 	If $2400chanGUIOpen = 0 Then
 		$2400chanGUIOpen = 1
 
-		$2400chanGUI = GUICreate("2.4Ghz Channel Graph", 800, 400, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+		$2400chanGUI = GUICreate($Text_2400ChannelGraph, 800, 400, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($ControlBackgroundColor, $2400chanGUI)
 
 		$cpsplit = StringSplit($2400ChanGraphPos, ',')
@@ -4691,7 +4697,7 @@ Func _Channels5000_GUI()
 	If $5000chanGUIOpen = 0 Then
 		$5000chanGUIOpen = 1
 
-		$5000chanGUI = GUICreate("5Ghz Channel Graph", 800, 400, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+		$5000chanGUI = GUICreate($Text_5000ChannelGraph, 800, 400, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($ControlBackgroundColor, $5000chanGUI)
 
 		$cpsplit = StringSplit($5000ChanGraphPos, ',')
@@ -6294,6 +6300,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "Longitude", $Text_Longitude)
 	IniWrite($DefaultLanguagePath, "GuiText", "Latitude", $Text_Latitude)
 	IniWrite($DefaultLanguagePath, "GuiText", "ActiveAPs", $Text_ActiveAPs)
+	IniWrite($DefaultLanguagePath, "GuiText", "Graph", $Text_Graph)
 	IniWrite($DefaultLanguagePath, "GuiText", "Graph1", $Text_Graph1)
 	IniWrite($DefaultLanguagePath, "GuiText", "Graph2", $Text_Graph2)
 	IniWrite($DefaultLanguagePath, "GuiText", "NoGraph", $Text_NoGraph)
@@ -6545,6 +6552,14 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AddCamera', $Text_AddCamera)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'RemoveCamera', $Text_RemoveCamera)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'EditCamera', $Text_EditCamera)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DownloadImages', $Text_DownloadImages)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', $Text_EnableCamTriggerScript)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SetCameras', $Text_SetCameras)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateUpdaterMsg', $Text_UpdateUpdaterMsg)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseRssiInGraphs', $Text_UseRssiInGraphs)
+	IniWrite($DefaultLanguagePath, 'GuiText', '2400ChannelGraph', $Text_2400ChannelGraph)
+	IniWrite($DefaultLanguagePath, 'GuiText', '5000ChannelGraph', $Text_5000ChannelGraph)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateGeolocations', $Text_UpdateGeolocations)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -9438,6 +9453,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Longitude = IniRead($DefaultLanguagePath, 'GuiText', 'Longitude', 'Longitude:')
 		$Text_Latitude = IniRead($DefaultLanguagePath, 'GuiText', 'Latitude', 'Latitude:')
 		$Text_ActiveAPs = IniRead($DefaultLanguagePath, 'GuiText', 'ActiveAPs', 'Active APs:')
+		$Text_Graph = IniRead($DefaultLanguagePath, 'GuiText', 'Graph', 'Graph')
 		$Text_Graph1 = IniRead($DefaultLanguagePath, 'GuiText', 'Graph1', 'Graph1')
 		$Text_Graph2 = IniRead($DefaultLanguagePath, 'GuiText', 'Graph2', 'Graph2')
 		$Text_NoGraph = IniRead($DefaultLanguagePath, 'GuiText', 'NoGraph', 'No Graph')
@@ -9686,6 +9702,14 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AddCamera = IniRead($DefaultLanguagePath, 'GuiText', 'AddCamera', 'Add Camera')
 		$Text_RemoveCamera = IniRead($DefaultLanguagePath, 'GuiText', 'RemoveCamera', 'Remove Camera')
 		$Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
+		$Text_DownloadImages = IniRead($DefaultLanguagePath, 'GuiText', 'DownloadImages', 'Download Images')
+		$Text_EnableCamTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', 'Enable camera trigger script')
+		$Text_SetCameras = IniRead($DefaultLanguagePath, 'GuiText', 'SetCameras', 'Set Cameras')
+		$Text_UpdateUpdaterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateUpdaterMsg', 'There is an update to the vistumbler updater. Would you like to download and update it now?')
+		$Text_UseRssiInGraphs = IniRead($DefaultLanguagePath, 'GuiText', 'UseRssiInGraphs', 'Use RSSI in graphs')
+		$Text_2400ChannelGraph = IniRead($DefaultLanguagePath, 'GuiText', '2400ChannelGraph', '2.4Ghz Channel Graph')
+		$Text_5000ChannelGraph = IniRead($DefaultLanguagePath, 'GuiText', '5000ChannelGraph', '5Ghz Channel Graph')
+		$Text_UpdateGeolocations = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateGeolocations', 'Update Geolocations')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
