@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 18'
+$version = 'v10.3 Beta 19'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/09/04'
+$last_modified = '2012/09/09'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -268,7 +268,8 @@ Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitu
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal, $CWCB_HighSignal, $CWIB_HighSignal, $CWCB_RSSI, $CWIB_RSSI, $CWCB_HighRSSI, $CWIB_HighRSSI
 Dim $CWCB_Authentication, $CWIB_Authentication, $CWCB_Encryption, $CWIB_Encryption, $CWCB_NetType, $CWIB_NetType, $CWCB_Label, $CWIB_Label
 
-Dim $GUI_COPY, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive, $Copy_HIGHSIG
+Dim $CopyGUI_BSSID, $CopyGUI_Line, $CopyGUI_SSID, $CopyGUI_CHAN, $CopyGUI_AUTH, $CopyGUI_ENCR, $CopyGUI_NETTYPE, $CopyGUI_RADTYPE, $CopyGUI_SIG, $CopyGUI_HIGHSIG, $CopyGUI_RSSI, $CopyGUI_HIGHRSSI, $CopyGUI_MANU, $CopyGUI_LAB, $CopyGUI_LAT, $CopyGUI_LON, $CopyGUI_LATDMS, $CopyGUI_LONDMS, $CopyGUI_LATDMM, $CopyGUI_LONDMM, $CopyGUI_BTX, $CopyGUI_OTX, $CopyGUI_FirstActive, $CopyGUI_LastActive
+Dim $GUI_COPY, $CopyFlag = 0, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_HIGHSIG, $Copy_RSSI, $Copy_HIGHRSSI, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
 
 Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
 $CurrentVersionFile = @ScriptDir & '\versions.ini'
@@ -434,6 +435,7 @@ Dim $Midi_PlayForActiveAps = IniRead($settings, 'MIDI', 'Midi_PlayForActiveAps',
 
 Dim $MapPos = IniRead($settings, 'KmlSettings', 'MapPos', 1)
 Dim $MapSig = IniRead($settings, 'KmlSettings', 'MapSig', 1)
+Dim $MapSigUseRSSI = IniRead($settings, 'KmlSettings', 'MapSigUseRSSI', 1)
 Dim $MapSigType = IniRead($settings, 'KmlSettings', 'MapSigType', 0)
 Dim $MapRange = IniRead($settings, 'KmlSettings', 'MapRange', 1)
 Dim $ShowTrack = IniRead($settings, 'KmlSettings', 'ShowTrack', 1)
@@ -914,6 +916,17 @@ Dim $Text_UseRssiInGraphs = IniRead($DefaultLanguagePath, 'GuiText', 'UseRssiInG
 Dim $Text_2400ChannelGraph = IniRead($DefaultLanguagePath, 'GuiText', '2400ChannelGraph', '2.4Ghz Channel Graph')
 Dim $Text_5000ChannelGraph = IniRead($DefaultLanguagePath, 'GuiText', '5000ChannelGraph', '5Ghz Channel Graph')
 Dim $Text_UpdateGeolocations = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateGeolocations', 'Update Geolocations')
+Dim $Text_ShowGpsPositionMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsPositionMap', 'Show GPS Position Map')
+Dim $Text_ShowGpsSignalMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsSignalMap', 'Show GPS Signal Map')
+Dim $Text_UseRssiSignalValue = IniRead($DefaultLanguagePath, 'GuiText', 'UseRssiSignalValue', 'Use RSSI signal values')
+Dim $Text_UseCircleToShowSigStength = IniRead($DefaultLanguagePath, 'GuiText', 'UseCircleToShowSigStength', 'Use circle to show signal strength')
+Dim $Text_ShowGpsRangeMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', 'Show GPS Range Map')
+Dim $Text_ShowGpsTack = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', 'Show GPS Track')
+
+
+
+
+
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1697,6 +1710,7 @@ While 1
 	EndIf
 
 	;Flag Actions
+	If $CopyFlag = 1 Then _CopySetClipboard()
 	If $Close = 1 Then _ExitVistumbler() ;If the close flag has been set, exit visumbler
 	If $SortColumn <> -1 Then _HeaderSort($SortColumn);Sort clicked listview column
 	If $ClearAllAps = 1 Then _ClearAllAp();Clear all access points
@@ -3469,8 +3483,6 @@ Func _GetGPS(); Recieves data from gps device
 				EndIf
 			EndIf
 		ElseIf $GpsType = 2 Then ;Use Kernel32
-
-
 			$gstring = StringStripWS(_rxwait($OpenedPort, '100', $maxtime), 8);Read data line from GPS
 			$dataline = $gstring; & $LastGpsString
 			$LastGpsString = $gstring
@@ -3480,7 +3492,6 @@ Func _GetGPS(); Recieves data from gps device
 				For $gda = 1 To $dlsplit[0]
 					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
 					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-
 						If StringInStr($dlsplit[$gda], "GPGGA") Then
 							_GPGGA($dlsplit[$gda]);Split GPGGA data from data string
 							$disconnected_time = -1
@@ -3489,7 +3500,6 @@ Func _GetGPS(); Recieves data from gps device
 							$disconnected_time = -1
 						EndIf
 					EndIf
-
 				Next
 			EndIf
 		EndIf
@@ -5179,28 +5189,54 @@ Func _CopyAP()
 		$GUI_COPY = GUICreate($Text_Copy, 491, 249)
 		GUISetBkColor($BackgroundColor)
 		GUICtrlCreateGroup($Text_SelectWhatToCopy, 8, 8, 473, 201)
-		$Copy_Line = GUICtrlCreateCheckbox($Column_Names_Line, 27, 29, 200, 15)
-		$Copy_BSSID = GUICtrlCreateCheckbox($Column_Names_BSSID, 27, 44, 200, 15)
-		$Copy_SSID = GUICtrlCreateCheckbox($Column_Names_SSID, 27, 59, 200, 15)
-		$Copy_CHAN = GUICtrlCreateCheckbox($Column_Names_Channel, 27, 75, 200, 15)
-		$Copy_AUTH = GUICtrlCreateCheckbox($Column_Names_Authentication, 27, 90, 200, 15)
-		$Copy_ENCR = GUICtrlCreateCheckbox($Column_Names_Encryption, 27, 105, 200, 15)
-		$Copy_NETTYPE = GUICtrlCreateCheckbox($Column_Names_NetworkType, 27, 120, 200, 15)
-		$Copy_RADTYPE = GUICtrlCreateCheckbox($Column_Names_RadioType, 27, 135, 200, 15)
-		$Copy_SIG = GUICtrlCreateCheckbox($Column_Names_Signal, 27, 151, 200, 15)
-		$Copy_HIGHSIG = GUICtrlCreateCheckbox($Column_Names_HighSignal, 27, 166, 200, 15)
-		$Copy_MANU = GUICtrlCreateCheckbox($Column_Names_MANUF, 27, 181, 200, 15)
-		$Copy_LAT = GUICtrlCreateCheckbox($Column_Names_Latitude, 267, 29, 200, 15)
-		$Copy_LON = GUICtrlCreateCheckbox($Column_Names_Longitude, 267, 44, 200, 15)
-		$Copy_LATDMS = GUICtrlCreateCheckbox($Column_Names_LatitudeDMS, 267, 59, 200, 15)
-		$Copy_LONDMS = GUICtrlCreateCheckbox($Column_Names_LongitudeDMS, 267, 75, 200, 15)
-		$Copy_LATDMM = GUICtrlCreateCheckbox($Column_Names_LatitudeDMM, 267, 90, 200, 15)
-		$Copy_LONDMM = GUICtrlCreateCheckbox($Column_Names_LongitudeDMM, 267, 105, 200, 15)
-		$Copy_BTX = GUICtrlCreateCheckbox($Column_Names_BasicTransferRates, 267, 120, 200, 15)
-		$Copy_OTX = GUICtrlCreateCheckbox($Column_Names_OtherTransferRates, 267, 135, 200, 15)
-		$Copy_FirstActive = GUICtrlCreateCheckbox($Column_Names_FirstActive, 267, 151, 200, 15)
-		$Copy_LastActive = GUICtrlCreateCheckbox($Column_Names_LastActive, 267, 166, 200, 15)
-		$Copy_LAB = GUICtrlCreateCheckbox($Column_Names_Label, 267, 181, 200, 15)
+		$CopyGUI_Line = GUICtrlCreateCheckbox($Column_Names_Line, 27, 25, 200, 15)
+		If $Copy_Line = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_BSSID = GUICtrlCreateCheckbox($Column_Names_BSSID, 27, 40, 200, 15)
+		If $Copy_BSSID = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_SSID = GUICtrlCreateCheckbox($Column_Names_SSID, 27, 55, 200, 15)
+		If $Copy_SSID = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_CHAN = GUICtrlCreateCheckbox($Column_Names_Channel, 27, 70, 200, 15)
+		If $Copy_CHAN = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_AUTH = GUICtrlCreateCheckbox($Column_Names_Authentication, 27, 85, 200, 15)
+		If $Copy_AUTH = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_ENCR = GUICtrlCreateCheckbox($Column_Names_Encryption, 27, 100, 200, 15)
+		If $Copy_ENCR = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_NETTYPE = GUICtrlCreateCheckbox($Column_Names_NetworkType, 27, 115, 200, 15)
+		If $Copy_NETTYPE = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_RADTYPE = GUICtrlCreateCheckbox($Column_Names_RadioType, 27, 130, 200, 15)
+		If $Copy_RADTYPE = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_SIG = GUICtrlCreateCheckbox($Column_Names_Signal, 27, 145, 200, 15)
+		If $Copy_SIG = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_HIGHSIG = GUICtrlCreateCheckbox($Column_Names_HighSignal, 27, 160, 200, 15)
+		If $Copy_HIGHSIG = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_RSSI = GUICtrlCreateCheckbox($Column_Names_RSSI, 27, 175, 200, 15)
+		If $Copy_RSSI = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_HIGHRSSI = GUICtrlCreateCheckbox($Column_Names_HighRSSI, 27, 190, 200, 15)
+		If $Copy_HIGHRSSI = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_MANU = GUICtrlCreateCheckbox($Column_Names_MANUF, 267, 25, 200, 15)
+		If $Copy_MANU = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_LAB = GUICtrlCreateCheckbox($Column_Names_Label, 267, 40, 200, 15)
+		If $Copy_LAB = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_LAT = GUICtrlCreateCheckbox($Column_Names_Latitude, 267, 55, 200, 15)
+		If $Copy_LAT = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_LON = GUICtrlCreateCheckbox($Column_Names_Longitude, 267, 70, 200, 15)
+		If $Copy_LON = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_LATDMS = GUICtrlCreateCheckbox($Column_Names_LatitudeDMS, 267, 85, 200, 15)
+		If $Copy_LATDMS = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_LONDMS = GUICtrlCreateCheckbox($Column_Names_LongitudeDMS, 267, 100, 200, 15)
+		If $Copy_LONDMS = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_LATDMM = GUICtrlCreateCheckbox($Column_Names_LatitudeDMM, 267, 115, 200, 15)
+		If $Copy_LATDMM = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_LONDMM = GUICtrlCreateCheckbox($Column_Names_LongitudeDMM, 267, 130, 200, 15)
+		If $Copy_LONDMM = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_BTX = GUICtrlCreateCheckbox($Column_Names_BasicTransferRates, 267, 145, 200, 15)
+		If $Copy_BTX = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_OTX = GUICtrlCreateCheckbox($Column_Names_OtherTransferRates, 267, 160, 200, 15)
+		If $Copy_OTX = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_FirstActive = GUICtrlCreateCheckbox($Column_Names_FirstActive, 267, 175, 200, 15)
+		If $Copy_FirstActive = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+		$CopyGUI_LastActive = GUICtrlCreateCheckbox($Column_Names_LastActive, 267, 190, 200, 15)
+		If $Copy_LastActive = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
 		$CopyOK = GUICtrlCreateButton($Text_Ok, 142, 216, 100, 25, 0)
 		$CopyCancel = GUICtrlCreateButton($Text_Cancel, 256, 216, 100, 25, 0)
@@ -5221,65 +5257,96 @@ EndFunc   ;==>_CloseCopyGUI
 
 Func _CopyOK()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopyOK() ') ;#Debug Display
-	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, NETTYPE, RADTYPE, HighSignal, MANU, HighGpsHistID, BTX, OTX, FirstHistID, LastHistID, LABEL FROM AP WHERE ApID = '" & $CopyAPID & "'"
+	$CopyFlag = 1
+	Dim $Copy_Line = 0, $Copy_BSSID = 0, $Copy_SSID = 0, $Copy_CHAN = 0, $Copy_AUTH = 0, $Copy_ENCR = 0, $Copy_NETTYPE = 0, $Copy_RADTYPE = 0, $Copy_SIG = 0, $Copy_HIGHSIG = 0, $Copy_RSSI = 0, $Copy_HIGHRSSI = 0, $Copy_MANU = 0, $Copy_LAB = 0, $Copy_LAT = 0, $Copy_LON = 0, $Copy_LATDMS = 0, $Copy_LONDMS = 0, $Copy_LATDMM = 0, $Copy_LONDMM = 0, $Copy_BTX = 0, $Copy_OTX = 0, $Copy_FirstActive = 0, $Copy_LastActive = 0
+	If GUICtrlRead($CopyGUI_Line) = 1 Then $Copy_Line = 1
+	If GUICtrlRead($CopyGUI_BSSID) = 1 Then $Copy_BSSID = 1
+	If GUICtrlRead($CopyGUI_SSID) = 1 Then $Copy_SSID = 1
+	If GUICtrlRead($CopyGUI_CHAN) = 1 Then $Copy_CHAN = 1
+	If GUICtrlRead($CopyGUI_AUTH) = 1 Then $Copy_AUTH = 1
+	If GUICtrlRead($CopyGUI_ENCR) = 1 Then $Copy_ENCR = 1
+	If GUICtrlRead($CopyGUI_NETTYPE) = 1 Then $Copy_NETTYPE = 1
+	If GUICtrlRead($CopyGUI_RADTYPE) = 1 Then $Copy_RADTYPE = 1
+	If GUICtrlRead($CopyGUI_SIG) = 1 Then $Copy_SIG = 1
+	If GUICtrlRead($CopyGUI_HIGHSIG) = 1 Then $Copy_HIGHSIG = 1
+	If GUICtrlRead($CopyGUI_RSSI) = 1 Then $Copy_RSSI = 1
+	If GUICtrlRead($CopyGUI_HIGHRSSI) = 1 Then $Copy_HIGHRSSI = 1
+	If GUICtrlRead($CopyGUI_MANU) = 1 Then $Copy_MANU = 1
+	If GUICtrlRead($CopyGUI_LAB) = 1 Then $Copy_LAB = 1
+	If GUICtrlRead($CopyGUI_LAT) = 1 Then $Copy_LAT = 1
+	If GUICtrlRead($CopyGUI_LON) = 1 Then $Copy_LON = 1
+	If GUICtrlRead($CopyGUI_LATDMS) = 1 Then $Copy_LATDMS = 1
+	If GUICtrlRead($CopyGUI_LONDMS) = 1 Then $Copy_LONDMS = 1
+	If GUICtrlRead($CopyGUI_LATDMM) = 1 Then $Copy_LATDMM = 1
+	If GUICtrlRead($CopyGUI_LONDMM) = 1 Then $Copy_LONDMM = 1
+	If GUICtrlRead($CopyGUI_BTX) = 1 Then $Copy_BTX = 1
+	If GUICtrlRead($CopyGUI_OTX) = 1 Then $Copy_OTX = 1
+	If GUICtrlRead($CopyGUI_FirstActive) = 1 Then $Copy_FirstActive = 1
+	If GUICtrlRead($CopyGUI_LastActive) = 1 Then $Copy_LastActive = 1
+	_CloseCopyGUI()
+EndFunc   ;==>_CopyOK
+
+Func _CopySetClipboard()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopySetClipboard() ') ;#Debug Display
+	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, NETTYPE, RADTYPE, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, BTX, OTX, FirstHistID, LastHistID FROM AP WHERE ApID = '" & $CopyAPID & "'"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	If $FoundApMatch <> 0 Then
 		$CopyText = ''
-		If GUICtrlRead($Copy_Line) = 1 Then
-			$CopyText = $ApMatchArray[1][1]
+		If $Copy_Line = 1 Then
+			$CopyText = Round($ApMatchArray[1][1])
 		EndIf
-		If GUICtrlRead($Copy_BSSID) = 1 Then
+		If $Copy_BSSID = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][2]
 			Else
 				$CopyText &= '|' & $ApMatchArray[1][2]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_SSID) = 1 Then
+		If $Copy_SSID = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][3]
 			Else
 				$CopyText &= '|' & $ApMatchArray[1][3]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_CHAN) = 1 Then
+		If $Copy_CHAN = 1 Then
 			If $CopyText = '' Then
-				$CopyText = $ApMatchArray[1][4]
+				$CopyText = Round($ApMatchArray[1][4])
 			Else
-				$CopyText &= '|' & $ApMatchArray[1][4]
+				$CopyText &= '|' & Round($ApMatchArray[1][4])
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_AUTH) = 1 Then
+		If $Copy_AUTH = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][5]
 			Else
 				$CopyText &= '|' & $ApMatchArray[1][5]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_ENCR) = 1 Then
+		If $Copy_ENCR = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][6]
 			Else
 				$CopyText &= '|' & $ApMatchArray[1][6]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_NETTYPE) = 1 Then
+		If $Copy_NETTYPE = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][7]
 			Else
 				$CopyText &= '|' & $ApMatchArray[1][7]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_RADTYPE) = 1 Then
+		If $Copy_RADTYPE = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][8]
 			Else
 				$CopyText &= '|' & $ApMatchArray[1][8]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_SIG) = 1 Then
-			$LastHistID = Round($ApMatchArray[1][15])
+		If $Copy_SIG = 1 Then
+			$LastHistID = $ApMatchArray[1][17] - 0
 			$query = "SELECT Signal FROM Hist Where HistID = '" & $LastHistID & "'"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$ExpSig = $HistMatchArray[1][1]
@@ -5289,22 +5356,47 @@ Func _CopyOK()
 				$CopyText &= '|' & $ExpSig
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_HIGHSIG) = 1 Then
+		If $Copy_HIGHSIG = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][9]
 			Else
 				$CopyText &= '|' & $ApMatchArray[1][9]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_MANU) = 1 Then
+		If $Copy_RSSI = 1 Then
+			$LastHistID = $ApMatchArray[1][17] - 0
+			$query = "SELECT RSSI FROM Hist Where HistID = '" & $LastHistID & "'"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ExpRSSI = $HistMatchArray[1][1]
+			If $CopyText = '' Then
+				$CopyText = $ExpRSSI
+			Else
+				$CopyText &= '|' & $ExpRSSI
+			EndIf
+		EndIf
+		If $Copy_HIGHRSSI = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][10]
 			Else
 				$CopyText &= '|' & $ApMatchArray[1][10]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_LAT) = 1 Or GUICtrlRead($Copy_LON) = 1 Or GUICtrlRead($Copy_LATDMS) = 1 Or GUICtrlRead($Copy_LONDMS) = 1 Or GUICtrlRead($Copy_LATDMM) = 1 Or GUICtrlRead($Copy_LONDMM) = 1 Then
-			$HighGpsHistID = Round($ApMatchArray[1][11])
+		If $Copy_MANU = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][11]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][11]
+			EndIf
+		EndIf
+		If $Copy_LAB = 1 Then
+			If $CopyText = '' Then
+				$CopyText = $ApMatchArray[1][12]
+			Else
+				$CopyText &= '|' & $ApMatchArray[1][12]
+			EndIf
+		EndIf
+		If $Copy_LAT = 1 Or $Copy_LON = 1 Or $Copy_LATDMS = 1 Or $Copy_LONDMS = 1 Or $Copy_LATDMM = 1 Or $Copy_LONDMM = 1 Then
+			$HighGpsHistID = $ApMatchArray[1][13] - 0
 			If $HighGpsHistID = 0 Then
 				$CopyLat = 'N 0000.0000'
 				$CopyLon = 'E 0000.0000'
@@ -5317,42 +5409,42 @@ Func _CopyOK()
 				$CopyLat = $GpsMatchArray[1][1]
 				$CopyLon = $GpsMatchArray[1][2]
 			EndIf
-			If GUICtrlRead($Copy_LAT) = 1 Then
+			If $Copy_LAT = 1 Then
 				If $CopyText = '' Then
 					$CopyText = _Format_GPS_DMM_to_DDD($CopyLat)
 				Else
 					$CopyText &= '|' & _Format_GPS_DMM_to_DDD($CopyLat)
 				EndIf
 			EndIf
-			If GUICtrlRead($Copy_LON) = 1 Then
+			If $Copy_LON = 1 Then
 				If $CopyText = '' Then
 					$CopyText = _Format_GPS_DMM_to_DDD($CopyLon)
 				Else
 					$CopyText &= '|' & _Format_GPS_DMM_to_DDD($CopyLon)
 				EndIf
 			EndIf
-			If GUICtrlRead($Copy_LATDMS) = 1 Then
+			If $Copy_LATDMS = 1 Then
 				If $CopyText = '' Then
 					$CopyText = _Format_GPS_DMM_to_DMS($CopyLat)
 				Else
 					$CopyText &= '|' & _Format_GPS_DMM_to_DMS($CopyLat)
 				EndIf
 			EndIf
-			If GUICtrlRead($Copy_LONDMS) = 1 Then
+			If $Copy_LONDMS = 1 Then
 				If $CopyText = '' Then
 					$CopyText = _Format_GPS_DMM_to_DMS($CopyLon)
 				Else
 					$CopyText &= '|' & _Format_GPS_DMM_to_DMS($CopyLon)
 				EndIf
 			EndIf
-			If GUICtrlRead($Copy_LATDMM) = 1 Then
+			If $Copy_LATDMM = 1 Then
 				If $CopyText = '' Then
 					$CopyText = $CopyLat
 				Else
 					$CopyText &= '|' & $CopyLat
 				EndIf
 			EndIf
-			If GUICtrlRead($Copy_LONDMM) = 1 Then
+			If $Copy_LONDMM = 1 Then
 				If $CopyText = '' Then
 					$CopyText = $CopyLon
 				Else
@@ -5360,22 +5452,22 @@ Func _CopyOK()
 				EndIf
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_BTX) = 1 Then
+		If $Copy_BTX = 1 Then
 			If $CopyText = '' Then
-				$CopyText = $ApMatchArray[1][12]
+				$CopyText = $ApMatchArray[1][14]
 			Else
-				$CopyText &= '|' & $ApMatchArray[1][12]
+				$CopyText &= '|' & $ApMatchArray[1][14]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_OTX) = 1 Then
+		If $Copy_OTX = 1 Then
 			If $CopyText = '' Then
 				$CopyText = $ApMatchArray[1][13]
 			Else
-				$CopyText &= '|' & $ApMatchArray[1][13]
+				$CopyText &= '|' & $ApMatchArray[1][15]
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_FirstActive) = 1 Then
-			$FirstHistID = $ApMatchArray[1][14]
+		If $Copy_FirstActive = 1 Then
+			$FirstHistID = $ApMatchArray[1][16]
 			$query = "SELECT GpsID FROM Hist Where HistID = '" & $FirstHistID & "'"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$ExpGID = $HistMatchArray[1][1]
@@ -5389,8 +5481,8 @@ Func _CopyOK()
 				$CopyText &= '|' & $ExpDate & ' ' & $ExpTime
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_LastActive) = 1 Then
-			$LastHistID = $ApMatchArray[1][15]
+		If $Copy_LastActive = 1 Then
+			$LastHistID = $ApMatchArray[1][17]
 			$query = "SELECT GpsID FROM Hist Where HistID = '" & $LastHistID & "'"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$ExpGID = $HistMatchArray[1][1]
@@ -5404,17 +5496,11 @@ Func _CopyOK()
 				$CopyText &= '|' & $ExpDate & ' ' & $ExpTime
 			EndIf
 		EndIf
-		If GUICtrlRead($Copy_LAB) = 1 Then
-			If $CopyText = '' Then
-				$CopyText = $ApMatchArray[1][16]
-			Else
-				$CopyText &= '|' & $ApMatchArray[1][16]
-			EndIf
-		EndIf
+		ConsoleWrite($CopyText & @CRLF)
 		ClipPut($CopyText)
 	EndIf
-	_CloseCopyGUI()
-EndFunc   ;==>_CopyOK
+	$CopyFlag = 0
+EndFunc   ;==>_CopySetClipboard
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       VISTUMBLER SAVE FUNCTIONS
@@ -6129,6 +6215,7 @@ Func _WriteINI()
 
 	IniWrite($settings, 'KmlSettings', 'MapPos', $MapPos)
 	IniWrite($settings, 'KmlSettings', 'MapSig', $MapSig)
+	IniWrite($settings, 'KmlSettings', 'MapSigUseRSSI', $MapSigUseRSSI)
 	IniWrite($settings, 'KmlSettings', 'MapSigType', $MapSigType)
 	IniWrite($settings, 'KmlSettings', 'MapRange', $MapRange)
 	IniWrite($settings, 'KmlSettings', 'ShowTrack', $ShowTrack)
@@ -6560,6 +6647,12 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', '2400ChannelGraph', $Text_2400ChannelGraph)
 	IniWrite($DefaultLanguagePath, 'GuiText', '5000ChannelGraph', $Text_5000ChannelGraph)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateGeolocations', $Text_UpdateGeolocations)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsPositionMap', $Text_ShowGpsPositionMap)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsSignalMap', $Text_ShowGpsSignalMap)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseRssiSignalValue', $Text_UseRssiSignalValue)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseCircleToShowSigStength', $Text_UseCircleToShowSigStength)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', $Text_ShowGpsRangeMap)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', $Text_ShowGpsTack)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -7527,53 +7620,55 @@ EndFunc   ;==>_ExportFilteredKML
 Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveToKML()') ;#Debug Display
 	Opt("GUIOnEventMode", 0)
-	$ExportKMLGUI = GUICreate($Text_ExportToKML, 250, 285)
+	$ExportKMLGUI = GUICreate($Text_ExportToKML, 250, 305)
 	GUISetBkColor($BackgroundColor)
-	$GUI_ExportKML_PosMap = GUICtrlCreateCheckbox("Show GPS Position Map", 15, 15, 240, 15)
+	$GUI_ExportKML_PosMap = GUICtrlCreateCheckbox($Text_ShowGpsPositionMap, 15, 15, 240, 15)
 	If $MapPos = 1 Then GUICtrlSetState($GUI_ExportKML_PosMap, $GUI_CHECKED)
-	$GUI_ExportKML_SigMap = GUICtrlCreateCheckbox("Show GPS Signal Map", 15, 35, 240, 15)
+	$GUI_ExportKML_SigMap = GUICtrlCreateCheckbox($Text_ShowGpsSignalMap, 15, 35, 240, 15)
 	If $MapSig = 1 Then GUICtrlSetState($GUI_ExportKML_SigMap, $GUI_CHECKED)
-	$GUI_ExportKML_SigCir = GUICtrlCreateCheckbox("Use circle to show signal strength", 30, 55, 200, 15)
-	GUICtrlCreateLabel($Text_Color & ":", 30, 75, 45, 15)
-	$GUI_CirSigMapColor = GUICtrlCreateInput($CirSigMapColor, 75, 75, 75, 15)
-	$GUI_CirSigMapColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 72, 75, 20)
+	$GUI_ExportKML_SigUseRSSI = GUICtrlCreateCheckbox($Text_UseRssiSignalValue, 30, 55, 200, 15)
+	If $MapSigUseRSSI = 1 Then GUICtrlSetState($GUI_ExportKML_SigUseRSSI, $GUI_CHECKED)
+	$GUI_ExportKML_SigCir = GUICtrlCreateCheckbox($Text_UseCircleToShowSigStength, 30, 75, 200, 15)
+	GUICtrlCreateLabel($Text_Color & ":", 30, 95, 45, 15)
+	$GUI_CirSigMapColor = GUICtrlCreateInput($CirSigMapColor, 75, 95, 75, 15)
+	$GUI_CirSigMapColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 92, 75, 20)
 	If $MapSigType = 1 Then
 		GUICtrlSetState($GUI_ExportKML_SigCir, $GUI_CHECKED)
 	Else
 		GUICtrlSetState($GUI_CirSigMapColor, $GUI_DISABLE)
 		GUICtrlSetState($GUI_CirSigMapColorBrowse, $GUI_DISABLE)
 	EndIf
-	$GUI_ExportKML_RangeMap = GUICtrlCreateCheckbox("Show GPS Range Map", 15, 95, 240, 15)
-	GUICtrlCreateLabel($Text_Color & ":", 30, 115, 45, 15)
-	$GUI_CirRangeMapColor = GUICtrlCreateInput($CirRangeMapColor, 75, 115, 75, 15)
-	$GUI_CirRangeMapColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 112, 75, 20)
+	$GUI_ExportKML_RangeMap = GUICtrlCreateCheckbox($Text_ShowGpsRangeMap, 15, 115, 240, 15)
+	GUICtrlCreateLabel($Text_Color & ":", 30, 135, 45, 15)
+	$GUI_CirRangeMapColor = GUICtrlCreateInput($CirRangeMapColor, 75, 135, 75, 15)
+	$GUI_CirRangeMapColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 132, 75, 20)
 	If $MapRange = 1 Then
 		GUICtrlSetState($GUI_ExportKML_RangeMap, $GUI_CHECKED)
 	Else
 		GUICtrlSetState($GUI_CirRangeMapColor, $GUI_DISABLE)
 		GUICtrlSetState($GUI_CirRangeMapColorBrowse, $GUI_DISABLE)
 	EndIf
-	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox("Show GPS Track", 15, 135, 240, 15)
-	GUICtrlCreateLabel($Text_Color & ":", 30, 155, 45, 15)
-	$GUI_TrackColor = GUICtrlCreateInput($TrackColor, 75, 155, 75, 15)
-	$GUI_TrackColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 152, 75, 20)
+	$GUI_ExportKML_DrawTrack = GUICtrlCreateCheckbox($Text_ShowGpsTack, 15, 155, 240, 15)
+	GUICtrlCreateLabel($Text_Color & ":", 30, 175, 45, 15)
+	$GUI_TrackColor = GUICtrlCreateInput($TrackColor, 75, 175, 75, 15)
+	$GUI_TrackColorBrowse = GUICtrlCreateButton($Text_Browse, 160, 172, 75, 20)
 	If $ShowTrack = 1 Then
 		GUICtrlSetState($GUI_ExportKML_DrawTrack, $GUI_CHECKED)
 	Else
 		GUICtrlSetState($GUI_TrackColor, $GUI_DISABLE)
 		GUICtrlSetState($GUI_TrackColorBrowse, $GUI_DISABLE)
 	EndIf
-	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 175, 240, 15)
+	$GUI_ExportKML_MapOpen = GUICtrlCreateCheckbox($Text_MapOpenNetworks, 15, 195, 240, 15)
 	If $MapOpen = 1 Then GUICtrlSetState($GUI_ExportKML_MapOpen, $GUI_CHECKED)
-	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 195, 240, 15)
+	$GUI_ExportKML_MapWEP = GUICtrlCreateCheckbox($Text_MapWepNetworks, 15, 215, 240, 15)
 	If $MapWEP = 1 Then GUICtrlSetState($GUI_ExportKML_MapWEP, $GUI_CHECKED)
-	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 215, 240, 15)
+	$GUI_ExportKML_MapSec = GUICtrlCreateCheckbox($Text_MapSecureNetworks, 15, 235, 240, 15)
 	If $MapSec = 1 Then GUICtrlSetState($GUI_ExportKML_MapSec, $GUI_CHECKED)
 
-	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 235, 240, 15)
+	$GUI_ExportKML_UseLocalImages = GUICtrlCreateCheckbox($Text_UseLocalImages, 15, 255, 240, 15)
 	If $UseLocalKmlImagesOnExport = 1 Then GUICtrlSetState($GUI_ExportKML_UseLocalImages, $GUI_CHECKED)
-	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 255, 81, 25, 0)
-	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 255, 81, 25, 0)
+	$GUI_ExportKML_OK = GUICtrlCreateButton($Text_Ok, 40, 275, 81, 25, 0)
+	$GUI_ExportKML_Cancel = GUICtrlCreateButton($Text_Cancel, 139, 275, 81, 25, 0)
 	GUISetState(@SW_SHOW)
 
 	While 1
@@ -7622,51 +7717,17 @@ Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 				GUIDelete($ExportKMLGUI)
 				ExitLoop
 			Case $GUI_ExportKML_OK
-				If GUICtrlRead($GUI_ExportKML_PosMap) = 1 Then
-					$MapPos = 1
-				Else
-					$MapPos = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportKML_SigMap) = 1 Then
-					$MapSig = 1
-				Else
-					$MapSig = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportKML_RangeMap) = 1 Then
-					$MapRange = 1
-				Else
-					$MapRange = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportKML_DrawTrack) = 1 Then
-					$ShowTrack = 1
-				Else
-					$ShowTrack = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportKML_SigCir) = 1 Then
-					$MapSigType = 1
-				Else
-					$MapSigType = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportKML_MapOpen) = 1 Then
-					$MapOpen = 1
-				Else
-					$MapOpen = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportKML_MapWEP) = 1 Then
-					$MapWEP = 1
-				Else
-					$MapWEP = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportKML_MapSec) = 1 Then
-					$MapSec = 1
-				Else
-					$MapSec = 0
-				EndIf
-				If GUICtrlRead($GUI_ExportKML_UseLocalImages) = 1 Then
-					$UseLocalKmlImagesOnExport = 1
-				Else
-					$UseLocalKmlImagesOnExport = 0
-				EndIf
+				Dim $MapPos = 0, $MapSig = 0, $MapRange = 0, $ShowTrack = 0, $MapSigUseRSSI = 0, $MapSigType = 0, $MapOpen = 0, $MapWEP = 0, $MapSec = 0, $UseLocalKmlImagesOnExport = 0
+				If GUICtrlRead($GUI_ExportKML_PosMap) = 1 Then $MapPos = 1
+				If GUICtrlRead($GUI_ExportKML_SigMap) = 1 Then $MapSig = 1
+				If GUICtrlRead($GUI_ExportKML_RangeMap) = 1 Then $MapRange = 1
+				If GUICtrlRead($GUI_ExportKML_DrawTrack) = 1 Then $ShowTrack = 1
+				If GUICtrlRead($GUI_ExportKML_SigUseRSSI) = 1 Then $MapSigUseRSSI = 1
+				If GUICtrlRead($GUI_ExportKML_SigCir) = 1 Then $MapSigType = 1
+				If GUICtrlRead($GUI_ExportKML_MapOpen) = 1 Then $MapOpen = 1
+				If GUICtrlRead($GUI_ExportKML_MapWEP) = 1 Then $MapWEP = 1
+				If GUICtrlRead($GUI_ExportKML_MapSec) = 1 Then $MapSec = 1
+				If GUICtrlRead($GUI_ExportKML_UseLocalImages) = 1 Then $UseLocalKmlImagesOnExport = 1
 				$TrackColor = GUICtrlRead($GUI_TrackColor)
 				$CirSigMapColor = GUICtrlRead($GUI_CirSigMapColor)
 				$CirRangeMapColor = GUICtrlRead($GUI_CirRangeMapColor)
@@ -7675,7 +7736,7 @@ Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 				$filename = FileSaveDialog("Google Earth Output File", $SaveDirKml, 'Google Earth (*.kml)', '', $ldatetimestamp & '.kml')
 				If Not @error Then
 					If StringInStr($filename, '.kml') = 0 Then $filename = $filename & '.kml'
-					$saved = SaveKML($filename, $UseLocalKmlImagesOnExport, $MapPos, $ShowTrack, $MapSig, $MapRange, $SelectedApID, $Filter, $MapSigType, $MapOpen, $MapWEP, $MapSec)
+					$saved = SaveKML($filename, $UseLocalKmlImagesOnExport, $MapPos, $ShowTrack, $MapSig, $MapRange, $SelectedApID, $Filter, $MapSigType, $MapOpen, $MapWEP, $MapSec, $MapSigUseRSSI)
 					If $saved = 1 Then
 						MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $filename & '"')
 					Else
@@ -7688,7 +7749,7 @@ Func SaveToKmlGUI($Filter = 0, $SelectedApID = 0)
 	Opt("GUIOnEventMode", 1)
 EndFunc   ;==>SaveToKmlGUI
 
-Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSigMap = 0, $GpsRangeMap = 0, $SelectedApID = 0, $Filter = 0, $SigMapType = 0, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1)
+Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $GpsSigMap = 0, $GpsRangeMap = 0, $SelectedApID = 0, $Filter = 0, $SigMapType = 0, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, $UseRSSI = 1)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'SaveKML()') ;#Debug Display
 	Local $file_header
 	Local $file_data
@@ -7804,8 +7865,8 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 					GUICtrlSetData($msgdisplay, 'Saving Open AP ' & $exp & '/' & $FoundApMatch)
 					$ExpApID = $ApMatchArray[$exp][1]
 					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
-					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
-					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID, $UseRSSI)
+					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID, $UseRSSI)
 					If $GpsRangeMap = 1 Then $file_rangedata &= _KmlCircleDistanceMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
@@ -7836,8 +7897,8 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 					GUICtrlSetData($msgdisplay, 'Saving WEP AP ' & $exp & '/' & $FoundApMatch)
 					$ExpApID = $ApMatchArray[$exp][1]
 					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
-					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
-					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID, $UseRSSI)
+					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID, $UseRSSI)
 					If $GpsRangeMap = 1 Then $file_rangedata &= _KmlCircleDistanceMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
@@ -7868,8 +7929,8 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 					GUICtrlSetData($msgdisplay, 'Saving Secure AP ' & $exp & '/' & $FoundApMatch)
 					$ExpApID = $ApMatchArray[$exp][1]
 					If $GpsPosMap = 1 Then $file_posdata &= _KmlPosMapAPID($ExpApID)
-					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID)
-					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID)
+					If $GpsSigMap = 1 And $SigMapType = 0 Then $file_sigdata &= _KmlSignalMapAPID($ExpApID, $UseRSSI)
+					If $GpsSigMap = 1 And $SigMapType = 1 Then $file_sigdata &= _KmlCircleSignalMapAPID($ExpApID, $UseRSSI)
 					If $GpsRangeMap = 1 Then $file_rangedata &= _KmlCircleDistanceMapAPID($ExpApID)
 				Next
 				If $GpsPosMap = 1 Then $file_posdata &= '		</Folder>' & @CRLF
@@ -8026,7 +8087,7 @@ Func _KmlPosMapAPID($APID)
 	Return ($file_data)
 EndFunc   ;==>_KmlPosMapAPID
 
-Func _KmlSignalMapAPID($APID)
+Func _KmlSignalMapAPID($APID, $UseRSSI = 1)
 	Local $file
 	Local $SigData = 0
 	Local $SigStrengthLevel = 0
@@ -8036,15 +8097,16 @@ Func _KmlSignalMapAPID($APID)
 	$ApIDMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatch[1][1], '&', ''), '>', ''), '<', '')
 	$ExpBSSID = $ApIDMatch[1][2]
-	$query = "SELECT GpsID, Signal, Date1, Time1 FROM Hist Where ApID='" & $APID & "' And Signal<>'0' ORDER BY Date1, Time1 ASC"
+	$query = "SELECT GpsID, Signal, RSSI, Date1, Time1 FROM Hist Where ApID='" & $APID & "' And Signal<>'0' ORDER BY Date1, Time1 ASC"
 	$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$GpsIDMatch = UBound($GpsIDArray) - 1
 	If $GpsIDMatch <> 0 Then
 		For $e = 1 To $GpsIDMatch
 			$ExpGID = $GpsIDArray[$e][1]
 			$ExpSig = $GpsIDArray[$e][2]
-			$ExpDate = StringReplace($GpsIDArray[$e][3], '-', '')
-			$ExpTime = $GpsIDArray[$e][4]
+			$ExpRSSI = $GpsIDArray[$e][3]
+			$ExpDate = StringReplace($GpsIDArray[$e][4], '-', '')
+			$ExpTime = $GpsIDArray[$e][5]
 			$dts = StringSplit($ExpTime, ":") ;Split time so it can be converted to seconds
 			$ExpTime = ($dts[1] * 3600) + ($dts[2] * 60) + $dts[3] ;In seconds
 			$LastTimeString = $NewTimeString
@@ -8100,7 +8162,14 @@ Func _KmlSignalMapAPID($APID)
 					If $ExpString <> '' And ($NewTimeString - $LastTimeString) <= $SigMapTimeBeforeMarkedDead Then $file &= $ExpString
 				EndIf
 
-				$ExpString = '					' & $ExpLon & ',' & $ExpLat & ',' & $ExpSig & @CRLF
+				If $UseRSSI = 1 Then
+					$ExpRSSIAlt = 100 + $ExpRSSI
+					$ExpString = '					' & $ExpLon & ',' & $ExpLat & ',' & $ExpRSSIAlt & @CRLF
+					ConsoleWrite($ExpRSSI & ' - ' & $ExpRSSIAlt & @CRLF)
+				Else
+					$ExpString = '					' & $ExpLon & ',' & $ExpLat & ',' & $ExpSig & @CRLF
+				EndIf
+
 				$file &= $ExpString
 			EndIf
 			If $e = $GpsIDMatch And $SigData = 1 Then
@@ -8114,7 +8183,7 @@ Func _KmlSignalMapAPID($APID)
 	Return ($file)
 EndFunc   ;==>_KmlSignalMapAPID
 
-Func _KmlCircleSignalMapAPID($APID)
+Func _KmlCircleSignalMapAPID($APID, $UseRSSI = 1)
 	Local $file
 	$query = "SELECT SSID, BSSID, HighGpsHistID FROM AP WHERE ApID='" & $APID & "'"
 	$ApIDMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -8122,17 +8191,23 @@ Func _KmlCircleSignalMapAPID($APID)
 	$ExpBSSID = $ApIDMatch[1][2]
 	$ExpHighGpsHistID = $ApIDMatch[1][3]
 	If $ExpHighGpsHistID <> '0' Then
-		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID='" & $ExpHighGpsHistID & "'"
+		$query = "SELECT Signal, RSSI, GpsID FROM Hist WHERE HistID='" & $ExpHighGpsHistID & "'"
 		$HistIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$ExpSig = $HistIDArray[1][1]
-		$ExpHighGpsID = $HistIDArray[1][2]
+		$ExpRSSI = $HistIDArray[1][2]
+		$ExpHighGpsID = $HistIDArray[1][3]
 		$query = "SELECT Longitude, Latitude FROM GPS Where GpsID='" & $ExpHighGpsID & "'"
 		$GpsIDArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$ExpLon = $GpsIDArray[1][1]
 		$ExpLat = $GpsIDArray[1][2]
 		$file &= '	<Folder>' & @CRLF _
 				 & '		<name>' & $ExpSSID & ' - ' & $ExpBSSID & '</name>' & @CRLF
-		$file &= _KmlDrawCircle($ExpLat, $ExpLon, $ExpSig, 'SigCircleColor')
+		If $UseRSSI = 1 Then
+			$ExpRSSIAlt = 100 + $ExpRSSI
+			$file &= _KmlDrawCircle($ExpLat, $ExpLon, $ExpRSSIAlt, 'SigCircleColor')
+		Else
+			$file &= _KmlDrawCircle($ExpLat, $ExpLon, $ExpSig, 'SigCircleColor')
+		EndIf
 		$file &= '	</Folder>' & @CRLF
 	EndIf
 	Return ($file)
@@ -9710,6 +9785,12 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_2400ChannelGraph = IniRead($DefaultLanguagePath, 'GuiText', '2400ChannelGraph', '2.4Ghz Channel Graph')
 		$Text_5000ChannelGraph = IniRead($DefaultLanguagePath, 'GuiText', '5000ChannelGraph', '5Ghz Channel Graph')
 		$Text_UpdateGeolocations = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateGeolocations', 'Update Geolocations')
+		$Text_ShowGpsPositionMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsPositionMap', 'Show GPS Position Map')
+		$Text_ShowGpsSignalMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsSignalMap', 'Show GPS Signal Map')
+		$Text_UseRssiSignalValue = IniRead($DefaultLanguagePath, 'GuiText', 'UseRssiSignalValue', 'Use RSSI signal values')
+		$Text_UseCircleToShowSigStength = IniRead($DefaultLanguagePath, 'GuiText', 'UseCircleToShowSigStength', 'Use circle to show signal strength')
+		$Text_ShowGpsRangeMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', 'Show GPS Range Map')
+		$Text_ShowGpsTack = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', 'Show GPS Track')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
