@@ -4883,7 +4883,6 @@ Func _Draw5000ChanGraph()
 			$x_center = $5000leftborder + (($Found_Freq - 5150) * $5000freqwidth)
 			$x_left = $x_center - (10 * $5000freqwidth)
 			$x_right = $x_center + (10 * $5000freqwidth)
-			$y_sig = $5000topborder + ($5000graphheight - ($Found_Signal * $5000percheight))
 			$y_bottom = $5000topborder + $5000graphheight
 			If $UseRssiInGraphs = 1 Then
 				$y_sigheight = (100 + $Found_RSSI) * $5000percheight
