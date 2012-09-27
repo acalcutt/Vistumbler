@@ -1133,6 +1133,8 @@ _GDIPlus_Startup()
 $Pen_GraphGrid = _GDIPlus_PenCreate(StringReplace($BackgroundColor, "0x", "0xFF"))
 $Pen_Red = _GDIPlus_PenCreate("0xFFFF0000")
 $Brush_ControlBackgroundColor = _GDIPlus_BrushCreateSolid(StringReplace($ControlBackgroundColor, "0x", "0xFF"))
+$Brush_Blue = _GDIPlus_BrushCreateSolid(0xFF00007F)
+$FontFamily_Arial = _GDIPlus_FontFamilyCreate("Arial")
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GUI
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4671,26 +4673,45 @@ Func _Draw2400ChanGraph()
 		EndIf
 
 		If $Found_Freq <> 0 Then
-			$y_center = $2400leftborder + (($Found_Freq - 2400) * $2400freqwidth)
-			$y_left = $y_center - (11 * $2400freqwidth)
-			$y_right = $y_center + (11 * $2400freqwidth)
-			$x_bottom = $2400topborder + $2400graphheight
+			$x_center = $2400leftborder + (($Found_Freq - 2400) * $2400freqwidth)
+			$x_left = $x_center - (11 * $2400freqwidth)
+			$x_right = $x_center + (11 * $2400freqwidth)
+			$y_bottom = $2400topborder + $2400graphheight
 			If $UseRssiInGraphs = 1 Then
-				$x_sig = $2400topborder + ($2400graphheight - ((100 + $Found_RSSI) * $2400percheight))
+				$y_sigheight = (100 + $Found_RSSI) * $2400percheight
 			Else
-				$x_sig = $2400topborder + ($2400graphheight - ($Found_Signal * $2400percheight))
+				$y_sigheight = $Found_Signal * $2400percheight
 			EndIf
+			$y_top = $2400topborder + ($2400graphheight - $y_sigheight)
 
+			;Draw left side or curve
 			Local $aPoints[4][2]
 			$aPoints[0][0] = 3
-			$aPoints[1][0] = $y_left
-			$aPoints[1][1] = $x_bottom
-			$aPoints[2][0] = $y_center
-			$aPoints[2][1] = $x_sig
-			$aPoints[3][0] = $y_right
-			$aPoints[3][1] = $x_bottom
-
+			$aPoints[1][0] = $x_left + 5
+			$aPoints[1][1] = $y_top
+			$aPoints[2][0] = $x_left + 5
+			$aPoints[2][1] = $y_top + ($y_sigheight / 2)
+			$aPoints[3][0] = $x_left
+			$aPoints[3][1] = $y_bottom
 			_GDIPlus_GraphicsDrawCurve($2400backbuffer, $aPoints, $Pen_Red)
+			;Draw right side or curve
+			Local $aPoints[4][2]
+			$aPoints[0][0] = 3
+			$aPoints[1][0] = $x_right - 5
+			$aPoints[1][1] = $y_top
+			$aPoints[2][0] = $x_right - 5
+			$aPoints[2][1] = $y_top + ($y_sigheight / 2)
+			$aPoints[3][0] = $x_right
+			$aPoints[3][1] = $y_bottom
+			_GDIPlus_GraphicsDrawCurve($2400backbuffer, $aPoints, $Pen_Red)
+			;Draw top of curve
+			_GDIPlus_GraphicsDrawLine($2400backbuffer, $x_left + 5, $y_top, $x_right - 5, $y_top, $Pen_Red)
+			;Draw SSID text
+			$hFont = _GDIPlus_FontCreate($FontFamily_Arial, 9, 1)
+			$tLayout = _GDIPlus_RectFCreate($x_left, $y_top - 15, $x_right - $x_left, 15)
+			$hFormat = _GDIPlus_StringFormatCreate()
+			_GDIPlus_StringFormatSetAlign($hFormat, 1)
+			_GDIPlus_GraphicsDrawStringEx($2400backbuffer, $Found_SSID, $hFont, $tLayout, $hFormat, $Brush_Blue)
 		EndIf
 	Next
 	_GDIPlus_GraphicsDrawImageRect($2400graphics, $2400bitmap, 0, 0, $2400width, $2400height)
@@ -4859,27 +4880,46 @@ Func _Draw5000ChanGraph()
 		EndIf
 
 		If $Found_Freq <> 0 Then
-			$y_center = $5000leftborder + (($Found_Freq - 5150) * $5000freqwidth)
-			$y_left = $y_center - (10 * $5000freqwidth)
-			$y_right = $y_center + (10 * $5000freqwidth)
-			$x_sig = $5000topborder + ($5000graphheight - ($Found_Signal * $5000percheight))
-			$x_bottom = $5000topborder + $5000graphheight
+			$x_center = $5000leftborder + (($Found_Freq - 5150) * $5000freqwidth)
+			$x_left = $x_center - (10 * $5000freqwidth)
+			$x_right = $x_center + (10 * $5000freqwidth)
+			$y_sig = $5000topborder + ($5000graphheight - ($Found_Signal * $5000percheight))
+			$y_bottom = $5000topborder + $5000graphheight
 			If $UseRssiInGraphs = 1 Then
-				$x_sig = $5000topborder + ($5000graphheight - ((100 + $Found_RSSI) * $5000percheight))
+				$y_sigheight = (100 + $Found_RSSI) * $5000percheight
 			Else
-				$x_sig = $5000topborder + ($5000graphheight - ($Found_Signal * $5000percheight))
+				$y_sigheight = $Found_Signal * $5000percheight
 			EndIf
+			$y_top = $5000topborder + ($5000graphheight - $y_sigheight)
 
+			;Draw left side or curve
 			Local $aPoints[4][2]
 			$aPoints[0][0] = 3
-			$aPoints[1][0] = $y_left
-			$aPoints[1][1] = $x_bottom
-			$aPoints[2][0] = $y_center
-			$aPoints[2][1] = $x_sig
-			$aPoints[3][0] = $y_right
-			$aPoints[3][1] = $x_bottom
-
+			$aPoints[1][0] = $x_left + 5
+			$aPoints[1][1] = $y_top
+			$aPoints[2][0] = $x_left + 5
+			$aPoints[2][1] = $y_top + ($y_sigheight / 2)
+			$aPoints[3][0] = $x_left
+			$aPoints[3][1] = $y_bottom
 			_GDIPlus_GraphicsDrawCurve($5000backbuffer, $aPoints, $Pen_Red)
+			;Draw right side or curve
+			Local $aPoints[4][2]
+			$aPoints[0][0] = 3
+			$aPoints[1][0] = $x_right - 5
+			$aPoints[1][1] = $y_top
+			$aPoints[2][0] = $x_right - 5
+			$aPoints[2][1] = $y_top + ($y_sigheight / 2)
+			$aPoints[3][0] = $x_right
+			$aPoints[3][1] = $y_bottom
+			_GDIPlus_GraphicsDrawCurve($5000backbuffer, $aPoints, $Pen_Red)
+			;Draw top of curve
+			_GDIPlus_GraphicsDrawLine($5000backbuffer, $x_left + 5, $y_top, $x_right - 5, $y_top, $Pen_Red)
+			;Draw SSID text
+			$hFont = _GDIPlus_FontCreate($FontFamily_Arial, 9, 1)
+			$tLayout = _GDIPlus_RectFCreate($x_left, $y_top - 15, $x_right - $x_left, 15)
+			$hFormat = _GDIPlus_StringFormatCreate()
+			_GDIPlus_StringFormatSetAlign($hFormat, 1)
+			_GDIPlus_GraphicsDrawStringEx($5000backbuffer, $Found_SSID, $hFont, $tLayout, $hFormat, $Brush_Blue)
 		EndIf
 	Next
 	_GDIPlus_GraphicsDrawImageRect($5000graphics, $5000bitmap, 0, 0, $5000width, $5000height)
