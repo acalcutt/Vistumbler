@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 19'
+$version = 'v10.3 Beta 20'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/09/09'
+$last_modified = '2012/10/18'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -272,9 +272,11 @@ Dim $CopyGUI_BSSID, $CopyGUI_Line, $CopyGUI_SSID, $CopyGUI_CHAN, $CopyGUI_AUTH, 
 Dim $GUI_COPY, $CopyFlag = 0, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_HIGHSIG, $Copy_RSSI, $Copy_HIGHRSSI, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
 
 Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
-$CurrentVersionFile = @ScriptDir & '\versions.ini'
-$NewVersionFile = $TmpDir & 'versions.ini'
-$VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
+Dim $SFSVN_ROOT = 'http://sfsvn.vistumbler.net/p/vistumbler/code/'
+Dim $BACKUPSVN_ROOT = 'http://backupsvn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
+Dim $UseBackupSVN = 0
+Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
+Dim $NewVersionFile = $TmpDir & 'versions.ini'
 
 Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
 		 & '		<IconStyle>' & @CRLF _
@@ -10724,11 +10726,27 @@ Func _CheckForUpdates()
 	$UpdatesAvalible = 0
 	FileDelete($NewVersionFile)
 	If $CheckForBetaUpdates = 1 Then
-		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
-		If $get = 0 Then FileDelete($NewVersionFile)
+		$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions-beta.ini?format=raw', $NewVersionFile, 1)
+		If $get = 0 Then ;Download failed, try backup viewvc server
+			FileDelete($NewVersionFile)
+			$get = InetGet($BACKUPSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
+			If $get = 0 Then
+				FileDelete($NewVersionFile)
+			Else
+				$UseBackupSVN = 1
+			EndIf
+		EndIf
 	Else
-		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
-		If $get = 0 Then FileDelete($NewVersionFile)
+		$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions.ini?format=raw', $NewVersionFile, 1)
+		If $get = 0 Then ;Download failed, try backup viewvc server
+			FileDelete($NewVersionFile)
+			$get = InetGet($BACKUPSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
+			If $get = 0 Then
+				FileDelete($NewVersionFile)
+			Else
+				$UseBackupSVN = 1
+			EndIf
+		EndIf
 	EndIf
 	If FileExists($NewVersionFile) Then
 		$fv = IniReadSection($NewVersionFile, "FileVersions")
@@ -10740,7 +10758,12 @@ Func _CheckForUpdates()
 					If $filename = 'update.exe' Then ;Download updated update.exe
 						$dloadupdatemsg = MsgBox(4, $Text_Information, $Text_UpdateUpdaterMsg)
 						If $dloadupdatemsg = 6 Then
-							$sourcefile = $VIEWSVN_ROOT & $filename & '?revision=' & $fversion
+							If $UseBackupSVN = 1 Then
+								$sourcefile = $BACKUPSVN_ROOT & $filename & '?revision=' & $fversion
+							Else
+								$sourcefile = $SFSVN_ROOT & $fversion & '/tree/VistumblerMDB/' & $filename & '?format=raw'
+							EndIf
+							ConsoleWrite($sourcefile & @CRLF)
 							$desttmpfile = $TmpDir & $filename & '.tmp'
 							$destfile = @ScriptDir & '\' & $filename
 							$get = InetGet($sourcefile, $desttmpfile, 1)

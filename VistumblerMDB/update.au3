@@ -1,8 +1,8 @@
-#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_UseUpx=n
-#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2011 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
@@ -14,15 +14,15 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v7.2'
+$version = 'v8'
 $origional_date = '2010/09/01'
-$last_modified = '2011/11/25'
+$last_modified = '2012/10/18'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include <EditConstants.au3>
 #include <GUIConstantsEx.au3>
 #include <WindowsConstants.au3>
-#Include <Array.au3>
+#include <Array.au3>
 
 Dim $TmpDir = @TempDir & '\Vistumbler\'
 DirCreate($TmpDir)
@@ -30,10 +30,12 @@ DirCreate($TmpDir)
 Dim $Errors
 Dim $NewFiles
 Dim $LoadVersionFile
+Dim $UseBackupSVN = 0
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
-Dim $VIEWSVN_ROOT = 'http://svn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
+Dim $SFSVN_ROOT = 'http://sfsvn.vistumbler.net/p/vistumbler/code/'
+Dim $BACKUPSVN_ROOT = 'http://backupsvn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
@@ -97,13 +99,32 @@ Else
 	If $CheckForBetaUpdates = 1 Then
 		$data = $Text_DownloadingBetaVerFile & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
-		$get = InetGet($VIEWSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
-		If $get = 0 Then FileDelete($NewVersionFile)
+		;Try to download version file from SF svn viewer
+		$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions-beta.ini?format=raw', $NewVersionFile, 1)
+		If $get = 0 Then ;Download failed, try backup viewvc server
+			FileDelete($NewVersionFile)
+			$get = InetGet($BACKUPSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
+			If $get = 0 Then
+				FileDelete($NewVersionFile)
+			Else
+				$UseBackupSVN = 1
+				ConsoleWrite('Used Beta Backup SVN' & @CRLF)
+			EndIf
+		EndIf
 	Else
 		$data = $Text_DownloadingVerFile & @CRLF & $data
 		GUICtrlSetData($UpdateEdit, $data)
-		$get = InetGet($VIEWSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
-		If $get = 0 Then FileDelete($NewVersionFile)
+		$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions.ini?format=raw', $NewVersionFile, 1)
+		If $get = 0 Then ;Download failed, try backup viewvc server
+			FileDelete($NewVersionFile)
+			$get = InetGet($BACKUPSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
+			If $get = 0 Then
+				FileDelete($NewVersionFile)
+			Else
+				$UseBackupSVN = 1
+				ConsoleWrite('Used Backup SVN' & @CRLF)
+			EndIf
+		EndIf
 	EndIf
 	If FileExists($NewVersionFile) Then
 		$data = $Text_VerFileDownloaded & @CRLF & $data
@@ -125,7 +146,7 @@ If FileExists($NewVersionFile) Then
 				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $version Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
 					If StringInStr($filename, '\') Then
 						$struct = StringSplit($filename, '\')
-						For $cp = 1 to $struct[0] - 1
+						For $cp = 1 To $struct[0] - 1
 							If $cp = 1 Then
 								$dirstruct = $struct[$cp]
 							Else
@@ -135,46 +156,51 @@ If FileExists($NewVersionFile) Then
 							DirCreate($TmpDir & $dirstruct)
 						Next
 					EndIf
-						$sourcefile = $VIEWSVN_ROOT & $filename_web & '?revision=' & $version
-						$desttmpfile = $TmpDir & $filename & '.tmp'
-						$destfile = @ScriptDir & '\' & $filename
-						GUICtrlSetData($datalabel, 'Downloading ' & $filename)
-						$get = InetGet($sourcefile, $desttmpfile, 1)
-						If $get = 0 Then ;Download Failed
-							GUICtrlSetData($datalabel, 'Downloading ' & $filename & ' failed')
-							$data = $Text_ErrDownloadingNewFile & ':' & $filename & @CRLF & $data
-							$Errors &= $Text_ErrDownloadingNewFile & ':' & $filename  & @CRLF
-							GUICtrlSetData($UpdateEdit, $data)
-							FileDelete($NewVersionFile)
-						Else ;Download Succesful
-							GUICtrlSetData($datalabel, 'Downloading ' & $filename & ' successful')
-							$ExistingFile = 0
-							If FileExists($destfile) Then
-								$ExistingFile = 1
-								FileDelete($destfile)
-							EndIf
-							If FileMove($desttmpfile, $destfile, 9) = 1 Then
-								If $ExistingFile = 0 Then
-									$data = $Text_NewFile & ':' & $filename & @CRLF & $data
-									$NewFiles &= $Text_NewFile & ':' & $filename & @CRLF
-								Else
-									$data = $Text_UpdatedFile & ':' & $filename & @CRLF & $data
-									$NewFiles &= $Text_UpdatedFile & ':' & $filename & @CRLF
-								EndIf
-								IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
-							Else
-								If $ExistingFile = 0 Then
-									$data = $Text_ErrCopyingFile & ':' & $filename & @CRLF & $data
-									$Errors &= $Text_ErrCopyingFile & ':' & $filename & @CRLF
-								Else
-									$data = $Text_ErrReplacaingOldFile & ':' & $filename & @CRLF & $data
-									$Errors &= $Text_ErrReplacaingOldFile & ':' & $filename & @CRLF
-								EndIf
-							EndIf
-							GUICtrlSetData($UpdateEdit, $data)
+					If $UseBackupSVN = 1 Then
+						$sourcefile = $BACKUPSVN_ROOT & $filename_web & '?revision=' & $version
+					Else
+						$sourcefile = $SFSVN_ROOT & $version & '/tree/VistumblerMDB/' & $filename_web & '?format=raw'
+					EndIf
+					ConsoleWrite($sourcefile & @CRLF)
+					$desttmpfile = $TmpDir & $filename & '.tmp'
+					$destfile = @ScriptDir & '\' & $filename
+					GUICtrlSetData($datalabel, 'Downloading ' & $filename)
+					$get = InetGet($sourcefile, $desttmpfile, 1)
+					If $get = 0 Then ;Download Failed
+						GUICtrlSetData($datalabel, 'Downloading ' & $filename & ' failed')
+						$data = $Text_ErrDownloadingNewFile & ':' & $filename & @CRLF & $data
+						$Errors &= $Text_ErrDownloadingNewFile & ':' & $filename & @CRLF
+						GUICtrlSetData($UpdateEdit, $data)
+						FileDelete($NewVersionFile)
+					Else ;Download Succesful
+						GUICtrlSetData($datalabel, 'Downloading ' & $filename & ' successful')
+						$ExistingFile = 0
+						If FileExists($destfile) Then
+							$ExistingFile = 1
+							FileDelete($destfile)
 						EndIf
-						If FileExists($desttmpfile) Then FileDelete($desttmpfile)
-						GUICtrlSetData($datalabel, '')
+						If FileMove($desttmpfile, $destfile, 9) = 1 Then
+							If $ExistingFile = 0 Then
+								$data = $Text_NewFile & ':' & $filename & @CRLF & $data
+								$NewFiles &= $Text_NewFile & ':' & $filename & @CRLF
+							Else
+								$data = $Text_UpdatedFile & ':' & $filename & @CRLF & $data
+								$NewFiles &= $Text_UpdatedFile & ':' & $filename & @CRLF
+							EndIf
+							IniWrite($CurrentVersionFile, "FileVersions", $filename, $version)
+						Else
+							If $ExistingFile = 0 Then
+								$data = $Text_ErrCopyingFile & ':' & $filename & @CRLF & $data
+								$Errors &= $Text_ErrCopyingFile & ':' & $filename & @CRLF
+							Else
+								$data = $Text_ErrReplacaingOldFile & ':' & $filename & @CRLF & $data
+								$Errors &= $Text_ErrReplacaingOldFile & ':' & $filename & @CRLF
+							EndIf
+						EndIf
+						GUICtrlSetData($UpdateEdit, $data)
+					EndIf
+					If FileExists($desttmpfile) Then FileDelete($desttmpfile)
+					GUICtrlSetData($datalabel, '')
 				Else
 					$data = $Text_NoChangeInFile & ':' & $filename & @CRLF & $data
 					GUICtrlSetData($UpdateEdit, $data)
@@ -192,7 +218,7 @@ If FileExists($NewVersionFile) Then
 					$data = $Text_DeletedFile & ':' & $filename & @CRLF & $data
 					$NewFiles &= $Text_DeletedFile & ':' & $filename & @CRLF
 					GUICtrlSetData($UpdateEdit, $data)
-					IniDelete ($CurrentVersionFile, 'FileVersions' , $filename)
+					IniDelete($CurrentVersionFile, 'FileVersions', $filename)
 				Else
 					$data = $Text_ErrDeletingFile & ':' & $filename & @CRLF & $data
 					$Errors &= $Text_ErrDeletingFile & ':' & $filename & @CRLF
@@ -234,16 +260,16 @@ Func _MsgBox($title, $msg, $But1txt, $But2txt)
 		Switch $nMsg
 			Case $GUI_EVENT_CLOSE
 				GUIDelete($MsgBoxGUI)
-				Return(0)
+				Return (0)
 			Case $But1
 				GUIDelete($MsgBoxGUI)
-				Return(1)
+				Return (1)
 			Case $But2
 				GUIDelete($MsgBoxGUI)
-				Return(2)
+				Return (2)
 		EndSwitch
 	WEnd
-EndFunc
+EndFunc   ;==>_MsgBox
 
 Func _WriteLanguageINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "Done", $Text_Done)
@@ -270,4 +296,4 @@ Func _WriteLanguageINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrDeletingFile', $Text_ErrDeletingFile)
 	IniWrite($DefaultLanguagePath, "GuiText", "ErrWouldYouLikeToRetryUpdate", $Text_ErrWouldYouLikeToRetryUpdate)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'DoneWouldYouLikeToLoadVistumbler', $Text_DoneWouldYouLikeToLoadVistumbler)
-EndFunc
+EndFunc   ;==>_WriteLanguageINI
