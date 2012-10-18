@@ -90,49 +90,43 @@ For $loop = 1 To $CmdLine[0]
 	EndIf
 Next
 
-If $LoadVersionFile <> '' And FileExists($LoadVersionFile) Then
-	$NewVersionFile = $LoadVersionFile
-	$data = $Text_UsingLocalFile & ' : ' & $NewVersionFile & @CRLF & $data
+FileDelete($NewVersionFile)
+If $CheckForBetaUpdates = 1 Then
+	$data = $Text_DownloadingBetaVerFile & @CRLF & $data
+	GUICtrlSetData($UpdateEdit, $data)
+	;Try to download version file from SF svn viewer
+	$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions-beta.ini?format=raw', $NewVersionFile, 1)
+	If $get = 0 Then ;Download failed, try backup viewvc server
+		FileDelete($NewVersionFile)
+		$get = InetGet($BACKUPSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
+		If $get = 0 Then
+			FileDelete($NewVersionFile)
+		Else
+			$UseBackupSVN = 1
+			ConsoleWrite('Used Beta Backup SVN' & @CRLF)
+		EndIf
+	EndIf
+Else
+	$data = $Text_DownloadingVerFile & @CRLF & $data
+	GUICtrlSetData($UpdateEdit, $data)
+	$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions.ini?format=raw', $NewVersionFile, 1)
+	If $get = 0 Then ;Download failed, try backup viewvc server
+		FileDelete($NewVersionFile)
+		$get = InetGet($BACKUPSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
+		If $get = 0 Then
+			FileDelete($NewVersionFile)
+		Else
+			$UseBackupSVN = 1
+			ConsoleWrite('Used Backup SVN' & @CRLF)
+		EndIf
+	EndIf
+EndIf
+If FileExists($NewVersionFile) Then
+	$data = $Text_VerFileDownloaded & @CRLF & $data
 	GUICtrlSetData($UpdateEdit, $data)
 Else
-	FileDelete($NewVersionFile)
-	If $CheckForBetaUpdates = 1 Then
-		$data = $Text_DownloadingBetaVerFile & @CRLF & $data
-		GUICtrlSetData($UpdateEdit, $data)
-		;Try to download version file from SF svn viewer
-		$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions-beta.ini?format=raw', $NewVersionFile, 1)
-		If $get = 0 Then ;Download failed, try backup viewvc server
-			FileDelete($NewVersionFile)
-			$get = InetGet($BACKUPSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
-			If $get = 0 Then
-				FileDelete($NewVersionFile)
-			Else
-				$UseBackupSVN = 1
-				ConsoleWrite('Used Beta Backup SVN' & @CRLF)
-			EndIf
-		EndIf
-	Else
-		$data = $Text_DownloadingVerFile & @CRLF & $data
-		GUICtrlSetData($UpdateEdit, $data)
-		$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions.ini?format=raw', $NewVersionFile, 1)
-		If $get = 0 Then ;Download failed, try backup viewvc server
-			FileDelete($NewVersionFile)
-			$get = InetGet($BACKUPSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
-			If $get = 0 Then
-				FileDelete($NewVersionFile)
-			Else
-				$UseBackupSVN = 1
-				ConsoleWrite('Used Backup SVN' & @CRLF)
-			EndIf
-		EndIf
-	EndIf
-	If FileExists($NewVersionFile) Then
-		$data = $Text_VerFileDownloaded & @CRLF & $data
-		GUICtrlSetData($UpdateEdit, $data)
-	Else
-		$data = $Text_ErrDownloadVerFile & @CRLF & $data
-		GUICtrlSetData($UpdateEdit, $data)
-	EndIf
+	$data = $Text_ErrDownloadVerFile & @CRLF & $data
+	GUICtrlSetData($UpdateEdit, $data)
 EndIf
 
 If FileExists($NewVersionFile) Then

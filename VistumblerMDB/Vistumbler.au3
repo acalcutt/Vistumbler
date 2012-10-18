@@ -1,4 +1,5 @@
 #RequireAdmin
+#RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
@@ -19,7 +20,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3 Beta 20'
+$version = 'v10.3 Beta 21'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2012/10/18'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -10718,7 +10719,8 @@ Func _MenuUpdate()
 EndFunc   ;==>_MenuUpdate
 
 Func _StartUpdate()
-	Run(@ScriptDir & '\update.exe /s="' & $NewVersionFile & '"')
+	_WriteINI()
+	Run(@ScriptDir & '\update.exe')
 	Exit
 EndFunc   ;==>_StartUpdate
 
