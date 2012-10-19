@@ -1,6 +1,8 @@
 #RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=..\icon.ico
+#AutoIt3Wrapper_Version=beta
+#AutoIt3Wrapper_Icon=..\icon.ico
+#AutoIt3Wrapper_UseUpx=n
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 
 Dim $InstallLocation = RegRead("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler", "InstallLocation")

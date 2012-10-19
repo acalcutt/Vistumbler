@@ -1,6 +1,8 @@
 #RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_icon=icon.ico
+#AutoIt3Wrapper_Version=Beta
+#AutoIt3Wrapper_Icon=icon.ico
+#AutoIt3Wrapper_UseUpx=n
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2010 Andrew Calcutt
