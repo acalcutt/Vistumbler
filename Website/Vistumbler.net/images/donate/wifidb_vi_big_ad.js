@@ -1,8 +1,8 @@
 if ("http:" == document.location.protocol) 
 {
-	/* Show Vistumbler Ad (Vistumbler Bottom 1) */
-	google_ad_client = "pub-4275640341473005";
-	google_ad_slot = "5223071023";
+	/* Show Vistumbler Ad (Live WiFiDB) */
+	google_ad_client = "ca-pub-4275640341473005";
+	google_ad_slot = "2580226693";
 	google_ad_width = 728;
 	google_ad_height = 90;
 	document.write('<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>');
