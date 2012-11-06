@@ -83,13 +83,15 @@ _CleanupFiles($TmpDir, '*.ldb')
 _CleanupFiles($TmpDir, '*.ini')
 _CleanupFiles($TmpDir, '*.kml')
 ;Associate VS1 with Vistumbler
-If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
-	RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
-	RegWrite('HKCR\.vs1\', '', 'REG_SZ', 'Vistumbler')
-	RegWrite('HKCR\Vistumbler\shell\open\command\', '', 'REG_SZ', '"' & @ScriptFullPath & '" "%1"')
-	RegWrite('HKCR\Vistumbler\DefaultIcon\', '', 'REG_SZ', '"' & @ScriptDir & '\Icons\vsfile_icon.ico"')
+If $PortableMode = 0 Then
+	If StringLower(StringTrimLeft(@ScriptName, StringLen(@ScriptName) - 4)) = '.exe' Then
+		RegWrite('HKCR\.vsz\', '', 'REG_SZ', 'Vistumbler')
+		RegWrite('HKCR\.vs1\', '', 'REG_SZ', 'Vistumbler')
+		RegWrite('HKCR\Vistumbler\shell\open\command\', '', 'REG_SZ', '"' & @ScriptFullPath & '" "%1"')
+		RegWrite('HKCR\Vistumbler\DefaultIcon\', '', 'REG_SZ', '"' & @ScriptDir & '\Icons\vsfile_icon.ico"')
+	EndIf
 EndIf
-
+;Set vistumbler to load VS1/VSZ if one is specified by command line
 Dim $Load = ''
 For $loop = 1 To $CmdLine[0]
 	If StringLower(StringTrimLeft($CmdLine[$loop], StringLen($CmdLine[$loop]) - 4)) = '.vs1' Then $Load = $CmdLine[$loop]
@@ -581,6 +583,7 @@ Dim $SearchWord_NetworkType = IniRead($DefaultLanguagePath, 'SearchWords', 'Netw
 Dim $SearchWord_Authentication = IniRead($DefaultLanguagePath, 'SearchWords', 'Authentication', 'Authentication')
 Dim $SearchWord_Encryption = IniRead($DefaultLanguagePath, 'SearchWords', 'Encryption', 'Encryption')
 Dim $SearchWord_Signal = IniRead($DefaultLanguagePath, 'SearchWords', 'Signal', 'Signal')
+Dim $SearchWord_RSSI = IniRead($DefaultLanguagePath, 'SearchWords', 'RSSI', 'RSSI')
 Dim $SearchWord_RadioType = IniRead($DefaultLanguagePath, 'SearchWords', 'RadioType', 'Radio Type')
 Dim $SearchWord_Channel = IniRead($DefaultLanguagePath, 'SearchWords', 'Channel', 'Channel')
 Dim $SearchWord_BasicRates = IniRead($DefaultLanguagePath, 'SearchWords', 'BasicRates', 'Basic Rates')
@@ -925,11 +928,7 @@ Dim $Text_UseRssiSignalValue = IniRead($DefaultLanguagePath, 'GuiText', 'UseRssi
 Dim $Text_UseCircleToShowSigStength = IniRead($DefaultLanguagePath, 'GuiText', 'UseCircleToShowSigStength', 'Use circle to show signal strength')
 Dim $Text_ShowGpsRangeMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', 'Show GPS Range Map')
 Dim $Text_ShowGpsTack = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', 'Show GPS Track')
-
-
-
-
-
+Dim $Text_Line = IniRead($DefaultLanguagePath, 'GuiText', 'Line', 'Line')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -6365,6 +6364,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "SearchWords", "Authentication", $SearchWord_Authentication)
 	IniWrite($DefaultLanguagePath, "SearchWords", "Encryption", $SearchWord_Encryption)
 	IniWrite($DefaultLanguagePath, "SearchWords", "Signal", $SearchWord_Signal)
+	IniWrite($DefaultLanguagePath, "SearchWords", "RSSI", $SearchWord_RSSI)
 	IniWrite($DefaultLanguagePath, "SearchWords", "RadioType", $SearchWord_RadioType)
 	IniWrite($DefaultLanguagePath, "SearchWords", "Channel", $SearchWord_Channel)
 	IniWrite($DefaultLanguagePath, "SearchWords", "BasicRates", $SearchWord_BasicRates)
@@ -6695,6 +6695,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseCircleToShowSigStength', $Text_UseCircleToShowSigStength)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', $Text_ShowGpsRangeMap)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', $Text_ShowGpsTack)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Line', $Text_Line)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -9441,6 +9442,7 @@ Func _LanguageChanged();Sets language information in gui if language changed
 	GUICtrlSetData($SearchWord_RadioType_GUI, IniRead($languagefile, 'SearchWords', 'RadioType', 'Radio Type'))
 	GUICtrlSetData($SearchWord_NetType_GUI, IniRead($languagefile, 'SearchWords', 'NetworkType', 'Network type'))
 	GUICtrlSetData($SearchWord_Signal_GUI, IniRead($languagefile, 'SearchWords', 'Signal', 'Signal'))
+	;GUICtrlSetData($SearchWord_RSSI_GUI, IniRead($languagefile, 'SearchWords', 'RSSI', 'RSSI'))
 	GUICtrlSetData($SearchWord_BasicRates_GUI, IniRead($languagefile, 'SearchWords', 'BasicRates', 'Basic Rates'))
 	GUICtrlSetData($SearchWord_OtherRates_GUI, IniRead($languagefile, 'SearchWords', 'OtherRates', 'Other Rates'))
 	GUICtrlSetData($SearchWord_Open_GUI, IniRead($languagefile, 'SearchWords', 'Open', 'Open'))
@@ -9833,6 +9835,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_UseCircleToShowSigStength = IniRead($DefaultLanguagePath, 'GuiText', 'UseCircleToShowSigStength', 'Use circle to show signal strength')
 		$Text_ShowGpsRangeMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', 'Show GPS Range Map')
 		$Text_ShowGpsTack = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', 'Show GPS Track')
+		$Text_Line = IniRead($DefaultLanguagePath, 'GuiText', 'Line', 'Line')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
@@ -9897,6 +9900,7 @@ Func _ApplySettingsGUI();Applys settings
 		$SearchWord_NetworkType = GUICtrlRead($SearchWord_NetType_GUI)
 		$SearchWord_Authentication = GUICtrlRead($SearchWord_Authentication_GUI)
 		$SearchWord_Signal = GUICtrlRead($SearchWord_Signal_GUI)
+		;$SearchWord_RSSI = GUICtrlRead($SearchWord_RSSI_GUI)
 		$SearchWord_RadioType = GUICtrlRead($SearchWord_RadioType_GUI)
 		$SearchWord_Channel = GUICtrlRead($SearchWord_Channel_GUI)
 		$SearchWord_BasicRates = GUICtrlRead($SearchWord_BasicRates_GUI)
@@ -10891,7 +10895,7 @@ EndFunc   ;==>_EditFilter
 Func _AddEditFilter($Filter_ID = '-1')
 	Local $Filter_Name, $Filter_Desc, $Filter_SSID = "*", $Filter_BSSID = "*", $Filter_CHAN = "*", $Filter_AUTH = "*", $Filter_ENCR = "*", $Filter_RADTYPE = "*", $Filter_NETTYPE = "*", $Filter_SIG = "*", $Filter_BTX = "*", $Filter_OTX = "*", $Filter_Line = "*", $Filter_Active = "*"
 	If $Filter_ID <> '-1' Then
-		$query = "SELECT FiltName, FiltDesc, SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $Filter_ID & "'"
+		$query = "SELECT FiltName, FiltDesc, SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, RSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $Filter_ID & "'"
 		$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
 		$Filter_Name = $FiltMatchArray[1][1]
 		$Filter_Desc = $FiltMatchArray[1][2]
@@ -10903,10 +10907,11 @@ Func _AddEditFilter($Filter_ID = '-1')
 		$Filter_RADTYPE = $FiltMatchArray[1][8]
 		$Filter_NETTYPE = $FiltMatchArray[1][9]
 		$Filter_SIG = $FiltMatchArray[1][10]
-		$Filter_BTX = $FiltMatchArray[1][11]
-		$Filter_OTX = $FiltMatchArray[1][12]
-		$Filter_Line = $FiltMatchArray[1][13]
-		$Filter_Active = $FiltMatchArray[1][14]
+		$Filter_RSSI = $FiltMatchArray[1][11]
+		$Filter_BTX = $FiltMatchArray[1][12]
+		$Filter_OTX = $FiltMatchArray[1][13]
+		$Filter_Line = $FiltMatchArray[1][14]
+		$Filter_Active = $FiltMatchArray[1][15]
 	EndIf
 	$Filter_ID_GUI = $Filter_ID
 
@@ -10921,7 +10926,6 @@ Func _AddEditFilter($Filter_ID = '-1')
 	GUISetBkColor($BackgroundColor)
 	GUICtrlCreateGroup('Filters', 8, 75, 665, 390)
 	GUICtrlCreateLabel($Text_FilterMsg, 32, 90, 618, 40)
-	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($SearchWord_SSID, 28, 125, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
@@ -10944,21 +10948,26 @@ Func _AddEditFilter($Filter_ID = '-1')
 	GUICtrlCreateLabel($SearchWord_NetworkType, 28, 365, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_NETTYPE_GUI = GUICtrlCreateInput($Filter_NETTYPE, 28, 380, 300, 20)
-	GUICtrlCreateLabel($SearchWord_Signal, 28, 405, 300, 15)
+	GUICtrlCreateLabel($Text_Active, 28, 405, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
-	$Filter_SIG_GUI = GUICtrlCreateInput($Filter_SIG, 28, 420, 300, 20)
+	$Filter_Active_GUI = GUICtrlCreateInput($Filter_Active, 28, 420, 300, 20)
+	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($SearchWord_BasicRates, 353, 125, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_BTX_GUI = GUICtrlCreateInput($Filter_BTX, 353, 140, 300, 20)
 	GUICtrlCreateLabel($SearchWord_OtherRates, 353, 165, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_OTX_GUI = GUICtrlCreateInput($Filter_OTX, 353, 180, 300, 20)
-	GUICtrlCreateLabel('Line', 353, 205, 300, 15)
+	GUICtrlCreateLabel($Text_Line, 353, 205, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_Line_GUI = GUICtrlCreateInput($Filter_Line, 353, 220, 300, 20)
-	GUICtrlCreateLabel($Text_Active, 353, 245, 300, 15)
+	GUICtrlCreateLabel($SearchWord_Signal, 353, 245, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
-	$Filter_Active_GUI = GUICtrlCreateInput($Filter_Active, 353, 260, 300, 20)
+	$Filter_SIG_GUI = GUICtrlCreateInput($Filter_SIG, 353, 260, 300, 20)
+	GUICtrlSetColor(-1, $TextColor)
+	;GUICtrlCreateLabel($, 353, 245, 300, 15)
+	;GUICtrlSetColor(-1, $TextColor)
+	$Filter_SIG_GUI = GUICtrlCreateInput($Filter_SIG, 353, 260, 300, 20)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AddEditFilt_Can = GUICtrlCreateButton($Text_Cancel, 600, 470, 75, 25, 0)
 	$GUI_AddEditFilt_Ok = GUICtrlCreateButton($Text_Ok, 525, 470, 75, 25, 0)
