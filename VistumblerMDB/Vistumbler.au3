@@ -1,5 +1,4 @@
 #RequireAdmin
-#RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
@@ -20,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.3'
+$version = 'v10.4 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/10/18'
+$last_modified = '2012/11/11'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -471,12 +470,10 @@ Dim $AutoKmlGpsTime = IniRead($settings, 'AutoKML', 'AutoKmlGpsTime', 1)
 Dim $AutoKmlTrackTime = IniRead($settings, 'AutoKML', 'AutoKmlTrackTime', 10)
 Dim $KmlFlyTo = IniRead($settings, 'AutoKML', 'KmlFlyTo', 1)
 Dim $OpenKmlNetLink = IniRead($settings, 'AutoKML', 'OpenKmlNetLink', 1)
-If @CPUArch = "X64" Then
-	$defaultgooglepath = "C:\Program Files (x86)\Google\Google Earth\client\googleearth.exe"
-Else
-	$defaultgooglepath = "C:\Program Files\Google\Google Earth\client\googleearth.exe"
-EndIf
-Dim $GoogleEarth_EXE = IniRead($settings, 'AutoKML', 'GoogleEarth_EXE', $defaultgooglepath)
+$defaultgooglepath = RegRead('HKEY_CURRENT_USER\Software\Google\Google Earth Plus\autoupdate', 'AppPath') & '/googleearth.exe'
+If $defaultgooglepath = '/googleearth.exe' And @OSArch = 'X86' Then $defaultgooglepath = 'C:/Program Files/Google/Google Earth/client/googleearth.exe' ;use as default for x86 if google earth path is not found in registry
+If $defaultgooglepath = '/googleearth.exe' And @OSArch = 'X64' Then $defaultgooglepath = 'C:/Program Files (x86)/Google/Google Earth/client/googleearth.exe' ;use as default for x64 if google earth path is not found in registry
+Dim $GoogleEarthExe = IniRead($settings, 'AutoKML', 'GoogleEarthExe', $defaultgooglepath)
 
 Dim $WifiDb_User = IniRead($settings, 'PhilsWifiTools', 'WifiDb_User', '')
 Dim $WifiDb_ApiKey = "notyetimplemented";IniRead($settings, 'PhilsWifiTools', 'WifiDb_ApiKey', '')
@@ -849,11 +846,13 @@ Dim $Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportV
 Dim $Text_UseNativeWifiMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiMsg', 'Use Native Wifi')
 Dim $Text_UseNativeWifiXpExtMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiXpExtMsg', '(No BSSID, CHAN, OTX, BTX)')
 
-
 Dim $Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
 Dim $Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
 Dim $Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filtered', 'Filtered')
 Dim $Text_Filters = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
+Dim $Text_FilterName = IniRead($DefaultLanguagePath, 'GuiText', 'FilterName', 'Filter Name')
+Dim $Text_FilterDesc = IniRead($DefaultLanguagePath, 'GuiText', 'FilterDesc', 'Filter Description')
+Dim $Text_FilterAddEdit = IniRead($DefaultLanguagePath, 'GuiText', 'FilterAddEdit', 'Add/Edit Filter')
 Dim $Text_NoAdaptersFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', 'No Adapters Found')
 Dim $Text_RecoveringMDB = IniRead($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', 'Recovering MDB')
 Dim $Text_FixingGpsTableDates = IniRead($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', 'Fixing GPS table date(s)')
@@ -916,6 +915,8 @@ Dim $Text_RemoveCamera = IniRead($DefaultLanguagePath, 'GuiText', 'RemoveCamera'
 Dim $Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
 Dim $Text_DownloadImages = IniRead($DefaultLanguagePath, 'GuiText', 'DownloadImages', 'Download Images')
 Dim $Text_EnableCamTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', 'Enable camera trigger script')
+Dim $Text_CameraTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'CameraTriggerScript', 'Camera Trigger Script')
+Dim $Text_CameraTriggerScriptTypes = IniRead($DefaultLanguagePath, 'GuiText', 'CameraTriggerScriptTypes', 'Camera Trigger Script (exe,bat)')
 Dim $Text_SetCameras = IniRead($DefaultLanguagePath, 'GuiText', 'SetCameras', 'Set Cameras')
 Dim $Text_UpdateUpdaterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateUpdaterMsg', 'There is an update to the vistumbler updater. Would you like to download and update it now?')
 Dim $Text_UseRssiInGraphs = IniRead($DefaultLanguagePath, 'GuiText', 'UseRssiInGraphs', 'Use RSSI in graphs')
@@ -6252,7 +6253,7 @@ Func _WriteINI()
 	IniWrite($settings, 'AutoKML', 'AutoKmlTrackTime', $AutoKmlTrackTime)
 	IniWrite($settings, 'AutoKML', 'KmlFlyTo', $KmlFlyTo)
 	IniWrite($settings, 'AutoKML', 'OpenKmlNetLink', $OpenKmlNetLink)
-	IniWrite($settings, 'AutoKML', 'GoogleEarth_EXE', $GoogleEarth_EXE)
+	If $GoogleEarthExe <> $defaultgooglepath Then IniWrite($settings, 'AutoKML', 'GoogleEarthExe', $GoogleEarthExe)
 
 	IniWrite($settings, 'KmlSettings', 'MapPos', $MapPos)
 	IniWrite($settings, 'KmlSettings', 'MapSig', $MapSig)
@@ -6621,6 +6622,9 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SetFilters', $Text_SetFilters)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Filtered', $Text_Filtered)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Filters', $Text_Filters)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterName', $Text_FilterName)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterDesc', $Text_FilterDesc)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FilterAddEdit', $Text_FilterAddEdit)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', $Text_NoAdaptersFound)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', $Text_RecoveringMDB)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', $Text_FixingGpsTableDates)
@@ -6683,6 +6687,8 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'EditCamera', $Text_EditCamera)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'DownloadImages', $Text_DownloadImages)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', $Text_EnableCamTriggerScript)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'CameraTriggerScript', $Text_CameraTriggerScript)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'CameraTriggerScriptTypes', $Text_CameraTriggerScriptTypes)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SetCameras', $Text_SetCameras)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UpdateUpdaterMsg', $Text_UpdateUpdaterMsg)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseRssiInGraphs', $Text_UseRssiInGraphs)
@@ -8344,7 +8350,7 @@ Func _StartGoogleAutoKmlRefresh()
 	$kml = $GoogleEarth_OpenFile
 	FileDelete($kml)
 	If $AutoKML = 1 Then
-		If FileExists($GoogleEarth_EXE) Then
+		If FileExists($GoogleEarthExe) Then
 			$RefAutoKmlGpsTime = Round($AutoKmlGpsTime / 2)
 			$RefAutoKmlActiveTime = Round($AutoKmlActiveTime / 2)
 			$RefAutoKmlDeadTime = Round($AutoKmlDeadTime / 2)
@@ -8406,7 +8412,7 @@ Func _StartGoogleAutoKmlRefresh()
 				If $AutoKmlDeadTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=k /f="' & $GoogleEarth_DeadFile & '" /d', '', @SW_HIDE)
 				If $AutoKmlActiveTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '"/t=k /f="' & $GoogleEarth_ActiveFile & '" /a', '', @SW_HIDE)
 				If $AutoKmlTrackTime <> 0 Then Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=k /f="' & $GoogleEarth_TrackFile & '" /p', '', @SW_HIDE)
-				Run('"' & $GoogleEarth_EXE & '" "' & $kml & '"')
+				Run('"' & $GoogleEarthExe & '" "' & $kml & '"')
 			EndIf
 		Else
 			MsgBox(0, $Text_Error, $Text_GoogleEarthDoesNotExist)
@@ -9080,7 +9086,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		If $OpenKmlNetLink = 1 Then GUICtrlSetState($GUI_OpenKmlNetLink, $GUI_CHECKED)
 		GUICtrlCreateLabel($Text_GoogleEarthEXE, 30, 100, 62, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_GoogleEXE = GUICtrlCreateInput($GoogleEarth_EXE, 30, 115, 537, 20)
+		$GUI_GoogleEXE = GUICtrlCreateInput($GoogleEarthExe, 30, 115, 537, 20)
 		GUICtrlCreateLabel($Text_ActiveRefreshTime & '(s)', 30, 140, 115, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_AutoKmlActiveTime = GUICtrlCreateInput($AutoKmlActiveTime, 30, 155, 115, 20)
@@ -9270,12 +9276,12 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 			GUICtrlCreateListViewItem('"' & $camname & '"|' & $camurl, $GUI_Cam_List)
 		Next
 		GUICtrlSetData($msgdisplay, '')
-		GUICtrlCreateGroup("Camera Trigger Script", 15, 300, 650, 150)
-		$Gui_CamTrigger = GUICtrlCreateCheckbox("Enable camera trigger script", 31, 320, 185, 17)
+		GUICtrlCreateGroup($Text_CameraTriggerScript, 15, 300, 650, 150)
+		$Gui_CamTrigger = GUICtrlCreateCheckbox($Text_EnableCamTriggerScript, 31, 320, 185, 17)
 		If $CamTrigger = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel("Camera Trigger Script (exe,bat)", 31, 345, 620, 15)
+		GUICtrlCreateLabel($Text_CameraTriggerScriptTypes, 31, 345, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_CamTriggerScript = GUICtrlCreateInput($CamTriggerScript, 31, 360, 515, 21)
 		GUICtrlCreateLabel($Text_RefreshTime, 31, 385, 620, 15)
@@ -9761,6 +9767,10 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as a wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
 		$Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
 		$Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
+		$Text_Filters = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
+		$Text_FilterName = IniRead($DefaultLanguagePath, 'GuiText', 'FilterName', 'Filter Name')
+		$Text_FilterDesc = IniRead($DefaultLanguagePath, 'GuiText', 'FilterDesc', 'Filter Description')
+		$Text_FilterAddEdit = IniRead($DefaultLanguagePath, 'GuiText', 'FilterAddEdit', 'Add/Edit Filter')
 		$Text_NoAdaptersFound = IniRead($DefaultLanguagePath, 'GuiText', 'NoAdaptersFound', 'No Adapters Found')
 		$Text_RecoveringMDB = IniRead($DefaultLanguagePath, 'GuiText', 'RecoveringMDB', 'Recovering MDB')
 		$Text_FixingGpsTableDates = IniRead($DefaultLanguagePath, 'GuiText', 'FixingGpsTableDates', 'Fixing GPS table date(s)')
@@ -9823,6 +9833,8 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
 		$Text_DownloadImages = IniRead($DefaultLanguagePath, 'GuiText', 'DownloadImages', 'Download Images')
 		$Text_EnableCamTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', 'Enable camera trigger script')
+		$Text_CameraTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'CameraTriggerScript', 'Camera Trigger Script')
+		$Text_CameraTriggerScriptTypes = IniRead($DefaultLanguagePath, 'GuiText', 'CameraTriggerScriptTypes', 'Camera Trigger Script (exe,bat)')
 		$Text_SetCameras = IniRead($DefaultLanguagePath, 'GuiText', 'SetCameras', 'Set Cameras')
 		$Text_UpdateUpdaterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UpdateUpdaterMsg', 'There is an update to the vistumbler updater. Would you like to download and update it now?')
 		$Text_UseRssiInGraphs = IniRead($DefaultLanguagePath, 'GuiText', 'UseRssiInGraphs', 'Use RSSI in graphs')
@@ -9965,7 +9977,7 @@ Func _ApplySettingsGUI();Applys settings
 		If GUICtrlRead($AutoSaveKML) = 4 And $AutoKML = 1 Then _AutoKmlToggle()
 		If GUICtrlRead($AutoSaveKML) = 1 And $AutoKML = 0 Then _AutoKmlToggle()
 
-		$GoogleEarth_EXE = GUICtrlRead($GUI_GoogleEXE)
+		$GoogleEarthExe = GUICtrlRead($GUI_GoogleEXE)
 		$AutoKmlActiveTime = GUICtrlRead($GUI_AutoKmlActiveTime)
 		$AutoKmlDeadTime = GUICtrlRead($GUI_AutoKmlDeadTime)
 		$AutoKmlGpsTime = GUICtrlRead($GUI_AutoKmlGpsTime)
@@ -10915,16 +10927,16 @@ Func _AddEditFilter($Filter_ID = '-1')
 	EndIf
 	$Filter_ID_GUI = $Filter_ID
 
-	$AddEditFilt_GUI = GUICreate("Add/Edit Filter", 690, 500, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+	$AddEditFilt_GUI = GUICreate($Text_FilterAddEdit, 690, 500, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 
-	GUICtrlCreateLabel("Filter Name", 28, 15, 300, 15)
+	GUICtrlCreateLabel($Text_FilterName, 28, 15, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_Name_GUI = GUICtrlCreateInput($Filter_Name, 28, 30, 300, 20)
-	GUICtrlCreateLabel("Filter Description", 353, 15, 300, 15)
+	GUICtrlCreateLabel($Text_FilterDesc, 353, 15, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_Desc_GUI = GUICtrlCreateInput($Filter_Desc, 353, 30, 300, 20)
 	GUISetBkColor($BackgroundColor)
-	GUICtrlCreateGroup('Filters', 8, 75, 665, 390)
+	GUICtrlCreateGroup($Text_Filters, 8, 75, 665, 390)
 	GUICtrlCreateLabel($Text_FilterMsg, 32, 90, 618, 40)
 	GUICtrlSetColor(-1, $TextColor)
 	GUICtrlCreateLabel($SearchWord_SSID, 28, 125, 300, 15)
@@ -11144,8 +11156,9 @@ Func _AddInterfaces()
 		$numofint = UBound($wlaninterfaces) - 1
 		For $antm = 0 To $numofint
 			$adapterid = $wlaninterfaces[$antm][0]
-			$adaptername = $wlaninterfaces[$antm][1]
-			$menuid = GUICtrlCreateMenuItem($adaptername, $Interfaces)
+			$adapterdesc = $wlaninterfaces[$antm][1]
+			$adaptername = RegRead('HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\' & $adapterid & '\Connection', 'Name')
+			$menuid = GUICtrlCreateMenuItem($adaptername & ' (' & $adapterdesc & ')', $Interfaces)
 			_ArrayAdd($NetworkAdapters, $menuid)
 			GUICtrlSetOnEvent($menuid, '_InterfaceChanged')
 			If $DefaultApapter = $adaptername Then
@@ -11162,6 +11175,7 @@ Func _AddInterfaces()
 			GUICtrlSetState($menuid, $GUI_CHECKED)
 		EndIf
 		If $menuid = 0 Then $noadaptersid = GUICtrlCreateMenuItem($Text_NoAdaptersFound, $Interfaces)
+		$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
 	Else
 		;Get network interfaces and add the to the interface menu
 		Local $DefaultApapterDesc
@@ -11213,7 +11227,8 @@ Func _InterfaceChanged()
 		$numofint = UBound($wlaninterfaces) - 1
 		For $antm = 0 To $numofint
 			$adapterid = $wlaninterfaces[$antm][0]
-			$adaptername = $wlaninterfaces[$antm][1]
+			$adapterdesc = $wlaninterfaces[$antm][1]
+			$adaptername = RegRead('HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\' & $adapterid & '\Connection', 'Name')
 			If $DefaultApapter = $adaptername Then $DefaultApapterID = $adapterid
 			_Wlan_SelectInterface($DefaultApapterID)
 		Next
