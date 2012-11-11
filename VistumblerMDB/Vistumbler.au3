@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4 Beta 1'
+$version = 'v10.4 Beta 2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2012/11/11'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -145,6 +145,7 @@ Dim $GPS_ID = 0
 Dim $CamID = 0
 Dim $CamGroupID = 0
 Dim $Recover = 0
+Dim $VistumblerGuiOpen = 0
 
 Dim $MoveMode = False
 Dim $MoveArea = False
@@ -400,6 +401,8 @@ Dim $AutoScan = IniRead($settings, 'Vistumbler', 'AutoScan', '0')
 Dim $dBmMaxSignal = IniRead($settings, 'Vistumbler', 'dBmMaxSignal', '-30')
 Dim $dBmDissociationSignal = IniRead($settings, 'Vistumbler', 'dBmDissociationSignal', '-85')
 
+Dim $VistumblerState = IniRead($settings, 'WindowPositions', 'VistumblerState', 'Window')
+Dim $VistumblerPosition = IniRead($settings, 'WindowPositions', 'VistumblerPosition', '')
 Dim $CompassPosition = IniRead($settings, 'WindowPositions', 'CompassPosition', '')
 Dim $GpsDetailsPosition = IniRead($settings, 'WindowPositions', 'GpsDetailsPosition', '')
 Dim $2400ChanGraphPos = IniRead($settings, 'WindowPositions', '2400ChanGraphPos', '')
@@ -1145,18 +1148,18 @@ Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' &
 $Vistumbler = GUICreate($title, 980, 692, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
 
-;$a = _WinGetPosEx($Vistumbler);Get window current position
-$a = WinGetPos($Vistumbler)
-Dim $VistumblerState = IniRead($settings, 'WindowPositions', 'VistumblerState', "Window");Get last window position from the ini file
-Dim $VistumblerPosition = IniRead($settings, 'WindowPositions', 'VistumblerPosition', $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3])
+;Set windows position and size
+If $VistumblerPosition = "" Then
+	$a = WinGetPos($Vistumbler)
+	$VistumblerPosition = $a[0] & ',' & $a[1] & ',' & $a[2] & ',' & $a[3]
+EndIf
 $b = StringSplit($VistumblerPosition, ",")
-
 If $VistumblerState = "Maximized" Then
 	WinSetState($title, "", @SW_MAXIMIZE)
 Else
-	;Split ini posion string
 	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]);Resize window to ini value
 EndIf
+
 ;File Menu
 $file = GUICtrlCreateMenu($Text_File)
 $NewSession = GUICtrlCreateMenuItem($Text_NewSession, $file)
@@ -1379,6 +1382,7 @@ GUICtrlSetColor(-1, $TextColor)
 GUISwitch($Vistumbler)
 _SetControlSizes()
 GUISetState(@SW_SHOW)
+$VistumblerGuiOpen = 1
 
 ;Button-Events-------------------------------------------
 GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseToggle')
@@ -6118,35 +6122,6 @@ Func _ExportVSZ()
 EndFunc   ;==>_ExportVSZ
 
 Func _WriteINI()
-	;Get Current column positions
-	$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
-	For $c = 1 To $currentcolumn[0]
-		If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
-		If $column_Active = $currentcolumn[$c] Then $save_column_Active = $c - 1
-		If $column_BSSID = $currentcolumn[$c] Then $save_column_BSSID = $c - 1
-		If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
-		If $column_Signal = $currentcolumn[$c] Then $save_column_Signal = $c - 1
-		If $column_HighSignal = $currentcolumn[$c] Then $save_column_HighSignal = $c - 1
-		If $column_RSSI = $currentcolumn[$c] Then $save_column_RSSI = $c - 1
-		If $column_HighRSSI = $currentcolumn[$c] Then $save_column_HighRSSI = $c - 1
-		If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
-		If $column_Authentication = $currentcolumn[$c] Then $save_column_Authentication = $c - 1
-		If $column_Encryption = $currentcolumn[$c] Then $save_column_Encryption = $c - 1
-		If $column_NetworkType = $currentcolumn[$c] Then $save_column_NetworkType = $c - 1
-		If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
-		If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
-		If $column_MANUF = $currentcolumn[$c] Then $save_column_MANUF = $c - 1
-		If $column_Label = $currentcolumn[$c] Then $save_column_Label = $c - 1
-		If $column_RadioType = $currentcolumn[$c] Then $save_column_RadioType = $c - 1
-		If $column_LatitudeDMS = $currentcolumn[$c] Then $save_column_LatitudeDMS = $c - 1
-		If $column_LongitudeDMS = $currentcolumn[$c] Then $save_column_LongitudeDMS = $c - 1
-		If $column_LatitudeDMM = $currentcolumn[$c] Then $save_column_LatitudeDMM = $c - 1
-		If $column_LongitudeDMM = $currentcolumn[$c] Then $save_column_LongitudeDMM = $c - 1
-		If $column_BasicTransferRates = $currentcolumn[$c] Then $save_column_BasicTransferRates = $c - 1
-		If $column_OtherTransferRates = $currentcolumn[$c] Then $save_column_OtherTransferRates = $c - 1
-		If $column_FirstActive = $currentcolumn[$c] Then $save_column_FirstActive = $c - 1
-		If $column_LastActive = $currentcolumn[$c] Then $save_column_LastActive = $c - 1
-	Next
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WriteINI()') ;#Debug Display
 	;write ini settings
 	If $SaveDir <> $DefaultSaveDir Then
@@ -6280,57 +6255,89 @@ Func _WriteINI()
 	IniWrite($settings, 'PhilsWifiTools', 'AutoUpApsToWifiDBTime', $AutoUpApsToWifiDBTime)
 	IniWrite($settings, "PhilsWifiTools", "WiFiDbLocateRefreshTime", $WiFiDbLocateRefreshTime)
 
-	IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
-	IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
-	IniWrite($settings, "Columns", "Column_BSSID", $save_column_BSSID)
-	IniWrite($settings, "Columns", "Column_SSID", $save_column_SSID)
-	IniWrite($settings, "Columns", "Column_Signal", $save_column_Signal)
-	IniWrite($settings, "Columns", "Column_HighSignal", $save_column_HighSignal)
-	IniWrite($settings, "Columns", "Column_RSSI", $save_column_RSSI)
-	IniWrite($settings, "Columns", "Column_HighRSSI", $save_column_HighRSSI)
-	IniWrite($settings, "Columns", "Column_Channel", $save_column_Channel)
-	IniWrite($settings, "Columns", "Column_Authentication", $save_column_Authentication)
-	IniWrite($settings, "Columns", "Column_Encryption", $save_column_Encryption)
-	IniWrite($settings, "Columns", "Column_NetworkType", $save_column_NetworkType)
-	IniWrite($settings, "Columns", "Column_Latitude", $save_column_Latitude)
-	IniWrite($settings, "Columns", "Column_Longitude", $save_column_Longitude)
-	IniWrite($settings, "Columns", "Column_Manufacturer", $save_column_MANUF)
-	IniWrite($settings, "Columns", "Column_Label", $save_column_Label)
-	IniWrite($settings, "Columns", "Column_RadioType", $save_column_RadioType)
-	IniWrite($settings, "Columns", "Column_LatitudeDMS", $save_column_LatitudeDMS)
-	IniWrite($settings, "Columns", "Column_LongitudeDMS", $save_column_LongitudeDMS)
-	IniWrite($settings, "Columns", "Column_LatitudeDMM", $save_column_LatitudeDMM)
-	IniWrite($settings, "Columns", "Column_LongitudeDMM", $save_column_LongitudeDMM)
-	IniWrite($settings, "Columns", "Column_BasicTransferRates", $save_column_BasicTransferRates)
-	IniWrite($settings, "Columns", "Column_OtherTransferRates", $column_OtherTransferRates)
-	IniWrite($settings, "Columns", "Column_FirstActive", $save_column_FirstActive)
-	IniWrite($settings, "Columns", "Column_LastActive", $save_column_LastActive)
+	If $VistumblerGuiOpen = 1 Then
+		;Get Current column positions
+		$currentcolumn = StringSplit(_GUICtrlListView_GetColumnOrder($ListviewAPs), '|')
+		For $c = 1 To $currentcolumn[0]
+			If $column_Line = $currentcolumn[$c] Then $save_column_Line = $c - 1
+			If $column_Active = $currentcolumn[$c] Then $save_column_Active = $c - 1
+			If $column_BSSID = $currentcolumn[$c] Then $save_column_BSSID = $c - 1
+			If $column_SSID = $currentcolumn[$c] Then $save_column_SSID = $c - 1
+			If $column_Signal = $currentcolumn[$c] Then $save_column_Signal = $c - 1
+			If $column_HighSignal = $currentcolumn[$c] Then $save_column_HighSignal = $c - 1
+			If $column_RSSI = $currentcolumn[$c] Then $save_column_RSSI = $c - 1
+			If $column_HighRSSI = $currentcolumn[$c] Then $save_column_HighRSSI = $c - 1
+			If $column_Channel = $currentcolumn[$c] Then $save_column_Channel = $c - 1
+			If $column_Authentication = $currentcolumn[$c] Then $save_column_Authentication = $c - 1
+			If $column_Encryption = $currentcolumn[$c] Then $save_column_Encryption = $c - 1
+			If $column_NetworkType = $currentcolumn[$c] Then $save_column_NetworkType = $c - 1
+			If $column_Latitude = $currentcolumn[$c] Then $save_column_Latitude = $c - 1
+			If $column_Longitude = $currentcolumn[$c] Then $save_column_Longitude = $c - 1
+			If $column_MANUF = $currentcolumn[$c] Then $save_column_MANUF = $c - 1
+			If $column_Label = $currentcolumn[$c] Then $save_column_Label = $c - 1
+			If $column_RadioType = $currentcolumn[$c] Then $save_column_RadioType = $c - 1
+			If $column_LatitudeDMS = $currentcolumn[$c] Then $save_column_LatitudeDMS = $c - 1
+			If $column_LongitudeDMS = $currentcolumn[$c] Then $save_column_LongitudeDMS = $c - 1
+			If $column_LatitudeDMM = $currentcolumn[$c] Then $save_column_LatitudeDMM = $c - 1
+			If $column_LongitudeDMM = $currentcolumn[$c] Then $save_column_LongitudeDMM = $c - 1
+			If $column_BasicTransferRates = $currentcolumn[$c] Then $save_column_BasicTransferRates = $c - 1
+			If $column_OtherTransferRates = $currentcolumn[$c] Then $save_column_OtherTransferRates = $c - 1
+			If $column_FirstActive = $currentcolumn[$c] Then $save_column_FirstActive = $c - 1
+			If $column_LastActive = $currentcolumn[$c] Then $save_column_LastActive = $c - 1
+		Next
 
-	IniWrite($settings, "Column_Width", "Column_Line", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0))
-	IniWrite($settings, "Column_Width", "Column_Active", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0))
-	IniWrite($settings, "Column_Width", "Column_BSSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BSSID - 0))
-	IniWrite($settings, "Column_Width", "Column_SSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0))
-	IniWrite($settings, "Column_Width", "Column_Signal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0))
-	IniWrite($settings, "Column_Width", "Column_HighSignal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighSignal - 0))
-	IniWrite($settings, "Column_Width", "Column_RSSI", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RSSI - 0))
-	IniWrite($settings, "Column_Width", "Column_HighRSSI", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighRSSI - 0))
-	IniWrite($settings, "Column_Width", "Column_Channel", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0))
-	IniWrite($settings, "Column_Width", "Column_Authentication", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0))
-	IniWrite($settings, "Column_Width", "Column_Encryption", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0))
-	IniWrite($settings, "Column_Width", "Column_NetworkType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0))
-	IniWrite($settings, "Column_Width", "Column_Latitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0))
-	IniWrite($settings, "Column_Width", "Column_Longitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0))
-	IniWrite($settings, "Column_Width", "Column_Manufacturer", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0))
-	IniWrite($settings, "Column_Width", "Column_Label", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0))
-	IniWrite($settings, "Column_Width", "Column_RadioType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0))
-	IniWrite($settings, "Column_Width", "Column_LatitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0))
-	IniWrite($settings, "Column_Width", "Column_LongitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0))
-	IniWrite($settings, "Column_Width", "Column_LatitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0))
-	IniWrite($settings, "Column_Width", "Column_LongitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0))
-	IniWrite($settings, "Column_Width", "Column_BasicTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0))
-	IniWrite($settings, "Column_Width", "Column_OtherTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0))
-	IniWrite($settings, "Column_Width", "Column_FirstActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_FirstActive - 0))
-	IniWrite($settings, "Column_Width", "Column_LastActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LastActive - 0))
+		IniWrite($settings, "Columns", "Column_Line", $save_column_Line)
+		IniWrite($settings, "Columns", "Column_Active", $save_column_Active)
+		IniWrite($settings, "Columns", "Column_BSSID", $save_column_BSSID)
+		IniWrite($settings, "Columns", "Column_SSID", $save_column_SSID)
+		IniWrite($settings, "Columns", "Column_Signal", $save_column_Signal)
+		IniWrite($settings, "Columns", "Column_HighSignal", $save_column_HighSignal)
+		IniWrite($settings, "Columns", "Column_RSSI", $save_column_RSSI)
+		IniWrite($settings, "Columns", "Column_HighRSSI", $save_column_HighRSSI)
+		IniWrite($settings, "Columns", "Column_Channel", $save_column_Channel)
+		IniWrite($settings, "Columns", "Column_Authentication", $save_column_Authentication)
+		IniWrite($settings, "Columns", "Column_Encryption", $save_column_Encryption)
+		IniWrite($settings, "Columns", "Column_NetworkType", $save_column_NetworkType)
+		IniWrite($settings, "Columns", "Column_Latitude", $save_column_Latitude)
+		IniWrite($settings, "Columns", "Column_Longitude", $save_column_Longitude)
+		IniWrite($settings, "Columns", "Column_Manufacturer", $save_column_MANUF)
+		IniWrite($settings, "Columns", "Column_Label", $save_column_Label)
+		IniWrite($settings, "Columns", "Column_RadioType", $save_column_RadioType)
+		IniWrite($settings, "Columns", "Column_LatitudeDMS", $save_column_LatitudeDMS)
+		IniWrite($settings, "Columns", "Column_LongitudeDMS", $save_column_LongitudeDMS)
+		IniWrite($settings, "Columns", "Column_LatitudeDMM", $save_column_LatitudeDMM)
+		IniWrite($settings, "Columns", "Column_LongitudeDMM", $save_column_LongitudeDMM)
+		IniWrite($settings, "Columns", "Column_BasicTransferRates", $save_column_BasicTransferRates)
+		IniWrite($settings, "Columns", "Column_OtherTransferRates", $column_OtherTransferRates)
+		IniWrite($settings, "Columns", "Column_FirstActive", $save_column_FirstActive)
+		IniWrite($settings, "Columns", "Column_LastActive", $save_column_LastActive)
+
+		IniWrite($settings, "Column_Width", "Column_Line", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Line - 0))
+		IniWrite($settings, "Column_Width", "Column_Active", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Active - 0))
+		IniWrite($settings, "Column_Width", "Column_BSSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BSSID - 0))
+		IniWrite($settings, "Column_Width", "Column_SSID", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_SSID - 0))
+		IniWrite($settings, "Column_Width", "Column_Signal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Signal - 0))
+		IniWrite($settings, "Column_Width", "Column_HighSignal", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighSignal - 0))
+		IniWrite($settings, "Column_Width", "Column_RSSI", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RSSI - 0))
+		IniWrite($settings, "Column_Width", "Column_HighRSSI", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_HighRSSI - 0))
+		IniWrite($settings, "Column_Width", "Column_Channel", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Channel - 0))
+		IniWrite($settings, "Column_Width", "Column_Authentication", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Authentication - 0))
+		IniWrite($settings, "Column_Width", "Column_Encryption", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Encryption - 0))
+		IniWrite($settings, "Column_Width", "Column_NetworkType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_NetworkType - 0))
+		IniWrite($settings, "Column_Width", "Column_Latitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Latitude - 0))
+		IniWrite($settings, "Column_Width", "Column_Longitude", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Longitude - 0))
+		IniWrite($settings, "Column_Width", "Column_Manufacturer", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_MANUF - 0))
+		IniWrite($settings, "Column_Width", "Column_Label", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_Label - 0))
+		IniWrite($settings, "Column_Width", "Column_RadioType", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_RadioType - 0))
+		IniWrite($settings, "Column_Width", "Column_LatitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMS - 0))
+		IniWrite($settings, "Column_Width", "Column_LongitudeDMS", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMS - 0))
+		IniWrite($settings, "Column_Width", "Column_LatitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LatitudeDMM - 0))
+		IniWrite($settings, "Column_Width", "Column_LongitudeDMM", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LongitudeDMM - 0))
+		IniWrite($settings, "Column_Width", "Column_BasicTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_BasicTransferRates - 0))
+		IniWrite($settings, "Column_Width", "Column_OtherTransferRates", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_OtherTransferRates - 0))
+		IniWrite($settings, "Column_Width", "Column_FirstActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_FirstActive - 0))
+		IniWrite($settings, "Column_Width", "Column_LastActive", _GUICtrlListView_GetColumnWidth($ListviewAPs, $column_LastActive - 0))
+	EndIf
 
 	;//Write Changes to Language File
 	IniWrite($DefaultLanguagePath, "Column_Names", "Column_Line", $Column_Names_Line)
