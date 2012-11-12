@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4 Beta 2'
+$version = 'v10.4 Beta 2.1'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2012/11/11'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -274,7 +274,7 @@ Dim $CWCB_Authentication, $CWIB_Authentication, $CWCB_Encryption, $CWIB_Encrypti
 Dim $CopyGUI_BSSID, $CopyGUI_Line, $CopyGUI_SSID, $CopyGUI_CHAN, $CopyGUI_AUTH, $CopyGUI_ENCR, $CopyGUI_NETTYPE, $CopyGUI_RADTYPE, $CopyGUI_SIG, $CopyGUI_HIGHSIG, $CopyGUI_RSSI, $CopyGUI_HIGHRSSI, $CopyGUI_MANU, $CopyGUI_LAB, $CopyGUI_LAT, $CopyGUI_LON, $CopyGUI_LATDMS, $CopyGUI_LONDMS, $CopyGUI_LATDMM, $CopyGUI_LONDMM, $CopyGUI_BTX, $CopyGUI_OTX, $CopyGUI_FirstActive, $CopyGUI_LastActive
 Dim $GUI_COPY, $CopyFlag = 0, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_HIGHSIG, $Copy_RSSI, $Copy_HIGHRSSI, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
 
-Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
+Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_RSSI_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
 Dim $SFSVN_ROOT = 'http://sfsvn.vistumbler.net/p/vistumbler/code/'
 Dim $BACKUPSVN_ROOT = 'http://backupsvn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
 Dim $UseBackupSVN = 0
@@ -1120,7 +1120,7 @@ Else
 	_CreateDB($FiltDB)
 	_AccessConnectConn($FiltDB, $FiltDB_OBJ)
 	_CreateTable($FiltDB, 'Filters', $FiltDB_OBJ)
-	_CreatMultipleFields($FiltDB, 'Filters', $FiltDB_OBJ, 'FiltID TEXT(255)|FiltName TEXT(255)|FiltDesc TEXT(255)|SSID TEXT(255)|BSSID TEXT(255)|CHAN TEXT(255)|AUTH TEXT(255)|ENCR TEXT(255)|RADTYPE TEXT(255)|NETTYPE TEXT(255)|Signal TEXT(255)|BTX TEXT(255)|OTX TEXT(255)|ApID TEXT(255)|Active TEXT(255)')
+	_CreatMultipleFields($FiltDB, 'Filters', $FiltDB_OBJ, 'FiltID TEXT(255)|FiltName TEXT(255)|FiltDesc TEXT(255)|SSID TEXT(255)|BSSID TEXT(255)|CHAN TEXT(255)|AUTH TEXT(255)|ENCR TEXT(255)|RADTYPE TEXT(255)|NETTYPE TEXT(255)|Signal INTEGER|RSSI INTEGER|BTX TEXT(255)|OTX TEXT(255)|ApID TEXT(255)|Active TEXT(255)')
 	$FiltID = 0
 EndIf
 
@@ -1986,6 +1986,7 @@ EndFunc   ;==>_ScanAccessPoints
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG, $RSSI)
+	;ConsoleWrite("$New:" & $New & " $NewGpsId:" & $NewGpsId & " $BSSID:" & $BSSID & " $SSID:" & $SSID & " $CHAN:" & $CHAN & " $AUTH:" & $AUTH & " $ENCR:" & $ENCR & " $NETTYPE:" & $NETTYPE & " $RADTYPE" & $RADTYPE & " $BTX:" & $BTX & "$OtX:" & $OtX & " $SIG:" & $SIG & " $RSSI:" & $RSSI & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApData()') ;#Debug Display
 	If $New = 1 And $SIG <> 0 Then
 		$AP_Status = $Text_Active
@@ -2010,9 +2011,10 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	$NewApFound = 0
 	If $GpsMatchArray <> 0 Then ;If GPS ID Is Found
 		;Query AP table for New AP
-		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active, SecType, HighSignal, HighRSSI FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $CHAN) & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
+		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active, SecType, HighSignal, HighRSSI FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = " & $CHAN & " And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
+		;ConsoleWrite($query & @CRLF)
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
 			$APID += 1
 			$HISTID += 1
@@ -2045,7 +2047,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$AddApRecordArray[3] = $AP_StatusNum
 			$AddApRecordArray[4] = $BSSID
 			$AddApRecordArray[5] = $SSID
-			$AddApRecordArray[6] = StringFormat("%03i", $CHAN)
+			$AddApRecordArray[6] = $CHAN
 			$AddApRecordArray[7] = $AUTH
 			$AddApRecordArray[8] = $ENCR
 			$AddApRecordArray[9] = $SecType
@@ -2059,8 +2061,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$AddApRecordArray[17] = $HISTID
 			$AddApRecordArray[18] = $MANUF
 			$AddApRecordArray[19] = $LABEL
-			$AddApRecordArray[20] = StringFormat("%03i", $SIG)
-			$AddApRecordArray[21] = StringFormat("%03i", $SIG)
+			$AddApRecordArray[20] = $SIG
+			$AddApRecordArray[21] = $SIG
 			$AddApRecordArray[22] = $RSSI
 			$AddApRecordArray[23] = $RSSI
 			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $AddApRecordArray)
@@ -2167,8 +2169,9 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$ExpHighRSSI = $Found_HighRSSI
 			EndIf
 			;Update AP in DB. Set Active, LastGpsID, and LastHistID
-			$query = "UPDATE AP SET Active = '" & $AP_StatusNum & "', LastGpsID = '" & $ExpGpsID & "', LastHistId = '" & $ExpLastHistID & "',Signal = '" & StringFormat("%03i", $SIG) & "',HighSignal = '" & StringFormat("%03i", $ExpHighSig) & "',RSSI = '" & $RSSI & "',HighRSSI = '" & $ExpHighRSSI & "' WHERE ApId = '" & $Found_APID & "'"
+			$query = "UPDATE AP SET Active = '" & $AP_StatusNum & "', LastGpsID = '" & $ExpGpsID & "', LastHistId = '" & $ExpLastHistID & "',Signal = " & $SIG & ",HighSignal = " & $ExpHighSig & ",RSSI = '" & $RSSI & "',HighRSSI = '" & $ExpHighRSSI & "' WHERE ApId = '" & $Found_APID & "'"
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+			;ConsoleWrite($query & @CRLF)
 			;Update AP in DB. Set FirstHistID
 			If $ExpFirstHistID <> -1 Then
 				$query = "UPDATE AP SET FirstHistId = '" & $ExpFirstHistID & "' WHERE ApId = '" & $Found_APID & "'"
@@ -2828,7 +2831,7 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
 	_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID TEXT(255)|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN TEXT(10)|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal TEXT(3)|HighSignal INTEGER|RSSI INTEGER|HighRSSI TEXT(4)|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID TEXT(255)|ListRow TEXT(255)|Active TEXT(1)|BSSID TEXT(20)|SSID TEXT(255)|CHAN INTEGER|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE TEXT(1)|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId TEXT(100)|LastGpsID TEXT(100)|FirstHistID TEXT(100)|LastHistID TEXT(100)|MANU TEXT(100)|LABEL TEXT(100)|Signal INTEGER|HighSignal INTEGER|RSSI INTEGER|HighRSSI INTEGER|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID TEXT(255)|ApID TEXT(255)|GpsID TEXT(255)|Signal TEXT(3)|RSSI INTEGER|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID TEXT(255)|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
@@ -4050,7 +4053,7 @@ EndFunc   ;==>_HeaderSort
 
 Func _ListSort($DbCol, $SortOrder)
 	If $DbCol <> "" Then
-		ConsoleWrite($DbCol & @CRLF)
+		;ConsoleWrite($DbCol & @CRLF)
 		Local $ListRowPos = -1
 		If $SortOrder = 1 Then
 			$SortDir = "DESC"
@@ -4078,8 +4081,7 @@ Func _ListSort($DbCol, $SortOrder)
 		ElseIf $DbCol = "LastActive" Then ; Sort by Last Active Time
 			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.LastHistID = Hist.HistID WHERE ListRow<>'-1' ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
-		ElseIf $DbCol = "RSSI" Or $DbCol = "HighRSSI" Then ; Sort by Last Active Time
-			ConsoleWrite('----' & @CRLF)
+		ElseIf $DbCol = "Signal" Or $DbCol = "HighSignal" Or $DbCol = "RSSI" Or $DbCol = "HighRSSI" Or $DbCol = "CHAN" Then ; Sort by Last Active Time
 			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>'-1' ORDER BY CInt(" & $DbCol & ") " & $SortDir & ", ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 		Else ; Sort by any other column
@@ -4437,7 +4439,7 @@ Func _GraphDraw()
 					$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gloop - 1))
 					If $UseRssiInGraphs = 1 Then
 						$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
-						ConsoleWrite($graph_point_center_y & @CRLF)
+						;ConsoleWrite($graph_point_center_y & @CRLF)
 					Else
 						$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
 					EndIf
@@ -5542,7 +5544,7 @@ Func _CopySetClipboard()
 				$CopyText &= '|' & $ExpDate & ' ' & $ExpTime
 			EndIf
 		EndIf
-		ConsoleWrite($CopyText & @CRLF)
+		;ConsoleWrite($CopyText & @CRLF)
 		ClipPut($CopyText)
 	EndIf
 	$CopyFlag = 0
@@ -6893,7 +6895,7 @@ Func _ImportVS1($VS1file)
 			If @error = -1 Then ExitLoop
 			If StringTrimRight($linein, StringLen($linein) - 1) <> "#" Then
 				$loadlist = StringSplit($linein, '|');Split Infomation of AP on line
-				ConsoleWrite($loadlist[0] & @CRLF)
+				;ConsoleWrite($loadlist[0] & @CRLF)
 				If $loadlist[0] = 6 Or $loadlist[0] = 12 Then ; If Line is GPS ID Line
 					If $loadlist[0] = 6 Then
 						$LoadGID = $loadlist[1]
@@ -8221,7 +8223,7 @@ Func _KmlSignalMapAPID($APID, $UseRSSI = 1)
 				If $UseRSSI = 1 Then
 					$ExpRSSIAlt = 100 + $ExpRSSI
 					$ExpString = '					' & $ExpLon & ',' & $ExpLat & ',' & $ExpRSSIAlt & @CRLF
-					ConsoleWrite($ExpRSSI & ' - ' & $ExpRSSIAlt & @CRLF)
+					;ConsoleWrite($ExpRSSI & ' - ' & $ExpRSSIAlt & @CRLF)
 				Else
 					$ExpString = '					' & $ExpLon & ',' & $ExpLat & ',' & $ExpSig & @CRLF
 				EndIf
@@ -10105,18 +10107,10 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			For $q = 1 To $q_splitstring[0]
 				If StringInStr($q_splitstring[$q], '<>') Then
 					If $ret <> '' Then $ret &= ','
-					If $q_field = "CHAN" Or $q_field = "Signal" Then
-						$ret &= "'" & StringFormat("%03i", StringReplace($q_splitstring[$q], '<>', '')) & "'"
-					Else
-						$ret &= "'" & StringReplace($q_splitstring[$q], '<>', '') & "'"
-					EndIf
+					$ret &= "'" & StringReplace($q_splitstring[$q], '<>', '') & "'"
 				Else
 					If $ret2 <> '' Then $ret2 &= ','
-					If $q_field = "CHAN" Or $q_field = "Signal" Then
-						$ret2 &= "'" & StringFormat("%03i", $q_splitstring[$q]) & "'"
-					Else
-						$ret2 &= "'" & $q_splitstring[$q] & "'"
-					EndIf
+					$ret2 &= "'" & $q_splitstring[$q] & "'"
 				EndIf
 			Next
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= "("
@@ -10128,30 +10122,16 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 		ElseIf StringInStr($FilterValues, "-") Then
 			$q_splitstring = StringSplit($FilterValues, "-")
 			If StringInStr($FilterValues, '<>') Then
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringFormat("%03i", StringReplace($q_splitstring[1], '<>', '')) & "' AND '" & StringFormat("%03i", StringReplace($q_splitstring[2], '<>', '')) & "')"
-				Else
-					$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
-				EndIf
+				$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
 			Else
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$q_query &= "(" & $q_field & " BETWEEN '" & StringFormat("%03i", $q_splitstring[1]) & "' AND '" & StringFormat("%03i", $q_splitstring[2]) & "')"
-				Else
-					$q_query &= "(" & $q_field & " BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
-				EndIf
+				$q_query &= "(" & $q_field & " BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
 			EndIf
 			Return ($q_query)
 		Else
 			If StringInStr($FilterValues, '<>') Then
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$q_query &= "(" & $q_field & " <> '" & StringFormat("%03i", StringReplace($FilterValues, '<>', '')) & "')"
-				Else
-					$q_query &= "(" & $q_field & " <> '" & StringReplace($FilterValues, '<>', '') & "')"
-				EndIf
+				$q_query &= "(" & $q_field & " <> '" & StringReplace($FilterValues, '<>', '') & "')"
 			Else
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$q_query &= "(" & $q_field & " = '" & StringFormat("%03i", $FilterValues) & "')"
-				ElseIf $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+				If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
 					$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
 				Else
 					$q_query &= "(" & $q_field & " = '" & $FilterValues & "')"
@@ -10176,18 +10156,10 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			For $q = 1 To $q_splitstring[0]
 				If StringInStr($q_splitstring[$q], '<>') Then
 					If $ret <> '' Then $ret &= ','
-					If $q_field = "CHAN" Or $q_field = "Signal" Then
-						$ret &= "'" & StringFormat("%03i", StringReplace($q_splitstring[$q], '<>', '')) & "'"
-					Else
-						$ret &= "'" & StringReplace($q_splitstring[$q], '<>', '') & "'"
-					EndIf
+					$ret &= "'" & StringReplace($q_splitstring[$q], '<>', '') & "'"
 				Else
 					If $ret2 <> '' Then $ret2 &= ','
-					If $q_field = "CHAN" Or $q_field = "Signal" Then
-						$ret2 &= "'" & StringFormat("%03i", $q_splitstring[$q]) & "'"
-					Else
-						$ret2 &= "'" & $q_splitstring[$q] & "'"
-					EndIf
+					$ret2 &= "'" & $q_splitstring[$q] & "'"
 				EndIf
 			Next
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= "("
@@ -10199,30 +10171,16 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 		ElseIf StringInStr($FilterValues, "-") Then
 			$q_splitstring = StringSplit($FilterValues, "-")
 			If StringInStr($FilterValues, '<>') Then
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$q_query &= "(" & $q_field & " BETWEEN '" & StringFormat("%03i", StringReplace($q_splitstring[1], '<>', '')) & "' AND '" & StringFormat("%03i", StringReplace($q_splitstring[2], '<>', '')) & "')"
-				Else
-					$q_query &= "(" & $q_field & " BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
-				EndIf
+				$q_query &= "(" & $q_field & " BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
 			Else
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringFormat("%03i", $q_splitstring[1]) & "' AND '" & StringFormat("%03i", $q_splitstring[2]) & "')"
-				Else
-					$q_query &= "(" & $q_field & " NOT BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
-				EndIf
+				$q_query &= "(" & $q_field & " NOT BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
 			EndIf
 			Return ($q_query)
 		Else
 			If StringInStr($FilterValues, '<>') Then
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$q_query &= "(" & $q_field & " = '" & StringFormat("%03i", StringReplace($FilterValues, '<>', '')) & "')"
-				Else
-					$q_query &= "(" & $q_field & " = '" & StringReplace($FilterValues, '<>', '') & "')"
-				EndIf
+				$q_query &= "(" & $q_field & " = '" & StringReplace($FilterValues, '<>', '') & "')"
 			Else
-				If $q_field = "CHAN" Or $q_field = "Signal" Then
-					$q_query &= "(" & $q_field & " <> '" & StringFormat("%03i", $FilterValues) & "')"
-				ElseIf $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+				If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
 					$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
 				Else
 					$q_query &= "(" & $q_field & " <> '" & $FilterValues & "')"
@@ -10788,7 +10746,7 @@ Func _CheckForUpdates()
 							Else
 								$sourcefile = $SFSVN_ROOT & $fversion & '/tree/VistumblerMDB/' & $filename & '?format=raw'
 							EndIf
-							ConsoleWrite($sourcefile & @CRLF)
+							;ConsoleWrite($sourcefile & @CRLF)
 							$desttmpfile = $TmpDir & $filename & '.tmp'
 							$destfile = @ScriptDir & '\' & $filename
 							$get = InetGet($sourcefile, $desttmpfile, 1)
@@ -10912,7 +10870,7 @@ Func _EditFilter()
 EndFunc   ;==>_EditFilter
 
 Func _AddEditFilter($Filter_ID = '-1')
-	Local $Filter_Name, $Filter_Desc, $Filter_SSID = "*", $Filter_BSSID = "*", $Filter_CHAN = "*", $Filter_AUTH = "*", $Filter_ENCR = "*", $Filter_RADTYPE = "*", $Filter_NETTYPE = "*", $Filter_SIG = "*", $Filter_BTX = "*", $Filter_OTX = "*", $Filter_Line = "*", $Filter_Active = "*"
+	Local $Filter_Name, $Filter_Desc, $Filter_SSID = "*", $Filter_BSSID = "*", $Filter_CHAN = "*", $Filter_AUTH = "*", $Filter_ENCR = "*", $Filter_RADTYPE = "*", $Filter_NETTYPE = "*", $Filter_SIG = "*", $Filter_RSSI = "*", $Filter_BTX = "*", $Filter_OTX = "*", $Filter_Line = "*", $Filter_Active = "*"
 	If $Filter_ID <> '-1' Then
 		$query = "SELECT FiltName, FiltDesc, SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, RSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $Filter_ID & "'"
 		$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
@@ -10984,9 +10942,9 @@ Func _AddEditFilter($Filter_ID = '-1')
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_SIG_GUI = GUICtrlCreateInput($Filter_SIG, 353, 260, 300, 20)
 	GUICtrlSetColor(-1, $TextColor)
-	;GUICtrlCreateLabel($, 353, 245, 300, 15)
-	;GUICtrlSetColor(-1, $TextColor)
-	$Filter_SIG_GUI = GUICtrlCreateInput($Filter_SIG, 353, 260, 300, 20)
+	GUICtrlCreateLabel($SearchWord_RSSI, 353, 285, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_RSSI_GUI = GUICtrlCreateInput($Filter_RSSI, 353, 300, 300, 20)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AddEditFilt_Can = GUICtrlCreateButton($Text_Cancel, 600, 470, 75, 25, 0)
 	$GUI_AddEditFilt_Ok = GUICtrlCreateButton($Text_Ok, 525, 470, 75, 25, 0)
@@ -11015,6 +10973,7 @@ Func _AddEditFilter_Ok()
 		$Filter_RADTYPE = GUICtrlRead($Filter_RADTYPE_GUI)
 		$Filter_NETTYPE = GUICtrlRead($Filter_NETTYPE_GUI)
 		$Filter_SIG = GUICtrlRead($Filter_SIG_GUI)
+		$Filter_RSSI = GUICtrlRead($Filter_RSSI_GUI)
 		$Filter_BTX = GUICtrlRead($Filter_BTX_GUI)
 		$Filter_OTX = GUICtrlRead($Filter_OTX_GUI)
 		$Filter_Line = GUICtrlRead($Filter_Line_GUI)
@@ -11028,6 +10987,7 @@ Func _AddEditFilter_Ok()
 		If $Filter_RADTYPE = '' Then $Filter_RADTYPE = '*'
 		If $Filter_NETTYPE = '' Then $Filter_NETTYPE = '*'
 		If $Filter_SIG = '' Then $Filter_SIG = '*'
+		If $Filter_RSSI = '' Then $Filter_RSSI = '*'
 		If $Filter_BTX = '' Then $Filter_BTX = '*'
 		If $Filter_OTX = '' Then $Filter_OTX = '*'
 		If $Filter_Line = '' Then $Filter_Line = '*'
@@ -11103,7 +11063,7 @@ Func _CreateFilterQuerys()
 	$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal, HighRSSI FROM AP"
 	$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 	If $DefFiltID <> '-1' Then
-		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
+		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, RSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
 		$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
 		$Filter_SSID = $FiltMatchArray[1][1]
 		$Filter_BSSID = $FiltMatchArray[1][2]
@@ -11113,10 +11073,11 @@ Func _CreateFilterQuerys()
 		$Filter_RADTYPE = $FiltMatchArray[1][6]
 		$Filter_NETTYPE = $FiltMatchArray[1][7]
 		$Filter_SIG = $FiltMatchArray[1][8]
-		$Filter_BTX = $FiltMatchArray[1][9]
-		$Filter_OTX = $FiltMatchArray[1][10]
-		$Filter_Line = $FiltMatchArray[1][11]
-		$Filter_Active = $FiltMatchArray[1][12]
+		$Filter_RSSI = $FiltMatchArray[1][9]
+		$Filter_BTX = $FiltMatchArray[1][10]
+		$Filter_OTX = $FiltMatchArray[1][11]
+		$Filter_Line = $FiltMatchArray[1][12]
+		$Filter_Active = $FiltMatchArray[1][13]
 
 		$aquery = ''
 		$aquery = _AddFilerString($aquery, 'SSID', $Filter_SSID)
@@ -11127,6 +11088,7 @@ Func _CreateFilterQuerys()
 		$aquery = _AddFilerString($aquery, 'RADTYPE', $Filter_RADTYPE)
 		$aquery = _AddFilerString($aquery, 'NETTYPE', $Filter_NETTYPE)
 		$aquery = _AddFilerString($aquery, 'Signal', $Filter_SIG)
+		$aquery = _AddFilerString($aquery, 'RSSI', $Filter_RSSI)
 		$aquery = _AddFilerString($aquery, 'BTX', $Filter_BTX)
 		$aquery = _AddFilerString($aquery, 'OTX', $Filter_OTX)
 		$aquery = _AddFilerString($aquery, 'ApID', $Filter_Line)
@@ -11142,6 +11104,7 @@ Func _CreateFilterQuerys()
 		$rquery = _RemoveFilterString($rquery, 'RADTYPE', $Filter_RADTYPE)
 		$rquery = _RemoveFilterString($rquery, 'NETTYPE', $Filter_NETTYPE)
 		$rquery = _RemoveFilterString($rquery, 'Signal', $Filter_SIG)
+		$rquery = _RemoveFilterString($rquery, 'RSSI', $Filter_RSSI)
 		$rquery = _RemoveFilterString($rquery, 'BTX', $Filter_BTX)
 		$rquery = _RemoveFilterString($rquery, 'OTX', $Filter_OTX)
 		$rquery = _RemoveFilterString($rquery, 'ApID', $Filter_Line)
@@ -11452,7 +11415,7 @@ Func _SelectConnectedAp()
 				EndIf
 			EndIf
 		Next
-		If $UseNativeWifi = 1 Then
+		If $UseNativeWifi = 1 And @OSVersion = "WIN_XP" Then
 			If $IntAuth = $SearchWord_Open And $InEncr = $SearchWord_None Then
 				$SecType = 1
 			ElseIf $InEncr = $SearchWord_Wep Then
@@ -11462,7 +11425,7 @@ Func _SelectConnectedAp()
 			EndIf
 			$query = "SELECT ListRow FROM AP WHERE SSID ='" & StringReplace($IntSSID, "'", "''") & "' And SECTYPE = '" & $SecType & "'"
 		Else
-			$query = "SELECT ListRow FROM AP WHERE BSSID = '" & $IntBSSID & "' And SSID ='" & StringReplace($IntSSID, "'", "''") & "' And CHAN = '" & StringFormat("%03i", $IntChan) & "' And AUTH = '" & $IntAuth & "'"
+			$query = "SELECT ListRow FROM AP WHERE BSSID = '" & $IntBSSID & "' And SSID ='" & StringReplace($IntSSID, "'", "''") & "' And CHAN = " & $IntChan & " And AUTH = '" & $IntAuth & "'"
 		EndIf
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundApMatch = UBound($ApMatchArray) - 1
@@ -11481,7 +11444,7 @@ EndFunc   ;==>_SelectConnectedAp
 
 Func _SelectHighSignalAp()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SelectHighSignalAp()') ;#Debug Display
-	$query = "SELECT TOP 1 ListRow FROM AP WHERE ListRow <> '-1' ORDER BY Signal DESC"
+	$query = "SELECT TOP 1 ListRow FROM AP WHERE ListRow <> '-1' ORDER BY RSSI DESC"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	If $FoundApMatch <> 0 Then

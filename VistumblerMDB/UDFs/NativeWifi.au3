@@ -5,6 +5,7 @@ http://sourceforge.net/projects/nativewifi/
 Artistic License 2.0
 
 Edited 2012-08-26 by acalcutt1 - Added International 2.4Ghz channels and 5Ghz channels to _Wlan_GetNetworkInfo()
+Edited 2012-11-11 by acalcutt1 - Modified _Wlan_EnumToString DOT11_AUTH_ALGORITHM and DOT11_CIPHER_ALGORITHM to match netsh output names.
 #CE
 ;--------------Enumerations-------------
 
@@ -192,15 +193,15 @@ Func _Wlan_EnumToString($sCategory, $iEnumeration)
 				Case $DOT11_AUTH_ALGO_80211_SHARED_KEY
 					Return "Shared Key"
 				Case $DOT11_AUTH_ALGO_WPA
-					Return "WPA"
+					Return "WPA-Enterprise"
 				Case $DOT11_AUTH_ALGO_WPA_PSK
-					Return "WPA-PSK"
+					Return "WPA-Personal"
 				Case $DOT11_AUTH_ALGO_WPA_NONE
 					Return "WPA-None"
 				Case $DOT11_AUTH_ALGO_RSNA
-					Return "WPA2"
+					Return "WPA2-Enterprise"
 				Case $DOT11_AUTH_ALGO_RSNA_PSK
-					Return "WPA2-PSK"
+					Return "WPA2-Personal"
 				Case $DOT11_AUTH_ALGO_IHV_START To $DOT11_AUTH_ALGO_IHV_END
 					Return "IHV Auth (0x" & Hex($iEnumeration) & ")"
 				Case Else
@@ -220,13 +221,13 @@ Func _Wlan_EnumToString($sCategory, $iEnumeration)
 		Case "DOT11_CIPHER_ALGORITHM"
 			Switch $iEnumeration
 				Case $DOT11_CIPHER_ALGO_NONE
-					Return "Unencrypted"
+					Return "None"
 				Case $DOT11_CIPHER_ALGO_WEP40
 					Return "WEP-40"
 				Case $DOT11_CIPHER_ALGO_TKIP
 					Return "TKIP"
 				Case $DOT11_CIPHER_ALGO_CCMP
-					Return "AES"
+					Return "CCMP"
 				Case $DOT11_CIPHER_ALGO_WEP104
 					Return "WEP-104"
 				Case $DOT11_CIPHER_ALGO_WPA_USE_GROUP
@@ -2849,8 +2850,8 @@ Func _Wlan_GenerateProfileObject($sProfile)
 		If .Type = "IBSS" Then .Type = "Ad Hoc"
 		If .Auth = "open" Then .Auth = "Open"
 		If .Auth = "shared" Then .Auth  = "Shared Key"
-		If .Auth = "WPAPSK" Then .Auth = "WPA-PSK"
-		If .Auth = "WPA2PSK" Then .Auth = "WPA2-PSK"
+		If .Auth = "WPAPSK" Then .Auth = "WPA-Personal"
+		If .Auth = "WPA2PSK" Then .Auth = "WPA2-Personal"
 		If .Encr = "none" Then .Encr = "Unencrypted"
 		If .Key.Protected == "true" Then .Key.Protected = True
 		If .Key.Protected == "false" Then .Key.Protected = False
@@ -5162,7 +5163,7 @@ EndFunc
 ;                  |.Name - Name of the profile (String) (Req)
 ;                  |.SSID - A list of SSIDs to connect to (List of strings) (Req)
 ;                  |.Type - The network type ("Infrastructure" or "Ad Hoc") (Req)
-;                  |.Auth - Authentication method ("Open", "Shared Key", "WEP", "WPA-PSK", "WPA2-PSK", "WPA" or "WPA2") (Req)
+;                  |.Auth - Authentication method ("Open", "Shared Key", "WEP", "WPA-Personal", "WPA2-Personal", "WPA-Enterprise" or "WPA2-Enterprise") (Req)
 ;                  |.Encr - Encryption method ("AES" or "TKIP") (Req)
 ;                  Key: ($oProfile.Key)
 ;                  |.Protected - Specifies if the Material property is encrypted (Boolean) (Req if using a Shared Key)
