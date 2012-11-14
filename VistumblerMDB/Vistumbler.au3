@@ -1120,7 +1120,7 @@ Else
 	_CreateDB($FiltDB)
 	_AccessConnectConn($FiltDB, $FiltDB_OBJ)
 	_CreateTable($FiltDB, 'Filters', $FiltDB_OBJ)
-	_CreatMultipleFields($FiltDB, 'Filters', $FiltDB_OBJ, 'FiltID TEXT(255)|FiltName TEXT(255)|FiltDesc TEXT(255)|SSID TEXT(255)|BSSID TEXT(255)|CHAN TEXT(255)|AUTH TEXT(255)|ENCR TEXT(255)|RADTYPE TEXT(255)|NETTYPE TEXT(255)|Signal INTEGER|RSSI INTEGER|BTX TEXT(255)|OTX TEXT(255)|ApID TEXT(255)|Active TEXT(255)')
+	_CreatMultipleFields($FiltDB, 'Filters', $FiltDB_OBJ, 'FiltID TEXT(255)|FiltName TEXT(255)|FiltDesc TEXT(255)|SSID TEXT(255)|BSSID TEXT(255)|CHAN TEXT(255)|AUTH TEXT(255)|ENCR TEXT(255)|RADTYPE TEXT(255)|NETTYPE TEXT(255)|Signal TEXT(255)|RSSI TEXT(255)|BTX TEXT(255)|OTX TEXT(255)|ApID TEXT(255)|Active TEXT(255)')
 	$FiltID = 0
 EndIf
 
@@ -10119,6 +10119,19 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			If $ret2 <> '' Then $q_query &= $q_field & " IN (" & $ret2 & ")"
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
 			Return ($q_query)
+		ElseIf $q_field = "RSSI" And (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then
+			$RRS = StringSplit($FilterValues, "-")
+			If $RRS[0] = 4 Then
+				$Rnum1 = $RRS[1] & '-' & $RRS[2]
+				$Rnum2 = $RRS[3] & '-' & $RRS[4]
+				ConsoleWrite('Range: ' & $Rnum1 & ' - ' & $Rnum2 & @CRLF)
+				If StringInStr($FilterValues, '<>') Then
+					$q_query &= "(" & $q_field & " NOT BETWEEN " & StringReplace($Rnum1, '<>', '') & " AND " & StringReplace($Rnum2, '<>', '') & ")"
+				Else
+					$q_query &= "(" & $q_field & " BETWEEN " & $Rnum1 & " AND " & $Rnum2 & ")"
+				EndIf
+			EndIf
+			Return ($q_query)
 		ElseIf StringInStr($FilterValues, "-") Then
 			$q_splitstring = StringSplit($FilterValues, "-")
 			If StringInStr($FilterValues, '<>') Then
@@ -10167,6 +10180,19 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			If $ret <> '' And $ret2 <> '' Then $q_query &= " Or "
 			If $ret2 <> '' Then $q_query &= $q_field & " NOT IN (" & $ret2 & ")"
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
+			Return ($q_query)
+		ElseIf $q_field = "RSSI" And (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then
+			$RRS = StringSplit($FilterValues, "-")
+			If $RRS[0] = 4 Then
+				$Rnum1 = $RRS[1] & '-' & $RRS[2]
+				$Rnum2 = $RRS[3] & '-' & $RRS[4]
+				ConsoleWrite('Range: ' & $Rnum1 & ' - ' & $Rnum2 & @CRLF)
+				If StringInStr($FilterValues, '<>') Then
+					$q_query &= "(" & $q_field & " BETWEEN " & StringReplace($Rnum1, '<>', '') & " AND " & $Rnum2 & ")"
+				Else
+					$q_query &= "(" & $q_field & " NOT BETWEEN " & $Rnum1 & " AND " & $Rnum2 & ")"
+				EndIf
+			EndIf
 			Return ($q_query)
 		ElseIf StringInStr($FilterValues, "-") Then
 			$q_splitstring = StringSplit($FilterValues, "-")
@@ -10995,7 +11021,7 @@ Func _AddEditFilter_Ok()
 
 		If $Filter_ID_GUI = '-1' Then
 			$FiltID += 1
-			_AddRecord($FiltDB, "Filters", $FiltDB_OBJ, $FiltID & '|' & $Filter_Name & '|' & $Filter_Desc & '|' & $Filter_SSID & '|' & $Filter_BSSID & '|' & $Filter_CHAN & '|' & $Filter_AUTH & '|' & $Filter_ENCR & '|' & $Filter_RADTYPE & '|' & $Filter_NETTYPE & '|' & $Filter_SIG & '|' & $Filter_BTX & '|' & $Filter_OTX & '|' & $Filter_Line & '|' & $Filter_Active)
+			_AddRecord($FiltDB, "Filters", $FiltDB_OBJ, $FiltID & '|' & $Filter_Name & '|' & $Filter_Desc & '|' & $Filter_SSID & '|' & $Filter_BSSID & '|' & $Filter_CHAN & '|' & $Filter_AUTH & '|' & $Filter_ENCR & '|' & $Filter_RADTYPE & '|' & $Filter_NETTYPE & '|' & $Filter_SIG & '|' & $Filter_RSSI & '|' & $Filter_BTX & '|' & $Filter_OTX & '|' & $Filter_Line & '|' & $Filter_Active)
 			$menuid = GUICtrlCreateMenuItem($Filter_Name, $FilterMenu)
 			GUICtrlSetOnEvent($menuid, '_FilterChanged')
 			_ArrayAdd($FilterMenuID_Array, $menuid)
@@ -11004,7 +11030,7 @@ Func _AddEditFilter_Ok()
 			$FilterID_Array[0] = UBound($FilterID_Array) - 1
 		Else
 			$Filter_ID = $Filter_ID_GUI
-			$query = "UPDATE Filters SET FiltName='" & $Filter_Name & "', FiltDesc='" & $Filter_Desc & "', SSID='" & $Filter_SSID & "', BSSID='" & $Filter_BSSID & "', CHAN='" & $Filter_CHAN & "', AUTH='" & $Filter_AUTH & "', ENCR='" & $Filter_ENCR & "', RADTYPE='" & $Filter_RADTYPE & "', NETTYPE='" & $Filter_NETTYPE & "', Signal='" & $Filter_SIG & "', BTX='" & $Filter_BTX & "', OTX='" & $Filter_OTX & "', ApID='" & $Filter_Line & "', Active='" & $Filter_Active & "' WHERE FiltID='" & $Filter_ID & "'"
+			$query = "UPDATE Filters SET FiltName='" & $Filter_Name & "', FiltDesc='" & $Filter_Desc & "', SSID='" & $Filter_SSID & "', BSSID='" & $Filter_BSSID & "', CHAN='" & $Filter_CHAN & "', AUTH='" & $Filter_AUTH & "', ENCR='" & $Filter_ENCR & "', RADTYPE='" & $Filter_RADTYPE & "', NETTYPE='" & $Filter_NETTYPE & "', Signal='" & $Filter_SIG & "', RSSI='" & $Filter_RSSI & "', BTX='" & $Filter_BTX & "', OTX='" & $Filter_OTX & "', ApID='" & $Filter_Line & "', Active='" & $Filter_Active & "' WHERE FiltID='" & $Filter_ID & "'"
 			_ExecuteMDB($FiltDB, $FiltDB_OBJ, $query)
 			For $fi = 1 To $FilterID_Array[0]
 				If $FilterID_Array[$fi] = $Filter_ID Then
@@ -11095,6 +11121,8 @@ Func _CreateFilterQuerys()
 		$aquery = _AddFilerString($aquery, 'Active', $Filter_Active)
 		If $aquery <> '' Then $AddQuery &= ' WHERE (' & $aquery & ')'
 
+		ConsoleWrite($AddQuery & @CRLF)
+
 		$rquery = ''
 		$rquery = _RemoveFilterString($rquery, 'SSID', $Filter_SSID)
 		$rquery = _RemoveFilterString($rquery, 'BSSID', $Filter_BSSID)
@@ -11110,6 +11138,8 @@ Func _CreateFilterQuerys()
 		$rquery = _RemoveFilterString($rquery, 'ApID', $Filter_Line)
 		$rquery = _RemoveFilterString($rquery, 'Active', $Filter_Active)
 		If $rquery <> '' Then $RemoveQuery &= ' WHERE (' & $rquery & ')'
+
+		ConsoleWrite($RemoveQuery & @CRLF)
 	EndIf
 EndFunc   ;==>_CreateFilterQuerys
 
