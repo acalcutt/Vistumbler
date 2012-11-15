@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4 Beta 2.1'
+$version = 'v10.4 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/11/11'
+$last_modified = '2012/11/14'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -274,7 +274,7 @@ Dim $CWCB_Authentication, $CWIB_Authentication, $CWCB_Encryption, $CWIB_Encrypti
 Dim $CopyGUI_BSSID, $CopyGUI_Line, $CopyGUI_SSID, $CopyGUI_CHAN, $CopyGUI_AUTH, $CopyGUI_ENCR, $CopyGUI_NETTYPE, $CopyGUI_RADTYPE, $CopyGUI_SIG, $CopyGUI_HIGHSIG, $CopyGUI_RSSI, $CopyGUI_HIGHRSSI, $CopyGUI_MANU, $CopyGUI_LAB, $CopyGUI_LAT, $CopyGUI_LON, $CopyGUI_LATDMS, $CopyGUI_LONDMS, $CopyGUI_LATDMM, $CopyGUI_LONDMM, $CopyGUI_BTX, $CopyGUI_OTX, $CopyGUI_FirstActive, $CopyGUI_LastActive
 Dim $GUI_COPY, $CopyFlag = 0, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_HIGHSIG, $Copy_RSSI, $Copy_HIGHRSSI, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
 
-Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_RSSI_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
+Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_HighSig_GUI, $Filter_RSSI_GUI, $Filter_HighRSSI_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
 Dim $SFSVN_ROOT = 'http://sfsvn.vistumbler.net/p/vistumbler/code/'
 Dim $BACKUPSVN_ROOT = 'http://backupsvn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
 Dim $UseBackupSVN = 0
@@ -1120,7 +1120,7 @@ Else
 	_CreateDB($FiltDB)
 	_AccessConnectConn($FiltDB, $FiltDB_OBJ)
 	_CreateTable($FiltDB, 'Filters', $FiltDB_OBJ)
-	_CreatMultipleFields($FiltDB, 'Filters', $FiltDB_OBJ, 'FiltID TEXT(255)|FiltName TEXT(255)|FiltDesc TEXT(255)|SSID TEXT(255)|BSSID TEXT(255)|CHAN TEXT(255)|AUTH TEXT(255)|ENCR TEXT(255)|RADTYPE TEXT(255)|NETTYPE TEXT(255)|Signal TEXT(255)|RSSI TEXT(255)|BTX TEXT(255)|OTX TEXT(255)|ApID TEXT(255)|Active TEXT(255)')
+	_CreatMultipleFields($FiltDB, 'Filters', $FiltDB_OBJ, 'FiltID TEXT(255)|FiltName TEXT(255)|FiltDesc TEXT(255)|SSID TEXT(255)|BSSID TEXT(255)|CHAN TEXT(255)|AUTH TEXT(255)|ENCR TEXT(255)|RADTYPE TEXT(255)|NETTYPE TEXT(255)|Signal TEXT(255)|HighSig TEXT(255)|RSSI TEXT(255)|HighRSSI TEXT(255)|BTX TEXT(255)|OTX TEXT(255)|ApID TEXT(255)|Active TEXT(255)')
 	$FiltID = 0
 EndIf
 
@@ -10102,7 +10102,55 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 	Else
 		If $q_query <> '' Then $q_query &= ' AND '
 		$FilterValues = StringReplace($FilterValues, "|", ",")
-		If StringInStr($FilterValues, ",") Then
+		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
+			If (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then ;If there are 3 dashes, treat this as a range of RSSI values
+				$RRS = StringSplit($FilterValues, "-")
+				If $RRS[0] = 4 Then
+					$Rnum1 = $RRS[1] & '-' & $RRS[2]
+					$Rnum2 = $RRS[3] & '-' & $RRS[4]
+					ConsoleWrite('Range: ' & $Rnum1 & ' - ' & $Rnum2 & @CRLF)
+					If StringInStr($FilterValues, '<>') Then
+						$q_query &= "(" & $q_field & " NOT BETWEEN " & StringReplace($Rnum1, '<>', '') & " AND " & StringReplace($Rnum2, '<>', '') & ")"
+					Else
+						$q_query &= "(" & $q_field & " BETWEEN " & $Rnum1 & " AND " & $Rnum2 & ")"
+					EndIf
+				EndIf
+			ElseIf StringInStr($FilterValues, ",") Then
+				$q_splitstring = StringSplit($FilterValues, ",")
+				For $q = 1 To $q_splitstring[0]
+					If StringInStr($q_splitstring[$q], '<>') Then
+						If $ret <> '' Then $ret &= ','
+						$ret &= StringReplace($q_splitstring[$q], '<>', '')
+					Else
+						If $ret2 <> '' Then $ret2 &= ','
+						$ret2 &= $q_splitstring[$q]
+					EndIf
+				Next
+				If $ret <> '' Or $ret2 <> '' Then $q_query &= "("
+				If $ret <> '' Then $q_query &= $q_field & " NOT IN (" & $ret & ")"
+				If $ret <> '' And $ret2 <> '' Then $q_query &= " And "
+				If $ret2 <> '' Then $q_query &= $q_field & " IN (" & $ret2 & ")"
+				If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
+			ElseIf StringInStr($FilterValues, "-") Then
+				$q_splitstring = StringSplit($FilterValues, "-")
+				If StringInStr($FilterValues, '<>') Then
+					$q_query &= "(" & $q_field & " NOT BETWEEN " & StringReplace($q_splitstring[1], '<>', '') & " AND " & StringReplace($q_splitstring[2], '<>', '') & ")"
+				Else
+					$q_query &= "(" & $q_field & " BETWEEN " & $q_splitstring[1] & " AND " & $q_splitstring[2] & ")"
+				EndIf
+			Else
+				If StringInStr($FilterValues, '<>') Then
+					$q_query &= "(" & $q_field & " <> " & StringReplace($FilterValues, '<>', '') & ")"
+				Else
+					If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+						$q_query &= "(" & $q_field & " like " & $FilterValues & ")"
+					Else
+						$q_query &= "(" & $q_field & " = " & $FilterValues & ")"
+					EndIf
+				EndIf
+			EndIf
+			Return ($q_query)
+		ElseIf StringInStr($FilterValues, ",") Then
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
 				If StringInStr($q_splitstring[$q], '<>') Then
@@ -10118,19 +10166,6 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			If $ret <> '' And $ret2 <> '' Then $q_query &= " And "
 			If $ret2 <> '' Then $q_query &= $q_field & " IN (" & $ret2 & ")"
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
-			Return ($q_query)
-		ElseIf $q_field = "RSSI" And (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then
-			$RRS = StringSplit($FilterValues, "-")
-			If $RRS[0] = 4 Then
-				$Rnum1 = $RRS[1] & '-' & $RRS[2]
-				$Rnum2 = $RRS[3] & '-' & $RRS[4]
-				ConsoleWrite('Range: ' & $Rnum1 & ' - ' & $Rnum2 & @CRLF)
-				If StringInStr($FilterValues, '<>') Then
-					$q_query &= "(" & $q_field & " NOT BETWEEN " & StringReplace($Rnum1, '<>', '') & " AND " & StringReplace($Rnum2, '<>', '') & ")"
-				Else
-					$q_query &= "(" & $q_field & " BETWEEN " & $Rnum1 & " AND " & $Rnum2 & ")"
-				EndIf
-			EndIf
 			Return ($q_query)
 		ElseIf StringInStr($FilterValues, "-") Then
 			$q_splitstring = StringSplit($FilterValues, "-")
@@ -10164,7 +10199,55 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 	Else
 		If $q_query <> '' Then $q_query &= ' OR '
 		$FilterValues = StringReplace($FilterValues, "|", ",")
-		If StringInStr($FilterValues, ",") Then
+		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
+			If (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then ;If there are 3 dashes, treat this as a range of RSSI values
+				$RRS = StringSplit($FilterValues, "-")
+				If $RRS[0] = 4 Then
+					$Rnum1 = $RRS[1] & '-' & $RRS[2]
+					$Rnum2 = $RRS[3] & '-' & $RRS[4]
+					ConsoleWrite('Range: ' & $Rnum1 & ' - ' & $Rnum2 & @CRLF)
+					If StringInStr($FilterValues, '<>') Then
+						$q_query &= "(" & $q_field & " BETWEEN " & StringReplace($Rnum1, '<>', '') & " AND " & $Rnum2 & ")"
+					Else
+						$q_query &= "(" & $q_field & " NOT BETWEEN " & $Rnum1 & " AND " & $Rnum2 & ")"
+					EndIf
+				EndIf
+			ElseIf StringInStr($FilterValues, ",") Then
+				$q_splitstring = StringSplit($FilterValues, ",")
+				For $q = 1 To $q_splitstring[0]
+					If StringInStr($q_splitstring[$q], '<>') Then
+						If $ret <> '' Then $ret &= ','
+						$ret &= StringReplace($q_splitstring[$q], '<>', '')
+					Else
+						If $ret2 <> '' Then $ret2 &= ','
+						$ret2 &= $q_splitstring[$q]
+					EndIf
+				Next
+				If $ret <> '' Or $ret2 <> '' Then $q_query &= "("
+				If $ret <> '' Then $q_query &= $q_field & " IN (" & $ret & ")"
+				If $ret <> '' And $ret2 <> '' Then $q_query &= " Or "
+				If $ret2 <> '' Then $q_query &= $q_field & " NOT IN (" & $ret2 & ")"
+				If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
+			ElseIf StringInStr($FilterValues, "-") Then
+				$q_splitstring = StringSplit($FilterValues, "-")
+				If StringInStr($FilterValues, '<>') Then
+					$q_query &= "(" & $q_field & " BETWEEN " & StringReplace($q_splitstring[1], '<>', '') & " AND " & StringReplace($q_splitstring[2], '<>', '') & ")"
+				Else
+					$q_query &= "(" & $q_field & " NOT BETWEEN " & $q_splitstring[1] & " AND " & $q_splitstring[2] & ")"
+				EndIf
+			Else
+				If StringInStr($FilterValues, '<>') Then
+					$q_query &= "(" & $q_field & " = " & StringReplace($FilterValues, '<>', '') & ")"
+				Else
+					If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+						$q_query &= "(" & $q_field & " not like " & $FilterValues & ")"
+					Else
+						$q_query &= "(" & $q_field & " <> " & $FilterValues & ")"
+					EndIf
+				EndIf
+			EndIf
+			Return ($q_query)
+		ElseIf StringInStr($FilterValues, ",") Then
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
 				If StringInStr($q_splitstring[$q], '<>') Then
@@ -10180,19 +10263,6 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			If $ret <> '' And $ret2 <> '' Then $q_query &= " Or "
 			If $ret2 <> '' Then $q_query &= $q_field & " NOT IN (" & $ret2 & ")"
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
-			Return ($q_query)
-		ElseIf $q_field = "RSSI" And (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then
-			$RRS = StringSplit($FilterValues, "-")
-			If $RRS[0] = 4 Then
-				$Rnum1 = $RRS[1] & '-' & $RRS[2]
-				$Rnum2 = $RRS[3] & '-' & $RRS[4]
-				ConsoleWrite('Range: ' & $Rnum1 & ' - ' & $Rnum2 & @CRLF)
-				If StringInStr($FilterValues, '<>') Then
-					$q_query &= "(" & $q_field & " BETWEEN " & StringReplace($Rnum1, '<>', '') & " AND " & $Rnum2 & ")"
-				Else
-					$q_query &= "(" & $q_field & " NOT BETWEEN " & $Rnum1 & " AND " & $Rnum2 & ")"
-				EndIf
-			EndIf
 			Return ($q_query)
 		ElseIf StringInStr($FilterValues, "-") Then
 			$q_splitstring = StringSplit($FilterValues, "-")
@@ -10896,9 +10966,9 @@ Func _EditFilter()
 EndFunc   ;==>_EditFilter
 
 Func _AddEditFilter($Filter_ID = '-1')
-	Local $Filter_Name, $Filter_Desc, $Filter_SSID = "*", $Filter_BSSID = "*", $Filter_CHAN = "*", $Filter_AUTH = "*", $Filter_ENCR = "*", $Filter_RADTYPE = "*", $Filter_NETTYPE = "*", $Filter_SIG = "*", $Filter_RSSI = "*", $Filter_BTX = "*", $Filter_OTX = "*", $Filter_Line = "*", $Filter_Active = "*"
+	Local $Filter_Name, $Filter_Desc, $Filter_SSID = "*", $Filter_BSSID = "*", $Filter_CHAN = "*", $Filter_AUTH = "*", $Filter_ENCR = "*", $Filter_RADTYPE = "*", $Filter_NETTYPE = "*", $Filter_SIG = "*", $Filter_HighSig = "*", $Filter_RSSI = "*", $Filter_HighRSSI = "*", $Filter_BTX = "*", $Filter_OTX = "*", $Filter_Line = "*", $Filter_Active = "*"
 	If $Filter_ID <> '-1' Then
-		$query = "SELECT FiltName, FiltDesc, SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, RSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $Filter_ID & "'"
+		$query = "SELECT FiltName, FiltDesc, SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, HighSig, RSSI, HighRSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $Filter_ID & "'"
 		$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
 		$Filter_Name = $FiltMatchArray[1][1]
 		$Filter_Desc = $FiltMatchArray[1][2]
@@ -10910,11 +10980,13 @@ Func _AddEditFilter($Filter_ID = '-1')
 		$Filter_RADTYPE = $FiltMatchArray[1][8]
 		$Filter_NETTYPE = $FiltMatchArray[1][9]
 		$Filter_SIG = $FiltMatchArray[1][10]
-		$Filter_RSSI = $FiltMatchArray[1][11]
-		$Filter_BTX = $FiltMatchArray[1][12]
-		$Filter_OTX = $FiltMatchArray[1][13]
-		$Filter_Line = $FiltMatchArray[1][14]
-		$Filter_Active = $FiltMatchArray[1][15]
+		$Filter_HighSig = $FiltMatchArray[1][11]
+		$Filter_RSSI = $FiltMatchArray[1][12]
+		$Filter_HighRSSI = $FiltMatchArray[1][13]
+		$Filter_BTX = $FiltMatchArray[1][14]
+		$Filter_OTX = $FiltMatchArray[1][15]
+		$Filter_Line = $FiltMatchArray[1][16]
+		$Filter_Active = $FiltMatchArray[1][17]
 	EndIf
 	$Filter_ID_GUI = $Filter_ID
 
@@ -10930,47 +11002,56 @@ Func _AddEditFilter($Filter_ID = '-1')
 	GUICtrlCreateGroup($Text_Filters, 8, 75, 665, 390)
 	GUICtrlCreateLabel($Text_FilterMsg, 32, 90, 618, 40)
 	GUICtrlSetColor(-1, $TextColor)
-	GUICtrlCreateLabel($SearchWord_SSID, 28, 125, 300, 15)
+	GUICtrlCreateLabel($Column_Names_SSID, 28, 125, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_SSID_GUI = GUICtrlCreateInput($Filter_SSID, 28, 140, 300, 20)
-	GUICtrlCreateLabel($SearchWord_BSSID, 28, 165, 300, 15)
+	GUICtrlCreateLabel($Column_Names_BSSID, 28, 165, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_BSSID_GUI = GUICtrlCreateInput($Filter_BSSID, 28, 180, 300, 20)
-	GUICtrlCreateLabel($SearchWord_Channel, 28, 205, 300, 15)
+	GUICtrlCreateLabel($Column_Names_Channel, 28, 205, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_CHAN_GUI = GUICtrlCreateInput($Filter_CHAN, 28, 220, 300, 20)
-	GUICtrlCreateLabel($SearchWord_Authentication, 28, 245, 300, 15)
+	GUICtrlCreateLabel($Column_Names_Authentication, 28, 245, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_AUTH_GUI = GUICtrlCreateInput($Filter_AUTH, 28, 260, 300, 20)
-	GUICtrlCreateLabel($SearchWord_Encryption, 28, 285, 300, 15)
+	GUICtrlCreateLabel($Column_Names_Encryption, 28, 285, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_ENCR_GUI = GUICtrlCreateInput($Filter_ENCR, 28, 300, 300, 20)
-	GUICtrlCreateLabel($SearchWord_RadioType, 28, 325, 300, 15)
+	GUICtrlCreateLabel($Column_Names_RadioType, 28, 325, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_RADTYPE_GUI = GUICtrlCreateInput($Filter_RADTYPE, 28, 340, 300, 20)
-	GUICtrlCreateLabel($SearchWord_NetworkType, 28, 365, 300, 15)
+	GUICtrlCreateLabel($Column_Names_NetworkType, 28, 365, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_NETTYPE_GUI = GUICtrlCreateInput($Filter_NETTYPE, 28, 380, 300, 20)
-	GUICtrlCreateLabel($Text_Active, 28, 405, 300, 15)
+	GUICtrlCreateLabel($Column_Names_Active, 28, 405, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_Active_GUI = GUICtrlCreateInput($Filter_Active, 28, 420, 300, 20)
 	GUICtrlSetColor(-1, $TextColor)
-	GUICtrlCreateLabel($SearchWord_BasicRates, 353, 125, 300, 15)
+	GUICtrlCreateLabel($Column_Names_BasicTransferRates, 353, 125, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_BTX_GUI = GUICtrlCreateInput($Filter_BTX, 353, 140, 300, 20)
-	GUICtrlCreateLabel($SearchWord_OtherRates, 353, 165, 300, 15)
+	GUICtrlCreateLabel($Column_Names_OtherTransferRates, 353, 165, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_OTX_GUI = GUICtrlCreateInput($Filter_OTX, 353, 180, 300, 20)
-	GUICtrlCreateLabel($Text_Line, 353, 205, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	GUICtrlCreateLabel($Column_Names_Line, 353, 205, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_Line_GUI = GUICtrlCreateInput($Filter_Line, 353, 220, 300, 20)
-	GUICtrlCreateLabel($SearchWord_Signal, 353, 245, 300, 15)
+	GUICtrlCreateLabel($Column_Names_Signal, 353, 245, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
 	$Filter_SIG_GUI = GUICtrlCreateInput($Filter_SIG, 353, 260, 300, 20)
 	GUICtrlSetColor(-1, $TextColor)
-	GUICtrlCreateLabel($SearchWord_RSSI, 353, 285, 300, 15)
+	GUICtrlCreateLabel($Column_Names_HighSignal, 353, 285, 300, 15)
 	GUICtrlSetColor(-1, $TextColor)
-	$Filter_RSSI_GUI = GUICtrlCreateInput($Filter_RSSI, 353, 300, 300, 20)
+	$Filter_HighSig_GUI = GUICtrlCreateInput($Filter_HighSig, 353, 300, 300, 20)
+	GUICtrlSetColor(-1, $TextColor)
+	GUICtrlCreateLabel($Column_Names_RSSI, 353, 325, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_RSSI_GUI = GUICtrlCreateInput($Filter_RSSI, 353, 340, 300, 20)
+	GUICtrlSetColor(-1, $TextColor)
+	GUICtrlCreateLabel($Column_Names_HighRSSI, 353, 365, 300, 15)
+	GUICtrlSetColor(-1, $TextColor)
+	$Filter_HighRSSI_GUI = GUICtrlCreateInput($Filter_HighRSSI, 353, 380, 300, 20)
 	GUICtrlSetColor(-1, $TextColor)
 	$GUI_AddEditFilt_Can = GUICtrlCreateButton($Text_Cancel, 600, 470, 75, 25, 0)
 	$GUI_AddEditFilt_Ok = GUICtrlCreateButton($Text_Ok, 525, 470, 75, 25, 0)
@@ -10999,7 +11080,9 @@ Func _AddEditFilter_Ok()
 		$Filter_RADTYPE = GUICtrlRead($Filter_RADTYPE_GUI)
 		$Filter_NETTYPE = GUICtrlRead($Filter_NETTYPE_GUI)
 		$Filter_SIG = GUICtrlRead($Filter_SIG_GUI)
+		$Filter_HighSig = GUICtrlRead($Filter_HighSig_GUI)
 		$Filter_RSSI = GUICtrlRead($Filter_RSSI_GUI)
+		$Filter_HighRSSI = GUICtrlRead($Filter_HighRSSI_GUI)
 		$Filter_BTX = GUICtrlRead($Filter_BTX_GUI)
 		$Filter_OTX = GUICtrlRead($Filter_OTX_GUI)
 		$Filter_Line = GUICtrlRead($Filter_Line_GUI)
@@ -11013,7 +11096,9 @@ Func _AddEditFilter_Ok()
 		If $Filter_RADTYPE = '' Then $Filter_RADTYPE = '*'
 		If $Filter_NETTYPE = '' Then $Filter_NETTYPE = '*'
 		If $Filter_SIG = '' Then $Filter_SIG = '*'
+		If $Filter_HighSig = '' Then $Filter_HighSig = '*'
 		If $Filter_RSSI = '' Then $Filter_RSSI = '*'
+		If $Filter_HighRSSI = '' Then $Filter_HighRSSI = '*'
 		If $Filter_BTX = '' Then $Filter_BTX = '*'
 		If $Filter_OTX = '' Then $Filter_OTX = '*'
 		If $Filter_Line = '' Then $Filter_Line = '*'
@@ -11021,7 +11106,7 @@ Func _AddEditFilter_Ok()
 
 		If $Filter_ID_GUI = '-1' Then
 			$FiltID += 1
-			_AddRecord($FiltDB, "Filters", $FiltDB_OBJ, $FiltID & '|' & $Filter_Name & '|' & $Filter_Desc & '|' & $Filter_SSID & '|' & $Filter_BSSID & '|' & $Filter_CHAN & '|' & $Filter_AUTH & '|' & $Filter_ENCR & '|' & $Filter_RADTYPE & '|' & $Filter_NETTYPE & '|' & $Filter_SIG & '|' & $Filter_RSSI & '|' & $Filter_BTX & '|' & $Filter_OTX & '|' & $Filter_Line & '|' & $Filter_Active)
+			_AddRecord($FiltDB, "Filters", $FiltDB_OBJ, $FiltID & '|' & $Filter_Name & '|' & $Filter_Desc & '|' & $Filter_SSID & '|' & $Filter_BSSID & '|' & $Filter_CHAN & '|' & $Filter_AUTH & '|' & $Filter_ENCR & '|' & $Filter_RADTYPE & '|' & $Filter_NETTYPE & '|' & $Filter_SIG & '|' & $Filter_HighSig & '|' & $Filter_RSSI & '|' & $Filter_HighRSSI & '|' & $Filter_BTX & '|' & $Filter_OTX & '|' & $Filter_Line & '|' & $Filter_Active)
 			$menuid = GUICtrlCreateMenuItem($Filter_Name, $FilterMenu)
 			GUICtrlSetOnEvent($menuid, '_FilterChanged')
 			_ArrayAdd($FilterMenuID_Array, $menuid)
@@ -11030,7 +11115,7 @@ Func _AddEditFilter_Ok()
 			$FilterID_Array[0] = UBound($FilterID_Array) - 1
 		Else
 			$Filter_ID = $Filter_ID_GUI
-			$query = "UPDATE Filters SET FiltName='" & $Filter_Name & "', FiltDesc='" & $Filter_Desc & "', SSID='" & $Filter_SSID & "', BSSID='" & $Filter_BSSID & "', CHAN='" & $Filter_CHAN & "', AUTH='" & $Filter_AUTH & "', ENCR='" & $Filter_ENCR & "', RADTYPE='" & $Filter_RADTYPE & "', NETTYPE='" & $Filter_NETTYPE & "', Signal='" & $Filter_SIG & "', RSSI='" & $Filter_RSSI & "', BTX='" & $Filter_BTX & "', OTX='" & $Filter_OTX & "', ApID='" & $Filter_Line & "', Active='" & $Filter_Active & "' WHERE FiltID='" & $Filter_ID & "'"
+			$query = "UPDATE Filters SET FiltName='" & $Filter_Name & "', FiltDesc='" & $Filter_Desc & "', SSID='" & $Filter_SSID & "', BSSID='" & $Filter_BSSID & "', CHAN='" & $Filter_CHAN & "', AUTH='" & $Filter_AUTH & "', ENCR='" & $Filter_ENCR & "', RADTYPE='" & $Filter_RADTYPE & "', NETTYPE='" & $Filter_NETTYPE & "', Signal='" & $Filter_SIG & "', HighSig='" & $Filter_HighSig & "', RSSI='" & $Filter_RSSI & "', HighRSSI='" & $Filter_HighRSSI & "', BTX='" & $Filter_BTX & "', OTX='" & $Filter_OTX & "', ApID='" & $Filter_Line & "', Active='" & $Filter_Active & "' WHERE FiltID='" & $Filter_ID & "'"
 			_ExecuteMDB($FiltDB, $FiltDB_OBJ, $query)
 			For $fi = 1 To $FilterID_Array[0]
 				If $FilterID_Array[$fi] = $Filter_ID Then
@@ -11089,7 +11174,7 @@ Func _CreateFilterQuerys()
 	$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal, HighRSSI FROM AP"
 	$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 	If $DefFiltID <> '-1' Then
-		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, RSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
+		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, HighSig, RSSI, HighRSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
 		$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
 		$Filter_SSID = $FiltMatchArray[1][1]
 		$Filter_BSSID = $FiltMatchArray[1][2]
@@ -11099,11 +11184,13 @@ Func _CreateFilterQuerys()
 		$Filter_RADTYPE = $FiltMatchArray[1][6]
 		$Filter_NETTYPE = $FiltMatchArray[1][7]
 		$Filter_SIG = $FiltMatchArray[1][8]
-		$Filter_RSSI = $FiltMatchArray[1][9]
-		$Filter_BTX = $FiltMatchArray[1][10]
-		$Filter_OTX = $FiltMatchArray[1][11]
-		$Filter_Line = $FiltMatchArray[1][12]
-		$Filter_Active = $FiltMatchArray[1][13]
+		$Filter_HighSig = $FiltMatchArray[1][9]
+		$Filter_RSSI = $FiltMatchArray[1][10]
+		$Filter_HighRSSI = $FiltMatchArray[1][11]
+		$Filter_BTX = $FiltMatchArray[1][12]
+		$Filter_OTX = $FiltMatchArray[1][13]
+		$Filter_Line = $FiltMatchArray[1][14]
+		$Filter_Active = $FiltMatchArray[1][15]
 
 		$aquery = ''
 		$aquery = _AddFilerString($aquery, 'SSID', $Filter_SSID)
@@ -11114,7 +11201,9 @@ Func _CreateFilterQuerys()
 		$aquery = _AddFilerString($aquery, 'RADTYPE', $Filter_RADTYPE)
 		$aquery = _AddFilerString($aquery, 'NETTYPE', $Filter_NETTYPE)
 		$aquery = _AddFilerString($aquery, 'Signal', $Filter_SIG)
+		$aquery = _AddFilerString($aquery, 'HighSignal', $Filter_HighSig)
 		$aquery = _AddFilerString($aquery, 'RSSI', $Filter_RSSI)
+		$aquery = _AddFilerString($aquery, 'HighRSSI', $Filter_HighRSSI)
 		$aquery = _AddFilerString($aquery, 'BTX', $Filter_BTX)
 		$aquery = _AddFilerString($aquery, 'OTX', $Filter_OTX)
 		$aquery = _AddFilerString($aquery, 'ApID', $Filter_Line)
@@ -11132,7 +11221,9 @@ Func _CreateFilterQuerys()
 		$rquery = _RemoveFilterString($rquery, 'RADTYPE', $Filter_RADTYPE)
 		$rquery = _RemoveFilterString($rquery, 'NETTYPE', $Filter_NETTYPE)
 		$rquery = _RemoveFilterString($rquery, 'Signal', $Filter_SIG)
+		$rquery = _RemoveFilterString($rquery, 'HighSignal', $Filter_HighSig)
 		$rquery = _RemoveFilterString($rquery, 'RSSI', $Filter_RSSI)
+		$rquery = _RemoveFilterString($rquery, 'HighRSSI', $Filter_HighRSSI)
 		$rquery = _RemoveFilterString($rquery, 'BTX', $Filter_BTX)
 		$rquery = _RemoveFilterString($rquery, 'OTX', $Filter_OTX)
 		$rquery = _RemoveFilterString($rquery, 'ApID', $Filter_Line)
