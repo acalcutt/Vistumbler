@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4 Beta 3.1'
+$version = 'v10.4 Beta 4'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/11/18'
+$last_modified = '2012/11/20'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -933,6 +933,7 @@ Dim $Text_UseCircleToShowSigStength = IniRead($DefaultLanguagePath, 'GuiText', '
 Dim $Text_ShowGpsRangeMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', 'Show GPS Range Map')
 Dim $Text_ShowGpsTack = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', 'Show GPS Track')
 Dim $Text_Line = IniRead($DefaultLanguagePath, 'GuiText', 'Line', 'Line')
+Dim $Text_Total = IniRead($DefaultLanguagePath, 'GuiText', 'Total', 'Total')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -2279,7 +2280,18 @@ Func _MarkDeadAPs()
 	$query = "Select COUNT(ApID) FROM AP WHERE Active=1"
 	$ActiveCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$ActiveCount = $ActiveCountArray[1][1]
-	GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveCount & " / " & $APID)
+	If $DefFiltID = '-1' Then
+		GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveCount & " / " & $APID)
+	Else
+		$query = "Select COUNT(ApID) FROM AP WHERE ListRow<>-1"
+		$FilteredCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FilteredCount = $FilteredCountArray[1][1]
+		$query = "Select COUNT(ApID) FROM AP WHERE Active=1 And ListRow<>-1"
+		$ActiveFilteredCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$ActiveFilteredCount = $ActiveFilteredCountArray[1][1]
+		GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveFilteredCount & " / " & $FilteredCount & " " & $Text_Filtered & "    " & $ActiveCount & " / " & $APID & " " & $Text_Total)
+		;GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveCount & " / " & $APID & "  ( " & $ActiveFilteredCount & " / " & $FilteredCount & " filtered )")
+	EndIf
 EndFunc   ;==>_MarkDeadAPs
 
 Func _ListViewAdd($line, $Add_Line = -1, $Add_Active = -1, $Add_BSSID = -1, $Add_SSID = -1, $Add_Authentication = -1, $Add_Encryption = -1, $Add_Signal = -1, $Add_HighSignal = -1, $Add_RSSI = -1, $Add_HighRSSI = -1, $Add_Channel = -1, $Add_RadioType = -1, $Add_BasicTransferRates = -1, $Add_OtherTransferRates = -1, $Add_NetworkType = -1, $Add_FirstAcvtive = -1, $Add_LastActive = -1, $Add_LatitudeDMM = -1, $Add_LongitudeDMM = -1, $Add_MANU = -1, $Add_Label = -1)
@@ -2468,7 +2480,7 @@ Func _RemoveTreeviewItem($Treeview, $RootTree, $ImpApID)
 	If $FoundTreeMatch = 1 Then
 		$STP = $TreeMatchArray[1][1]
 		$ISP = $TreeMatchArray[1][2]
-		$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE ApID<>" & $ImpApID & " And SubTreePos='" & $STP & "' And RootTree='" & $RootTree & "'"
+		$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE ApID<>" & $ImpApID & " And SubTreePos=" & $STP & " And RootTree='" & $RootTree & "'"
 		$TreeMatchArray2 = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundTreeMatch2 = UBound($TreeMatchArray2) - 1
 		If $FoundTreeMatch2 = 0 Then _GUICtrlTreeView_Delete(GUICtrlGetHandle($Treeview), $STP)
@@ -2827,15 +2839,13 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'Hist', $DB_OBJ)
 	_CreateTable($dbfile, 'TreeviewPos', $DB_OBJ)
 	_CreateTable($dbfile, 'LoadedFiles', $DB_OBJ)
-	_CreateTable($VistumblerDB, "Graph", $DB_OBJ)
-	_CreateTable($VistumblerDB, "Graph_Temp", $DB_OBJ)
-	_CreateTable($VistumblerDB, 'CAM', $DB_OBJ)
+	_CreateTable($dbfile, 'CAM', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID INTEGER|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID INTEGER|ListRow INTEGER|Active INTEGER|BSSID TEXT(20)|SSID TEXT(255)|CHAN INTEGER|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE INTEGER|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId INTEGER|LastGpsID INTEGER|FirstHistID INTEGER|LastHistID INTEGER|MANU TEXT(100)|LABEL TEXT(100)|Signal INTEGER|HighSignal INTEGER|RSSI INTEGER|HighRSSI INTEGER|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID INTEGER|ApID INTEGER|GpsID INTEGER|Signal INTEGER|RSSI INTEGER|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID INTEGER|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos TEXT(255)|InfoSubPos TEXT(255)|SsidPos TEXT(255)|BssidPos TEXT(255)|ChanPos TEXT(255)|NetPos TEXT(255)|EncrPos TEXT(255)|RadPos TEXT(255)|AuthPos TEXT(255)|BtxPos TEXT(255)|OtxPos TEXT(255)|ManuPos TEXT(255)|LabPos TEXT(255)')
+	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID INTEGER|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos INTEGER|InfoSubPos INTEGER|SsidPos INTEGER|BssidPos INTEGER|ChanPos INTEGER|NetPos INTEGER|EncrPos INTEGER|RadPos  INTEGER|AuthPos INTEGER|BtxPos INTEGER|OtxPos INTEGER|ManuPos INTEGER|LabPos INTEGER')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
-	_CreatMultipleFields($VistumblerDB, 'CAM', $DB_OBJ, 'CamID INTEGER|CamGroup TEXT(255)|GpsID INTEGER|CamName TEXT(255)|CamFile TEXT(255)|ImgMD5 TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
+	_CreatMultipleFields($dbfile, 'CAM', $DB_OBJ, 'CamID INTEGER|CamGroup TEXT(255)|GpsID INTEGER|CamName TEXT(255)|CamFile TEXT(255)|ImgMD5 TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4642,8 +4652,8 @@ Func _Draw2400ChanGraph()
 	_Draw2400ChanLine(2472, 13)
 	_Draw2400ChanLine(2484, 14)
 
-	;Draw Channel labels and lines
-	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active=1"
+	;Draw graph lines
+	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active=1 And ListRow<>-1"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $dc = 1 To $FoundApMatch
@@ -4830,7 +4840,7 @@ Func _Draw5000ChanGraph()
 	_Draw5000ChanLine(5805, 161)
 	_Draw5000ChanLine(5825, 165)
 
-	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active=1"
+	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active=1 And ListRow<>-1"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $dc = 1 To $FoundApMatch
@@ -6713,6 +6723,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', $Text_ShowGpsRangeMap)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', $Text_ShowGpsTack)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Line', $Text_Line)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Total', $Text_Total)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -7235,7 +7246,9 @@ Func _ImportCSV($CSVfile)
 				$ImpRAD = $CSVArray[$lc][9]
 				$ImpCHAN = $CSVArray[$lc][10]
 				$ImpBTX = $CSVArray[$lc][11]
+				If StringLeft($ImpBTX, 1) = '"' And StringRight($ImpBTX, 1) = '"' Then $ImpBTX = StringTrimLeft(StringTrimRight($ImpBTX, 1), 1)
 				$ImpOTX = $CSVArray[$lc][12]
+				If StringLeft($ImpOTX, 1) = '"' And StringRight($ImpOTX, 1) = '"' Then $ImpOTX = StringTrimLeft(StringTrimRight($ImpOTX, 1), 1)
 				$ImpNET = $CSVArray[$lc][13]
 				$ImpLAB = $CSVArray[$lc][14]
 				If StringLeft($ImpLAB, 1) = '"' And StringRight($ImpLAB, 1) = '"' Then $ImpLAB = StringTrimLeft(StringTrimRight($ImpLAB, 1), 1)
@@ -9777,7 +9790,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_UseNativeWifiXpExtMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiXpExtMsg', '(No BSSID, CHAN, OTX, BTX)')
 		$Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as a wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
 		$Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
-		$Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
+		$Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filtered', 'Filtered')
 		$Text_Filters = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
 		$Text_FilterName = IniRead($DefaultLanguagePath, 'GuiText', 'FilterName', 'Filter Name')
 		$Text_FilterDesc = IniRead($DefaultLanguagePath, 'GuiText', 'FilterDesc', 'Filter Description')
@@ -9859,6 +9872,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_ShowGpsRangeMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsRangeMap', 'Show GPS Range Map')
 		$Text_ShowGpsTack = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', 'Show GPS Track')
 		$Text_Line = IniRead($DefaultLanguagePath, 'GuiText', 'Line', 'Line')
+		$Text_Total = IniRead($DefaultLanguagePath, 'GuiText', 'Total', 'Total')
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
