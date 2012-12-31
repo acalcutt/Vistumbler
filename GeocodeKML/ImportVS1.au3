@@ -1,10 +1,16 @@
 ;#RequireAdmin
 ;#include "UDFs\_XMLDomWrapper.au3"
 #include "UDFs\FileListToArray3.au3"
+#include "UDFs\MD5.au3"
 #include <Array.au3>
 #include <INet.au3>
 #include <SQLite.au3>
-Dim $APID, $GPS_ID
+Dim $SearchWord_None = 'None';IniRead($DefaultLanguagePath, 'SearchWords', 'None', 'None')
+Dim $SearchWord_Open = 'Open';IniRead($DefaultLanguagePath, 'SearchWords', 'Open', 'Open')
+Dim $SearchWord_Wep = 'WEP';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
+Dim $dBmMaxSignal = '-30';IniRead($settings, 'Vistumbler', 'dBmMaxSignal', '-30')
+Dim $dBmDissociationSignal = '-85';IniRead($settings, 'Vistumbler', 'dBmDissociationSignal', '-85')
+Dim $APID, $HISTID, $GPS_ID
 Dim $RetryAttempts = 1 ;Number of times to retry getting location
 Dim $DBhndl
 Dim $TmpDir = @ScriptDir & '\temp\'
@@ -21,8 +27,28 @@ Func _SearchVistumblerFiles()
 	  MsgBox(0, "Error", "No folder selected, exiting")
 	  Exit
    Else
-	  $VistumblerFiles = _FileListToArray3($VistumblerFilesFolder, "*.VS1", 1, 1, 1)
-	  _ArrayDisplay($VistumblerFiles)
+		$VistumblerFiles = _FileListToArray3($VistumblerFilesFolder, "*.VS1", 1, 1, 1)
+		For $f=1 to $VistumblerFiles[0]
+			$filename = $VistumblerFiles[$f]
+			$loadfile = $VistumblerFiles[$f]
+			$loadfileMD5 = _MD5ForFile($loadfile)
+			ConsoleWrite('File:' & $f & '/' & $VistumblerFiles[0] & ' ' & $loadfile & ' (' & $loadfileMD5 & ')' & @CRLF)
+			Local $MD5MatchArray, $iRows, $iColumns, $iRval
+			$query = "SELECT MD5 FROM LoadedFiles WHERE MD5='" & $loadfileMD5 & "'"
+			$iRval = _SQLite_GetTable2d($DBhndl, $query, $MD5MatchArray, $iRows, $iColumns)
+			$FoundMD5Match = $iRows
+
+			If $FoundMD5Match <> 0 Then
+				ConsoleWrite('! File Already Exists '& $filename & @CRLF)
+			Else
+				ConsoleWrite('+> Importing New File ' & $filename & @CRLF)
+				_ImportVS1($loadfile)
+				$query = "INSERT INTO LoadedFiles(File,MD5) VALUES ('" & $loadfile & "','" & $loadfileMD5 & "');"
+				_SQLite_Exec($DBhndl, $query)
+			EndIf
+
+
+		Next
    EndIf
 EndFunc
 
@@ -124,40 +150,6 @@ Func _ImportVS1($VS1file)
 							   _SQLite_Exec($DBhndl, $query)
 						   EndIf
 					   EndIf
-					 #cs
-					$query = "SELECT OldGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $LoadGID
-					$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$FoundTempGidMatch = UBound($TempGidMatchArray) - 1
-					If $FoundTempGidMatch = 0 Then
-						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
-						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-						$FoundGpsMatch = UBound($GpsMatchArray) - 1
-						If $FoundGpsMatch = 0 Then
-							$AddGID += 1
-							$GPS_ID += 1
-							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadHorDilPitch & '|' & $LoadAlt & '|' & $LoadGeo & '|' & $LoadSpeedKmh & '|' & $LoadSpeedMPH & '|' & $LoadTrackAngle & '|' & $LoadDate & '|' & $LoadTime)
-							_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $GPS_ID)
-						ElseIf $FoundGpsMatch = 1 Then
-							$NewGpsId = $GpsMatchArray[1][1]
-							_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $NewGpsId)
-						EndIf
-					ElseIf $FoundTempGidMatch = 1 Then
-						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
-						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-						$FoundGpsMatch = UBound($GpsMatchArray) - 1
-						If $FoundGpsMatch = 0 Then
-							$AddGID += 1
-							$GPS_ID += 1
-							_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLat & '|' & $LoadLon & '|' & $LoadSat & '|' & $LoadHorDilPitch & '|' & $LoadAlt & '|' & $LoadGeo & '|' & $LoadSpeedKmh & '|' & $LoadSpeedMPH & '|' & $LoadTrackAngle & '|' & $LoadDate & '|' & $LoadTime)
-							$query = "UPDATE TempGpsIDMatchTabel SET NewGpsID=" & $GPS_ID & " WHERE OldGpsID=" & $LoadGID
-							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-						ElseIf $FoundGpsMatch = 1 Then
-							$NewGpsId = $GpsMatchArray[1][1]
-							$query = "UPDATE TempGpsIDMatchTabel SET NewGpsID=" & $NewGpsId & " WHERE OldGpsID=" & $LoadGID
-							_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-						EndIf
-				  EndIf
-				  #ce
 				ElseIf $loadlist[0] = 13 Then ;If String is VS1 v3 data line
 					$Found = 0
 					$SSID = StringStripWS($loadlist[1], 3)
@@ -180,18 +172,16 @@ Func _ImportVS1($VS1file)
 							$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
 							If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
 							$ImpRSSI = _SignalPercentToDb($ImpSig)
-							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $ImpGID
-							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-							$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
-							If $TempGidMatchArrayMatch <> 0 Then
-								$NewGID = $TempGidMatchArray[1][1]
-								;Add AP Info to DB, Listview, and Treeview
+
+							Local $TempGpsIDMatchArray, $iRows, $iColumns, $iRval
+							$query = "SELECT NewGpsID FROM TempGpsIDMatchTable WHERE OldGpsID='" & $ImpGID & "'"
+							$iRval = _SQLite_GetTable2d($DBhndl, $query, $TempGpsIDMatchArray, $iRows, $iColumns)
+							If $iRows = 1 Then
+								$NewGID = $TempGpsIDMatchArray[1][0]
 								$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig, $ImpRSSI)
 								If $NewApAdded <> 0 Then $AddAP += 1
 							EndIf
 						EndIf
-						$closebtn = _GUICtrlButton_GetState($NsCancel)
-						If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 					Next
 				ElseIf $loadlist[0] = 15 Then ;If String is VS1 v4 data line
 					;_ArrayDisplay($loadlist)
@@ -220,18 +210,15 @@ Func _ImportVS1($VS1file)
 							$ImpGID = $GidSigSplit[1]
 							$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
 							$ImpRSSI = $GidSigSplit[3]
-							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $ImpGID
-							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-							$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
-							If $TempGidMatchArrayMatch <> 0 Then
-								$NewGID = $TempGidMatchArray[1][1]
-								;Add AP Info to DB, Listview, and Treeview
+							Local $TempGpsIDMatchArray, $iRows, $iColumns, $iRval
+							$query = "SELECT NewGpsID FROM TempGpsIDMatchTable WHERE OldGpsID=" & $ImpGID
+							$iRval = _SQLite_GetTable2d($DBhndl, $query, $TempGpsIDMatchArray, $iRows, $iColumns)
+							If $iRows = 1 Then
+								$NewGID = $GpsMatchArray[1][0]
 								$NewApAdded = _AddApData(0, $NewGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $ImpSig, $ImpRSSI)
 								If $NewApAdded <> 0 Then $AddAP += 1
 							EndIf
 						EndIf
-						$closebtn = _GUICtrlButton_GetState($NsCancel)
-						If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 					Next
 				ElseIf $loadlist[0] = 17 Then ; If string is TXT data line
 					$Found = 0
@@ -266,28 +253,32 @@ Func _ImportVS1($VS1file)
 					If StringLen($ld[1]) <> 4 Then $LoadLastActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
 
 					;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
+
+					Local $GpsMatchArray, $iRows, $iColumns, $iRval
 					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
-					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$FoundGpsMatch = UBound($GpsMatchArray) - 1
-					If $FoundGpsMatch = 0 Then
+					$iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $iRows, $iColumns)
+					If $iRows = 0 Then
 						$AddGID += 1
 						$GPS_ID += 1
-						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
+						$query = "INSERT INTO GPS(GPSID,Latitude,Longitude,NumOfSats,HorDilPitch,Alt,Geo,SpeedInMPH,SpeedInKmH,TrackAngle,Date1,Time1) VALUES ('" & $GPS_ID & "','" & $LoadLatitude & "','" & $LoadLongitude & "','" & $LoadSat & "',0,0,0,0,0,0,'" & $LoadFirstActive_Date & "','" & $LoadFirstActive_Time & "');"
+						_SQLite_Exec($DBhndl, $query)
 						$LoadGID = $GPS_ID
 					Else
-						$LoadGID = $GpsMatchArray[1][1]
+						$LoadGID = $GpsMatchArray[1][0]
 					EndIf
+
 					;Add First AP Info to DB, Listview, and Treeview
 					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal, $RSSI)
 					If $NewApAdded <> 0 Then $AddAP += 1
 					;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
-					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
-					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$FoundGpsMatch = UBound($GpsMatchArray) - 1
-					If $FoundGpsMatch = 0 Then
+					Local $GpsMatchArray, $iRows, $iColumns, $iRval
+					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
+					$iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $iRows, $iColumns)
+					If $iRows = 0 Then
 						$AddGID += 1
 						$GPS_ID += 1
-						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $LoadLatitude & '|' & $LoadLongitude & '|' & $LoadSat & '|0|0|0|0|0|0|' & $LoadLastActive_Date & '|' & $LoadLastActive_Time)
+						$query = "INSERT INTO GPS(GPSID,Latitude,Longitude,NumOfSats,HorDilPitch,Alt,Geo,SpeedInMPH,SpeedInKmH,TrackAngle,Date1,Time1) VALUES ('" & $GPS_ID & "','" & $LoadLatitude & "','" & $LoadLongitude & "','" & $LoadSat & "',0,0,0,0,0,0,'" & $LoadLastActive_Date & "','" & $LoadLastActive_Time & "');"
+						_SQLite_Exec($DBhndl, $query)
 						$LoadGID = $GPS_ID
 					Else
 						$LoadGID = $GpsMatchArray[1][1]
@@ -299,65 +290,47 @@ Func _ImportVS1($VS1file)
 					;ExitLoop
 				EndIf
 			EndIf
-
-			If TimerDiff($UpdateTimer) > 600 Or ($currentline = $totallines) Then
-				$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
-				$percent = ($currentline / $totallines) * 100
-				GUICtrlSetData($progressbar, $percent)
-				GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
-				GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
-				GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
-				GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-				GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline & "/" & $totallines)
-				GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($currentline / $min, 1), 1))
-				$UpdateTimer = TimerInit()
-			EndIf
-			If TimerDiff($MemReleaseTimer) > 10000 Then
-				_ReduceMemory()
-				$MemReleaseTimer = TimerInit()
-			EndIf
-			$currentline += 1
-			$closebtn = _GUICtrlButton_GetState($NsCancel)
-			If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 		Next
 	EndIf
 	FileClose($vistumblerfile)
 	$query = "DELETE FROM TempGpsIDMatchTable"
 	_SQLite_Exec($DBhndl, $query)
-	$query = "DROP TempGpsIDMatchTable"
+	$query = "DROP TABLE TempGpsIDMatchTable"
 	_SQLite_Exec($DBhndl, $query)
 EndFunc   ;==>_ImportVS1
 
 Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG, $RSSI)
-	;ConsoleWrite("$New:" & $New & " $NewGpsId:" & $NewGpsId & " $BSSID:" & $BSSID & " $SSID:" & $SSID & " $CHAN:" & $CHAN & " $AUTH:" & $AUTH & " $ENCR:" & $ENCR & " $NETTYPE:" & $NETTYPE & " $RADTYPE" & $RADTYPE & " $BTX:" & $BTX & "$OtX:" & $OtX & " $SIG:" & $SIG & " $RSSI:" & $RSSI & @CRLF)
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApData()') ;#Debug Display
+	ConsoleWrite("$New:" & $New & " $NewGpsId:" & $NewGpsId & " $BSSID:" & $BSSID & " $SSID:" & $SSID & " $CHAN:" & $CHAN & " $AUTH:" & $AUTH & " $ENCR:" & $ENCR & " $NETTYPE:" & $NETTYPE & " $RADTYPE" & $RADTYPE & " $BTX:" & $BTX & "$OtX:" & $OtX & " $SIG:" & $SIG & " $RSSI:" & $RSSI & @CRLF)
 	If $New = 1 And $SIG <> 0 Then
-		$AP_Status = $Text_Active
+		$AP_Status = "Active";$Text_Active
 		$AP_StatusNum = 1
 		$AP_DisplaySig = $SIG
 		$AP_DisplayRSSI = $RSSI
 	Else
-		$AP_Status = $Text_Dead
+		$AP_Status = "Dead";$Text_Dead
 		$AP_StatusNum = 0
 		$AP_DisplaySig = 0
 		$AP_DisplayRSSI = -100
 	EndIf
 	;Get Current GPS/Date/Time Information
-	$query = "SELECT TOP 1 Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = " & $NewGpsId
-	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$New_Lat = $GpsMatchArray[1][1]
-	$New_Lon = $GpsMatchArray[1][2]
-	$New_NumSat = $GpsMatchArray[1][3]
-	$New_Date = $GpsMatchArray[1][4]
-	$New_Time = $GpsMatchArray[1][5]
+	Local $GpsMatchArray, $iRows, $iColumns, $iRval
+	$query = "SELECT Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = '" & $NewGpsId & "' limit 1"
+	$iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $iRows, $iColumns)
+	;$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$New_Lat = $GpsMatchArray[1][0]
+	$New_Lon = $GpsMatchArray[1][1]
+	$New_NumSat = $GpsMatchArray[1][2]
+	$New_Date = $GpsMatchArray[1][3]
+	$New_Time = $GpsMatchArray[1][4]
 	$New_DateTime = $New_Date & ' ' & $New_Time
 	$NewApFound = 0
 	If $GpsMatchArray <> 0 Then ;If GPS ID Is Found
 		;Query AP table for New AP
-		$query = "SELECT TOP 1 ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active, SecType, HighSignal, HighRSSI FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = " & $CHAN & " And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
-		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$FoundApMatch = UBound($ApMatchArray) - 1
-		;ConsoleWrite($query & @CRLF)
+		Local $ApMatchArray, $iRows, $iColumns, $iRval
+		$query = "SELECT ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active, SecType, HighSignal, HighRSSI FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = '" & $CHAN & "' And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "' limit 1"
+		$iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $iRows, $iColumns)
+		;$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = $iRows
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
 			$APID += 1
 			$HISTID += 1
@@ -372,8 +345,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$SecType = 3
 			EndIf
 			;Get Label and Manufacturer information
-			$MANUF = _FindManufacturer($BSSID);Set Manufacturer
-			$LABEL = _SetLabels($BSSID)
+			$MANUF = "";_FindManufacturer($BSSID);Set Manufacturer
+			$LABEL = "";_SetLabels($BSSID)
 			;Set HISTID
 			If $New_Lat <> 'N 0000.0000' And $New_Lon <> 'E 0000.0000' Then
 				$DBHighGpsHistId = $HISTID
@@ -381,46 +354,22 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$DBHighGpsHistId = '0'
 			EndIf
 			;Add History Information
-			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGpsId & '|' & $SIG & '|' & $RSSI & '|' & $New_Date & '|' & $New_Time)
+			$query = "INSERT INTO Hist(HistID,ApID,GpsID,Signal,RSSI,Date1,Time1) VALUES ('" & $HISTID & "','" & $APID & "','" & $NewGpsId & "','" & $SIG & "','" & $RSSI & "','" & $New_Date & "','" & $New_Time & "');"
+			_SQLite_Exec($DBhndl, $query)
 			;Add AP Data into the AP table
-			ReDim $AddApRecordArray[24]
-			$AddApRecordArray[0] = 21
-			$AddApRecordArray[1] = $APID
-			$AddApRecordArray[2] = $ListRow
-			$AddApRecordArray[3] = $AP_StatusNum
-			$AddApRecordArray[4] = $BSSID
-			$AddApRecordArray[5] = $SSID
-			$AddApRecordArray[6] = $CHAN
-			$AddApRecordArray[7] = $AUTH
-			$AddApRecordArray[8] = $ENCR
-			$AddApRecordArray[9] = $SecType
-			$AddApRecordArray[10] = $NETTYPE
-			$AddApRecordArray[11] = $RADTYPE
-			$AddApRecordArray[12] = $BTX
-			$AddApRecordArray[13] = $OtX
-			$AddApRecordArray[14] = $DBHighGpsHistId
-			$AddApRecordArray[15] = $NewGpsId
-			$AddApRecordArray[16] = $HISTID
-			$AddApRecordArray[17] = $HISTID
-			$AddApRecordArray[18] = $MANUF
-			$AddApRecordArray[19] = $LABEL
-			$AddApRecordArray[20] = $AP_DisplaySig
-			$AddApRecordArray[21] = $SIG
-			$AddApRecordArray[22] = $AP_DisplayRSSI
-			$AddApRecordArray[23] = $RSSI
-			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $AddApRecordArray)
-
+			$query = "INSERT INTO AP(ApID,ListRow,Active,BSSID,SSID,CHAN,AUTH,ENCR,SECTYPE,NETTYPE,RADTYPE,BTX,OTX,HighGpsHistId,LastGpsID,FirstHistID,LastHistID,MANU,LABEL,Signal,HighSignal,RSSI,HighRSSI,CountryCode,CountryName,AdminCode,AdminName,Admin2Name) VALUES ('" & $APID & "','" & $ListRow & "','" & $AP_StatusNum & "','" & $BSSID & "','" & StringReplace($SSID, "'", "''") & "','" & $CHAN & "','" & $AUTH & "','" & $ENCR & "','" & $SecType & "','" & $NETTYPE & "','" & $RADTYPE & "','" & $BTX & "','" & $OtX & "','" & $DBHighGpsHistId & "','" & $NewGpsId & "','" & $HISTID & "','" & $HISTID & "','" & StringReplace($MANUF, "'", "''") & "','" & StringReplace($LABEL, "'", "''") & "','" & $AP_DisplaySig & "','" & $SIG & "','" & $AP_DisplayRSSI & "','" & $RSSI & "','','','','','');"
+			_SQLite_Exec($DBhndl, $query)
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
-			$Found_APID = $ApMatchArray[1][1]
-			$Found_ListRow = $ApMatchArray[1][2]
-			$Found_HighGpsHistId = $ApMatchArray[1][3]
-			$Found_LastGpsID = $ApMatchArray[1][4]
-			$Found_FirstHistID = $ApMatchArray[1][5]
-			$Found_LastHistID = $ApMatchArray[1][6]
-			$Found_Active = $ApMatchArray[1][7]
-			$Found_SecType = $ApMatchArray[1][8]
-			$Found_HighSignal = Round($ApMatchArray[1][9])
-			$Found_HighRSSI = Round($ApMatchArray[1][10])
+			$Found_APID = $ApMatchArray[1][0]
+			$Found_ListRow = $ApMatchArray[1][1]
+			$Found_HighGpsHistId = $ApMatchArray[1][2]
+			$Found_LastGpsID = $ApMatchArray[1][3]
+			$Found_FirstHistID = $ApMatchArray[1][4]
+			$Found_LastHistID = $ApMatchArray[1][5]
+			$Found_Active = $ApMatchArray[1][6]
+			$Found_SecType = $ApMatchArray[1][7]
+			$Found_HighSignal = Round($ApMatchArray[1][8])
+			$Found_HighRSSI = Round($ApMatchArray[1][9])
 			$HISTID += 1
 			;Set Last Time and First Time
 			If $New = 1 Then ;If this is a new access point, use new information
@@ -430,20 +379,22 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$ExpLastDateTime = $New_DateTime
 				$ExpFirstDateTime = -1
 			Else ;If this is not a new check if this information is newer or older
-				$query = "SELECT TOP 1 Date1, Time1 FROM Hist WHERE HistID=" & $Found_LastHistID
-				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				If _CompareDate($HistMatchArray[1][1] & ' ' & $HistMatchArray[1][2], $New_Date & ' ' & $New_Time) = 1 Then
+				Local $HistMatchArray, $iRows, $iColumns, $iRval
+				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $Found_LastHistID & "' LIMIT 1"
+				$iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $iRows, $iColumns)
+				If _CompareDate($HistMatchArray[1][0] & ' ' & $HistMatchArray[1][1], $New_Date & ' ' & $New_Time) = 1 Then
 					$ExpLastHistID = $Found_LastHistID
 					$ExpGpsID = $Found_LastGpsID
-					$ExpLastDateTime = $HistMatchArray[1][1] & ' ' & $HistMatchArray[1][2]
+					$ExpLastDateTime = $HistMatchArray[1][0] & ' ' & $HistMatchArray[1][1]
 				Else
 					$ExpLastHistID = $HISTID
 					$ExpGpsID = $NewGpsId
 					$ExpLastDateTime = $New_DateTime
 				EndIf
-				$query = "SELECT TOP 1 Date1, Time1 FROM Hist WHERE HistID=" & $Found_FirstHistID
-				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				If _CompareDate($HistMatchArray[1][1] & ' ' & $HistMatchArray[1][2], $New_Date & ' ' & $New_Time) = 2 Then
+				Local $HistMatchArray, $iRows, $iColumns, $iRval
+				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID = '" & $Found_FirstHistID & "' LIMIT 1"
+				$iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $iRows, $iColumns)
+				If _CompareDate($HistMatchArray[1][0] & ' ' & $HistMatchArray[1][1], $New_Date & ' ' & $New_Time) = 2 Then
 					$ExpFirstDateTime = -1
 					$ExpFirstHistID = -1
 				Else
@@ -459,16 +410,18 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$DBHighGpsHistId = $HISTID
 				Else;If old HighGpsHistId has a postion, check if the new posion has a higher number of satalites/higher signal
 					;Get Old GpsID and Signal
-					$query = "SELECT GpsID, Signal FROM HIST WHERE HistID=" & $Found_HighGpsHistId
-					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$Found_GpsID = $HistMatchArray[1][1]
-					$Found_Sig = $HistMatchArray[1][2] - 0 ;For some reason a " - 0' was needed here or the signals would not compair properly
+					Local $HistMatchArray, $iRows, $iColumns, $iRval
+					$query = "SELECT GpsID, Signal FROM HIST WHERE HistID = '" & $Found_HighGpsHistId & "' LIMIT 1"
+					$iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $iRows, $iColumns)
+					$Found_GpsID = $HistMatchArray[1][0]
+					$Found_Sig = $HistMatchArray[1][1] - 0 ;For some reason a " - 0' was needed here or the signals would not compair properly
 					;Get Old Latititude, Logitude and Number of Satalites from Old GPS ID
-					$query = "SELECT Latitude, Longitude, NumOfSats FROM GPS WHERE GpsID=" & $Found_GpsID
-					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$Found_Lat = $GpsMatchArray[1][1]
-					$Found_Lon = $GpsMatchArray[1][2]
-					$Found_NumSat = $GpsMatchArray[1][3]
+					Local $GpsMatchArray, $iRows, $iColumns, $iRval
+					$query = "SELECT Latitude, Longitude, NumOfSats FROM GPS WHERE GpsID = '" & $Found_GpsID & "'"
+					$iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $iRows, $iColumns)
+					$Found_Lat = $GpsMatchArray[1][0]
+					$Found_Lon = $GpsMatchArray[1][1]
+					$Found_NumSat = $GpsMatchArray[1][2]
 					If $SIG > $Found_Sig Then ;If the new signal is greater or eqaul to the old signal
 						$DBHighGpsHistId = $HISTID
 						$DBLat = $New_Lat
@@ -496,8 +449,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			EndIf
 			;If HighGpsHistID is different from the origional, update it
 			If $DBHighGpsHistId <> $Found_HighGpsHistId Then
-				$query = "UPDATE AP SET HighGpsHistId=" & $DBHighGpsHistId & " WHERE ApID=" & $Found_APID
-				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				$query = "UPDATE AP SET HighGpsHistId = '" & $DBHighGpsHistId & "' WHERE ApID = '" & $Found_APID & "'"
+				_SQLite_Exec($DBhndl, $query)
 			EndIf
 			;If High Signal has changed, update it
 			If $SIG > $Found_HighSignal Then
@@ -513,23 +466,59 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			EndIf
 			;Update AP in DB. Set Active, LastGpsID, and LastHistID
 			$query = "UPDATE AP SET Active=" & $AP_StatusNum & ", LastGpsID=" & $ExpGpsID & ", LastHistId=" & $ExpLastHistID & ",Signal=" & $AP_DisplaySig & ",HighSignal=" & $ExpHighSig & ",RSSI=" & $AP_DisplayRSSI & ",HighRSSI=" & $ExpHighRSSI & " WHERE ApId=" & $Found_APID
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-			;ConsoleWrite($query & @CRLF)
+			_SQLite_Exec($DBhndl, $query)
 			;Update AP in DB. Set FirstHistID
 			If $ExpFirstHistID <> -1 Then
-				$query = "UPDATE AP SET FirstHistId=" & $ExpFirstHistID & " WHERE ApId=" & $Found_APID
-				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				$query = "UPDATE AP SET FirstHistId = '" & $ExpFirstHistID & "' WHERE ApId = '" & $Found_APID & "'"
+				_SQLite_Exec($DBhndl, $query)
 			EndIf
 			;Add new history ID
-			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $Found_APID & '|' & $NewGpsId & '|' & $SIG & '|' & $RSSI & '|' & $New_Date & '|' & $New_Time)
-			EndIf
+			$query = "INSERT INTO Hist(HistID,ApID,GpsID,Signal,RSSI,Date1,Time1) VALUES ('" & $HISTID & "','" & $Found_APID & "','" & $NewGpsId & "','" & $SIG & "','" & $RSSI & "','" & $New_Date & "','" & $New_Time & "');"
+			_SQLite_Exec($DBhndl, $query)
 		EndIf
 	EndIf
 	Return ($NewApFound)
 EndFunc   ;==>_AddApData
 
+Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
+	$d1 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d1, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
+	$d2 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d2, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
+	If $d1 = $d2 Then
+		Return (0)
+	ElseIf $d1 > $d2 Then
+		Return (1)
+	ElseIf $d1 < $d2 Then
+		Return (2)
+	Else
+		Return (-1)
+	EndIf
+EndFunc   ;==>_CompareDate
 
+Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd� mm' ss", or ddmm.mmmm to ddmm.mmmm
+	;All GPS Formats to ddmm.mmmm
+	$return = '0.0000'
+	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	If $splitlatlon1[0] = 2 Then
+		$splitlatlon2 = StringSplit($splitlatlon1[2], ".")
+		If StringLen($splitlatlon2[2]) = 4 Then ;ddmm.mmmm to ddmm.mmmm
+			$return = $splitlatlon1[1] & ' ' & StringFormat('%0.4f', $splitlatlon1[2])
+		ElseIf StringLen($splitlatlon2[2]) = 7 Then ; dd.dddd to ddmm.mmmm
+			$DD = $splitlatlon2[1] * 100
+			$MM = ('.' & $splitlatlon2[2]) * 60 ;multiply remaining decimal by 60 to get mm.mmmm
+			$return = $splitlatlon1[1] & ' ' & StringFormat('%0.4f', $DD + $MM);Format data properly (ex. N ddmm.mmmm)
+		EndIf
+	ElseIf $splitlatlon1[0] = 4 Then; ddmmss to ddmm.mmmm
+		$DD = StringTrimRight($splitlatlon1[2], 1) * 100
+		$MM = StringTrimRight($splitlatlon1[3], 1) + (StringTrimRight($splitlatlon1[4], 1) / 60)
+		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.4f', $DD + $MM)
+	EndIf
+	Return ($return)
+EndFunc   ;==>_Format_GPS_All_to_DMM
 
+Func _SignalPercentToDb($InSig);Estimated value
+	$dBm = ((($dBmMaxSignal - $dBmDissociationSignal) * $InSig) - (20 * $dBmMaxSignal) + (100 * $dBmDissociationSignal)) / 80
+	Return (Round($dBm))
+EndFunc   ;==>_SignalPercentToDb
 
 Func _GoogleGetGpsLocation($gllat, $gllon)
 	Local $aResult[4]
@@ -620,16 +609,21 @@ Func _SetUpDbTables($dbfile)
 	_SQLite_Exec($DBhndl, "CREATE TABLE LoadedFiles (File,MD5)")
 
 	;Get Counts
+	Local $aRow
 	$query = "Select COUNT(ApID) FROM AP"
 	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
 	$APID = $aRow[0]
+	Local $aRow
+	$query = "Select COUNT(HistID) FROM Hist"
+	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
+	$HISTID = $aRow[0]
+	Local $aRow
 	$query = "Select COUNT(GPSID) FROM GPS"
 	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
 	$GPS_ID = $aRow[0]
 EndFunc   ;==>_SetUpDbTables
 
 Func _Format_GPS_DMM($gps)
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM()') ;#Debug Display
 	$return = '0000.0000'
 	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
