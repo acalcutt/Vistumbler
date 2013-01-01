@@ -1,23 +1,31 @@
-;#RequireAdmin
+﻿;#RequireAdmin
 ;#include "UDFs\_XMLDomWrapper.au3"
 #include "UDFs\FileListToArray3.au3"
 #include "UDFs\MD5.au3"
 #include <Array.au3>
 #include <INet.au3>
 #include <SQLite.au3>
+Dim $settings = 'settings.ini'
 Dim $SearchWord_None = 'None';IniRead($DefaultLanguagePath, 'SearchWords', 'None', 'None')
 Dim $SearchWord_Open = 'Open';IniRead($DefaultLanguagePath, 'SearchWords', 'Open', 'Open')
 Dim $SearchWord_Wep = 'WEP';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
 Dim $dBmMaxSignal = '-30';IniRead($settings, 'Vistumbler', 'dBmMaxSignal', '-30')
 Dim $dBmDissociationSignal = '-85';IniRead($settings, 'Vistumbler', 'dBmDissociationSignal', '-85')
-Dim $APID, $HISTID, $GPS_ID
+Dim $APID, $HISTID, $GPS_ID, $FILE_ID
 Dim $RetryAttempts = 1 ;Number of times to retry getting location
 Dim $DBhndl
 Dim $TmpDir = @ScriptDir & '\temp\'
-$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
-$DB = $TmpDir & 'VS1_Import_' & $ldatetimestamp & '.SDB'
-ConsoleWrite($DB & @CRLF)
-_SetUpDbTables($DB)
+_SQLite_Startup()
+
+;Set Up DB
+;$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
+$DB = $TmpDir & 'VS1_Import.SDB' ;_' & $ldatetimestamp & '
+$ExistingDB = FileExists($DB)
+If $ExistingDB = 1 Then ConsoleWrite("! " & $DB & " already exits. Import will use existing file" & @CRLF)
+If $ExistingDB = 0 Then ConsoleWrite("+> Creating " & $DB & @CRLF)
+$DBhndl = _SQLite_Open($DB)
+If $ExistingDB = 0 Then _SetUpDbTables($DB)
+;Import files
 _SearchVistumblerFiles()
 
 
@@ -29,6 +37,14 @@ Func _SearchVistumblerFiles()
    Else
 		$VistumblerFiles = _FileListToArray3($VistumblerFilesFolder, "*.VS1", 1, 1, 1)
 		For $f=1 to $VistumblerFiles[0]
+			$FILE_ID += 1
+			;Safe Kill Import if killswitch is set
+			$KillSwitch = IniRead($settings, 'Settings', 'KillSwitch', '0')
+			If $KillSwitch = 1 Then
+				ConsoleWrite("! Kill switch is enabled. Exiting..." & @CRLF)
+				Exit
+			EndIf
+			;Import File
 			$filename = $VistumblerFiles[$f]
 			$loadfile = $VistumblerFiles[$f]
 			$loadfileMD5 = _MD5ForFile($loadfile)
@@ -46,7 +62,6 @@ Func _SearchVistumblerFiles()
 				$query = "INSERT INTO LoadedFiles(File,MD5) VALUES ('" & $loadfile & "','" & $loadfileMD5 & "');"
 				_SQLite_Exec($DBhndl, $query)
 			EndIf
-
 
 		Next
    EndIf
@@ -69,6 +84,7 @@ Func _ImportVS1($VS1file)
 			$totallines += 1
 		WEnd
 		;Start Importing File
+		$DispTimer = TimerInit()
 		For $Load = 1 To $totallines
 			$linein = FileReadLine($vistumblerfile, $Load);Open Line in file
 			If @error = -1 Then ExitLoop
@@ -290,6 +306,12 @@ Func _ImportVS1($VS1file)
 					;ExitLoop
 				EndIf
 			EndIf
+			;Display line info to console
+			If TimerDiff($DispTimer) > 15000 Then
+				$datetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC
+				ConsoleWrite('--> ' & $datetimestamp & ' - Line: ' & $Load & '/' &  $totallines & @CRLF)
+				$DispTimer = TimerInit()
+			EndIf
 		Next
 	EndIf
 	FileClose($vistumblerfile)
@@ -300,7 +322,7 @@ Func _ImportVS1($VS1file)
 EndFunc   ;==>_ImportVS1
 
 Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $RADTYPE, $BTX, $OtX, $SIG, $RSSI)
-	ConsoleWrite("$New:" & $New & " $NewGpsId:" & $NewGpsId & " $BSSID:" & $BSSID & " $SSID:" & $SSID & " $CHAN:" & $CHAN & " $AUTH:" & $AUTH & " $ENCR:" & $ENCR & " $NETTYPE:" & $NETTYPE & " $RADTYPE" & $RADTYPE & " $BTX:" & $BTX & "$OtX:" & $OtX & " $SIG:" & $SIG & " $RSSI:" & $RSSI & @CRLF)
+	;ConsoleWrite("$New:" & $New & " $NewGpsId:" & $NewGpsId & " $BSSID:" & $BSSID & " $SSID:" & $SSID & " $CHAN:" & $CHAN & " $AUTH:" & $AUTH & " $ENCR:" & $ENCR & " $NETTYPE:" & $NETTYPE & " $RADTYPE" & $RADTYPE & " $BTX:" & $BTX & "$OtX:" & $OtX & " $SIG:" & $SIG & " $RSSI:" & $RSSI & @CRLF)
 	If $New = 1 And $SIG <> 0 Then
 		$AP_Status = "Active";$Text_Active
 		$AP_StatusNum = 1
@@ -354,7 +376,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$DBHighGpsHistId = '0'
 			EndIf
 			;Add History Information
-			$query = "INSERT INTO Hist(HistID,ApID,GpsID,Signal,RSSI,Date1,Time1) VALUES ('" & $HISTID & "','" & $APID & "','" & $NewGpsId & "','" & $SIG & "','" & $RSSI & "','" & $New_Date & "','" & $New_Time & "');"
+			$query = "INSERT INTO Hist(HistID,ApID,GpsID,FileID,Signal,RSSI,Date1,Time1) VALUES ('" & $HISTID & "','" & $APID & "','" & $NewGpsId & "','" & $FILE_ID & "','" & $SIG & "','" & $RSSI & "','" & $New_Date & "','" & $New_Time & "');"
 			_SQLite_Exec($DBhndl, $query)
 			;Add AP Data into the AP table
 			$query = "INSERT INTO AP(ApID,ListRow,Active,BSSID,SSID,CHAN,AUTH,ENCR,SECTYPE,NETTYPE,RADTYPE,BTX,OTX,HighGpsHistId,LastGpsID,FirstHistID,LastHistID,MANU,LABEL,Signal,HighSignal,RSSI,HighRSSI,CountryCode,CountryName,AdminCode,AdminName,Admin2Name) VALUES ('" & $APID & "','" & $ListRow & "','" & $AP_StatusNum & "','" & $BSSID & "','" & StringReplace($SSID, "'", "''") & "','" & $CHAN & "','" & $AUTH & "','" & $ENCR & "','" & $SecType & "','" & $NETTYPE & "','" & $RADTYPE & "','" & $BTX & "','" & $OtX & "','" & $DBHighGpsHistId & "','" & $NewGpsId & "','" & $HISTID & "','" & $HISTID & "','" & StringReplace($MANUF, "'", "''") & "','" & StringReplace($LABEL, "'", "''") & "','" & $AP_DisplaySig & "','" & $SIG & "','" & $AP_DisplayRSSI & "','" & $RSSI & "','','','','','');"
@@ -473,7 +495,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				_SQLite_Exec($DBhndl, $query)
 			EndIf
 			;Add new history ID
-			$query = "INSERT INTO Hist(HistID,ApID,GpsID,Signal,RSSI,Date1,Time1) VALUES ('" & $HISTID & "','" & $Found_APID & "','" & $NewGpsId & "','" & $SIG & "','" & $RSSI & "','" & $New_Date & "','" & $New_Time & "');"
+			$query = "INSERT INTO Hist(HistID,ApID,GpsID,FileID,Signal,RSSI,Date1,Time1) VALUES ('" & $HISTID & "','" & $Found_APID & "','" & $NewGpsId & "','" & $FILE_ID & "','" & $SIG & "','" & $RSSI & "','" & $New_Date & "','" & $New_Time & "');"
 			_SQLite_Exec($DBhndl, $query)
 		EndIf
 	EndIf
@@ -599,14 +621,12 @@ Func _WifiDBGeonames($lat, $lon)
 EndFunc
 
 Func _SetUpDbTables($dbfile)
-	_SQLite_Startup()
-	$DBhndl = _SQLite_Open($dbfile)
 	_SQLite_Exec($DBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
 	ConsoleWrite(@error & @CRLF)
-	_SQLite_Exec($DBhndl, "CREATE TABLE GPS (GPSID,Latitude,Longitude,NumOfSats,HorDilPitch,Alt,Geo,SpeedInMPH,SpeedInKmH,TrackAngle,Date1,Time1)")
 	_SQLite_Exec($DBhndl, "CREATE TABLE AP (ApID,ListRow,Active,BSSID,SSID,CHAN,AUTH,ENCR,SECTYPE,NETTYPE,RADTYPE,BTX,OTX,HighGpsHistId,LastGpsID,FirstHistID,LastHistID,MANU,LABEL,Signal,HighSignal,RSSI,HighRSSI,CountryCode,CountryName,AdminCode,AdminName,Admin2Name)")
-	_SQLite_Exec($DBhndl, "CREATE TABLE Hist (HistID,ApID,GpsID,Signal,RSSI,Date1,Time1)")
-	_SQLite_Exec($DBhndl, "CREATE TABLE LoadedFiles (File,MD5)")
+	_SQLite_Exec($DBhndl, "CREATE TABLE GPS (GPSID,Latitude,Longitude,NumOfSats,HorDilPitch,Alt,Geo,SpeedInMPH,SpeedInKmH,TrackAngle,Date1,Time1)")
+	_SQLite_Exec($DBhndl, "CREATE TABLE Hist (HistID,ApID,GpsID,FileID,Signal,RSSI,Date1,Time1)")
+	_SQLite_Exec($DBhndl, "CREATE TABLE LoadedFiles (FileID,File,MD5)")
 
 	;Get Counts
 	Local $aRow
@@ -614,13 +634,17 @@ Func _SetUpDbTables($dbfile)
 	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
 	$APID = $aRow[0]
 	Local $aRow
+	$query = "Select COUNT(GPSID) FROM GPS"
+	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
+	$GPS_ID = $aRow[0]
+	Local $aRow
 	$query = "Select COUNT(HistID) FROM Hist"
 	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
 	$HISTID = $aRow[0]
 	Local $aRow
-	$query = "Select COUNT(GPSID) FROM GPS"
+	$query = "Select COUNT(FileID) FROM LoadedFiles"
 	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
-	$GPS_ID = $aRow[0]
+	$FILE_ID = $aRow[0]
 EndFunc   ;==>_SetUpDbTables
 
 Func _Format_GPS_DMM($gps)
