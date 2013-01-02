@@ -19,12 +19,13 @@ _SQLite_Startup()
 
 ;Set Up DB
 ;$ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
-$DB = $TmpDir & 'VS1_Import.SDB' ;_' & $ldatetimestamp & '
+$DB = $TmpDir & 'VS1_Import.SDB'
 $ExistingDB = FileExists($DB)
 If $ExistingDB = 1 Then ConsoleWrite("! " & $DB & " already exits. Import will use existing file" & @CRLF)
 If $ExistingDB = 0 Then ConsoleWrite("+> Creating " & $DB & @CRLF)
 $DBhndl = _SQLite_Open($DB)
-If $ExistingDB = 0 Then _SetUpDbTables($DB)
+If $ExistingDB = 1 Then _GetDbValues($DBhndl)
+If $ExistingDB = 0 Then _SetUpDbTables($DBhndl)
 ;Import files
 _SearchVistumblerFiles()
 
@@ -37,7 +38,6 @@ Func _SearchVistumblerFiles()
    Else
 		$VistumblerFiles = _FileListToArray3($VistumblerFilesFolder, "*.VS1", 1, 1, 1)
 		For $f=1 to $VistumblerFiles[0]
-			$FILE_ID += 1
 			;Safe Kill Import if killswitch is set
 			$KillSwitch = IniRead($settings, 'Settings', 'KillSwitch', '0')
 			If $KillSwitch = 1 Then
@@ -48,7 +48,7 @@ Func _SearchVistumblerFiles()
 			$filename = $VistumblerFiles[$f]
 			$loadfile = $VistumblerFiles[$f]
 			$loadfileMD5 = _MD5ForFile($loadfile)
-			ConsoleWrite('File:' & $f & '/' & $VistumblerFiles[0] & ' ' & $loadfile & ' (' & $loadfileMD5 & ')' & @CRLF)
+			ConsoleWrite('File:' & $f & '/' & $VistumblerFiles[0] & ' | File:' & $loadfile & ' | MD5:' & $loadfileMD5 & ' | Size:' & Round(FileGetSize ($loadfile)/1024) & 'kB' & @CRLF)
 			Local $MD5MatchArray, $iRows, $iColumns, $iRval
 			$query = "SELECT MD5 FROM LoadedFiles WHERE MD5='" & $loadfileMD5 & "'"
 			$iRval = _SQLite_GetTable2d($DBhndl, $query, $MD5MatchArray, $iRows, $iColumns)
@@ -58,15 +58,15 @@ Func _SearchVistumblerFiles()
 				ConsoleWrite('! File Already Exists '& $filename & @CRLF)
 			Else
 				ConsoleWrite('+> Importing New File ' & $filename & @CRLF)
+				$FILE_ID += 1
 				_ImportVS1($loadfile)
-				$query = "INSERT INTO LoadedFiles(File,MD5) VALUES ('" & $loadfile & "','" & $loadfileMD5 & "');"
+				$query = "INSERT INTO LoadedFiles(FileID,File,MD5) VALUES ('" & $FILE_ID & "','" & $loadfile & "','" & $loadfileMD5 & "');"
 				_SQLite_Exec($DBhndl, $query)
 			EndIf
 
 		Next
    EndIf
 EndFunc
-
 
 Func _ImportVS1($VS1file)
 	_SQLite_Exec($DBhndl, "CREATE TABLE TempGpsIDMatchTable (OldGpsID,NewGpsID)")
@@ -621,31 +621,36 @@ Func _WifiDBGeonames($lat, $lon)
 EndFunc
 
 Func _SetUpDbTables($dbfile)
-	_SQLite_Exec($DBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
-	ConsoleWrite(@error & @CRLF)
-	_SQLite_Exec($DBhndl, "CREATE TABLE AP (ApID,ListRow,Active,BSSID,SSID,CHAN,AUTH,ENCR,SECTYPE,NETTYPE,RADTYPE,BTX,OTX,HighGpsHistId,LastGpsID,FirstHistID,LastHistID,MANU,LABEL,Signal,HighSignal,RSSI,HighRSSI,CountryCode,CountryName,AdminCode,AdminName,Admin2Name)")
-	_SQLite_Exec($DBhndl, "CREATE TABLE GPS (GPSID,Latitude,Longitude,NumOfSats,HorDilPitch,Alt,Geo,SpeedInMPH,SpeedInKmH,TrackAngle,Date1,Time1)")
-	_SQLite_Exec($DBhndl, "CREATE TABLE Hist (HistID,ApID,GpsID,FileID,Signal,RSSI,Date1,Time1)")
-	_SQLite_Exec($DBhndl, "CREATE TABLE LoadedFiles (FileID,File,MD5)")
+	_SQLite_Exec($dbfile, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
+	_SQLite_Exec($dbfile, "CREATE TABLE AP (ApID,ListRow,Active,BSSID,SSID,CHAN,AUTH,ENCR,SECTYPE,NETTYPE,RADTYPE,BTX,OTX,HighGpsHistId,LastGpsID,FirstHistID,LastHistID,MANU,LABEL,Signal,HighSignal,RSSI,HighRSSI,CountryCode,CountryName,AdminCode,AdminName,Admin2Name)")
+	_SQLite_Exec($dbfile, "CREATE TABLE GPS (GPSID,Latitude,Longitude,NumOfSats,HorDilPitch,Alt,Geo,SpeedInMPH,SpeedInKmH,TrackAngle,Date1,Time1)")
+	_SQLite_Exec($dbfile, "CREATE TABLE Hist (HistID,ApID,GpsID,FileID,Signal,RSSI,Date1,Time1)")
+	_SQLite_Exec($dbfile, "CREATE TABLE LoadedFiles (FileID,File,MD5)")
+EndFunc   ;==>_SetUpDbTables
 
+Func _GetDbValues($dbfile)
 	;Get Counts
 	Local $aRow
 	$query = "Select COUNT(ApID) FROM AP"
-	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
+	_SQLite_QuerySingleRow($dbfile, $query, $aRow)
 	$APID = $aRow[0]
+	ConsoleWrite('$APID:' & $APID & @CRLF)
 	Local $aRow
 	$query = "Select COUNT(GPSID) FROM GPS"
-	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
+	_SQLite_QuerySingleRow($dbfile, $query, $aRow)
 	$GPS_ID = $aRow[0]
+	ConsoleWrite('$GPS_ID:' & $GPS_ID & @CRLF)
 	Local $aRow
 	$query = "Select COUNT(HistID) FROM Hist"
-	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
+	_SQLite_QuerySingleRow($dbfile, $query, $aRow)
 	$HISTID = $aRow[0]
+	ConsoleWrite('$HISTID:' & $HISTID & @CRLF)
 	Local $aRow
 	$query = "Select COUNT(FileID) FROM LoadedFiles"
-	_SQLite_QuerySingleRow($DBhndl, $query, $aRow)
+	_SQLite_QuerySingleRow($dbfile, $query, $aRow)
 	$FILE_ID = $aRow[0]
-EndFunc   ;==>_SetUpDbTables
+	ConsoleWrite('$FILE_ID:' & $FILE_ID & @CRLF)
+EndFunc
 
 Func _Format_GPS_DMM($gps)
 	$return = '0000.0000'
