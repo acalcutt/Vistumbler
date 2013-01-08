@@ -107,8 +107,8 @@ Func _SearchVistumblerFiles()
 				$FILE_ID += 1
 				_ImportVS1($loadfile)
 				$query = "INSERT INTO LoadedFiles (FileID, File, MD5) VALUES ('" & $FILE_ID & "', '" & StringReplace($loadfile, "\", "\\") & "', '" & $loadfileMD5 & "');"
-				ConsoleWrite($query & @CRLF)
-				$ret = _Query($DBconn, $query)
+				_Query($DBconn, $query)
+				_ShowDbValues($DBconn)
 			EndIf
 
 		Next
@@ -116,7 +116,7 @@ Func _SearchVistumblerFiles()
 EndFunc
 
 Func _ImportVS1($VS1file)
-	$query = "CREATE TABLE TempGpsIDMatchTable (OldGpsID INT,NewGpsID INT)"
+	$query = "CREATE TABLE TempGpsIDMatchTable (OldGpsID INT,NewGpsID INT) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci"
 	$ret = _Query($DBconn, $query)
 	$vistumblerfile = FileOpen($VS1file, 0)
 	If $vistumblerfile <> -1 Then
@@ -659,16 +659,16 @@ Func _WifiDBGeonames($lat, $lon)
 EndFunc
 
 Func _SetUpDbTables($DBhnd1)
-	$query = "CREATE TABLE AP (ApID INT,ListRow INT,Active INT,BSSID VARCHAR(255),SSID VARCHAR(255),CHAN INT,AUTH VARCHAR(255),ENCR VARCHAR(255),SECTYPE INT,NETTYPE VARCHAR(255),RADTYPE VARCHAR(255),BTX VARCHAR(255),OTX VARCHAR(255),HighGpsHistId INT,LastGpsID INT,FirstHistID INT,LastHistID INT,MANU VARCHAR(255),LABEL VARCHAR(255),Signal INT,HighSignal INT,RSSI INT,HighRSSI INT,CountryCode VARCHAR(255),CountryName VARCHAR(255),AdminCode VARCHAR(255),AdminName VARCHAR(255),Admin2Name VARCHAR(255))"
+	$query = "CREATE TABLE AP (ApID INT,ListRow INT,Active INT,BSSID VARCHAR(255),SSID VARCHAR(255),CHAN INT,AUTH VARCHAR(255),ENCR VARCHAR(255),SECTYPE INT,NETTYPE VARCHAR(255),RADTYPE VARCHAR(255),BTX VARCHAR(255),OTX VARCHAR(255),HighGpsHistId INT,LastGpsID INT,FirstHistID INT,LastHistID INT,MANU VARCHAR(255),LABEL VARCHAR(255),Signal INT,HighSignal INT,RSSI INT,HighRSSI INT,CountryCode VARCHAR(255),CountryName VARCHAR(255),AdminCode VARCHAR(255),AdminName VARCHAR(255),Admin2Name VARCHAR(255)) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
 	_Query($DBhnd1, $query)
 
-	$query = "CREATE TABLE GPS (GPSID INT,Latitude VARCHAR(255),Longitude VARCHAR(255),NumOfSats INT,HorDilPitch INT,Alt INT,Geo INT,SpeedInMPH INT,SpeedInKmH INT,TrackAngle INT,Date1 VARCHAR(255),Time1 VARCHAR(255))"
+	$query = "CREATE TABLE GPS (GPSID INT,Latitude VARCHAR(255),Longitude VARCHAR(255),NumOfSats INT,HorDilPitch INT,Alt INT,Geo INT,SpeedInMPH INT,SpeedInKmH INT,TrackAngle INT,Date1 VARCHAR(255),Time1 VARCHAR(255)) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
 	_Query($DBhnd1, $query)
 
-	$query = "CREATE TABLE Hist (HistID INT,ApID INT,GpsID INT,FileID INT,Signal INT,RSSI INT,Date1 VARCHAR(255),Time1 VARCHAR(255))"
+	$query = "CREATE TABLE Hist (HistID INT,ApID INT,GpsID INT,FileID INT,Signal INT,RSSI INT,Date1 VARCHAR(255),Time1 VARCHAR(255)) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
 	_Query($DBhnd1, $query)
 
-	$query = "CREATE TABLE LoadedFiles (FileID INT,File VARCHAR(255),MD5 VARCHAR(255))"
+	$query = "CREATE TABLE LoadedFiles (FileID INT,File VARCHAR(255),MD5 VARCHAR(255)) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;"
 	_Query($DBhnd1, $query)
 EndFunc   ;==>_SetUpDbTables
 
@@ -685,25 +685,44 @@ EndFunc
 
 Func _GetDbValues($DBhnd1)
 	;Get Counts
-	$query = "Select COUNT(ApID) FROM AP"
+	$query = "Select COUNT(ApID) FROM AP;"
 	$aRow = _QueryToTable($DBhnd1, $query)
 	$APID = $aRow[1][1]
 	ConsoleWrite("+> $APID:" & $APID & @CRLF)
 
-	$query = "Select COUNT(GPSID) FROM GPS"
+	$query = "Select COUNT(GPSID) FROM GPS;"
 	$aRow = _QueryToTable($DBhnd1, $query)
 	$GPS_ID = $aRow[1][1]
 	ConsoleWrite("+> $GPS_ID:" & $GPS_ID & @CRLF)
 
-	$query = "Select COUNT(HistID) FROM Hist"
+	$query = "Select COUNT(HistID) FROM Hist;"
 	$aRow = _QueryToTable($DBhnd1, $query)
 	$HISTID = $aRow[1][1]
 	ConsoleWrite("+> $HISTID:" & $HISTID & @CRLF)
 
-	$query = "Select COUNT(FileID) FROM LoadedFiles"
+	$query = "Select COUNT(FileID) FROM LoadedFiles;"
 	$aRow = _QueryToTable($DBhnd1, $query)
 	$FILE_ID = $aRow[1][1]
 	ConsoleWrite("+> $FILE_ID:" & $FILE_ID & @CRLF)
+EndFunc
+
+Func _ShowDbValues($DBhnd1)
+	;Show Counts
+	$query = "Select COUNT(ApID) FROM AP;"
+	$aRow = _QueryToTable($DBhnd1, $query)
+	ConsoleWrite("+> $APID:" & $aRow[1][1] & @CRLF)
+
+	$query = "Select COUNT(GPSID) FROM GPS;"
+	$aRow = _QueryToTable($DBhnd1, $query)
+	ConsoleWrite("+> $GPS_ID:" & $aRow[1][1] & @CRLF)
+
+	$query = "Select COUNT(HistID) FROM Hist;"
+	$aRow = _QueryToTable($DBhnd1, $query)
+	ConsoleWrite("+> $HISTID:" & $aRow[1][1] & @CRLF)
+
+	$query = "Select COUNT(FileID) FROM LoadedFiles;"
+	$aRow = _QueryToTable($DBhnd1, $query)
+	ConsoleWrite("+> $FILE_ID:" & $aRow[1][1] & @CRLF)
 EndFunc
 
 Func _QueryToTable($oConnectionObj, $sQuery)
