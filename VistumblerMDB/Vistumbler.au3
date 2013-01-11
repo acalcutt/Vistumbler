@@ -41,6 +41,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
+#include "UDFs\HTTP.au3"
 #include "UDFs\MD5.au3"
 #include "UDFs\NativeWifi.au3"
 #include "UDFs\ParseCSV.au3"
@@ -253,6 +254,7 @@ Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $n
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
 
+Dim $WifiDbUploadGUI, $upload_user_GUI, $upload_otherusers_GUI, $upload_apikey_GUI, $upload_title_GUI, $upload_notes_GUI, $VS1_Radio_GUI, $VSZ_Radio_GUI, $CSV_Radio_GUI
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
 Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
@@ -479,7 +481,8 @@ If $defaultgooglepath = '/googleearth.exe' And @OSArch = 'X64' Then $defaultgoog
 Dim $GoogleEarthExe = IniRead($settings, 'AutoKML', 'GoogleEarthExe', $defaultgooglepath)
 
 Dim $WifiDb_User = IniRead($settings, 'PhilsWifiTools', 'WifiDb_User', '')
-Dim $WifiDb_ApiKey = "notyetimplemented";IniRead($settings, 'PhilsWifiTools', 'WifiDb_ApiKey', '')
+Dim $WifiDb_ApiKey = IniRead($settings, 'PhilsWifiTools', 'WifiDb_ApiKey', '')
+Dim $WifiDb_OtherUsers = IniRead($settings, 'PhilsWifiTools', 'WifiDb_OtherUsers', '')
 Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_SURL', 'https://www.randomintervals.com/wifi/')
 Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_SURL', 'https://wifidb.vistumbler.net/wifidb/')
 Dim $PhilsApiURL = IniRead($settings, 'PhilsWifiTools', 'API_SURL', 'https://api.vistumbler.net/')
@@ -5017,7 +5020,8 @@ Func _ViewInPhilsGraph();Sends data to phils php graphing script
 	EndIf
 EndFunc   ;==>_ViewInPhilsGraph
 
-Func _AddToYourWDB()
+#cs
+	Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
 	$WdbFile = $SaveDir & 'WDB_Export.VS1'
 	FileDelete($WdbFile)
@@ -5026,7 +5030,194 @@ Func _AddToYourWDB()
 	$url_data = "file=" & $WdbFile
 	;ConsoleWrite($url_data & @CRLF)
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
+	EndFunc   ;==>_AddToYourWDB
+#ce
+
+Func _AddToYourWDB()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
+	$WifiDbUploadGUI = GUICreate("Upload to WifiDB", 581, 526, 192, 124)
+	GUICtrlCreateLabel("Add wifidb upload disclaimer here", 24, 8, 532, 89)
+
+	GUICtrlCreateGroup("User Information", 24, 104, 281, 161)
+	GUICtrlCreateLabel("WifiDB Username", 39, 124, 236, 20)
+	$upload_user_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
+	GUICtrlCreateLabel("Other users", 39, 169, 236, 20)
+	$upload_otherusers_GUI = GUICtrlCreateInput($WifiDb_OtherUsers, 39, 189, 241, 20)
+	GUICtrlCreateLabel("WifiDB Api Key", 39, 213, 236, 20)
+	$upload_apikey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
+	;GUICtrlCreateGroup("", -99, -99, 1, 1)
+
+	GUICtrlCreateGroup("File Type", 312, 104, 249, 161)
+	$VSZ_Radio_GUI = GUICtrlCreateRadio("Vistumbler VSZ", 327, 139, 220, 20)
+	$VS1_Radio_GUI = GUICtrlCreateRadio("Vistumbler VS1", 327, 174, 220, 20)
+	$CSV_Radio_GUI = GUICtrlCreateRadio("Vistumbler Detailed CSV", 327, 209, 220, 20)
+	;GUICtrlCreateGroup("", -99, -99, 1, 1)
+
+	GUICtrlCreateGroup("Upload Information", 24, 272, 537, 201)
+	GUICtrlCreateLabel("Title", 39, 297, 500, 20)
+	$upload_title_GUI = GUICtrlCreateInput($ldatetimestamp, 39, 317, 500, 21)
+	GUICtrlCreateLabel("Notes", 39, 342, 500, 20)
+	$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
+	;GUICtrlCreateGroup("", -99, -99, 1, 1)
+
+	$WifiDbUploadGUI_Upload = GUICtrlCreateButton("Upload APs to WifiDB", 24, 488, 241, 25)
+	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton("Cancel", 316, 487, 241, 25)
+	GUISetState(@SW_SHOW)
+
+	GUICtrlSetOnEvent($WifiDbUploadGUI_Upload, '_UploadFileToWifiDB')
+	GUICtrlSetOnEvent($WifiDbUploadGUI_Cancel, '_CloseWifiDbUploadGUI')
+	GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseWifiDbUploadGUI')
 EndFunc   ;==>_AddToYourWDB
+
+Func _CloseWifiDbUploadGUI()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseWifiDbUploadGUI() ') ;#Debug Display
+	GUIDelete($WifiDbUploadGUI)
+EndFunc   ;==>_CloseWifiDbUploadGUI
+
+Func _UploadFileToWifiDB()
+	$upload_user = GUICtrlRead($upload_user_GUI)
+	$upload_otherusers = GUICtrlRead($upload_otherusers_GUI)
+	$upload_apikey = GUICtrlRead($upload_apikey_GUI)
+	$upload_title = GUICtrlRead($upload_title_GUI)
+	$upload_notes = GUICtrlRead($upload_notes_GUI)
+	ConsoleWrite("$upload_user: " & $upload_user & "$upload_otherusers: " & $upload_otherusers & "$upload_apikey: " & $upload_apikey & "$upload_title: " & $upload_title & "$upload_notes: " & $upload_notes & @CRLF)
+	_CloseWifiDbUploadGUI()
+
+	If GUICtrlRead($VS1_Radio_GUI) = $GUI_CHECKED Then
+		$upload_filetype = "VS1"
+	ElseIf GUICtrlRead($CSV_Radio_GUI) = $GUI_CHECKED Then
+		$upload_filetype = "CSV"
+	Else
+		$upload_filetype = "VSZ"
+	EndIf
+
+	;Get Host, Path, and Port from WifiDB api url
+	Local $host, $port, $path
+	$hstring = StringTrimRight($PhilsApiURL, StringLen($PhilsApiURL) - (StringInStr($PhilsApiURL, "/", 0, 3) - 1))
+	$path = StringTrimLeft($PhilsApiURL, StringInStr($PhilsApiURL, "/", 0, 3) - 1)
+	If StringInStr($hstring, ":", 0, 2) Then
+		$hpa = StringSplit($hstring, ":")
+		If $hpa[0] = 3 Then
+			$host = StringReplace($hpa[2], "//", "")
+			$port = $hpa[3]
+		EndIf
+	Else
+		$host = StringReplace(StringReplace($hstring, "https://", ""), "http://", "")
+		If StringInStr($hstring, "https://") Then
+			$port = 443
+		Else
+			$port = 80
+		EndIf
+	EndIf
+	ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
+	ConsoleWrite($hstring & @CRLF)
+	ConsoleWrite($path & @CRLF)
+	$page = $path & "import.php"
+
+	If $upload_filetype = "VS1" Then
+		$WdbFile = $SaveDir & 'WDB_Export.VS1'
+		FileDelete($WdbFile)
+		$fileexported = _ExportVS1($WdbFile)
+		If $fileexported = 1 Then
+			$socket = _HTTPConnect($host, $port)
+			_HTTPPost_WifiDB_File($host, $page, $socket, FileRead($WdbFile), $ldatetimestamp & "_wdb_export.VS1", "text/plain; charset=""UTF-8""", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
+			$recv = _HTTPRead($socket, 1)
+			ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+		Else
+			ConsoleWrite("No VS1 Created for some reason..." & @CRLF)
+		EndIf
+	ElseIf $upload_filetype = "CSV" Then
+		$WdbFile = $SaveDir & 'WDB_Export.CSV'
+		FileDelete($WdbFile)
+		$fileexported = _ExportToCSV($WdbFile, 0, 1)
+		If $fileexported = 1 Then
+			$socket = _HTTPConnect($host, $port)
+			_HTTPPost_WifiDB_File($host, $page, $socket, FileRead($WdbFile), $ldatetimestamp & "_wdb_export.CSV", "text/plain; charset=""UTF-8""", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
+			$recv = _HTTPRead($socket, 1)
+			ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+		Else
+			ConsoleWrite("No CSV Created for some reason..." & @CRLF)
+		EndIf
+	ElseIf $upload_filetype = "VSZ" Then
+		;Create VSZ
+		$WdbFile = $SaveDir & 'WDB_Export.VSZ'
+		$vsz_temp_file = $TmpDir & 'data.zip'
+		$vsz_file = $WdbFile
+		$vs1_file = $TmpDir & 'data.vs1'
+		If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
+		If FileExists($vsz_file) Then FileDelete($vsz_file)
+		If FileExists($vs1_file) Then FileDelete($vs1_file)
+		_ExportVS1($vs1_file)
+		_Zip_Create($vsz_temp_file)
+		_Zip_AddItem($vsz_temp_file, $vs1_file)
+		FileMove($vsz_temp_file, $vsz_file)
+		;Upload VSZ
+		If FileExists($vsz_file) Then
+			$socket = _HTTPConnect($host, $port)
+			$vszfileread = FileRead($vsz_file) & @CRLF
+			_HTTPPost_WifiDB_File($host, $page, $socket, $vszfileread, $ldatetimestamp & "_wdb_export.VSZ", "application/octet-stream", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
+			$recv = _HTTPRead($socket, 1)
+			ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+		Else
+			ConsoleWrite("No VSZ Created for some reason..." & @CRLF)
+		EndIf
+	EndIf
+EndFunc   ;==>_UploadFileToWifiDB
+
+
+Func _HTTPPost_WifiDB_File($host, $page, $socket, $file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
+	Local $command, $extra_commands
+	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
+
+	$extra_commands = "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""apikey""" & @CRLF & @CRLF
+	$extra_commands &= $apikey & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""user""" & @CRLF & @CRLF
+	$extra_commands &= $user & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""otherusers""" & @CRLF & @CRLF
+	$extra_commands &= $otherusers & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""title""" & @CRLF & @CRLF
+	$extra_commands &= $title & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""notes""" & @CRLF & @CRLF
+	$extra_commands &= $notes & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""file""; filename=""" & $filename & """" & @CRLF
+	$extra_commands &= "Content-Type: " & $contenttype & @CRLF & @CRLF
+
+	$extra_commands &= $file
+	$extra_commands &= "--" & $boundary & "--"
+
+	Dim $datasize = StringLen($extra_commands)
+
+	$command = "POST " & $page & " HTTP/1.1" & @CRLF
+	$command &= "Host: " & $host & @CRLF
+	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
+	$command &= "Connection: close" & @CRLF
+	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
+	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
+	$command &= $extra_commands
+
+	If $contenttype = "application/octet-stream" Then
+		ConsoleWrite(StringReplace($command, $file, "## BINARY DATA FILE ##" & @CRLF) & @CRLF)
+	Else
+		ConsoleWrite($command & @CRLF)
+	EndIf
+
+	Dim $bytessent = TCPSend($socket, $command)
+
+	If $bytessent == 0 Then
+		SetExtended(@error)
+		SetError(2)
+		Return 0
+	EndIf
+
+	SetError(0)
+	Return $bytessent
+EndFunc   ;==>_HTTPPost_WifiDB_File
 
 Func _ExportWifidbVS1($savefile, $Filter = 0);writes v3.0 vistumbler detailed data to a txt file (WifiDB does not curretly support v4 VS1, this has been added for backward compatibility)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
@@ -5112,6 +5303,88 @@ Func _ExportWifidbVS1($savefile, $Filter = 0);writes v3.0 vistumbler detailed da
 		Return (0)
 	EndIf
 EndFunc   ;==>_ExportWifidbVS1
+
+Func _GenerateWifidbVS1($Filter = 0);writes v3.0 vistumbler detailed data to a txt file (WifiDB does not curretly support v4 VS1, this has been added for backward compatibility)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
+	$file = "# Vistumbler VS1 - Detailed Export Version 3.0" & @CRLF & _
+			"# Created By: " & $Script_Name & ' ' & $version & @CRLF & _
+			"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
+			"# GpsID|Latitude|Longitude|NumOfSatalites|HorizontalDilutionOfPrecision|Altitude(m)|HeightOfGeoidAboveWGS84Ellipsoid(m)|Speed(km/h)|Speed(MPH)|TrackAngle(Deg)|Date(UTC y-m-d)|Time(UTC h:m:s.ms)" & @CRLF & _
+			"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
+	;Export GPS IDs
+	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
+	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundGpsMatch = UBound($GpsMatchArray) - 1
+	For $exp = 1 To $FoundGpsMatch
+		GUICtrlSetData($msgdisplay, $Text_SavingGID & ' ' & $exp & ' / ' & $FoundGpsMatch)
+		$ExpGID = $GpsMatchArray[$exp][1]
+		$ExpLat = $GpsMatchArray[$exp][2]
+		$ExpLon = $GpsMatchArray[$exp][3]
+		$ExpSat = $GpsMatchArray[$exp][4]
+		$ExpHorDilPitch = $GpsMatchArray[$exp][5]
+		$ExpAlt = $GpsMatchArray[$exp][6]
+		$ExpGeo = $GpsMatchArray[$exp][7]
+		$ExpSpeedMPH = $GpsMatchArray[$exp][8]
+		$ExpSpeedKmh = $GpsMatchArray[$exp][9]
+		$ExpTrack = $GpsMatchArray[$exp][10]
+		$ExpDate = $GpsMatchArray[$exp][11]
+		$ExpTime = $GpsMatchArray[$exp][12]
+		$file &= $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime & @CRLF
+	Next
+
+	;Export AP Information
+	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
+			"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL" & @CRLF & _
+			"# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
+	If $Filter = 1 Then
+		$query = $AddQuery
+	Else
+		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	EndIf
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	If $FoundApMatch > 0 Then
+		For $exp = 1 To $FoundApMatch
+			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
+			$ExpApID = $ApMatchArray[$exp][1]
+			$ExpSSID = $ApMatchArray[$exp][2]
+			$ExpBSSID = $ApMatchArray[$exp][3]
+			$ExpNET = $ApMatchArray[$exp][4]
+			$ExpRAD = $ApMatchArray[$exp][5]
+			$ExpCHAN = $ApMatchArray[$exp][6]
+			$ExpAUTH = $ApMatchArray[$exp][7]
+			$ExpENCR = $ApMatchArray[$exp][8]
+			$ExpSECTYPE = $ApMatchArray[$exp][9]
+			$ExpBTX = $ApMatchArray[$exp][10]
+			$ExpOTX = $ApMatchArray[$exp][11]
+			$ExpMANU = $ApMatchArray[$exp][12]
+			$ExpLAB = $ApMatchArray[$exp][13]
+			$ExpHighGpsID = $ApMatchArray[$exp][14]
+			$ExpFirstID = $ApMatchArray[$exp][15]
+			$ExpLastID = $ApMatchArray[$exp][16]
+			$ExpGidSid = ''
+
+			;Create GID,SIG String
+			$query = "SELECT GpsID, Signal FROM Hist WHERE ApID=" & $ExpApID
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundHistMatch = UBound($HistMatchArray) - 1
+			For $epgs = 1 To $FoundHistMatch
+				$ExpGID = $HistMatchArray[$epgs][1]
+				$ExpSig = $HistMatchArray[$epgs][2]
+				If $epgs = 1 Then
+					$ExpGidSid = $ExpGID & ',' & $ExpSig
+				Else
+					$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
+				EndIf
+			Next
+
+			$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
+		Next
+		Return ($file)
+	Else
+		SetError(1)
+	EndIf
+EndFunc   ;==>_GenerateWifidbVS1
 
 Func _LocatePositionInWiFiDB();Finds GPS based on active acess points and opens in browser
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
@@ -6998,7 +7271,7 @@ Func _ImportVS1($VS1file)
 							$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
 							If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
 							$ImpRSSI = _SignalPercentToDb($ImpSig)
-							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $ImpGID
+							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID='" & $ImpGID & "'"
 							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 							$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
 							If $TempGidMatchArrayMatch <> 0 Then
@@ -9241,7 +9514,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_WifiDB_User = GUICtrlCreateInput($WifiDb_User, 123, 75, 185, 20)
 		GUICtrlCreateLabel("WifiDB API Key", 328, 77, 78, 15)
 		$GUI_WifiDB_ApiKey = GUICtrlCreateInput($WifiDb_ApiKey, 411, 75, 185, 20)
-		GUICtrlSetState($GUI_WifiDB_ApiKey, $GUI_DISABLE);disable because wifidb api key is not yet implemented
+		;GUICtrlSetState($GUI_WifiDB_ApiKey, $GUI_DISABLE);disable because wifidb api key is not yet implemented
 		GUICtrlCreateLabel($Text_PHPgraphing, 31, 110, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_PhilsGraphURL = GUICtrlCreateInput($PhilsGraphURL, 31, 125, 620, 20)
