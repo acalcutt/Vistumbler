@@ -9,7 +9,7 @@
 #AutoIt3Wrapper_Run_Tidy=y
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2012 Andrew Calcutt
+;Copyright (C) 2013 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4'
+$version = 'v10.4.20 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2012/11/20'
+$last_modified = '2013/01/11'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -5035,7 +5035,8 @@ EndFunc   ;==>_ViewInPhilsGraph
 
 Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
-	$WifiDbUploadGUI = GUICreate("Upload to WifiDB", 581, 526, 192, 124)
+	$WifiDbUploadGUI = GUICreate("Upload to WifiDB", 580, 525)
+	GUISetBkColor($BackgroundColor)
 	GUICtrlCreateLabel("Add wifidb upload disclaimer here", 24, 8, 532, 89)
 
 	GUICtrlCreateGroup("User Information", 24, 104, 281, 161)
@@ -5049,6 +5050,7 @@ Func _AddToYourWDB()
 
 	GUICtrlCreateGroup("File Type", 312, 104, 249, 161)
 	$VSZ_Radio_GUI = GUICtrlCreateRadio("Vistumbler VSZ", 327, 139, 220, 20)
+	GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
 	$VS1_Radio_GUI = GUICtrlCreateRadio("Vistumbler VS1", 327, 174, 220, 20)
 	$CSV_Radio_GUI = GUICtrlCreateRadio("Vistumbler Detailed CSV", 327, 209, 220, 20)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
@@ -5060,8 +5062,8 @@ Func _AddToYourWDB()
 	$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
 
-	$WifiDbUploadGUI_Upload = GUICtrlCreateButton("Upload APs to WifiDB", 24, 488, 241, 25)
-	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton("Cancel", 316, 487, 241, 25)
+	$WifiDbUploadGUI_Upload = GUICtrlCreateButton("Upload APs to WifiDB", 35, 488, 241, 25)
+	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton("Cancel", 305, 487, 241, 25)
 	GUISetState(@SW_SHOW)
 
 	GUICtrlSetOnEvent($WifiDbUploadGUI_Upload, '_UploadFileToWifiDB')
@@ -5075,21 +5077,25 @@ Func _CloseWifiDbUploadGUI()
 EndFunc   ;==>_CloseWifiDbUploadGUI
 
 Func _UploadFileToWifiDB()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UploadFileToWifiDB() ') ;#Debug Display
+	GUICtrlSetData($msgdisplay, 'Uploading APs to WifiDB')
+	;Get Upload Information from upload GUI
 	$upload_user = GUICtrlRead($upload_user_GUI)
 	$upload_otherusers = GUICtrlRead($upload_otherusers_GUI)
 	$upload_apikey = GUICtrlRead($upload_apikey_GUI)
 	$upload_title = GUICtrlRead($upload_title_GUI)
 	$upload_notes = GUICtrlRead($upload_notes_GUI)
-	ConsoleWrite("$upload_user: " & $upload_user & "$upload_otherusers: " & $upload_otherusers & "$upload_apikey: " & $upload_apikey & "$upload_title: " & $upload_title & "$upload_notes: " & $upload_notes & @CRLF)
-	_CloseWifiDbUploadGUI()
 
-	If GUICtrlRead($VS1_Radio_GUI) = $GUI_CHECKED Then
+	If GUICtrlRead($VS1_Radio_GUI) = 1 Then
 		$upload_filetype = "VS1"
-	ElseIf GUICtrlRead($CSV_Radio_GUI) = $GUI_CHECKED Then
+	ElseIf GUICtrlRead($CSV_Radio_GUI) = 1 Then
 		$upload_filetype = "CSV"
 	Else
 		$upload_filetype = "VSZ"
 	EndIf
+
+	ConsoleWrite("$upload_filetype:" & $upload_filetype & " $upload_user:" & $upload_user & " $upload_otherusers:" & $upload_otherusers & " $upload_apikey:" & $upload_apikey & " $upload_title:" & $upload_title & " $upload_notes:" & $upload_notes & @CRLF)
+	_CloseWifiDbUploadGUI()
 
 	;Get Host, Path, and Port from WifiDB api url
 	Local $host, $port, $path
@@ -5114,6 +5120,7 @@ Func _UploadFileToWifiDB()
 	ConsoleWrite($path & @CRLF)
 	$page = $path & "import.php"
 
+	;Upload File to WifiDB
 	If $upload_filetype = "VS1" Then
 		$WdbFile = $SaveDir & 'WDB_Export.VS1'
 		FileDelete($WdbFile)
@@ -5122,7 +5129,11 @@ Func _UploadFileToWifiDB()
 			$socket = _HTTPConnect($host, $port)
 			_HTTPPost_WifiDB_File($host, $page, $socket, FileRead($WdbFile), $ldatetimestamp & "_wdb_export.VS1", "text/plain; charset=""UTF-8""", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
 			$recv = _HTTPRead($socket, 1)
-			ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+			If @error Then
+				ConsoleWrite("HTTPRead Error:" & @error & @CRLF)
+			Else
+				ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+			EndIf
 		Else
 			ConsoleWrite("No VS1 Created for some reason..." & @CRLF)
 		EndIf
@@ -5134,7 +5145,11 @@ Func _UploadFileToWifiDB()
 			$socket = _HTTPConnect($host, $port)
 			_HTTPPost_WifiDB_File($host, $page, $socket, FileRead($WdbFile), $ldatetimestamp & "_wdb_export.CSV", "text/plain; charset=""UTF-8""", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
 			$recv = _HTTPRead($socket, 1)
-			ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+			If @error Then
+				ConsoleWrite("HTTPRead Error:" & @error & @CRLF)
+			Else
+				ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+			EndIf
 		Else
 			ConsoleWrite("No CSV Created for some reason..." & @CRLF)
 		EndIf
@@ -5157,11 +5172,16 @@ Func _UploadFileToWifiDB()
 			$vszfileread = FileRead($vsz_file) & @CRLF
 			_HTTPPost_WifiDB_File($host, $page, $socket, $vszfileread, $ldatetimestamp & "_wdb_export.VSZ", "application/octet-stream", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
 			$recv = _HTTPRead($socket, 1)
-			ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+			If @error Then
+				ConsoleWrite("HTTPRead Error:" & @error & @CRLF)
+			Else
+				ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+			EndIf
 		Else
 			ConsoleWrite("No VSZ Created for some reason..." & @CRLF)
 		EndIf
 	EndIf
+	GUICtrlSetData($msgdisplay, '');Clear $msgdisplay
 EndFunc   ;==>_UploadFileToWifiDB
 
 
