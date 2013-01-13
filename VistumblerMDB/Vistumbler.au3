@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4.20 Beta 1'
+$version = 'v10.4.20 Beta 2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2013/01/11'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -266,7 +266,7 @@ Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDi
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL, $GUI_PhilsApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
-Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFilter
+Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
@@ -898,6 +898,7 @@ Dim $Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "Update
 Dim $Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
 Dim $Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler file')
 Dim $Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed Comma Delimited file')
+Dim $Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Summary Comma Delimited file')
 Dim $Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler wi-scan file')
 Dim $Text_WardriveDb3File = IniRead($DefaultLanguagePath, "GuiText", "WardriveDb3File", "Wardrive-android file")
 Dim $Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
@@ -6005,10 +6006,12 @@ Func _ExportCsvDataGui($Gui_CsvFilter = 0);Saves data to a selected file
 	$Gui_Csv = GUICreate($Text_ExportToCSV, 543, 132)
 	GUISetBkColor($BackgroundColor)
 	$Gui_CsvFile = GUICtrlCreateInput($SaveDir & $ldatetimestamp & '.csv', 20, 20, 409, 21)
-	$GUI_CsvSaveAs = GUICtrlCreateButton("Save As", 440, 20, 81, 22, $WS_GROUP)
-	$Gui_CsvRadSummary = GUICtrlCreateRadio("Summary", 20, 50, 289, 20)
-	GUICtrlSetState($Gui_CsvRadSummary, $GUI_CHECKED)
-	$Gui_CsvRadDetailed = GUICtrlCreateRadio("Detailed", 20, 70, 289, 20)
+	$GUI_CsvSaveAs = GUICtrlCreateButton($Text_Browse, 440, 20, 81, 22, $WS_GROUP)
+	$Gui_CsvRadDetailed = GUICtrlCreateRadio($Text_DetailedCsvFile, 20, 50, 250, 20)
+	GUICtrlSetState($Gui_CsvRadDetailed, $GUI_CHECKED)
+	$Gui_CsvRadSummary = GUICtrlCreateRadio($Text_SummaryCsvFile, 20, 70, 250, 20)
+	$Gui_CsvFiltered = GUICtrlCreateCheckbox($Text_Filtered, 300, 50, 250, 20)
+	If $Gui_CsvFilter = 1 Then GUICtrlSetState($Gui_CsvFiltered, $GUI_CHECKED)
 	$Gui_CsvOk = GUICtrlCreateButton($Text_Ok, 128, 95, 97, 25, $WS_GROUP)
 	$Gui_CsvCancel = GUICtrlCreateButton($Text_Cancel, 290, 95, 97, 25, $WS_GROUP)
 	GUISetState(@SW_SHOW)
@@ -6021,15 +6024,20 @@ EndFunc   ;==>_ExportCsvDataGui
 Func _ExportCsvDataGui_Ok()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui_Ok()') ;#Debug Display
 	$filename = GUICtrlRead($Gui_CsvFile)
-	$rad_summary = GUICtrlRead($Gui_CsvRadSummary)
-	$rad_detailed = GUICtrlRead($Gui_CsvRadDetailed)
-	_ExportCsvDataGui_Close()
-	If StringInStr($filename, '.csv') = 0 Then $filename = $filename & '.csv'
-	If $rad_summary = 1 Then
-		$saved = _ExportToCSV($filename, $Gui_CsvFilter, 0)
+	If GUICtrlRead($Gui_CsvRadSummary) = 1 Then
+		$CsvDetailed = 0
 	Else
-		$saved = _ExportToCSV($filename, $Gui_CsvFilter, 1)
+		$CsvDetailed = 1
 	EndIf
+	If GUICtrlRead($Gui_CsvFiltered) = 1 Then
+		$CsvFiltered = 1
+	Else
+		$CsvFiltered = 0
+	EndIf
+	_ExportCsvDataGui_Close()
+
+	If StringInStr($filename, '.csv') = 0 Then $filename = $filename & '.csv'
+	$saved = _ExportToCSV($filename, $CsvFiltered, $CsvDetailed)
 	If $saved = 1 Then
 		MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $filename & '"')
 	Else
@@ -6051,6 +6059,7 @@ Func _ExportCsvDataGui_Close()
 EndFunc   ;==>_ExportCsvDataGui_Close
 
 Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data to a csv file
+	ConsoleWrite("$Filter:" & $Filter & ' - $Detailed:' & $Detailed & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
 	If $Filter = 1 Then
 		$query = $AddQuery
@@ -6978,6 +6987,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FixHistSignals', $Text_FixHistSignals)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerFile', $Text_VistumblerFile)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'DetailedFile', $Text_DetailedCsvFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SummaryFile', $Text_SummaryCsvFile)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', $Text_NetstumblerTxtFile)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', $Text_WardriveDb3File)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoScanApsOnLaunch', $Text_AutoScanApsOnLaunch)
@@ -10127,6 +10137,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
 		$Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler file')
 		$Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed Comma Delimited file')
+		$Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Summary Comma Delimited file')
 		$Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler wi-scan file')
 		$Text_WardriveDb3File = IniRead($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', 'Wardrive-android file')
 		$Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
