@@ -64,6 +64,7 @@ Dim $MapTrack = 0
 Dim $apiurl
 Dim $WifiDb_User
 Dim $WifiDb_ApiKey
+Dim $WifiDb_SessionID
 
 For $loop = 1 To $CmdLine[0]
 	If StringInStr($CmdLine[$loop], '/f') Then
@@ -100,6 +101,10 @@ For $loop = 1 To $CmdLine[0]
 	If StringInStr($CmdLine[$loop], '/wk') Then
 		$wksplit = _StringExplode($CmdLine[$loop], "=" , 1)
 		If IsArray($wksplit) Then $WifiDb_ApiKey = $wksplit[1]
+	EndIf
+	If StringInStr($CmdLine[$loop], '/wsid') Then
+		$wsidsplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		If IsArray($wksplit) Then $WifiDb_SessionID = $wksplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/?') Then
 		MsgBox(0, '', 'to be filled in later. the old help was outdated an no longer relevant')
@@ -581,7 +586,7 @@ Func _UploadActiveApsToWifidb()
 				$ExpLastGpsTime = $GpsMatchArray[1][11]
 
 				$url_root = $apiurl & 'live.php?'
-				$url_data = "SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsMPH & "&Track=" & $ExpLastGpsTAngle
+				$url_data = "SessionID=" & $WifiDb_SessionID & "&SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsMPH & "&Track=" & $ExpLastGpsTAngle
 				If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then $url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
 				If $Debug = 1 Then FileWrite("templog.txt", StringLen($url_root & $url_data) & ' - ' & $url_root & $url_data & @CRLF)
 				$webpagesource = _INetGetSource($url_root & $url_data)

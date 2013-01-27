@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4.20 Beta 2'
+$version = 'v10.4.20 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/01/11'
+$last_modified = '2013/01/26'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -114,6 +114,9 @@ $datestamp = $dt[1]
 $timestamp = $dt[2]
 $ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
 Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate')), 'MM', 'M'), 'dd', 'd')
+;Set WifiDB Session ID
+$WifiDbSessionID = StringTrimLeft(_MD5(@ComputerName & ' ' & @UserName & ' ' & $ldatetimestamp & '-' & @MSEC), 2)
+ConsoleWrite($WifiDbSessionID & @CRLF)
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
@@ -1659,7 +1662,7 @@ While 1
 	;Upload Active APs to WiFiDB (if enabled)
 	If $AutoUpApsToWifiDB = 1 Then
 		If TimerDiff($wifidb_au_timer) >= ($AutoUpApsToWifiDBTime * 1000) Then
-			$run = 'Export.exe' & ' /db="' & $VistumblerDB & '" /t=w /u="' & $PhilsApiURL & '" /wa="' & $WifiDb_User & '" /wk="' & $WifiDb_ApiKey & '"'
+			$run = 'Export.exe' & ' /db="' & $VistumblerDB & '" /t=w /u="' & $PhilsApiURL & '" /wa="' & $WifiDb_User & '" /wk="' & $WifiDb_ApiKey & '" /wsid="' & $WifiDbSessionID & '"'
 			;ConsoleWrite($run & @CRLF)
 			$WifiDbUploadProcess = Run($run, @ScriptDir, @SW_HIDE)
 			$wifidb_au_timer = TimerInit()
