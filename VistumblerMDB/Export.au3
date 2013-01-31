@@ -5,7 +5,7 @@
 #AutoIt3Wrapper_UseUpx=n
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2012 Andrew Calcutt
+;Copyright (C) 2013 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -15,8 +15,8 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Exporter'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports based on input options'
-$version = 'v6.1'
-$last_modified = '2012/11/18'
+$version = 'v6.2'
+$last_modified = '2013/01/30'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
@@ -26,7 +26,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $DB_OBJ
-Dim $Debug = 0
+Dim $Debug = 1
 Dim $filetype = 'cd';Default file type (d=detailed VS1, cd=detailed CSV, cs=summary CSV, k=KML, w=WifiDB Upload)
 Dim $filename = @ScriptDir & '\Temp\Save.csv'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
@@ -104,7 +104,7 @@ For $loop = 1 To $CmdLine[0]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/wsid') Then
 		$wsidsplit = _StringExplode($CmdLine[$loop], "=" , 1)
-		If IsArray($wksplit) Then $WifiDb_SessionID = $wksplit[1]
+		If IsArray($wsidsplit) Then $WifiDb_SessionID = $wsidsplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/?') Then
 		MsgBox(0, '', 'to be filled in later. the old help was outdated an no longer relevant')

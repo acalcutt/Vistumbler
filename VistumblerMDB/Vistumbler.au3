@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4.20 Beta 3'
+$version = 'v10.4.20 Alpha 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/01/26'
+$last_modified = '2013/01/30'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1663,7 +1663,7 @@ While 1
 	If $AutoUpApsToWifiDB = 1 Then
 		If TimerDiff($wifidb_au_timer) >= ($AutoUpApsToWifiDBTime * 1000) Then
 			$run = 'Export.exe' & ' /db="' & $VistumblerDB & '" /t=w /u="' & $PhilsApiURL & '" /wa="' & $WifiDb_User & '" /wk="' & $WifiDb_ApiKey & '" /wsid="' & $WifiDbSessionID & '"'
-			;ConsoleWrite($run & @CRLF)
+			ConsoleWrite($run & @CRLF)
 			$WifiDbUploadProcess = Run($run, @ScriptDir, @SW_HIDE)
 			$wifidb_au_timer = TimerInit()
 		EndIf
