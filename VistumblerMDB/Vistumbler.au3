@@ -115,7 +115,7 @@ $timestamp = $dt[2]
 $ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
 Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate')), 'MM', 'M'), 'dd', 'd')
 ;Set WifiDB Session ID
-$WifiDbSessionID = StringTrimLeft(_MD5(@ComputerName & ' ' & @UserName & ' ' & $ldatetimestamp & '-' & @MSEC), 2)
+$WifiDbSessionID = _MD5(@ComputerName & ' ' & @UserName & ' ' & $ldatetimestamp & '-' & @MSEC);StringTrimLeft(_MD5(@ComputerName & ' ' & @UserName & ' ' & $ldatetimestamp & '-' & @MSEC), 2)
 ConsoleWrite($WifiDbSessionID & @CRLF)
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
