@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4.20 Alpha 2'
+$version = 'v10.4.20 Alpha 3'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2013/01/30'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -114,9 +114,6 @@ $datestamp = $dt[1]
 $timestamp = $dt[2]
 $ldatetimestamp = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
 Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', 'DateFormat', RegRead('HKCU\Control Panel\International\', 'sShortDate')), 'MM', 'M'), 'dd', 'd')
-;Set WifiDB Session ID
-$WifiDbSessionID = _MD5(@ComputerName & ' ' & @UserName & ' ' & $ldatetimestamp & '-' & @MSEC);StringTrimLeft(_MD5(@ComputerName & ' ' & @UserName & ' ' & $ldatetimestamp & '-' & @MSEC), 2)
-ConsoleWrite($WifiDbSessionID & @CRLF)
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
@@ -211,6 +208,7 @@ Dim $ClearAllAps = 0
 Dim $UpdateAutoSave = 0
 Dim $CompassOpen = 0
 Dim $SettingsOpen = 0
+Dim $AutoUpApsToWifiDB = 0
 Dim $SayProcess
 Dim $MidiProcess
 Dim $AutoSaveProcess
@@ -221,6 +219,7 @@ Dim $NsCancel
 Dim $DefaultApapterID
 Dim $OpenedPort
 Dim $LastGpsString
+Dim $WifiDbSessionID
 
 Dim $AddQuery
 Dim $RemoveQuery
@@ -257,7 +256,7 @@ Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $n
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
 
-Dim $WifiDbUploadGUI, $upload_user_GUI, $upload_otherusers_GUI, $upload_apikey_GUI, $upload_title_GUI, $upload_notes_GUI, $VS1_Radio_GUI, $VS1_Filtered_Radio_GUI, $VSZ_Radio_GUI, $VSZ_Filtered_Radio_GUI, $CSV_Radio_GUI, $CSV_Filtered_Radio_GUI
+Dim $WifiDbUploadGUI, $upload_user_GUI, $upload_otherusers_GUI, $upload_apikey_GUI, $upload_title_GUI, $upload_notes_GUI, $VS1_Radio_GUI, $VSZ_Radio_GUI, $CSV_Radio_GUI, $Export_Filtered_GUI
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
 Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
@@ -490,7 +489,7 @@ Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_SURL', 'https:/
 Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_SURL', 'https://wifidb.vistumbler.net/wifidb/')
 Dim $PhilsApiURL = IniRead($settings, 'PhilsWifiTools', 'API_SURL', 'https://api.vistumbler.net/')
 Dim $UseWiFiDbGpsLocate = IniRead($settings, 'PhilsWifiTools', 'UseWiFiDbGpsLocate', 0)
-Dim $AutoUpApsToWifiDB = IniRead($settings, 'PhilsWifiTools', 'AutoUpApsToWifiDB', 0)
+Dim $EnableAutoUpApsToWifiDB = IniRead($settings, 'PhilsWifiTools', 'AutoUpApsToWifiDB', 0)
 Dim $AutoUpApsToWifiDBTime = IniRead($settings, 'PhilsWifiTools', 'AutoUpApsToWifiDBTime', 60)
 Dim $WiFiDbLocateRefreshTime = IniRead($settings, 'PhilsWifiTools', 'WiFiDbLocateRefreshTime', 5000)
 
@@ -1322,7 +1321,7 @@ If @OSVersion = "WIN_XP" Then GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_DI
 If @OSVersion = "WIN_XP" Then $UseWiFiDbGpsLocate = 0
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
 $UseWiFiDbAutoUploadButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbUploadAps & ' (' & $Text_Experimental & ')', $WifidbMenu)
-If $AutoUpApsToWifiDB = 1 Then GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
+If $EnableAutoUpApsToWifiDB = 1 Then _WifiDbAutoUploadToggle(0)
 ;GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_DISABLE); Upload to WifiDB is not ready yet. The button will be disabled until it is available
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
@@ -1475,7 +1474,7 @@ GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
 ;GUICtrlSetOnEvent($GUI_CleanupNonMatchingImages, '_RemoveNonMatchingImages')
 ;WifiDB Menu
 GUICtrlSetOnEvent($UseWiFiDbGpsLocateButton, '_WifiDbLocateToggle')
-GUICtrlSetOnEvent($UseWiFiDbAutoUploadButton, '_WifiDbAutoUploadToggle')
+GUICtrlSetOnEvent($UseWiFiDbAutoUploadButton, '_WifiDbAutoUploadToggleWarn')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
 GUICtrlSetOnEvent($LocateInWDB, '_LocatePositionInWiFiDB')
 GUICtrlSetOnEvent($ViewLiveInWDB, '_ViewLiveInWDB')
@@ -3316,14 +3315,22 @@ Func _WifiDbLocateToggle();Turns wifi gps locate on or off
 	EndIf
 EndFunc   ;==>_WifiDbLocateToggle
 
-Func _WifiDbAutoUploadToggle()
+Func _WifiDbAutoUploadToggleWarn()
+	_WifiDbAutoUploadToggle(1)
+EndFunc   ;==>_WifiDbAutoUploadToggleWarn
+
+Func _WifiDbAutoUploadToggle($Warn = 1)
 	If $AutoUpApsToWifiDB = 1 Then
 		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
 		$AutoUpApsToWifiDB = 0
 	Else
-		$UploadWarn = MsgBox(4, $Text_Warning, $Text_WifiDBAutoUploadWarning)
+		If $Warn = 0 Then $UploadWarn = 6
+		If $Warn <> 0 Then $UploadWarn = MsgBox(4, $Text_Warning, $Text_WifiDBAutoUploadWarning)
 		If $UploadWarn = 6 Then
 			GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
+			;Set WifiDB Session ID
+			$WifiDbSessionID = StringTrimLeft(_MD5(Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & $ldatetimestamp & '-' & @MSEC), 2)
+			ConsoleWrite("WifiDb Session ID:" & $WifiDbSessionID & @CRLF)
 			$AutoUpApsToWifiDB = 1
 			$wifidb_au_timer = TimerInit()
 		EndIf
@@ -5142,14 +5149,11 @@ Func _AddToYourWDB()
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
 
 	GUICtrlCreateGroup("File Type", 312, 104, 249, 161)
-	$VSZ_Radio_GUI = GUICtrlCreateRadio("Vistumbler VSZ", 327, 130, 220, 20)
+	$VSZ_Radio_GUI = GUICtrlCreateRadio("Vistumbler VSZ", 327, 150, 220, 20)
 	GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
-	$VSZ_Filtered_Radio_GUI = GUICtrlCreateRadio("Vistumbler VSZ Filtered", 327, 150, 220, 20)
 	$VS1_Radio_GUI = GUICtrlCreateRadio("Vistumbler VS1", 327, 170, 220, 20)
-	$VS1_Filtered_Radio_GUI = GUICtrlCreateRadio("Vistumbler VS1 Filtered", 327, 190, 220, 20)
-	$CSV_Radio_GUI = GUICtrlCreateRadio("Vistumbler Detailed CSV", 327, 210, 220, 20)
-	$CSV_Filtered_Radio_GUI = GUICtrlCreateRadio("Vistumbler Detailed CSV Filtered", 327, 230, 220, 20)
-	;GUICtrlCreateGroup("", -99, -99, 1, 1)
+	$CSV_Radio_GUI = GUICtrlCreateRadio("Vistumbler Detailed CSV", 327, 190, 220, 20)
+	$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
 
 	GUICtrlCreateGroup("Upload Information", 24, 272, 537, 201)
 	GUICtrlCreateLabel("Title", 39, 297, 500, 20)
@@ -5182,27 +5186,24 @@ Func _UploadFileToWifiDB()
 	$upload_title = GUICtrlRead($upload_title_GUI)
 	$upload_notes = GUICtrlRead($upload_notes_GUI)
 
-	If GUICtrlRead($VS1_Filtered_Radio_GUI) = 1 Then
-		$Filtered = 1
+	If GUICtrlRead($VS1_Radio_GUI) = 1 Then
+		$WdbFile = $SaveDir & 'WDB_Export.VS1'
 		$upload_filetype = "VS1"
-	ElseIf GUICtrlRead($VS1_Radio_GUI) = 1 Then
-		$Filtered = 0
-		$upload_filetype = "VS1"
-	ElseIf GUICtrlRead($CSV_Filtered_Radio_GUI) = 1 Then
-		$Filtered = 1
-		$upload_filetype = "CSV"
 	ElseIf GUICtrlRead($CSV_Radio_GUI) = 1 Then
-		$Filtered = 0
+		$WdbFile = $SaveDir & 'WDB_Export.CSV'
 		$upload_filetype = "CSV"
-	ElseIf GUICtrlRead($VSZ_Filtered_Radio_GUI) = 1 Then
-		$Filtered = 1
-		$upload_filetype = "VSZ"
 	Else
-		$Filtered = 0
+		$WdbFile = $SaveDir & 'WDB_Export.VSZ'
 		$upload_filetype = "VSZ"
 	EndIf
 
-	ConsoleWrite("$upload_filetype:" & $upload_filetype & " $upload_user:" & $upload_user & " $upload_otherusers:" & $upload_otherusers & " $upload_apikey:" & $upload_apikey & " $upload_title:" & $upload_title & " $upload_notes:" & $upload_notes & @CRLF)
+	If GUICtrlRead($Export_Filtered_GUI) = 1 Then
+		$Filtered = 1
+	Else
+		$Filtered = 0
+	EndIf
+
+	ConsoleWrite("$upload_filetype:" & $upload_filetype & "$filtered:" & $Filtered & " $upload_user:" & $upload_user & " $upload_otherusers:" & $upload_otherusers & " $upload_apikey:" & $upload_apikey & " $upload_title:" & $upload_title & " $upload_notes:" & $upload_notes & @CRLF)
 	_CloseWifiDbUploadGUI()
 
 	;Get Host, Path, and Port from WifiDB api url
@@ -5228,58 +5229,42 @@ Func _UploadFileToWifiDB()
 	ConsoleWrite($path & @CRLF)
 	$page = $path & "import.php"
 
-	;Upload File to WifiDB
+	;Export WDB File
+	Local $fileexported, $fileread, $filetype
 	If $upload_filetype = "VS1" Then
-		$WdbFile = $SaveDir & 'WDB_Export.VS1'
-		FileDelete($WdbFile)
 		$fileexported = _ExportVS1($WdbFile, $Filtered)
-		If $fileexported = 1 Then
-			$socket = _HTTPConnect($host, $port)
-			_HTTPPost_WifiDB_File($host, $page, $socket, FileRead($WdbFile), $ldatetimestamp & "_wdb_export.VS1", "text/plain; charset=""UTF-8""", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
-			$recv = _HTTPRead($socket, 1)
-			If @error Then
-				ConsoleWrite("HTTPRead Error:" & @error & @CRLF)
-			Else
-				ConsoleWrite("Data received:" & $recv[4] & @CRLF)
-			EndIf
-		Else
-			ConsoleWrite("No VS1 Created for some reason..." & @CRLF)
-		EndIf
+		$filetype = "text/plain; charset=""UTF-8"""
+		$fileuname = $ldatetimestamp & "_wdb_export.VS1"
+		If $fileexported = 1 Then $fileread = FileRead($WdbFile)
 	ElseIf $upload_filetype = "CSV" Then
-		$WdbFile = $SaveDir & 'WDB_Export.CSV'
-		FileDelete($WdbFile)
 		$fileexported = _ExportToCSV($WdbFile, $Filtered, 1)
-		If $fileexported = 1 Then
-			$socket = _HTTPConnect($host, $port)
-			_HTTPPost_WifiDB_File($host, $page, $socket, FileRead($WdbFile), $ldatetimestamp & "_wdb_export.CSV", "text/plain; charset=""UTF-8""", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
-			$recv = _HTTPRead($socket, 1)
-			If @error Then
-				ConsoleWrite("HTTPRead Error:" & @error & @CRLF)
-			Else
-				ConsoleWrite("Data received:" & $recv[4] & @CRLF)
-			EndIf
-		Else
-			ConsoleWrite("No CSV Created for some reason..." & @CRLF)
-		EndIf
-	ElseIf $upload_filetype = "VSZ" Then
-		;Create VSZ
-		$WdbFile = $SaveDir & 'WDB_Export.VSZ'
-		FileDelete($WdbFile)
+		$filetype = "text/plain; charset=""UTF-8"""
+		$fileuname = $ldatetimestamp & "_wdb_export.CSV"
+		If $fileexported = 1 Then $fileread = FileRead($WdbFile)
+	Else
 		$fileexported = _ExportVSZ($WdbFile, $Filtered)
-		If $fileexported = 1 Then
-			$socket = _HTTPConnect($host, $port)
-			$vszfileread = FileRead($WdbFile) & @CRLF
-			_HTTPPost_WifiDB_File($host, $page, $socket, $vszfileread, $ldatetimestamp & "_wdb_export.VSZ", "application/octet-stream", $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
+		$filetype = "application/octet-stream"
+		$fileuname = $ldatetimestamp & "_wdb_export.VSZ"
+		If $fileexported = 1 Then $fileread = FileRead($WdbFile) & @CRLF
+	EndIf
+
+	If $fileexported = 1 Then ;Upload File to WifiDB
+		$socket = _HTTPConnect($host, $port)
+		If Not @error Then
+			_HTTPPost_WifiDB_File($host, $page, $socket, $fileread, $fileuname, $filetype, $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
 			$recv = _HTTPRead($socket, 1)
 			If @error Then
-				ConsoleWrite("HTTPRead Error:" & @error & @CRLF)
+				ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
 			Else
 				ConsoleWrite("Data received:" & $recv[4] & @CRLF)
 			EndIf
 		Else
-			ConsoleWrite("No VSZ Created for some reason..." & @CRLF)
+			ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
 		EndIf
+	Else ;File Export failed
+		MsgBox(0, $Text_Error, "No export created for some reason... are there APs to be exported?")
 	EndIf
+
 	GUICtrlSetData($msgdisplay, '');Clear $msgdisplay
 EndFunc   ;==>_UploadFileToWifiDB
 
@@ -5942,16 +5927,15 @@ Func _ExportVSZ($savefile, $Filter = 0)
 	If FileExists($vsz_temp_file) Then FileDelete($vsz_temp_file)
 	If FileExists($vsz_file) Then FileDelete($vsz_file)
 	If FileExists($vs1_file) Then FileDelete($vs1_file)
-	_ExportVS1($vs1_file, $Filter)
-	_Zip_Create($vsz_temp_file)
-	_Zip_AddItem($vsz_temp_file, $vs1_file)
-	FileMove($vsz_temp_file, $vsz_file)
-	FileDelete($vs1_file)
-	If FileExists($savefile) Then
-		Return (1)
-	Else
-		Return (0)
+	$vs1tmpcreated = _ExportVS1($vs1_file, $Filter)
+	If $vs1tmpcreated = 1 Then
+		_Zip_Create($vsz_temp_file)
+		_Zip_AddItem($vsz_temp_file, $vs1_file)
+		FileMove($vsz_temp_file, $vsz_file)
+		FileDelete($vs1_file)
+		If FileExists($savefile) Then Return (1)
 	EndIf
+	Return (0)
 EndFunc   ;==>_ExportVSZ
 
 Func _ExportCsvData();Saves data to a selected file
