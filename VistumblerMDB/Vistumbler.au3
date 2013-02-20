@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4.20 Alpha 3'
+$version = 'v10.4.20 Alpha 4'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/01/30'
+$last_modified = '2013/02/19'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -91,6 +91,15 @@ If $PortableMode = 0 Then
 		RegWrite('HKCR\Vistumbler\DefaultIcon\', '', 'REG_SZ', '"' & @ScriptDir & '\Icons\vsfile_icon.ico"')
 	EndIf
 EndIf
+;Set Hotkeys
+$hkArray = IniReadSection($settings, "Hotkeys")
+If Not @error Then
+	For $hk = 1 To $hkArray[0][0]
+		ConsoleWrite("Hotkey:" & $hkArray[$hk][0] & " Function:" & $hkArray[$hk][1] & @CRLF)
+		HotKeySet($hkArray[$hk][0], $hkArray[$hk][1])
+	Next
+EndIf
+
 ;Set vistumbler to load VS1/VSZ if one is specified by command line
 Dim $Load = ''
 For $loop = 1 To $CmdLine[0]
@@ -940,6 +949,20 @@ Dim $Text_ShowGpsRangeMap = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsRan
 Dim $Text_ShowGpsTack = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', 'Show GPS Track')
 Dim $Text_Line = IniRead($DefaultLanguagePath, 'GuiText', 'Line', 'Line')
 Dim $Text_Total = IniRead($DefaultLanguagePath, 'GuiText', 'Total', 'Total')
+Dim $Text_WifiDB_Upload_Discliamer = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB_Upload_Discliamer', 'This feature uploads access points to the WifiDB. a file will be generated and uploaded to the WifiDB API URL specified in the Vistumbler WifiDB Settings.')
+Dim $Text_UserInformation = IniRead($DefaultLanguagePath, 'GuiText', 'UserInformation', 'User Information')
+Dim $Text_WifiDB_Username = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB_Username', 'WifiDB Username')
+Dim $Text_WifiDB_Api_Key = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB_Api_Key', 'WifiDB Api Key')
+Dim $Text_OtherUsers = IniRead($DefaultLanguagePath, 'GuiText', 'OtherUsers', 'Other users')
+Dim $Text_FileType = IniRead($DefaultLanguagePath, 'GuiText', 'FileType', 'File Type')
+Dim $Text_VistumblerVSZ = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerVSZ', 'Vistumbler VSZ')
+Dim $Text_VistumblerVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerVS1', 'Vistumbler VS1')
+Dim $Text_VistumblerCSV = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerCSV', 'Vistumbler Detailed CSV')
+Dim $Text_UploadInformation = IniRead($DefaultLanguagePath, 'GuiText', 'UploadInformation', 'Upload Information')
+Dim $Text_Title = IniRead($DefaultLanguagePath, 'GuiText', 'Title', 'Title')
+Dim $Text_Notes = IniRead($DefaultLanguagePath, 'GuiText', 'Notes', 'Notes')
+Dim $Text_UploadApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadApsToWifidb', 'Upload APs to WifiDB')
+Dim $Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -5044,8 +5067,8 @@ EndFunc   ;==>_ViewInPhilsGraph
 	;ConsoleWrite($url_data & @CRLF)
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 	EndFunc   ;==>_AddToYourWDB
-
-
+	
+	
 	Func _ExportWifidbVS1($savefile, $Filter = 0);writes v3.0 vistumbler detailed data to a txt file (WifiDB does not curretly support v4 VS1, this has been added for backward compatibility)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
 	$file = "# Vistumbler VS1 - Detailed Export Version 3.0" & @CRLF & _
@@ -5073,7 +5096,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpTime = $GpsMatchArray[$exp][12]
 	$file &= $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime & @CRLF
 	Next
-
+	
 	;Export AP Information
 	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
 	"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL" & @CRLF & _
@@ -5105,7 +5128,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpFirstID = $ApMatchArray[$exp][15]
 	$ExpLastID = $ApMatchArray[$exp][16]
 	$ExpGidSid = ''
-
+	
 	;Create GID,SIG String
 	$query = "SELECT GpsID, Signal FROM Hist WHERE ApID=" & $ExpApID
 	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5119,7 +5142,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
 	EndIf
 	Next
-
+	
 	$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
 	Next
 	$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
@@ -5130,40 +5153,40 @@ EndFunc   ;==>_ViewInPhilsGraph
 	Return (0)
 	EndIf
 	EndFunc   ;==>_ExportWifidbVS1
-
+	
 #ce
 
 Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
-	$WifiDbUploadGUI = GUICreate("Upload to WifiDB", 580, 525)
+	$WifiDbUploadGUI = GUICreate($Text_UploadApsToWifidb, 580, 525)
 	GUISetBkColor($BackgroundColor)
-	GUICtrlCreateLabel("Add wifidb upload disclaimer here", 24, 8, 532, 89)
+	GUICtrlCreateLabel($Text_WifiDB_Upload_Discliamer, 24, 8, 532, 89)
 
-	GUICtrlCreateGroup("User Information", 24, 104, 281, 161)
-	GUICtrlCreateLabel("WifiDB Username", 39, 124, 236, 20)
+	GUICtrlCreateGroup($Text_UserInformation, 24, 104, 281, 161)
+	GUICtrlCreateLabel($Text_WifiDB_Username, 39, 124, 236, 20)
 	$upload_user_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
-	GUICtrlCreateLabel("Other users", 39, 169, 236, 20)
+	GUICtrlCreateLabel($Text_OtherUsers, 39, 169, 236, 20)
 	$upload_otherusers_GUI = GUICtrlCreateInput($WifiDb_OtherUsers, 39, 189, 241, 20)
-	GUICtrlCreateLabel("WifiDB Api Key", 39, 213, 236, 20)
+	GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
 	$upload_apikey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
 
-	GUICtrlCreateGroup("File Type", 312, 104, 249, 161)
-	$VSZ_Radio_GUI = GUICtrlCreateRadio("Vistumbler VSZ", 327, 150, 220, 20)
+	GUICtrlCreateGroup($Text_FileType, 312, 104, 249, 161)
+	$VSZ_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVSZ, 327, 150, 220, 20)
 	GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
-	$VS1_Radio_GUI = GUICtrlCreateRadio("Vistumbler VS1", 327, 170, 220, 20)
-	$CSV_Radio_GUI = GUICtrlCreateRadio("Vistumbler Detailed CSV", 327, 190, 220, 20)
+	$VS1_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVS1, 327, 170, 220, 20)
+	$CSV_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerCSV, 327, 190, 220, 20)
 	$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
 
-	GUICtrlCreateGroup("Upload Information", 24, 272, 537, 201)
-	GUICtrlCreateLabel("Title", 39, 297, 500, 20)
+	GUICtrlCreateGroup($Text_UploadInformation, 24, 272, 537, 201)
+	GUICtrlCreateLabel($Text_Title, 39, 297, 500, 20)
 	$upload_title_GUI = GUICtrlCreateInput($ldatetimestamp, 39, 317, 500, 21)
-	GUICtrlCreateLabel("Notes", 39, 342, 500, 20)
+	GUICtrlCreateLabel($Text_Notes, 39, 342, 500, 20)
 	$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
 
-	$WifiDbUploadGUI_Upload = GUICtrlCreateButton("Upload APs to WifiDB", 35, 488, 241, 25)
-	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton("Cancel", 305, 487, 241, 25)
+	$WifiDbUploadGUI_Upload = GUICtrlCreateButton($Text_UploadApsToWifidb, 35, 488, 241, 25)
+	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton($Text_Cancel, 305, 487, 241, 25)
 	GUISetState(@SW_SHOW)
 
 	GUICtrlSetOnEvent($WifiDbUploadGUI_Upload, '_UploadFileToWifiDB')
@@ -5178,7 +5201,7 @@ EndFunc   ;==>_CloseWifiDbUploadGUI
 
 Func _UploadFileToWifiDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UploadFileToWifiDB() ') ;#Debug Display
-	GUICtrlSetData($msgdisplay, 'Uploading APs to WifiDB')
+	GUICtrlSetData($msgdisplay, $Text_UploadingApsToWifidb)
 	;Get Upload Information from upload GUI
 	$upload_user = GUICtrlRead($upload_user_GUI)
 	$upload_otherusers = GUICtrlRead($upload_otherusers_GUI)
@@ -5230,7 +5253,7 @@ Func _UploadFileToWifiDB()
 	$page = $path & "import.php"
 
 	;Export WDB File
-	Local $fileexported, $fileread, $filetype
+	Local $fileexported, $filetype, $fileuname, $fileread
 	If $upload_filetype = "VS1" Then
 		$fileexported = _ExportVS1($WdbFile, $Filtered)
 		$filetype = "text/plain; charset=""UTF-8"""
@@ -5255,13 +5278,17 @@ Func _UploadFileToWifiDB()
 			$recv = _HTTPRead($socket, 1)
 			If @error Then
 				ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
+				MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
 			Else
 				ConsoleWrite("Data received:" & $recv[4] & @CRLF)
+				MsgBox(0, $Text_Information, "Data received:" & $recv[4])
 			EndIf
 		Else
+			MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
 			ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
 		EndIf
 	Else ;File Export failed
+		ConsoleWrite("No export created for some reason... are there APs to be exported?" & @CRLF)
 		MsgBox(0, $Text_Error, "No export created for some reason... are there APs to be exported?")
 	EndIf
 
@@ -6954,6 +6981,20 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', $Text_ShowGpsTack)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Line', $Text_Line)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Total', $Text_Total)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDB_Upload_Discliamer', $Text_WifiDB_Upload_Discliamer)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UserInformation', $Text_UserInformation)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDB_Username', $Text_WifiDB_Username)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'WifiDB_Api_Key', $Text_WifiDB_Api_Key)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'OtherUsers', $Text_OtherUsers)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FileType', $Text_FileType)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerVSZ', $Text_VistumblerVSZ)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerVS1', $Text_VistumblerVS1)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerCSV', $Text_VistumblerCSV)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UploadInformation', $Text_UploadInformation)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Title', $Text_Title)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Notes', $Text_Notes)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UploadApsToWifidb', $Text_UploadApsToWifidb)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', $Text_UploadingApsToWifidb)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -10104,6 +10145,21 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_ShowGpsTack = IniRead($DefaultLanguagePath, 'GuiText', 'ShowGpsTack', 'Show GPS Track')
 		$Text_Line = IniRead($DefaultLanguagePath, 'GuiText', 'Line', 'Line')
 		$Text_Total = IniRead($DefaultLanguagePath, 'GuiText', 'Total', 'Total')
+		$Text_WifiDB_Upload_Discliamer = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB_Upload_Discliamer', 'This feature uploads access points to the WifiDB. a file will be generated and uploaded to the WifiDB API URL specified in the Vistumbler WifiDB Settings.')
+		$Text_UserInformation = IniRead($DefaultLanguagePath, 'GuiText', 'UserInformation', 'User Information')
+		$Text_WifiDB_Username = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB_Username', 'WifiDB Username')
+		$Text_WifiDB_Api_Key = IniRead($DefaultLanguagePath, 'GuiText', 'WifiDB_Api_Key', 'WifiDB Api Key')
+		$Text_OtherUsers = IniRead($DefaultLanguagePath, 'GuiText', 'OtherUsers', 'Other users')
+		$Text_FileType = IniRead($DefaultLanguagePath, 'GuiText', 'FileType', 'File Type')
+		$Text_VistumblerVSZ = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerVSZ', 'Vistumbler VSZ')
+		$Text_VistumblerVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerVS1', 'Vistumbler VS1')
+		$Text_VistumblerCSV = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerCSV', 'Vistumbler Detailed CSV')
+		$Text_UploadInformation = IniRead($DefaultLanguagePath, 'GuiText', 'UploadInformation', 'Upload Information')
+		$Text_Title = IniRead($DefaultLanguagePath, 'GuiText', 'Title', 'Title')
+		$Text_Notes = IniRead($DefaultLanguagePath, 'GuiText', 'Notes', 'Notes')
+		$Text_UploadApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadApsToWifidb', 'Upload APs to WifiDB')
+		$Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
+
 		$RestartVistumbler = 1
 	EndIf
 	If $Apply_Manu = 1 Then
