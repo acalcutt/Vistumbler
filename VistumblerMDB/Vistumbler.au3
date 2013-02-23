@@ -1,4 +1,4 @@
-#RequireAdmin
+;#RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
@@ -4132,7 +4132,7 @@ Func _ListSort($DbCol, $SortOrder)
 			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.LastHistID = Hist.HistID WHERE ListRow<>-1 ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 		ElseIf $DbCol = "Signal" Or $DbCol = "HighSignal" Or $DbCol = "RSSI" Or $DbCol = "HighRSSI" Or $DbCol = "CHAN" Then ; Sort by Last Active Time
-			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>-1 ORDER BY CInt(" & $DbCol & ") " & $SortDir & ", ApID " & $SortDir
+			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>-1 ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
 			$ListRowPos = _SortDbQueryToList($query, $ListRowPos)
 		Else ; Sort by any other column
 			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>-1 ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
@@ -7066,12 +7066,12 @@ Func _LoadListGUI($imfile1 = "")
 	$NsCancel = GUICtrlCreateButton($Text_Close, 255, 95, 150, 25, $WS_GROUP)
 	$progressbar = GUICtrlCreateProgress(10, 135, 480, 20)
 	$percentlabel = GUICtrlCreateLabel($Text_Progress & ': ' & $Text_Ready, 10, 165, 230, 20)
-	$linetotal = GUICtrlCreateLabel($Text_LineTotal & ':', 10, 190, 230, 20)
+	$linetotal = GUICtrlCreateLabel($Text_LineTotal & ':', 10, 190, 250, 20)
 	$newlines = GUICtrlCreateLabel($Text_NewAPs & ':', 10, 215, 230, 20)
 
-	$minutes = GUICtrlCreateLabel($Text_Minutes & ':', 260, 165, 230, 20)
-	$linemin = GUICtrlCreateLabel($Text_LinesMin & ':', 260, 190, 230, 20)
-	$estimatedtime = GUICtrlCreateLabel($Text_EstimatedTimeRemaining & ':', 260, 215, 230, 20)
+	$minutes = GUICtrlCreateLabel($Text_Minutes & ':', 230, 165, 270, 20)
+	$linemin = GUICtrlCreateLabel($Text_LinesMin & ':', 230, 190, 270, 35)
+	$estimatedtime = GUICtrlCreateLabel($Text_EstimatedTimeRemaining & ':', 230, 215, 270, 35)
 	GUISetState(@SW_SHOW)
 
 	GUICtrlSetOnEvent($browse1, "_ImportFileBrowse")
@@ -7179,7 +7179,7 @@ Func _ImportVS1($VS1file)
 			If @error = -1 Then ExitLoop
 			If StringTrimRight($linein, StringLen($linein) - 1) <> "#" Then
 				$loadlist = StringSplit($linein, '|');Split Infomation of AP on line
-				;ConsoleWrite($loadlist[0] & @CRLF)
+				ConsoleWrite($loadlist[0] & @CRLF)
 				If $loadlist[0] = 6 Or $loadlist[0] = 12 Then ; If Line is GPS ID Line
 					If $loadlist[0] = 6 Then
 						$LoadGID = $loadlist[1]
@@ -7215,11 +7215,11 @@ Func _ImportVS1($VS1file)
 						If StringInStr($LoadTime, '.') = 0 Then $LoadTime &= '.000'
 					EndIf
 
-					$query = "SELECT OldGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $LoadGID
+					$query = "SELECT TOP 1 OldGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $LoadGID
 					$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$FoundTempGidMatch = UBound($TempGidMatchArray) - 1
 					If $FoundTempGidMatch = 0 Then
-						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
+						$query = "SELECT TOP 1 GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 						$FoundGpsMatch = UBound($GpsMatchArray) - 1
 						If $FoundGpsMatch = 0 Then
@@ -7232,7 +7232,7 @@ Func _ImportVS1($VS1file)
 							_AddRecord($VistumblerDB, "TempGpsIDMatchTabel", $DB_OBJ, $LoadGID & '|' & $NewGpsId)
 						EndIf
 					ElseIf $FoundTempGidMatch = 1 Then
-						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
+						$query = "SELECT TOP 1 GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
 						$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 						$FoundGpsMatch = UBound($GpsMatchArray) - 1
 						If $FoundGpsMatch = 0 Then
@@ -7269,7 +7269,7 @@ Func _ImportVS1($VS1file)
 							$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
 							If $ImpSig = '' Then $ImpSig = '0' ;Old VS1 file no signal fix
 							$ImpRSSI = _SignalPercentToDb($ImpSig)
-							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID='" & $ImpGID & "'"
+							$query = "SELECT TOP 1 NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $ImpGID
 							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 							$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
 							If $TempGidMatchArrayMatch <> 0 Then
@@ -7309,7 +7309,7 @@ Func _ImportVS1($VS1file)
 							$ImpGID = $GidSigSplit[1]
 							$ImpSig = StringReplace(StringStripWS($GidSigSplit[2], 3), '%', '')
 							$ImpRSSI = $GidSigSplit[3]
-							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $ImpGID
+							$query = "SELECT TOP 1 NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $ImpGID
 							$TempGidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 							$TempGidMatchArrayMatch = UBound($TempGidMatchArray) - 1
 							If $TempGidMatchArrayMatch <> 0 Then
@@ -7355,7 +7355,7 @@ Func _ImportVS1($VS1file)
 					If StringLen($ld[1]) <> 4 Then $LoadLastActive_Date = StringFormat("%04i", $ld[3]) & '-' & StringFormat("%02i", $ld[1]) & '-' & StringFormat("%02i", $ld[2])
 
 					;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
-					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
+					$query = "SELECT  TOP 1 GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$FoundGpsMatch = UBound($GpsMatchArray) - 1
 					If $FoundGpsMatch = 0 Then
@@ -7370,7 +7370,7 @@ Func _ImportVS1($VS1file)
 					$NewApAdded = _AddApData(0, $LoadGID, $BSSID, $SSID, $Channel, $Authentication, $Encryption, $NetworkType, $RadioType, $BasicTransferRates, $OtherTransferRates, $HighGpsSignal, $RSSI)
 					If $NewApAdded <> 0 Then $AddAP += 1
 					;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
-					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
+					$query = "SELECT  TOP 1 GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$FoundGpsMatch = UBound($GpsMatchArray) - 1
 					If $FoundGpsMatch = 0 Then
@@ -7398,7 +7398,7 @@ Func _ImportVS1($VS1file)
 				GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
 				GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
 				GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline & "/" & $totallines)
-				GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($totallines / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($totallines / Round($currentline / $min, 1), 1))
+				GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & _DecToMinSec(Round(($totallines / Round($currentline / $min, 1)) - $min, 1)) & "/" & _DecToMinSec(Round($totallines / Round($currentline / $min, 1), 1)))
 				$UpdateTimer = TimerInit()
 			EndIf
 			If TimerDiff($MemReleaseTimer) > 10000 Then
@@ -7785,7 +7785,7 @@ Func _LoadMDB()
 	$Cancel = GUICtrlCreateButton($Text_Close, 260, 60, 100, 25)
 	$progressbar = GUICtrlCreateProgress(10, 95, 490, 10)
 	$percentlabel = GUICtrlCreateLabel($Text_Progress & ': ' & $Text_Ready, 10, 115, 200, 20)
-	$linetotal = GUICtrlCreateLabel($Text_LineTotal & ':', 10, 135, 200, 20)
+	$linetotal = GUICtrlCreateLabel($Text_LineTotal & ':', 10, 150, 200, 35)
 	$newlines = GUICtrlCreateLabel($Text_NewAPs & ':', 10, 155, 200, 20)
 	$minutes = GUICtrlCreateLabel($Text_Minutes & ':', 230, 115, 240, 20)
 	$linemin = GUICtrlCreateLabel($Text_LinesMin & ':', 230, 135, 240, 20)
@@ -7940,7 +7940,7 @@ Func _ImportWardriveDb3($DB3file)
 			GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($Load / $min, 1))
 			GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
 			GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $NewAP & "/" & $WardriveAPs)
+			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $NewAP & " / " & $WardriveAPs)
 			GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($WardriveAPs / Round($NewAP / $min, 1)) - $min, 1) & "/" & Round($WardriveAPs / Round($NewAP / $min, 1), 1))
 			$UpdateTimer = TimerInit()
 		EndIf
@@ -12149,3 +12149,22 @@ Func _RemoveNonMatchingImages()
 	If $CamNameMatch = 0 Then ;If Img is not found, add it
 	EndIf
 EndFunc   ;==>_RemoveNonMatchingImages
+
+Func _DecToMinSec($dec) ;Convert a decimal value of time to "(XX)XXm XXsec" format
+	$hdec = $dec / 60
+	$mdec = StringRegExpReplace($hdec, "(\d*\.)", ".") * 60
+	$sdec = StringRegExpReplace($mdec, "(\d*\.)", ".") * 60
+	$Hour = StringFormat("%d\n", $hdec);StringTrimRight($hdec, (StringLen($hdec) - StringInStr($hdec, ".", 1, -1)) + 1)
+	$Mins = StringFormat("%d\n", $mdec);StringTrimRight($mdec, (StringLen($mdec) - StringInStr($mdec, ".", 1, -1)) + 1)
+	$Secs = Round($sdec, 1);StringTrimRight($sdec, (StringLen($sdec) - StringInStr($sdec, ".", 1, -1)) + 1)
+
+	ConsoleWrite(' $dec:' & $dec & '$hdec: ' & $hdec & '$mdec: ' & $mdec & '$sdec:' & $sdec & @CRLF)
+	ConsoleWrite('$Hour: ' & $Hour & '$Mins:' & $Mins & ' $Secs:' & $Secs & @CRLF)
+
+	$rettime = ""
+	If $Hour <> 0 Then $rettime &= $Hour & 'h '
+	If $Mins <> 0 Then $rettime &= $Mins & 'm '
+	If $Secs <> 0 Then $rettime &= $Secs & 's'
+
+	Return ($rettime)
+EndFunc   ;==>_DecToMinSec
