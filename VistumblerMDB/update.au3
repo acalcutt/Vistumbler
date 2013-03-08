@@ -4,19 +4,19 @@
 #AutoIt3Wrapper_UseUpx=n
 #endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2011 Andrew Calcutt
+;Copyright (C) 2013 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
 ;AutoIt Version: v3.3.9.4
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v8'
+$version = 'v9'
 $origional_date = '2010/09/01'
-$last_modified = '2012/10/18'
+$last_modified = '2013/03/07'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include <EditConstants.au3>
@@ -34,8 +34,7 @@ Dim $UseBackupSVN = 0
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
-Dim $SFSVN_ROOT = 'http://sfsvn.vistumbler.net/p/vistumbler/code/'
-Dim $BACKUPSVN_ROOT = 'http://backupsvn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
+Dim $GIT_ROOT = 'https://raw.github.com/RIEI/Vistumbler/'
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
@@ -95,31 +94,13 @@ If $CheckForBetaUpdates = 1 Then
 	$data = $Text_DownloadingBetaVerFile & @CRLF & $data
 	GUICtrlSetData($UpdateEdit, $data)
 	;Try to download version file from SF svn viewer
-	$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions-beta.ini?format=raw', $NewVersionFile, 1)
-	If $get = 0 Then ;Download failed, try backup viewvc server
-		FileDelete($NewVersionFile)
-		$get = InetGet($BACKUPSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
-		If $get = 0 Then
-			FileDelete($NewVersionFile)
-		Else
-			$UseBackupSVN = 1
-			ConsoleWrite('Used Beta Backup SVN' & @CRLF)
-		EndIf
-	EndIf
+	$get = InetGet($GIT_ROOT & 'master/VistumblerMDB/versions-beta.ini', $NewVersionFile, 1)
+	If $get = 0 Then FileDelete($NewVersionFile)
 Else
 	$data = $Text_DownloadingVerFile & @CRLF & $data
 	GUICtrlSetData($UpdateEdit, $data)
-	$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions.ini?format=raw', $NewVersionFile, 1)
-	If $get = 0 Then ;Download failed, try backup viewvc server
-		FileDelete($NewVersionFile)
-		$get = InetGet($BACKUPSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
-		If $get = 0 Then
-			FileDelete($NewVersionFile)
-		Else
-			$UseBackupSVN = 1
-			ConsoleWrite('Used Backup SVN' & @CRLF)
-		EndIf
-	EndIf
+	$get = InetGet($GIT_ROOT & 'master/VistumblerMDB/versions.ini', $NewVersionFile, 1)
+	If $get = 0 Then FileDelete($NewVersionFile)
 EndIf
 If FileExists($NewVersionFile) Then
 	$data = $Text_VerFileDownloaded & @CRLF & $data
@@ -150,11 +131,7 @@ If FileExists($NewVersionFile) Then
 							DirCreate($TmpDir & $dirstruct)
 						Next
 					EndIf
-					If $UseBackupSVN = 1 Then
-						$sourcefile = $BACKUPSVN_ROOT & $filename_web & '?revision=' & $version
-					Else
-						$sourcefile = $SFSVN_ROOT & $version & '/tree/VistumblerMDB/' & $filename_web & '?format=raw'
-					EndIf
+					$sourcefile = $GIT_ROOT & $version & '/VistumblerMDB/' & $filename_web
 					ConsoleWrite($sourcefile & @CRLF)
 					$desttmpfile = $TmpDir & $filename & '.tmp'
 					$destfile = @ScriptDir & '\' & $filename
