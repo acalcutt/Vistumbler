@@ -1,7 +1,0 @@
-Author: Phillip Ferland
-Website: randomintervals.com
-Version: 1.1.0
-Date Created: 2009-11-25
-Details:
-1.1.0 - Added login header and mysticache contents.
-1.0.1 - This is a theme based off of the default skin for WiFiDB, a few small changes were made by Andrew to refine and simplify the theme.
