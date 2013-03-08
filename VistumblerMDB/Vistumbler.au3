@@ -1,4 +1,4 @@
-;#RequireAdmin
+#RequireAdmin
 #region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.4.20 Alpha 4'
+$version = 'v10.5 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/02/19'
+$last_modified = '2013/03/08'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -288,9 +288,7 @@ Dim $CopyGUI_BSSID, $CopyGUI_Line, $CopyGUI_SSID, $CopyGUI_CHAN, $CopyGUI_AUTH, 
 Dim $GUI_COPY, $CopyFlag = 0, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_HIGHSIG, $Copy_RSSI, $Copy_HIGHRSSI, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
 
 Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_HighSig_GUI, $Filter_RSSI_GUI, $Filter_HighRSSI_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
-Dim $SFSVN_ROOT = 'http://sfsvn.vistumbler.net/p/vistumbler/code/'
-Dim $BACKUPSVN_ROOT = 'http://backupsvn.vistumbler.net/viewvc/vistumbler/VistumblerMDB/'
-Dim $UseBackupSVN = 0
+Dim $GIT_ROOT = 'https://raw.github.com/RIEI/Vistumbler/'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
 
@@ -1349,7 +1347,7 @@ If $EnableAutoUpApsToWifiDB = 1 Then _WifiDbAutoUploadToggle(0)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewLiveInWDB = GUICtrlCreateMenuItem($Text_WifiDBOpenLiveAPWebpage & ' (' & $Text_Experimental & ')', $WifidbMenu)
-$UpdateGeolocations = GUICtrlCreateMenuItem($Text_UpdateGeolocations & ' (' & $Text_Experimental & ')', $WifidbMenu)
+;$UpdateGeolocations = GUICtrlCreateMenuItem($Text_UpdateGeolocations & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewWDBWebpage = GUICtrlCreateMenuItem($Text_WifiDBOpenMainWebpage, $WifidbMenu)
 $ViewInPhilsGraph = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $WifidbMenu)
 
@@ -1501,7 +1499,7 @@ GUICtrlSetOnEvent($UseWiFiDbAutoUploadButton, '_WifiDbAutoUploadToggleWarn')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
 GUICtrlSetOnEvent($LocateInWDB, '_LocatePositionInWiFiDB')
 GUICtrlSetOnEvent($ViewLiveInWDB, '_ViewLiveInWDB')
-GUICtrlSetOnEvent($UpdateGeolocations, '_GeoLocateAllAps')
+;GUICtrlSetOnEvent($UpdateGeolocations, '_GeoLocateAllAps')
 GUICtrlSetOnEvent($ViewWDBWebpage, '_ViewWDBWebpage')
 GUICtrlSetOnEvent($ViewInPhilsGraph, '_ViewInPhilsGraph')
 ;Help Menu
@@ -5056,8 +5054,8 @@ Func _ViewInPhilsGraph();Sends data to phils php graphing script
 	EndIf
 EndFunc   ;==>_ViewInPhilsGraph
 
-#cs
-	Func _AddToYourWDB()
+
+Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
 	$WdbFile = $SaveDir & 'WDB_Export.VS1'
 	FileDelete($WdbFile)
@@ -5066,102 +5064,101 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$url_data = "file=" & $WdbFile
 	;ConsoleWrite($url_data & @CRLF)
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
-	EndFunc   ;==>_AddToYourWDB
-	
-	
-	Func _ExportWifidbVS1($savefile, $Filter = 0);writes v3.0 vistumbler detailed data to a txt file (WifiDB does not curretly support v4 VS1, this has been added for backward compatibility)
+EndFunc   ;==>_AddToYourWDB
+
+
+Func _ExportWifidbVS1($savefile, $Filter = 0);writes v3.0 vistumbler detailed data to a txt file (WifiDB does not curretly support v4 VS1, this has been added for backward compatibility)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
 	$file = "# Vistumbler VS1 - Detailed Export Version 3.0" & @CRLF & _
-	"# Created By: " & $Script_Name & ' ' & $version & @CRLF & _
-	"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
-	"# GpsID|Latitude|Longitude|NumOfSatalites|HorizontalDilutionOfPrecision|Altitude(m)|HeightOfGeoidAboveWGS84Ellipsoid(m)|Speed(km/h)|Speed(MPH)|TrackAngle(Deg)|Date(UTC y-m-d)|Time(UTC h:m:s.ms)" & @CRLF & _
-	"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
+			"# Created By: " & $Script_Name & ' ' & $version & @CRLF & _
+			"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
+			"# GpsID|Latitude|Longitude|NumOfSatalites|HorizontalDilutionOfPrecision|Altitude(m)|HeightOfGeoidAboveWGS84Ellipsoid(m)|Speed(km/h)|Speed(MPH)|TrackAngle(Deg)|Date(UTC y-m-d)|Time(UTC h:m:s.ms)" & @CRLF & _
+			"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
 	;Export GPS IDs
 	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS ORDER BY Date1, Time1"
 	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundGpsMatch = UBound($GpsMatchArray) - 1
 	For $exp = 1 To $FoundGpsMatch
-	GUICtrlSetData($msgdisplay, $Text_SavingGID & ' ' & $exp & ' / ' & $FoundGpsMatch)
-	$ExpGID = $GpsMatchArray[$exp][1]
-	$ExpLat = $GpsMatchArray[$exp][2]
-	$ExpLon = $GpsMatchArray[$exp][3]
-	$ExpSat = $GpsMatchArray[$exp][4]
-	$ExpHorDilPitch = $GpsMatchArray[$exp][5]
-	$ExpAlt = $GpsMatchArray[$exp][6]
-	$ExpGeo = $GpsMatchArray[$exp][7]
-	$ExpSpeedMPH = $GpsMatchArray[$exp][8]
-	$ExpSpeedKmh = $GpsMatchArray[$exp][9]
-	$ExpTrack = $GpsMatchArray[$exp][10]
-	$ExpDate = $GpsMatchArray[$exp][11]
-	$ExpTime = $GpsMatchArray[$exp][12]
-	$file &= $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime & @CRLF
+		GUICtrlSetData($msgdisplay, $Text_SavingGID & ' ' & $exp & ' / ' & $FoundGpsMatch)
+		$ExpGID = $GpsMatchArray[$exp][1]
+		$ExpLat = $GpsMatchArray[$exp][2]
+		$ExpLon = $GpsMatchArray[$exp][3]
+		$ExpSat = $GpsMatchArray[$exp][4]
+		$ExpHorDilPitch = $GpsMatchArray[$exp][5]
+		$ExpAlt = $GpsMatchArray[$exp][6]
+		$ExpGeo = $GpsMatchArray[$exp][7]
+		$ExpSpeedMPH = $GpsMatchArray[$exp][8]
+		$ExpSpeedKmh = $GpsMatchArray[$exp][9]
+		$ExpTrack = $GpsMatchArray[$exp][10]
+		$ExpDate = $GpsMatchArray[$exp][11]
+		$ExpTime = $GpsMatchArray[$exp][12]
+		$file &= $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime & @CRLF
 	Next
-	
+
 	;Export AP Information
 	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
-	"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL" & @CRLF & _
-	"# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
+			"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL" & @CRLF & _
+			"# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
 	If $Filter = 1 Then
-	$query = $AddQuery
+		$query = $AddQuery
 	Else
-	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 	EndIf
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	If $FoundApMatch > 0 Then
-	For $exp = 1 To $FoundApMatch
-	GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
-	$ExpApID = $ApMatchArray[$exp][1]
-	$ExpSSID = $ApMatchArray[$exp][2]
-	$ExpBSSID = $ApMatchArray[$exp][3]
-	$ExpNET = $ApMatchArray[$exp][4]
-	$ExpRAD = $ApMatchArray[$exp][5]
-	$ExpCHAN = $ApMatchArray[$exp][6]
-	$ExpAUTH = $ApMatchArray[$exp][7]
-	$ExpENCR = $ApMatchArray[$exp][8]
-	$ExpSECTYPE = $ApMatchArray[$exp][9]
-	$ExpBTX = $ApMatchArray[$exp][10]
-	$ExpOTX = $ApMatchArray[$exp][11]
-	$ExpMANU = $ApMatchArray[$exp][12]
-	$ExpLAB = $ApMatchArray[$exp][13]
-	$ExpHighGpsID = $ApMatchArray[$exp][14]
-	$ExpFirstID = $ApMatchArray[$exp][15]
-	$ExpLastID = $ApMatchArray[$exp][16]
-	$ExpGidSid = ''
-	
-	;Create GID,SIG String
-	$query = "SELECT GpsID, Signal FROM Hist WHERE ApID=" & $ExpApID
-	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundHistMatch = UBound($HistMatchArray) - 1
-	For $epgs = 1 To $FoundHistMatch
-	$ExpGID = $HistMatchArray[$epgs][1]
-	$ExpSig = $HistMatchArray[$epgs][2]
-	If $epgs = 1 Then
-	$ExpGidSid = $ExpGID & ',' & $ExpSig
-	Else
-	$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
-	EndIf
-	Next
-	
-	$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
-	Next
-	$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
-	FileWrite($savefile, $file)
-	FileClose($savefile)
-	Return (1)
-	Else
-	Return (0)
-	EndIf
-	EndFunc   ;==>_ExportWifidbVS1
-	
-#ce
+		For $exp = 1 To $FoundApMatch
+			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
+			$ExpApID = $ApMatchArray[$exp][1]
+			$ExpSSID = $ApMatchArray[$exp][2]
+			$ExpBSSID = $ApMatchArray[$exp][3]
+			$ExpNET = $ApMatchArray[$exp][4]
+			$ExpRAD = $ApMatchArray[$exp][5]
+			$ExpCHAN = $ApMatchArray[$exp][6]
+			$ExpAUTH = $ApMatchArray[$exp][7]
+			$ExpENCR = $ApMatchArray[$exp][8]
+			$ExpSECTYPE = $ApMatchArray[$exp][9]
+			$ExpBTX = $ApMatchArray[$exp][10]
+			$ExpOTX = $ApMatchArray[$exp][11]
+			$ExpMANU = $ApMatchArray[$exp][12]
+			$ExpLAB = $ApMatchArray[$exp][13]
+			$ExpHighGpsID = $ApMatchArray[$exp][14]
+			$ExpFirstID = $ApMatchArray[$exp][15]
+			$ExpLastID = $ApMatchArray[$exp][16]
+			$ExpGidSid = ''
 
-Func _AddToYourWDB()
+			;Create GID,SIG String
+			$query = "SELECT GpsID, Signal FROM Hist WHERE ApID=" & $ExpApID
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundHistMatch = UBound($HistMatchArray) - 1
+			For $epgs = 1 To $FoundHistMatch
+				$ExpGID = $HistMatchArray[$epgs][1]
+				$ExpSig = $HistMatchArray[$epgs][2]
+				If $epgs = 1 Then
+					$ExpGidSid = $ExpGID & ',' & $ExpSig
+				Else
+					$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
+				EndIf
+			Next
+
+			$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
+		Next
+		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		FileWrite($savefile, $file)
+		FileClose($savefile)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+EndFunc   ;==>_ExportWifidbVS1
+
+#cs --Upload code for futute WifiDB revision that is not yet out *waves fist at phil*--
+	Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
 	$WifiDbUploadGUI = GUICreate($Text_UploadApsToWifidb, 580, 525)
 	GUISetBkColor($BackgroundColor)
 	GUICtrlCreateLabel($Text_WifiDB_Upload_Discliamer, 24, 8, 532, 89)
-
+	
 	GUICtrlCreateGroup($Text_UserInformation, 24, 104, 281, 161)
 	GUICtrlCreateLabel($Text_WifiDB_Username, 39, 124, 236, 20)
 	$upload_user_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
@@ -5170,29 +5167,30 @@ Func _AddToYourWDB()
 	GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
 	$upload_apikey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
-
+	
 	GUICtrlCreateGroup($Text_FileType, 312, 104, 249, 161)
 	$VSZ_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVSZ, 327, 150, 220, 20)
 	GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
 	$VS1_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVS1, 327, 170, 220, 20)
 	$CSV_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerCSV, 327, 190, 220, 20)
 	$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
-
+	
 	GUICtrlCreateGroup($Text_UploadInformation, 24, 272, 537, 201)
 	GUICtrlCreateLabel($Text_Title, 39, 297, 500, 20)
 	$upload_title_GUI = GUICtrlCreateInput($ldatetimestamp, 39, 317, 500, 21)
 	GUICtrlCreateLabel($Text_Notes, 39, 342, 500, 20)
 	$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
-
+	
 	$WifiDbUploadGUI_Upload = GUICtrlCreateButton($Text_UploadApsToWifidb, 35, 488, 241, 25)
 	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton($Text_Cancel, 305, 487, 241, 25)
 	GUISetState(@SW_SHOW)
-
+	
 	GUICtrlSetOnEvent($WifiDbUploadGUI_Upload, '_UploadFileToWifiDB')
 	GUICtrlSetOnEvent($WifiDbUploadGUI_Cancel, '_CloseWifiDbUploadGUI')
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseWifiDbUploadGUI')
-EndFunc   ;==>_AddToYourWDB
+	EndFunc   ;==>_AddToYourWDB
+#ce
 
 Func _CloseWifiDbUploadGUI()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseWifiDbUploadGUI() ') ;#Debug Display
@@ -11108,27 +11106,11 @@ Func _CheckForUpdates()
 	$UpdatesAvalible = 0
 	FileDelete($NewVersionFile)
 	If $CheckForBetaUpdates = 1 Then
-		$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions-beta.ini?format=raw', $NewVersionFile, 1)
-		If $get = 0 Then ;Download failed, try backup viewvc server
-			FileDelete($NewVersionFile)
-			$get = InetGet($BACKUPSVN_ROOT & 'versions-beta.ini', $NewVersionFile, 1)
-			If $get = 0 Then
-				FileDelete($NewVersionFile)
-			Else
-				$UseBackupSVN = 1
-			EndIf
-		EndIf
+		$get = InetGet($GIT_ROOT & 'beta/VistumblerMDB/versions.ini', $NewVersionFile, 1)
+		If $get = 0 Then FileDelete($NewVersionFile)
 	Else
-		$get = InetGet($SFSVN_ROOT & 'HEAD/tree/VistumblerMDB/versions.ini?format=raw', $NewVersionFile, 1)
-		If $get = 0 Then ;Download failed, try backup viewvc server
-			FileDelete($NewVersionFile)
-			$get = InetGet($BACKUPSVN_ROOT & 'versions.ini', $NewVersionFile, 1)
-			If $get = 0 Then
-				FileDelete($NewVersionFile)
-			Else
-				$UseBackupSVN = 1
-			EndIf
-		EndIf
+		$get = InetGet($GIT_ROOT & 'master/VistumblerMDB/versions.ini', $NewVersionFile, 1)
+		If $get = 0 Then FileDelete($NewVersionFile)
 	EndIf
 	If FileExists($NewVersionFile) Then
 		$fv = IniReadSection($NewVersionFile, "FileVersions")
@@ -11140,12 +11122,7 @@ Func _CheckForUpdates()
 					If $filename = 'update.exe' Then ;Download updated update.exe
 						$dloadupdatemsg = MsgBox(4, $Text_Information, $Text_UpdateUpdaterMsg)
 						If $dloadupdatemsg = 6 Then
-							If $UseBackupSVN = 1 Then
-								$sourcefile = $BACKUPSVN_ROOT & $filename & '?revision=' & $fversion
-							Else
-								$sourcefile = $SFSVN_ROOT & $fversion & '/tree/VistumblerMDB/' & $filename & '?format=raw'
-							EndIf
-							;ConsoleWrite($sourcefile & @CRLF)
+							$sourcefile = $GIT_ROOT & $fversion & '/VistumblerMDB/' & $filename
 							$desttmpfile = $TmpDir & $filename & '.tmp'
 							$destfile = @ScriptDir & '\' & $filename
 							$get = InetGet($sourcefile, $desttmpfile, 1)

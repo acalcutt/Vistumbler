@@ -16,7 +16,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates Vistumbler from SVN based on version.ini'
 $version = 'v9'
 $origional_date = '2010/09/01'
-$last_modified = '2013/03/07'
+$last_modified = '2013/03/08'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include <EditConstants.au3>
@@ -93,8 +93,7 @@ FileDelete($NewVersionFile)
 If $CheckForBetaUpdates = 1 Then
 	$data = $Text_DownloadingBetaVerFile & @CRLF & $data
 	GUICtrlSetData($UpdateEdit, $data)
-	;Try to download version file from SF svn viewer
-	$get = InetGet($GIT_ROOT & 'master/VistumblerMDB/versions-beta.ini', $NewVersionFile, 1)
+	$get = InetGet($GIT_ROOT & 'beta/VistumblerMDB/versions.ini', $NewVersionFile, 1)
 	If $get = 0 Then FileDelete($NewVersionFile)
 Else
 	$data = $Text_DownloadingVerFile & @CRLF & $data
@@ -132,7 +131,7 @@ If FileExists($NewVersionFile) Then
 						Next
 					EndIf
 					$sourcefile = $GIT_ROOT & $version & '/VistumblerMDB/' & $filename_web
-					ConsoleWrite($sourcefile & @CRLF)
+					;ConsoleWrite($sourcefile & @CRLF)
 					$desttmpfile = $TmpDir & $filename & '.tmp'
 					$destfile = @ScriptDir & '\' & $filename
 					GUICtrlSetData($datalabel, 'Downloading ' & $filename)
