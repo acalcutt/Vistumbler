@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.5 Beta 1'
+$version = 'v10.5'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2013/03/08'
 HttpSetUserAgent($Script_Name & ' ' & $version)
