@@ -266,7 +266,7 @@ Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $n
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
 
-Dim $WifiDbUploadGUI, $upload_user_GUI, $upload_otherusers_GUI, $upload_apikey_GUI, $upload_title_GUI, $upload_notes_GUI, $VS1_Radio_GUI, $VSZ_Radio_GUI, $CSV_Radio_GUI, $Export_Filtered_GUI
+Dim $WifiDbUploadGUI, $WifiDb_User_GUI, $WifiDb_OtherUsers_GUI, $WifiDb_ApiKey_GUI, $upload_title_GUI, $upload_notes_GUI, $VS1_Radio_GUI, $VSZ_Radio_GUI, $CSV_Radio_GUI, $Export_Filtered_GUI
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
 Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
@@ -493,6 +493,8 @@ Dim $GoogleEarthExe = IniRead($settings, 'AutoKML', 'GoogleEarthExe', $defaultgo
 Dim $WifiDb_User = IniRead($settings, 'PhilsWifiTools', 'WifiDb_User', '')
 Dim $WifiDb_ApiKey = IniRead($settings, 'PhilsWifiTools', 'WifiDb_ApiKey', '')
 Dim $WifiDb_OtherUsers = IniRead($settings, 'PhilsWifiTools', 'WifiDb_OtherUsers', '')
+Dim $WifiDb_UploadType = IniRead($settings, 'PhilsWifiTools', 'WifiDb_UploadType', 'VSZ')
+Dim $WifiDb_UploadFiltered = IniRead($settings, 'PhilsWifiTools', 'WifiDb_UploadFiltered', 0)
 Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_SURL', 'https://www.randomintervals.com/wifi/')
 Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_SURL', 'https://wifidb.vistumbler.net/wifidb/')
 Dim $PhilsApiURL = IniRead($settings, 'PhilsWifiTools', 'API_SURL', 'https://api.vistumbler.net/')
@@ -5163,26 +5165,27 @@ Func _AddToYourWDB()
 
 	GUICtrlCreateGroup($Text_UserInformation, 24, 104, 281, 161)
 	GUICtrlCreateLabel($Text_WifiDB_Username, 39, 124, 236, 20)
-	$upload_user_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
+	$WifiDb_User_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
 	GUICtrlCreateLabel($Text_OtherUsers, 39, 169, 236, 20)
-	$upload_otherusers_GUI = GUICtrlCreateInput($WifiDb_OtherUsers, 39, 189, 241, 20)
+	$WifiDb_OtherUsers_GUI = GUICtrlCreateInput($WifiDb_OtherUsers, 39, 189, 241, 20)
 	GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
-	$upload_apikey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
-	;GUICtrlCreateGroup("", -99, -99, 1, 1)
+	$WifiDb_ApiKey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
 
 	GUICtrlCreateGroup($Text_FileType, 312, 104, 249, 161)
 	$VSZ_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVSZ, 327, 150, 220, 20)
-	GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
+	If $WifiDb_UploadType = "VSZ" Then GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
 	$VS1_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVS1, 327, 170, 220, 20)
+	If $WifiDb_UploadType = "VS1" Then GUICtrlSetState($VS1_Radio_GUI, $GUI_CHECKED)
 	$CSV_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerCSV, 327, 190, 220, 20)
+	If $WifiDb_UploadType = "CSV" Then GUICtrlSetState($CSV_Radio_GUI, $GUI_CHECKED)
 	$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
+	If $WifiDb_UploadFiltered = 1 Then GUICtrlSetState($Export_Filtered_GUI, $GUI_CHECKED)
 
 	GUICtrlCreateGroup($Text_UploadInformation, 24, 272, 537, 201)
 	GUICtrlCreateLabel($Text_Title, 39, 297, 500, 20)
 	$upload_title_GUI = GUICtrlCreateInput($ldatetimestamp, 39, 317, 500, 21)
 	GUICtrlCreateLabel($Text_Notes, 39, 342, 500, 20)
 	$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
-	;GUICtrlCreateGroup("", -99, -99, 1, 1)
 
 	$WifiDbUploadGUI_Upload = GUICtrlCreateButton($Text_UploadApsToWifidb, 35, 488, 241, 25)
 	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton($Text_Cancel, 305, 487, 241, 25)
@@ -5203,30 +5206,30 @@ Func _UploadFileToWifiDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UploadFileToWifiDB() ') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $Text_UploadingApsToWifidb)
 	;Get Upload Information from upload GUI
-	$upload_user = GUICtrlRead($upload_user_GUI)
-	$upload_otherusers = GUICtrlRead($upload_otherusers_GUI)
-	$upload_apikey = GUICtrlRead($upload_apikey_GUI)
+	$WifiDb_User = GUICtrlRead($WifiDb_User_GUI)
+	$WifiDb_OtherUsers = GUICtrlRead($WifiDb_OtherUsers_GUI)
+	$WifiDb_ApiKey = GUICtrlRead($WifiDb_ApiKey_GUI)
 	$upload_title = GUICtrlRead($upload_title_GUI)
 	$upload_notes = GUICtrlRead($upload_notes_GUI)
 
 	If GUICtrlRead($VS1_Radio_GUI) = 1 Then
 		$WdbFile = $SaveDir & 'WDB_Export.VS1'
-		$upload_filetype = "VS1"
+		$WifiDb_UploadType = "VS1"
 	ElseIf GUICtrlRead($CSV_Radio_GUI) = 1 Then
 		$WdbFile = $SaveDir & 'WDB_Export.CSV'
-		$upload_filetype = "CSV"
+		$WifiDb_UploadType = "CSV"
 	Else
 		$WdbFile = $SaveDir & 'WDB_Export.VSZ'
-		$upload_filetype = "VSZ"
+		$WifiDb_UploadType = "VSZ"
 	EndIf
 
 	If GUICtrlRead($Export_Filtered_GUI) = 1 Then
-		$Filtered = 1
+		$WifiDb_UploadFiltered = 1
 	Else
-		$Filtered = 0
+		$WifiDb_UploadFiltered = 0
 	EndIf
 
-	ConsoleWrite("$upload_filetype:" & $upload_filetype & "$filtered:" & $Filtered & " $upload_user:" & $upload_user & " $upload_otherusers:" & $upload_otherusers & " $upload_apikey:" & $upload_apikey & " $upload_title:" & $upload_title & " $upload_notes:" & $upload_notes & @CRLF)
+	ConsoleWrite("$WifiDb_UploadType:" & $WifiDb_UploadType & "$WifiDb_UploadFiltered:" & $WifiDb_UploadFiltered & " $WifiDb_User:" & $WifiDb_User & " $WifiDb_OtherUsers:" & $WifiDb_OtherUsers & " $WifiDb_ApiKey:" & $WifiDb_ApiKey & " $upload_title:" & $upload_title & " $upload_notes:" & $upload_notes & @CRLF)
 	_CloseWifiDbUploadGUI()
 
 	;Get Host, Path, and Port from WifiDB api url
@@ -5254,18 +5257,18 @@ Func _UploadFileToWifiDB()
 
 	;Export WDB File
 	Local $fileexported, $filetype, $fileuname, $fileread
-	If $upload_filetype = "VS1" Then
-		$fileexported = _ExportVS1($WdbFile, $Filtered)
+	If $WifiDb_UploadType = "VS1" Then
+		$fileexported = _ExportVS1($WdbFile, $WifiDb_UploadFiltered)
 		$filetype = "text/plain; charset=""UTF-8"""
 		$fileuname = $ldatetimestamp & "_wdb_export.VS1"
 		If $fileexported = 1 Then $fileread = FileRead($WdbFile)
-	ElseIf $upload_filetype = "CSV" Then
-		$fileexported = _ExportToCSV($WdbFile, $Filtered, 1)
+	ElseIf $WifiDb_UploadType = "CSV" Then
+		$fileexported = _ExportToCSV($WdbFile, $WifiDb_UploadFiltered, 1)
 		$filetype = "text/plain; charset=""UTF-8"""
 		$fileuname = $ldatetimestamp & "_wdb_export.CSV"
 		If $fileexported = 1 Then $fileread = FileRead($WdbFile)
 	Else
-		$fileexported = _ExportVSZ($WdbFile, $Filtered)
+		$fileexported = _ExportVSZ($WdbFile, $WifiDb_UploadFiltered)
 		$filetype = "application/octet-stream"
 		$fileuname = $ldatetimestamp & "_wdb_export.VSZ"
 		If $fileexported = 1 Then $fileread = FileRead($WdbFile) & @CRLF
@@ -5274,7 +5277,7 @@ Func _UploadFileToWifiDB()
 	If $fileexported = 1 Then ;Upload File to WifiDB
 		$socket = _HTTPConnect($host, $port)
 		If Not @error Then
-			_HTTPPost_WifiDB_File($host, $page, $socket, $fileread, $fileuname, $filetype, $upload_apikey, $upload_user, $upload_otherusers, $upload_title, $upload_notes)
+			_HTTPPost_WifiDB_File($host, $page, $socket, $fileread, $fileuname, $filetype, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
 			$recv = _HTTPRead($socket, 1)
 			If @error Then
 				ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
@@ -6527,6 +6530,9 @@ Func _WriteINI()
 
 	IniWrite($settings, 'PhilsWifiTools', 'WifiDb_User', $WifiDb_User)
 	IniWrite($settings, 'PhilsWifiTools', 'WifiDb_ApiKey', $WifiDb_ApiKey)
+	IniWrite($settings, 'PhilsWifiTools', 'WifiDb_OtherUsers', $WifiDb_OtherUsers)
+	IniWrite($settings, 'PhilsWifiTools', 'WifiDb_UploadType', $WifiDb_UploadType)
+	IniWrite($settings, 'PhilsWifiTools', 'WifiDb_UploadFiltered', $WifiDb_UploadFiltered)
 	IniWrite($settings, 'PhilsWifiTools', 'Graph_SURL', $PhilsGraphURL)
 	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_SURL', $PhilsWdbURL)
 	IniWrite($settings, 'PhilsWifiTools', 'API_SURL', $PhilsApiURL)
