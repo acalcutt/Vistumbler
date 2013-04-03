@@ -5395,7 +5395,7 @@ EndFunc   ;==>_ViewWDBWebpage
 
 Func _LocateGpsInWifidb();Finds GPS based on active acess points based on WifiDB for use in vistumbler
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
-	Local $ActiveMacs
+	Local $ActiveMacs = ""
 	Local $return = 0
 	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1 And BSSID<>''"
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5405,23 +5405,103 @@ Func _LocateGpsInWifidb();Finds GPS based on active acess points based on WifiDB
 			If $exb <> 1 Then $ActiveMacs &= '-'
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
-		$url_root = $PhilsApiURL & 'locate.php?'
-		$url_data = "ActiveBSSIDs=" & $ActiveMacs
-		;ConsoleWrite($url_root & $url_data & @CRLF)
-		$webpagesource = _INetGetSource($url_root & $url_data)
-		If StringInStr($webpagesource, '|') Then
-			$wifigpsdata = StringSplit($webpagesource, "|")
-			If $wifigpsdata[1] <> '' And $wifigpsdata[1] <> '' Then
-				$LatitudeWifidb = $wifigpsdata[1]
-				$LongitudeWifidb = $wifigpsdata[2]
-				$WifidbGPS_Update = TimerInit()
-				$return = 1
+		If $ActiveMacs <> "" Then
+			;Get Host, Path, and Port from WifiDB api url
+			Local $host, $port, $path
+			$hstring = StringTrimRight($PhilsApiURL, StringLen($PhilsApiURL) - (StringInStr($PhilsApiURL, "/", 0, 3) - 1))
+			$path = StringTrimLeft($PhilsApiURL, StringInStr($PhilsApiURL, "/", 0, 3) - 1)
+			If StringInStr($hstring, ":", 0, 2) Then
+				$hpa = StringSplit($hstring, ":")
+				If $hpa[0] = 3 Then
+					$host = StringReplace($hpa[2], "//", "")
+					$port = $hpa[3]
+				EndIf
+			Else
+				$host = StringReplace(StringReplace($hstring, "https://", ""), "http://", "")
+				If StringInStr($hstring, "https://") Then
+					$port = 443
+				Else
+					$port = 80
+				EndIf
+			EndIf
+			ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
+			ConsoleWrite($hstring & @CRLF)
+			ConsoleWrite($path & @CRLF)
+			$page = $path & "locate.php"
+			;Get information from WifiDB
+			$socket = _HTTPConnect($host, $port)
+			If Not @error Then
+				_HTTPPost_WifiDB_LocateGPS($host, $page, $socket, $ActiveMacs)
+				$recv = _HTTPRead($socket, 1)
+				If @error Then
+					ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
+					;MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
+				Else
+					;Read WifiDB JSON Response
+					Local $httprecv, $import_json_response, $json_array_size
+					$httprecv = $recv[4]
+					$import_json_response = _JSONDecode($httprecv)
+					$json_array_size = UBound($import_json_response) - 1
+					;Pull out information from decoded json array
+					Local $lglat, $lglon, $lgdate, $lgtime, $lgsats
+					For $ji = 0 To $json_array_size
+						If $import_json_response[$ji][0] = 'lat' Then $lglat = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'long' Then $lglon = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'date' Then $lgdate = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'time' Then $lgtime = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'sats' Then $lgsats = $import_json_response[$ji][1]
+					Next
+					;Update Vistumbler GPS info with what was pulled from wifidb
+					If $lglat <> '' And $lglon <> '' Then
+						ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
+						$LatitudeWifidb = $lglat
+						$LongitudeWifidb = $lglon
+						$WifidbGPS_Update = TimerInit()
+						$return = 1
+					EndIf
+				EndIf
+			Else
+				MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
+				ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
 			EndIf
 		EndIf
 	EndIf
 	_ClearWifiGpsDetails()
 	Return ($return)
 EndFunc   ;==>_LocateGpsInWifidb
+
+Func _HTTPPost_WifiDB_LocateGPS($host, $page, $socket, $ActiveBSSIDs)
+	Local $command, $extra_commands
+	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
+
+	$extra_commands = "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""ActiveBSSIDs""" & @CRLF & @CRLF
+	$extra_commands &= $ActiveBSSIDs & @CRLF
+	$extra_commands &= "--" & $boundary & "--"
+
+	Dim $datasize = StringLen($extra_commands)
+
+	$command = "POST " & $page & " HTTP/1.1" & @CRLF
+	$command &= "Host: " & $host & @CRLF
+	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
+	$command &= "Connection: close" & @CRLF
+	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
+	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
+	$command &= $extra_commands
+	ConsoleWrite($command & @CRLF)
+
+	Dim $bytessent = TCPSend($socket, $command)
+
+	If $bytessent == 0 Then
+		SetExtended(@error)
+		SetError(2)
+		Return 0
+	EndIf
+
+	SetError(0)
+	Return $bytessent
+EndFunc   ;==>_HTTPPost_WifiDB_LocateGPS
+
 
 Func _ClearWifiGpsDetails();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearWifiGpsDetails()') ;#Debug Display
