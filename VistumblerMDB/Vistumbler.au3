@@ -5196,11 +5196,40 @@ Func _AddToYourWDB()
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseWifiDbUploadGUI')
 EndFunc   ;==>_AddToYourWDB
 
-
 Func _CloseWifiDbUploadGUI()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseWifiDbUploadGUI() ') ;#Debug Display
 	GUIDelete($WifiDbUploadGUI)
 EndFunc   ;==>_CloseWifiDbUploadGUI
+
+Func _Get_HostPortPath($inURL)
+	Local $host, $port, $path
+	$hstring = StringTrimRight($inURL, StringLen($inURL) - (StringInStr($inURL, "/", 0, 3) - 1))
+	$path = StringTrimLeft($inURL, StringInStr($inURL, "/", 0, 3) - 1)
+	If StringInStr($hstring, ":", 0, 2) Then
+		$hpa = StringSplit($hstring, ":")
+		If $hpa[0] = 3 Then
+			$host = StringReplace($hpa[2], "//", "")
+			$port = $hpa[3]
+		EndIf
+	Else
+		$host = StringReplace(StringReplace($hstring, "https://", ""), "http://", "")
+		If StringInStr($hstring, "https://") Then
+			$port = 443
+		Else
+			$port = 80
+		EndIf
+	EndIf
+	If $host <> "" And $port <> "" And $path <> "" Then
+		Local $hpResults[4]
+		$hpResults[0] = 3
+		$hpResults[1] = $host
+		$hpResults[2] = $port
+		$hpResults[3] = $path
+		Return $hpResults
+	Else
+		SetError(1);something messed up splitting the given URL....who knows what.
+	EndIf
+EndFunc   ;==>_Get_HostPortPath
 
 Func _UploadFileToWifiDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UploadFileToWifiDB() ') ;#Debug Display
@@ -5233,78 +5262,69 @@ Func _UploadFileToWifiDB()
 	_CloseWifiDbUploadGUI()
 
 	;Get Host, Path, and Port from WifiDB api url
-	Local $host, $port, $path
-	$hstring = StringTrimRight($PhilsApiURL, StringLen($PhilsApiURL) - (StringInStr($PhilsApiURL, "/", 0, 3) - 1))
-	$path = StringTrimLeft($PhilsApiURL, StringInStr($PhilsApiURL, "/", 0, 3) - 1)
-	If StringInStr($hstring, ":", 0, 2) Then
-		$hpa = StringSplit($hstring, ":")
-		If $hpa[0] = 3 Then
-			$host = StringReplace($hpa[2], "//", "")
-			$port = $hpa[3]
-		EndIf
-	Else
-		$host = StringReplace(StringReplace($hstring, "https://", ""), "http://", "")
-		If StringInStr($hstring, "https://") Then
-			$port = 443
+	$hpparr = _Get_HostPortPath($PhilsApiURL)
+	If Not @error Then
+		Local $host, $port, $path
+		$host = $hpparr[1]
+		$port = $hpparr[2]
+		$path = $hpparr[3]
+		$page = $path & "import.php"
+		ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
+		ConsoleWrite($path & @CRLF)
+
+		;Export WDB File
+		Local $fileexported, $filetype, $fileuname, $fileread
+		If $WifiDb_UploadType = "VS1" Then
+			$fileexported = _ExportVS1($WdbFile, $WifiDb_UploadFiltered)
+			$filetype = "text/plain; charset=""UTF-8"""
+			$fileuname = $ldatetimestamp & "_wdb_export.VS1"
+			If $fileexported = 1 Then $fileread = FileRead($WdbFile)
+		ElseIf $WifiDb_UploadType = "CSV" Then
+			$fileexported = _ExportToCSV($WdbFile, $WifiDb_UploadFiltered, 1)
+			$filetype = "text/plain; charset=""UTF-8"""
+			$fileuname = $ldatetimestamp & "_wdb_export.CSV"
+			If $fileexported = 1 Then $fileread = FileRead($WdbFile)
 		Else
-			$port = 80
+			$fileexported = _ExportVSZ($WdbFile, $WifiDb_UploadFiltered)
+			$filetype = "application/octet-stream"
+			$fileuname = $ldatetimestamp & "_wdb_export.VSZ"
+			If $fileexported = 1 Then $fileread = FileRead($WdbFile) & @CRLF
 		EndIf
-	EndIf
-	ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
-	ConsoleWrite($hstring & @CRLF)
-	ConsoleWrite($path & @CRLF)
-	$page = $path & "import.php"
 
-	;Export WDB File
-	Local $fileexported, $filetype, $fileuname, $fileread
-	If $WifiDb_UploadType = "VS1" Then
-		$fileexported = _ExportVS1($WdbFile, $WifiDb_UploadFiltered)
-		$filetype = "text/plain; charset=""UTF-8"""
-		$fileuname = $ldatetimestamp & "_wdb_export.VS1"
-		If $fileexported = 1 Then $fileread = FileRead($WdbFile)
-	ElseIf $WifiDb_UploadType = "CSV" Then
-		$fileexported = _ExportToCSV($WdbFile, $WifiDb_UploadFiltered, 1)
-		$filetype = "text/plain; charset=""UTF-8"""
-		$fileuname = $ldatetimestamp & "_wdb_export.CSV"
-		If $fileexported = 1 Then $fileread = FileRead($WdbFile)
-	Else
-		$fileexported = _ExportVSZ($WdbFile, $WifiDb_UploadFiltered)
-		$filetype = "application/octet-stream"
-		$fileuname = $ldatetimestamp & "_wdb_export.VSZ"
-		If $fileexported = 1 Then $fileread = FileRead($WdbFile) & @CRLF
-	EndIf
-
-	If $fileexported = 1 Then ;Upload File to WifiDB
-		$socket = _HTTPConnect($host, $port)
-		If Not @error Then
-			_HTTPPost_WifiDB_File($host, $page, $socket, $fileread, $fileuname, $filetype, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
-			$recv = _HTTPRead($socket, 1)
-			If @error Then
-				ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-				MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
-			Else
-				Local $httprecv, $import_json_response, $json_array_size, $json_msg
-				$httprecv = $recv[4]
-				$import_json_response = _JSONDecode($httprecv)
-				$json_array_size = UBound($import_json_response) - 1
-				For $ji = 0 To $json_array_size
-					$json_msg &= $import_json_response[$ji] & @CRLF
-				Next
-				If $json_msg <> "" Then
-					MsgBox(0, $Text_Information, $json_msg)
+		If $fileexported = 1 Then ;Upload File to WifiDB
+			$socket = _HTTPConnect($host, $port)
+			If Not @error Then
+				_HTTPPost_WifiDB_File($host, $page, $socket, $fileread, $fileuname, $filetype, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
+				$recv = _HTTPRead($socket, 1)
+				If @error Then
+					ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
+					MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
 				Else
-					MsgBox(0, $Text_Error, $httprecv)
+					Local $httprecv, $import_json_response, $json_array_size, $json_msg
+					$httprecv = $recv[4]
+					$import_json_response = _JSONDecode($httprecv)
+					$json_array_size = UBound($import_json_response) - 1
+					For $ji = 0 To $json_array_size
+						$json_msg &= $import_json_response[$ji] & @CRLF
+					Next
+					If $json_msg <> "" Then
+						MsgBox(0, $Text_Information, $json_msg)
+					Else
+						MsgBox(0, $Text_Error, $httprecv)
+					EndIf
 				EndIf
+			Else
+				MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
+				ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
 			EndIf
-		Else
-			MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
-			ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
+		Else ;File Export failed
+			ConsoleWrite("No export created for some reason... are there APs to be exported?" & @CRLF)
+			MsgBox(0, $Text_Error, "No export created for some reason... are there APs to be exported?")
 		EndIf
-	Else ;File Export failed
-		ConsoleWrite("No export created for some reason... are there APs to be exported?" & @CRLF)
-		MsgBox(0, $Text_Error, "No export created for some reason... are there APs to be exported?")
+	Else
+		ConsoleWrite("error getting host, path, and port from url """ & $PhilsApiURL & """" & @CRLF)
+		MsgBox(0, $Text_Error, "error getting host, path, and port from url """ & $PhilsApiURL & """")
 	EndIf
-
 	GUICtrlSetData($msgdisplay, '');Clear $msgdisplay
 EndFunc   ;==>_UploadFileToWifiDB
 
@@ -5362,42 +5382,15 @@ Func _HTTPPost_WifiDB_File($host, $page, $socket, $file, $filename, $contenttype
 	Return $bytessent
 EndFunc   ;==>_HTTPPost_WifiDB_File
 
-Func _LocatePositionInWiFiDB();Finds GPS based on active acess points and opens in browser
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
-	Local $ActiveMacs
-	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1"
-	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundBssidMatch = UBound($BssidMatchArray) - 1
-	If $FoundBssidMatch <> 0 Then
-		For $exb = 1 To $FoundBssidMatch
-			If $exb <> 1 Then $ActiveMacs &= '-'
-			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
-		Next
-		$url_root = $PhilsApiURL & 'locate.php?'
-		$url_data = "ActiveBSSIDs=" & $ActiveMacs
-		Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
-	Else
-		MsgBox(0, $Text_Error, $Text_NoActiveApFound)
-	EndIf
+Func _LocatePositionInWiFiDB();Finds GPS based on active acess points displays information in message box
+	_LocateGpsInWifidb(1)
 EndFunc   ;==>_LocatePositionInWiFiDB
 
-Func _ViewLiveInWDB();View wifidb live aps in browser
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewLiveInWDB()') ;#Debug Display
-	$url = $PhilsWdbURL & 'opt/live.php'
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
-EndFunc   ;==>_ViewLiveInWDB
-
-Func _ViewWDBWebpage();View wifidb live aps in browser
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewWDBWebpage()') ;#Debug Display
-	$url = $PhilsWdbURL
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
-EndFunc   ;==>_ViewWDBWebpage
-
-Func _LocateGpsInWifidb();Finds GPS based on active acess points based on WifiDB for use in vistumbler
+Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points based on WifiDB for use in vistumbler
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs = ""
 	Local $return = 0
-	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1 And BSSID<>''"
+	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1 And ListRow<>-1 And BSSID<>''"
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundBssidMatch = UBound($BssidMatchArray) - 1
 	If $FoundBssidMatch <> 0 Then
@@ -5407,64 +5400,65 @@ Func _LocateGpsInWifidb();Finds GPS based on active acess points based on WifiDB
 		Next
 		If $ActiveMacs <> "" Then
 			;Get Host, Path, and Port from WifiDB api url
-			Local $host, $port, $path
-			$hstring = StringTrimRight($PhilsApiURL, StringLen($PhilsApiURL) - (StringInStr($PhilsApiURL, "/", 0, 3) - 1))
-			$path = StringTrimLeft($PhilsApiURL, StringInStr($PhilsApiURL, "/", 0, 3) - 1)
-			If StringInStr($hstring, ":", 0, 2) Then
-				$hpa = StringSplit($hstring, ":")
-				If $hpa[0] = 3 Then
-					$host = StringReplace($hpa[2], "//", "")
-					$port = $hpa[3]
-				EndIf
-			Else
-				$host = StringReplace(StringReplace($hstring, "https://", ""), "http://", "")
-				If StringInStr($hstring, "https://") Then
-					$port = 443
-				Else
-					$port = 80
-				EndIf
-			EndIf
-			ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
-			ConsoleWrite($hstring & @CRLF)
-			ConsoleWrite($path & @CRLF)
-			$page = $path & "locate.php"
-			;Get information from WifiDB
-			$socket = _HTTPConnect($host, $port)
+			$hpparr = _Get_HostPortPath($PhilsApiURL)
 			If Not @error Then
-				_HTTPPost_WifiDB_LocateGPS($host, $page, $socket, $ActiveMacs)
-				$recv = _HTTPRead($socket, 1)
-				If @error Then
-					ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-					;MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
-				Else
-					;Read WifiDB JSON Response
-					Local $httprecv, $import_json_response, $json_array_size
-					$httprecv = $recv[4]
-					$import_json_response = _JSONDecode($httprecv)
-					$json_array_size = UBound($import_json_response) - 1
-					;Pull out information from decoded json array
-					Local $lglat, $lglon, $lgdate, $lgtime, $lgsats
-					For $ji = 0 To $json_array_size
-						If $import_json_response[$ji][0] = 'lat' Then $lglat = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'long' Then $lglon = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'date' Then $lgdate = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'time' Then $lgtime = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'sats' Then $lgsats = $import_json_response[$ji][1]
-					Next
-					;Update Vistumbler GPS info with what was pulled from wifidb
-					If $lglat <> '' And $lglon <> '' Then
-						ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
-						$LatitudeWifidb = $lglat
-						$LongitudeWifidb = $lglon
-						$WifidbGPS_Update = TimerInit()
-						$return = 1
+				Local $host, $port, $path
+				$host = $hpparr[1]
+				$port = $hpparr[2]
+				$path = $hpparr[3]
+				$page = $path & "locate.php"
+				ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
+				ConsoleWrite($path & @CRLF)
+				;Get information from WifiDB
+				$socket = _HTTPConnect($host, $port)
+				If Not @error Then
+					_HTTPPost_WifiDB_LocateGPS($host, $page, $socket, $ActiveMacs)
+					$recv = _HTTPRead($socket, 1)
+					If @error Then
+						ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
+						;MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
+					Else
+						;Read WifiDB JSON Response
+						Local $httprecv, $import_json_response, $json_array_size
+						$httprecv = $recv[4]
+						ConsoleWrite($httprecv & @CRLF)
+						$import_json_response = _JSONDecode($httprecv)
+						$json_array_size = UBound($import_json_response) - 1
+						;Pull out information from decoded json array
+						Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
+						For $ji = 0 To $json_array_size
+							If $import_json_response[$ji][0] = 'lat' Then $lglat = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'long' Then $lglon = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'date' Then $lgdate = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'time' Then $lgtime = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'sats' Then $lgsats = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'error' Then $lgerror = $import_json_response[$ji][1]
+						Next
+						;Update Vistumbler GPS info with what was pulled from wifidb
+						If $lglat <> '' And $lglon <> '' Then
+							If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, $Text_Latitude & ': ' & $lglat & @CRLF & $Text_Longitude & ': ' & $lglon & @CRLF & $Text_Date & ': ' & $lgdate & @CRLF & $Text_Time & ': ' & $lgtime & @CRLF)
+							ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
+							$LatitudeWifidb = $lglat
+							$LongitudeWifidb = $lglon
+							$WifidbGPS_Update = TimerInit()
+							$return = 1
+						ElseIf $lgerror <> '' Then
+							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $lgerror)
+							ConsoleWrite($Text_Error & ': ' & $lgerror & @CRLF)
+						EndIf
+
 					EndIf
+				Else
+					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
+					ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
 				EndIf
 			Else
-				MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
-				ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
+				If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "error getting host, path, and port from url """ & $PhilsApiURL & """")
+				ConsoleWrite("error getting host, path, and port from url """ & $PhilsApiURL & """" & @CRLF)
 			EndIf
 		EndIf
+	Else
+		If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_NoActiveApFound)
 	EndIf
 	_ClearWifiGpsDetails()
 	Return ($return)
@@ -5502,6 +5496,17 @@ Func _HTTPPost_WifiDB_LocateGPS($host, $page, $socket, $ActiveBSSIDs)
 	Return $bytessent
 EndFunc   ;==>_HTTPPost_WifiDB_LocateGPS
 
+Func _ViewLiveInWDB();View wifidb live aps in browser
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewLiveInWDB()') ;#Debug Display
+	$url = $PhilsWdbURL & 'opt/live.php'
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
+EndFunc   ;==>_ViewLiveInWDB
+
+Func _ViewWDBWebpage();View wifidb live aps in browser
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewWDBWebpage()') ;#Debug Display
+	$url = $PhilsWdbURL
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
+EndFunc   ;==>_ViewWDBWebpage
 
 Func _ClearWifiGpsDetails();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearWifiGpsDetails()') ;#Debug Display
