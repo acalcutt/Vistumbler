@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.5.2 Alpha 1'
+$version = 'v10.5.2 Alpha 2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/04/01'
+$last_modified = '2013/04/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1350,7 +1350,7 @@ If $EnableAutoUpApsToWifiDB = 1 Then _WifiDbAutoUploadToggle(0)
 $ViewPhilsWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewLiveInWDB = GUICtrlCreateMenuItem($Text_WifiDBOpenLiveAPWebpage & ' (' & $Text_Experimental & ')', $WifidbMenu)
-;$UpdateGeolocations = GUICtrlCreateMenuItem($Text_UpdateGeolocations & ' (' & $Text_Experimental & ')', $WifidbMenu)
+$UpdateGeolocations = GUICtrlCreateMenuItem($Text_UpdateGeolocations & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewWDBWebpage = GUICtrlCreateMenuItem($Text_WifiDBOpenMainWebpage, $WifidbMenu)
 $ViewInPhilsGraph = GUICtrlCreateMenuItem($Text_PhilsPHPgraph, $WifidbMenu)
 
@@ -1502,7 +1502,7 @@ GUICtrlSetOnEvent($UseWiFiDbAutoUploadButton, '_WifiDbAutoUploadToggleWarn')
 GUICtrlSetOnEvent($ViewPhilsWDB, '_AddToYourWDB')
 GUICtrlSetOnEvent($LocateInWDB, '_LocatePositionInWiFiDB')
 GUICtrlSetOnEvent($ViewLiveInWDB, '_ViewLiveInWDB')
-;GUICtrlSetOnEvent($UpdateGeolocations, '_GeoLocateAllAps')
+GUICtrlSetOnEvent($UpdateGeolocations, '_GeoLocateAllAps')
 GUICtrlSetOnEvent($ViewWDBWebpage, '_ViewWDBWebpage')
 GUICtrlSetOnEvent($ViewInPhilsGraph, '_ViewInPhilsGraph')
 ;Help Menu
@@ -5302,13 +5302,22 @@ Func _UploadFileToWifiDB()
 				Else
 					Local $httprecv, $import_json_response, $json_array_size, $json_msg
 					$httprecv = $recv[4]
+					ConsoleWrite($httprecv & @CRLF)
 					$import_json_response = _JSONDecode($httprecv)
 					$json_array_size = UBound($import_json_response) - 1
+					;Pull out information from decoded json array
+					Local $imtitle, $imuser, $immessage, $imimportnum, $imfilehash, $imerror
 					For $ji = 0 To $json_array_size
-						$json_msg &= $import_json_response[$ji] & @CRLF
+						If $import_json_response[$ji][0] = 'title' Then $imtitle = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'user' Then $imuser = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'message' Then $immessage = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'importnum' Then $imimportnum = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'filehash' Then $imfilehash = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'error' Then $imerror = $import_json_response[$ji][1]
 					Next
-					If $json_msg <> "" Then
-						MsgBox(0, $Text_Information, $json_msg)
+					If $imtitle <> "" Or $imuser <> "" Or $immessage <> "" Or $imimportnum <> "" Or $imfilehash <> "" Then
+						MsgBox(0, $Text_Information, "Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
+						ConsoleWrite("Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
 					Else
 						MsgBox(0, $Text_Error, $httprecv)
 					EndIf
@@ -5416,7 +5425,7 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 					$recv = _HTTPRead($socket, 1)
 					If @error Then
 						ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-						;MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
+						If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
 					Else
 						;Read WifiDB JSON Response
 						Local $httprecv, $import_json_response, $json_array_size
@@ -5445,6 +5454,9 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 						ElseIf $lgerror <> '' Then
 							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $lgerror)
 							ConsoleWrite($Text_Error & ': ' & $lgerror & @CRLF)
+						Else
+							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $httprecv)
+							ConsoleWrite($Text_Error & ': ' & $httprecv & @CRLF)
 						EndIf
 
 					EndIf
@@ -5495,6 +5507,104 @@ Func _HTTPPost_WifiDB_LocateGPS($host, $page, $socket, $ActiveBSSIDs)
 	SetError(0)
 	Return $bytessent
 EndFunc   ;==>_HTTPPost_WifiDB_LocateGPS
+
+Func _GeoLocate($lat, $lon, $ShowPrompts = 0)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GeoLocate()') ;#Debug Display
+	Local $return = 0
+	$lat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lat), "N", ""), "S", "-"), " ", "")
+	$lon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lon), "E", ""), "W", "-"), " ", "")
+	$hpparr = _Get_HostPortPath($PhilsApiURL)
+	If Not @error Then
+		Local $host, $port, $path
+		$host = $hpparr[1]
+		$port = $hpparr[2]
+		$path = $hpparr[3]
+		$page = $path & "geonames.php"
+		ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
+		ConsoleWrite($path & @CRLF)
+		;Get information from WifiDB
+		$socket = _HTTPConnect($host, $port)
+		If Not @error Then
+			_HTTPPost_WifiDB_GeoLocate($host, $page, $socket, $lat, $lon)
+			$recv = _HTTPRead($socket, 1)
+			If @error Then
+				ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
+				If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
+			Else
+				;Read WifiDB JSON Response
+				Local $httprecv, $import_json_response, $json_array_size
+				$httprecv = $recv[4]
+				ConsoleWrite($httprecv & @CRLF)
+				$import_json_response = _JSONDecode($httprecv)
+				$json_array_size = UBound($import_json_response) - 1
+				;Pull out information from decoded json array
+				Local $gncc, $gncn, $gna1c, $gna1n, $gna2n, $gnan, $gnerr
+				For $ji = 0 To $json_array_size
+					If $import_json_response[$ji][0] = 'Country Code' Then $gncc = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'Country Name' Then $gncn = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'Admin1 Code' Then $gna1c = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'Admin1 Name' Then $gna1n = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'Admin2 Name' Then $gna2n = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'Area Name' Then $gnan = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'error' Then $gnerr = $import_json_response[$ji][1]
+				Next
+				If $gncc <> "" Or $gncn <> "" Or $gna1c <> "" Or $gna1n <> "" Or $gna2n <> "" Or $gnan <> "" Or $gnerr <> "" Then
+					Local $aReturn[7]
+					$aReturn[1] = $gncc
+					$aReturn[2] = $gncn
+					$aReturn[3] = $gna1c
+					$aReturn[4] = $gna1n
+					$aReturn[5] = $gna2n
+					$aReturn[6] = $gnan
+					Return $aReturn
+				Else
+					Local $aReturn[2]
+					$aReturn[1] = $gnerr
+					SetError(1)
+					Return
+				EndIf
+			EndIf
+		Else
+			If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
+			ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
+		EndIf
+	EndIf
+EndFunc   ;==>_GeoLocate
+
+Func _HTTPPost_WifiDB_GeoLocate($host, $page, $socket, $lat, $lon)
+	Local $command, $extra_commands
+	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
+
+	$extra_commands = "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""lat""" & @CRLF & @CRLF
+	$extra_commands &= $lat & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""long""" & @CRLF & @CRLF
+	$extra_commands &= $lon & @CRLF
+	$extra_commands &= "--" & $boundary & "--"
+
+	Dim $datasize = StringLen($extra_commands)
+
+	$command = "POST " & $page & " HTTP/1.1" & @CRLF
+	$command &= "Host: " & $host & @CRLF
+	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
+	$command &= "Connection: close" & @CRLF
+	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
+	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
+	$command &= $extra_commands
+	ConsoleWrite($command & @CRLF)
+
+	Dim $bytessent = TCPSend($socket, $command)
+
+	If $bytessent == 0 Then
+		SetExtended(@error)
+		SetError(2)
+		Return 0
+	EndIf
+
+	SetError(0)
+	Return $bytessent
+EndFunc   ;==>_HTTPPost_WifiDB_GeoLocate
 
 Func _ViewLiveInWDB();View wifidb live aps in browser
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewLiveInWDB()') ;#Debug Display
@@ -11988,6 +12098,7 @@ EndFunc   ;==>_CleanupFiles
 #ce
 
 Func _GeoLocateAllAps()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GeoLocateAllAps()') ;#Debug Display
 	$query = "SELECT ApID, HighGpsHistId FROM AP WHERE HighGpsHistId<>0"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$ApMatch = UBound($ApMatchArray) - 1
@@ -12010,14 +12121,12 @@ Func _GeoLocateAllAps()
 				$Ap_Lat = $GpsMatchArray[1][1]
 				$Ap_Lon = $GpsMatchArray[1][2]
 				$GeoInfo = _GeoLocate($Ap_Lat, $Ap_Lon)
-				;ConsoleWrite("GeoInfo:" & $GeoInfo & @CRLF)
-				If $GeoInfo <> "0" Then
-					$GeoInfoSplit = StringSplit($GeoInfo, "|")
-					$GL_CountryCode = $GeoInfoSplit[1]
-					$GL_CountryName = $GeoInfoSplit[2]
-					$GL_AdminCode = $GeoInfoSplit[3]
-					$GL_AdminName = $GeoInfoSplit[4]
-					$GL_Admin2Name = $GeoInfoSplit[5]
+				If Not @error Then
+					$GL_CountryCode = $GeoInfo[1]
+					$GL_CountryName = $GeoInfo[2]
+					$GL_AdminCode = $GeoInfo[3]
+					$GL_AdminName = $GeoInfo[4]
+					$GL_Admin2Name = $GeoInfo[5]
 					$query = "UPDATE AP SET CountryCode='" & $GL_CountryCode & "', CountryName='" & $GL_CountryName & "' , AdminCode='" & $GL_AdminCode & "' , AdminName='" & $GL_AdminName & "' , Admin2Name='" & $GL_Admin2Name & "' WHERE ApID=" & $Ap_ApID
 					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				EndIf
@@ -12026,17 +12135,6 @@ Func _GeoLocateAllAps()
 		EndIf
 	Next
 EndFunc   ;==>_GeoLocateAllAps
-
-Func _GeoLocate($lat, $lon)
-	Local $return = 0
-	$lat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lat), "N", ""), "S", "-"), " ", "")
-	$lon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lon), "E", ""), "W", "-"), " ", "")
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GeoLocate()') ;#Debug Display
-	$url = $PhilsApiURL & 'geonames.php?lat=' & $lat & '&long=' & $lon
-	$webpagesource = _INetGetSource($url, 'True')
-	If StringInStr($webpagesource, '|') Then $return = $webpagesource
-	Return ($return)
-EndFunc   ;==>_GeoLocate
 
 Func _ImageDownloader()
 	$query = "SELECT CamName, CamUrl FROM Cameras"
