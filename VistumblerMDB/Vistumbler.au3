@@ -2073,7 +2073,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			;Add History Information
 			_AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & '|' & $APID & '|' & $NewGpsId & '|' & $SIG & '|' & $RSSI & '|' & $New_Date & '|' & $New_Time)
 			;Add AP Data into the AP table
-			ReDim $AddApRecordArray[24]
+			ReDim $AddApRecordArray[32]
 			$AddApRecordArray[0] = 21
 			$AddApRecordArray[1] = $APID
 			$AddApRecordArray[2] = $ListRow
@@ -2098,8 +2098,15 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$AddApRecordArray[21] = $SIG
 			$AddApRecordArray[22] = $AP_DisplayRSSI
 			$AddApRecordArray[23] = $RSSI
+			$AddApRecordArray[24] = "";Geonames CountryCode
+			$AddApRecordArray[25] = "";Geonames CountryName
+			$AddApRecordArray[26] = "";Geonames AdminCode
+			$AddApRecordArray[27] = "";Geonames AdminName
+			$AddApRecordArray[28] = "";Geonames Admin2Name
+			$AddApRecordArray[29] = "";Geonames Areaname
+			$AddApRecordArray[30] = 0;Geonames Accuracy(miles)
+			$AddApRecordArray[31] = 0;Geonames Accuracy(km)
 			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $AddApRecordArray)
-
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
 			$Found_APID = $ApMatchArray[1][1]
 			$Found_ListRow = $ApMatchArray[1][2]
@@ -2873,7 +2880,7 @@ Func _SetUpDbTables($dbfile)
 	_CreateTable($dbfile, 'LoadedFiles', $DB_OBJ)
 	_CreateTable($dbfile, 'CAM', $DB_OBJ)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID INTEGER|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID INTEGER|ListRow INTEGER|Active INTEGER|BSSID TEXT(20)|SSID TEXT(255)|CHAN INTEGER|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE INTEGER|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId INTEGER|LastGpsID INTEGER|FirstHistID INTEGER|LastHistID INTEGER|MANU TEXT(100)|LABEL TEXT(100)|Signal INTEGER|HighSignal INTEGER|RSSI INTEGER|HighRSSI INTEGER|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)')
+	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID INTEGER|ListRow INTEGER|Active INTEGER|BSSID TEXT(20)|SSID TEXT(255)|CHAN INTEGER|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE INTEGER|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId INTEGER|LastGpsID INTEGER|FirstHistID INTEGER|LastHistID INTEGER|MANU TEXT(100)|LABEL TEXT(100)|Signal INTEGER|HighSignal INTEGER|RSSI INTEGER|HighRSSI INTEGER|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)|AreaName TEXT(100)|GNAmiles FLOAT|GNAkm FLOAT')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID INTEGER|ApID INTEGER|GpsID INTEGER|Signal INTEGER|RSSI INTEGER|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID INTEGER|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos INTEGER|InfoSubPos INTEGER|SsidPos INTEGER|BssidPos INTEGER|ChanPos INTEGER|NetPos INTEGER|EncrPos INTEGER|RadPos  INTEGER|AuthPos INTEGER|BtxPos INTEGER|OtxPos INTEGER|ManuPos INTEGER|LabPos INTEGER')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
@@ -5538,7 +5545,7 @@ Func _GeoLocate($lat, $lon, $ShowPrompts = 0)
 				$import_json_response = _JSONDecode($httprecv)
 				$json_array_size = UBound($import_json_response) - 1
 				;Pull out information from decoded json array
-				Local $gncc, $gncn, $gna1c, $gna1n, $gna2n, $gnan, $gnerr
+				Local $gncc, $gncn, $gna1c, $gna1n, $gna2n, $gnan, $gnerr, $gnm, $gnkm
 				For $ji = 0 To $json_array_size
 					If $import_json_response[$ji][0] = 'Country Code' Then $gncc = $import_json_response[$ji][1]
 					If $import_json_response[$ji][0] = 'Country Name' Then $gncn = $import_json_response[$ji][1]
@@ -5546,16 +5553,20 @@ Func _GeoLocate($lat, $lon, $ShowPrompts = 0)
 					If $import_json_response[$ji][0] = 'Admin1 Name' Then $gna1n = $import_json_response[$ji][1]
 					If $import_json_response[$ji][0] = 'Admin2 Name' Then $gna2n = $import_json_response[$ji][1]
 					If $import_json_response[$ji][0] = 'Area Name' Then $gnan = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'miles' Then $gnm = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'km' Then $gnkm = $import_json_response[$ji][1]
 					If $import_json_response[$ji][0] = 'error' Then $gnerr = $import_json_response[$ji][1]
 				Next
-				If $gncc <> "" Or $gncn <> "" Or $gna1c <> "" Or $gna1n <> "" Or $gna2n <> "" Or $gnan <> "" Or $gnerr <> "" Then
-					Local $aReturn[7]
+				If $gncc <> "" Or $gncn <> "" Or $gna1c <> "" Or $gna1n <> "" Or $gna2n <> "" Or $gnan <> "" Or $gnm <> "" Or $gnkm <> "" Or $gnerr <> "" Then
+					Local $aReturn[9]
 					$aReturn[1] = $gncc
 					$aReturn[2] = $gncn
 					$aReturn[3] = $gna1c
 					$aReturn[4] = $gna1n
 					$aReturn[5] = $gna2n
 					$aReturn[6] = $gnan
+					$aReturn[7] = $gnm
+					$aReturn[8] = $gnkm
 					Return $aReturn
 				Else
 					Local $aReturn[2]
@@ -12098,11 +12109,17 @@ EndFunc   ;==>_CleanupFiles
 #ce
 
 Func _GeoLocateAllAps()
+	$OnlyUpdateBlank = InputBox("Geolocate Update Type", "1=Update only blank" & @CRLF & "0=update all aps", 1)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GeoLocateAllAps()') ;#Debug Display
-	$query = "SELECT ApID, HighGpsHistId FROM AP WHERE HighGpsHistId<>0"
+	If $OnlyUpdateBlank = 0 Then
+		$query = "SELECT ApID, HighGpsHistId FROM AP WHERE HighGpsHistId<>0"
+	Else
+		$query = "SELECT ApID, HighGpsHistId FROM AP WHERE HighGpsHistId<>0 And CountryCode='' And CountryName='' And AdminCode='' And AdminName='' And Admin2Name='' And AreaName=''"
+	EndIf
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$ApMatch = UBound($ApMatchArray) - 1
 	For $ugn = 1 To $ApMatch
+		GUICtrlSetData($msgdisplay, 'Updating Geoname information for AP ' & $ugn & "/" & $ApMatch)
 		;ConsoleWrite($ugn & "/" & $ApMatch & @CRLF)
 		$Ap_ApID = $ApMatchArray[$ugn][1]
 		$Ap_HighGpsHist = $ApMatchArray[$ugn][2]
@@ -12127,13 +12144,20 @@ Func _GeoLocateAllAps()
 					$GL_AdminCode = $GeoInfo[3]
 					$GL_AdminName = $GeoInfo[4]
 					$GL_Admin2Name = $GeoInfo[5]
-					$query = "UPDATE AP SET CountryCode='" & $GL_CountryCode & "', CountryName='" & $GL_CountryName & "' , AdminCode='" & $GL_AdminCode & "' , AdminName='" & $GL_AdminName & "' , Admin2Name='" & $GL_Admin2Name & "' WHERE ApID=" & $Ap_ApID
+					$GL_AreaName = $GeoInfo[6]
+					$GL_Miles = $GeoInfo[7]
+					$GL_km = $GeoInfo[8]
+					ConsoleWrite($GL_CountryCode & @CRLF & $GL_CountryName & @CRLF & $GL_AdminCode & @CRLF & $GL_AdminName & @CRLF & $GL_Admin2Name & @CRLF & $GL_AreaName & @CRLF & $GL_Miles & @CRLF & $GL_km & @CRLF)
+					$query = "UPDATE AP SET CountryCode='" & $GL_CountryCode & "', CountryName='" & $GL_CountryName & "' , AdminCode='" & $GL_AdminCode & "' , AdminName='" & $GL_AdminName & "' , Admin2Name='" & $GL_Admin2Name & "' , AreaName='" & $GL_AreaName & "' , GNAmiles='" & $GL_Miles & "'  , GNAkm='" & $GL_km & "' WHERE ApID=" & $Ap_ApID
+					ConsoleWrite($query & @CRLF)
 					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				EndIf
 				;ConsoleWrite("---------------------------------------------------" & @CRLF)
 			EndIf
 		EndIf
 	Next
+	MsgBox(0, $Text_Information, 'Finished updating geolocations')
+	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_GeoLocateAllAps
 
 Func _ImageDownloader()
