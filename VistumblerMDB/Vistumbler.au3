@@ -4455,10 +4455,19 @@ Func ListViewAPs_RClick()
 	If ($aHit[0] <> -1) Then
 		; Create a standard popup menu
 		; -------------------- To Do --------------------
-		Local $idCopy = 1, $idGNInfo = 2
+		Local $idCopy = 1000, $idWifiDB = 2000, $idGNInfo = 2001, $idGraph = 2002
+
+		;Create WifiDB menu
+		$subWifiDB = _GUICtrlMenu_CreateMenu()
+		_GUICtrlMenu_InsertMenuItem($subWifiDB, 0, "Geonames Info", $idGNInfo)
+		_GUICtrlMenu_InsertMenuItem($subWifiDB, 1, $Text_PhilsPHPgraph, $idGraph)
+
 		$hMenu = _GUICtrlMenu_CreatePopup()
-		_GUICtrlMenu_AddMenuItem($hMenu, "Copy", $idCopy)
-		_GUICtrlMenu_AddMenuItem($hMenu, "Geonames Info", $idGNInfo)
+		_GUICtrlMenu_InsertMenuItem($hMenu, 0, "Copy", $idCopy)
+		_GUICtrlMenu_InsertMenuItem($hMenu, 1, "WifiDB", 0)
+		_GUICtrlMenu_SetItemSubMenu($hMenu, 1, $subWifiDB)
+
+		;_GUICtrlMenu_AddMenuItem($hMenu, "Geonames Info", $idGNInfo, $subWifiDB)
 		; ========================================================================
 		; Shows how to capture the context menu selections
 		; ========================================================================
@@ -4469,6 +4478,9 @@ Func ListViewAPs_RClick()
 			Case $idGNInfo
 				ConsoleWrite("Info: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
 				_GeonamesInfo($aHit[0])
+			Case $idGraph
+				ConsoleWrite("Graph: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
+				_ViewInPhilsGraph_Open($aHit[0])
 		EndSwitch
 		_GUICtrlMenu_DestroyMenu($hMenu)
 	EndIf
@@ -5037,10 +5049,14 @@ EndFunc   ;==>_Draw5000ChanLine
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PHILS FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
-
-Func _ViewInPhilsGraph();Sends data to phils php graphing script
+Func _ViewInPhilsGraph()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewInPhilsGraph()') ;#Debug Display
 	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	_ViewInPhilsGraph_Open($Selected)
+EndFunc   ;==>_ViewInPhilsGraph
+
+Func _ViewInPhilsGraph_Open($Selected);Sends data to phils php graphing script
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewInPhilsGraph_Open()') ;#Debug Display
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 		$query = "SELECT ApID, SSID, BSSID, AUTH, ENCR, RADTYPE, NETTYPE, CHAN, BTX, OTX, MANU, LABEL, HighGpsHistID FROM AP WHERE ListRow=" & $Selected
 		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5098,7 +5114,7 @@ Func _ViewInPhilsGraph();Sends data to phils php graphing script
 	Else
 		MsgBox(0, $Text_Error, $Text_NoApSelected)
 	EndIf
-EndFunc   ;==>_ViewInPhilsGraph
+EndFunc   ;==>_ViewInPhilsGraph_Open
 
 #cs
 	Func _AddToYourWDB()
@@ -5111,8 +5127,8 @@ EndFunc   ;==>_ViewInPhilsGraph
 	;ConsoleWrite($url_data & @CRLF)
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 	EndFunc   ;==>_AddToYourWDB
-
-
+	
+	
 	Func _ExportWifidbVS1($savefile, $Filter = 0);writes v3.0 vistumbler detailed data to a txt file (WifiDB does not curretly support v4 VS1, this has been added for backward compatibility)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
 	$file = "# Vistumbler VS1 - Detailed Export Version 3.0" & @CRLF & _
@@ -5140,7 +5156,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpTime = $GpsMatchArray[$exp][12]
 	$file &= $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime & @CRLF
 	Next
-
+	
 	;Export AP Information
 	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
 	"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL" & @CRLF & _
@@ -5172,7 +5188,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpFirstID = $ApMatchArray[$exp][15]
 	$ExpLastID = $ApMatchArray[$exp][16]
 	$ExpGidSid = ''
-
+	
 	;Create GID,SIG String
 	$query = "SELECT GpsID, Signal FROM Hist WHERE ApID=" & $ExpApID
 	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5186,7 +5202,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
 	EndIf
 	Next
-
+	
 	$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
 	Next
 	$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
@@ -5197,7 +5213,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	Return (0)
 	EndIf
 	EndFunc   ;==>_ExportWifidbVS1
-
+	
 #ce
 
 Func _AddToYourWDB()
