@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.5.2 Alpha 2'
+$version = 'v10.5.2 Alpha 2.22'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/04/03'
+$last_modified = '2013/04/15'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -38,6 +38,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include <String.au3>
 #include <INet.au3>
 #include <SQLite.au3>
+#include <GuiMenu.au3>
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
@@ -1371,8 +1372,11 @@ $Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics(900, 400, $Graphic)
 $Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
 GUISwitch($Vistumbler)
 
-$ListviewAPs = GUICtrlCreateListView($headers, 260, 65, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
-GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+$ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
+_GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_DOUBLEBUFFER, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT))
+_GUICtrlListView_SetBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
+_GUICtrlListView_SetTextBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
+_GUICtrlListView_SetTextColor($ListviewAPs, RGB2BGR($TextColor))
 $hImage = _GUIImageList_Create()
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-red.ico")
@@ -1447,7 +1451,7 @@ GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
 ;Edit Menu
 GUICtrlSetOnEvent($ClearAll, '_ClearAll')
-GUICtrlSetOnEvent($Copy, '_CopyAP')
+GUICtrlSetOnEvent($Copy, '_CopySelectedAP')
 GUICtrlSetOnEvent($SelectConnected, '_MenuSelectConnectedAp')
 GUICtrlSetOnEvent($SortTree, '_SortTree')
 ;Optons Menu
@@ -2104,8 +2108,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$AddApRecordArray[27] = "";Geonames AdminName
 			$AddApRecordArray[28] = "";Geonames Admin2Name
 			$AddApRecordArray[29] = "";Geonames Areaname
-			$AddApRecordArray[30] = 0;Geonames Accuracy(miles)
-			$AddApRecordArray[31] = 0;Geonames Accuracy(km)
+			$AddApRecordArray[30] = -1;Geonames Accuracy(miles)
+			$AddApRecordArray[31] = -1;Geonames Accuracy(km)
 			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $AddApRecordArray)
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
 			$Found_APID = $ApMatchArray[1][1]
@@ -4337,14 +4341,12 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top + ($Graphic_height + 1)
 			$ListviewAPs_height = $DataChild_Height - ($Graphic_height + 1)
 
-			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			_WinAPI_MoveWindow($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
 			$Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics($Graphic_width, $Graphic_height, $Graphic)
 			$Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
-
-
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		Else
 			$TreeviewAPs_left = $DataChild_Left
@@ -4357,7 +4359,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top
 			$ListviewAPs_height = $DataChild_Height
 
-			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			_WinAPI_MoveWindow($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
 			GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
@@ -4387,7 +4389,7 @@ Func _TreeviewListviewResize()
 			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
 			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
 			$ListviewAPs_width = $DataChild_Width - $ListviewAPs_left
-			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			_WinAPI_MoveWindow($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitPercent = StringFormat('%0.2f', $TreeviewAPs_width / $DataChild_Width)
 		EndIf
 		If $MoveMode = True And $cursorInfo[2] = 0 Then
@@ -4411,7 +4413,7 @@ Func _TreeviewListviewResize()
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$ListviewAPs_top = $Graphic_top + $Graphic_height + 1
 			$ListviewAPs_height = $DataChild_Height - $Graphic_height
-			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			_WinAPI_MoveWindow($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitHeightPercent = StringFormat('%0.2f', $Graphic_height / $DataChild_Height)
 			$Redraw = 1
 		EndIf
@@ -4424,19 +4426,53 @@ EndFunc   ;==>_TreeviewListviewResize
 
 Func WM_NOTIFY($hWnd, $MsgID, $wParam, $lParam)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'WM_NOTIFY()') ;#Debug Display
-	Local $tagNMHDR, $code
-	$tagNMHDR = DllStructCreate("int;int;int", $lParam)
-	If @error Then Return 0
-	$code = DllStructGetData($tagNMHDR, 3)
-	If $wParam = $ListviewAPs And $code = -3 Then
-		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
-		If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
-			_GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False)
-		EndIf
-	EndIf
+	Local $hWndFrom, $iCode, $tNMHDR, $hWndListView, $tInfo
+	$hWndListView = $ListviewAPs
+	If Not IsHWnd($ListviewAPs) Then $hWndListView = GUICtrlGetHandle($ListviewAPs)
+	$tNMHDR = DllStructCreate($tagNMHDR, $lParam)
+	$hWndFrom = HWnd(DllStructGetData($tNMHDR, "hWndFrom"))
+	$iCode = DllStructGetData($tNMHDR, "Code")
+	Switch $hWndFrom
+		Case $hWndListView
+			Switch $iCode
+				Case $NM_CLICK
+					ConsoleWrite('Listview Left Click' & @CRLF)
+				Case $NM_RCLICK
+					ConsoleWrite('Listview Right Click' & @CRLF)
+					ListViewAPs_RClick()
+				Case $NM_DBLCLK
+					ConsoleWrite("Listview Double Click" & @CRLF)
+					$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+					If $Selected <> -1 Then _GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False) ; Deselect selected AP
+			EndSwitch
+	EndSwitch
 	Return $GUI_RUNDEFMSG
 EndFunc   ;==>WM_NOTIFY
 
+Func ListViewAPs_RClick()
+	Local $aHit
+	$aHit = _GUICtrlListView_SubItemHitTest($ListviewAPs)
+	If ($aHit[0] <> -1) Then
+		; Create a standard popup menu
+		; -------------------- To Do --------------------
+		Local $idCopy = 1, $idGNInfo = 2
+		$hMenu = _GUICtrlMenu_CreatePopup()
+		_GUICtrlMenu_AddMenuItem($hMenu, "Copy", $idCopy)
+		_GUICtrlMenu_AddMenuItem($hMenu, "Geonames Info", $idGNInfo)
+		; ========================================================================
+		; Shows how to capture the context menu selections
+		; ========================================================================
+		Switch _GUICtrlMenu_TrackPopupMenu($hMenu, $ListviewAPs, -1, -1, 1, 1, 2)
+			Case $idCopy
+				ConsoleWrite("Copy: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
+				_CopyAP_GUI($aHit[0])
+			Case $idGNInfo
+				ConsoleWrite("Info: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
+				_GeonamesInfo($aHit[0])
+		EndSwitch
+		_GUICtrlMenu_DestroyMenu($hMenu)
+	EndIf
+EndFunc   ;==>ListViewAPs_RClick
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GRAPH FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -5075,8 +5111,8 @@ EndFunc   ;==>_ViewInPhilsGraph
 	;ConsoleWrite($url_data & @CRLF)
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_root & $url_data);open url with rundll 32
 	EndFunc   ;==>_AddToYourWDB
-	
-	
+
+
 	Func _ExportWifidbVS1($savefile, $Filter = 0);writes v3.0 vistumbler detailed data to a txt file (WifiDB does not curretly support v4 VS1, this has been added for backward compatibility)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
 	$file = "# Vistumbler VS1 - Detailed Export Version 3.0" & @CRLF & _
@@ -5104,7 +5140,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpTime = $GpsMatchArray[$exp][12]
 	$file &= $ExpGID & '|' & $ExpLat & '|' & $ExpLon & '|' & $ExpSat & '|' & $ExpHorDilPitch & '|' & $ExpAlt & '|' & $ExpGeo & '|' & $ExpSpeedKmh & '|' & $ExpSpeedMPH & '|' & $ExpTrack & '|' & $ExpDate & '|' & $ExpTime & @CRLF
 	Next
-	
+
 	;Export AP Information
 	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
 	"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL" & @CRLF & _
@@ -5136,7 +5172,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpFirstID = $ApMatchArray[$exp][15]
 	$ExpLastID = $ApMatchArray[$exp][16]
 	$ExpGidSid = ''
-	
+
 	;Create GID,SIG String
 	$query = "SELECT GpsID, Signal FROM Hist WHERE ApID=" & $ExpApID
 	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5150,7 +5186,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
 	EndIf
 	Next
-	
+
 	$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
 	Next
 	$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
@@ -5161,7 +5197,7 @@ EndFunc   ;==>_ViewInPhilsGraph
 	Return (0)
 	EndIf
 	EndFunc   ;==>_ExportWifidbVS1
-	
+
 #ce
 
 Func _AddToYourWDB()
@@ -5617,6 +5653,30 @@ Func _HTTPPost_WifiDB_GeoLocate($host, $page, $socket, $lat, $lon)
 	Return $bytessent
 EndFunc   ;==>_HTTPPost_WifiDB_GeoLocate
 
+Func _GeonamesInfo($SelectedRow)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopyAP_GUI() ') ;#Debug Display
+	$query = "SELECT CountryCode, CountryName, AdminCode, AdminName, Admin2Name, AreaName, GNAmiles, GNAkm FROM AP WHERE ListRow=" & $SelectedRow
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	If $SelectedRow <> -1 And $FoundApMatch <> 0 Then ;If a access point is selected in the listview, map its data
+		Local $GN_CountryCode = "Not Available", $GN_CountryName = "Not Available", $GN_AdminCode = "Not Available", $GN_AdminName = "Not Available", $GN_Admin2Name = "Not Available", $GN_AreaName = "Not Available", $GN_GNAmiles = "Not Available", $GN_GNAkm = "Not Available"
+		If $ApMatchArray[1][1] <> "" Then $GN_CountryCode = $ApMatchArray[1][1]
+		If $ApMatchArray[1][2] <> "" Then $GN_CountryName = $ApMatchArray[1][2]
+		If $ApMatchArray[1][3] <> "" Then $GN_AdminCode = $ApMatchArray[1][3]
+		If $ApMatchArray[1][4] <> "" Then $GN_AdminName = $ApMatchArray[1][4]
+		If $ApMatchArray[1][5] <> "" Then $GN_Admin2Name = $ApMatchArray[1][5]
+		If $ApMatchArray[1][6] <> "" Then $GN_AreaName = $ApMatchArray[1][6]
+		If $ApMatchArray[1][7] <> -1 Then $GN_GNAmiles = $ApMatchArray[1][7]
+		If $ApMatchArray[1][8] <> -1 Then $GN_GNAkm = $ApMatchArray[1][8]
+		MsgBox(0, $Text_Information, "Country Code: " & $GN_CountryCode & @CRLF & "Country Name: " & $GN_CountryName & @CRLF & "Admin Code: " & $GN_AdminCode & @CRLF & "Admin Name: " & $GN_AdminName & @CRLF & "Admin2 Name: " & $GN_Admin2Name & @CRLF & "Area Name: " & $GN_AreaName & @CRLF & 'Accuracy(miles): ' & $GN_GNAmiles & @CRLF & 'Accuracy(km): ' & $GN_GNAkm)
+	Else
+		If $SelectedRow = -1 Then
+			MsgBox(0, $Text_Error, $Text_NoApSelected)
+		ElseIf $FoundApMatch = 0 Then
+			MsgBox(0, $Text_Error, "No AP match found")
+		EndIf
+	EndIf
+EndFunc   ;==>_GeonamesInfo
 Func _ViewLiveInWDB();View wifidb live aps in browser
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewLiveInWDB()') ;#Debug Display
 	$url = $PhilsWdbURL & 'opt/live.php'
@@ -5693,13 +5753,18 @@ EndFunc   ;==>_OpenVistumblerStore
 ;                                                       COPY GUI FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _CopyAP()
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopyAP() ') ;#Debug Display
+Func _CopySelectedAP()
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopySelectedAP() ') ;#Debug Display
 	$CopySelected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
-	$query = "SELECT ApID FROM AP WHERE ListRow=" & $CopySelected
+	_CopyAP_GUI($CopySelected)
+EndFunc   ;==>_CopySelectedAP
+
+Func _CopyAP_GUI($SelectedRow)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopyAP_GUI() ') ;#Debug Display
+	$query = "SELECT ApID FROM AP WHERE ListRow=" & $SelectedRow
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
-	If $CopySelected <> -1 And $FoundApMatch <> 0 Then ;If a access point is selected in the listview, map its data
+	If $SelectedRow <> -1 And $FoundApMatch <> 0 Then ;If a access point is selected in the listview, map its data
 		$CopyAPID = $ApMatchArray[1][1]
 		$GUI_COPY = GUICreate($Text_Copy, 491, 249)
 		GUISetBkColor($BackgroundColor)
@@ -5763,7 +5828,7 @@ Func _CopyAP()
 	Else
 		MsgBox(0, $Text_Error, $Text_NoApSelected)
 	EndIf
-EndFunc   ;==>_CopyAP
+EndFunc   ;==>_CopyAP_GUI
 
 Func _CloseCopyGUI()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseCopyGUI() ') ;#Debug Display
@@ -12370,3 +12435,15 @@ Func _DecToMinSec($dec) ;Convert a decimal value of time to "(XX)XXm XXsec" form
 
 	Return ($rettime)
 EndFunc   ;==>_DecToMinSec
+
+Func RGB2BGR($iColor)
+	If StringLen($iColor) = 8 Then
+		$r = StringMid($iColor, 3, 2)
+		$g = StringMid($iColor, 5, 2)
+		$b = StringMid($iColor, 7, 2)
+		Return ('0x' & $b & $g & $r)
+	Else
+		SetError(1)
+		Return ('0xFFFFFF')
+	EndIf
+EndFunc   ;==>RGB2BGR
