@@ -5267,22 +5267,27 @@ Func _UploadFileToWifiDB()
 					$httprecv = $recv[4]
 					ConsoleWrite($httprecv & @CRLF)
 					$import_json_response = _JSONDecode($httprecv)
-					$json_array_size = UBound($import_json_response) - 1
+					$import_json_response_iRows = UBound($import_json_response, 1)
+					$import_json_response_iCols = UBound($import_json_response, 2)
 					;Pull out information from decoded json array
-					Local $imtitle, $imuser, $immessage, $imimportnum, $imfilehash, $imerror
-					For $ji = 0 To $json_array_size
-						If $import_json_response[$ji][0] = 'title' Then $imtitle = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'user' Then $imuser = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'message' Then $immessage = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'importnum' Then $imimportnum = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'filehash' Then $imfilehash = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'error' Then $imerror = $import_json_response[$ji][1]
-					Next
-					If $imtitle <> "" Or $imuser <> "" Or $immessage <> "" Or $imimportnum <> "" Or $imfilehash <> "" Then
-						MsgBox(0, $Text_Information, "Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
-						ConsoleWrite("Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
+					If $import_json_response_iCols = 2 Then
+						Local $imtitle, $imuser, $immessage, $imimportnum, $imfilehash, $imerror
+						For $ji = 0 To ($import_json_response_iRows - 1)
+							If $import_json_response[$ji][0] = 'title' Then $imtitle = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'user' Then $imuser = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'message' Then $immessage = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'importnum' Then $imimportnum = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'filehash' Then $imfilehash = $import_json_response[$ji][1]
+							If $import_json_response[$ji][0] = 'error' Then $imerror = $import_json_response[$ji][1]
+						Next
+						If $imtitle <> "" Or $imuser <> "" Or $immessage <> "" Or $imimportnum <> "" Or $imfilehash <> "" Then
+							MsgBox(0, $Text_Information, "Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
+							ConsoleWrite("Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
+						Else
+							MsgBox(0, $Text_Error, $httprecv)
+						EndIf
 					Else
-						MsgBox(0, $Text_Error, $httprecv)
+						MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 					EndIf
 				EndIf
 			Else
@@ -5395,33 +5400,37 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 						$httprecv = $recv[4]
 						ConsoleWrite($httprecv & @CRLF)
 						$import_json_response = _JSONDecode($httprecv)
-						$json_array_size = UBound($import_json_response) - 1
-						;Pull out information from decoded json array
-						Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
-						For $ji = 0 To $json_array_size
-							If $import_json_response[$ji][0] = 'lat' Then $lglat = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'long' Then $lglon = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'date' Then $lgdate = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'time' Then $lgtime = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'sats' Then $lgsats = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'error' Then $lgerror = $import_json_response[$ji][1]
-						Next
-						;Update Vistumbler GPS info with what was pulled from wifidb
-						If $lglat <> '' And $lglon <> '' Then
-							If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, $Text_Latitude & ': ' & $lglat & @CRLF & $Text_Longitude & ': ' & $lglon & @CRLF & $Text_Date & ': ' & $lgdate & @CRLF & $Text_Time & ': ' & $lgtime & @CRLF)
-							ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
-							$LatitudeWifidb = $lglat
-							$LongitudeWifidb = $lglon
-							$WifidbGPS_Update = TimerInit()
-							$return = 1
-						ElseIf $lgerror <> '' Then
-							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $lgerror)
-							ConsoleWrite($Text_Error & ': ' & $lgerror & @CRLF)
+						$import_json_response_iRows = UBound($import_json_response, 1)
+						$import_json_response_iCols = UBound($import_json_response, 2)
+						If $import_json_response_iCols = 2 Then
+							;Pull out information from decoded json array
+							Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
+							For $ji = 0 To ($import_json_response_iRows - 1)
+								If $import_json_response[$ji][0] = 'lat' Then $lglat = $import_json_response[$ji][1]
+								If $import_json_response[$ji][0] = 'long' Then $lglon = $import_json_response[$ji][1]
+								If $import_json_response[$ji][0] = 'date' Then $lgdate = $import_json_response[$ji][1]
+								If $import_json_response[$ji][0] = 'time' Then $lgtime = $import_json_response[$ji][1]
+								If $import_json_response[$ji][0] = 'sats' Then $lgsats = $import_json_response[$ji][1]
+								If $import_json_response[$ji][0] = 'error' Then $lgerror = $import_json_response[$ji][1]
+							Next
+							;Update Vistumbler GPS info with what was pulled from wifidb
+							If $lglat <> '' And $lglon <> '' Then
+								If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, $Text_Latitude & ': ' & $lglat & @CRLF & $Text_Longitude & ': ' & $lglon & @CRLF & $Text_Date & ': ' & $lgdate & @CRLF & $Text_Time & ': ' & $lgtime & @CRLF)
+								ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
+								$LatitudeWifidb = $lglat
+								$LongitudeWifidb = $lglon
+								$WifidbGPS_Update = TimerInit()
+								$return = 1
+							ElseIf $lgerror <> '' Then
+								If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $lgerror)
+								ConsoleWrite($Text_Error & ': ' & $lgerror & @CRLF)
+							Else
+								If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $httprecv)
+								ConsoleWrite($Text_Error & ': ' & $httprecv & @CRLF)
+							EndIf
 						Else
-							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $httprecv)
-							ConsoleWrite($Text_Error & ': ' & $httprecv & @CRLF)
+							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 						EndIf
-
 					EndIf
 				Else
 					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
@@ -5499,36 +5508,41 @@ Func _GeoLocate($lat, $lon, $ShowPrompts = 0)
 				$httprecv = $recv[4]
 				ConsoleWrite($httprecv & @CRLF)
 				$import_json_response = _JSONDecode($httprecv)
-				$json_array_size = UBound($import_json_response) - 1
-				;Pull out information from decoded json array
-				Local $gncc, $gncn, $gna1c, $gna1n, $gna2n, $gnan, $gnerr, $gnm, $gnkm
-				For $ji = 0 To $json_array_size
-					If $import_json_response[$ji][0] = 'Country Code' Then $gncc = $import_json_response[$ji][1]
-					If $import_json_response[$ji][0] = 'Country Name' Then $gncn = $import_json_response[$ji][1]
-					If $import_json_response[$ji][0] = 'Admin1 Code' Then $gna1c = $import_json_response[$ji][1]
-					If $import_json_response[$ji][0] = 'Admin1 Name' Then $gna1n = $import_json_response[$ji][1]
-					If $import_json_response[$ji][0] = 'Admin2 Name' Then $gna2n = $import_json_response[$ji][1]
-					If $import_json_response[$ji][0] = 'Area Name' Then $gnan = $import_json_response[$ji][1]
-					If $import_json_response[$ji][0] = 'miles' Then $gnm = $import_json_response[$ji][1]
-					If $import_json_response[$ji][0] = 'km' Then $gnkm = $import_json_response[$ji][1]
-					If $import_json_response[$ji][0] = 'error' Then $gnerr = $import_json_response[$ji][1]
-				Next
-				If $gncc <> "" Or $gncn <> "" Or $gna1c <> "" Or $gna1n <> "" Or $gna2n <> "" Or $gnan <> "" Or $gnm <> "" Or $gnkm <> "" Or $gnerr <> "" Then
-					Local $aReturn[9]
-					$aReturn[1] = $gncc
-					$aReturn[2] = $gncn
-					$aReturn[3] = $gna1c
-					$aReturn[4] = $gna1n
-					$aReturn[5] = $gna2n
-					$aReturn[6] = $gnan
-					$aReturn[7] = $gnm
-					$aReturn[8] = $gnkm
-					Return $aReturn
+				$import_json_response_iRows = UBound($import_json_response, 1)
+				$import_json_response_iCols = UBound($import_json_response, 2)
+				If $import_json_response_iCols = 2 Then
+					;Pull out information from decoded json array
+					Local $gncc, $gncn, $gna1c, $gna1n, $gna2n, $gnan, $gnerr, $gnm, $gnkm
+					For $ji = 0 To ($import_json_response_iRows - 1)
+						If $import_json_response[$ji][0] = 'Country Code' Then $gncc = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'Country Name' Then $gncn = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'Admin1 Code' Then $gna1c = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'Admin1 Name' Then $gna1n = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'Admin2 Name' Then $gna2n = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'Area Name' Then $gnan = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'miles' Then $gnm = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'km' Then $gnkm = $import_json_response[$ji][1]
+						If $import_json_response[$ji][0] = 'error' Then $gnerr = $import_json_response[$ji][1]
+					Next
+					If $gncc <> "" Or $gncn <> "" Or $gna1c <> "" Or $gna1n <> "" Or $gna2n <> "" Or $gnan <> "" Or $gnm <> "" Or $gnkm <> "" Or $gnerr <> "" Then
+						Local $aReturn[9]
+						$aReturn[1] = $gncc
+						$aReturn[2] = $gncn
+						$aReturn[3] = $gna1c
+						$aReturn[4] = $gna1n
+						$aReturn[5] = $gna2n
+						$aReturn[6] = $gnan
+						$aReturn[7] = $gnm
+						$aReturn[8] = $gnkm
+						Return $aReturn
+					Else
+						Local $aReturn[2]
+						$aReturn[1] = $gnerr
+						SetError(1)
+						Return
+					EndIf
 				Else
-					Local $aReturn[2]
-					$aReturn[1] = $gnerr
-					SetError(1)
-					Return
+					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 				EndIf
 			EndIf
 		Else
@@ -5647,7 +5661,7 @@ Func _LocateAPInWifidb($Selected, $ShowPrompts = 0);Finds AP in WifiDB
 						$import_json_response_iRows = UBound($import_json_response, 1)
 						$import_json_response_iCols = UBound($import_json_response, 2)
 						ConsoleWrite('$import_json_response_iCols:' & $import_json_response_iCols & @CRLF)
-						If $import_json_response_iCols = 0 Then
+						If $import_json_response_iRows <> 0 And $import_json_response_iCols = 0 Then
 							;Pull out information from decoded json array
 							Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
 							For $ji = 0 To ($import_json_response_iRows - 1)
@@ -5679,10 +5693,12 @@ Func _LocateAPInWifidb($Selected, $ShowPrompts = 0);Finds AP in WifiDB
 										If $aparr[$ai][0] = 'username' Then $ausername = $aparr[$ai][1]
 										If $aparr[$ai][0] = 'ap_hash' Then $aap_hash = $aparr[$ai][1]
 									Next
-									MsgBox(0, $Text_Information, 'ID: ' & $aid & @CRLF & 'SSID: ' & $assid & @CRLF & 'BSSID: ' & $amac & @CRLF & 'SecType: ' & $asectype & @CRLF & 'Channel: ' & $achan & @CRLF & 'Authentication: ' & $aauth & @CRLF & 'Encrytion: ' & $aencry & @CRLF & 'Radio Type' & $aradio & @CRLF & 'BTX: ' & $abtx & @CRLF & 'OTX: ' & $aotx & @CRLF & 'Label: ' & $alabel & @CRLF & 'First Seen: ' & $afa & @CRLF & 'Last Seen: ' & $ala & @CRLF & 'Network Type: ' & $ant & @CRLF & 'Manufacturer: ' & $amanuf & @CRLF & 'Geonames ID: ' & $ageonames_id & @CRLF & 'Admin ID:' & $aadmin1_id & @CRLF & 'Admin2 ID: ' & $aadmin2_id & @CRLF & 'Username: ' & $ausername & @CRLF & 'Hash: ' & $aap_hash)
+									If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, 'ID: ' & $aid & @CRLF & 'SSID: ' & $assid & @CRLF & 'BSSID: ' & $amac & @CRLF & 'SecType: ' & $asectype & @CRLF & 'Channel: ' & $achan & @CRLF & 'Authentication: ' & $aauth & @CRLF & 'Encrytion: ' & $aencry & @CRLF & 'Radio Type' & $aradio & @CRLF & 'BTX: ' & $abtx & @CRLF & 'OTX: ' & $aotx & @CRLF & 'Label: ' & $alabel & @CRLF & 'First Seen: ' & $afa & @CRLF & 'Last Seen: ' & $ala & @CRLF & 'Network Type: ' & $ant & @CRLF & 'Manufacturer: ' & $amanuf & @CRLF & 'Geonames ID: ' & $ageonames_id & @CRLF & 'Admin ID:' & $aadmin1_id & @CRLF & 'Admin2 ID: ' & $aadmin2_id & @CRLF & 'Username: ' & $ausername & @CRLF & 'Hash: ' & $aap_hash)
 									ConsoleWrite($aid & ' - ' & $assid & ' - ' & $amac & ' - ' & $asectype & ' - ' & $achan & ' - ' & $aauth & ' - ' & $aencry & ' - ' & $aradio & ' - ' & $abtx & ' - ' & $aotx & ' - ' & $alabel & ' - ' & $afa & ' - ' & $ala & ' - ' & $ant & ' - ' & $amanuf & ' - ' & $ageonames_id & ' - ' & $aadmin1_id & ' - ' & $aadmin2_id & ' - ' & $ausername & ' - ' & $aap_hash & @CRLF)
 								EndIf
 							Next
+						Else
+							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 						EndIf
 					EndIf
 				Else
