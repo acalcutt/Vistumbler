@@ -4455,16 +4455,17 @@ Func ListViewAPs_RClick()
 	If ($aHit[0] <> -1) Then
 		; Create a standard popup menu
 		; -------------------- To Do --------------------
-		Local $idCopy = 1000, $idWifiDB = 2000, $idGNInfo = 2001, $idGraph = 2002
+		Local $idCopy = 1000, $idWifiDB = 1001, $idGNInfo = 2001, $idGraph = 2002, $idFindAP = 2003
 
 		;Create WifiDB menu
 		$subWifiDB = _GUICtrlMenu_CreateMenu()
 		_GUICtrlMenu_InsertMenuItem($subWifiDB, 0, "Geonames Info", $idGNInfo)
 		_GUICtrlMenu_InsertMenuItem($subWifiDB, 1, $Text_PhilsPHPgraph, $idGraph)
+		_GUICtrlMenu_InsertMenuItem($subWifiDB, 1, "Find AP in WifiDB", $idFindAP)
 
 		$hMenu = _GUICtrlMenu_CreatePopup()
 		_GUICtrlMenu_InsertMenuItem($hMenu, 0, "Copy", $idCopy)
-		_GUICtrlMenu_InsertMenuItem($hMenu, 1, "WifiDB", 0)
+		_GUICtrlMenu_InsertMenuItem($hMenu, 1, "WifiDB", $idWifiDB)
 		_GUICtrlMenu_SetItemSubMenu($hMenu, 1, $subWifiDB)
 
 		;_GUICtrlMenu_AddMenuItem($hMenu, "Geonames Info", $idGNInfo, $subWifiDB)
@@ -4481,6 +4482,9 @@ Func ListViewAPs_RClick()
 			Case $idGraph
 				ConsoleWrite("Graph: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
 				_ViewInPhilsGraph_Open($aHit[0])
+			Case $idFindAP
+				ConsoleWrite("Find AP: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
+				_LocateAPInWifidb($aHit[0], 1)
 		EndSwitch
 		_GUICtrlMenu_DestroyMenu($hMenu)
 	EndIf
@@ -5598,6 +5602,149 @@ Func _ViewLiveInWDB();View wifidb live aps in browser
 	$url = $PhilsWdbURL & 'opt/live.php'
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
 EndFunc   ;==>_ViewLiveInWDB
+
+Func _LocateAPInWifidb($Selected, $ShowPrompts = 0);Finds AP in WifiDB
+	ConsoleWrite("$Selected:" & $Selected & @CRLF)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocateAPInWifidb()') ;#Debug Display
+	If $Selected <> -1 Then
+		$query = "SELECT TOP 1 SSID, BSSID, RADTYPE, CHAN, AUTH, ENCR FROM AP WHERE ListRow=" & $Selected
+		ConsoleWrite("$query:" & $query & @CRLF)
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		If $FoundApMatch <> 0 Then
+			Local $ExpSSID, $ExpBSSID, $ExpRAD, $ExpCHAN, $ExpAUTH, $ExpENCR
+			$ExpSSID = $ApMatchArray[1][1]
+			$ExpBSSID = $ApMatchArray[1][2]
+			$ExpRAD = $ApMatchArray[1][3]
+			$ExpCHAN = $ApMatchArray[1][4]
+			$ExpAUTH = $ApMatchArray[1][5]
+			$ExpENCR = $ApMatchArray[1][6]
+
+			;Get Host, Path, and Port from WifiDB api url
+			$hpparr = _Get_HostPortPath($PhilsApiURL)
+			If Not @error Then
+				Local $host, $port, $path
+				$host = $hpparr[1]
+				$port = $hpparr[2]
+				$path = $hpparr[3]
+				$page = $path & "search.php"
+				ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
+				ConsoleWrite($page & @CRLF)
+				;Get information from WifiDB
+				$socket = _HTTPConnect($host, $port)
+				If Not @error Then
+					_HTTPPost_WifiDB_LocateAP($host, $page, $socket, $ExpSSID, $ExpBSSID, $ExpRAD, $ExpCHAN, $ExpAUTH, $ExpENCR)
+					$recv = _HTTPRead($socket, 1)
+					If @error Then
+						ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
+						If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
+					Else
+						;Read WifiDB JSON Response
+						Local $httprecv, $import_json_response, $iRows, $iCols
+						$httprecv = $recv[4]
+						ConsoleWrite($httprecv & @CRLF)
+						$import_json_response = _JSONDecode($httprecv)
+						$import_json_response_iRows = UBound($import_json_response, 1)
+						$import_json_response_iCols = UBound($import_json_response, 2)
+						ConsoleWrite('$import_json_response_iCols:' & $import_json_response_iCols & @CRLF)
+						If $import_json_response_iCols = 0 Then
+							;Pull out information from decoded json array
+							Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
+							For $ji = 0 To ($import_json_response_iRows - 1)
+								$aparr = $import_json_response[$ji]
+								$aparr_iRows = UBound($aparr, 1)
+								$aparr_iCols = UBound($aparr, 2)
+								ConsoleWrite('$aparr_iCols:' & $aparr_iCols & @CRLF)
+								If $aparr_iCols = 2 Then
+									Local $aid, $assid, $amac, $asectype, $achan, $aauth, $aencry, $aradio, $abtx, $aotx, $alabel, $afa, $ala, $ant, $amanuf, $ageonames_id, $aadmin1_id, $aadmin2_id, $ausername, $aap_hash
+									For $ai = 0 To ($aparr_iRows - 1)
+										If $aparr[$ai][0] = 'id' Then $aid = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'ssid' Then $assid = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'mac' Then $amac = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'sectype' Then $asectype = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'chan' Then $achan = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'auth' Then $aauth = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'encry' Then $aencry = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'radio' Then $aradio = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'BTx' Then $abtx = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'OTx' Then $aotx = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'label' Then $alabel = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'FA' Then $afa = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'LA' Then $ala = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'NT' Then $ant = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'manuf' Then $amanuf = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'geonames_id' Then $ageonames_id = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'admin1_id' Then $aadmin1_id = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'admin2_id' Then $aadmin2_id = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'username' Then $ausername = $aparr[$ai][1]
+										If $aparr[$ai][0] = 'ap_hash' Then $aap_hash = $aparr[$ai][1]
+									Next
+									MsgBox(0, $Text_Information, 'ID: ' & $aid & @CRLF & 'SSID: ' & $assid & @CRLF & 'BSSID: ' & $amac & @CRLF & 'SecType: ' & $asectype & @CRLF & 'Channel: ' & $achan & @CRLF & 'Authentication: ' & $aauth & @CRLF & 'Encrytion: ' & $aencry & @CRLF & 'Radio Type' & $aradio & @CRLF & 'BTX: ' & $abtx & @CRLF & 'OTX: ' & $aotx & @CRLF & 'Label: ' & $alabel & @CRLF & 'First Seen: ' & $afa & @CRLF & 'Last Seen: ' & $ala & @CRLF & 'Network Type: ' & $ant & @CRLF & 'Manufacturer: ' & $amanuf & @CRLF & 'Geonames ID: ' & $ageonames_id & @CRLF & 'Admin ID:' & $aadmin1_id & @CRLF & 'Admin2 ID: ' & $aadmin2_id & @CRLF & 'Username: ' & $ausername & @CRLF & 'Hash: ' & $aap_hash)
+									ConsoleWrite($aid & ' - ' & $assid & ' - ' & $amac & ' - ' & $asectype & ' - ' & $achan & ' - ' & $aauth & ' - ' & $aencry & ' - ' & $aradio & ' - ' & $abtx & ' - ' & $aotx & ' - ' & $alabel & ' - ' & $afa & ' - ' & $ala & ' - ' & $ant & ' - ' & $amanuf & ' - ' & $ageonames_id & ' - ' & $aadmin1_id & ' - ' & $aadmin2_id & ' - ' & $ausername & ' - ' & $aap_hash & @CRLF)
+								EndIf
+							Next
+						EndIf
+					EndIf
+				Else
+					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
+					ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
+				EndIf
+			Else
+				If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "error getting host, path, and port from url """ & $PhilsApiURL & """")
+				ConsoleWrite("error getting host, path, and port from url """ & $PhilsApiURL & """" & @CRLF)
+			EndIf
+		EndIf
+	Else
+		If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_NoApSelected)
+	EndIf
+EndFunc   ;==>_LocateAPInWifidb
+
+Func _HTTPPost_WifiDB_LocateAP($host, $page, $socket, $SSID, $mac, $radio, $CHAN, $AUTH, $encry)
+	Local $command, $extra_commands
+	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
+
+	$extra_commands = "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""ssid""" & @CRLF & @CRLF
+	$extra_commands &= $SSID & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""mac""" & @CRLF & @CRLF
+	$extra_commands &= $mac & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""radio""" & @CRLF & @CRLF
+	$extra_commands &= $radio & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""chan""" & @CRLF & @CRLF
+	$extra_commands &= $CHAN & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""auth""" & @CRLF & @CRLF
+	$extra_commands &= $AUTH & @CRLF
+	$extra_commands &= "--" & $boundary & @CRLF
+	$extra_commands &= "Content-Disposition: form-data; name=""encry""" & @CRLF & @CRLF
+	$extra_commands &= $encry & @CRLF
+	$extra_commands &= "--" & $boundary & "--"
+
+	Dim $datasize = StringLen($extra_commands)
+
+	$command = "POST " & $page & " HTTP/1.1" & @CRLF
+	$command &= "Host: " & $host & @CRLF
+	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
+	$command &= "Connection: close" & @CRLF
+	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
+	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
+	$command &= $extra_commands
+	ConsoleWrite($command & @CRLF)
+
+	Dim $bytessent = TCPSend($socket, $command)
+
+	If $bytessent == 0 Then
+		SetExtended(@error)
+		SetError(2)
+		Return 0
+	EndIf
+
+	SetError(0)
+	Return $bytessent
+EndFunc   ;==>_HTTPPost_WifiDB_LocateAP
 
 Func _ViewWDBWebpage();View wifidb live aps in browser
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewWDBWebpage()') ;#Debug Display
@@ -9020,13 +9167,13 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 
 					$otxarray = StringSplit($Found_OTX, " ")
 					If IsArray($otxarray) Then
-						$Radio = $otxarray[$otxarray[0]] * 10
+						$radio = $otxarray[$otxarray[0]] * 10
 					Else
 						$btxarray = StringSplit($Found_BTX, " ")
 						If IsArray($btxarray) Then
-							$Radio = $btxarray[$btxarray[0]] * 10
+							$radio = $btxarray[$btxarray[0]] * 10
 						Else
-							$Radio = 0
+							$radio = 0
 						EndIf
 					EndIf
 
@@ -9079,7 +9226,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 
 					$Flags = StringFormat("%04i", $Flags)
 				EndIf
-				$file &= $Found_Lat & "	" & $Found_Lon & "	( " & $Found_SSID & " )	" & $BSS & "	( " & $Found_BSSID & " )	" & $Found_Time & " (GMT)	[ " & $Found_Sig & " " & $Found_Sig + 50 & " 50 ]	# ( " & $Found_LAB & ' - ' & $Found_MANU & " )	" & $Flags & "	" & $CHAN & "	1000	" & $Radio & "	" & $Found_CHAN & @CRLF
+				$file &= $Found_Lat & "	" & $Found_Lon & "	( " & $Found_SSID & " )	" & $BSS & "	( " & $Found_BSSID & " )	" & $Found_Time & " (GMT)	[ " & $Found_Sig & " " & $Found_Sig + 50 & " 50 ]	# ( " & $Found_LAB & ' - ' & $Found_MANU & " )	" & $Flags & "	" & $CHAN & "	1000	" & $radio & "	" & $Found_CHAN & @CRLF
 			Next
 			$savefile = FileOpen($filename, 128 + 2);Open in UTF-8 write mode
 			FileWrite($savefile, $file)
