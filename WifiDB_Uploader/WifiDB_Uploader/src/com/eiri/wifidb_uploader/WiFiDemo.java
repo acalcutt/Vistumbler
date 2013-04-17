@@ -2,7 +2,6 @@ package com.eiri.wifidb_uploader;
 
 import java.util.List;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -28,15 +27,17 @@ public class WiFiDemo extends Activity implements OnClickListener {
 	Button buttonScan;
 
 	/** Called when the activity is first created. */
-	@SuppressLint("NewApi")
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		if (android.os.Build.VERSION.SDK_INT > 9) {
-	      StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-	      StrictMode.setThreadPolicy(policy);
-	    }
+		
+		StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+	       .detectNetwork() // or .detectAll() for all detectable problems
+	       .penaltyDialog()  //show a dialog
+	       .permitNetwork() //permit Network access 
+	       .build());
+
 		// Setup UI
 		textStatus = (TextView) findViewById(R.id.textStatus);
 		buttonScan = (Button) findViewById(R.id.buttonScan);

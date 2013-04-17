@@ -17,8 +17,8 @@ import org.apache.http.util.EntityUtils;
 
 import android.util.Log;
 
-public class Post {
-	public void postData(String sSID, String bSSID, String capabilities, String frequency, String level, String latitude_str, String longitude_str) {
+public class WifiDB {
+	public void postLiveData(String sSID, String bSSID, String capabilities, Integer frequency, Integer level, Double latitude, Double longitude) {
 	    // Create a new HttpClient and Post Header
 	    DefaultHttpClient httpclient = new DefaultHttpClient();
 	    HttpPost httppost = new HttpPost("http://dev01.wifidb.net/wifidb/api/live.php");
@@ -27,10 +27,10 @@ public class Post {
         nameValuePairs.add(new BasicNameValuePair("ssid", sSID));
         nameValuePairs.add(new BasicNameValuePair("mac", bSSID));
         nameValuePairs.add(new BasicNameValuePair("capabilities", capabilities));
-        nameValuePairs.add(new BasicNameValuePair("radio", frequency));
-        nameValuePairs.add(new BasicNameValuePair("signal", level));
-        nameValuePairs.add(new BasicNameValuePair("latitude", latitude_str));
-        nameValuePairs.add(new BasicNameValuePair("longitude", longitude_str));
+        nameValuePairs.add(new BasicNameValuePair("radio", Integer.toString(frequency)));
+        nameValuePairs.add(new BasicNameValuePair("signal", Integer.toString(level)));
+        nameValuePairs.add(new BasicNameValuePair("latitude", Double.toString(latitude)));
+        nameValuePairs.add(new BasicNameValuePair("longitude", Double.toString(longitude)));
         
         try {
 			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
@@ -38,20 +38,27 @@ public class Post {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
         // Execute HTTP Post Request
         try {
-			HttpResponse result = httpclient.execute(httppost);
-			HttpEntity entity = result.getEntity();
+			HttpResponse response = httpclient.execute(httppost);
+			if (response.getStatusLine().getStatusCode() == 200)
+            {
+                HttpEntity entity = response.getEntity();
+				Log.d("", "HTTP Receive message: " + EntityUtils.toString(entity));
+            }			
+
 			
-			Log.d("", "HTTP Receive message: " + EntityUtils.toString(entity));
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	    } catch (UnsupportedEncodingException uee) {
+	        Log.d("Exceptions", "UnsupportedEncodingException");
+	        uee.printStackTrace();
+	    } catch (ClientProtocolException cpe) {
+	        Log.d("Exceptions", "ClientProtocolException");
+	        cpe.printStackTrace();
+	    } catch (IOException ioe) {
+	        Log.d("Exceptions", "IOException");
+	        ioe.printStackTrace();
+	    }  
 	} 
 	// see http://androidsnippets.com/executing-a-http-post-request-with-httpclient
 }
