@@ -10,6 +10,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -30,6 +31,12 @@ public class WiFiDemo extends Activity implements OnClickListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		
+		StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+	       .detectNetwork() // or .detectAll() for all detectable problems
+	       .penaltyDialog()  //show a dialog
+	       .permitNetwork() //permit Network access 
+	       .build());
 
 		// Setup UI
 		textStatus = (TextView) findViewById(R.id.textStatus);
