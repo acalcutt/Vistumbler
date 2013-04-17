@@ -48,12 +48,6 @@ public class WiFiScanReceiver extends BroadcastReceiver {
     	String capabilities = result.capabilities;
     	int level = result.level;
     	Log.d(TAG, "onReceive() message:1");
-    	double[] gps = getGPS();
-    	//double lat_d = gps[0];
-    	//double lon_d = gps[1];
-    	//String lat = Double.toString(lat_d);
-    	//String lon = Double.toString(lon_d);
-    	//Log.d(TAG, "onReceive() message:" + lat);
     	
     	// Create a new HttpClient and Post Header
         HttpClient httpclient = new DefaultHttpClient();
