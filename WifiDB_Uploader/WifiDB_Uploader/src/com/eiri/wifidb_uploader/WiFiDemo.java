@@ -5,6 +5,7 @@ import java.util.List;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
@@ -15,6 +16,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,6 +26,7 @@ public class WiFiDemo extends Activity implements OnClickListener {
 	WifiManager wifi;
 	BroadcastReceiver receiver;
 
+	Switch ScanSwitch;
 	TextView textStatus;
 	Button buttonScan;
 
@@ -39,6 +43,9 @@ public class WiFiDemo extends Activity implements OnClickListener {
 	       .build());
 
 		// Setup UI
+		
+		ScanSwitch = (Switch) findViewById(R.id.ScanSwitch);
+		ScanSwitch.setOnClickListener(this);
 		textStatus = (TextView) findViewById(R.id.textStatus);
 		buttonScan = (Button) findViewById(R.id.buttonScan);
 		buttonScan.setOnClickListener(this);
@@ -70,14 +77,29 @@ public class WiFiDemo extends Activity implements OnClickListener {
 		unregisterReceiver(receiver);
 	}
 
-	public void onClick(View view) {
-		Toast.makeText(this, "On Click Clicked. Toast to that!!!",
-				Toast.LENGTH_LONG).show();
+	public void onClick(View src) {
+		switch (src.getId()) {
+		    case R.id.ScanSwitch:
+		    	Log.d(TAG, "ScanSwitch Pressed");
+		      	ScanSwitch = (Switch) findViewById(R.id.ScanSwitch);
+		      	if (ScanSwitch.isChecked()){
+		      		stopService(new Intent(this, ScanService.class));
+		      		(ScanSwitch).setChecked(false);
+		      	} else {
+		      		startService(new Intent(this, ScanService.class));
+		      		(ScanSwitch).setChecked(false);
+		        }
+		      	break;
+		    case R.id.buttonScan:
+		    	Log.d(TAG, "buttonScan Pressed");
+		    	stopService(new Intent(this, ScanService.class));
+		    	break;
+	    }
 
-		if (view.getId() == R.id.buttonScan) {
-			Log.d(TAG, "onClick() wifi.startScan()");
-			wifi.startScan();
-		}
 	}
+	
+	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 
+
+}
 }

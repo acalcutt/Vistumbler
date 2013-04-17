@@ -3,6 +3,13 @@
   android:orientation="vertical" android:layout_width="fill_parent"
   android:layout_height="fill_parent">
 
+    <Switch
+        android:id="@+id/ScanSwitch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="false"
+        android:text="Scan" />
+
   <Button android:layout_width="wrap_content"
     android:layout_height="wrap_content" android:id="@+id/buttonScan"
     android:text="Scan"></Button>
