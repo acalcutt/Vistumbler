@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;WifiDB_Uploader&apos;" deleteContents="false" description="Delete resource &apos;WifiDB_Uploader&apos;" element1="/WifiDB_Uploader" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1366157056916"/>
+</session>

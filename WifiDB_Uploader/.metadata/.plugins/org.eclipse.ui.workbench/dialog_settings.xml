@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="NewWizardAction">
+		<item value="com.android.ide.eclipse.editors.wizards.NewActivityWizard" key="NewWizardSelectionPage.STORE_SELECTED_ID"/>
+		<list key="NewWizardSelectionPage.STORE_EXPANDED_CATEGORIES_ID">
+			<item value="com.android.ide.eclipse.wizards.category"/>
+		</list>
+	</section>
+	<section name="ImportExportAction">
+	</section>
+</section>

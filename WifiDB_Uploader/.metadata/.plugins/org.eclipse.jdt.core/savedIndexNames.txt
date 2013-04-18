@@ -1,0 +1,5 @@
+INDEX VERSION 1.126+C:\Users\ACalcutt\Documents\GitHub\Vistumbler\WifiDB_Uploader\.metadata\.plugins\org.eclipse.jdt.core
+20239785.index
+4066006262.index
+154041578.index
+1487660247.index
