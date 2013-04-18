@@ -1,27 +1,30 @@
 package com.eiri.wifidb_uploader;
 
-import android.app.IntentService;
+import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
+import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
-public class ScanService extends IntentService{
+public class ScanService extends Service {
 	private static final String TAG = "ScanService";
 	WifiManager wifi;
 	BroadcastReceiver receiver;
 	
-	// No-arg constructor is required
-	public ScanService() {
-	   super("ScanService");
-	}
-
 	@Override
-	protected void onHandleIntent(Intent intent) {
-	   Log.d(TAG, "Scan Service started");
-	   
+	public IBinder onBind(Intent intent) {
+		return null;
+	}
+	
+	@Override
+	public void onCreate() {
+		Toast.makeText(this, "My Service Created", Toast.LENGTH_LONG).show();
+		Log.d(TAG, "onCreate");
+		
 		// Setup WiFi
 		wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 
@@ -30,14 +33,18 @@ public class ScanService extends IntentService{
 			receiver = new WiFiScanReceiver(this);
 
 		registerReceiver(receiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-		
-		wifi.startScan();
 	}
-	
-	public void onStop() {
+
+	@Override
+	public void onDestroy() {
+		Toast.makeText(this, "My Service Stopped", Toast.LENGTH_LONG).show();
 		if(receiver != null) unregisterReceiver(receiver);
 	}
-	public void onDestroy(){
-		if(receiver != null) unregisterReceiver(receiver);	
+	
+	@Override
+	public void onStart(Intent intent, int startid) {
+		Toast.makeText(this, "My Service Started", Toast.LENGTH_LONG).show();
+		Log.d(TAG, "onStart");
+		wifi.startScan();
 	}
 }

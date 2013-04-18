@@ -25,10 +25,9 @@ public final class R {
     }
     public static final class id {
         public static final int ScanSwitch=0x7f080000;
-        public static final int ScrollView01=0x7f080002;
-        public static final int action_settings=0x7f080004;
-        public static final int buttonScan=0x7f080001;
-        public static final int textStatus=0x7f080003;
+        public static final int ScrollView01=0x7f080001;
+        public static final int TextResponse=0x7f080002;
+        public static final int action_settings=0x7f080003;
     }
     public static final class layout {
         public static final int main=0x7f030000;
