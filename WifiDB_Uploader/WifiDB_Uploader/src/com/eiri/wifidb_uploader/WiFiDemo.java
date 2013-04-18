@@ -23,16 +23,17 @@ import android.widget.Toast;
 
 public class WiFiDemo extends Activity implements OnClickListener {
 	private static final String TAG = "WiFiDemo";
-	WifiManager wifi;
-	BroadcastReceiver receiver;
+	Intent ScanServiceIntent;
 
 	Switch ScanSwitch;
 	TextView textStatus;
 	Button buttonScan;
+	
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		
@@ -49,32 +50,9 @@ public class WiFiDemo extends Activity implements OnClickListener {
 		textStatus = (TextView) findViewById(R.id.textStatus);
 		buttonScan = (Button) findViewById(R.id.buttonScan);
 		buttonScan.setOnClickListener(this);
+		
+		ScanServiceIntent =new Intent(this, ScanService.class);
 
-		// Setup WiFi
-		wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-
-		// Get WiFi status
-		WifiInfo info = wifi.getConnectionInfo();
-		textStatus.append("\n\nWiFi Status: " + info.toString());
-
-		// List available networks
-		List<WifiConfiguration> configs = wifi.getConfiguredNetworks();
-		for (WifiConfiguration config : configs) {
-			textStatus.append("\n\n" + config.toString());
-		}
-
-		// Register Broadcast Receiver
-		if (receiver == null)
-			receiver = new WiFiScanReceiver(this);
-
-		registerReceiver(receiver, new IntentFilter(
-				WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
-		Log.d(TAG, "onCreate()");
-	}
-
-	@Override
-	public void onStop() {
-		unregisterReceiver(receiver);
 	}
 
 	public void onClick(View src) {
@@ -83,11 +61,13 @@ public class WiFiDemo extends Activity implements OnClickListener {
 		    	Log.d(TAG, "ScanSwitch Pressed");
 		      	ScanSwitch = (Switch) findViewById(R.id.ScanSwitch);
 		      	if (ScanSwitch.isChecked()){
-		      		stopService(new Intent(this, ScanService.class));
-		      		(ScanSwitch).setChecked(false);
+		      		Log.d(TAG, "Start Scan");
+		      		startService(ScanServiceIntent);
+		      		ScanSwitch.setChecked(true);
 		      	} else {
-		      		startService(new Intent(this, ScanService.class));
-		      		(ScanSwitch).setChecked(false);
+		      		Log.d(TAG, "Stop Scan");
+		      		stopService(ScanServiceIntent);
+		      		ScanSwitch.setChecked(false);
 		        }
 		      	break;
 		    case R.id.buttonScan:
@@ -97,9 +77,4 @@ public class WiFiDemo extends Activity implements OnClickListener {
 	    }
 
 	}
-	
-	public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-
-
-}
 }

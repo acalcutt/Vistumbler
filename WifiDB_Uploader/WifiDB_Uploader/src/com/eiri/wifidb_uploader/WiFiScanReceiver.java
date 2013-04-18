@@ -12,17 +12,17 @@ import android.util.Log;
 
 public class WiFiScanReceiver extends BroadcastReceiver {
   private static final String TAG = "WiFiScanReceiver";
-  WiFiDemo wifiDemo;
+  ScanService ScanService;
 
-  public WiFiScanReceiver(WiFiDemo wifiDemo) {
+  public WiFiScanReceiver(ScanService ScanService) {
     super();
-    this.wifiDemo = wifiDemo;
+    this.ScanService = ScanService;   
   }
 
   @Override
   public void onReceive(Context c, Intent intent) {
 	  
-    List<ScanResult> results = wifiDemo.wifi.getScanResults();
+    List<ScanResult> results = ScanService.wifi.getScanResults();
 
     for (ScanResult result : results) {
     	String bssid = result.BSSID;
