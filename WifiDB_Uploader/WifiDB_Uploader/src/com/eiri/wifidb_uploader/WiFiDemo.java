@@ -7,6 +7,8 @@ import android.os.Handler;
 import android.os.ResultReceiver;
 import android.os.StrictMode;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -14,7 +16,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 public class WiFiDemo extends Activity implements OnClickListener {
-	private static final String TAG = "WiFiDemo";
+	private static final String TAG = "WiFiDB_Demo";
 	Switch ScanSwitch;
 	TextView textStatus;
 	Button buttonScan;
@@ -39,7 +41,24 @@ public class WiFiDemo extends Activity implements OnClickListener {
 
 		Log.d(TAG, "onCreate()");
 	}
+	
+	@Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        menu.add(Menu.NONE, 0, 0, "Settings");
+        return super.onCreateOptionsMenu(menu);
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case 0:
+                startActivity(new Intent(this, QuickPrefsActivity.class));
+                return true;
+        }
+        return false;
+    }
+    
+	@Override
 	public void onClick(View src) {
 		switch (src.getId()) {
 		    case R.id.ScanSwitch:

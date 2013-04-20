@@ -1,4 +1,3 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">
-<refactoring comment="Delete resource &apos;WifiDB_Uploader&apos;" deleteContents="false" description="Delete resource &apos;WifiDB_Uploader&apos;" element1="/WifiDB_Uploader" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1366157056916"/>
+<session version="1.0">&#x0A;<refactoring comment="Delete resource &apos;WifiDB_Uploader&apos;" deleteContents="false" description="Delete resource &apos;WifiDB_Uploader&apos;" element1="/WifiDB_Uploader" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1366157056916"/>&#x0A;<refactoring comment="Delete resource &apos;_pasted_code_&apos;" deleteContents="false" description="Delete resource &apos;_pasted_code_&apos;" element1="/_pasted_code_" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1366430824826"/>
 </session>

@@ -1,17 +1,20 @@
 package com.eiri.wifidb_uploader;
 
+import java.util.List;
+
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
 public class ScanService extends Service {
-	private static final String TAG = "ScanService";
+	private static final String TAG = "WiFiDB_ScanService";
 	WifiManager wifi;
 	BroadcastReceiver receiver;
 	
@@ -46,5 +49,10 @@ public class ScanService extends Service {
 		Toast.makeText(this, "My Service Started", Toast.LENGTH_LONG).show();
 		Log.d(TAG, "onStart");
 		wifi.startScan();
+		// List available networks
+		List<WifiConfiguration> configs = wifi.getConfiguredNetworks();
+		for (WifiConfiguration config : configs) {
+			Log.d(TAG, "Network: " + config.toString());
+		}
 	}
 }
