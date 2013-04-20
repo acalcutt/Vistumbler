@@ -4466,10 +4466,9 @@ Func _GraphDraw()
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
 				If $HistSize < $max_graph_points Then $max_graph_points = $HistSize ;Fix to prevent graph from drawing outside its region when the are 0% marks
-				Local $graph_point_center_y, $graph_point_center_x, $gloop
+				Local $graph_point_center_y, $graph_point_center_x, $Found_dts, $gloop
 				Local $GraphWidthSpacing = $Graph_width / ($HistSize - 1)
 				Local $GraphHeightSpacing = $Graph_height / 100
-				Local $Found_dts = (@HOUR * 3600) + (@MIN * 60) + @SEC ;Current time in seconds
 				For $gs = 1 To $HistSize
 					$gloop += 1
 					If $gloop > $max_graph_points Then ExitLoop
@@ -4547,33 +4546,40 @@ Func _GraphDraw()
 			EndIf
 		ElseIf $Graph = 2 Then
 			$max_graph_points = $Graph_width
-			$query = "SELECT TOP " & $max_graph_points & " Signal, RSSI, ApID, Date1, Time1 FROM Hist WHERE ApID=" & $GraphApID & " ORDER BY Date1, Time1 Desc"
+			$query = "SELECT TOP " & $max_graph_points & " Signal, RSSI, ApID, Date1, Time1 FROM Hist WHERE ApID=" & $GraphApID & " And Signal<>0 ORDER BY Date1, Time1 Desc"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
-				Local $gloop
-				ConsoleWrite('---------------------------------------------------------------------------------' & @CRLF)
+				Local $Found_dts, $gloop
 				Local $GraphWidthSpacing = $Graph_width / $max_graph_points
 				Local $GraphHeightSpacing = $Graph_height / 100
-				$ts = StringSplit($timestamp, ":")
-				$Found_dts = StringReplace($datestamp & ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4), '-', '')
-				$FoundSig = 0
-				$FoundRSSI = -100
 				For $gs = 1 To $HistSize
+					$gloop += 1
+					If $gloop > $max_graph_points Then ExitLoop
 					$ExpSig = $HistMatchArray[$gs][1] - 0
 					$ExpRSSI = $HistMatchArray[$gs][2]
 					$ExpApID = $HistMatchArray[$gs][3]
 					$ExpDate = $HistMatchArray[$gs][4]
-					$LastSig = $FoundSig
-					$LastRSSI = $FoundRSSI
+
 					$Last_dts = $Found_dts
 					$ts = StringSplit($HistMatchArray[$gs][5], ":")
 					$ExpTime = ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4) ;In seconds
 					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
 
-					While 1
-						ConsoleWrite("$Last_dts: " & $Last_dts & "  $Found_dts:" & $Found_dts & '   ' & ($Last_dts - $Found_dts) & @CRLF)
-						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then ;increment $gloop for any gaps that may exist (AP at 0%)
+					;Draw line for signal strength
+					If $UseRssiInGraphs = 1 Then
+						$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
+					Else
+						$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
+					EndIf
+					$graph_line_top_x = ($Graph_leftborder + $Graph_width) - ($gloop * $GraphWidthSpacing)
+					$graph_line_bottom_x = ($Graph_leftborder + $Graph_width) - ($gloop * $GraphWidthSpacing)
+					$graph_line_bottom_y = $Graph_topborder + $Graph_height
+					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_line_top_x, $graph_line_top_y, $graph_line_bottom_x, $graph_line_bottom_y, $Pen_Red)
+
+					;increment $gloop for any gaps that may exist (AP at 0%)
+					If $gs <> 1 Then
+						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
 							If $GraphDeadTime = 1 Then
 								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
 								For $wz = 1 To $numofzeros
@@ -4584,41 +4590,9 @@ Func _GraphDraw()
 								$gloop += 1
 								If $gloop > $max_graph_points Then ExitLoop
 							EndIf
-							$Found_dts = $Last_dts
-							$FoundSig = 0
-							$FoundRSSI = -100
-						ElseIf ($Last_dts - $Found_dts) > 0 Then ;Draw assumed signal lines per second, increment $gloop
-							$numofsigs = $Last_dts - $Found_dts
-							For $wz = 1 To $numofsigs
-
-								If $UseRssiInGraphs = 1 Then
-									$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
-								Else
-									$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
-								EndIf
-								$graph_line_top_x = ($Graph_leftborder + $Graph_width) - ($gloop * $GraphWidthSpacing)
-								$graph_line_bottom_x = ($Graph_leftborder + $Graph_width) - ($gloop * $GraphWidthSpacing)
-								$graph_line_bottom_y = $Graph_topborder + $Graph_height
-								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_line_top_x, $graph_line_top_y, $graph_line_bottom_x, $graph_line_bottom_y, $Pen_Red)
-								$gloop += 1
-								If $gloop > $max_graph_points Then ExitLoop
-							Next
-							$Found_dts = $Last_dts
-						Else ;Draw line for signal strength
-							If $UseRssiInGraphs = 1 Then
-								$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
-							Else
-								$graph_line_top_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
-							EndIf
-							$graph_line_top_x = ($Graph_leftborder + $Graph_width) - ($gloop * $GraphWidthSpacing)
-							$graph_line_bottom_x = ($Graph_leftborder + $Graph_width) - ($gloop * $GraphWidthSpacing)
-							$graph_line_bottom_y = $Graph_topborder + $Graph_height
-							_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_line_top_x, $graph_line_top_y, $graph_line_bottom_x, $graph_line_bottom_y, $Pen_Red)
-							$gloop += 1
-							ExitLoop
 						EndIf
-					WEnd
-					If $gloop > $max_graph_points Then ExitLoop
+					EndIf
+
 				Next
 			EndIf
 		EndIf
@@ -5184,7 +5158,7 @@ EndFunc   ;==>_ExportWifidbVS1
 	$WifiDbUploadGUI = GUICreate($Text_UploadApsToWifidb, 580, 525)
 	GUISetBkColor($BackgroundColor)
 	GUICtrlCreateLabel($Text_WifiDB_Upload_Discliamer, 24, 8, 532, 89)
-	
+
 	GUICtrlCreateGroup($Text_UserInformation, 24, 104, 281, 161)
 	GUICtrlCreateLabel($Text_WifiDB_Username, 39, 124, 236, 20)
 	$upload_user_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
@@ -5193,25 +5167,25 @@ EndFunc   ;==>_ExportWifidbVS1
 	GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
 	$upload_apikey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
-	
+
 	GUICtrlCreateGroup($Text_FileType, 312, 104, 249, 161)
 	$VSZ_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVSZ, 327, 150, 220, 20)
 	GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
 	$VS1_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVS1, 327, 170, 220, 20)
 	$CSV_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerCSV, 327, 190, 220, 20)
 	$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
-	
+
 	GUICtrlCreateGroup($Text_UploadInformation, 24, 272, 537, 201)
 	GUICtrlCreateLabel($Text_Title, 39, 297, 500, 20)
 	$upload_title_GUI = GUICtrlCreateInput($ldatetimestamp, 39, 317, 500, 21)
 	GUICtrlCreateLabel($Text_Notes, 39, 342, 500, 20)
 	$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
-	
+
 	$WifiDbUploadGUI_Upload = GUICtrlCreateButton($Text_UploadApsToWifidb, 35, 488, 241, 25)
 	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton($Text_Cancel, 305, 487, 241, 25)
 	GUISetState(@SW_SHOW)
-	
+
 	GUICtrlSetOnEvent($WifiDbUploadGUI_Upload, '_UploadFileToWifiDB')
 	GUICtrlSetOnEvent($WifiDbUploadGUI_Cancel, '_CloseWifiDbUploadGUI')
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseWifiDbUploadGUI')
