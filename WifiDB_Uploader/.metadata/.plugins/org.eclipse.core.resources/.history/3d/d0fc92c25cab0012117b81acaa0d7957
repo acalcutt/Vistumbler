@@ -157,7 +157,7 @@ class MyLocation{
         handler.postDelayed(showTime, iteration_timeout_step);
     }
     
-    public void destroy(Context ctx, LocationResult result){
+    public void desroy(Context ctx, LocationResult result){
         context = ctx;
         locationResult = result;
         

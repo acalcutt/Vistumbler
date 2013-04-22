@@ -157,20 +157,24 @@ class MyLocation{
         handler.postDelayed(showTime, iteration_timeout_step);
     }
     
-    public void destroy(Context ctx, LocationResult result){
+    public void desroy(Context ctx, LocationResult result){
         context = ctx;
         locationResult = result;
-        
-        // removing all updates and listeners
+
         myLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        myLocationManager.removeUpdates(gpsLocationListener);
-        myLocationManager.removeUpdates(networkLocationListener);    
-        myLocationManager.removeGpsStatusListener(gpsStatusListener);
-        
-        //Reset variables
+
+        gps_enabled = (Boolean) myLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
         bestLocation = null;
         counts = 0;
-        sat_count = 0; 
+
+        // turning on location updates
+        myLocationManager.requestLocationUpdates("network", 0, 0, networkLocationListener);
+        myLocationManager.requestLocationUpdates("gps", 0, 0, gpsLocationListener);
+        myLocationManager.addGpsStatusListener(gpsStatusListener);
+        
+        // starting best location finder loop
+        handler.postDelayed(showTime, iteration_timeout_step);
     }    
 
     /**

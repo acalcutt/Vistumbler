@@ -5,6 +5,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -21,6 +22,7 @@ public class ScanService extends Service {
 	private static Timer timer;
 	private Context ctx;
 	static WifiManager wifi;
+	BroadcastReceiver receiver;
 	
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -32,8 +34,43 @@ public class ScanService extends Service {
 		super.onCreate();
 		ctx = this; 
 		Toast.makeText(this, "My Service Created", Toast.LENGTH_LONG).show();
-		Log.d(TAG, "onCreate");   		
+		Log.d(TAG, "onCreate");
+		
+		   		
 	}
+	
+	private class mainTask extends TimerTask
+    { 
+        public void run() 
+        {
+        	//new Thread(new Runnable() {
+    	        //public void run() {
+    	        	// Get Prefs
+    	        	SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
+	    		    String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "https://api.wifidb.net/");
+	    		    String WifiDb_Username = sharedPrefs.getString("wifidb_username", "Anonymous"); 
+	    		    String WifiDb_ApiKey = sharedPrefs.getString("wifidb_upload_api_url", "");     	
+	    		    String WifiDb_SID = "1";
+	    		    
+	    		    // Get Location
+    	    		Location location = MyLocation.getLocation(ctx);
+    	    	    final Double latitude = location.getLatitude();
+    	    	    final Double longitude = location.getLongitude();
+    	    	    Integer sats = MyLocation.getGpsStatus(ctx);      	
+    	    	    Log.d(TAG, "LAT: " + latitude + "LONG: " + longitude + "SATS: " + sats);
+    	    	    
+    	    	    // Get Wifi Info
+    	    	    List<ScanResult> results = ScanService.wifi.getScanResults();
+    	    	    for (ScanResult result : results) {    	    	    
+    	    	    	Log.d(TAG, "onReceive() http post");
+    	    	    	WifiDB post = new WifiDB();
+    	    		    String Label = "";
+    	    	    	post.postLiveData(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey, WifiDb_SID, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
+    	    	    }
+    	        //}
+  	      	//}).start();
+        }
+    }
 	
 	@Override
 	public void onDestroy() {
@@ -69,33 +106,4 @@ public class ScanService extends Service {
 		wifi.startScan();
 		timer.scheduleAtFixedRate(new mainTask(), 0, 5000);
 	}
-	
-	private class mainTask extends TimerTask
-    { 
-        public void run() 
-        {
-        	// Get Prefs
-        	SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-        	String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "https://api.wifidb.net/");
-        	String WifiDb_Username = sharedPrefs.getString("wifidb_username", "Anonymous"); 
-        	String WifiDb_ApiKey = sharedPrefs.getString("wifidb_upload_api_url", "");     	
-        	String WifiDb_SID = "1";
-	    		    
-        	// Get Location
-        	Location location = MyLocation.getLocation(ctx);
-        	final Double latitude = location.getLatitude();
-        	final Double longitude = location.getLongitude();
-        	Integer sats = MyLocation.getGpsStatus(ctx);      	
-        	Log.d(TAG, "LAT: " + latitude + "LONG: " + longitude + "SATS: " + sats);
-    	    	    
-        	// Get Wifi Info
-        	List<ScanResult> results = ScanService.wifi.getScanResults();
-        	for (ScanResult result : results) {    	    	    
-            	 	Log.d(TAG, "onReceive() http post");
-                  	WifiDB post = new WifiDB();
-    	    	    String Label = "";
-    	   	    	post.postLiveData(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey, WifiDb_SID, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
-     	    }
-        }
-    }	
 }
