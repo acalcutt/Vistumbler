@@ -1,11 +1,14 @@
 package com.eiri.wifidb_uploader;
 
+import java.util.Iterator;
+
 import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.GpsSatellite;
+import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -15,7 +18,7 @@ import android.provider.Settings;
 import android.util.Log;
 
 public class GPS extends Service implements LocationListener {
-	 
+	private static final String TAG = "GPS";
     private final Context mContext;
  
     // flag for GPS status
@@ -44,20 +47,28 @@ public class GPS extends Service implements LocationListener {
         getLocation();
     }
     
-    public Integer getSats()
-    {
-    	int SatellitesInFix = 0;
+    public Integer getSats() {
+    	
     	int Satellites = 0;
-    	for (GpsSatellite sat : locationManager.getGpsStatus(null).getSatellites()) {
+        int SatellitesInFix = 0;
+        int timetofix = locationManager.getGpsStatus(null).getTimeToFirstFix();
+        Log.i(TAG, "Time to first fix = "+String.valueOf(timetofix));
+        for (GpsSatellite sat : locationManager.getGpsStatus(null).getSatellites()) {
             if(sat.usedInFix()) {
-				SatellitesInFix++;              
+                SatellitesInFix++;              
             }
             Satellites++;
         }
+        Log.i(TAG, String.valueOf(Satellites) + " Used In Last Fix ("+SatellitesInFix+")");    	
+    	
+    	Log.d(TAG, "SatellitesInFix: " + SatellitesInFix);
+    	Log.d(TAG, "Satellites: " + Satellites);
     	return Satellites;
     }
     
+    
     public Location getLocation() {
+    	Log.d(TAG, "getLocation()");
         try {
             locationManager = (LocationManager) mContext
                     .getSystemService(LOCATION_SERVICE);
@@ -66,15 +77,15 @@ public class GPS extends Service implements LocationListener {
             isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
  
             // getting network status
-            //isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
  
             if (!isGPSEnabled){ // && !isNetworkEnabled) {
                 // no gps provider is enabled
             	showSettingsAlert();
             } else {
                 this.canGetLocation = true;
-                // First get location from Network Provider
                 /*
+                // First get location from Network Provider
                  if (isNetworkEnabled) {
                    	locationManager.requestLocationUpdates(
                             LocationManager.NETWORK_PROVIDER,
@@ -87,6 +98,9 @@ public class GPS extends Service implements LocationListener {
                         if (location != null) {
                             latitude = location.getLatitude();
                             longitude = location.getLongitude();
+                        }else{
+                                latitude = 0.0;
+                                longitude = 0.0;
                         }
                     }
                 }
@@ -105,6 +119,9 @@ public class GPS extends Service implements LocationListener {
                             if (location != null) {
                                 latitude = location.getLatitude();
                                 longitude = location.getLongitude();
+                            }else{
+                                latitude = 0.0;
+                                longitude = 0.0;
                             }
                         }
                     }
@@ -117,6 +134,7 @@ public class GPS extends Service implements LocationListener {
  
         return location;
     }
+    
     @Override
     public void onLocationChanged(Location location) {
     }

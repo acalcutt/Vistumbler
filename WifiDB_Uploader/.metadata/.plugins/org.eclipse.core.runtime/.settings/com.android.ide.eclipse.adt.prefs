@@ -2,4 +2,5 @@ com.android.ide.eclipse.adt.autoPickTarget=false
 com.android.ide.eclipse.adt.fixLegacyEditors=1
 com.android.ide.eclipse.adt.previews=screens
 com.android.ide.eclipse.adt.sdk=C\:\\Users\\ACalcutt\\Downloads\\adt-bundle-windows-x86_64-20130219\\adt-bundle-windows-x86_64-20130219\\sdk
+com.android.ide.eclipse.adt.xmlEditor=true
 eclipse.preferences.version=1

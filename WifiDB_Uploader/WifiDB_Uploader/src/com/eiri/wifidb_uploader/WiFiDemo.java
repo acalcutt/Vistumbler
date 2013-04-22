@@ -1,7 +1,10 @@
 package com.eiri.wifidb_uploader;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
@@ -14,6 +17,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class WiFiDemo extends Activity implements OnClickListener {
 	private static final String TAG = "WiFiDB_Demo";
@@ -25,6 +29,7 @@ public class WiFiDemo extends Activity implements OnClickListener {
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		
@@ -39,8 +44,39 @@ public class WiFiDemo extends Activity implements OnClickListener {
 		ScanSwitch = (Switch) findViewById(R.id.ScanSwitch);
 		ScanSwitch.setOnClickListener(this);
 
-		Log.d(TAG, "onCreate()");
+		//Setup GPS
+		LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+		if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)){
+			Toast.makeText(this, "GPS is Enabled in your devide", Toast.LENGTH_SHORT).show();
+		}else{
+			showGPSDisabledAlertToUser();
+		}			
 	}
+	
+	private void showGPSDisabledAlertToUser(){
+		Log.d(TAG, "showGPSDisabledAlertToUser");
+		AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+		alertDialogBuilder.setMessage("GPS is disabled in your device. Would you like to enable it?")
+		.setCancelable(false)
+		.setPositiveButton("Goto Settings Page To Enable GPS",
+				new DialogInterface.OnClickListener(){
+					public void onClick(DialogInterface dialog, int id){
+						Intent callGPSSettingIntent = new Intent(
+								android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+						startActivity(callGPSSettingIntent);
+					}
+				}
+		);
+		alertDialogBuilder.setNegativeButton("Cancel",
+				new DialogInterface.OnClickListener(){
+					public void onClick(DialogInterface dialog, int id){
+						dialog.cancel();
+					}
+				}
+		);
+		AlertDialog alert = alertDialogBuilder.create();
+		alert.show();
+	}	
 	
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {

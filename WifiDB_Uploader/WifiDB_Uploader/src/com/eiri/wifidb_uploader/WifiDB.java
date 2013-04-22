@@ -15,15 +15,12 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class WifiDB {
 	private static final String TAG = "WiFiDB_POST";
 	
-	public void postLiveData(String sAPIURL, String sSID, String bSSID, String capabilities, Integer frequency, Integer level, String latitude_str, String longitude_str) {
+	public void postLiveData(String sAPIURL, String sSID, String bSSID, String capabilities, Integer frequency, Integer level, Double latitude, Double longitude, String Label) {
 	    // Create a new HttpClient and Post Header
 	    DefaultHttpClient httpclient = new DefaultHttpClient();
 	    String HTTP_POST_HOST_PATH = sAPIURL + "live.php";
@@ -266,9 +263,9 @@ public class WifiDB {
         nameValuePairs.add(new BasicNameValuePair("Radio", radio));
         nameValuePairs.add(new BasicNameValuePair("NT", nt));
         nameValuePairs.add(new BasicNameValuePair("Sig", Integer.toString(level)));
-        nameValuePairs.add(new BasicNameValuePair("Lat", latitude_str));
-        nameValuePairs.add(new BasicNameValuePair("Long", longitude_str));
-        nameValuePairs.add(new BasicNameValuePair("Label", longitude_str));
+        nameValuePairs.add(new BasicNameValuePair("Lat", Double.toString(latitude)));
+        nameValuePairs.add(new BasicNameValuePair("Long", Double.toString(longitude)));
+        nameValuePairs.add(new BasicNameValuePair("Label", Label));
         
         try {
         	Log.d(TAG, "HTTP POST TO: " + HTTP_POST_HOST_PATH);
