@@ -89,15 +89,10 @@ class MyLocation{
                 	Log.d(TAG, "BestLocation finded return result to main. sat_count=" + sat_count);
                 	Log.d(TAG, "#########################################");
 
-
-                    // removing all updates and listeners
-                    myLocationManager.removeUpdates(gpsLocationListener);
-                    myLocationManager.removeUpdates(networkLocationListener);    
-                    myLocationManager.removeGpsStatusListener(gpsStatusListener);
                     sat_count = 0;
 
                     // send best location to locationResult
-                   // locationResult.gotLocation(bestLocation);
+                    locationResult.gotLocation(bestLocation);
                 }
             }
          }
@@ -157,7 +152,7 @@ class MyLocation{
         handler.postDelayed(showTime, iteration_timeout_step);
     }
     
-    public void desroy(Context ctx, LocationResult result){
+    public void destroy(Context ctx, LocationResult result){
         context = ctx;
         locationResult = result;
 
@@ -168,13 +163,10 @@ class MyLocation{
         bestLocation = null;
         counts = 0;
 
-        // turning on location updates
-        myLocationManager.requestLocationUpdates("network", 0, 0, networkLocationListener);
-        myLocationManager.requestLocationUpdates("gps", 0, 0, gpsLocationListener);
-        myLocationManager.addGpsStatusListener(gpsStatusListener);
-        
-        // starting best location finder loop
-        handler.postDelayed(showTime, iteration_timeout_step);
+        // removing all updates and listeners
+        myLocationManager.removeUpdates(gpsLocationListener);
+        myLocationManager.removeUpdates(networkLocationListener);    
+        myLocationManager.removeGpsStatusListener(gpsStatusListener);
     }    
 
     /**

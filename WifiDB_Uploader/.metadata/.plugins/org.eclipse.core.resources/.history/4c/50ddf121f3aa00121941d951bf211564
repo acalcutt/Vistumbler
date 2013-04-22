@@ -97,7 +97,7 @@ class MyLocation{
                     sat_count = 0;
 
                     // send best location to locationResult
-                   // locationResult.gotLocation(bestLocation);
+                    locationResult.gotLocation(bestLocation);
                 }
             }
          }
@@ -156,26 +156,6 @@ class MyLocation{
         // starting best location finder loop
         handler.postDelayed(showTime, iteration_timeout_step);
     }
-    
-    public void desroy(Context ctx, LocationResult result){
-        context = ctx;
-        locationResult = result;
-
-        myLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-
-        gps_enabled = (Boolean) myLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-
-        bestLocation = null;
-        counts = 0;
-
-        // turning on location updates
-        myLocationManager.requestLocationUpdates("network", 0, 0, networkLocationListener);
-        myLocationManager.requestLocationUpdates("gps", 0, 0, gpsLocationListener);
-        myLocationManager.addGpsStatusListener(gpsStatusListener);
-        
-        // starting best location finder loop
-        handler.postDelayed(showTime, iteration_timeout_step);
-    }    
 
     /**
      * GpsStatus listener. OnChainged counts connected satellites count.

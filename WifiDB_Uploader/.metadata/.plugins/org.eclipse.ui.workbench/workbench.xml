@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workbench progressCount="14" version="2.0">
 <workbenchAdvisor/>
-<window height="768" maximized="true" width="1302" x="122" y="0">
+<window height="768" maximized="true" width="1302" x="80" y="68">
 <fastViewData fastViewLocation="1024"/>
 <perspectiveBar>
-<itemSize x="250"/>
+<itemSize x="249"/>
 </perspectiveBar>
 <coolbarLayout>
 <coolItem id="group.file" itemType="typeGroupMarker"/>
@@ -45,18 +45,13 @@
 <part id="5"/>
 <part id="6"/>
 <part id="7"/>
-<part id="8"/>
 </presentation>
 </folder>
 </info>
 </editorArea>
 <editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="WiFiDemo.java" partName="WiFiDemo.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiDemo.java" title="WiFiDemo.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiDemo.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiDemo.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="25" selectionOffset="957" selectionTopPixel="0"/>
-</editor>
-<editor focus="true" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="GPS.java" partName="GPS.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java" title="GPS.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1850" selectionTopPixel="476"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1151" selectionTopPixel="1223"/>
 </editor>
 <editor id="com.android.ide.eclipse.editors.CommonXmlEditor" name="preferences.xml" partName="preferences.xml" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/res/xml/preferences.xml" title="preferences.xml" tooltip="WifiDB_Uploader/res/xml/preferences.xml" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/res/xml/preferences.xml"/>
@@ -71,17 +66,17 @@
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/QuickPrefsActivity.java"/>
 <editorState selectionHorizontalPixel="0" selectionLength="18" selectionOffset="128" selectionTopPixel="0"/>
 </editor>
-<editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="WiFiScanReceiver.java" partName="WiFiScanReceiver.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiScanReceiver.java" title="WiFiScanReceiver.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiScanReceiver.java" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiScanReceiver.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1692" selectionTopPixel="396"/>
-</editor>
 <editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="WifiDB.java" partName="WifiDB.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java" title="WifiDB.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java"/>
-<editorState selectionHorizontalPixel="273" selectionLength="0" selectionOffset="986" selectionTopPixel="0"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="7997" selectionTopPixel="4011"/>
 </editor>
-<editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="ScanService.java" partName="ScanService.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java" title="ScanService.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java" workbook="DefaultEditorWorkbook">
+<editor focus="true" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="ScanService.java" partName="ScanService.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java" title="ScanService.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="375" selectionTopPixel="549"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="3264" selectionTopPixel="1216"/>
+</editor>
+<editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="MyLocation.java" partName="MyLocation.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/MyLocation.java" title="MyLocation.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/MyLocation.java" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/MyLocation.java"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="3462" selectionTopPixel="1356"/>
 </editor>
 </editors>
 <views>
@@ -114,7 +109,8 @@
 <view id="org.eclipse.ui.views.ProblemView" partName="Problems">
 <viewState PRIMARY_SORT_FIELD="org.eclipse.ui.ide.severityAndDescriptionField" categoryGroup="org.eclipse.ui.ide.severity" markerContentGenerator="org.eclipse.ui.ide.problemsGenerator" partName="Problems">
 <expanded>
-<category IMemento.internal.id="Warnings (4 items)"/>
+<category IMemento.internal.id="Warnings (1 item)"/>
+<category IMemento.internal.id="Warnings"/>
 <category IMemento.internal.id="Errors"/>
 </expanded>
 <columnWidths org.eclipse.ui.ide.locationField="90" org.eclipse.ui.ide.markerType="90" org.eclipse.ui.ide.pathField="120" org.eclipse.ui.ide.resourceField="90" org.eclipse.ui.ide.severityAndDescriptionField="448"/>
@@ -370,7 +366,7 @@
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@4adc1ade" ratio="0.6346912" ratioLeft="483" ratioRight="278" relationship="4" relative="org.eclipse.ui.editorss">
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@4adc1ade" ratio="0.696452" ratioLeft="530" ratioRight="231" relationship="4" relative="org.eclipse.ui.editorss">
 <folder activePageID="com.android.ide.eclipse.ddms.views.LogCatView" appearance="2" expanded="1">
 <page content="com.android.ide.eclipse.ddms.views.LogCatView" label="LogCat"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
@@ -497,162 +493,159 @@
 <workingSets/>
 <navigationHistory>
 <editors>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/MyLocation.java"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiDemo.java"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiScanReceiver.java"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WiFiDemo.java"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.manifest.ManifestEditor" path="/WifiDB_Uploader/AndroidManifest.xml"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/Wifi.java"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.manifest.ManifestEditor" path="/WifiDB_Uploader/AndroidManifest.xml"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/QuickPrefsActivity.java"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.CommonXmlEditor" path="/WifiDB_Uploader/res/xml/preferences.xml"/>
 </editors>
-<item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="774" y="0"/>
-</item>
-<item historyLabel="WiFiDemo.java" index="2">
-<position info="not_deleted" x="3127" y="0"/>
+<item historyLabel="WiFiScanReceiver.java" index="2">
+<position info="not_deleted" x="1601" y="72"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="1062" y="0"/>
+<position/>
 </item>
-<item historyLabel="WiFiDemo.java" index="2">
-<position info="not_deleted" x="3127" y="0"/>
+<item historyLabel="WifiDB.java" index="3">
+<position info="not_deleted" x="9313" y="0"/>
 </item>
-<item historyLabel="WiFiDemo.java" index="2">
-<position info="not_deleted" x="1801" y="0"/>
-</item>
-<item historyLabel="WiFiDemo.java" index="2">
-<position info="not_deleted" x="2051" y="0"/>
+<item historyLabel="WiFiScanReceiver.java" index="2">
+<position info="not_deleted" x="702" y="104"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="556" y="0"/>
+<position info="not_deleted" x="2671" y="0"/>
 </item>
-<item historyLabel="WiFiDemo.java" index="2">
-<position info="not_deleted" x="2051" y="0"/>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="2893" y="12"/>
 </item>
-<item historyLabel="GPS.java" index="3">
-<position info="not_deleted" x="2050" y="0"/>
-</item>
-<item historyLabel="WiFiDemo.java" index="2">
-<position info="not_deleted" x="687" y="48"/>
-</item>
-<item historyLabel="GPS.java" index="3">
-<position info="not_deleted" x="97" y="0"/>
-</item>
-<item historyLabel="WiFiDemo.java" index="2">
-<position info="not_deleted" x="957" y="25"/>
-</item>
-<item historyLabel="GPS.java" index="3">
-<position info="not_deleted" x="1637" y="15"/>
+<item historyLabel="WiFiScanReceiver.java" index="2">
+<position info="not_deleted" x="813" y="1040"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="556" y="0"/>
+<position info="not_deleted" x="2671" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="402" y="0"/>
+<position info="not_deleted" x="1430" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="236" y="8"/>
+<position info="not_deleted" x="2637" y="16"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="61" y="0"/>
+<position/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="236" y="8"/>
+<position info="not_deleted" x="2637" y="16"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="293" y="0"/>
+<position info="not_deleted" x="2889" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="375" y="0"/>
-</item>
-<item historyLabel="WifiDB.java" index="0">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item historyLabel="WiFiScanReceiver.java" index="4">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item historyLabel="WiFiScanReceiver.java" index="4">
-<position info="not_deleted" x="1903" y="0"/>
-</item>
-<item historyLabel="GPS.java" index="3">
-<position info="not_deleted" x="1449" y="0"/>
-</item>
-<item historyLabel="WifiDB.java" index="0">
-<position info="not_deleted" x="986" y="0"/>
+<position info="not_deleted" x="3063" y="5"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="375" y="0"/>
+<position info="not_deleted" x="2833" y="0"/>
 </item>
-<item historyLabel="WifiDB.java" index="0">
-<position info="not_deleted" x="986" y="0"/>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="3490" y="12"/>
 </item>
-<item historyLabel="WiFiScanReceiver.java" index="4">
-<position info="not_deleted" x="1903" y="0"/>
+<item historyLabel="WiFiScanReceiver.java" index="2">
+<position info="not_deleted" x="813" y="1040"/>
+</item>
+<item historyLabel="WifiDB.java" index="3">
+<position info="not_deleted" x="9058" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="1">
-<position info="not_deleted" x="375" y="0"/>
+<position info="not_deleted" x="2833" y="0"/>
 </item>
-<item historyLabel="WiFiScanReceiver.java" index="4">
-<position info="not_deleted" x="1903" y="0"/>
+<item historyLabel="Wifi.java" index="4">
+<position info="not_deleted" x="58" y="0"/>
 </item>
-<item historyLabel="WiFiScanReceiver.java" index="4">
-<position info="not_deleted" x="1077" y="8"/>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="1664" y="0"/>
 </item>
-<item historyLabel="WiFiDemo.java" index="5">
-<position info="not_deleted" x="957" y="25"/>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="3490" y="12"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="1664" y="0"/>
+</item>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="3490" y="12"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="1664" y="0"/>
+</item>
+<item historyLabel="GPS.java" index="5">
+<position info="not_deleted" x="1861" y="0"/>
 </item>
 <item historyLabel="WifiDB_Uploader Manifest" index="6"/>
-<item historyLabel="WiFiScanReceiver.java" index="4">
-<position info="not_deleted" x="1692" y="0"/>
+<item historyLabel="QuickPrefsActivity.java" index="7">
+<position info="not_deleted" x="128" y="18"/>
 </item>
-<item historyLabel="GPS.java" index="7">
+<item historyLabel="WifiDB.java" index="3">
+<position info="not_deleted" x="7997" y="0"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="2789" y="0"/>
+</item>
+<item historyLabel="WiFiScanReceiver.java" index="2">
+<position info="not_deleted" x="813" y="1040"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="2789" y="0"/>
+</item>
+<item historyLabel="preferences.xml" index="8"/>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="2789" y="0"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="1166" y="0"/>
+</item>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="5245" y="0"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="2455" y="0"/>
+</item>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="5245" y="0"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="3191" y="0"/>
+</item>
+<item historyLabel="MyLocation.java" index="0">
 <position/>
 </item>
-<item historyLabel="GPS.java" index="7">
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="3191" y="0"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="3163" y="0"/>
+</item>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="5035" y="0"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
+<position info="not_deleted" x="3163" y="0"/>
+</item>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="5338" y="0"/>
+</item>
+<item historyLabel="ScanService.java" index="1">
 <position/>
 </item>
-<item historyLabel="GPS.java" index="7">
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="5338" y="0"/>
+</item>
+<item historyLabel="WifiDB_Uploader Manifest" index="6"/>
+<item historyLabel="MyLocation.java" index="0">
+<position info="not_deleted" x="3462" y="0"/>
+</item>
+<item active="true" historyLabel="ScanService.java" index="1">
 <position/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="4964" y="0"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2203" y="0"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2363" y="9"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2468" y="0"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2363" y="9"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2414" y="10"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2454" y="0"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2046" y="8"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2208" y="16"/>
-</item>
-<item historyLabel="GPS.java" index="7">
-<position/>
-</item>
-<item active="true" historyLabel="GPS.java" index="7">
-<position info="not_deleted" x="2264" y="35"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -680,6 +673,24 @@
 </trimLayout>
 </window>
 <mruList>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="mainTask.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/mainTask.java">
+<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/mainTask.java"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="Wifi.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/Wifi.java">
+<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/Wifi.java"/>
+</file>
+<file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="Context.class" tooltip="android.content.Context">
+<persistable org.eclipse.jdt.ui.ClassFileIdentifier="=WifiDB_Uploader/C:\/Users\/ACalcutt\/Downloads\/adt-bundle-windows-x86_64-20130219\/adt-bundle-windows-x86_64-20130219\/sdk\/platforms\/android-14\/android.jar&lt;android.content(Context.class"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="old.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/old.java">
+<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/old.java"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="MyLocation.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/MyLocation.java">
+<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/MyLocation.java"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="test.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/test.java">
+<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/test.java"/>
+</file>
 <file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="Iterable.class" tooltip="java.lang.Iterable">
 <persistable org.eclipse.jdt.ui.ClassFileIdentifier="=WifiDB_Uploader/C:\/Users\/ACalcutt\/Downloads\/adt-bundle-windows-x86_64-20130219\/adt-bundle-windows-x86_64-20130219\/sdk\/platforms\/android-14\/android.jar&lt;java.lang(Iterable.class"/>
 </file>
@@ -706,24 +717,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.CommonXmlEditor" name="main.xml" tooltip="WifiDB_Uploader/res/layout/main.xml">
 <persistable path="/WifiDB_Uploader/res/layout/main.xml"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.CommonXmlEditor" name="show_settings_layout.xml" tooltip="WifiDB_Uploader/res/layout/show_settings_layout.xml">
-<persistable path="/WifiDB_Uploader/res/layout/show_settings_layout.xml"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="R.java" tooltip="WifiDB_Uploader/gen/com/eiri/wifidb_uploader/R.java">
-<persistable path="/WifiDB_Uploader/gen/com/eiri/wifidb_uploader/R.java"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.manifest.ManifestEditor" name="AndroidManifest.xml" tooltip="WifiDB_Uploader/AndroidManifest.xml">
-<persistable path="/WifiDB_Uploader/AndroidManifest.xml"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="ShowSettingsActivity.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/ShowSettingsActivity.java">
-<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/ShowSettingsActivity.java"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.CommonXmlEditor" name="arrays.xml" tooltip="WifiDB_Uploader/res/values/arrays.xml">
-<persistable path="/WifiDB_Uploader/res/values/arrays.xml"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.CommonXmlEditor" name="preferences.xml" tooltip="WifiDB_Uploader/res/xml/preferences.xml">
-<persistable path="/WifiDB_Uploader/res/xml/preferences.xml"/>
 </file>
 </mruList>
 </workbench>

@@ -87,13 +87,8 @@ public class ScanService extends Service {
 	
 	@Override
 	public void onDestroy() {
-		Toast.makeText(this, "My Service Stopped", Toast.LENGTH_LONG).show(); 	
-		
-		if(timer != null) {
-			timer.cancel();
-			timer.purge();
-			timer = null;
-		}
+		Toast.makeText(this, "My Service Stopped", Toast.LENGTH_LONG).show();
+		if(receiver != null) unregisterReceiver(receiver);
 	}
 	
 	@Override

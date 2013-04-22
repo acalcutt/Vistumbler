@@ -56,15 +56,14 @@ public class ScanService extends Service {
     { 
         public void run() 
         {
-        	//new Thread(new Runnable() {
-    	        //public void run() {
+        	new Thread(new Runnable() {
+    	        public void run() {
     	        	// Get Prefs
     	        	SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 	    		    String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "https://api.wifidb.net/");
 	    		    String WifiDb_Username = sharedPrefs.getString("wifidb_username", "Anonymous"); 
 	    		    String WifiDb_ApiKey = sharedPrefs.getString("wifidb_upload_api_url", "");     	
-	    		    String WifiDb_SID = "1";
-	    		    
+    	        	
 	    		    // Get Location
     	    		Location location = MyLocation.getLocation(ctx);
     	    	    final Double latitude = location.getLatitude();
@@ -78,22 +77,17 @@ public class ScanService extends Service {
     	    	    	Log.d(TAG, "onReceive() http post");
     	    	    	WifiDB post = new WifiDB();
     	    		    String Label = "";
-    	    	    	post.postLiveData(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey, WifiDb_SID, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
+    	    	    	post.postLiveData(WifiDb_ApiURL, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
     	    	    }
-    	        //}
-  	      	//}).start();
+    	        }
+  	      	}).start();
         }
     }
 	
 	@Override
 	public void onDestroy() {
-		Toast.makeText(this, "My Service Stopped", Toast.LENGTH_LONG).show(); 	
-		
-		if(timer != null) {
-			timer.cancel();
-			timer.purge();
-			timer = null;
-		}
+		Toast.makeText(this, "My Service Stopped", Toast.LENGTH_LONG).show();
+		if(receiver != null) unregisterReceiver(receiver);
 	}
 	
 	@Override

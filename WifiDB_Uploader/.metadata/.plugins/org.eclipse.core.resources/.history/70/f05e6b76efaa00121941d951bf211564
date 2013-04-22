@@ -20,7 +20,7 @@ import android.util.Log;
 public class WifiDB {
 	private static final String TAG = "WiFiDB_POST";
 	
-	public void postLiveData(String sAPIURL, String sSID, String sUsername, String sApiKey, String sSSID, String sBSSID, String capabilities, Integer frequency, Integer level, Double latitude, Double longitude, String Label) {
+	public void postLiveData(String sAPIURL, String sSID, String bSSID, String capabilities, Integer frequency, Integer level, Double latitude, Double longitude, String Label) {
 	    // Create a new HttpClient and Post Header
 	    DefaultHttpClient httpclient = new DefaultHttpClient();
 	    String HTTP_POST_HOST_PATH = sAPIURL + "live.php";
@@ -254,11 +254,8 @@ public class WifiDB {
 	    
 	    // Upload your data, muahahahahaha
         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-        nameValuePairs.add(new BasicNameValuePair("Sid", sSID));
-        nameValuePairs.add(new BasicNameValuePair("Username", sUsername));
-        nameValuePairs.add(new BasicNameValuePair("apikey", sApiKey));
-        nameValuePairs.add(new BasicNameValuePair("SSID", sSSID));
-        nameValuePairs.add(new BasicNameValuePair("Mac", sSSID));
+        nameValuePairs.add(new BasicNameValuePair("SSID", sSID));
+        nameValuePairs.add(new BasicNameValuePair("Mac", bSSID));
         nameValuePairs.add(new BasicNameValuePair("Auth", Found_AUTH));
         nameValuePairs.add(new BasicNameValuePair("Encry", Found_ENCR));
         nameValuePairs.add(new BasicNameValuePair("SecType", Integer.toString(Found_SecType)));
