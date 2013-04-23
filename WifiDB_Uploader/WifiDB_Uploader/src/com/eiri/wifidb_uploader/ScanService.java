@@ -21,6 +21,7 @@ public class ScanService extends Service {
 	private static Timer timer;
 	private Context ctx;
 	static WifiManager wifi;
+	SharedPreferences sharedPrefs;
 	
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -32,6 +33,7 @@ public class ScanService extends Service {
 		super.onCreate();
 		ctx = this; 
 		Toast.makeText(this, "My Service Created", Toast.LENGTH_LONG).show();
+		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
 		Log.d(TAG, "onCreate");   		
 	}
 	
@@ -50,9 +52,7 @@ public class ScanService extends Service {
 		wifi = null;
 						
 		// Stop GpS
-		MyLocation my_location = new MyLocation();
-		my_location.destroy(this, null);			
-		my_location = null;
+		GPS.stop(ctx);
 	}
 	
 	@Override
@@ -62,27 +62,32 @@ public class ScanService extends Service {
 		timer = new Timer();
 		// Setup WiFi
 		wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
-				
+		wifi.startScan();		
 		//Setup GpS
-		MyLocation my_location = new MyLocation();
-		my_location.init(this, null);			
-		wifi.startScan();
-		timer.scheduleAtFixedRate(new mainTask(), 0, 5000);
+		GPS.start(ctx);
+		//Setup Timer
+		Integer RefreshInterval = Integer.parseInt(sharedPrefs.getString("wifidb_upload_interval", "10000"));
+		Log.d(TAG, "RefreshInterval:" + RefreshInterval);
+		timer.scheduleAtFixedRate(new mainTask(), 0, RefreshInterval);
 	}
 	
 	private class mainTask extends TimerTask
     { 
         public void run() 
         {
+        	
+        	//Initiate Wifi Scan
+        	wifi.startScan();
+        	
         	// Get Prefs
-        	SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-        	String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "https://api.wifidb.net/");
+        	String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "http://dev01.wifidb.net/wifidb/api/");
         	String WifiDb_Username = sharedPrefs.getString("wifidb_username", "Anonymous"); 
         	String WifiDb_ApiKey = sharedPrefs.getString("wifidb_upload_api_url", "");     	
         	String WifiDb_SID = "1";
+        	Log.d(TAG, "WifiDb_ApiURL: " + WifiDb_ApiURL + " WifiDb_Username: " + WifiDb_Username + " WifiDb_ApiKey: " + WifiDb_ApiKey + " WifiDb_SID: " + WifiDb_SID);
 	    		    
         	// Get Location
-        	Location location = MyLocation.getLocation(ctx);
+        	Location location = GPS.getLocation(ctx);
         	final Double latitude = location.getLatitude();
         	final Double longitude = location.getLongitude();
         	Integer sats = MyLocation.getGpsStatus(ctx);      	

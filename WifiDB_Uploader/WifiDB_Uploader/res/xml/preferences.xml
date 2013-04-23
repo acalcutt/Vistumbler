@@ -26,7 +26,7 @@
             android:key="wifidb_upload_interval"
             android:title="Upload interval"
             android:summary="Define how often data will be uploaded to the wifidb"
-            android:defaultValue="10000" 
+            android:defaultValue="10000"
             android:entries="@array/uploadInterval"
             android:entryValues="@array/uploadIntervalValues"
         />
@@ -36,6 +36,6 @@
 			android:summary="Define the path to the wifidb api url"
             android:dialogTitle="WifiDB Api URL"
             android:dialogMessage="Provide the Api URL"    
-            android:defaultValue="https://dev01.wifidb.net/wifidb/api/" />
+            android:defaultValue="http://dev01.wifidb.net/wifidb/api/" />
 	</PreferenceCategory>    
 </PreferenceScreen>

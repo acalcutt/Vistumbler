@@ -27,7 +27,6 @@
 <fullyQualifiedTypeName name="java.util.Iterator"/>
 <fullyQualifiedTypeName name="android.location.LocationManager"/>
 <fullyQualifiedTypeName name="android.location.Location"/>
-<fullyQualifiedTypeName name="android.content.Context"/>
 <fullyQualifiedTypeName name="android.location.Criteria"/>
 <fullyQualifiedTypeName name="java.util.List"/>
 <fullyQualifiedTypeName name="android.util.Log"/>
@@ -41,4 +40,6 @@
 <fullyQualifiedTypeName name="android.location.GpsStatus.Listener"/>
 <fullyQualifiedTypeName name="java.util.TimerTask"/>
 <fullyQualifiedTypeName name="java.util.Timer"/>
+<fullyQualifiedTypeName name="android.app.ActivityManager"/>
+<fullyQualifiedTypeName name="android.content.Context"/>
 </qualifiedTypeNameHistroy>

@@ -3,6 +3,6 @@
 
     <string name="app_name">WifiDB Uploader</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
+    <string name="Scan">Scan</string>
 
 </resources>

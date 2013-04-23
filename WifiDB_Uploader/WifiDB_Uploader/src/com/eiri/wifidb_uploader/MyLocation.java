@@ -110,17 +110,8 @@ class MyLocation{
     	if(!gps_enabled){
     		return true;
         }
-    	else if(counts <= 4){
-    		return false;
-        }
-        if(sat_count < min_gps_sat_count){
-        	//if 20-25 sec and 3 satellites found then stop
-        	if(counts >= 40 && sat_count >= 3){
-        		return true;
-            }
-            return false;
-        }
-        return true;
+    	return false;
+
     }
 
     /**

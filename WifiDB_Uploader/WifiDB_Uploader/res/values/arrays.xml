@@ -12,7 +12,7 @@
     <string-array name="uploadIntervalValues">
         <item name="1000">1000</item>
         <item name="5000">5000</item>
-        <item name="5000">10000</item>
+        <item name="10000">10000</item>
         <item name="30000">30000</item>
         <item name="60000">60000</item>
         <item name="300000">300000</item>
