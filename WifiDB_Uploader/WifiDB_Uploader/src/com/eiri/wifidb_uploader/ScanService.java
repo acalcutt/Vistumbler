@@ -80,9 +80,9 @@ public class ScanService extends Service {
         	wifi.startScan();
         	
         	// Get Prefs
-        	String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "http://dev01.wifidb.net/wifidb/api/");
-        	String WifiDb_Username = sharedPrefs.getString("wifidb_username", "Anonymous"); 
-        	String WifiDb_ApiKey = sharedPrefs.getString("wifidb_upload_api_url", "");     	
+        	String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "@string/default_wifidb_upload_api_url");
+        	String WifiDb_Username = sharedPrefs.getString("wifidb_username", "@string/default_wifidb_username"); 
+        	String WifiDb_ApiKey = sharedPrefs.getString("wifidb_upload_apikey", "@string/default_wifidb_upload_apikey");     	
         	String WifiDb_SID = "1";
         	Log.d(TAG, "WifiDb_ApiURL: " + WifiDb_ApiURL + " WifiDb_Username: " + WifiDb_Username + " WifiDb_ApiKey: " + WifiDb_ApiKey + " WifiDb_SID: " + WifiDb_SID);
 	    		    
@@ -90,16 +90,15 @@ public class ScanService extends Service {
         	Location location = GPS.getLocation(ctx);
         	final Double latitude = location.getLatitude();
         	final Double longitude = location.getLongitude();
-        	Integer sats = MyLocation.getGpsStatus(ctx);      	
+        	Integer sats = GPS.getSats(ctx);      	
         	Log.d(TAG, "LAT: " + latitude + "LONG: " + longitude + "SATS: " + sats);
     	    	    
         	// Get Wifi Info
         	List<ScanResult> results = ScanService.wifi.getScanResults();
-        	for (ScanResult result : results) {    	    	    
-            	 	Log.d(TAG, "onReceive() http post");
-                  	WifiDB post = new WifiDB();
-    	    	    String Label = "";
-    	   	    	post.postLiveData(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey, WifiDb_SID, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
+        	for (ScanResult result : results) {  
+        			String Label = "";Log.d(TAG, "onReceive() http post");
+        			Log.d(TAG, "SSID:" + result.SSID + " BSSID:" + result.BSSID + " capabilities:" + result.capabilities + " freq:" + result.frequency + " level:" + result.level);
+            	 	WifiDB.postLiveData(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey, WifiDb_SID, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
      	    }
         }
     }	

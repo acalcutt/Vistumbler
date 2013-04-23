@@ -20,7 +20,7 @@ import android.util.Log;
 public class WifiDB {
 	private static final String TAG = "WiFiDB_POST";
 	
-	public void postLiveData(String sAPIURL, String sSID, String sUsername, String sApiKey, String sSSID, String sBSSID, String capabilities, Integer frequency, Integer level, Double latitude, Double longitude, String Label) {
+	public static void postLiveData(String sAPIURL, String sSID, String sUsername, String sApiKey, String sSSID, String sBSSID, String capabilities, Integer frequency, Integer level, Double latitude, Double longitude, String Label) {
 	    // Create a new HttpClient and Post Header
 	    DefaultHttpClient httpclient = new DefaultHttpClient();
 	    String HTTP_POST_HOST_PATH = sAPIURL + "live.php";

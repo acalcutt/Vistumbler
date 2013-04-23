@@ -14,10 +14,10 @@ import android.util.Log;
 
 public class GPS {
 	private static final String TAG = "GPS";
-    private static final int min_gps_sat_count = 5; //If GPS is enabled,Use minimal connected satellites count.
+    //private static final int min_gps_sat_count = 5; //If GPS is enabled,Use minimal connected satellites count.
 	public static Context context;
     private static LocationManager myLocationManager;
-    private static int sat_count = 0;
+    //private static int sat_count = 0;
     LocationResult locationResult;
     
 	public static void start(Context ctx){
@@ -55,31 +55,33 @@ public class GPS {
     /**
      * GpsStatus listener. OnChainged counts connected satellites count.
      */
+	
     public final static GpsStatus.Listener gpsStatusListener = new GpsStatus.Listener() {
         public void onGpsStatusChanged(int event) {
-
+        	/*
              if(event == GpsStatus.GPS_EVENT_SATELLITE_STATUS){
                 try {
                     // Check number of satellites in list to determine fix state
                      GpsStatus status = myLocationManager.getGpsStatus(null);
                      Iterable<GpsSatellite>satellites = status.getSatellites();
-
                      sat_count = 0;
-
                      Iterator<GpsSatellite>satI = satellites.iterator();
                      while(satI.hasNext()) {
-                         GpsSatellite satellite = satI.next();
-                         Log.d(TAG, "Satellite: snr=" + satellite.getSnr() + ", elevation=" + satellite.getElevation());                       
+                         //GpsSatellite satellite = satI.next();
+                         //Log.d(TAG, "Satellite: snr=" + satellite.getSnr() + ", elevation=" + satellite.getElevation());                       
+                         satI.next();
                          sat_count++;
                      }
                 } catch (Exception e) {
                     e.printStackTrace();
                     sat_count = min_gps_sat_count + 1;
                 }
-                Log.d(TAG, "#### sat_count = " + sat_count);
+                //Log.d(TAG, "#### sat_count = " + sat_count);
              }
+             */
          }
     };
+    
     
     public static Location getLocation(Context context){
     	Log.d(TAG, "getLocation()");
@@ -107,24 +109,22 @@ public class GPS {
         }
     }
     
-    public static Integer getGpsStatus(Context context){
+    public static Integer getSats(Context context){
     	Log.d(TAG, "getGpsStatus()");
     	myLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         // fetch last known location and update it
         try {
              GpsStatus status = myLocationManager.getGpsStatus(null);
              Iterable<GpsSatellite>satellites = status.getSatellites();
-             
-             Log.d(TAG, satellites.toString());
-
+             //Log.d(TAG, satellites.toString());
              int sats = 0;
-
              Iterator<GpsSatellite>satI = satellites.iterator();
-             Log.d(TAG, satI.toString());
+             //Log.d(TAG, satI.toString());
              while(satI.hasNext()) {
-                 GpsSatellite satellite = satI.next();
-                 Log.d(TAG, "Satellite: snr=" + satellite.getSnr() + ", elevation=" + satellite.getElevation());                       
-                 sats++;
+                 //GpsSatellite satellite = satI.next();
+                 //Log.d(TAG, "Satellite: snr=" + satellite.getSnr() + ", elevation=" + satellite.getElevation());                       
+            	 satI.next();
+            	 sats++;
              }
              return sats;
         } catch (Exception e) {
@@ -133,7 +133,6 @@ public class GPS {
         }
     }
     
-
     /**
      * Gps location listener.
      */

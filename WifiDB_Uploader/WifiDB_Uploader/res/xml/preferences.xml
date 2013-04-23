@@ -10,14 +10,14 @@
 			android:summary="Define the wifidb user to use when uploading data"
             android:dialogTitle="WifiDB Username"
             android:dialogMessage="Provide a username"    
-            android:defaultValue="Anonymous" />
+            android:defaultValue="@string/default_wifidb_username" />
         <EditTextPreference
 			android:key="wifidb_apikey"
 			android:title="WifiDB Api Key" 
 			android:summary="Define the wifidb api key for the specified user"
             android:dialogTitle="WifiDB Api Key"
             android:dialogMessage="Provide a Api Key"    
-            android:defaultValue="" />
+            android:defaultValue="@string/default_wifidb_upload_apikey" />
     </PreferenceCategory>
     <PreferenceCategory 
         android:title="Upload Preferences"
@@ -36,6 +36,6 @@
 			android:summary="Define the path to the wifidb api url"
             android:dialogTitle="WifiDB Api URL"
             android:dialogMessage="Provide the Api URL"    
-            android:defaultValue="http://dev01.wifidb.net/wifidb/api/" />
+            android:defaultValue="@string/default_wifidb_upload_api_url" />
 	</PreferenceCategory>    
 </PreferenceScreen>
