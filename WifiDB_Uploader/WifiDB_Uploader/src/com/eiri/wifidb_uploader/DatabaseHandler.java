@@ -68,7 +68,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         		+ "GpsID REAL,"
                 + "Signal INTEGER," 
                 + "RSSI REAL," 
-                + "DateTime TEXT"
+                + "DateTime TEXT,"
+                + "UploadCode INTEGER"
                 + ")";
         db.execSQL(CREATE_HIST_TABLE);
         
@@ -343,37 +344,38 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         sql = "SELECT ApID, HighGpsID, FirstGpsID, LastGpsID, Active, SECTYPE, HighSignal, HighRSSI FROM AP WHERE BSSID='" + BSSID + "' And SSID='" + SSID + "' And CHAN=" + chan + " And AUTH='" + Found_AUTH + "' And ENCR='" + Found_ENCR + "' And RADTYPE='" + radio + "' limit 1";
         Cursor data = db.rawQuery(sql, null);
         if (data.moveToFirst()) {
-        	String Found_ApID = data.getString(data.getColumnIndex("ApID"));
-        	String Found_HighGpsID = data.getString(data.getColumnIndex("HighGpsID"));
-        	String Found_FirstGpsID = data.getString(data.getColumnIndex("FirstGpsID"));
-        	String Found_LastGpsID = data.getString(data.getColumnIndex("LastGpsID"));
-        	String Found_Active = data.getString(data.getColumnIndex("Active"));
-        	String Found_SECTYPE = data.getString(data.getColumnIndex("SECTYPE"));
+        	long Found_ApID = data.getLong(data.getColumnIndex("ApID"));
+        	//long Found_HighGpsID = data.getLong(data.getColumnIndex("HighGpsID"));
+        	long Found_FirstGpsID = data.getLong(data.getColumnIndex("FirstGpsID"));
+        	long Found_LastGpsID = data.getLong(data.getColumnIndex("LastGpsID"));
+        	//Integer Found_Active = data.getInt(data.getColumnIndex("Active"));
+        	//Integer Found_SECTYPE = data.getInt(data.getColumnIndex("SECTYPE"));
         	Integer Found_HighSignal = Integer.parseInt(data.getString(data.getColumnIndex("HighSignal")));
         	Integer Found_HighRSSI = Integer.parseInt(data.getString(data.getColumnIndex("HighRSSI")));
-
+        	apid = Found_ApID;
+        	
         	sql = "select GpsID, DateTime from Hist WHERE ApID=" + Found_ApID + " And DateTime>'" + DateTime + "' ORDER BY DateTime DESC LIMIT 1";
         	Cursor lgiddata = db.rawQuery(sql, null);
-        	String ExpLastGpsID;
-			String ExpLastDateTime;
+        	long ExpLastGpsID;
+			//String ExpLastDateTime;
 			if (lgiddata.moveToFirst()) {
-				ExpLastGpsID = lgiddata.getString(lgiddata.getColumnIndex("GpsID"));
-				ExpLastDateTime = lgiddata.getString(lgiddata.getColumnIndex("DateTime"));
+				ExpLastGpsID = lgiddata.getInt(lgiddata.getColumnIndex("GpsID"));
+				//ExpLastDateTime = lgiddata.getString(lgiddata.getColumnIndex("DateTime"));
         	} else {
-				ExpLastGpsID = new Long(GpsID).toString();
-				ExpLastDateTime = DateTime;
+				ExpLastGpsID = GpsID;
+				//ExpLastDateTime = DateTime;
         	}
 			
         	sql = "select GpsID, DateTime from Hist WHERE ApID=" + Found_ApID + " And DateTime<'" + DateTime + "' ORDER BY DateTime ASC LIMIT 1";
         	Cursor fgiddata = db.rawQuery(sql, null);
-        	String ExpFirstGpsID;
-			String ExpFirstDateTime;
+        	long ExpFirstGpsID;
+			//String ExpFirstDateTime;
 			if (fgiddata.moveToFirst()) {
-				ExpFirstGpsID = fgiddata.getString(fgiddata.getColumnIndex("GpsID"));
-				ExpFirstDateTime = fgiddata.getString(fgiddata.getColumnIndex("DateTime"));
+				ExpFirstGpsID = fgiddata.getInt(fgiddata.getColumnIndex("GpsID"));
+				//ExpFirstDateTime = fgiddata.getString(fgiddata.getColumnIndex("DateTime"));
         	} else {
-        		ExpFirstGpsID = new Long(GpsID).toString();
-        		ExpFirstDateTime = DateTime;
+        		ExpFirstGpsID = GpsID;
+        		//ExpFirstDateTime = DateTime;
         	}
 			
 			if (ExpLastGpsID!=Found_LastGpsID){
@@ -400,15 +402,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 				sql = "UPDATE AP SET HighRSSI=" + level + " WHERE ApID=" + Found_ApID;
 				db.execSQL(sql);
 			}
-
-        	ContentValues values1 = new ContentValues();
-        	values1.put("ApID", Found_ApID);
-        	values1.put("GpsID", GpsID);
-        	values1.put("Signal", Found_Signal);
-        	values1.put("RSSI", level);
-        	values1.put("DateTime", DateTime);
-            db.insert("HIST", null, values1);
-			
         } else {
         	
             ContentValues values = new ContentValues();
@@ -439,15 +432,84 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             values.put("Admin2Name", "");
             apid = db.insert("AP", null, values);
             
-        	ContentValues values1 = new ContentValues();
-        	values1.put("ApID", apid);
-        	values1.put("GpsID", GpsID);
-        	values1.put("Signal", Found_Signal);
-        	values1.put("RSSI", level);
-        	values1.put("DateTime", DateTime);
-            db.insert("HIST", null, values1);
+            
         }
         db.close(); // Closing database connection
 		return apid;
+    }
+
+    long addHist(long ApID, long GpsID, Integer RSSI, String DateTime) {
+    	long histid = -1;
+	    int dBmMaxSignal = -30;
+	    int dBmDissociationSignal = -85;
+	    int Signal = Math.round(100 - 80 * (dBmMaxSignal - RSSI) / (dBmMaxSignal - dBmDissociationSignal));
+	    if (Signal < 0) Signal = 0;   	
+    	
+    	SQLiteDatabase db = this.getWritableDatabase();
+        String sql = "SELECT HistID FROM Hist WHERE ApID=" + ApID + " And GpsID=" + GpsID + " And Signal=" + Signal + " And RSSI=" + RSSI + " And DateTime='" + DateTime + "' LIMIT 1";
+        Cursor data = db.rawQuery(sql, null);
+        if (data.moveToFirst()) { 	    	
+        	histid = Long.parseLong(data.getString(data.getColumnIndex("HistID")));
+        }else{
+        	ContentValues values = new ContentValues();
+        	values.put("ApID", ApID);
+        	values.put("GpsID", GpsID);
+        	values.put("Signal", Signal);
+        	values.put("RSSI", RSSI);
+        	values.put("DateTime", DateTime);
+        	values.put("UploadCode", 0);
+            histid = db.insert("HIST", null, values);
+        }
+        db.close();
+        return histid;
+    }
+    
+    int UploadToWifiDB(String WifiDbApiURL, String WifiDbApiUser, String WifiDbApiPass) {
+    	int uploaded = 0;
+    	
+    	
+    	SQLiteDatabase db = this.getWritableDatabase();
+        String sql = "SELECT GpsID, ApID, Signal, RSSI FROM Hist WHERE UploadCode=0 LIMIT 1";
+        Cursor data = db.rawQuery(sql, null);
+        while (data.moveToNext()) {
+        	long Found_GpsID = data.getLong(data.getColumnIndex("GpsID"));
+        	long Found_ApID = data.getLong(data.getColumnIndex("ApID"));
+        	Integer Found_Signal = data.getInt(data.getColumnIndex("Signal"));
+        	Integer Found_RSSI = data.getInt(data.getColumnIndex("RSSI"));
+            String gpssql = "SELECT Latitude, Longitude, NumOfSats, Alt, Speed, TrackAngle, DateTime FROM GPS WHERE GpsID=" + Found_GpsID + " LIMIT 1";
+            Cursor gpsdata = db.rawQuery(gpssql, null);
+            if (gpsdata.moveToFirst()) {
+            	
+            	Double Found_Latitude = gpsdata.getDouble(gpsdata.getColumnIndex("Latitude"));
+            	Double Found_Longitude = gpsdata.getDouble(gpsdata.getColumnIndex("Longitude"));
+            	Integer Found_NumOfSats = gpsdata.getInt(gpsdata.getColumnIndex("NumOfSats"));
+            	Double Found_Alt = gpsdata.getDouble(gpsdata.getColumnIndex("Alt"));
+            	float Found_Speed = gpsdata.getFloat(gpsdata.getColumnIndex("Speed"));
+            	float Found_TrackAngle = gpsdata.getFloat(gpsdata.getColumnIndex("TrackAngle"));
+            	String Found_DateTime = gpsdata.getString(gpsdata.getColumnIndex("DateTime"));
+            	
+                String apsql = "SELECT BSSID, SSID, CHAN, AUTH, ENCR, SECTYPE, NETTYPE, RADTYPE, LABEL FROM AP WHERE ApID=" + Found_ApID + " LIMIT 1";
+                Cursor apdata = db.rawQuery(apsql, null);
+                
+                if (apdata.moveToFirst()) { 
+                	String Found_BSSID = apdata.getString(apdata.getColumnIndex("BSSID"));
+                	String Found_SSID = apdata.getString(apdata.getColumnIndex("SSID"));
+                	Integer Found_CHAN = apdata.getInt(apdata.getColumnIndex("CHAN"));
+                	String Found_AUTH = apdata.getString(apdata.getColumnIndex("AUTH"));
+                	String Found_ENCR = apdata.getString(apdata.getColumnIndex("ENCR"));
+                	Integer Found_SECTYPE = apdata.getInt(apdata.getColumnIndex("SECTYPE"));
+                	String Found_NETTYPE = apdata.getString(apdata.getColumnIndex("NETTYPE"));
+                	String Found_RADTYPE = apdata.getString(apdata.getColumnIndex("RADTYPE"));
+                	String Found_LABEL = apdata.getString(apdata.getColumnIndex("LABEL"));
+                	
+                	WifiDB.postLiveData(WifiDbApiURL, WifiDbApiUser, WifiDbApiPass, Found_SSID, Found_BSSID, Found_RADTYPE, Found_AUTH, Found_ENCR, Found_LABEL, Found_NETTYPE, Found_LABEL, Found_SECTYPE, Found_CHAN, Found_Signal, Found_RSSI, Found_Latitude, Found_Longitude, Found_NumOfSats, Found_Alt, Found_Speed, Found_TrackAngle, Found_DateTime);
+                	
+                	sql = "UPDATE Hist SET UploadCode=1";
+    				db.execSQL(sql);
+                }
+            }
+        }
+        db.close();
+		return uploaded;
     }
 }

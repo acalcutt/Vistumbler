@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -20,255 +21,69 @@ import android.util.Log;
 public class WifiDB {
 	private static final String TAG = "WiFiDB_POST";
 	
-	public static void postLiveData(String sAPIURL, String sSID, String sUsername, String sApiKey, String sSSID, String sBSSID, String capabilities, Integer frequency, Integer level, Double latitude, Double longitude, String Label) {
+	public static void postLiveData(String sAPIURL, 
+									String sSID, 
+									String sUsername, 
+									String sApiKey, 
+									String sSSID, 
+									String sBSSID, 
+									String sRADIO, 
+									String sAUTH, 
+									String sENCR, 
+									String Label, 
+									String sNetType, 
+									Integer iSecType, 
+									Integer iCHAN, 
+									Integer iSignal, 
+									Integer iRSSI, 
+									Double dLat, 
+									Double dLon,
+									Integer dSats,
+									Double dAlt,
+									float fSpeed,
+									float fTrack,
+									String sDataTime) {
+		//Get Date and Time
+		StringTokenizer tk = new StringTokenizer(sDataTime);
+		String date = tk.nextToken();  // <---  yyyy-mm-dd
+		String time = tk.nextToken();  // <---  hh:mm:ss.SSS
+		//Get Speeds 
+		int iSpeedKMH=(int) ((fSpeed*3600)/1000);
+		int iSpeedMPH=(int) (fSpeed*2.2369);
+		
 	    // Create a new HttpClient and Post Header
 	    DefaultHttpClient httpclient = new DefaultHttpClient();
 	    String HTTP_POST_HOST_PATH = sAPIURL + "live.php";
 	    //String HTTP_POST_HOST_PATH = "http://dev01.wifidb.net/wifidb/api/live.php";
 	    HttpPost httppost = new HttpPost(HTTP_POST_HOST_PATH);
-	    String Found_AUTH = "";
-	    String Found_ENCR = "";
-	    Integer Found_SecType = 0;
-        Integer chan = 0;
-        String radio = "";
-	    String nt = "";
-	    //convert to vs1/wifidb data
-	    if(capabilities.contains("WPA2-PSK-CCMP") || capabilities.contains("WPA2-PSK-TKIP+CCMP"))
-        {	
-	    	Found_AUTH = "WPA2-Personal";
-            Found_ENCR = "CCMP";
-            Found_SecType = 3;
-        }else if(capabilities.contains("WPA-PSK-CCMP") || capabilities.contains("WPA-PSK-TKIP+CCMP"))
-        {	
-        	Found_AUTH = "WPA-Personal";
-            Found_ENCR = "CCMP";
-            Found_SecType = 3;
-        }else if(capabilities.contains("WPA2-EAP-CCMP") || capabilities.contains("WPA2-EAP-TKIP+CCMP"))
-        {	
-        	Found_AUTH = "WPA2-Enterprise";
-            Found_ENCR = "CCMP";
-            Found_SecType = 3;
-        }else if(capabilities.contains("WPA-EAP-CCMP") || capabilities.contains("WPA-EAP-TKIP+CCMP"))
-        {
-        	Found_AUTH = "WPA-Enterprise";
-            Found_ENCR = "CCMP";
-            Found_SecType = 3;
-        }else if(capabilities.contains("WPA2-PSK-TKIP"))
-        {	
-        	Found_AUTH = "WPA2-Personal";
-            Found_ENCR = "TKIP";
-            Found_SecType = 3;
-        }else if(capabilities.contains("WPA-PSK-TKIP"))
-        {	
-        	Found_AUTH = "WPA-Personal";
-            Found_ENCR = "TKIP";
-            Found_SecType = 3;
-        }else if(capabilities.contains("WPA2-EAP-TKIP"))
-        {	
-        	Found_AUTH = "WPA2-Enterprise";
-            Found_ENCR = "TKIP";
-            Found_SecType = 3;
-        }else if(capabilities.contains("WPA-EAP-TKIP"))
-        {	
-        	Found_AUTH = "WPA-Enterprise";
-            Found_ENCR = "TKIP";
-            Found_SecType = 3;
-        }else if(capabilities.contains("WEP"))
-        {	
-        	Found_AUTH = "Open";
-            Found_ENCR = "WEP";
-            Found_SecType = 2;
-        }else
-        {	
-        	Found_AUTH = "Open";
-            Found_ENCR = "None";
-            Found_SecType = 1;
-        }
-        if(capabilities.contains("IBSS"))
-        {
-            nt = "Ad-Hoc";
-        }else
-        {
-            nt = "Infrastructure";
-        }
-        
-        switch(frequency)
-        {
-            case 2412:
-                chan = 1;
-                radio = "802.11g";
-            break;
-            case 2417:
-                chan = 2;
-                radio = "802.11g";
-            break;
-            case 2422:
-                chan = 3;
-                radio = "802.11g";
-            break;
-            case 2427:
-                chan = 4;
-                radio = "802.11g";
-            break;
-            case 2432:
-                chan = 5;
-                radio = "802.11g";
-            break;
-            case 2437:
-                chan = 6;
-                radio = "802.11g";
-            break;
-            case 2442:
-                chan = 7;
-                radio = "802.11g";
-            break;
-            case 2447:
-                chan = 8;
-                radio = "802.11g";
-            break;
-            case 2452:
-                chan = 9;
-                radio = "802.11g";
-            break;
-            case 2457:
-                chan = 10;
-                radio = "802.11g";
-            break;
-            case 2462:
-                chan = 11;
-                radio = "802.11g";
-            break;
-            case 2467:
-                chan = 12;
-                radio = "802.11g";
-            break;
-            case 2472:
-                chan = 13;
-                radio = "802.11g";
-            break;
-            case 2484:
-                chan = 14;
-                radio = "802.11g";
-            break;
-            case 5180:
-            	chan = 36;
-            	radio = "802.11n";
-        	break;
-            case 5200:
-            	chan = 40;
-            	radio = "802.11n";
-        	break;
-            case 5220:
-            	chan = 44;
-            	radio = "802.11n";
-        	break;
-            case 5240:
-            	chan = 48;
-            	radio = "802.11n";
-        	break;
-            case 5260:
-            	chan = 52;
-            	radio = "802.11n";
-        	break;
-            case 5280:
-            	chan = 56;
-            	radio = "802.11n";
-        	break;
-            case 5300:
-            	chan = 60;
-            	radio = "802.11n";
-        	break;
-            case 5320:
-            	chan = 64;
-            	radio = "802.11n";
-        	break;
-            case 5500:
-            	chan = 100;
-            	radio = "802.11n";
-        	break;
-            case 5520:
-            	chan = 104;
-            	radio = "802.11n";
-        	break;
-            case 5540:
-            	chan = 108;
-            	radio = "802.11n";
-        	break;
-            case 5560:
-            	chan = 112;
-            	radio = "802.11n";
-        	break;
-            case 5580:
-            	chan = 116;
-            	radio = "802.11n";
-        	break;
-            case 5600:
-            	chan = 120;
-            	radio = "802.11n";
-        	break;
-            case 5620:
-            	chan = 124;
-            	radio = "802.11n";
-        	break;
-            case 5640:
-            	chan = 128;
-            	radio = "802.11n";
-        	break;
-            case 5660:
-            	chan = 132;
-            	radio = "802.11n";
-        	break;
-            case 5680:
-            	chan = 136;
-            	radio = "802.11n";
-        	break;
-            case 5700:
-            	chan = 140;
-            	radio = "802.11n";
-        	break;
-            case 5745:
-            	chan = 149;
-            	radio = "802.11n";
-        	break;
-            case 5765:
-            	chan = 153;
-            	radio = "802.11n";
-        	break;
-            case 5785:
-            	chan = 157;
-            	radio = "802.11n";
-        	break;
-            case 5805:
-            	chan = 161;
-            	radio = "802.11n";
-        	break;
-            case 5825:
-            	chan = 165;
-            	radio = "802.11n";
-        	break;
-            default:
-                chan = 6;
-                radio = "802.11g";
-            break;
-        }
-	    
 	    // Upload your data, muahahahahaha
         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
         nameValuePairs.add(new BasicNameValuePair("Sid", sSID));
         nameValuePairs.add(new BasicNameValuePair("Username", sUsername));
         nameValuePairs.add(new BasicNameValuePair("apikey", sApiKey));
+        
         nameValuePairs.add(new BasicNameValuePair("SSID", sSSID));
-        nameValuePairs.add(new BasicNameValuePair("Mac", sSSID));
-        nameValuePairs.add(new BasicNameValuePair("Auth", Found_AUTH));
-        nameValuePairs.add(new BasicNameValuePair("Encry", Found_ENCR));
-        nameValuePairs.add(new BasicNameValuePair("SecType", Integer.toString(Found_SecType)));
-        nameValuePairs.add(new BasicNameValuePair("Chan", Integer.toString(chan)));
-        nameValuePairs.add(new BasicNameValuePair("Radio", radio));
-        nameValuePairs.add(new BasicNameValuePair("NT", nt));
-        nameValuePairs.add(new BasicNameValuePair("Sig", Integer.toString(level)));
-        nameValuePairs.add(new BasicNameValuePair("Lat", Double.toString(latitude)));
-        nameValuePairs.add(new BasicNameValuePair("Long", Double.toString(longitude)));
+        nameValuePairs.add(new BasicNameValuePair("Mac", sBSSID));
+        nameValuePairs.add(new BasicNameValuePair("Rad", sRADIO));
+        nameValuePairs.add(new BasicNameValuePair("Auth", sAUTH));
+        nameValuePairs.add(new BasicNameValuePair("Encry", sENCR));
         nameValuePairs.add(new BasicNameValuePair("Label", Label));
+        nameValuePairs.add(new BasicNameValuePair("NT", sNetType));
+        nameValuePairs.add(new BasicNameValuePair("SecType", Integer.toString(iSecType)));
+        nameValuePairs.add(new BasicNameValuePair("Chn", Integer.toString(iCHAN)));
+        nameValuePairs.add(new BasicNameValuePair("Sig", Integer.toString(iSignal)));
+        nameValuePairs.add(new BasicNameValuePair("RSSI", Integer.toString(iRSSI)));
+        
+        nameValuePairs.add(new BasicNameValuePair("Lat", Double.toString(dLat)));
+        nameValuePairs.add(new BasicNameValuePair("Long", Double.toString(dLon)));
+        nameValuePairs.add(new BasicNameValuePair("Sats", Integer.toString(dSats)));
+        nameValuePairs.add(new BasicNameValuePair("ALT", Double.toString(dAlt)));
+        nameValuePairs.add(new BasicNameValuePair("KMH", Integer.toString(iSpeedKMH)));
+        nameValuePairs.add(new BasicNameValuePair("MPH", Integer.toString(iSpeedMPH)));
+        nameValuePairs.add(new BasicNameValuePair("Track", Float.toString(fTrack)));
+        nameValuePairs.add(new BasicNameValuePair("Date", date));
+        nameValuePairs.add(new BasicNameValuePair("Time", time));
+        
         
         try {
         	Log.d(TAG, "HTTP POST TO: " + HTTP_POST_HOST_PATH);

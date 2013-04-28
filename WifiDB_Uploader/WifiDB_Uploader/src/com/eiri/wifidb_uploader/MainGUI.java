@@ -14,9 +14,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.Messenger;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -33,28 +30,7 @@ public class MainGUI extends Activity implements OnClickListener {
 	TextView textStatus;
 	Button buttonScan;
 	static GoogleMap map;
-	final Messenger mMessenger = new Messenger(new IncomingHandler());
-	
-	class IncomingHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-        	Log.d(TAG, "handleMessage");
-            switch (msg.what) {
-            case ScanService.MSG_SET_MAP_POSITION:
-            	Log.d(TAG, "MSG_SET_MAP_POSITION");
-            	UpdateMapLocation((LatLng) msg.obj);
-                break;
-            case ScanService.MSG_SET_MAP_ZOOM_LEVEL:
-            	Log.d(TAG, "MSG_SET_MAP_ZOOM_LEVEL");
-            	UpdateMapZoomLevel(msg.arg1);
-                break;
-            default:
-                super.handleMessage(msg);
-            }
-        }
-    }	
-	
-	
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {

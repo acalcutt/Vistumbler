@@ -3,10 +3,9 @@ package com.eiri.wifidb_uploader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
-
-import com.google.android.gms.maps.model.LatLng;
 
 import android.app.Service;
 import android.content.Context;
@@ -17,7 +16,6 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -76,27 +74,38 @@ public class ScanService extends Service {
 		//Setup Timer
 		Integer RefreshInterval = Integer.parseInt(sharedPrefs.getString("wifidb_upload_interval", "10000"));
 		Log.d(TAG, "RefreshInterval:" + RefreshInterval);
-		timer.scheduleAtFixedRate(new mainTask(), 0, RefreshInterval);
+		timer.scheduleAtFixedRate(new ScanTask(), 0, RefreshInterval);
+		timer.scheduleAtFixedRate(new UploadTask(), 0, RefreshInterval);
 	}
 	
-	private class mainTask extends TimerTask
+	private class UploadTask extends TimerTask
     { 
         public void run() 
         {
-        	//Get Current Time
-        	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-        	String currentDateandTime = sdf.format(new Date());
-        	
-        	//Initiate Wifi Scan
-        	wifi.startScan();
-        	
         	// Get Prefs
         	String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "@string/default_wifidb_upload_api_url");
         	String WifiDb_Username = sharedPrefs.getString("wifidb_username", "@string/default_wifidb_username"); 
         	String WifiDb_ApiKey = sharedPrefs.getString("wifidb_upload_apikey", "@string/default_wifidb_upload_apikey");     	
         	String WifiDb_SID = "1";
         	Log.d(TAG, "WifiDb_ApiURL: " + WifiDb_ApiURL + " WifiDb_Username: " + WifiDb_Username + " WifiDb_ApiKey: " + WifiDb_ApiKey + " WifiDb_SID: " + WifiDb_SID);
-	    		    
+	    		       	
+        	// Upload APs
+        	DatabaseHandler db = new DatabaseHandler(ctx);
+        	db.UploadToWifiDB(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey);
+        }
+    }    
+	
+	private class ScanTask extends TimerTask
+    { 
+        public void run() 
+        {
+        	//Get Current Time
+        	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
+        	String currentDateandTime = sdf.format(new Date());
+        	
+        	//Initiate Wifi Scan
+        	wifi.startScan();
+
         	// Get Location
         	Location location = GPS.getLocation(ctx);
         	final Double latitude = location.getLatitude();
@@ -110,14 +119,14 @@ public class ScanService extends Service {
         	
         	Integer sats = GPS.getSats(ctx);
         	Log.d(TAG, "LAT: " + latitude.toString()
-        			+ "LONG: " + longitude.toString()
-        			+ "Accuracy: " + Accuracy
-        			+ "Altitude: " + Altitude
-        			+ "Bearing: " + Bearing 
-        			+ "Extras" + Extras.toString()
-        			+ "Provider: " + Provider 
-        			+ "Speed: " + Speed 
-        			+ "sats: " + sats);
+        			+ " LONG: " + longitude.toString()
+        			+ " Accuracy: " + Accuracy
+        			+ " Altitude: " + Altitude
+        			+ " Bearing: " + Bearing 
+        			+ " Extras" + Extras.toString()
+        			+ " Provider: " + Provider 
+        			+ " Speed: " + Speed 
+        			+ " sats: " + sats);
         	
         	DatabaseHandler db = new DatabaseHandler(ctx);
         	long GpsID = db.addGPS(latitude, longitude, sats, Accuracy, Altitude, Speed, Bearing, currentDateandTime);     	
@@ -125,12 +134,16 @@ public class ScanService extends Service {
         	// Get Wifi Info
         	List<ScanResult> results = ScanService.wifi.getScanResults();
         	for (ScanResult result : results) {  
-        		db.addAP(GpsID, result.BSSID, result.SSID, result.frequency, result.capabilities, result.level, currentDateandTime);
-        		
-        		
-        			String Label = "";Log.d(TAG, "onReceive() http post");
-        			Log.d(TAG, "SSID:" + result.SSID + " BSSID:" + result.BSSID + " capabilities:" + result.capabilities + " freq:" + result.frequency + " level:" + result.level);
-            	 	//WifiDB.postLiveData(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey, WifiDb_SID, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
+        		long ApID = db.addAP(GpsID, result.BSSID, result.SSID, result.frequency, result.capabilities, result.level, currentDateandTime);
+        		long HistID = db.addHist(ApID, GpsID, result.level, currentDateandTime);
+        		Log.d(TAG, "GpsID:" + GpsID
+        					+ " HistID:" + HistID
+        					+ " ApID:" + ApID 
+        					+ " SSID:" + result.SSID
+        					+ " BSSID:" + result.BSSID 
+        					+ " capabilities:" + result.capabilities
+        					+ " freq:" + result.frequency 
+        					+ " level:" + result.level);
      	    }
         }
     }	
