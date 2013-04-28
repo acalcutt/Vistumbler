@@ -1,0 +1,100 @@
+package com.eiri.wifidb_uploader;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+public class DatabaseHandler extends SQLiteOpenHelper {
+    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "WifiDB_Uploader";
+
+ 
+    public DatabaseHandler(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+ 
+    // Creating Tables
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        String CREATE_GPS_TABLE = "CREATE TABLE GPS(" 
+        		+ "GPSID INTEGER PRIMARY KEY,"
+        		+ "Latitude REAL,"
+        		+ "Longitude REAL,"
+                + "NumOfSats INTEGER," 
+                + "Alt REAL," 
+                + "Speed REAL," 
+                + "TrackAngle REAL," 
+                + "DateTime TEXT"
+                + ")";
+        db.execSQL(CREATE_GPS_TABLE); 
+        
+        String CREATE_AP_TABLE = "CREATE TABLE AP(" 
+        		+ "ApID INTEGER PRIMARY KEY,"
+        		+ "BSSID TEXT,"
+        		+ "SSID TEXT,"
+                + "CHAN INTEGER," 
+                + "AUTH TEXT," 
+                + "ENCR TEXT," 
+                + "SECTYPE TEXT," 
+                + "NETTYPE TEXT," 
+                + "RADTYPE TEXT," 
+                + "BTX TEXT," 
+                + "OTX TEXT,"
+                + "HighGpsHistId INTEGER,"
+                + "LastGpsID INTEGER,"
+                + "MANU TEXT,"
+                + "LABEL TEXT,"
+                + "Signal INTEGER,"
+                + "HighSignal INTEGER,"
+                + "RSSI INTEGER,"
+                + "HighRSSI INTEGER,"
+                + "CountryCode TEXT,"
+                + "CountryName TEXT,"
+                + "AdminCode TEXT,"
+                + "AdminName TEXT,"
+                + "Admin2Name TEXT"
+                + ")";
+        db.execSQL(CREATE_AP_TABLE);
+        
+        String CREATE_HIST_TABLE = "CREATE TABLE HIST(" 
+        		+ "HistID INTEGER PRIMARY KEY,"
+        		+ "ApID REAL,"
+        		+ "GpsID REAL,"
+                + "Signal INTEGER," 
+                + "RSSI REAL," 
+                + "DateTime TEXT"
+                + ")";
+        db.execSQL(CREATE_HIST_TABLE);
+        
+    }
+ 
+    // Upgrading database
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // Drop older table if existed
+        db.execSQL("DROP TABLE IF EXISTS GPS");
+        db.execSQL("DROP TABLE IF EXISTS AP");
+        db.execSQL("DROP TABLE IF EXISTS HIST");
+ 
+        // Create tables again
+        onCreate(db);
+    }
+
+    void addAP(Double Latitude, Double Longitude, Integer NumOfSats, double Alt, float Speed, float TrackAngle, String DateTime) {
+        SQLiteDatabase db = this.getWritableDatabase();         
+ 
+        ContentValues values = new ContentValues();
+        values.put("Latitude", Latitude); // Contact Name
+        values.put("Longitude", Longitude); // Contact Phone
+        values.put("NumOfSats", NumOfSats); // Contact Name
+        values.put("Alt", Alt); // Contact Phone
+        values.put("Speed", Speed); // Contact Name
+        values.put("TrackAngle", TrackAngle); // Contact Phone
+        values.put("DateTime", DateTime); // Contact Phone
+        
+        // Inserting Row
+        db.insert("GPS", null, values);
+        db.close(); // Closing database connection
+    }
+}

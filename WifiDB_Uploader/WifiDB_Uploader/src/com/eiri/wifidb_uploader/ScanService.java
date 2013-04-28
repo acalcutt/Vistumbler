@@ -1,8 +1,12 @@
 package com.eiri.wifidb_uploader;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import com.google.android.gms.maps.model.LatLng;
 
 import android.app.Service;
 import android.content.Context;
@@ -11,13 +15,17 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
 public class ScanService extends Service {
 	private static final String TAG = "WiFiDB_ScanService";
+	public static final int MSG_SET_MAP_POSITION = 1;
+	public static final int MSG_SET_MAP_ZOOM_LEVEL = 2;
 	private static Timer timer;
 	private Context ctx;
 	static WifiManager wifi;
@@ -75,6 +83,9 @@ public class ScanService extends Service {
     { 
         public void run() 
         {
+        	//Get Current Time
+        	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+        	String currentDateandTime = sdf.format(new Date());
         	
         	//Initiate Wifi Scan
         	wifi.startScan();
@@ -90,15 +101,36 @@ public class ScanService extends Service {
         	Location location = GPS.getLocation(ctx);
         	final Double latitude = location.getLatitude();
         	final Double longitude = location.getLongitude();
-        	Integer sats = GPS.getSats(ctx);      	
-        	Log.d(TAG, "LAT: " + latitude + "LONG: " + longitude + "SATS: " + sats);
-    	    	    
+        	final float Accuracy = location.getAccuracy();
+        	final double Altitude = location.getAltitude();
+        	final float Bearing = location.getBearing();
+        	final Bundle Extras = location.getExtras();
+        	final String Provider = location.getProvider();
+        	final float Speed = location.getSpeed();
+        	
+        	Integer sats = GPS.getSats(ctx);
+        	Log.d(TAG, "LAT: " + latitude.toString()
+        			+ "LONG: " + longitude.toString()
+        			+ "Accuracy: " + Accuracy
+        			+ "Altitude: " + Altitude
+        			+ "Bearing: " + Bearing 
+        			+ "Extras" + Extras.toString()
+        			+ "Provider: " + Provider 
+        			+ "Speed: " + Speed 
+        			+ "sats: " + sats);
+        	
+        	DatabaseHandler db = new DatabaseHandler(ctx);
+        	long GpsID = db.addGPS(latitude, longitude, sats, Accuracy, Altitude, Speed, Bearing, currentDateandTime);     	
+
         	// Get Wifi Info
         	List<ScanResult> results = ScanService.wifi.getScanResults();
         	for (ScanResult result : results) {  
+        		db.addAP(GpsID, result.BSSID, result.SSID, result.frequency, result.capabilities, result.level, currentDateandTime);
+        		
+        		
         			String Label = "";Log.d(TAG, "onReceive() http post");
         			Log.d(TAG, "SSID:" + result.SSID + " BSSID:" + result.BSSID + " capabilities:" + result.capabilities + " freq:" + result.frequency + " level:" + result.level);
-            	 	WifiDB.postLiveData(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey, WifiDb_SID, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
+            	 	//WifiDB.postLiveData(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey, WifiDb_SID, result.SSID, result.BSSID, result.capabilities, result.frequency, result.level, latitude, longitude, Label);
      	    }
         }
     }	

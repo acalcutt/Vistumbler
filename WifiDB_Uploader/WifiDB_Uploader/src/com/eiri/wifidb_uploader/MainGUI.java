@@ -1,5 +1,10 @@
 package com.eiri.wifidb_uploader;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
@@ -9,6 +14,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.os.Messenger;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,7 +32,29 @@ public class MainGUI extends Activity implements OnClickListener {
 	Switch ScanSwitch;
 	TextView textStatus;
 	Button buttonScan;
-
+	static GoogleMap map;
+	final Messenger mMessenger = new Messenger(new IncomingHandler());
+	
+	class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+        	Log.d(TAG, "handleMessage");
+            switch (msg.what) {
+            case ScanService.MSG_SET_MAP_POSITION:
+            	Log.d(TAG, "MSG_SET_MAP_POSITION");
+            	UpdateMapLocation((LatLng) msg.obj);
+                break;
+            case ScanService.MSG_SET_MAP_ZOOM_LEVEL:
+            	Log.d(TAG, "MSG_SET_MAP_ZOOM_LEVEL");
+            	UpdateMapZoomLevel(msg.arg1);
+                break;
+            default:
+                super.handleMessage(msg);
+            }
+        }
+    }	
+	
+	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -35,12 +65,15 @@ public class MainGUI extends Activity implements OnClickListener {
 		// Setup UI
 		ScanSwitch = (Switch) findViewById(R.id.ScanSwitch);
 		ScanSwitch.setOnClickListener(this);
-
 		if (isScanServiceRunning()){
 			ScanSwitch.setChecked(true);
 		}else{
 			ScanSwitch.setChecked(false);
 		}
+		
+		android.app.FragmentManager fragmentManager = getFragmentManager();  
+	     MapFragment mapFragment = (MapFragment)fragmentManager.findFragmentById(R.id.map);  
+	     map = mapFragment.getMap(); 
 
 		//Setup GPS
 		LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -94,21 +127,20 @@ public class MainGUI extends Activity implements OnClickListener {
     
 	@Override
 	public void onClick(View src) {
-		switch (src.getId()) {
-		    case R.id.ScanSwitch:
-		    	Log.d(TAG, "ScanSwitch Pressed");
-		      	ScanSwitch = (Switch) findViewById(R.id.ScanSwitch);
-		      	if (ScanSwitch.isChecked()){
-		      		Log.d(TAG, "Start Scan");
-		      		startService(new Intent(this, ScanService.class));
-		      		ScanSwitch.setChecked(true);
-		      	} else {
-		      		Log.d(TAG, "Stop Scan");
-		      		stopService(new Intent(this, ScanService.class));
-		      		ScanSwitch.setChecked(false);
-		        }
-		      	break;
-	    }
+		int id = src.getId();
+		if(id == R.id.ScanSwitch) {
+	    	Log.d(TAG, "ScanSwitch Pressed");
+	      	ScanSwitch = (Switch) findViewById(R.id.ScanSwitch);
+	      	if (ScanSwitch.isChecked()){
+	      		Log.d(TAG, "Start Scan");
+	      		startService(new Intent(this, ScanService.class));
+	      		ScanSwitch.setChecked(true);
+	      	} else {
+	      		Log.d(TAG, "Stop Scan");
+	      		stopService(new Intent(this, ScanService.class));
+	      		ScanSwitch.setChecked(false);
+	        }
+		}
 	}
 	
 	private boolean isScanServiceRunning() {
@@ -120,4 +152,13 @@ public class MainGUI extends Activity implements OnClickListener {
 	    }
 	    return false;
 	}
+
+	
+	public static void UpdateMapLocation(LatLng CurrentLoc) {
+    	map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurrentLoc, 15));
+	}
+	
+	public static void UpdateMapZoomLevel(Integer zoomlevel) {
+    	map.animateCamera(CameraUpdateFactory.zoomTo(zoomlevel), 2000, null); 
+	}	
 }
