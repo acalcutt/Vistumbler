@@ -4,8 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import android.app.Service;
 import android.content.Context;
@@ -15,19 +13,21 @@ import android.location.Location;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.Toast;
 
 public class ScanService extends Service {
 	private static final String TAG = "WiFiDB_ScanService";
 	public static final int MSG_SET_MAP_POSITION = 1;
 	public static final int MSG_SET_MAP_ZOOM_LEVEL = 2;
-	private static Timer timer;
 	private Context ctx;
 	static WifiManager wifi;
 	SharedPreferences sharedPrefs;
+	String WifiDb_SessionID;
+	private Handler Scan_handler;
+	private Handler Upload_handler;
 	
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -36,115 +36,122 @@ public class ScanService extends Service {
 	
 	@Override
 	public void onCreate() {
+		Log.d(TAG, "onCreate"); 
 		super.onCreate();
 		ctx = this; 
-		Toast.makeText(this, "My Service Created", Toast.LENGTH_LONG).show();
+		wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
 		sharedPrefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-		Log.d(TAG, "onCreate");   		
 	}
 	
 	@Override
 	public void onDestroy() {
-		super.onDestroy();
-		Toast.makeText(this, "My Service Stopped", Toast.LENGTH_LONG).show(); 	
-		// Stop Timer
-		if(timer != null) {
-			timer.cancel();
-			timer.purge();
-			timer = null;
-		}
-				
-		// Stop WiFi
-		wifi = null;
-						
+		Log.d(TAG, "onDestroy");
+		super.onDestroy();	
+		// Stop Scan
+		Scan_handler.removeCallbacks(RunScan);
+		// Stop Upload
+		Upload_handler.removeCallbacks(RunUpload);				
 		// Stop GpS
 		GPS.stop(ctx);
 	}
 	
 	@Override
 	public void onStart(Intent intent, int startid) {
-		Toast.makeText(this, "My Service Started", Toast.LENGTH_LONG).show();
 		Log.d(TAG, "onStart");
-		timer = new Timer();
 		// Setup WiFi
-		wifi = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+		
 		wifi.startScan();		
 		//Setup GpS
 		GPS.start(ctx);
 		//Setup Timer
-		Integer RefreshInterval = Integer.parseInt(sharedPrefs.getString("wifidb_upload_interval", "10000"));
-		Log.d(TAG, "RefreshInterval:" + RefreshInterval);
-		timer.scheduleAtFixedRate(new ScanTask(), 0, RefreshInterval);
-		timer.scheduleAtFixedRate(new UploadTask(), 0, RefreshInterval);
+		Integer ScanInterval = Integer.parseInt(sharedPrefs.getString("wifidb_scan_interval", "2000"));
+		Integer UploadInterval = Integer.parseInt(sharedPrefs.getString("wifidb_upload_interval", "10000"));
+		Log.d(TAG, "ScanInterval:" + ScanInterval);
+		Log.d(TAG, "UploadInterval:" + UploadInterval);
+		
+		Scan_handler = new Handler();
+		Upload_handler = new Handler();
+		Scan_handler.postDelayed(RunScan, ScanInterval);
+		Upload_handler.postDelayed(RunUpload, UploadInterval);
+		WifiDb_SessionID = java.util.UUID.randomUUID().toString();
 	}
 	
-	private class UploadTask extends TimerTask
-    { 
-        public void run() 
-        {
-        	// Get Prefs
-        	String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "@string/default_wifidb_upload_api_url");
-        	String WifiDb_Username = sharedPrefs.getString("wifidb_username", "@string/default_wifidb_username"); 
-        	String WifiDb_ApiKey = sharedPrefs.getString("wifidb_upload_apikey", "@string/default_wifidb_upload_apikey");     	
-        	String WifiDb_SID = "1";
-        	Log.d(TAG, "WifiDb_ApiURL: " + WifiDb_ApiURL + " WifiDb_Username: " + WifiDb_Username + " WifiDb_ApiKey: " + WifiDb_ApiKey + " WifiDb_SID: " + WifiDb_SID);
-	    		       	
-        	// Upload APs
-        	DatabaseHandler db = new DatabaseHandler(ctx);
-        	db.UploadToWifiDB(WifiDb_ApiURL, WifiDb_Username, WifiDb_ApiKey);
+	private Runnable RunUpload = new Runnable() {
+        public void run() {
+        	Thread th = new Thread(new Runnable() {
+                public void run() {
+		        	// Get Prefs
+		        	String WifiDb_ApiURL = sharedPrefs.getString("wifidb_upload_api_url", "http://dev01.wifidb.net/wifidb/api/");
+		        	String WifiDb_Username = sharedPrefs.getString("wifidb_username", "Anonymous");
+		        	String WifiDb_ApiKey = sharedPrefs.getString("wifidb_apikey", "");
+		        	Log.d(TAG, "WifiDb_ApiURL: " + WifiDb_ApiURL + " WifiDb_Username: " + WifiDb_Username + " WifiDb_ApiKey: " + WifiDb_ApiKey + " WifiDb_SID: " + WifiDb_SessionID);
+			    		       	
+		        	// Upload APs
+		        	DatabaseHandler db = new DatabaseHandler(ctx);
+		        	db.UploadToWifiDB(WifiDb_ApiURL, WifiDb_SessionID, WifiDb_Username, WifiDb_ApiKey);
+                }
+        	});
+        	th.start();
+        	Integer UploadInterval = Integer.parseInt(sharedPrefs.getString("wifidb_upload_interval", "10000"));
+        	Upload_handler.postDelayed(RunUpload, UploadInterval);
         }
-    }    
-	
-	private class ScanTask extends TimerTask
-    { 
-        public void run() 
-        {
-        	//Get Current Time
-        	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
-        	String currentDateandTime = sdf.format(new Date());
-        	
-        	//Initiate Wifi Scan
-        	wifi.startScan();
+    };
 
-        	// Get Location
-        	Location location = GPS.getLocation(ctx);
-        	final Double latitude = location.getLatitude();
-        	final Double longitude = location.getLongitude();
-        	final float Accuracy = location.getAccuracy();
-        	final double Altitude = location.getAltitude();
-        	final float Bearing = location.getBearing();
-        	final Bundle Extras = location.getExtras();
-        	final String Provider = location.getProvider();
-        	final float Speed = location.getSpeed();
-        	
-        	Integer sats = GPS.getSats(ctx);
-        	Log.d(TAG, "LAT: " + latitude.toString()
-        			+ " LONG: " + longitude.toString()
-        			+ " Accuracy: " + Accuracy
-        			+ " Altitude: " + Altitude
-        			+ " Bearing: " + Bearing 
-        			+ " Extras" + Extras.toString()
-        			+ " Provider: " + Provider 
-        			+ " Speed: " + Speed 
-        			+ " sats: " + sats);
-        	
-        	DatabaseHandler db = new DatabaseHandler(ctx);
-        	long GpsID = db.addGPS(latitude, longitude, sats, Accuracy, Altitude, Speed, Bearing, currentDateandTime);     	
-
-        	// Get Wifi Info
-        	List<ScanResult> results = ScanService.wifi.getScanResults();
-        	for (ScanResult result : results) {  
-        		long ApID = db.addAP(GpsID, result.BSSID, result.SSID, result.frequency, result.capabilities, result.level, currentDateandTime);
-        		long HistID = db.addHist(ApID, GpsID, result.level, currentDateandTime);
-        		Log.d(TAG, "GpsID:" + GpsID
-        					+ " HistID:" + HistID
-        					+ " ApID:" + ApID 
-        					+ " SSID:" + result.SSID
-        					+ " BSSID:" + result.BSSID 
-        					+ " capabilities:" + result.capabilities
-        					+ " freq:" + result.frequency 
-        					+ " level:" + result.level);
-     	    }
+	private Runnable RunScan = new Runnable() {
+        public void run() {
+        	Thread th2 = new Thread(new Runnable() {
+                public void run() {  	
+                	//Get Current Time
+                	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US);
+                	String currentDateandTime = sdf.format(new Date());
+	        	
+		        	//Initiate Wifi Scan
+		        	wifi.startScan();
+		
+		        	// Get Location
+		        	Location location = GPS.getLocation(ctx);
+		        	final Double latitude = location.getLatitude();
+		        	final Double longitude = location.getLongitude();
+		        	final float Accuracy = location.getAccuracy();
+		        	final double Altitude = location.getAltitude();
+		        	final float Bearing = location.getBearing();
+		        	final Bundle Extras = location.getExtras();
+		        	final String Provider = location.getProvider();
+		        	final float Speed = location.getSpeed();
+		        	
+		        	Integer sats = GPS.getSats(ctx);
+		        	Log.d(TAG, "LAT: " + latitude.toString()
+		        			+ " LONG: " + longitude.toString()
+		        			+ " Accuracy: " + Accuracy
+		        			+ " Altitude: " + Altitude
+		        			+ " Bearing: " + Bearing 
+		        			+ " Extras" + Extras.toString()
+		        			+ " Provider: " + Provider 
+		        			+ " Speed: " + Speed 
+		        			+ " sats: " + sats);
+		        	
+		        	DatabaseHandler db = new DatabaseHandler(ctx);
+		        	long GpsID = db.addGPS(latitude, longitude, sats, Accuracy, Altitude, Speed, Bearing, currentDateandTime);     	
+		
+		        	// Get Wifi Info
+			        List<ScanResult> results = ScanService.wifi.getScanResults();
+			        for (ScanResult result : results) {  
+			        	long ApID = db.addAP(GpsID, result.BSSID, result.SSID, result.frequency, result.capabilities, result.level, currentDateandTime);
+			        	long HistID = db.addHist(ApID, GpsID, result.level, currentDateandTime);
+			        	Log.d(TAG, "GpsID:" + GpsID
+			        				+ " HistID:" + HistID
+			        				+ " ApID:" + ApID 
+			        				+ " SSID:" + result.SSID
+			        				+ " BSSID:" + result.BSSID 
+			        				+ " capabilities:" + result.capabilities
+			        				+ " freq:" + result.frequency 
+			        				+ " level:" + result.level);
+			     	}	        		
+                }
+        	});
+        	th2.start();
+        	Integer ScanInterval = Integer.parseInt(sharedPrefs.getString("wifidb_scan_interval", "2000"));
+        	Scan_handler.postDelayed(RunScan, ScanInterval);
         }
-    }	
+    };	
 }

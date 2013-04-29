@@ -9,6 +9,8 @@ package com.eiri.wifidb_uploader;
 
 public final class R {
     public static final class array {
+        public static final int scanInterval=0x7f070002;
+        public static final int scanIntervalValues=0x7f070003;
         public static final int uploadInterval=0x7f070000;
         public static final int uploadIntervalValues=0x7f070001;
     }

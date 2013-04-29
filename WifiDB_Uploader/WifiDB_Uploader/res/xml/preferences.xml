@@ -10,14 +10,14 @@
 			android:summary="Define the wifidb user to use when uploading data"
             android:dialogTitle="WifiDB Username"
             android:dialogMessage="Provide a username"    
-            android:defaultValue="@string/default_wifidb_username" />
+            android:defaultValue="Anonymous" />
         <EditTextPreference
 			android:key="wifidb_apikey"
 			android:title="WifiDB Api Key" 
 			android:summary="Define the wifidb api key for the specified user"
             android:dialogTitle="WifiDB Api Key"
             android:dialogMessage="Provide a Api Key"    
-            android:defaultValue="@string/default_wifidb_upload_apikey" />
+            android:defaultValue="" />
     </PreferenceCategory>
     <PreferenceCategory 
         android:title="Upload Preferences"
@@ -36,6 +36,18 @@
 			android:summary="Define the path to the wifidb api url"
             android:dialogTitle="WifiDB Api URL"
             android:dialogMessage="Provide the Api URL"    
-            android:defaultValue="@string/default_wifidb_upload_api_url" />
-	</PreferenceCategory>    
+            android:defaultValue="http://dev01.wifidb.net/wifidb/api/" />
+	</PreferenceCategory>
+    <PreferenceCategory 
+        android:title="Scan Preferences"
+        android:key="wifidb_scan_prefs">
+		<ListPreference 
+            android:key="wifidb_scan_interval"
+            android:title="Scan interval"
+            android:summary="Define how often APs will be updates"
+            android:defaultValue="2000"
+            android:entries="@array/scanInterval"
+            android:entryValues="@array/scanIntervalValues"
+        />
+	</PreferenceCategory>
 </PreferenceScreen>

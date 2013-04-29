@@ -38,7 +38,7 @@ public class WifiDB {
 									Integer iRSSI, 
 									Double dLat, 
 									Double dLon,
-									Integer dSats,
+									Integer iSats,
 									Double dAlt,
 									float fSpeed,
 									float fTrack,
@@ -58,8 +58,8 @@ public class WifiDB {
 	    HttpPost httppost = new HttpPost(HTTP_POST_HOST_PATH);
 	    // Upload your data, muahahahahaha
         List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>(2);
-        nameValuePairs.add(new BasicNameValuePair("Sid", sSID));
-        nameValuePairs.add(new BasicNameValuePair("Username", sUsername));
+        nameValuePairs.add(new BasicNameValuePair("SessionID", sSID));
+        nameValuePairs.add(new BasicNameValuePair("username", sUsername));
         nameValuePairs.add(new BasicNameValuePair("apikey", sApiKey));
         
         nameValuePairs.add(new BasicNameValuePair("SSID", sSSID));
@@ -76,13 +76,37 @@ public class WifiDB {
         
         nameValuePairs.add(new BasicNameValuePair("Lat", Double.toString(dLat)));
         nameValuePairs.add(new BasicNameValuePair("Long", Double.toString(dLon)));
-        nameValuePairs.add(new BasicNameValuePair("Sats", Integer.toString(dSats)));
+        nameValuePairs.add(new BasicNameValuePair("Sats", Integer.toString(iSats)));
         nameValuePairs.add(new BasicNameValuePair("ALT", Double.toString(dAlt)));
         nameValuePairs.add(new BasicNameValuePair("KMH", Integer.toString(iSpeedKMH)));
         nameValuePairs.add(new BasicNameValuePair("MPH", Integer.toString(iSpeedMPH)));
         nameValuePairs.add(new BasicNameValuePair("Track", Float.toString(fTrack)));
         nameValuePairs.add(new BasicNameValuePair("Date", date));
         nameValuePairs.add(new BasicNameValuePair("Time", time));
+        
+    	Log.d(TAG, "Sid: " + sSID
+    			+ " Username: " + sUsername
+    			+ " apikey: " + sApiKey
+    			+ " SSID: " + sSSID
+    			+ " Mac: " + sBSSID
+    			+ " Rad: " + sRADIO 
+    			+ " Auth" + sAUTH
+    			+ " Encry: " + sENCR
+    			+ " Label: " + Label 
+    			+ " NT: " + sNetType
+    			+ " SecType: " + Integer.toString(iSecType)
+    			+ " Chn: " + Integer.toString(iCHAN)
+    			+ " Sig: " + Integer.toString(iSignal)
+    			+ " RSSI: " + Integer.toString(iRSSI)
+    			+ " Lat: " + Double.toString(dLat)
+    			+ " Long: " + Double.toString(dLon)
+    			+ " Sats: " + Integer.toString(iSats)
+    			+ " ALT: " + Double.toString(dAlt)
+    			+ " KMH: " + Integer.toString(iSpeedKMH)
+    			+ " MPH: " + Integer.toString(iSpeedMPH)
+    			+ " Track: " + Float.toString(fTrack)
+    			+ " Date: " + date
+    			+ " Time: " + time);
         
         
         try {

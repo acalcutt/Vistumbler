@@ -1,3 +1,5 @@
+int array scanInterval 0x7f070002
+int array scanIntervalValues 0x7f070003
 int array uploadInterval 0x7f070000
 int array uploadIntervalValues 0x7f070001
 int attr cameraBearing 0x7f010001
