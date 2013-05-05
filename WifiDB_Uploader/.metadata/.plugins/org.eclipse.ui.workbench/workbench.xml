@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<workbench progressCount="17" version="2.0">
+<workbench progressCount="14" version="2.0">
 <workbenchAdvisor/>
 <window height="870" maximized="true" width="861" x="0" y="0">
 <fastViewData fastViewLocation="1024"/>
@@ -36,7 +36,7 @@
 <editors>
 <editorArea activeWorkbook="DefaultEditorWorkbook">
 <info part="DefaultEditorWorkbook">
-<folder appearance="1" expanded="0">
+<folder appearance="1" expanded="2">
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
 <part id="0"/>
 <part id="1"/>
@@ -46,6 +46,7 @@
 <part id="6"/>
 <part id="5"/>
 <part id="7"/>
+<part id="8"/>
 </presentation>
 </folder>
 </info>
@@ -61,22 +62,26 @@
 </editor>
 <editor activePart="true" focus="true" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="ScanService.java" partName="ScanService.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java" title="ScanService.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="5975" selectionTopPixel="920"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="448" selectionTopPixel="2087"/>
 </editor>
 <editor id="com.android.ide.eclipse.editors.CommonXmlEditor" name="preferences.xml" partName="preferences.xml" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/res/xml/preferences.xml" title="preferences.xml" tooltip="WifiDB_Uploader/res/xml/preferences.xml" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/res/xml/preferences.xml"/>
 </editor>
 <editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="WifiDB.java" partName="WifiDB.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java" title="WifiDB.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="2115" selectionTopPixel="1424"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="5851" selectionTopPixel="1424"/>
 </editor>
 <editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="MainGUI.java" partName="MainGUI.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/MainGUI.java" title="MainGUI.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/MainGUI.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/MainGUI.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="571" selectionTopPixel="0"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1223" selectionTopPixel="0"/>
 </editor>
 <editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="DatabaseHandler.java" partName="DatabaseHandler.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/DatabaseHandler.java" title="DatabaseHandler.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/DatabaseHandler.java" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/DatabaseHandler.java"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="19930" selectionTopPixel="8401"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="910" selectionTopPixel="217"/>
+</editor>
+<editor id="org.eclipse.jdt.ui.CompilationUnitEditor" name="GPS.java" partName="GPS.java" path="C:/Users/ACalcutt/Documents/GitHub/Vistumbler/WifiDB_Uploader/WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java" title="GPS.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java"/>
+<editorState selectionHorizontalPixel="0" selectionLength="11" selectionOffset="3448" selectionTopPixel="1376"/>
 </editor>
 </editors>
 <views>
@@ -105,10 +110,10 @@
 <viewState/>
 </view>
 <view id="com.android.ide.eclipse.ddms.views.FileExplorerView" partName="File Explorer"/>
+<view id="com.android.ide.eclipse.ddms.views.NetworkStatsView" partName="Network Statistics"/>
 <view id="org.eclipse.ui.views.ProblemView" partName="Problems">
 <viewState PRIMARY_SORT_FIELD="org.eclipse.ui.ide.severityAndDescriptionField" categoryGroup="org.eclipse.ui.ide.severity" markerContentGenerator="org.eclipse.ui.ide.problemsGenerator" partName="Problems">
 <expanded>
-<category IMemento.internal.id="Errors (13 items)"/>
 <category IMemento.internal.id="Warnings"/>
 <category IMemento.internal.id="Errors"/>
 </expanded>
@@ -120,7 +125,6 @@
 <visible IMemento.internal.id="org.eclipse.ui.ide.markerType"/>
 </viewState>
 </view>
-<view id="com.android.ide.eclipse.ddms.views.NetworkStatsView" partName="Network Statistics"/>
 <view id="org.eclipse.jdt.ui.PackageExplorer" partName="Package Explorer">
 <viewState group_libraries="1" layout="2" linkWithEditor="0" rootMode="1" workingSetName="">
 <customFilters userDefinedPatternsEnabled="false">
@@ -161,7 +165,7 @@
 <viewState/>
 </view>
 </views>
-<perspectives activePart="com.android.ide.eclipse.ddms.views.LogCatView" activePerspective="org.eclipse.jdt.ui.JavaPerspective">
+<perspectives activePart="org.eclipse.jdt.ui.CompilationUnitEditor" activePerspective="org.eclipse.jdt.ui.JavaPerspective">
 <perspective editorAreaTrimState="2" editorAreaVisible="0" fixed="0" version="0.016">
 <descriptor class="com.android.ide.eclipse.ddms.Perspective" id="com.android.ide.eclipse.ddms.Perspective" label="DDMS"/>
 <alwaysOnActionSet id="org.eclipse.ui.cheatsheets.actionSet"/>
@@ -242,7 +246,7 @@
 </mainWindow>
 </layout>
 </perspective>
-<perspective editorAreaTrimState="4" editorAreaVisible="1" fixed="0" version="0.016">
+<perspective editorAreaTrimState="2" editorAreaVisible="1" fixed="0" version="0.016">
 <descriptor class="org.eclipse.jdt.internal.ui.JavaPerspectiveFactory" id="org.eclipse.jdt.ui.JavaPerspective" label="Java"/>
 <alwaysOnActionSet id="org.eclipse.ui.cheatsheets.actionSet"/>
 <alwaysOnActionSet id="org.eclipse.search.searchActionSet"/>
@@ -302,7 +306,7 @@
 <hide_toolbar_item_id id="org.eclipse.debug.ui.commands.RunToLine"/>
 <hide_toolbar_item_id id="org.eclipse.jdt.ui.actions.OpenProjectWizard"/>
 <hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
-<view id="com.android.ide.eclipse.ddms.views.LogCatView"/>
+<view id="org.eclipse.jdt.ui.PackageExplorer"/>
 <fastViewBars>
 <fastViewBar fastViewLocation="1024" id="bottom" orientation="256" selectedTabId="org.eclipse.ui.console.ConsoleView" style="0">
 <fastViews>
@@ -313,27 +317,25 @@
 <view id="org.eclipse.debug.ui.DebugView" ratio="0.3"/>
 </fastViews>
 </fastViewBar>
-<fastViewBar fastViewLocation="16384" id="left" orientation="512" selectedTabId="org.eclipse.jdt.ui.PackageExplorer" style="1">
-<fastViews>
-<view id="org.eclipse.jdt.ui.PackageExplorer" ratio="0.3"/>
-</fastViews>
-</fastViewBar>
-<fastViewBar fastViewLocation="131072" id="right" orientation="512" selectedTabId="org.eclipse.ui.views.ContentOutline" style="1">
+<fastViewBar fastViewLocation="1024" id="org.eclipse.ui.internal.ViewStack@1c2622ec" orientation="256" selectedTabId="com.android.ide.eclipse.ddms.views.LogCatView" style="0">
 <fastViews>
 <view id="org.eclipse.ui.views.ContentOutline" ratio="0.3"/>
+<view id="com.android.ide.eclipse.ddms.views.LogCatView" ratio="0.47251308"/>
 </fastViews>
 </fastViewBar>
 </fastViewBars>
 <layout>
-<mainWindow maximized="org.eclipse.ui.internal.ViewStack@2e113f89">
+<mainWindow>
 <info folder="true" part="left">
-<folder appearance="2" expanded="0">
-<page content="org.eclipse.jdt.ui.PackageExplorer" label="LabelNotFound"/>
+<folder activePageID="org.eclipse.jdt.ui.PackageExplorer" appearance="2" expanded="2">
+<page content="org.eclipse.jdt.ui.PackageExplorer" label="Package Explorer"/>
 <page content="org.eclipse.jdt.ui.TypeHierarchy" label="LabelNotFound"/>
 <page content="org.eclipse.ui.views.ResourceNavigator" label="LabelNotFound"/>
 <page content="org.eclipse.ui.navigator.ProjectExplorer" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.junit.ResultView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
+</presentation>
 </folder>
 </info>
 <info folder="true" part="org.eclipse.ui.internal.ViewStack@38579fe6" ratio="0.75" ratioLeft="750" ratioRight="250" relationship="2" relative="left">
@@ -344,9 +346,9 @@
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
-<info part="org.eclipse.ui.editorss" ratio="0.11616515" ratioLeft="166" ratioRight="1263" relationship="2" relative="left"/>
+<info part="org.eclipse.ui.editorss" ratio="0.22043388" ratioLeft="315" ratioRight="1114" relationship="2" relative="left"/>
 <info folder="true" part="bottom" ratio="0.6044678" ratioLeft="460" ratioRight="301" relationship="4" relative="org.eclipse.ui.editorss">
-<folder appearance="2" expanded="2">
+<folder appearance="2" expanded="0">
 <page content="org.eclipse.ui.views.ProblemView" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.ui.JavadocView" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.ui.SourceView" label="LabelNotFound"/>
@@ -359,8 +361,7 @@
 </folder>
 </info>
 <info folder="true" part="right" ratio="0.7493333" ratioLeft="562" ratioRight="188" relationship="2" relative="org.eclipse.ui.editorss">
-<folder appearance="2" expanded="0">
-<page content="org.eclipse.ui.views.ContentOutline" label="LabelNotFound"/>
+<folder appearance="2" expanded="2">
 <page content="org.eclipse.ui.texteditor.TemplatesView" label="LabelNotFound"/>
 <page content="org.eclipse.ant.ui.views.AntView" label="LabelNotFound"/>
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
@@ -377,16 +378,20 @@
 </folder>
 </info>
 <info folder="true" part="org.eclipse.ui.internal.ViewStack@7e9eefcc" ratio="0.75" ratioLeft="573" ratioRight="191" relationship="4" relative="org.eclipse.ui.editorss">
-<folder appearance="2" expanded="0">
+<folder appearance="2" expanded="2">
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
 <info folder="true" part="org.eclipse.ui.internal.ViewStack@2e113f89" ratio="0.75" ratioLeft="573" ratioRight="191" relationship="4" relative="org.eclipse.ui.editorss">
-<folder activePageID="com.android.ide.eclipse.ddms.views.LogCatView" appearance="2" expanded="1">
-<page content="com.android.ide.eclipse.ddms.views.LogCatView" label="LogCat"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
-<part id="0"/>
-</presentation>
+<folder appearance="2" expanded="0">
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
+</folder>
+</info>
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@1c2622ec" ratio="0.82917213" ratioLeft="631" ratioRight="130" relationship="4" relative="org.eclipse.ui.editorss">
+<folder appearance="2" expanded="0">
+<page content="org.eclipse.ui.views.ContentOutline" label="LabelNotFound"/>
+<page content="com.android.ide.eclipse.ddms.views.LogCatView" label="LabelNotFound"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
 <info part="org.eclipse.egit.ui.RepositoriesView" ratio="0.5990712" ratioLeft="387" ratioRight="259" relationship="4" relative="left"/>
@@ -448,20 +453,29 @@
 <view id="org.eclipse.debug.ui.BreakpointView"/>
 <view id="org.eclipse.ui.views.ContentOutline"/>
 <fastViewBars/>
-<layout>&#x0A;<mainWindow>&#x0A;<info folder="true" part="org.eclipse.debug.internal.ui.NavigatorFolderView">&#x0A;<folder activePageID="org.eclipse.debug.ui.DebugView" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.debug.ui.DebugView" label="Debug"/>
+<layout>
+<mainWindow>
+<info folder="true" part="org.eclipse.debug.internal.ui.NavigatorFolderView">
+<folder activePageID="org.eclipse.debug.ui.DebugView" appearance="2" expanded="2">
+<page content="org.eclipse.debug.ui.DebugView" label="Debug"/>
 <page content="org.eclipse.ui.views.ResourceNavigator" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.ui.PackageExplorer" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.ui.TypeHierarchy" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
 </presentation>
 </folder>
 </info>
-<info folder="true" part="stickyFolderRight" ratio="0.75" ratioLeft="1074" ratioRight="358" relationship="2" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">&#x0A;<folder appearance="2" expanded="2">&#x0A;<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
+<info folder="true" part="stickyFolderRight" ratio="0.75" ratioLeft="1074" ratioRight="358" relationship="2" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">
+<folder appearance="2" expanded="2">
+<page content="org.eclipse.help.ui.HelpView" label="LabelNotFound"/>
 <page content="org.eclipse.ui.internal.introview" label="LabelNotFound"/>
 <page content="org.eclipse.ui.cheatsheets.views.CheatSheetView" label="LabelNotFound"/>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.debug.internal.ui.ConsoleFolderView" ratio="0.75" ratioLeft="573" ratioRight="191" relationship="4" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">&#x0A;<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
+<info folder="true" part="org.eclipse.debug.internal.ui.ConsoleFolderView" ratio="0.75" ratioLeft="573" ratioRight="191" relationship="4" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">
+<folder activePageID="org.eclipse.ui.console.ConsoleView" appearance="2" expanded="2">
+<page content="org.eclipse.ui.console.ConsoleView" label="Console"/>
 <page content="org.eclipse.ui.views.TaskList" label="Tasks"/>
 <page content="org.eclipse.ui.views.ProblemView" label="Problems"/>
 <page content="org.eclipse.cdt.debug.ui.executablesView" label="Executables"/>
@@ -469,34 +483,44 @@
 <page content="org.eclipse.ui.views.PropertySheet" label="LabelNotFound"/>
 <page content="org.eclipse.jdt.debug.ui.DisplayView" label="LabelNotFound"/>
 <page content="org.eclipse.search.SearchResultView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
 <part id="1"/>
 <part id="2"/>
 <part id="3"/>
 </presentation>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@1ebbc921" ratio="0.5" ratioLeft="716" ratioRight="716" relationship="2" relative="org.eclipse.debug.internal.ui.ConsoleFolderView">&#x0A;<folder activePageID="com.android.ide.eclipse.ddms.views.LogCatView" appearance="2" expanded="2">&#x0A;<page content="com.android.ide.eclipse.ddms.views.LogCatView" label="LogCat"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@1ebbc921" ratio="0.5" ratioLeft="716" ratioRight="716" relationship="2" relative="org.eclipse.debug.internal.ui.ConsoleFolderView">
+<folder activePageID="com.android.ide.eclipse.ddms.views.LogCatView" appearance="2" expanded="2">
+<page content="com.android.ide.eclipse.ddms.views.LogCatView" label="LogCat"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
 </presentation>
 </folder>
 </info>
 <info part="org.eclipse.ui.editorss" ratio="0.45326278" ratioLeft="257" ratioRight="310" relationship="4" relative="org.eclipse.debug.internal.ui.NavigatorFolderView"/>
-<info folder="true" part="org.eclipse.debug.internal.ui.OutlineFolderView" ratio="0.75" ratioLeft="1074" ratioRight="358" relationship="2" relative="org.eclipse.ui.editorss">&#x0A;<folder activePageID="org.eclipse.ui.views.ContentOutline" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.ui.views.ContentOutline" label="Outline"/>
+<info folder="true" part="org.eclipse.debug.internal.ui.OutlineFolderView" ratio="0.75" ratioLeft="1074" ratioRight="358" relationship="2" relative="org.eclipse.ui.editorss">
+<folder activePageID="org.eclipse.ui.views.ContentOutline" appearance="2" expanded="2">
+<page content="org.eclipse.ui.views.ContentOutline" label="Outline"/>
 <page content="org.eclipse.ant.ui.views.AntView" label="LabelNotFound"/>
 <page content="org.eclipse.cdt.dsf.gdb.ui.tracecontrol.view" label="LabelNotFound"/>
 <page content="org.eclipse.cdt.dsf.debug.ui.disassembly.view" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
 </presentation>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.debug.internal.ui.ToolsFolderView" ratio="0.5" ratioLeft="716" ratioRight="716" relationship="2" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">&#x0A;<folder activePageID="org.eclipse.debug.ui.VariableView" appearance="2" expanded="2">&#x0A;<page content="org.eclipse.debug.ui.VariableView" label="Variables"/>
+<info folder="true" part="org.eclipse.debug.internal.ui.ToolsFolderView" ratio="0.5" ratioLeft="716" ratioRight="716" relationship="2" relative="org.eclipse.debug.internal.ui.NavigatorFolderView">
+<folder activePageID="org.eclipse.debug.ui.VariableView" appearance="2" expanded="2">
+<page content="org.eclipse.debug.ui.VariableView" label="Variables"/>
 <page content="org.eclipse.debug.ui.BreakpointView" label="Breakpoints"/>
 <page content="org.eclipse.debug.ui.ExpressionView" label="LabelNotFound"/>
 <page content="org.eclipse.debug.ui.RegisterView" label="LabelNotFound"/>
 <page content="org.eclipse.cdt.debug.ui.SignalsView" label="LabelNotFound"/>
 <page content="org.eclipse.debug.ui.ModuleView" label="LabelNotFound"/>
-<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">&#x0A;<part id="0"/>
+<presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory">
+<part id="0"/>
 <part id="1"/>
 </presentation>
 </folder>
@@ -509,152 +533,159 @@
 <navigationHistory>
 <editors>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/ScanService.java"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/MainGUI.java"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/DatabaseHandler.java"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/WifiDB.java"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.CommonXmlEditor" path="/WifiDB_Uploader/res/xml/preferences.xml"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="com.android.ide.eclipse.editors.CommonXmlEditor" path="/WifiDB_Uploader/res/values/arrays.xml"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java"/>
 </editors>
-<item historyLabel="preferences.xml" index="3"/>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="3064" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5871" y="0"/>
 </item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19513" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5714" y="0"/>
 </item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="785" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5710" y="0"/>
 </item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19513" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5701" y="3"/>
 </item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="838" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19540" y="0"/>
-</item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="838" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19540" y="0"/>
-</item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="838" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19634" y="0"/>
-</item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="838" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19634" y="0"/>
-</item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="838" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19634" y="0"/>
-</item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="838" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19634" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5577" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="3064" y="0"/>
+<position info="not_deleted" x="4171" y="4"/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5577" y="0"/>
+</item>
+<item historyLabel="GPS.java" index="3">
+<position info="not_deleted" x="3448" y="11"/>
+</item>
+<item historyLabel="DatabaseHandler.java" index="2">
+<position info="not_deleted" x="16538" y="0"/>
+</item>
+<item historyLabel="DatabaseHandler.java" index="2">
+<position info="not_deleted" x="16720" y="0"/>
+</item>
+<item historyLabel="DatabaseHandler.java" index="2">
+<position info="not_deleted" x="14933" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="2245" y="0"/>
+<position info="not_deleted" x="1525" y="0"/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5577" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="2563" y="0"/>
+<position info="not_deleted" x="1525" y="0"/>
 </item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="13871" y="0"/>
-</item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="838" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19496" y="15"/>
+<item historyLabel="DatabaseHandler.java" index="2">
+<position info="not_deleted" x="5" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="3058" y="16"/>
+<position info="not_deleted" x="1525" y="0"/>
 </item>
-<item historyLabel="preferences.xml" index="3"/>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="2727" y="0"/>
+<item historyLabel="DatabaseHandler.java" index="2">
+<position info="not_deleted" x="5" y="0"/>
 </item>
-<item historyLabel="WifiDB.java" index="2">
-<position info="not_deleted" x="2115" y="0"/>
+<item historyLabel="DatabaseHandler.java" index="2">
+<position info="not_deleted" x="910" y="0"/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="4875" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19496" y="15"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="3838" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="3858" y="2"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="3737" y="0"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="3858" y="2"/>
-</item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="16890" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5577" y="0"/>
 </item>
 <item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="4875" y="0"/>
+<position info="not_deleted" x="1277" y="198"/>
 </item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="16890" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="5577" y="0"/>
 </item>
-<item historyLabel="DatabaseHandler.java" index="1">
-<position info="not_deleted" x="19930" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="3094" y="0"/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="4875" y="0"/>
-</item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="2073" y="0"/>
-</item>
-<item historyLabel="ScanService.java" index="0">
+<item historyLabel="MainGUI.java" index="1">
 <position/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="1425" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1177" y="0"/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="1382" y="15"/>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="935" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="964" y="0"/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="1382" y="15"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1288" y="13"/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="5756" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="809" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1223" y="0"/>
 </item>
-<item historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="3219" y="0"/>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
 </item>
-<item historyLabel="preferences.xml" index="3"/>
-<item historyLabel="arrays.xml" index="4"/>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1118" y="13"/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1035" y="0"/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1086" y="0"/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1941" y="0"/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1494" y="0"/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position/>
+</item>
+<item historyLabel="MainGUI.java" index="1">
+<position info="not_deleted" x="1223" y="0"/>
+</item>
 <item active="true" historyLabel="ScanService.java" index="0">
-<position info="not_deleted" x="3356" y="0"/>
+<position info="not_deleted" x="1277" y="198"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -678,17 +709,26 @@
 <trimItem IMemento.internal.id="org.eclipse.ui.internal.HeapStatus"/>
 <trimItem IMemento.internal.id="org.eclipse.ui.internal.progress.ProgressRegion"/>
 <trimItem IMemento.internal.id="bottom"/>
-<trimItem IMemento.internal.id="org.eclipse.ui.internal.ViewStack@70c67766"/>
-<trimItem IMemento.internal.id="org.eclipse.ui.internal.ViewStack@7e9eefcc"/>
+<trimItem IMemento.internal.id="org.eclipse.ui.internal.ViewStack@2e113f89"/>
+<trimItem IMemento.internal.id="org.eclipse.ui.internal.ViewStack@1c2622ec"/>
 </trimArea>
 </trimLayout>
 </window>
 <mruList>
-<file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="Cursor.class" tooltip="android.database.Cursor">
-<persistable org.eclipse.jdt.ui.ClassFileIdentifier="=WifiDB_Uploader/C:\/Users\/ACalcutt\/Downloads\/adt-bundle-windows-x86_64-20130219\/adt-bundle-windows-x86_64-20130219\/sdk\/platforms\/android-14\/android.jar&lt;android.database(Cursor.class"/>
+<file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="Location.class" tooltip="android.location.Location">
+<persistable org.eclipse.jdt.ui.ClassFileIdentifier="=WifiDB_Uploader/C:\/Users\/ACalcutt\/Downloads\/adt-bundle-windows-x86_64-20130219\/adt-bundle-windows-x86_64-20130219\/sdk\/platforms\/android-14\/android.jar&lt;android.location(Location.class"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="UpdateMapTimer.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/UpdateMapTimer.java">
+<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/UpdateMapTimer.java"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="UpdateMap.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/UpdateMap.java">
+<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/UpdateMap.java"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="GPS.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java">
 <persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/GPS.java"/>
+</file>
+<file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="Cursor.class" tooltip="android.database.Cursor">
+<persistable org.eclipse.jdt.ui.ClassFileIdentifier="=WifiDB_Uploader/C:\/Users\/ACalcutt\/Downloads\/adt-bundle-windows-x86_64-20130219\/adt-bundle-windows-x86_64-20130219\/sdk\/platforms\/android-14\/android.jar&lt;android.database(Cursor.class"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="DatabaseHandler.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/DatabaseHandler.java">
 <persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/DatabaseHandler.java"/>
@@ -719,15 +759,6 @@
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.PropertiesFileEditor" name="project.properties" tooltip="WifiDB_Uploader/project.properties">
 <persistable path="/WifiDB_Uploader/project.properties"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="mainTask.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/mainTask.java">
-<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/mainTask.java"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.jdt.ui.CompilationUnitEditor" name="Wifi.java" tooltip="WifiDB_Uploader/src/com/eiri/wifidb_uploader/Wifi.java">
-<persistable path="/WifiDB_Uploader/src/com/eiri/wifidb_uploader/Wifi.java"/>
-</file>
-<file factoryID="org.eclipse.jdt.ui.ClassFileEditorInputFactory" id="org.eclipse.jdt.ui.ClassFileEditor" name="Context.class" tooltip="android.content.Context">
-<persistable org.eclipse.jdt.ui.ClassFileIdentifier="=WifiDB_Uploader/C:\/Users\/ACalcutt\/Downloads\/adt-bundle-windows-x86_64-20130219\/adt-bundle-windows-x86_64-20130219\/sdk\/platforms\/android-14\/android.jar&lt;android.content(Context.class"/>
 </file>
 </mruList>
 </workbench>

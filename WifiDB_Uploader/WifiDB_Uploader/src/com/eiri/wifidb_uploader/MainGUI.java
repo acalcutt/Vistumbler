@@ -1,5 +1,8 @@
 package com.eiri.wifidb_uploader;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -14,6 +17,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,10 +31,26 @@ import android.widget.Toast;
 
 public class MainGUI extends Activity implements OnClickListener {
 	private static final String TAG = "WiFiDB_Demo";
+	private Timer myTimer;
+	private Context ctx;
 	Switch ScanSwitch;
 	TextView textStatus;
 	Button buttonScan;
 	static GoogleMap map;
+	
+	static Handler handler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {			  
+				Bundle bundle = msg.getData();
+				String lat = bundle.getString("lat");
+				String lon = bundle.getString("lon");
+				Log.d(TAG, "Timer_Tick - Lat:" + lat + "  -  Lon:" + lon);
+				Double Latitude = Double.parseDouble(lat);
+				Double Longitude = Double.parseDouble(lon);
+				LatLng Position = new LatLng(Latitude, Longitude);
+				UpdateMapLocation(Position);
+			      }
+		}; 	
 
 	/** Called when the activity is first created. */
 	@Override
@@ -37,6 +58,7 @@ public class MainGUI extends Activity implements OnClickListener {
 		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
+		ctx = this;
 		
 		// Setup UI
 		ScanSwitch = (Switch) findViewById(R.id.ScanSwitch);
@@ -46,7 +68,17 @@ public class MainGUI extends Activity implements OnClickListener {
 		}else{
 			ScanSwitch.setChecked(false);
 		}
-		
+
+		// Setup UI Update Timer
+		 myTimer = new Timer();
+		  myTimer.schedule(new TimerTask() {
+		   @Override
+		   public void run() {
+			   UpdateMap();
+		   }
+
+		  }, 0, 1000);	
+
 		android.app.FragmentManager fragmentManager = getFragmentManager();  
 	     MapFragment mapFragment = (MapFragment)fragmentManager.findFragmentById(R.id.map);  
 	     map = mapFragment.getMap(); 
@@ -58,6 +90,17 @@ public class MainGUI extends Activity implements OnClickListener {
 		}else{
 			showGPSDisabledAlertToUser();
 		}			
+	}
+	
+	public void onDestroy() {
+		Log.d(TAG, "onDestroy");
+		super.onDestroy();	
+		// Stop Scan
+		if(myTimer != null) {
+			myTimer.cancel();
+			myTimer.purge();
+			myTimer = null;
+		}
 	}
 	
 	private void showGPSDisabledAlertToUser(){
@@ -129,12 +172,32 @@ public class MainGUI extends Activity implements OnClickListener {
 	    return false;
 	}
 
-	
+	 private void UpdateMap() {
+		 Runnable runnable = new Runnable() {
+			 public void run() {
+					 Message msg = handler.obtainMessage();
+					 Bundle bundle = new Bundle();
+					 DatabaseHandler db = new DatabaseHandler(ctx);
+					 String[] gps = db.getLatestGPS();
+					 if (gps[0]!="0.0" && gps[1]!="0.0") {
+						 bundle.putString("lat", gps[0]);
+						 bundle.putString("lon", gps[1]);
+						 msg.setData(bundle);
+						 handler.sendMessage(msg);
+					 }
+
+				 }
+	      };
+	      
+	      Thread mythread = new Thread(runnable);
+	      mythread.start(); 
+	 }
+		
 	public static void UpdateMapLocation(LatLng CurrentLoc) {
-    	map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurrentLoc, 15));
+	   	map.moveCamera(CameraUpdateFactory.newLatLngZoom(CurrentLoc, 15));
 	}
-	
+		
 	public static void UpdateMapZoomLevel(Integer zoomlevel) {
-    	map.animateCamera(CameraUpdateFactory.zoomTo(zoomlevel), 2000, null); 
-	}	
+	   	map.animateCamera(CameraUpdateFactory.zoomTo(zoomlevel), 2000, null); 
+	}
 }

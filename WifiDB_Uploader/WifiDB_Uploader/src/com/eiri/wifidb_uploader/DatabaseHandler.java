@@ -23,8 +23,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_GPS_TABLE = "CREATE TABLE GPS(" 
         		+ "GPSID INTEGER PRIMARY KEY,"
-        		+ "Latitude REAL,"
-        		+ "Longitude REAL,"
+        		+ "Latitude TEXT,"
+        		+ "Longitude TEXT,"
                 + "NumOfSats INTEGER," 
                 + "Accuracy REAL," 
                 + "Alt REAL," 
@@ -90,9 +90,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     }
 
     long addGPS(Double Latitude, Double Longitude, Integer NumOfSats, float Accuracy, double Alt, float Speed, float TrackAngle, String DateTime) {
-        SQLiteDatabase db = this.getWritableDatabase();         
         long gpsid = -1;
 		synchronized(Lock) {
+			SQLiteDatabase db = this.getWritableDatabase(); 
 	        ContentValues values = new ContentValues();
 	        values.put("Latitude", Latitude);
 	        values.put("Longitude", Longitude);
@@ -468,6 +468,26 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 	        db.close();
     	}
         return histid;
+    }
+    
+    String[] getLatestGPS() {
+    	String Latitude = "0.0";
+    	String Longitude = "0.0";
+    	synchronized(Lock) {
+	    	SQLiteDatabase db = this.getWritableDatabase();
+	        String sql = "SELECT Latitude, Longitude FROM GPS WHERE Latitude<>0.0 And Longitude<>0.0 ORDER BY DateTime DESC LIMIT 1";
+	        Cursor data = db.rawQuery(sql, null);
+	        if (data.moveToFirst()) {
+	        	Latitude = data.getString(data.getColumnIndex("Latitude"));
+	        	Longitude = data.getString(data.getColumnIndex("Longitude"));
+	        }
+	        db.close();
+    	}
+    	String ar[] = new String[2];
+        ar[0] = Latitude;
+        ar[1] = Longitude;
+        return ar; //returning two values at once
+    	
     }
     
     int UploadToWifiDB(String WifiDbApiURL, String WifiDbSessionID, String WifiDbApiUser, String WifiDbApiKey) {
