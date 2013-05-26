@@ -7819,7 +7819,7 @@ Func _ImportWardriveDb3($DB3file)
 	For $NewAP = 1 To $WardriveAPs
 		$Found_BSSID = StringUpper($NetworkMatchArray[$NewAP][0])
 		$Found_SSID = $NetworkMatchArray[$NewAP][1]
-		$Found_Capabilies = $NetworkMatchArray[$NewAP][2]
+		$Found_Capabilities = $NetworkMatchArray[$NewAP][2]
 		$Found_RSSI = $NetworkMatchArray[$NewAP][3]
 		$Found_Signal = _DbToSignalPercent($Found_RSSI)
 		$Found_Frequency = $NetworkMatchArray[$NewAP][4]
@@ -7829,39 +7829,39 @@ Func _ImportWardriveDb3($DB3file)
 		$Found_TimeStamp = StringTrimRight($NetworkMatchArray[$NewAP][8], 3)
 
 		;Get Authentication and Encrytion from capabilities
-		If StringInStr($Found_Capabilies, "WPA2-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA2-PSK-TKIP+CCMP") Then
+		If StringInStr($Found_Capabilities, "WPA2-PSK-CCMP") Or StringInStr($Found_Capabilities, "WPA2-PSK-TKIP+CCMP") Then
 			$Found_AUTH = "WPA2-Personal"
 			$Found_ENCR = "CCMP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA-PSK-TKIP+CCMP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA-PSK-CCMP") Or StringInStr($Found_Capabilities, "WPA-PSK-TKIP+CCMP") Then
 			$Found_AUTH = "WPA-Personal"
 			$Found_ENCR = "CCMP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA2-EAP-TKIP+CCMP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA2-EAP-CCMP") Or StringInStr($Found_Capabilities, "WPA2-EAP-TKIP+CCMP") Then
 			$Found_AUTH = "WPA2-Enterprise"
 			$Found_ENCR = "CCMP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA-EAP-TKIP+CCMP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA-EAP-CCMP") Or StringInStr($Found_Capabilities, "WPA-EAP-TKIP+CCMP") Then
 			$Found_AUTH = "WPA-Enterprise"
 			$Found_ENCR = "CCMP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-PSK-TKIP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA2-PSK-TKIP") Then
 			$Found_AUTH = "WPA2-Personal"
 			$Found_ENCR = "TKIP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-TKIP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA-PSK-TKIP") Then
 			$Found_AUTH = "WPA-Personal"
 			$Found_ENCR = "TKIP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-TKIP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA2-EAP-TKIP") Then
 			$Found_AUTH = "WPA2-Enterprise"
 			$Found_ENCR = "TKIP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-TKIP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA-EAP-TKIP") Then
 			$Found_AUTH = "WPA-Enterprise"
 			$Found_ENCR = "TKIP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WEP") Then
+		ElseIf StringInStr($Found_Capabilities, "WEP") Then
 			$Found_AUTH = "Open"
 			$Found_ENCR = "WEP"
 			$Found_SecType = "2"
@@ -7872,7 +7872,7 @@ Func _ImportWardriveDb3($DB3file)
 		EndIf
 
 		;Get Network Type from capabilities
-		If StringInStr($Found_Capabilies, "[IBSS]") Then
+		If StringInStr($Found_Capabilities, "[IBSS]") Then
 			$Found_NETTYPE = "Adhoc"
 		Else
 			$Found_NETTYPE = "Infrastructure"
