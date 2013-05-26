@@ -5873,7 +5873,7 @@ Func _ExportVS1($savefile, $Filter = 0);writes vistumbler detailed data to a txt
 
 	;Export AP Information
 	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
-			"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|High Signal|High RSSI|Label|GID,SIGNAL,RSSI" & @CRLF & _
+			"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|High Signal|High RSSI|Network Type|Label|GID,SIGNAL,RSSI" & @CRLF & _
 			"# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
 	If $Filter = 1 Then
 		$query = $AddQuery
