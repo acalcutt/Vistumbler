@@ -1,16 +1,17 @@
 <?php
 $ver = "1.2.1";
-ini_set("memory_limit","3072M"); //lots of GPS cords need lots of memory
+ini_set("memory_limit","3072M");
 $script_start = "2009-Jan-24";
-$last_edit = "2009-July-22";
-$author = "pferland";
+$last_edit = "2013-07-04"; //Happy 4th of July!
+$author = "pferland"; //modified by acalcutt 2013-06-30 to support new oui.txt file
 $stime = time();
+//compile to exe using bamcomple 1.21 with command "bamcompile.exe manufmac.php manufmac.exe"
 echo "-----------------------------------------------------------------------\n";
 echo "| Starting creation of Vistumbler compatible Wireless Router Manuf List.\n| By: $author\n| http:\\www.randomintervals.com\n| Version: $ver\n";
 $debug = 0;
 $cwd = getcwd();
 
-$source="http://standards.ieee.org/regauth/oui/oui.txt";
+$source="http://standards.ieee.org/develop/regauth/oui/oui.txt";
 $manuf_list = array();
 $phpfile = "manufactures.inc.php";
 $phpfilewrite = fopen($phpfile, "w");
@@ -20,20 +21,22 @@ $vs1file = "manufactures.ini";
 $vs1filewrite = fopen($vs1file, "w");
 $vs1fileappend = fopen($vs1file, "a");
 
-	echo "Downloading and Opening the Source File from: \n----->".$source."\n|\n|";
+echo "Downloading and Opening the Source File from: \n----->".$source."\n|\n|";
 $return = file($source);
 
 $total_lines = count($return);
-	echo "Source File opened and Destination file placed, starting convertion.\n|\n|";
+echo "Source File opened and Destination file placed, starting convertion.\n|\n|";
+
 foreach($return as $ret)
 {
-	$test = substr($ret, 11,5);
+	$test = substr($ret, 13,5);
 	if ($test != "(hex)"){if($debug === 1){echo "Erroneous data found, dropping\n| This is normal...\n| ";} continue;}
 	$retexp = explode("(hex)",$ret);
-	$Man_mac = trim($retexp[0], "\x20\x09");
+	
+	$Man_mac = trim($retexp[0]);
 	$man_mac = explode("-",$Man_mac);
 	$Man_mac = implode("",$man_mac);
-	$Manuf = trim($retexp[1], "\n\r\x20\x09");
+	$Manuf = trim($retexp[1]);
 	if($Manuf == "PRIVATE"){echo "Non Needed Manuf found...\n| ";continue;}
 	$manuf_list[] = array(
 						"mac" 	=> $Man_mac,
