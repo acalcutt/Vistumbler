@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.5.1 Beta 2'
+$version = 'v10.5.1 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/06/12'
+$last_modified = '2013/08/18'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -2146,21 +2146,21 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$DBHighGpsHistId = $HISTID
 				Else;If old HighGpsHistId has a postion, check if the new posion has a higher number of satalites/higher signal
 					;Get Old GpsID and Signal
-					$query = "SELECT GpsID, Signal FROM HIST WHERE HistID=" & $Found_HighGpsHistId
+					$query = "SELECT GpsID, RSSI FROM HIST WHERE HistID=" & $Found_HighGpsHistId
 					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$Found_GpsID = $HistMatchArray[1][1]
-					$Found_Sig = $HistMatchArray[1][2] - 0 ;For some reason a " - 0' was needed here or the signals would not compair properly
+					$Found_RSSI = $HistMatchArray[1][2]
 					;Get Old Latititude, Logitude and Number of Satalites from Old GPS ID
 					$query = "SELECT Latitude, Longitude, NumOfSats FROM GPS WHERE GpsID=" & $Found_GpsID
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$Found_Lat = $GpsMatchArray[1][1]
 					$Found_Lon = $GpsMatchArray[1][2]
 					$Found_NumSat = $GpsMatchArray[1][3]
-					If $SIG > $Found_Sig Then ;If the new signal is greater or eqaul to the old signal
+					If $RSSI > $Found_RSSI Then ;If the new RSSI is greater or eqaul to the old RSSI
 						$DBHighGpsHistId = $HISTID
 						$DBLat = $New_Lat
 						$DBLon = $New_Lon
-					ElseIf $SIG = $Found_Sig Then ;If the number of satalites are equal, use the position with the higher signal
+					ElseIf $RSSI = $Found_RSSI Then ;If the number of satalites are equal, use the position with the higher signal
 						If $New_NumSat > $Found_NumSat Then
 							$DBHighGpsHistId = $HISTID
 							$DBLat = $New_Lat
@@ -2170,7 +2170,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 							$DBLat = -1
 							$DBLon = -1
 						EndIf
-					Else ;If the Old Number of satalites is greater than the new, use the old position
+					Else ;If the old RSSI is greater than the new, use the old position
 						$DBHighGpsHistId = $Found_HighGpsHistId
 						$DBLat = -1
 						$DBLon = -1
@@ -3437,7 +3437,7 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = 
 			MsgBox(0, $Text_Error, $Text_InstallNetcommOCX)
 		Else
 			$NetComm.CommPort = $CommPort ;Set port number
-			$NetComm.Settings = $CommSettings ;Set port settings
+			$NetComm.settings = $CommSettings ;Set port settings
 			$NetComm.InputLen = 0 ;reads entire buffer
 			If $ComError <> 1 Then
 				$NetComm.InputMode = 0 ;reads in text mode
@@ -4439,7 +4439,7 @@ Func _GraphDraw()
 	;Draw % or dBm labels and lines
 	If $UseRssiInGraphs = 1 Then;Draw dBm labels
 		For $sn = 0 To 10
-			$RSSI = ($sn * - 10)
+			$RSSI = ($sn * -10)
 			$vposition = $Graph_topborder + (($Graph_height / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($Graph_backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $Graph_leftborder, $vposition, $Graph_leftborder + $Graph_width, $vposition, $Pen_GraphGrid)
@@ -4659,7 +4659,7 @@ Func _Draw2400ChanGraph()
 	;Draw 10% labels and lines
 	If $UseRssiInGraphs = 1 Then
 		For $sn = 0 To 10
-			$RSSI = ($sn * - 10)
+			$RSSI = ($sn * -10)
 			$vposition = $2400topborder + (($2400graphheight / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($2400backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($2400backbuffer, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
@@ -4838,7 +4838,7 @@ Func _Draw5000ChanGraph()
 	;Draw 10% labels and lines
 	If $UseRssiInGraphs = 1 Then
 		For $sn = 0 To 10
-			$RSSI = ($sn * - 10)
+			$RSSI = ($sn * -10)
 			$vposition = $5000topborder + (($5000graphheight / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($5000backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($5000backbuffer, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
@@ -5452,7 +5452,7 @@ EndFunc   ;==>_OpenVistumblerForum
 
 Func _OpenVistumblerWiki();Opens Vistumbler Wiki
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerWiki() ') ;#Debug Display
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://sourceforge.net/apps/mediawiki/vistumbler/')
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'https://github.com/RIEI/Vistumbler/wiki')
 EndFunc   ;==>_OpenVistumblerWiki
 
 ;-------------------------------------------------------------------------------------------------------------------------------
