@@ -4515,11 +4515,13 @@ Func _RClick_AddManu();Adds new manucaturer to settings gui manufacturer list
 		GUICtrlCreateLabel($Column_Names_MANUF, 185, 10, 420, 15)
 		$MacAdd_GUI_MANU = GUICtrlCreateInput($Found_MMANU, 185, 30, 420, 21)
 		$MacAdd_OK = GUICtrlCreateButton($Text_Ok, 160, 60, 129, 25)
+		GUICtrlSetState(-1, 512)
 		$MacAdd_Cancel = GUICtrlCreateButton($Text_Cancel, 298, 60, 129, 25)
 		GUISetState(@SW_SHOW)
 		$AddMacOpen = 1
 		GUICtrlSetOnEvent($MacAdd_OK, "_MacAdd_Ok")
 		GUICtrlSetOnEvent($MacAdd_Cancel, "_MacAdd_Close")
+
 	Else
 		MsgBox(0, $Text_Error, "No AP selected")
 	EndIf
@@ -4575,9 +4577,10 @@ Func _RClick_AddLabel();Adds new manucaturer to settings gui manufacturer list
 		GUISetBkColor($BackgroundColor)
 		GUICtrlCreateLabel($Column_Names_BSSID, 15, 10, 150, 15)
 		$LabelAdd_GUI_BSSID = GUICtrlCreateInput($Found_BSSID, 16, 30, 153, 21)
-		GUICtrlCreateLabel($Column_Names_MANUF, 185, 10, 420, 15)
+		GUICtrlCreateLabel($Column_Names_Label, 185, 10, 420, 15)
 		$LabelAdd_GUI_LABEL = GUICtrlCreateInput($Found_MLABEL, 185, 30, 420, 21)
 		$LabelAdd_OK = GUICtrlCreateButton($Text_Ok, 160, 60, 129, 25)
+		GUICtrlSetState(-1, 512)
 		$LabelAdd_Cancel = GUICtrlCreateButton($Text_Cancel, 298, 60, 129, 25)
 		GUISetState(@SW_SHOW)
 		$AddLabelOpen = 1
@@ -4629,7 +4632,7 @@ Func _GraphDraw()
 	;Draw % or dBm labels and lines
 	If $UseRssiInGraphs = 1 Then;Draw dBm labels
 		For $sn = 0 To 10
-			$RSSI = ($sn * -10)
+			$RSSI = ($sn * - 10)
 			$vposition = $Graph_topborder + (($Graph_height / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($Graph_backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $Graph_leftborder, $vposition, $Graph_leftborder + $Graph_width, $vposition, $Pen_GraphGrid)
@@ -4849,7 +4852,7 @@ Func _Draw2400ChanGraph()
 	;Draw 10% labels and lines
 	If $UseRssiInGraphs = 1 Then
 		For $sn = 0 To 10
-			$RSSI = ($sn * -10)
+			$RSSI = ($sn * - 10)
 			$vposition = $2400topborder + (($2400graphheight / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($2400backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($2400backbuffer, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
@@ -5028,7 +5031,7 @@ Func _Draw5000ChanGraph()
 	;Draw 10% labels and lines
 	If $UseRssiInGraphs = 1 Then
 		For $sn = 0 To 10
-			$RSSI = ($sn * -10)
+			$RSSI = ($sn * - 10)
 			$vposition = $5000topborder + (($5000graphheight / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($5000backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($5000backbuffer, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
