@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.5.1 Beta 3'
+$version = 'v10.5.1 Beta 4'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/08/18'
+$last_modified = '2013/08/21'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -34,6 +34,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include <GDIPlus.au3>
 #include <Date.au3>
 #include <GuiButton.au3>
+#include <GuiMenu.au3>
 #include <Misc.au3>
 #include <String.au3>
 #include <INet.au3>
@@ -126,6 +127,7 @@ Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', '
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
+Global Enum $idCopy = 1000, $idNewManu, $idNewLabel
 
 Dim $NsOk
 Dim $StartArraySize
@@ -147,7 +149,9 @@ Dim $LabDB_OBJ
 Dim $CamDB_OBJ
 Dim $InstDB_OBJ
 Dim $FiltDB_OBJ
-Dim $AddApRecordArray[22]
+Dim $AddApRecordArray[24]
+Dim $AddLabelRecordArray[3]
+Dim $AddManuRecordArray[3]
 Dim $AddTreeRecordArray[17]
 Dim $APID = 0
 Dim $HISTID = 0
@@ -217,6 +221,8 @@ Dim $ClearAllAps = 0
 Dim $UpdateAutoSave = 0
 Dim $CompassOpen = 0
 Dim $SettingsOpen = 0
+Dim $AddMacOpen = 0
+Dim $AddLabelOpen = 0
 Dim $AutoUpApsToWifiDB = 0
 Dim $SayProcess
 Dim $MidiProcess
@@ -279,6 +285,7 @@ Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL, $GUI_PhilsApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
+Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal, $CWCB_HighSignal, $CWIB_HighSignal, $CWCB_RSSI, $CWIB_RSSI, $CWCB_HighRSSI, $CWIB_HighRSSI
@@ -4412,21 +4419,204 @@ Func _TreeviewListviewResize()
 	EndIf
 EndFunc   ;==>_TreeviewListviewResize
 
-Func WM_NOTIFY($hWnd, $MsgID, $wParam, $lParam)
+#cs
+	Func WM_NOTIFY($hWnd, $MsgID, $wParam, $lParam)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'WM_NOTIFY()') ;#Debug Display
 	Local $tagNMHDR, $code
 	$tagNMHDR = DllStructCreate("int;int;int", $lParam)
 	If @error Then Return 0
 	$code = DllStructGetData($tagNMHDR, 3)
 	If $wParam = $ListviewAPs And $code = -3 Then
-		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
-		If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
-			_GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False)
-		EndIf
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+	_GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False)
 	EndIf
+	EndIf
+	Return $GUI_RUNDEFMSG
+	EndFunc   ;==>WM_NOTIFY
+#ce
+Func WM_NOTIFY($hWnd, $iMsg, $iwParam, $ilParam)
+	Local $hWndFrom, $iIDFrom, $iCode, $tNMHDR, $hWndListView, $tInfo
+	$hWndListView = $ListviewAPs
+	If Not IsHWnd($ListviewAPs) Then $hWndListView = GUICtrlGetHandle($ListviewAPs)
+
+	$tNMHDR = DllStructCreate($tagNMHDR, $ilParam)
+	$hWndFrom = HWnd(DllStructGetData($tNMHDR, "hWndFrom"))
+	;$iIDFrom = DllStructGetData($tNMHDR, "IDFrom")
+	$iCode = DllStructGetData($tNMHDR, "Code")
+	Switch $hWndFrom
+		Case $hWndListView
+			Switch $iCode
+				Case $NM_RCLICK ; Sent by a list-view control when the user clicks an item with the left mouse button
+					ListView_RClick()
+				Case $NM_DBLCLK
+					$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+					If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+						_GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False)
+					EndIf
+			EndSwitch
+	EndSwitch
 	Return $GUI_RUNDEFMSG
 EndFunc   ;==>WM_NOTIFY
 
+Func ListView_RClick()
+	Local $aHit
+	ConsoleWrite("rclick" & @CRLF)
+	$hWndListView = $ListviewAPs
+	If Not IsHWnd($ListviewAPs) Then $hWndListView = GUICtrlGetHandle($ListviewAPs)
+	$aHit = _GUICtrlListView_SubItemHitTest($hWndListView)
+	If ($aHit[0] <> -1) Then
+		; Create a standard popup menu
+		; -------------------- To Do --------------------
+		$hMenu = _GUICtrlMenu_CreatePopup()
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_Copy, $idCopy)
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_AddNewMan, $idNewManu)
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_AddNewLabel, $idNewLabel)
+
+		; ========================================================================
+		; Shows how to capture the context menu selections
+		; ========================================================================
+		Switch _GUICtrlMenu_TrackPopupMenu($hMenu, $hWndListView, -1, -1, 1, 1, 2)
+			Case $idCopy
+				_CopyAP()
+			Case $idNewManu
+				_RClick_AddManu()
+			Case $idNewLabel
+				_RClick_AddLabel()
+		EndSwitch
+		_GUICtrlMenu_DestroyMenu($hMenu)
+	EndIf
+EndFunc   ;==>ListView_RClick
+
+Func _RClick_AddManu();Adds new manucaturer to settings gui manufacturer list
+	If $AddMacOpen = 1 Then _MacAdd_Close()
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+		;Get Mac Address
+		$query = "SELECT BSSID FROM AP WHERE ListRow=" & $Selected
+		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$Found_BSSID = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace($ListRowMatchArray[1][1], ':', ''), '-', ''), '"', ''), ' ', ''))
+		$Found_BSSID = StringTrimRight($Found_BSSID, StringLen($Found_BSSID) - 6)
+
+		;Get existing mac address information if it exists
+		Local $Found_MMANU
+		$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID='" & $Found_BSSID & "'"
+		$ManuMatchArray = _RecordSearch($ManuDB, $query, $ManuDB_OBJ)
+		$FoundManuMatch = UBound($ManuMatchArray) - 1
+		If $FoundManuMatch = 1 Then
+			$Found_MMANU = $ManuMatchArray[1][1]
+		EndIf
+
+		;Present GUI to change mac address
+		$MacAdd_GUI = GUICreate($Text_AddNewMan, 623, 96)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateLabel($Column_Names_BSSID, 15, 10, 150, 15)
+		$MacAdd_GUI_BSSID = GUICtrlCreateInput($Found_BSSID, 16, 30, 153, 21)
+		GUICtrlCreateLabel($Column_Names_MANUF, 185, 10, 420, 15)
+		$MacAdd_GUI_MANU = GUICtrlCreateInput($Found_MMANU, 185, 30, 420, 21)
+		$MacAdd_OK = GUICtrlCreateButton($Text_Ok, 160, 60, 129, 25)
+		$MacAdd_Cancel = GUICtrlCreateButton($Text_Cancel, 298, 60, 129, 25)
+		GUISetState(@SW_SHOW)
+		$AddMacOpen = 1
+		GUICtrlSetOnEvent($MacAdd_OK, "_MacAdd_Ok")
+		GUICtrlSetOnEvent($MacAdd_Cancel, "_MacAdd_Close")
+	Else
+		MsgBox(0, $Text_Error, "No AP selected")
+	EndIf
+EndFunc   ;==>_RClick_AddManu
+
+Func _MacAdd_Ok()
+	$MacAdd_BSSID = GUICtrlRead($MacAdd_GUI_BSSID)
+	$MacAdd_MANU = GUICtrlRead($MacAdd_GUI_MANU)
+	;Check if mac already exists
+	$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID='" & $MacAdd_BSSID & "'"
+	$ManuMatchArray = _RecordSearch($ManuDB, $query, $ManuDB_OBJ)
+	$FoundManuMatch = UBound($ManuMatchArray) - 1
+	If $FoundManuMatch = 1 Then ; Mac Exists, ask to update it
+		$overwrite_entry = MsgBox(4, $Text_Overwrite & '?', $Text_MacExistsOverwriteIt)
+		If $overwrite_entry = 6 Then
+			$query = "UPDATE Manufacturers SET Manufacturer='" & StringReplace($MacAdd_MANU, "'", "''") & "' WHERE BSSID='" & $MacAdd_BSSID & "'"
+			_ExecuteMDB($ManuDB, $ManuDB_OBJ, $query)
+		EndIf
+	Else ; Mac doesn't exist, Add it
+		ReDim $AddManuRecordArray[3]
+		$AddManuRecordArray[0] = 2
+		$AddManuRecordArray[1] = $MacAdd_BSSID
+		$AddManuRecordArray[2] = $MacAdd_MANU
+		_AddRecord($ManuDB, "Manufacturers", $ManuDB_OBJ, $AddManuRecordArray)
+	EndIf
+	_MacAdd_Close()
+EndFunc   ;==>_MacAdd_Ok
+
+Func _MacAdd_Close();Close edit manufacturer window
+	GUIDelete($MacAdd_GUI)
+	$AddMacOpen = 0
+	_UpdateListMacLabels()
+EndFunc   ;==>_MacAdd_Close
+
+Func _RClick_AddLabel();Adds new manucaturer to settings gui manufacturer list
+	If $AddLabelOpen = 1 Then _LabelAdd_Close()
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+		;Get Mac Address
+		$query = "SELECT BSSID FROM AP WHERE ListRow=" & $Selected
+		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$Found_BSSID = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace($ListRowMatchArray[1][1], ':', ''), '-', ''), '"', ''), ' ', ''))
+		;Get existing mac address information if it exists
+		Local $Found_MLABEL
+		$query = "SELECT Label FROM Labels WHERE BSSID='" & $Found_BSSID & "'"
+		$ManuMatchArray = _RecordSearch($LabDB, $query, $LabDB_OBJ)
+		$FoundManuMatch = UBound($ManuMatchArray) - 1
+		If $FoundManuMatch = 1 Then
+			$Found_MLABEL = $ManuMatchArray[1][1]
+		EndIf
+		;Present GUI to change mac address
+		$LabelAdd_GUI = GUICreate($Text_AddNewLabel, 623, 96)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateLabel($Column_Names_BSSID, 15, 10, 150, 15)
+		$LabelAdd_GUI_BSSID = GUICtrlCreateInput($Found_BSSID, 16, 30, 153, 21)
+		GUICtrlCreateLabel($Column_Names_MANUF, 185, 10, 420, 15)
+		$LabelAdd_GUI_LABEL = GUICtrlCreateInput($Found_MLABEL, 185, 30, 420, 21)
+		$LabelAdd_OK = GUICtrlCreateButton($Text_Ok, 160, 60, 129, 25)
+		$LabelAdd_Cancel = GUICtrlCreateButton($Text_Cancel, 298, 60, 129, 25)
+		GUISetState(@SW_SHOW)
+		$AddLabelOpen = 1
+		GUICtrlSetOnEvent($LabelAdd_OK, "_LabelAdd_Ok")
+		GUICtrlSetOnEvent($LabelAdd_Cancel, "_LabelAdd_Close")
+	Else
+		MsgBox(0, $Text_Error, "No AP selected")
+	EndIf
+EndFunc   ;==>_RClick_AddLabel
+
+Func _LabelAdd_Ok()
+	$LabelAdd_BSSID = GUICtrlRead($LabelAdd_GUI_BSSID)
+	$LabelAdd_LABEL = GUICtrlRead($LabelAdd_GUI_LABEL)
+	;Check if mac already exists
+	$query = "SELECT Label FROM Labels WHERE BSSID='" & $LabelAdd_BSSID & "'"
+	$ManuMatchArray = _RecordSearch($LabDB, $query, $LabDB_OBJ)
+	$FoundManuMatch = UBound($ManuMatchArray) - 1
+	If $FoundManuMatch = 1 Then ; Mac Exists, ask to update it
+		$overwrite_entry = MsgBox(4, $Text_Overwrite & '?', $Text_MacExistsOverwriteIt)
+		If $overwrite_entry = 6 Then
+			$query = "UPDATE Labels SET Label='" & StringReplace($LabelAdd_LABEL, "'", "''") & "' WHERE BSSID='" & $LabelAdd_BSSID & "'"
+			ConsoleWrite('old: ' & $query & @CRLF)
+			_ExecuteMDB($LabDB, $LabDB_OBJ, $query)
+		EndIf
+	Else ; Mac doesn't exist, Add it
+		ReDim $AddLabelRecordArray[3]
+		$AddLabelRecordArray[0] = 2
+		$AddLabelRecordArray[1] = $LabelAdd_BSSID
+		$AddLabelRecordArray[2] = $LabelAdd_LABEL
+		_AddRecord($LabDB, "Labels", $LabDB_OBJ, $AddLabelRecordArray)
+	EndIf
+	_LabelAdd_Close()
+EndFunc   ;==>_LabelAdd_Ok
+
+Func _LabelAdd_Close();Close edit manufacturer window
+	GUIDelete($LabelAdd_GUI)
+	$AddLabelOpen = 0
+	_UpdateListMacLabels()
+EndFunc   ;==>_LabelAdd_Close
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GRAPH FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
