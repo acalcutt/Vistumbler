@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.5.1 Beta 4'
+$version = 'v10.5.1 Beta 4.1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/08/21'
+$last_modified = '2013/10/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -2579,7 +2579,8 @@ Func _FilterRemoveNonMatchingInList()
 			For $frnm = 1 To $ApMatchArray[0][0]
 				$fApID = $ApMatchArray[$frnm][1]
 				;Get ListRow of AP
-				$query = "Select ListRow FR OM AP WHERE ApID=" & $fApID
+				$query = "Select ListRow FROM AP WHERE ApID=" & $fApID
+				ConsoleWrite($query & @CRLF)
 				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$fListRow = $ListRowArray[1][1]
 				_TreeViewRemove($fApID)
@@ -2676,7 +2677,7 @@ EndFunc   ;==>_FilterRemoveNonMatchingInList
 	$ImpSig = '0'
 	$ImpRSSI = '-100'
 	EndIf
-	
+
 	;Add APs to top of list
 	If $AddDirection = 0 Then
 	$query = "UPDATE AP SET ListRow=ListRow+1 WHERE ListRow<>-1"
@@ -5398,7 +5399,7 @@ EndFunc   ;==>_ExportWifidbVS1
 	$WifiDbUploadGUI = GUICreate($Text_UploadApsToWifidb, 580, 525)
 	GUISetBkColor($BackgroundColor)
 	GUICtrlCreateLabel($Text_WifiDB_Upload_Discliamer, 24, 8, 532, 89)
-	
+
 	GUICtrlCreateGroup($Text_UserInformation, 24, 104, 281, 161)
 	GUICtrlCreateLabel($Text_WifiDB_Username, 39, 124, 236, 20)
 	$upload_user_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
@@ -5407,25 +5408,25 @@ EndFunc   ;==>_ExportWifidbVS1
 	GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
 	$upload_apikey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
-	
+
 	GUICtrlCreateGroup($Text_FileType, 312, 104, 249, 161)
 	$VSZ_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVSZ, 327, 150, 220, 20)
 	GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
 	$VS1_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVS1, 327, 170, 220, 20)
 	$CSV_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerCSV, 327, 190, 220, 20)
 	$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
-	
+
 	GUICtrlCreateGroup($Text_UploadInformation, 24, 272, 537, 201)
 	GUICtrlCreateLabel($Text_Title, 39, 297, 500, 20)
 	$upload_title_GUI = GUICtrlCreateInput($ldatetimestamp, 39, 317, 500, 21)
 	GUICtrlCreateLabel($Text_Notes, 39, 342, 500, 20)
 	$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
 	;GUICtrlCreateGroup("", -99, -99, 1, 1)
-	
+
 	$WifiDbUploadGUI_Upload = GUICtrlCreateButton($Text_UploadApsToWifidb, 35, 488, 241, 25)
 	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton($Text_Cancel, 305, 487, 241, 25)
 	GUISetState(@SW_SHOW)
-	
+
 	GUICtrlSetOnEvent($WifiDbUploadGUI_Upload, '_UploadFileToWifiDB')
 	GUICtrlSetOnEvent($WifiDbUploadGUI_Cancel, '_CloseWifiDbUploadGUI')
 	GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseWifiDbUploadGUI')
@@ -10684,10 +10685,14 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 				If StringInStr($FilterValues, '<>') Then
 					$q_query &= "(" & $q_field & " <> " & StringReplace($FilterValues, '<>', '') & ")"
 				Else
-					If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
-						$q_query &= "(" & $q_field & " like " & $FilterValues & ")"
+					StringReplace($FilterValues, "%", "%")
+					$filter_pcount = @extended ; Number of % signs replaced above
+					StringReplace($FilterValues, "\%", "\%")
+					$filter_epcount = @extended ; Number of escaped % signs replaced above
+					If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
+						$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
 					Else
-						$q_query &= "(" & $q_field & " = " & $FilterValues & ")"
+						$q_query &= "(" & $q_field & " = '" & $FilterValues & "')"
 					EndIf
 				EndIf
 			EndIf
@@ -10721,7 +10726,11 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			If StringInStr($FilterValues, '<>') Then
 				$q_query &= "(" & $q_field & " <> '" & StringReplace($FilterValues, '<>', '') & "')"
 			Else
-				If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+				StringReplace($FilterValues, "%", "%")
+				$filter_pcount = @extended ; Number of % signs replaced above
+				StringReplace($FilterValues, "\%", "\%")
+				$filter_epcount = @extended ; Number of escaped % signs replaced above
+				If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
 					$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
 				Else
 					$q_query &= "(" & $q_field & " = '" & $FilterValues & "')"
@@ -10781,10 +10790,14 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 				If StringInStr($FilterValues, '<>') Then
 					$q_query &= "(" & $q_field & " = " & StringReplace($FilterValues, '<>', '') & ")"
 				Else
-					If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
-						$q_query &= "(" & $q_field & " not like " & $FilterValues & ")"
+					StringReplace($FilterValues, "%", "%")
+					$filter_pcount = @extended ; Number of % signs replaced above
+					StringReplace($FilterValues, "\%", "\%")
+					$filter_epcount = @extended ; Number of escaped % signs replaced above
+					If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
+						$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
 					Else
-						$q_query &= "(" & $q_field & " <> " & $FilterValues & ")"
+						$q_query &= "(" & $q_field & " <> '" & $FilterValues & "')"
 					EndIf
 				EndIf
 			EndIf
@@ -10818,7 +10831,11 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			If StringInStr($FilterValues, '<>') Then
 				$q_query &= "(" & $q_field & " = '" & StringReplace($FilterValues, '<>', '') & "')"
 			Else
-				If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+				StringReplace($FilterValues, "%", "%")
+				$filter_pcount = @extended ; Number of % signs replaced above
+				StringReplace($FilterValues, "\%", "\%")
+				$filter_epcount = @extended ; Number of escaped % signs replaced above
+				If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
 					$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
 				Else
 					$q_query &= "(" & $q_field & " <> '" & $FilterValues & "')"
