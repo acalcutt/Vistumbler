@@ -19,9 +19,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.5.1 Beta 4.1'
+$version = 'v10.5.1 Beta 4.2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/10/03'
+$last_modified = '2013/10/09'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -6280,7 +6280,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 	EndIf
 	If $Detailed = 0 Then
-		$file = "SSID,BSSID,MANUFACTURER,HIGHEST SIGNAL W/GPS,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,LATITUDE,LONGITUDE,BTX,OTX,FIRST SEEN(UTC),LAST SEEN(UTC),NETWORK TYPE,LABEL" & @CRLF
+		$file = "SSID,BSSID,MANUFACTURER,HIGHEST SIGNAL W/GPS,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,LATITUDE,LONGITUDE,BTX,OTX,FIRST SEEN(UTC),LAST SEEN(UTC),NETWORK TYPE,LABEL, HIGHEST SIGNAL, HIGHEST RSSI" & @CRLF
 	ElseIf $Detailed = 1 Then
 		$file = "SSID,BSSID,MANUFACTURER,SIGNAL,High Signal,RSSI,High RSSI,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,BTX,OTX,NETWORK TYPE,LABEL,LATITUDE,LONGITUDE,SATELLITES,HDOP,ALTITUDE,HEIGHT OF GEOID,SPEED(km/h),SPEED(MPH),TRACK ANGLE,DATE(UTC),TIME(UTC)" & @CRLF
 	EndIf
@@ -6339,7 +6339,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
 				;Write summary csv line
-				$file &= StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', '') & @CRLF
+				$file &= StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', '') & ',' & $ExpHighSig & ',' & $ExpHighRSSI & @CRLF
 			ElseIf $Detailed = 1 Then
 				;Get All Signals and GpsIDs for current ApID
 				$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID & " And Signal<>0 ORDER BY Date1, Time1"
@@ -7811,7 +7811,7 @@ Func _ImportCSV($CSVfile)
 				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 
 			Next
-		ElseIf $iCol = 16 Then ;Import Vistumbler Summary CSV
+		ElseIf $iCol = 16 Or $iCol = 18 Then ;Import Vistumbler Summary CSV
 			For $lc = 1 To $iSize
 				$ImpSSID = $CSVArray[$lc][0]
 				If StringLeft($ImpSSID, 1) = '"' And StringRight($ImpSSID, 1) = '"' Then $ImpSSID = StringTrimLeft(StringTrimRight($ImpSSID, 1), 1)
@@ -7834,6 +7834,10 @@ Func _ImportCSV($CSVfile)
 				$ImpLAB = $CSVArray[$lc][15]
 				If StringLeft($ImpLAB, 1) = '"' And StringRight($ImpLAB, 1) = '"' Then $ImpLAB = StringTrimLeft(StringTrimRight($ImpLAB, 1), 1)
 				$ImpSat = "00"
+				If $iCol = 18 Then ;If this is a newer summery csv, use the new RSSI and Signal values
+					$ImpHighSig = $CSVArray[$lc][16]
+					$ImpRSSI = $CSVArray[$lc][17]
+				EndIf
 
 				$tsplit = StringSplit($ImpFirstDateTime, ' ')
 				$LoadFirstActive_Date = $tsplit[1]
@@ -10644,7 +10648,23 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 		Return ($q_query)
 	Else
 		If $q_query <> '' Then $q_query &= ' AND '
-		$FilterValues = StringReplace($FilterValues, "|", ",")
+		;$FilterValues = StringReplace($FilterValues, "|", ",")
+		;Get values to seperate filter sysmbols from escaped filter symbols
+		StringReplace($FilterValues, "%", "%")
+		$filter_pcount = @extended ; Number of percent signs in filter
+		StringReplace($FilterValues, "\%", "\%")
+		$filter_epcount = @extended ; Number of escaped percent signs in filter
+		StringReplace($FilterValues, "-", "-")
+		$filter_dcount = @extended ; Number of dashes in filter
+		StringReplace($FilterValues, "\-", "\-")
+		$filter_edcount = @extended ; Number of escaped dashes in filter
+		StringReplace($FilterValues, ",", ",")
+		$filter_ccount = @extended ; Number of commas in filter
+		StringReplace($FilterValues, "\,", "\,")
+		$filter_eccount = @extended ; Number of escaped commas signs in filter
+		$filter_enecount = @extended ; Number of escaped not equals in filter
+		$FilterValues = StringReplace(StringReplace(StringReplace($FilterValues, "\%", "%"), "\-", "-"), "\,", ",")
+
 		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
 			If (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then ;If there are 3 dashes, treat this as a range of RSSI values
 				$RRS = StringSplit($FilterValues, "-")
@@ -10685,10 +10705,6 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 				If StringInStr($FilterValues, '<>') Then
 					$q_query &= "(" & $q_field & " <> " & StringReplace($FilterValues, '<>', '') & ")"
 				Else
-					StringReplace($FilterValues, "%", "%")
-					$filter_pcount = @extended ; Number of % signs replaced above
-					StringReplace($FilterValues, "\%", "\%")
-					$filter_epcount = @extended ; Number of escaped % signs replaced above
 					If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
 						$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
 					Else
@@ -10697,7 +10713,7 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 				EndIf
 			EndIf
 			Return ($q_query)
-		ElseIf StringInStr($FilterValues, ",") Then
+		ElseIf StringInStr($FilterValues, ",") And ($filter_ccount > $filter_eccount) Then
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
 				If StringInStr($q_splitstring[$q], '<>') Then
@@ -10714,22 +10730,21 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			If $ret2 <> '' Then $q_query &= $q_field & " IN (" & $ret2 & ")"
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
 			Return ($q_query)
-		ElseIf StringInStr($FilterValues, "-") Then
-			$q_splitstring = StringSplit($FilterValues, "-")
+		ElseIf StringInStr($FilterValues, "-") And ($filter_dcount > $filter_edcount) Then
+			$filtopnum = (($filter_dcount - 1) / 2) + 1 ;Find center dash, which should be the filter operator
+			$splitdashpos = StringInStr($FilterValues, "-", 1, $filtopnum) ;Find center dash location
+			$ri1 = StringTrimRight($FilterValues, (StringLen($FilterValues) - $splitdashpos) + 1) ;Get first range value
+			$ri2 = StringTrimLeft($FilterValues, $splitdashpos) ;Get second range value
 			If StringInStr($FilterValues, '<>') Then
-				$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
+				$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringReplace($ri1, '<>', '') & "' AND '" & StringReplace($ri2, '<>', '') & "')"
 			Else
-				$q_query &= "(" & $q_field & " BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+				$q_query &= "(" & $q_field & " BETWEEN '" & $ri1 & "' AND '" & $ri2 & "')"
 			EndIf
 			Return ($q_query)
 		Else
 			If StringInStr($FilterValues, '<>') Then
 				$q_query &= "(" & $q_field & " <> '" & StringReplace($FilterValues, '<>', '') & "')"
 			Else
-				StringReplace($FilterValues, "%", "%")
-				$filter_pcount = @extended ; Number of % signs replaced above
-				StringReplace($FilterValues, "\%", "\%")
-				$filter_epcount = @extended ; Number of escaped % signs replaced above
 				If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
 					$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
 				Else
@@ -10749,7 +10764,22 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 		Return ($q_query)
 	Else
 		If $q_query <> '' Then $q_query &= ' OR '
-		$FilterValues = StringReplace($FilterValues, "|", ",")
+		;$FilterValues = StringReplace($FilterValues, "|", ",")
+		;Get values to seperate filter sysmbols from escaped filter symbols
+		StringReplace($FilterValues, "%", "%")
+		$filter_pcount = @extended ; Number of percent signs in filter
+		StringReplace($FilterValues, "\%", "\%")
+		$filter_epcount = @extended ; Number of escaped percent signs in filter
+		StringReplace($FilterValues, "-", "-")
+		$filter_dcount = @extended ; Number of dashes in filter
+		StringReplace($FilterValues, "\-", "\-")
+		$filter_edcount = @extended ; Number of escaped dashes in filter
+		StringReplace($FilterValues, ",", ",")
+		$filter_ccount = @extended ; Number of commas in filter
+		StringReplace($FilterValues, "\,", "\,")
+		$filter_eccount = @extended ; Number of escaped commas signs in filter
+		$FilterValues = StringReplace(StringReplace(StringReplace($FilterValues, "\%", "%"), "\-", "-"), "\,", ",")
+		;Create query
 		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
 			If (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then ;If there are 3 dashes, treat this as a range of RSSI values
 				$RRS = StringSplit($FilterValues, "-")
@@ -10790,10 +10820,6 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 				If StringInStr($FilterValues, '<>') Then
 					$q_query &= "(" & $q_field & " = " & StringReplace($FilterValues, '<>', '') & ")"
 				Else
-					StringReplace($FilterValues, "%", "%")
-					$filter_pcount = @extended ; Number of % signs replaced above
-					StringReplace($FilterValues, "\%", "\%")
-					$filter_epcount = @extended ; Number of escaped % signs replaced above
 					If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
 						$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
 					Else
@@ -10802,7 +10828,7 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 				EndIf
 			EndIf
 			Return ($q_query)
-		ElseIf StringInStr($FilterValues, ",") Then
+		ElseIf StringInStr($FilterValues, ",") And ($filter_ccount > $filter_eccount) Then
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
 				If StringInStr($q_splitstring[$q], '<>') Then
@@ -10819,22 +10845,21 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			If $ret2 <> '' Then $q_query &= $q_field & " NOT IN (" & $ret2 & ")"
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
 			Return ($q_query)
-		ElseIf StringInStr($FilterValues, "-") Then
-			$q_splitstring = StringSplit($FilterValues, "-")
+		ElseIf StringInStr($FilterValues, "-") And ($filter_dcount > $filter_edcount) Then
+			$filtopnum = (($filter_dcount - 1) / 2) + 1 ;Find center dash, which should be the filter operator
+			$splitdashpos = StringInStr($FilterValues, "-", 1, $filtopnum) ;Find center dash location
+			$ri1 = StringTrimRight($FilterValues, (StringLen($FilterValues) - $splitdashpos) + 1) ;Get first range value
+			$ri2 = StringTrimLeft($FilterValues, $splitdashpos) ;Get second range value
 			If StringInStr($FilterValues, '<>') Then
-				$q_query &= "(" & $q_field & " BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
+				$q_query &= "(" & $q_field & " BETWEEN '" & StringReplace($ri1, '<>', '') & "' AND '" & StringReplace($ri2, '<>', '') & "')"
 			Else
-				$q_query &= "(" & $q_field & " NOT BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+				$q_query &= "(" & $q_field & " NOT BETWEEN '" & $ri1 & "' AND '" & $ri2 & "')"
 			EndIf
 			Return ($q_query)
 		Else
 			If StringInStr($FilterValues, '<>') Then
 				$q_query &= "(" & $q_field & " = '" & StringReplace($FilterValues, '<>', '') & "')"
 			Else
-				StringReplace($FilterValues, "%", "%")
-				$filter_pcount = @extended ; Number of % signs replaced above
-				StringReplace($FilterValues, "\%", "\%")
-				$filter_epcount = @extended ; Number of escaped % signs replaced above
 				If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
 					$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
 				Else
