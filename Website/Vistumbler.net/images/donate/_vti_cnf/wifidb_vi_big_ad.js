@@ -1,9 +1,9 @@
 vti_encoding:SR|utf8-nl
 vti_timelastmodified:TR|28 Dec 2013 06:00:03 -0000
 vti_extenderversion:SR|12.0.0.6211
-vti_author:SR|WSC_DOMAIN\\acalcutt
+vti_author:SR|EIRI\\andrew
 vti_modifiedby:SR|EIRI\\andrew
-vti_timecreated:TR|17 May 2009 00:42:09 -0000
-vti_backlinkinfo:VX|
+vti_timecreated:TR|28 Dec 2013 06:00:03 -0000
 vti_cacheddtm:TX|28 Dec 2013 06:00:03 -0000
-vti_filesize:IR|360
+vti_filesize:IR|599
+vti_backlinkinfo:VX|
