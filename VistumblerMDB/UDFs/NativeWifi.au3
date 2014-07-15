@@ -6,6 +6,8 @@ Artistic License 2.0
 
 Edited 2012-08-26 by acalcutt1 - Added International 2.4Ghz channels and 5Ghz channels to _Wlan_GetNetworkInfo()
 Edited 2012-11-11 by acalcutt1 - Modified _Wlan_EnumToString DOT11_AUTH_ALGORITHM and DOT11_CIPHER_ALGORITHM to match netsh output names.
+Edited 2014-07-15 by acalcutt - Merge branch 'patch-1' of https://github.com/EionRobb/Vistumbler into beta. Fix to allow 802.11ac support.
+
 #CE
 ;--------------Enumerations-------------
 
@@ -3719,7 +3721,7 @@ EndFunc
 ;                  |$asNetworks[$iIndex][11] - Information on the radio types listed
 ;                  |$asNetworks[$iIndex][12] - The radio types of network
 ;                  |$asNetworks[$iIndex][13] - UDF Flags
-;                  number - The associated profile entry can be \n[^found at this index
+;                  number - The associated profile entry can be found at this index
 ;                  C - There is a authentication and/or encryption conflict between the profile and what was detected from the network.
 ;                  M - The authentication and/or encryption fields of the entry have been modified to coincide with the detected network.
 ;                  Failure - False
