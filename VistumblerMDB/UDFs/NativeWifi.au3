@@ -23,7 +23,7 @@ Global Enum $DOT11_CIPHER_ALGO_NONE, $DOT11_CIPHER_ALGO_WEP40, $DOT11_CIPHER_ALG
 
 ;DOT11_PHY_TYPE
 Global Enum $DOT11_PHY_TYPE_UNKNOWN, $DOT11_PHY_TYPE_ANY = 0, $DOT11_PHY_TYPE_FHSS, $DOT11_PHY_TYPE_DSSS, $DOT11_PHY_TYPE_IRBASEBAND, $DOT11_PHY_TYPE_OFDM, _
-		$DOT11_PHY_TYPE_HRDSSS, $DOT11_PHY_TYPE_ERP, $DOT11_PHY_TYPE_HT, $DOT11_PHY_TYPE_IHV_START = 2147483648, $DOT11_PHY_TYPE_IHV_END = 4294967295
+		$DOT11_PHY_TYPE_HRDSSS, $DOT11_PHY_TYPE_ERP, $DOT11_PHY_TYPE_HT, $DOT11_PHY_TYPE_VHT, $DOT11_PHY_TYPE_IHV_START = 2147483648, $DOT11_PHY_TYPE_IHV_END = 4294967295
 
 ;DOT11_RADIO_STATE
 Global Enum $DOT11_RADIO_STATE_UNKNOWN, $DOT11_RADIO_STATE_ON, $DOT11_RADIO_STATE_OFF
@@ -259,6 +259,8 @@ Func _Wlan_EnumToString($sCategory, $iEnumeration)
 					Return "g"
 				Case $DOT11_PHY_TYPE_HT
 					Return "n"
+				Case $DOT11_PHY_TYPE_VHT
+					Return "ac"
 				Case $DOT11_PHY_TYPE_IHV_START To $DOT11_PHY_TYPE_IHV_END
 					Return "IHV Phy Type (0x" & Hex($iEnumeration) & ")"
 				Case Else
@@ -3717,7 +3719,7 @@ EndFunc
 ;                  |$asNetworks[$iIndex][11] - Information on the radio types listed
 ;                  |$asNetworks[$iIndex][12] - The radio types of network
 ;                  |$asNetworks[$iIndex][13] - UDF Flags
-;                  number - The associated profile entry can be found at this index
+;                  number - The associated profile entry can be \n[^found at this index
 ;                  C - There is a authentication and/or encryption conflict between the profile and what was detected from the network.
 ;                  M - The authentication and/or encryption fields of the entry have been modified to coincide with the detected network.
 ;                  Failure - False
