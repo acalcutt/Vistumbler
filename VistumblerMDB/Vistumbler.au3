@@ -17,9 +17,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.5.1 Beta 5'
+$version = 'v10.5.1 Beta 6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2014/07/15'
+$last_modified = '2014/08/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -5633,11 +5633,43 @@ Func _LocateGpsInWifidb();Finds GPS based on active acess points based on WifiDB
 		$url_data = "ActiveBSSIDs=" & $ActiveMacs
 		;ConsoleWrite($url_root & $url_data & @CRLF)
 		$webpagesource = _INetGetSource($url_root & $url_data)
-		If StringInStr($webpagesource, '|') Then
-			$wifigpsdata = StringSplit($webpagesource, "|")
-			If $wifigpsdata[1] <> '' And $wifigpsdata[1] <> '' Then
-				$LatitudeWifidb = $wifigpsdata[1]
-				$LongitudeWifidb = $wifigpsdata[2]
+		$webpagesource = StringReplace(StringReplace(StringReplace($webpagesource, '{', ''), '}', ''), '"', '') ; Remove JSON formatting
+		;ConsoleWrite($webpagesource & @CRLF)
+		If StringInStr($webpagesource, ',') Then
+			$wifidbvalues = StringSplit($webpagesource, ",")
+			Local $TmpLatWifiDB, $TmpLonWifiDB
+			For $lr = 0 To $wifidbvalues[0]
+				If StringInStr($wifidbvalues[$lr], ':') Then
+					$wifigpsdata = StringSplit($wifidbvalues[$lr], ":")
+					If $wifigpsdata[0] = 2 Then
+						$wifigpsdatatype = $wifigpsdata[1]
+						$wifigpsdatavalue = $wifigpsdata[2]
+						;ConsoleWrite($wifigpsdatatype & "-" & $wifigpsdatavalue & @CRLF)
+
+						If $wifigpsdatatype = "lat" Then
+							If StringInStr($wifigpsdatavalue, "-") Then
+								$wifigpsdatavalue = "S " & StringReplace($wifigpsdatavalue, "-", "")
+							Else
+								$wifigpsdatavalue = "N " & StringReplace($wifigpsdatavalue, "+", "")
+							EndIf
+							$TmpLatWifiDB = $wifigpsdatavalue
+						ElseIf $wifigpsdatatype = "long" Then
+							If StringInStr($wifigpsdatavalue, "-") Then
+								$wifigpsdatavalue = "W " & StringReplace($wifigpsdatavalue, "-", "")
+							Else
+								$wifigpsdatavalue = "E " & StringReplace($wifigpsdatavalue, "+", "")
+							EndIf
+							$TmpLonWifiDB = $wifigpsdatavalue
+						EndIf
+					EndIf
+				EndIf
+			Next
+
+			;ConsoleWrite($TmpLatWifiDB & "-" & $TmpLonWifiDB & @CRLF)
+
+			If $TmpLatWifiDB <> '' And $TmpLonWifiDB <> '' Then
+				$LatitudeWifidb = $TmpLatWifiDB
+				$LongitudeWifidb = $TmpLonWifiDB
 				$WifidbGPS_Update = TimerInit()
 				$return = 1
 			EndIf
