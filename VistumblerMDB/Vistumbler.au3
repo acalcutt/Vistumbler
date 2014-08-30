@@ -2183,7 +2183,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 						$DBHighGpsHistId = $HISTID
 						$DBLat = $New_Lat
 						$DBLon = $New_Lon
-					ElseIf $RSSI = $Found_RSSI Then ;If the number of satalites are equal, use the position with the higher signal
+					ElseIf $RSSI = $Found_RSSI Then ;If the RSSIs are equal, use the position with the higher number of sats
 						If $New_NumSat > $Found_NumSat Then
 							$DBHighGpsHistId = $HISTID
 							$DBLat = $New_Lat
@@ -12759,19 +12759,6 @@ Func RGB2BGR($iColor)
 		Return ('0xFFFFFF')
 	EndIf
 EndFunc   ;==>RGB2BGR
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 Func _UpdateListview()
 	;Find APs that meet criteria but are not in the listview
