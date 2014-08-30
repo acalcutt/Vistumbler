@@ -1,27 +1,25 @@
 #RequireAdmin
-#region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=Beta
+#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
-#AutoIt3Wrapper_UseUpx=n
 #AutoIt3Wrapper_Res_Fileversion=10.3.2.0
-#AutoIt3Wrapper_res_requestedExecutionLevel=asInvoker
+#AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
 #AutoIt3Wrapper_Run_Tidy=y
-#endregion ;**** Directives created by AutoIt3Wrapper_GUI ****
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2013 Andrew Calcutt
+;Copyright (C) 2014 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.9.4
+;AutoIt Version: v3.3.12.0
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
-$Script_Function = 'A wireless network scanner for vista and windows 7. This Program uses "netsh wlan show networks mode=bssid" to get wireless information.'
-$version = 'v10.5.2 Alpha 2.22'
+$Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
+$version = 'v10.5.2 Alpha 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2013/04/15'
+$last_modified = '2014/08/29'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -34,6 +32,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include <GDIPlus.au3>
 #include <Date.au3>
 #include <GuiButton.au3>
+#include <GuiMenu.au3>
 #include <Misc.au3>
 #include <String.au3>
 #include <INet.au3>
@@ -128,6 +127,7 @@ Dim $DateFormat = StringReplace(StringReplace(IniRead($settings, 'DateFormat', '
 ;Declair-Variables---------------------------------------
 Global $gdi_dll, $user32_dll
 Global $hDC
+Global Enum $idCopy = 1000, $idNewManu, $idNewLabel, $idGNInfo, $idGraph, $idFindAP
 
 Dim $NsOk
 Dim $StartArraySize
@@ -149,7 +149,9 @@ Dim $LabDB_OBJ
 Dim $CamDB_OBJ
 Dim $InstDB_OBJ
 Dim $FiltDB_OBJ
-Dim $AddApRecordArray[22]
+Dim $AddApRecordArray[24]
+Dim $AddLabelRecordArray[3]
+Dim $AddManuRecordArray[3]
 Dim $AddTreeRecordArray[17]
 Dim $APID = 0
 Dim $HISTID = 0
@@ -219,6 +221,8 @@ Dim $ClearAllAps = 0
 Dim $UpdateAutoSave = 0
 Dim $CompassOpen = 0
 Dim $SettingsOpen = 0
+Dim $AddMacOpen = 0
+Dim $AddLabelOpen = 0
 Dim $AutoUpApsToWifiDB = 0
 Dim $SayProcess
 Dim $MidiProcess
@@ -281,6 +285,7 @@ Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac
 Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_PhilsGraphURL, $GUI_PhilsWdbURL, $GUI_PhilsApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
+Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal, $CWCB_HighSignal, $CWIB_HighSignal, $CWCB_RSSI, $CWIB_RSSI, $CWCB_HighRSSI, $CWIB_HighRSSI
@@ -432,7 +437,7 @@ Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 
 Dim $SortTime = IniRead($settings, 'AutoSort', 'AutoSortTime', 60)
 Dim $AutoSort = IniRead($settings, 'AutoSort', 'AutoSort', 0)
-Dim $SortBy = IniRead($settings, 'AutoSort', 'SortCombo', 'Sort by SSID')
+Dim $SortBy = IniRead($settings, 'AutoSort', 'SortCombo', 'SSID')
 Dim $SortDirection = IniRead($settings, 'AutoSort', 'AscDecDefault', 0)
 
 Dim $SaveTime = IniRead($settings, 'AutoSave', 'AutoSaveTime', 300)
@@ -965,6 +970,8 @@ Dim $Text_Title = IniRead($DefaultLanguagePath, 'GuiText', 'Title', 'Title')
 Dim $Text_Notes = IniRead($DefaultLanguagePath, 'GuiText', 'Notes', 'Notes')
 Dim $Text_UploadApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadApsToWifidb', 'Upload APs to WifiDB')
 Dim $Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
+Dim $Text_GeoNamesInfo = IniRead($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo', 'Geonames Info')
+Dim $Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1612,7 +1619,8 @@ While 1
 			;Remove APs that do not match the filter
 			_FilterRemoveNonMatchingInList()
 			;Add APs back into the listview that match but are not there
-			_FilterReAddMatchingNotInList()
+			_UpdateListview()
+			;_FilterReAddMatchingNotInList()
 			;Play Midi Sounds for all active APs (if enabled)
 			_PlayMidiForActiveAPs()
 		EndIf
@@ -1635,7 +1643,8 @@ While 1
 		;Remove APs that do not match the filter
 		_FilterRemoveNonMatchingInList()
 		;Add APs back into the listview that match but are not there
-		_FilterReAddMatchingNotInList()
+		_UpdateListview()
+		;_FilterReAddMatchingNotInList()
 	EndIf
 	;Resize Controls / Control Resize Monitoring
 	_TreeviewListviewResize()
@@ -1699,7 +1708,7 @@ While 1
 	EndIf
 
 	;Sort Listview (if enabled)
-	If $AutoSort = 1 And TimerDiff($sort_timer) >= ($SortTime * 1000) Then _SortListColumn($SortBy, $SortDirection)
+	;If $AutoSort = 1 And TimerDiff($sort_timer) >= ($SortTime * 1000) Then _SortListColumn($SortBy, $SortDirection)
 	If $AutoSave = 1 And $UpdateAutoSave = 1 And TimerDiff($save_timer) >= ($SaveTime * 1000) Then
 		_AutoSave()
 		$UpdateAutoSave = 0
@@ -2160,21 +2169,21 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$DBHighGpsHistId = $HISTID
 				Else;If old HighGpsHistId has a postion, check if the new posion has a higher number of satalites/higher signal
 					;Get Old GpsID and Signal
-					$query = "SELECT GpsID, Signal FROM HIST WHERE HistID=" & $Found_HighGpsHistId
+					$query = "SELECT GpsID, RSSI FROM HIST WHERE HistID=" & $Found_HighGpsHistId
 					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$Found_GpsID = $HistMatchArray[1][1]
-					$Found_Sig = $HistMatchArray[1][2] - 0 ;For some reason a " - 0' was needed here or the signals would not compair properly
+					$Found_RSSI = $HistMatchArray[1][2]
 					;Get Old Latititude, Logitude and Number of Satalites from Old GPS ID
 					$query = "SELECT Latitude, Longitude, NumOfSats FROM GPS WHERE GpsID=" & $Found_GpsID
 					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$Found_Lat = $GpsMatchArray[1][1]
 					$Found_Lon = $GpsMatchArray[1][2]
 					$Found_NumSat = $GpsMatchArray[1][3]
-					If $SIG > $Found_Sig Then ;If the new signal is greater or eqaul to the old signal
+					If $RSSI > $Found_RSSI Then ;If the new RSSI is greater or eqaul to the old RSSI
 						$DBHighGpsHistId = $HISTID
 						$DBLat = $New_Lat
 						$DBLon = $New_Lon
-					ElseIf $SIG = $Found_Sig Then ;If the number of satalites are equal, use the position with the higher signal
+					ElseIf $RSSI = $Found_RSSI Then ;If the number of satalites are equal, use the position with the higher signal
 						If $New_NumSat > $Found_NumSat Then
 							$DBHighGpsHistId = $HISTID
 							$DBLat = $New_Lat
@@ -2184,7 +2193,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 							$DBLat = -1
 							$DBLon = -1
 						EndIf
-					Else ;If the Old Number of satalites is greater than the new, use the old position
+					Else ;If the old RSSI is greater than the new, use the old position
 						$DBHighGpsHistId = $Found_HighGpsHistId
 						$DBLat = -1
 						$DBLon = -1
@@ -2243,6 +2252,49 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	EndIf
 	Return ($NewApFound)
 EndFunc   ;==>_AddApData
+
+Func _AddIconListRow($SigLev, $IconSecType, $LineTxt, $AddPos)
+	;Add Into ListView, Set icon color
+	Local $addListRow
+	If $SigLev >= 1 And $SigLev <= 20 Then
+		If $IconSecType = 1 Then
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 1)
+		Else
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 7)
+		EndIf
+	ElseIf $SigLev >= 21 And $SigLev <= 40 Then
+		If $IconSecType = 1 Then
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 2)
+		Else
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 8)
+		EndIf
+	ElseIf $SigLev >= 41 And $SigLev <= 60 Then
+		If $IconSecType = 1 Then
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 3)
+		Else
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 9)
+		EndIf
+	ElseIf $SigLev >= 61 And $SigLev <= 80 Then
+		If $IconSecType = 1 Then
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 4)
+		Else
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 10)
+		EndIf
+	ElseIf $SigLev >= 81 And $SigLev <= 100 Then
+		If $IconSecType = 1 Then
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 5)
+		Else
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 11)
+		EndIf
+	Else
+		If $IconSecType = 1 Then
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 0)
+		Else
+			$addListRow = _GUICtrlListView_InsertItem($ListviewAPs, $LineTxt, $AddPos, 6)
+		EndIf
+	EndIf
+	Return ($addListRow)
+EndFunc   ;==>_AddIconListRow
 
 Func _UpdateIcon($ApListRow, $ApSig, $ApSecType)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateIcon()') ;#Debug Display
@@ -2542,6 +2594,7 @@ Func _FilterRemoveNonMatchingInList()
 				$fApID = $ApMatchArray[$frnm][1]
 				;Get ListRow of AP
 				$query = "Select ListRow FROM AP WHERE ApID=" & $fApID
+				ConsoleWrite($query & @CRLF)
 				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$fListRow = $ListRowArray[1][1]
 				_TreeViewRemove($fApID)
@@ -2571,127 +2624,129 @@ Func _FilterRemoveNonMatchingInList()
 	EndIf
 EndFunc   ;==>_FilterRemoveNonMatchingInList
 
-Func _FilterReAddMatchingNotInList()
+#cs
+	Func _FilterReAddMatchingNotInList()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FilterReAddMatchingNotInList()') ;#Debug Display
 	If StringInStr($AddQuery, "WHERE") Then
-		$fquery = $AddQuery & " AND ListRow=-1"
+	$fquery = $AddQuery & " AND ListRow=-1"
 	Else
-		$fquery = $AddQuery & " WHERE ListRow=-1"
+	$fquery = $AddQuery & " WHERE ListRow=-1"
 	EndIf
 	$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
 	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
 	For $imp = 1 To $FoundLoadApMatch
-		$ImpApID = $LoadApMatchArray[$imp][1]
-		$ImpSSID = $LoadApMatchArray[$imp][2]
-		$ImpBSSID = $LoadApMatchArray[$imp][3]
-		$ImpNET = $LoadApMatchArray[$imp][4]
-		$ImpRAD = $LoadApMatchArray[$imp][5]
-		$ImpCHAN = $LoadApMatchArray[$imp][6]
-		$ImpAUTH = $LoadApMatchArray[$imp][7]
-		$ImpENCR = $LoadApMatchArray[$imp][8]
-		$ImpSecType = $LoadApMatchArray[$imp][9]
-		$ImpBTX = $LoadApMatchArray[$imp][10]
-		$ImpOTX = $LoadApMatchArray[$imp][11]
-		$ImpMANU = $LoadApMatchArray[$imp][12]
-		$ImpLAB = $LoadApMatchArray[$imp][13]
-		$ImpHighGpsHistID = $LoadApMatchArray[$imp][14]
-		$ImpFirstHistID = $LoadApMatchArray[$imp][15]
-		$ImpLastHistID = $LoadApMatchArray[$imp][16]
-		$ImpLastGpsID = $LoadApMatchArray[$imp][17]
-		$ImpActive = $LoadApMatchArray[$imp][18]
-		$ImpHighSignal = $LoadApMatchArray[$imp][19]
-		$ImpHighRSSI = $LoadApMatchArray[$imp][20]
-		;Get GPS Position
-		If $ImpHighGpsHistID = 0 Then
-			$ImpLat = 'N 0000.0000'
-			$ImpLon = 'E 0000.0000'
-		Else
-			$query = "SELECT GpsID FROM Hist WHERE HistID=" & $ImpHighGpsHistID
-			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ImpGID = $HistMatchArray[1][1]
-			$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ImpGID
-			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundGpsMatch = UBound($GpsMatchArray) - 1
-			$ImpLat = $GpsMatchArray[1][1]
-			$ImpLon = $GpsMatchArray[1][2]
-		EndIf
-		;Get First Time
-		$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $ImpFirstHistID
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ImpDate = $HistMatchArray[1][1]
-		$ImpTime = $HistMatchArray[1][2]
-		$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
-		;Get Last Time
-		$query = "SELECT Date1, Time1, Signal, RSSI FROM Hist WHERE HistID=" & $ImpLastHistID
-		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-		$ImpDate = $HistMatchArray[1][1]
-		$ImpTime = $HistMatchArray[1][2]
-		$ImpSig = $HistMatchArray[1][3]
-		$ImpRSSI = $HistMatchArray[1][4]
-		$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
-		;If AP is not active, mark as dead and set signal to 0
-		If $ImpActive <> 0 And $ImpSig <> 0 Then
-			$LActive = $Text_Active
-		Else
-			$LActive = $Text_Dead
-			$ImpSig = '0'
-			$ImpRSSI = '-100'
-		EndIf
+	$ImpApID = $LoadApMatchArray[$imp][1]
+	$ImpSSID = $LoadApMatchArray[$imp][2]
+	$ImpBSSID = $LoadApMatchArray[$imp][3]
+	$ImpNET = $LoadApMatchArray[$imp][4]
+	$ImpRAD = $LoadApMatchArray[$imp][5]
+	$ImpCHAN = $LoadApMatchArray[$imp][6]
+	$ImpAUTH = $LoadApMatchArray[$imp][7]
+	$ImpENCR = $LoadApMatchArray[$imp][8]
+	$ImpSecType = $LoadApMatchArray[$imp][9]
+	$ImpBTX = $LoadApMatchArray[$imp][10]
+	$ImpOTX = $LoadApMatchArray[$imp][11]
+	$ImpMANU = $LoadApMatchArray[$imp][12]
+	$ImpLAB = $LoadApMatchArray[$imp][13]
+	$ImpHighGpsHistID = $LoadApMatchArray[$imp][14]
+	$ImpFirstHistID = $LoadApMatchArray[$imp][15]
+	$ImpLastHistID = $LoadApMatchArray[$imp][16]
+	$ImpLastGpsID = $LoadApMatchArray[$imp][17]
+	$ImpActive = $LoadApMatchArray[$imp][18]
+	$ImpHighSignal = $LoadApMatchArray[$imp][19]
+	$ImpHighRSSI = $LoadApMatchArray[$imp][20]
+	;Get GPS Position
+	If $ImpHighGpsHistID = 0 Then
+	$ImpLat = 'N 0000.0000'
+	$ImpLon = 'E 0000.0000'
+	Else
+	$query = "SELECT GpsID FROM Hist WHERE HistID=" & $ImpHighGpsHistID
+	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ImpGID = $HistMatchArray[1][1]
+	$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ImpGID
+	$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundGpsMatch = UBound($GpsMatchArray) - 1
+	$ImpLat = $GpsMatchArray[1][1]
+	$ImpLon = $GpsMatchArray[1][2]
+	EndIf
+	;Get First Time
+	$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $ImpFirstHistID
+	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ImpDate = $HistMatchArray[1][1]
+	$ImpTime = $HistMatchArray[1][2]
+	$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
+	;Get Last Time
+	$query = "SELECT Date1, Time1, Signal, RSSI FROM Hist WHERE HistID=" & $ImpLastHistID
+	$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$ImpDate = $HistMatchArray[1][1]
+	$ImpTime = $HistMatchArray[1][2]
+	$ImpSig = $HistMatchArray[1][3]
+	$ImpRSSI = $HistMatchArray[1][4]
+	$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
+	;If AP is not active, mark as dead and set signal to 0
+	If $ImpActive <> 0 And $ImpSig <> 0 Then
+	$LActive = $Text_Active
+	Else
+	$LActive = $Text_Dead
+	$ImpSig = '0'
+	$ImpRSSI = '-100'
+	EndIf
 
-		;Add APs to top of list
-		If $AddDirection = 0 Then
-			$query = "UPDATE AP SET ListRow=ListRow+1 WHERE ListRow<>-1"
-			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-			$DBAddPos = 0
-		Else ;Add to bottom
-			$DBAddPos = -1
-		EndIf
-		;Add Into ListView, Set icon color
-		$ImpLine = Round($ImpApID)
-		If $ImpSig >= 1 And $ImpSig <= 20 Then
-			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 1)
-			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 7)
-			EndIf
-		ElseIf $ImpSig >= 21 And $ImpSig <= 40 Then
-			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 2)
-			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 8)
-			EndIf
-		ElseIf $ImpSig >= 41 And $ImpSig <= 60 Then
-			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 3)
-			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 9)
-			EndIf
-		ElseIf $ImpSig >= 61 And $ImpSig <= 80 Then
-			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 4)
-			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 10)
-			EndIf
-		ElseIf $ImpSig >= 81 And $ImpSig <= 100 Then
-			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 5)
-			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 11)
-			EndIf
-		Else
-			If $ImpSecType = 1 Then
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 0)
-			Else
-				$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 6)
-			EndIf
-		EndIf
-		_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
-		$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $ImpApID
-		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		;Add Into TreeView
-		_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+	;Add APs to top of list
+	If $AddDirection = 0 Then
+	$query = "UPDATE AP SET ListRow=ListRow+1 WHERE ListRow<>-1"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$DBAddPos = 0
+	Else ;Add to bottom
+	$DBAddPos = -1
+	EndIf
+	;Add Into ListView, Set icon color
+	$ImpLine = Round($ImpApID)
+	If $ImpSig >= 1 And $ImpSig <= 20 Then
+	If $ImpSecType = 1 Then
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 1)
+	Else
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 7)
+	EndIf
+	ElseIf $ImpSig >= 21 And $ImpSig <= 40 Then
+	If $ImpSecType = 1 Then
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 2)
+	Else
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 8)
+	EndIf
+	ElseIf $ImpSig >= 41 And $ImpSig <= 60 Then
+	If $ImpSecType = 1 Then
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 3)
+	Else
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 9)
+	EndIf
+	ElseIf $ImpSig >= 61 And $ImpSig <= 80 Then
+	If $ImpSecType = 1 Then
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 4)
+	Else
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 10)
+	EndIf
+	ElseIf $ImpSig >= 81 And $ImpSig <= 100 Then
+	If $ImpSecType = 1 Then
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 5)
+	Else
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 11)
+	EndIf
+	Else
+	If $ImpSecType = 1 Then
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 0)
+	Else
+	$ListRow = _GUICtrlListView_InsertItem($ListviewAPs, $ImpLine, $DBAddPos, 6)
+	EndIf
+	EndIf
+	_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
+	$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $ImpApID
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	;Add Into TreeView
+	_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
 	Next
-EndFunc   ;==>_FilterReAddMatchingNotInList
+	EndFunc   ;==>_FilterReAddMatchingNotInList
+#ce
 
 Func _ClearAllAp()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearAllAp()') ;#Debug Display
@@ -2860,7 +2915,8 @@ Func _RecoverMDB()
 	$query = "UPDATE AP SET ListRow=-1, Active=0, Signal=0"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	;Add APs into Listview and Treeview
-	_FilterReAddMatchingNotInList()
+	_UpdateListview()
+	;_FilterReAddMatchingNotInList()
 	;Sort
 	If $AddDirection = 0 Then
 		$v_sort = True;set ascending
@@ -3451,7 +3507,7 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = 
 			MsgBox(0, $Text_Error, $Text_InstallNetcommOCX)
 		Else
 			$NetComm.CommPort = $CommPort ;Set port number
-			$NetComm.Settings = $CommSettings ;Set port settings
+			$NetComm.settings = $CommSettings ;Set port settings
 			$NetComm.InputLen = 0 ;reads entire buffer
 			If $ComError <> 1 Then
 				$NetComm.InputMode = 0 ;reads in text mode
@@ -4154,7 +4210,6 @@ Func _ListSort($DbCol, $SortOrder)
 EndFunc   ;==>_ListSort
 
 Func _SortDbQueryToList($query, $listpos)
-	ConsoleWrite($query & @CRLF)
 	;ConsoleWrite($query & @CRLF)
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
@@ -4424,13 +4479,14 @@ Func _TreeviewListviewResize()
 	EndIf
 EndFunc   ;==>_TreeviewListviewResize
 
-Func WM_NOTIFY($hWnd, $MsgID, $wParam, $lParam)
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'WM_NOTIFY()') ;#Debug Display
-	Local $hWndFrom, $iCode, $tNMHDR, $hWndListView, $tInfo
+Func WM_NOTIFY($hWnd, $iMsg, $iwParam, $ilParam)
+	Local $hWndFrom, $iIDFrom, $iCode, $tNMHDR, $hWndListView, $tInfo
 	$hWndListView = $ListviewAPs
 	If Not IsHWnd($ListviewAPs) Then $hWndListView = GUICtrlGetHandle($ListviewAPs)
-	$tNMHDR = DllStructCreate($tagNMHDR, $lParam)
+
+	$tNMHDR = DllStructCreate($tagNMHDR, $ilParam)
 	$hWndFrom = HWnd(DllStructGetData($tNMHDR, "hWndFrom"))
+	;$iIDFrom = DllStructGetData($tNMHDR, "IDFrom")
 	$iCode = DllStructGetData($tNMHDR, "Code")
 	Switch $hWndFrom
 		Case $hWndListView
@@ -4451,31 +4507,33 @@ EndFunc   ;==>WM_NOTIFY
 
 Func ListViewAPs_RClick()
 	Local $aHit
-	$aHit = _GUICtrlListView_SubItemHitTest($ListviewAPs)
+	$hWndListView = $ListviewAPs
+	If Not IsHWnd($ListviewAPs) Then $hWndListView = GUICtrlGetHandle($ListviewAPs)
+	$aHit = _GUICtrlListView_SubItemHitTest($hWndListView)
 	If ($aHit[0] <> -1) Then
 		; Create a standard popup menu
-		; -------------------- To Do --------------------
-		Local $idCopy = 1000, $idWifiDB = 1001, $idGNInfo = 2001, $idGraph = 2002, $idFindAP = 2003
-
-		;Create WifiDB menu
-		$subWifiDB = _GUICtrlMenu_CreateMenu()
-		_GUICtrlMenu_InsertMenuItem($subWifiDB, 0, "Geonames Info", $idGNInfo)
-		_GUICtrlMenu_InsertMenuItem($subWifiDB, 1, $Text_PhilsPHPgraph, $idGraph)
-		_GUICtrlMenu_InsertMenuItem($subWifiDB, 1, "Find AP in WifiDB", $idFindAP)
-
 		$hMenu = _GUICtrlMenu_CreatePopup()
-		_GUICtrlMenu_InsertMenuItem($hMenu, 0, "Copy", $idCopy)
-		_GUICtrlMenu_InsertMenuItem($hMenu, 1, "WifiDB", $idWifiDB)
-		_GUICtrlMenu_SetItemSubMenu($hMenu, 1, $subWifiDB)
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_Copy, $idCopy)
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_AddNewMan, $idNewManu)
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_AddNewLabel, $idNewLabel)
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_GeoNamesInfo, $idGNInfo)
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_PhilsPHPgraph, $idGraph)
+		_GUICtrlMenu_AddMenuItem($hMenu, $Text_FindApInWifidb, $idFindAP)
 
-		;_GUICtrlMenu_AddMenuItem($hMenu, "Geonames Info", $idGNInfo, $subWifiDB)
+
 		; ========================================================================
-		; Shows how to capture the context menu selections
+		; capture the context menu selections
 		; ========================================================================
 		Switch _GUICtrlMenu_TrackPopupMenu($hMenu, $ListviewAPs, -1, -1, 1, 1, 2)
 			Case $idCopy
 				ConsoleWrite("Copy: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
-				_CopyAP_GUI($aHit[0])
+				_CopySelectedAP()
+			Case $idNewManu
+				ConsoleWrite("AddManu: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
+				_RClick_AddManu()
+			Case $idNewLabel
+				ConsoleWrite("AddLabel: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
+				_RClick_AddLabel()
 			Case $idGNInfo
 				ConsoleWrite("Info: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
 				_GeonamesInfo($aHit[0])
@@ -4489,6 +4547,139 @@ Func ListViewAPs_RClick()
 		_GUICtrlMenu_DestroyMenu($hMenu)
 	EndIf
 EndFunc   ;==>ListViewAPs_RClick
+
+Func _RClick_AddManu();Adds new manucaturer to settings gui manufacturer list
+	If $AddMacOpen = 1 Then _MacAdd_Close()
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+		;Get Mac Address
+		$query = "SELECT BSSID FROM AP WHERE ListRow=" & $Selected
+		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$Found_BSSID = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace($ListRowMatchArray[1][1], ':', ''), '-', ''), '"', ''), ' ', ''))
+		$Found_BSSID = StringTrimRight($Found_BSSID, StringLen($Found_BSSID) - 6)
+
+		;Get existing mac address information if it exists
+		Local $Found_MMANU
+		$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID='" & $Found_BSSID & "'"
+		$ManuMatchArray = _RecordSearch($ManuDB, $query, $ManuDB_OBJ)
+		$FoundManuMatch = UBound($ManuMatchArray) - 1
+		If $FoundManuMatch = 1 Then
+			$Found_MMANU = $ManuMatchArray[1][1]
+		EndIf
+
+		;Present GUI to change mac address
+		$MacAdd_GUI = GUICreate($Text_AddNewMan, 623, 96)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateLabel($Column_Names_BSSID, 15, 10, 150, 15)
+		$MacAdd_GUI_BSSID = GUICtrlCreateInput($Found_BSSID, 16, 30, 153, 21)
+		GUICtrlCreateLabel($Column_Names_MANUF, 185, 10, 420, 15)
+		$MacAdd_GUI_MANU = GUICtrlCreateInput($Found_MMANU, 185, 30, 420, 21)
+		$MacAdd_OK = GUICtrlCreateButton($Text_Ok, 160, 60, 129, 25)
+		GUICtrlSetState(-1, 512)
+		$MacAdd_Cancel = GUICtrlCreateButton($Text_Cancel, 298, 60, 129, 25)
+		GUISetState(@SW_SHOW)
+		$AddMacOpen = 1
+		GUICtrlSetOnEvent($MacAdd_OK, "_MacAdd_Ok")
+		GUICtrlSetOnEvent($MacAdd_Cancel, "_MacAdd_Close")
+
+	Else
+		MsgBox(0, $Text_Error, "No AP selected")
+	EndIf
+EndFunc   ;==>_RClick_AddManu
+
+Func _MacAdd_Ok()
+	$MacAdd_BSSID = GUICtrlRead($MacAdd_GUI_BSSID)
+	$MacAdd_MANU = GUICtrlRead($MacAdd_GUI_MANU)
+	;Check if mac already exists
+	$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID='" & $MacAdd_BSSID & "'"
+	$ManuMatchArray = _RecordSearch($ManuDB, $query, $ManuDB_OBJ)
+	$FoundManuMatch = UBound($ManuMatchArray) - 1
+	If $FoundManuMatch = 1 Then ; Mac Exists, ask to update it
+		$overwrite_entry = MsgBox(4, $Text_Overwrite & '?', $Text_MacExistsOverwriteIt)
+		If $overwrite_entry = 6 Then
+			$query = "UPDATE Manufacturers SET Manufacturer='" & StringReplace($MacAdd_MANU, "'", "''") & "' WHERE BSSID='" & $MacAdd_BSSID & "'"
+			_ExecuteMDB($ManuDB, $ManuDB_OBJ, $query)
+		EndIf
+	Else ; Mac doesn't exist, Add it
+		ReDim $AddManuRecordArray[3]
+		$AddManuRecordArray[0] = 2
+		$AddManuRecordArray[1] = $MacAdd_BSSID
+		$AddManuRecordArray[2] = $MacAdd_MANU
+		_AddRecord($ManuDB, "Manufacturers", $ManuDB_OBJ, $AddManuRecordArray)
+	EndIf
+	_MacAdd_Close()
+EndFunc   ;==>_MacAdd_Ok
+
+Func _MacAdd_Close();Close edit manufacturer window
+	GUIDelete($MacAdd_GUI)
+	$AddMacOpen = 0
+	_UpdateListMacLabels()
+EndFunc   ;==>_MacAdd_Close
+
+Func _RClick_AddLabel();Adds new manucaturer to settings gui manufacturer list
+	If $AddLabelOpen = 1 Then _LabelAdd_Close()
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
+		;Get Mac Address
+		$query = "SELECT BSSID FROM AP WHERE ListRow=" & $Selected
+		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$Found_BSSID = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace($ListRowMatchArray[1][1], ':', ''), '-', ''), '"', ''), ' ', ''))
+		;Get existing mac address information if it exists
+		Local $Found_MLABEL
+		$query = "SELECT Label FROM Labels WHERE BSSID='" & $Found_BSSID & "'"
+		$ManuMatchArray = _RecordSearch($LabDB, $query, $LabDB_OBJ)
+		$FoundManuMatch = UBound($ManuMatchArray) - 1
+		If $FoundManuMatch = 1 Then
+			$Found_MLABEL = $ManuMatchArray[1][1]
+		EndIf
+		;Present GUI to change mac address
+		$LabelAdd_GUI = GUICreate($Text_AddNewLabel, 623, 96)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateLabel($Column_Names_BSSID, 15, 10, 150, 15)
+		$LabelAdd_GUI_BSSID = GUICtrlCreateInput($Found_BSSID, 16, 30, 153, 21)
+		GUICtrlCreateLabel($Column_Names_Label, 185, 10, 420, 15)
+		$LabelAdd_GUI_LABEL = GUICtrlCreateInput($Found_MLABEL, 185, 30, 420, 21)
+		$LabelAdd_OK = GUICtrlCreateButton($Text_Ok, 160, 60, 129, 25)
+		GUICtrlSetState(-1, 512)
+		$LabelAdd_Cancel = GUICtrlCreateButton($Text_Cancel, 298, 60, 129, 25)
+		GUISetState(@SW_SHOW)
+		$AddLabelOpen = 1
+		GUICtrlSetOnEvent($LabelAdd_OK, "_LabelAdd_Ok")
+		GUICtrlSetOnEvent($LabelAdd_Cancel, "_LabelAdd_Close")
+	Else
+		MsgBox(0, $Text_Error, "No AP selected")
+	EndIf
+EndFunc   ;==>_RClick_AddLabel
+
+Func _LabelAdd_Ok()
+	$LabelAdd_BSSID = GUICtrlRead($LabelAdd_GUI_BSSID)
+	$LabelAdd_LABEL = GUICtrlRead($LabelAdd_GUI_LABEL)
+	;Check if mac already exists
+	$query = "SELECT Label FROM Labels WHERE BSSID='" & $LabelAdd_BSSID & "'"
+	$ManuMatchArray = _RecordSearch($LabDB, $query, $LabDB_OBJ)
+	$FoundManuMatch = UBound($ManuMatchArray) - 1
+	If $FoundManuMatch = 1 Then ; Mac Exists, ask to update it
+		$overwrite_entry = MsgBox(4, $Text_Overwrite & '?', $Text_MacExistsOverwriteIt)
+		If $overwrite_entry = 6 Then
+			$query = "UPDATE Labels SET Label='" & StringReplace($LabelAdd_LABEL, "'", "''") & "' WHERE BSSID='" & $LabelAdd_BSSID & "'"
+			ConsoleWrite('old: ' & $query & @CRLF)
+			_ExecuteMDB($LabDB, $LabDB_OBJ, $query)
+		EndIf
+	Else ; Mac doesn't exist, Add it
+		ReDim $AddLabelRecordArray[3]
+		$AddLabelRecordArray[0] = 2
+		$AddLabelRecordArray[1] = $LabelAdd_BSSID
+		$AddLabelRecordArray[2] = $LabelAdd_LABEL
+		_AddRecord($LabDB, "Labels", $LabDB_OBJ, $AddLabelRecordArray)
+	EndIf
+	_LabelAdd_Close()
+EndFunc   ;==>_LabelAdd_Ok
+
+Func _LabelAdd_Close();Close edit manufacturer window
+	GUIDelete($LabelAdd_GUI)
+	$AddLabelOpen = 0
+	_UpdateListMacLabels()
+EndFunc   ;==>_LabelAdd_Close
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GRAPH FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -4501,7 +4692,7 @@ Func _GraphDraw()
 	;Draw % or dBm labels and lines
 	If $UseRssiInGraphs = 1 Then;Draw dBm labels
 		For $sn = 0 To 10
-			$RSSI = ($sn * - 10)
+			$RSSI = ($sn * -10)
 			$vposition = $Graph_topborder + (($Graph_height / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($Graph_backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $Graph_leftborder, $vposition, $Graph_leftborder + $Graph_width, $vposition, $Pen_GraphGrid)
@@ -4721,7 +4912,7 @@ Func _Draw2400ChanGraph()
 	;Draw 10% labels and lines
 	If $UseRssiInGraphs = 1 Then
 		For $sn = 0 To 10
-			$RSSI = ($sn * - 10)
+			$RSSI = ($sn * -10)
 			$vposition = $2400topborder + (($2400graphheight / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($2400backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($2400backbuffer, $2400leftborder, $vposition, $2400width - $2400rightborder, $vposition, $Pen_GraphGrid)
@@ -4900,7 +5091,7 @@ Func _Draw5000ChanGraph()
 	;Draw 10% labels and lines
 	If $UseRssiInGraphs = 1 Then
 		For $sn = 0 To 10
-			$RSSI = ($sn * - 10)
+			$RSSI = ($sn * -10)
 			$vposition = $5000topborder + (($5000graphheight / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($5000backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($5000backbuffer, $5000leftborder, $vposition, $5000width - $5000rightborder, $vposition, $Pen_GraphGrid)
@@ -5812,7 +6003,7 @@ EndFunc   ;==>_OpenVistumblerForum
 
 Func _OpenVistumblerWiki();Opens Vistumbler Wiki
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerWiki() ') ;#Debug Display
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://sourceforge.net/apps/mediawiki/vistumbler/')
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'https://github.com/RIEI/Vistumbler/wiki')
 EndFunc   ;==>_OpenVistumblerWiki
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -6238,7 +6429,7 @@ Func _ExportVS1($savefile, $Filter = 0);writes vistumbler detailed data to a txt
 
 	;Export AP Information
 	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
-			"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|High Signal|High RSSI|Label|GID,SIGNAL,RSSI" & @CRLF & _
+			"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|High Signal|High RSSI|Network Type|Label|GID,SIGNAL,RSSI" & @CRLF & _
 			"# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
 	If $Filter = 1 Then
 		$query = $AddQuery
@@ -6404,7 +6595,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 	EndIf
 	If $Detailed = 0 Then
-		$file = "SSID,BSSID,MANUFACTURER,HIGHEST SIGNAL W/GPS,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,LATITUDE,LONGITUDE,BTX,OTX,FIRST SEEN(UTC),LAST SEEN(UTC),NETWORK TYPE,LABEL" & @CRLF
+		$file = "SSID,BSSID,MANUFACTURER,HIGHEST SIGNAL W/GPS,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,LATITUDE,LONGITUDE,BTX,OTX,FIRST SEEN(UTC),LAST SEEN(UTC),NETWORK TYPE,LABEL, HIGHEST SIGNAL, HIGHEST RSSI" & @CRLF
 	ElseIf $Detailed = 1 Then
 		$file = "SSID,BSSID,MANUFACTURER,SIGNAL,High Signal,RSSI,High RSSI,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,BTX,OTX,NETWORK TYPE,LABEL,LATITUDE,LONGITUDE,SATELLITES,HDOP,ALTITUDE,HEIGHT OF GEOID,SPEED(km/h),SPEED(MPH),TRACK ANGLE,DATE(UTC),TIME(UTC)" & @CRLF
 	EndIf
@@ -6463,7 +6654,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
 				;Write summary csv line
-				$file &= StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', '') & @CRLF
+				$file &= StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', '') & ',' & $ExpHighSig & ',' & $ExpHighRSSI & @CRLF
 			ElseIf $Detailed = 1 Then
 				;Get All Signals and GpsIDs for current ApID
 				$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID & " And Signal<>0 ORDER BY Date1, Time1"
@@ -7504,7 +7695,8 @@ Func _ImportOk()
 		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
 		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_AddingApsIntoList)
-		_FilterReAddMatchingNotInList()
+		;_FilterReAddMatchingNotInList()
+		_UpdateListview()
 		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_SortingList)
 		If $AddDirection = 0 Then
 			$v_sort = True;set ascending
@@ -7937,7 +8129,7 @@ Func _ImportCSV($CSVfile)
 				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
 
 			Next
-		ElseIf $iCol = 16 Then ;Import Vistumbler Summary CSV
+		ElseIf $iCol = 16 Or $iCol = 18 Then ;Import Vistumbler Summary CSV
 			For $lc = 1 To $iSize
 				$ImpSSID = $CSVArray[$lc][0]
 				If StringLeft($ImpSSID, 1) = '"' And StringRight($ImpSSID, 1) = '"' Then $ImpSSID = StringTrimLeft(StringTrimRight($ImpSSID, 1), 1)
@@ -7960,6 +8152,10 @@ Func _ImportCSV($CSVfile)
 				$ImpLAB = $CSVArray[$lc][15]
 				If StringLeft($ImpLAB, 1) = '"' And StringRight($ImpLAB, 1) = '"' Then $ImpLAB = StringTrimLeft(StringTrimRight($ImpLAB, 1), 1)
 				$ImpSat = "00"
+				If $iCol = 18 Then ;If this is a newer summery csv, use the new RSSI and Signal values
+					$ImpHighSig = $CSVArray[$lc][16]
+					$ImpRSSI = $CSVArray[$lc][17]
+				EndIf
 
 				$tsplit = StringSplit($ImpFirstDateTime, ' ')
 				$LoadFirstActive_Date = $tsplit[1]
@@ -8187,7 +8383,7 @@ Func _ImportWardriveDb3($DB3file)
 	For $NewAP = 1 To $WardriveAPs
 		$Found_BSSID = StringUpper($NetworkMatchArray[$NewAP][0])
 		$Found_SSID = $NetworkMatchArray[$NewAP][1]
-		$Found_Capabilies = $NetworkMatchArray[$NewAP][2]
+		$Found_Capabilities = $NetworkMatchArray[$NewAP][2]
 		$Found_RSSI = $NetworkMatchArray[$NewAP][3]
 		$Found_Signal = _DbToSignalPercent($Found_RSSI)
 		$Found_Frequency = $NetworkMatchArray[$NewAP][4]
@@ -8197,39 +8393,39 @@ Func _ImportWardriveDb3($DB3file)
 		$Found_TimeStamp = StringTrimRight($NetworkMatchArray[$NewAP][8], 3)
 
 		;Get Authentication and Encrytion from capabilities
-		If StringInStr($Found_Capabilies, "WPA2-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA2-PSK-TKIP+CCMP") Then
+		If StringInStr($Found_Capabilities, "WPA2-PSK-CCMP") Or StringInStr($Found_Capabilities, "WPA2-PSK-TKIP+CCMP") Then
 			$Found_AUTH = "WPA2-Personal"
 			$Found_ENCR = "CCMP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-CCMP") Or StringInStr($Found_Capabilies, "WPA-PSK-TKIP+CCMP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA-PSK-CCMP") Or StringInStr($Found_Capabilities, "WPA-PSK-TKIP+CCMP") Then
 			$Found_AUTH = "WPA-Personal"
 			$Found_ENCR = "CCMP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA2-EAP-TKIP+CCMP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA2-EAP-CCMP") Or StringInStr($Found_Capabilities, "WPA2-EAP-TKIP+CCMP") Then
 			$Found_AUTH = "WPA2-Enterprise"
 			$Found_ENCR = "CCMP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-CCMP") Or StringInStr($Found_Capabilies, "WPA-EAP-TKIP+CCMP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA-EAP-CCMP") Or StringInStr($Found_Capabilities, "WPA-EAP-TKIP+CCMP") Then
 			$Found_AUTH = "WPA-Enterprise"
 			$Found_ENCR = "CCMP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-PSK-TKIP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA2-PSK-TKIP") Then
 			$Found_AUTH = "WPA2-Personal"
 			$Found_ENCR = "TKIP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-PSK-TKIP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA-PSK-TKIP") Then
 			$Found_AUTH = "WPA-Personal"
 			$Found_ENCR = "TKIP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA2-EAP-TKIP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA2-EAP-TKIP") Then
 			$Found_AUTH = "WPA2-Enterprise"
 			$Found_ENCR = "TKIP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WPA-EAP-TKIP") Then
+		ElseIf StringInStr($Found_Capabilities, "WPA-EAP-TKIP") Then
 			$Found_AUTH = "WPA-Enterprise"
 			$Found_ENCR = "TKIP"
 			$Found_SecType = "3"
-		ElseIf StringInStr($Found_Capabilies, "WEP") Then
+		ElseIf StringInStr($Found_Capabilities, "WEP") Then
 			$Found_AUTH = "Open"
 			$Found_ENCR = "WEP"
 			$Found_SecType = "2"
@@ -8240,7 +8436,7 @@ Func _ImportWardriveDb3($DB3file)
 		EndIf
 
 		;Get Network Type from capabilities
-		If StringInStr($Found_Capabilies, "[IBSS]") Then
+		If StringInStr($Found_Capabilities, "[IBSS]") Then
 			$Found_NETTYPE = "Adhoc"
 		Else
 			$Found_NETTYPE = "Infrastructure"
@@ -10770,7 +10966,23 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 		Return ($q_query)
 	Else
 		If $q_query <> '' Then $q_query &= ' AND '
-		$FilterValues = StringReplace($FilterValues, "|", ",")
+		;$FilterValues = StringReplace($FilterValues, "|", ",")
+		;Get values to seperate filter sysmbols from escaped filter symbols
+		StringReplace($FilterValues, "%", "%")
+		$filter_pcount = @extended ; Number of percent signs in filter
+		StringReplace($FilterValues, "\%", "\%")
+		$filter_epcount = @extended ; Number of escaped percent signs in filter
+		StringReplace($FilterValues, "-", "-")
+		$filter_dcount = @extended ; Number of dashes in filter
+		StringReplace($FilterValues, "\-", "\-")
+		$filter_edcount = @extended ; Number of escaped dashes in filter
+		StringReplace($FilterValues, ",", ",")
+		$filter_ccount = @extended ; Number of commas in filter
+		StringReplace($FilterValues, "\,", "\,")
+		$filter_eccount = @extended ; Number of escaped commas signs in filter
+		$filter_enecount = @extended ; Number of escaped not equals in filter
+		$FilterValues = StringReplace(StringReplace(StringReplace($FilterValues, "\%", "%"), "\-", "-"), "\,", ",")
+
 		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
 			If (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then ;If there are 3 dashes, treat this as a range of RSSI values
 				$RRS = StringSplit($FilterValues, "-")
@@ -10811,15 +11023,15 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 				If StringInStr($FilterValues, '<>') Then
 					$q_query &= "(" & $q_field & " <> " & StringReplace($FilterValues, '<>', '') & ")"
 				Else
-					If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
-						$q_query &= "(" & $q_field & " like " & $FilterValues & ")"
+					If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
+						$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
 					Else
-						$q_query &= "(" & $q_field & " = " & $FilterValues & ")"
+						$q_query &= "(" & $q_field & " = '" & $FilterValues & "')"
 					EndIf
 				EndIf
 			EndIf
 			Return ($q_query)
-		ElseIf StringInStr($FilterValues, ",") Then
+		ElseIf StringInStr($FilterValues, ",") And ($filter_ccount > $filter_eccount) Then
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
 				If StringInStr($q_splitstring[$q], '<>') Then
@@ -10836,19 +11048,22 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 			If $ret2 <> '' Then $q_query &= $q_field & " IN (" & $ret2 & ")"
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
 			Return ($q_query)
-		ElseIf StringInStr($FilterValues, "-") Then
-			$q_splitstring = StringSplit($FilterValues, "-")
+		ElseIf StringInStr($FilterValues, "-") And ($filter_dcount > $filter_edcount) Then
+			$filtopnum = (($filter_dcount - 1) / 2) + 1 ;Find center dash, which should be the filter operator
+			$splitdashpos = StringInStr($FilterValues, "-", 1, $filtopnum) ;Find center dash location
+			$ri1 = StringTrimRight($FilterValues, (StringLen($FilterValues) - $splitdashpos) + 1) ;Get first range value
+			$ri2 = StringTrimLeft($FilterValues, $splitdashpos) ;Get second range value
 			If StringInStr($FilterValues, '<>') Then
-				$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
+				$q_query &= "(" & $q_field & " NOT BETWEEN '" & StringReplace($ri1, '<>', '') & "' AND '" & StringReplace($ri2, '<>', '') & "')"
 			Else
-				$q_query &= "(" & $q_field & " BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+				$q_query &= "(" & $q_field & " BETWEEN '" & $ri1 & "' AND '" & $ri2 & "')"
 			EndIf
 			Return ($q_query)
 		Else
 			If StringInStr($FilterValues, '<>') Then
 				$q_query &= "(" & $q_field & " <> '" & StringReplace($FilterValues, '<>', '') & "')"
 			Else
-				If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+				If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
 					$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
 				Else
 					$q_query &= "(" & $q_field & " = '" & $FilterValues & "')"
@@ -10867,7 +11082,22 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 		Return ($q_query)
 	Else
 		If $q_query <> '' Then $q_query &= ' OR '
-		$FilterValues = StringReplace($FilterValues, "|", ",")
+		;$FilterValues = StringReplace($FilterValues, "|", ",")
+		;Get values to seperate filter sysmbols from escaped filter symbols
+		StringReplace($FilterValues, "%", "%")
+		$filter_pcount = @extended ; Number of percent signs in filter
+		StringReplace($FilterValues, "\%", "\%")
+		$filter_epcount = @extended ; Number of escaped percent signs in filter
+		StringReplace($FilterValues, "-", "-")
+		$filter_dcount = @extended ; Number of dashes in filter
+		StringReplace($FilterValues, "\-", "\-")
+		$filter_edcount = @extended ; Number of escaped dashes in filter
+		StringReplace($FilterValues, ",", ",")
+		$filter_ccount = @extended ; Number of commas in filter
+		StringReplace($FilterValues, "\,", "\,")
+		$filter_eccount = @extended ; Number of escaped commas signs in filter
+		$FilterValues = StringReplace(StringReplace(StringReplace($FilterValues, "\%", "%"), "\-", "-"), "\,", ",")
+		;Create query
 		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
 			If (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then ;If there are 3 dashes, treat this as a range of RSSI values
 				$RRS = StringSplit($FilterValues, "-")
@@ -10908,15 +11138,15 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 				If StringInStr($FilterValues, '<>') Then
 					$q_query &= "(" & $q_field & " = " & StringReplace($FilterValues, '<>', '') & ")"
 				Else
-					If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
-						$q_query &= "(" & $q_field & " not like " & $FilterValues & ")"
+					If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
+						$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
 					Else
-						$q_query &= "(" & $q_field & " <> " & $FilterValues & ")"
+						$q_query &= "(" & $q_field & " <> '" & $FilterValues & "')"
 					EndIf
 				EndIf
 			EndIf
 			Return ($q_query)
-		ElseIf StringInStr($FilterValues, ",") Then
+		ElseIf StringInStr($FilterValues, ",") And ($filter_ccount > $filter_eccount) Then
 			$q_splitstring = StringSplit($FilterValues, ",")
 			For $q = 1 To $q_splitstring[0]
 				If StringInStr($q_splitstring[$q], '<>') Then
@@ -10933,19 +11163,22 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 			If $ret2 <> '' Then $q_query &= $q_field & " NOT IN (" & $ret2 & ")"
 			If $ret <> '' Or $ret2 <> '' Then $q_query &= ")"
 			Return ($q_query)
-		ElseIf StringInStr($FilterValues, "-") Then
-			$q_splitstring = StringSplit($FilterValues, "-")
+		ElseIf StringInStr($FilterValues, "-") And ($filter_dcount > $filter_edcount) Then
+			$filtopnum = (($filter_dcount - 1) / 2) + 1 ;Find center dash, which should be the filter operator
+			$splitdashpos = StringInStr($FilterValues, "-", 1, $filtopnum) ;Find center dash location
+			$ri1 = StringTrimRight($FilterValues, (StringLen($FilterValues) - $splitdashpos) + 1) ;Get first range value
+			$ri2 = StringTrimLeft($FilterValues, $splitdashpos) ;Get second range value
 			If StringInStr($FilterValues, '<>') Then
-				$q_query &= "(" & $q_field & " BETWEEN '" & StringReplace($q_splitstring[1], '<>', '') & "' AND '" & StringReplace($q_splitstring[2], '<>', '') & "')"
+				$q_query &= "(" & $q_field & " BETWEEN '" & StringReplace($ri1, '<>', '') & "' AND '" & StringReplace($ri2, '<>', '') & "')"
 			Else
-				$q_query &= "(" & $q_field & " NOT BETWEEN '" & $q_splitstring[1] & "' AND '" & $q_splitstring[2] & "')"
+				$q_query &= "(" & $q_field & " NOT BETWEEN '" & $ri1 & "' AND '" & $ri2 & "')"
 			EndIf
 			Return ($q_query)
 		Else
 			If StringInStr($FilterValues, '<>') Then
 				$q_query &= "(" & $q_field & " = '" & StringReplace($FilterValues, '<>', '') & "')"
 			Else
-				If $q_field = "BSSID" And StringInStr($FilterValues, '%') Then
+				If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
 					$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
 				Else
 					$q_query &= "(" & $q_field & " <> '" & $FilterValues & "')"
@@ -11819,7 +12052,7 @@ Func _FilterChanged()
 EndFunc   ;==>_FilterChanged
 
 Func _CreateFilterQuerys()
-	$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal, HighRSSI FROM AP"
+	$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal, HighRSSI, ListRow FROM AP"
 	$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
 	If $DefFiltID <> '-1' Then
 		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, HighSig, RSSI, HighRSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
@@ -12526,3 +12759,238 @@ Func RGB2BGR($iColor)
 		Return ('0xFFFFFF')
 	EndIf
 EndFunc   ;==>RGB2BGR
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Func _UpdateListview()
+	;Find APs that meet criteria but are not in the listview
+	If StringInStr($AddQuery, "WHERE") Then
+		$fquery = $AddQuery & " AND ListRow=-1"
+	Else
+		$fquery = $AddQuery & " WHERE ListRow=-1"
+	EndIf
+	$LoadApMatchArray = _RecordSearch($VistumblerDB, $fquery, $DB_OBJ)
+	$FoundLoadApMatch = UBound($LoadApMatchArray) - 1
+
+	If $AutoSort = 0 Then
+		For $imp = 1 To $FoundLoadApMatch
+			$ImpApID = $LoadApMatchArray[$imp][1]
+			$ImpSSID = $LoadApMatchArray[$imp][2]
+			$ImpBSSID = $LoadApMatchArray[$imp][3]
+			$ImpNET = $LoadApMatchArray[$imp][4]
+			$ImpRAD = $LoadApMatchArray[$imp][5]
+			$ImpCHAN = $LoadApMatchArray[$imp][6]
+			$ImpAUTH = $LoadApMatchArray[$imp][7]
+			$ImpENCR = $LoadApMatchArray[$imp][8]
+			$ImpSecType = $LoadApMatchArray[$imp][9]
+			$ImpBTX = $LoadApMatchArray[$imp][10]
+			$ImpOTX = $LoadApMatchArray[$imp][11]
+			$ImpMANU = $LoadApMatchArray[$imp][12]
+			$ImpLAB = $LoadApMatchArray[$imp][13]
+			$ImpHighGpsHistID = $LoadApMatchArray[$imp][14]
+			$ImpFirstHistID = $LoadApMatchArray[$imp][15]
+			$ImpLastHistID = $LoadApMatchArray[$imp][16]
+			$ImpLastGpsID = $LoadApMatchArray[$imp][17]
+			$ImpActive = $LoadApMatchArray[$imp][18]
+			$ImpHighSignal = $LoadApMatchArray[$imp][19]
+			$ImpHighRSSI = $LoadApMatchArray[$imp][20]
+			;Get GPS Position
+			If $ImpHighGpsHistID = 0 Then
+				$ImpLat = 'N 0000.0000'
+				$ImpLon = 'E 0000.0000'
+			Else
+				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $ImpHighGpsHistID
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ImpGID = $HistMatchArray[1][1]
+				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ImpGID
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FoundGpsMatch = UBound($GpsMatchArray) - 1
+				$ImpLat = $GpsMatchArray[1][1]
+				$ImpLon = $GpsMatchArray[1][2]
+			EndIf
+			;Get First Time
+			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $ImpFirstHistID
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ImpDate = $HistMatchArray[1][1]
+			$ImpTime = $HistMatchArray[1][2]
+			$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
+			;Get Last Time
+			$query = "SELECT Date1, Time1, Signal, RSSI FROM Hist WHERE HistID=" & $ImpLastHistID
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$ImpDate = $HistMatchArray[1][1]
+			$ImpTime = $HistMatchArray[1][2]
+			$ImpSig = $HistMatchArray[1][3]
+			$ImpRSSI = $HistMatchArray[1][4]
+			$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
+			;If AP is not active, mark as dead and set signal to 0
+			If $ImpActive <> 0 And $ImpSig <> 0 Then
+				$LActive = $Text_Active
+			Else
+				$LActive = $Text_Dead
+				$ImpSig = '0'
+				$ImpRSSI = '-100'
+			EndIf
+
+			;Add APs to top of list
+			If $AddDirection = 0 Then
+				$query = "UPDATE AP SET ListRow=ListRow+1 WHERE ListRow<>-1"
+				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				$DBAddPos = 0
+			Else ;Add to bottom
+				$DBAddPos = -1
+			EndIf
+
+			;Add New Listrow with Icon
+			$ListRow = _AddIconListRow($ImpSig, $ImpSecType, $ImpApID, $DBAddPos)
+			_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
+			$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $ImpApID
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+			;Add Into TreeView
+			_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+		Next
+	Else
+		Local $ListRowPos = -1, $DbColName, $SortDir
+		;Mark APs that are not in the list but meet the criteria
+		For $imp = 1 To $FoundLoadApMatch
+			;Set the ListRow to -2 so it gets added later
+			$ImpApID = $LoadApMatchArray[$imp][1]
+			$query = "UPDATE AP SET ListRow=-2 WHERE ApID=" & $ImpApID
+			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		Next
+		;Get Sort Direction from settings
+		If $SortDirection = 1 Then
+			$SortDir = "DESC"
+		Else
+			$SortDir = "ASC"
+		EndIf
+		$DbCol = _GetDbColNameByListColName($SortBy) ;Set DB Column to sort by
+		ConsoleWrite("$DbCol:" & $DbCol & " $SortDir:" & $SortDir & @CRLF)
+		If $DbCol = "Latitude" Or $DbCol = "Longitude" Then ; Sort by Latitude Or Longitude
+			;Add results that have no GPS postion first if DESC
+			If $SortDir = "DESC" Then
+				$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE HighGpsHistID=0 And ListRow<>-1 ORDER BY ApID " & $SortDir
+				$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
+			EndIf
+			;Add sorted results with GPS
+			If $DbCol = "Latitude" Then $query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI FROM (AP INNER JOIN Hist ON AP.HighGpsHistId = Hist.HistID) INNER JOIN GPS ON Hist.GpsID = GPS.GPSID WHERE ListRow<>-1 ORDER BY GPS.Latitude " & $SortDir & ", GPS.Longitude " & $SortDir & ", AP.ApID " & $SortDir
+			If $DbCol = "Longitude" Then $query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI FROM (AP INNER JOIN Hist ON AP.HighGpsHistId = Hist.HistID) INNER JOIN GPS ON Hist.GpsID = GPS.GPSID WHERE ListRow<>-1 ORDER BY GPS.Longitude " & $SortDir & ", GPS.Latitude " & $SortDir & ", AP.ApID " & $SortDir
+			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
+			;Add results that have no GPS postion last if ASC
+			If $SortDir = "ASC" Then
+				$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE HighGpsHistID=0 And ListRow<>-1 ORDER BY ApID " & $SortDir
+				$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
+			EndIf
+		ElseIf $DbCol = "FirstActive" Then ; Sort by First Active Time
+			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.FirstHistID = Hist.HistID WHERE ListRow<>-1 ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
+			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
+		ElseIf $DbCol = "LastActive" Then ; Sort by Last Active Time
+			$query = "SELECT AP.ListRow, AP.ApID, AP.SSID, AP.BSSID, AP.NETTYPE, AP.RADTYPE, AP.CHAN, AP.AUTH, AP.ENCR, AP.SecType, AP.BTX, AP.OTX, AP.MANU, AP.LABEL, AP.HighGpsHistID, AP.FirstHistID, AP.LastHistID, AP.LastGpsID, AP.Active, AP.Signal, AP.HighSignal, AP.RSSI, AP.HighRSSI, Hist.Date1, Hist.Time1 FROM AP INNER JOIN Hist ON AP.LastHistID = Hist.HistID WHERE ListRow<>-1 ORDER BY Hist.Date1 " & $SortDir & ", Hist.Time1 " & $SortDir & ", AP.ApID " & $SortDir
+			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
+		ElseIf $DbCol = "Signal" Or $DbCol = "HighSignal" Or $DbCol = "RSSI" Or $DbCol = "HighRSSI" Or $DbCol = "CHAN" Then ; Sort by Last Active Time
+			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>-1 ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
+			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
+		Else ; Sort by any other column
+			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>-1 ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
+			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
+		EndIf
+	EndIf
+EndFunc   ;==>_UpdateListview
+
+Func __UpdateListviewDbQueryToList($query, $listpos)
+	$ListCurrentRowCount = _GUICtrlListView_GetItemCount(GUICtrlGetHandle($ListviewAPs))
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $wlv = 1 To $FoundApMatch
+		$listpos += 1
+		$Found_ListRow = $ApMatchArray[$wlv][1]
+		If $Found_ListRow <> $listpos Then ;If row has changed, update list information
+			$Found_APID = $ApMatchArray[$wlv][2]
+			$Found_SSID = $ApMatchArray[$wlv][3]
+			$Found_BSSID = $ApMatchArray[$wlv][4]
+			$Found_NETTYPE = $ApMatchArray[$wlv][5]
+			$Found_RADTYPE = $ApMatchArray[$wlv][6]
+			$Found_CHAN = $ApMatchArray[$wlv][7]
+			$Found_AUTH = $ApMatchArray[$wlv][8]
+			$Found_ENCR = $ApMatchArray[$wlv][9]
+			$Found_SecType = $ApMatchArray[$wlv][10]
+			$Found_BTX = $ApMatchArray[$wlv][11]
+			$Found_OTX = $ApMatchArray[$wlv][12]
+			$Found_MANU = $ApMatchArray[$wlv][13]
+			$Found_LABEL = $ApMatchArray[$wlv][14]
+			$Found_HighGpsHistId = $ApMatchArray[$wlv][15]
+			$Found_FirstHistID = $ApMatchArray[$wlv][16]
+			$Found_LastHistID = $ApMatchArray[$wlv][17]
+			$Found_LastGpsID = $ApMatchArray[$wlv][18]
+			$Found_Active = $ApMatchArray[$wlv][19]
+			$Found_Signal = $ApMatchArray[$wlv][20]
+			$Found_HighSignal = $ApMatchArray[$wlv][21]
+			$Found_RSSI = $ApMatchArray[$wlv][22]
+			$Found_HighRSSI = $ApMatchArray[$wlv][23]
+
+			;Get First Time
+			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_FirstHistID
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$Found_FirstDate = $HistMatchArray[1][1]
+			$Found_FirstTime = $HistMatchArray[1][2]
+			$Found_FirstDateTime = $Found_FirstDate & ' ' & $Found_FirstTime
+
+			;Get Last Time
+			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_LastHistID
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$Found_LastDate = $HistMatchArray[1][1]
+			$Found_LastTime = $HistMatchArray[1][2]
+			$Found_LastDateTime = $Found_LastDate & ' ' & $Found_LastTime
+
+			;Get GPS Position
+			If $Found_HighGpsHistId = 0 Then
+				$Found_Lat = "N 0000.0000"
+				$Found_Lon = "E 0000.0000"
+			Else
+				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $Found_HighGpsHistId
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$Found_GpsID = $HistMatchArray[1][1]
+				$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID=" & $Found_GpsID
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$Found_Lat = $GpsMatchArray[1][1]
+				$Found_Lon = $GpsMatchArray[1][2]
+			EndIf
+
+			If $wlv > $ListCurrentRowCount Then
+				;Add new row with icon to the bottom of the list
+				$ListRow = _AddIconListRow($Found_Signal, $Found_SecType, $Found_APID, -1)
+				;Write changes to listview
+				_ListViewAdd($ListRow, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
+				;Update ListRow
+				$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $Found_APID
+				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				;Add Into TreeView
+				_TreeViewAdd($Found_APID, $Found_SSID, $Found_BSSID, $Found_CHAN, $Found_NETTYPE, $Found_ENCR, $Found_RADTYPE, $Found_AUTH, $Found_BTX, $Found_OTX, $Found_MANU, $Found_LABEL)
+			Else
+				;Write changes to listview
+				_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
+				;Update ListRow Icon
+				_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
+				;Update ListRow
+				$query = "UPDATE AP SET ListRow=" & $listpos & " WHERE ApID=" & $Found_APID
+				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+			EndIf
+		EndIf
+	Next
+	;Remove extra rows
+	If $ListCurrentRowCount > $FoundApMatch Then
+		For $remrow = $FoundApMatch To $ListCurrentRowCount
+			_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $remrow)
+		Next
+	EndIf
+EndFunc   ;==>__UpdateListviewDbQueryToList

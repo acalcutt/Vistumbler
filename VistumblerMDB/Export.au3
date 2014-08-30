@@ -1,8 +1,6 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
-#AutoIt3Wrapper_UseUpx=n
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2013 Andrew Calcutt
@@ -10,13 +8,13 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.9.4
+;AutoIt Version: v3.3.12.0
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Exporter'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports based on input options'
-$version = 'v6.2'
-$last_modified = '2013/01/30'
+$version = 'v7'
+$last_modified = '2014/08/28'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
@@ -26,7 +24,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $DB_OBJ
-Dim $Debug = 1
+Dim $Debug = 0
 Dim $filetype = 'cd';Default file type (d=detailed VS1, cd=detailed CSV, cs=summary CSV, k=KML, w=WifiDB Upload)
 Dim $filename = @ScriptDir & '\Temp\Save.csv'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
@@ -563,35 +561,38 @@ Func _UploadActiveApsToWifidb()
 		$ExpLastID = $ApMatchArray[$exp][12]
 		$ExpLAB = $ApMatchArray[$exp][13]
 
-		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID=" & $ExpLastID
+		$query = "SELECT Signal, RSSI, GpsID FROM Hist WHERE HistID=" & $ExpLastID
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundHistMatch = UBound($HistMatchArray) - 1
 		If $FoundHistMatch = 1 Then
 			$ExpLastGpsSig = $HistMatchArray[1][1]
-			$ExpLastGpsID = $HistMatchArray[1][2]
-			$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID=" & $ExpLastGpsID
-			$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$FoundGpsMatch = UBound($GpsMatchArray) - 1
-			If $FoundGpsMatch = 1 Then
-				$ExpLastGpsLat = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][1], "N", ""), "S", "-"), " ", "")
-				$ExpLastGpsLon = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][2], "E", ""), "W", "-"), " ", "")
-				$ExpLastGpsSat = $GpsMatchArray[1][3]
-				$ExpLastGpsHDP = $GpsMatchArray[1][4]
-				$ExpLastGpsAlt = $GpsMatchArray[1][5]
-				$ExpLastGpsGeo = $GpsMatchArray[1][6]
-				$ExpLastGpsMPH = $GpsMatchArray[1][7]
-				$ExpLastGpsKMH = $GpsMatchArray[1][8]
-				$ExpLastGpsTAngle = $GpsMatchArray[1][9]
-				$ExpLastGpsDate = $GpsMatchArray[1][10]
-				$ExpLastGpsTime = $GpsMatchArray[1][11]
+			$ExpLastGpsRSSI = $HistMatchArray[1][2]
+			$ExpLastGpsID = $HistMatchArray[1][3]
+			If $ExpLastGpsSig <> 0 Then
+				$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID=" & $ExpLastGpsID
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$FoundGpsMatch = UBound($GpsMatchArray) - 1
+				If $FoundGpsMatch = 1 Then
+					$ExpLastGpsLat = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][1], "N", ""), "S", "-"), " ", "")
+					$ExpLastGpsLon = StringReplace(StringReplace(StringReplace($GpsMatchArray[1][2], "E", ""), "W", "-"), " ", "")
+					$ExpLastGpsSat = $GpsMatchArray[1][3]
+					$ExpLastGpsHDP = $GpsMatchArray[1][4]
+					$ExpLastGpsAlt = $GpsMatchArray[1][5]
+					$ExpLastGpsGeo = $GpsMatchArray[1][6]
+					$ExpLastGpsMPH = $GpsMatchArray[1][7]
+					$ExpLastGpsKMH = $GpsMatchArray[1][8]
+					$ExpLastGpsTAngle = $GpsMatchArray[1][9]
+					$ExpLastGpsDate = $GpsMatchArray[1][10]
+					$ExpLastGpsTime = $GpsMatchArray[1][11]
 
-				$url_root = $apiurl & 'live.php?'
-				$url_data = "SessionID=" & $WifiDb_SessionID & "&SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsMPH & "&Track=" & $ExpLastGpsTAngle
-				If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then $url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
-				If $Debug = 1 Then FileWrite("templog.txt", StringLen($url_root & $url_data) & ' - ' & $url_root & $url_data & @CRLF)
-				$webpagesource = _INetGetSource($url_root & $url_data)
-				If $Debug = 1 Then FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
-			EndIf
+					$url_root = $apiurl & 'live.php?'
+					$url_data = "SessionID=" & $WifiDb_SessionID & "&SSID=" & $ExpSSID & "&Mac=" & $ExpBSSID & "&Auth=" & $ExpAUTH & "&SecType=" & $ExpSECTYPE & "&Encry=" & $ExpENCR & "&Rad=" & $ExpRAD & "&Chn=" & $ExpCHAN & "&Lat=" & $ExpLastGpsLat & "&Long=" & $ExpLastGpsLon & "&BTx=" & $ExpBTX & "&OTx=" & $ExpOTX & "&Date=" & $ExpLastGpsDate & "&Time=" & $ExpLastGpsTime & "&NT=" & $ExpNET & "&Label=" & $ExpLAB & "&Sig=" & $ExpLastGpsSig & "&RSSI=" & $ExpLastGpsRSSI & "&Sats=" & $ExpLastGpsSat & "&HDP=" & $ExpLastGpsHDP & "&ALT=" & $ExpLastGpsAlt & "&GEO=" & $ExpLastGpsGeo & "&KMH=" & $ExpLastGpsKMH & "&MPH=" & $ExpLastGpsMPH & "&Track=" & $ExpLastGpsTAngle
+					If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then $url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
+					If $Debug = 1 Then FileWrite("templog.txt", StringLen($url_root & $url_data) & ' - ' & $url_root & $url_data & @CRLF)
+					$webpagesource = _INetGetSource($url_root & $url_data)
+					If $Debug = 1 Then FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
+				EndIf
+			EndIF
 		EndIf
 	Next
 EndFunc   ;==>_UploadActiveApsToWifidb

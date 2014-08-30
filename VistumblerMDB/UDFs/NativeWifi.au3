@@ -6,6 +6,8 @@ Artistic License 2.0
 
 Edited 2012-08-26 by acalcutt1 - Added International 2.4Ghz channels and 5Ghz channels to _Wlan_GetNetworkInfo()
 Edited 2012-11-11 by acalcutt1 - Modified _Wlan_EnumToString DOT11_AUTH_ALGORITHM and DOT11_CIPHER_ALGORITHM to match netsh output names.
+Edited 2014-07-15 by acalcutt - Merge branch 'patch-1' of https://github.com/EionRobb/Vistumbler into beta. Fix to allow 802.11ac support.
+
 #CE
 ;--------------Enumerations-------------
 
@@ -23,7 +25,7 @@ Global Enum $DOT11_CIPHER_ALGO_NONE, $DOT11_CIPHER_ALGO_WEP40, $DOT11_CIPHER_ALG
 
 ;DOT11_PHY_TYPE
 Global Enum $DOT11_PHY_TYPE_UNKNOWN, $DOT11_PHY_TYPE_ANY = 0, $DOT11_PHY_TYPE_FHSS, $DOT11_PHY_TYPE_DSSS, $DOT11_PHY_TYPE_IRBASEBAND, $DOT11_PHY_TYPE_OFDM, _
-		$DOT11_PHY_TYPE_HRDSSS, $DOT11_PHY_TYPE_ERP, $DOT11_PHY_TYPE_HT, $DOT11_PHY_TYPE_IHV_START = 2147483648, $DOT11_PHY_TYPE_IHV_END = 4294967295
+		$DOT11_PHY_TYPE_HRDSSS, $DOT11_PHY_TYPE_ERP, $DOT11_PHY_TYPE_HT, $DOT11_PHY_TYPE_VHT, $DOT11_PHY_TYPE_IHV_START = 2147483648, $DOT11_PHY_TYPE_IHV_END = 4294967295
 
 ;DOT11_RADIO_STATE
 Global Enum $DOT11_RADIO_STATE_UNKNOWN, $DOT11_RADIO_STATE_ON, $DOT11_RADIO_STATE_OFF
@@ -259,6 +261,8 @@ Func _Wlan_EnumToString($sCategory, $iEnumeration)
 					Return "g"
 				Case $DOT11_PHY_TYPE_HT
 					Return "n"
+				Case $DOT11_PHY_TYPE_VHT
+					Return "ac"
 				Case $DOT11_PHY_TYPE_IHV_START To $DOT11_PHY_TYPE_IHV_END
 					Return "IHV Phy Type (0x" & Hex($iEnumeration) & ")"
 				Case Else
