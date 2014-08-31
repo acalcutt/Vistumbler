@@ -501,7 +501,7 @@ Dim $WifiDb_ApiKey = IniRead($settings, 'PhilsWifiTools', 'WifiDb_ApiKey', '')
 Dim $WifiDb_OtherUsers = IniRead($settings, 'PhilsWifiTools', 'WifiDb_OtherUsers', '')
 Dim $WifiDb_UploadType = IniRead($settings, 'PhilsWifiTools', 'WifiDb_UploadType', 'VSZ')
 Dim $WifiDb_UploadFiltered = IniRead($settings, 'PhilsWifiTools', 'WifiDb_UploadFiltered', 0)
-Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graph_SURL', 'https://www.randomintervals.com/wifi/')
+Dim $PhilsGraphURL = IniRead($settings, 'PhilsWifiTools', 'Graphing_SURL', 'https://api.wifidb.net/wifi/')
 Dim $PhilsWdbURL = IniRead($settings, 'PhilsWifiTools', 'WiFiDB_SURL', 'https://wifidb.vistumbler.net/wifidb/')
 Dim $PhilsApiURL = IniRead($settings, 'PhilsWifiTools', 'API_SURL', 'https://api.vistumbler.net/')
 Dim $UseWiFiDbGpsLocate = IniRead($settings, 'PhilsWifiTools', 'UseWiFiDbGpsLocate', 0)
@@ -1379,11 +1379,8 @@ $Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics(900, 400, $Graphic)
 $Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
 GUISwitch($Vistumbler)
 
-$ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
-_GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_DOUBLEBUFFER, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT))
-_GUICtrlListView_SetBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
-_GUICtrlListView_SetTextBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
-_GUICtrlListView_SetTextColor($ListviewAPs, RGB2BGR($TextColor))
+$ListviewAPs = GUICtrlCreateListView($headers, 260, 65, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 $hImage = _GUIImageList_Create()
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-red.ico")
@@ -1574,9 +1571,9 @@ While 1
 			If $LatitudeWifidb <> 'N 0000.0000' And $LongitudeWifidb <> 'E 0000.0000' Then
 				$Latitude = $LatitudeWifidb
 				$Longitude = $LongitudeWifidb
-				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
-				GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
 			EndIf
+			GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
+			GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
 		EndIf
 		$WiFiDbLocate_Timer = TimerInit()
 		$UpdatedWiFiDbGPS = 1
@@ -3402,6 +3399,7 @@ Func _WifiDbLocateToggle();Turns wifi gps locate on or off
 		If $UploadWarn = 6 Then
 			GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
 			$UseWiFiDbGpsLocate = 1
+			$WifidbGPS_Update = TimerInit()
 		EndIf
 	EndIf
 EndFunc   ;==>_WifiDbLocateToggle
@@ -4098,29 +4096,45 @@ EndFunc   ;==>_UpdateGpsDetailsGUI
 
 Func _ClearGpsDetailsGUI();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearGpsDetailsGUI()') ;#Debug Display
-	GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": GPGGA:" & Round(TimerDiff($GPGGA_Update) / 1000) & " / " & ($GpsTimeout / 1000) & " - " & "GPRMC:" & Round(TimerDiff($GPRMC_Update) / 1000) & " / " & ($GpsTimeout / 1000))
-	If Round(TimerDiff($GPGGA_Update)) > $GpsTimeout Then
-		$FixTime = ''
-		$Latitude = 'N 0000.0000'
-		$Longitude = 'E 0000.0000'
-		$NumberOfSatalites = '00'
-		$HorDilPitch = '0'
-		$Alt = '0'
-		$AltS = 'M'
-		$Geo = '0'
-		$GeoS = 'M'
-		$GPGGA_Update = TimerInit()
+	If $UseGPS = 1 Then
+		GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": GPGGA:" & Round(TimerDiff($GPGGA_Update) / 1000) & " / " & ($GpsTimeout / 1000) & " - " & "GPRMC:" & Round(TimerDiff($GPRMC_Update) / 1000) & " / " & ($GpsTimeout / 1000))
+		If Round(TimerDiff($GPGGA_Update)) > $GpsTimeout Then
+			If $UseWiFiDbGpsLocate = 0 Then
+				$Latitude = 'N 0000.0000'
+				$Longitude = 'E 0000.0000'
+			EndIf
+			$FixTime = ''
+			$NumberOfSatalites = '00'
+			$HorDilPitch = '0'
+			$Alt = '0'
+			$AltS = 'M'
+			$Geo = '0'
+			$GeoS = 'M'
+			$GPGGA_Update = TimerInit()
+		EndIf
+		If Round(TimerDiff($GPRMC_Update)) > $GpsTimeout Then
+			$FixTime2 = ''
+			$Latitude2 = 'N 0000.0000'
+			$Longitude2 = 'E 0000.0000'
+			$SpeedInKnots = '0'
+			$SpeedInMPH = '0'
+			$SpeedInKmH = '0'
+			$TrackAngle = '0'
+			$FixDate = ''
+			$GPRMC_Update = TimerInit()
+		EndIf
 	EndIf
-	If Round(TimerDiff($GPRMC_Update)) > $GpsTimeout Then
-		$FixTime2 = ''
-		$Latitude2 = 'N 0000.0000'
-		$Longitude2 = 'E 0000.0000'
-		$SpeedInKnots = '0'
-		$SpeedInMPH = '0'
-		$SpeedInKmH = '0'
-		$TrackAngle = '0'
-		$FixDate = ''
-		$GPRMC_Update = TimerInit()
+	If $UseWiFiDbGpsLocate = 1 Then
+		If Round(TimerDiff($WifidbGPS_Update)) > $GpsTimeout Then
+			GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": WifiDB:" & Round(TimerDiff($WifidbGPS_Update) / 1000) & " / " & ($GpsTimeout / 1000))
+			$Latitude = 'N 0000.0000'
+			$Longitude = 'E 0000.0000'
+			$LatitudeWifidb = 'N 0000.0000'
+			$LongitudeWifidb = 'E 0000.0000'
+			GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
+			GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
+			$WifidbGPS_Update = TimerInit()
+		EndIf
 	EndIf
 EndFunc   ;==>_ClearGpsDetailsGUI
 
@@ -4396,7 +4410,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top + ($Graphic_height + 1)
 			$ListviewAPs_height = $DataChild_Height - ($Graphic_height + 1)
 
-			_WinAPI_MoveWindow($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
@@ -4414,7 +4428,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top
 			$ListviewAPs_height = $DataChild_Height
 
-			_WinAPI_MoveWindow($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
 			GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
@@ -4444,7 +4458,7 @@ Func _TreeviewListviewResize()
 			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
 			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
 			$ListviewAPs_width = $DataChild_Width - $ListviewAPs_left
-			_WinAPI_MoveWindow($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitPercent = StringFormat('%0.2f', $TreeviewAPs_width / $DataChild_Width)
 		EndIf
 		If $MoveMode = True And $cursorInfo[2] = 0 Then
@@ -4468,7 +4482,7 @@ Func _TreeviewListviewResize()
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$ListviewAPs_top = $Graphic_top + $Graphic_height + 1
 			$ListviewAPs_height = $DataChild_Height - $Graphic_height
-			_WinAPI_MoveWindow($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitHeightPercent = StringFormat('%0.2f', $Graphic_height / $DataChild_Height)
 			$Redraw = 1
 		EndIf
@@ -4524,7 +4538,7 @@ Func ListViewAPs_RClick()
 		; ========================================================================
 		; capture the context menu selections
 		; ========================================================================
-		Switch _GUICtrlMenu_TrackPopupMenu($hMenu, $ListviewAPs, -1, -1, 1, 1, 2)
+		Switch _GUICtrlMenu_TrackPopupMenu($hMenu, $hWndListView, -1, -1, 1, 1, 2)
 			Case $idCopy
 				ConsoleWrite("Copy: " & StringFormat("Item, SubItem [%d, %d]", $aHit[0], $aHit[1]) & @CRLF)
 				_CopySelectedAP()
@@ -5285,25 +5299,53 @@ Func _ViewInPhilsGraph_Open($Selected);Sends data to phils php graphing script
 				$Found_Lon = $GpsMatchArray[1][2]
 			EndIf
 
-			$query = "SELECT Signal, Date1, Time1 FROM Hist WHERE ApID=" & $Found_APID & " ORDER BY Date1 DESC, Time1 DESC"
+			;---------------------
+
+			$max_graph_points = 1000
+			$query = "SELECT TOP " & $max_graph_points & " Signal, Date1, Time1 FROM Hist WHERE ApID=" & $Found_APID & " And Signal<>0 ORDER BY Date1, Time1 Desc"
 			$SignalMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$FoundSignalMatch = UBound($SignalMatchArray) - 1
 			If $FoundSignalMatch <> 0 Then
-				For $pg = 1 To $FoundSignalMatch
-					If $pg = 1 Then
-						$pgsigdata = $SignalMatchArray[$pg][1]
-						$Found_LastSeen = $SignalMatchArray[$pg][2] & ' ' & $SignalMatchArray[$pg][3]
+				Local $Found_dts, $gloop, $pgsigdata, $Found_FirstSeen, $Found_LastSeen
+				For $gs = 1 To $FoundSignalMatch
+					$gloop += 1
+					If $gloop > $max_graph_points Then ExitLoop
+					$ExpSig = $SignalMatchArray[$gs][1] - 0
+					$ExpDate = $SignalMatchArray[$gs][2]
+					$ExpTime = $SignalMatchArray[$gs][3]
+
+					$Last_dts = $Found_dts
+					$ts = StringSplit($ExpTime, ":")
+					$ExpTimeSecs = ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4) ;In seconds
+					$Found_dts = StringReplace($ExpDate & $ExpTimeSecs, '-', '')
+
+					If $gs = 1 Then
+						$pgsigdata = $ExpSig
+						$Found_FirstSeen = $ExpDate & ' ' & $ExpTime
+						$Found_LastSeen = $ExpDate & ' ' & $ExpTime
 					Else
-						$pgsigdata &= '-' & $SignalMatchArray[$pg][1]
+						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
+							$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
+							For $wz = 1 To $numofzeros
+								$gloop += 1
+								$pgsigdata &= '-0'
+								If $gloop > $max_graph_points Then ExitLoop
+							Next
+						EndIf
+						$pgsigdata &= '-' & $ExpSig
+						$Found_LastSeen = $ExpDate & ' ' & $ExpTime
 					EndIf
-					If $pg = $FoundSignalMatch Then $Found_FirstSeen = $SignalMatchArray[$pg][2] & ' ' & $SignalMatchArray[$pg][3]
 				Next
-				$url_root = $PhilsGraphURL
-				$url_data = "?SSID=" & $Found_SSID & "&Mac=" & $Found_BSSID & "&Manuf=" & $Found_MANU & "&Auth=" & $Found_AUTH & "&Encry=" & $Found_ENCR & "&radio=" & $Found_RADTYPE & "&Chn=" & $Found_CHAN & "&Lat=" & $Found_Lat & "&Long=" & $Found_Lon & "&BTx=" & $Found_BTX & "&OTx=" & $Found_OTX & "&FA=" & $Found_FirstSeen & "&LU=" & $Found_LastSeen & "&NT=" & $Found_NETTYPE & "&Label=" & $Found_LAB & "&Sig=" & $pgsigdata
-				$url_full = $url_root & $url_data
-				$url_trimmed = StringTrimRight($url_full, (StringLen($url_full) - 2048)) ;trim sting to internet explorer max url lenth
-				$url_trimmed2 = StringTrimRight($url_trimmed, (StringLen($url_trimmed) - StringInStr($url_trimmed, "-", 1, -1)) + 1);find - that marks the last full data and get rid of the rest
-				Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_trimmed2);open url with rundll 32
+				If $pgsigdata = "" Then
+					MsgBox(0, $Text_Error, "No data to graph")
+				Else
+					$url_root = $PhilsGraphURL
+					$url_data = "?SSID=" & $Found_SSID & "&Mac=" & $Found_BSSID & "&Manuf=" & $Found_MANU & "&Auth=" & $Found_AUTH & "&Encry=" & $Found_ENCR & "&radio=" & $Found_RADTYPE & "&Chn=" & $Found_CHAN & "&Lat=" & $Found_Lat & "&Long=" & $Found_Lon & "&BTx=" & $Found_BTX & "&OTx=" & $Found_OTX & "&FA=" & $Found_FirstSeen & "&LU=" & $Found_LastSeen & "&NT=" & $Found_NETTYPE & "&Label=" & $Found_LAB & "&Sig=" & $pgsigdata
+					$url_full = $url_root & $url_data
+					$url_trimmed = StringTrimRight($url_full, (StringLen($url_full) - 2048)) ;trim sting to internet explorer max url lenth
+					$url_trimmed2 = StringTrimRight($url_trimmed, (StringLen($url_trimmed) - StringInStr($url_trimmed, "-", 1, -1)) + 1);find - that marks the last full data and get rid of the rest
+					Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_trimmed2);open url with rundll 32
+				EndIf
 			EndIf
 		EndIf
 	Else
@@ -5606,10 +5648,24 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 							Next
 							;Update Vistumbler GPS info with what was pulled from wifidb
 							If $lglat <> '' And $lglon <> '' Then
-								If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, $Text_Latitude & ': ' & $lglat & @CRLF & $Text_Longitude & ': ' & $lglon & @CRLF & $Text_Date & ': ' & $lgdate & @CRLF & $Text_Time & ': ' & $lgtime & @CRLF)
-								ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
+								;Format Lat/Lon
+								If StringInStr($lglat, "-") Then
+									$lglat = "S " & StringReplace(StringReplace($lglat, "-", ""), "0.0000", "0000.0000")
+								Else
+									$lglat = "N " & StringReplace(StringReplace($lglat, "+", ""), "0.0000", "0000.0000")
+								EndIf
+								If StringInStr($lglon, "-") Then
+									$lglon = "W " & StringReplace(StringReplace($lglon, "-", ""), "0.0000", "0000.0000")
+								Else
+									$lglon = "E " & StringReplace(StringReplace($lglon, "+", ""), "0.0000", "0000.0000")
+								EndIf
+								;Set WifiDB Lat/Lon
 								$LatitudeWifidb = $lglat
 								$LongitudeWifidb = $lglon
+								;Show Prompt
+								If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, $Text_Latitude & ': ' & $lglat & @CRLF & $Text_Longitude & ': ' & $lglon & @CRLF & $Text_Date & ': ' & $lgdate & @CRLF & $Text_Time & ': ' & $lgtime & @CRLF)
+								ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
+								;Reset update timer
 								$WifidbGPS_Update = TimerInit()
 								$return = 1
 							ElseIf $lgerror <> '' Then
@@ -5635,7 +5691,11 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 	Else
 		If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_NoActiveApFound)
 	EndIf
-	_ClearWifiGpsDetails()
+
+	;Update GPS Information in GUI
+	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
+	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
+
 	Return ($return)
 EndFunc   ;==>_LocateGpsInWifidb
 
@@ -5958,20 +6018,6 @@ Func _ViewWDBWebpage();View wifidb live aps in browser
 	$url = $PhilsWdbURL
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
 EndFunc   ;==>_ViewWDBWebpage
-
-Func _ClearWifiGpsDetails();Clears all GPS Details information
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearWifiGpsDetails()') ;#Debug Display
-	GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": WifiDb:" & Round(TimerDiff($WifidbGPS_Update) / 1000) & " / " & ($GpsTimeout / 1000))
-	If Round(TimerDiff($WifidbGPS_Update)) > $GpsTimeout Then
-		$Latitude = 'N 0000.0000'
-		$Longitude = 'E 0000.0000'
-		$LatitudeWifidb = 'N 0000.0000'
-		$LongitudeWifidb = 'E 0000.0000'
-		GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
-		GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
-		$WifidbGPS_Update = TimerInit()
-	EndIf
-EndFunc   ;==>_ClearWifiGpsDetails
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTION
@@ -7074,7 +7120,7 @@ Func _WriteINI()
 	IniWrite($settings, 'PhilsWifiTools', 'WifiDb_OtherUsers', $WifiDb_OtherUsers)
 	IniWrite($settings, 'PhilsWifiTools', 'WifiDb_UploadType', $WifiDb_UploadType)
 	IniWrite($settings, 'PhilsWifiTools', 'WifiDb_UploadFiltered', $WifiDb_UploadFiltered)
-	IniWrite($settings, 'PhilsWifiTools', 'Graph_SURL', $PhilsGraphURL)
+	IniWrite($settings, 'PhilsWifiTools', 'Graphing_SURL', $PhilsGraphURL)
 	IniWrite($settings, 'PhilsWifiTools', 'WiFiDB_SURL', $PhilsWdbURL)
 	IniWrite($settings, 'PhilsWifiTools', 'API_SURL', $PhilsApiURL)
 	IniWrite($settings, "PhilsWifiTools", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
@@ -12981,3 +13027,4 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 		Next
 	EndIf
 EndFunc   ;==>__UpdateListviewDbQueryToList
+
