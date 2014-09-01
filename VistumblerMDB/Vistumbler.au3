@@ -17,9 +17,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.5.2 Alpha 3'
+$version = 'v10.6 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2014/08/29'
+$last_modified = '2014/08/31'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -262,7 +262,7 @@ Dim $5000chanGUI, $5000GraphicGUI, $5000chanGUIOpen, $5000height, $5000width, $5
 
 Dim $FixTime, $FixTime2, $FixDate
 Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
-Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0, $WifidbGPS_Update
+Dim $GpsDetailsGUI, $GPGGA_Update, $GPRMC_Update, $GpsDetailsOpen = 0, $WifidbGPS_Update, $UploadFileToWifiDBOpen = 0
 Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GPGGA_Satalites, $GPGGA_HorDilPitch, $GPGGA_Alt, $GPGGA_Geo, $GPRMC_Time, $GPRMC_Date, $GPRMC_Lat, $GPRMC_Lon, $GPRMC_Status, $GPRMC_SpeedKnots, $GPRMC_SpeedMPH, $GPRMC_SpeedKmh, $GPRMC_TrackAngle
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
 Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
@@ -870,7 +870,7 @@ Dim $Text_SupportVistumbler = IniRead($DefaultLanguagePath, 'GuiText', 'SupportV
 Dim $Text_UseNativeWifiMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiMsg', 'Use Native Wifi')
 Dim $Text_UseNativeWifiXpExtMsg = IniRead($DefaultLanguagePath, 'GuiText', 'UseNativeWifiXpExtMsg', '(No BSSID, CHAN, OTX, BTX)')
 
-Dim $Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*)" as wildcard. Seperate multiple filters with a comma(,). Use a dash(-) for ranges.')
+Dim $Text_FilterMsg = IniRead($DefaultLanguagePath, 'GuiText', 'FilterMsg', 'Use asterik(*) for all. Seperate multiple filters with a comma(,). Use a dash(-) for ranges. Mac address field supports like with percent(%) as a wildcard. SSID field uses backslash(\) to escape control characters.')
 Dim $Text_SetFilters = IniRead($DefaultLanguagePath, 'GuiText', 'SetFilters', 'Set Filters')
 Dim $Text_Filtered = IniRead($DefaultLanguagePath, 'GuiText', 'Filtered', 'Filtered')
 Dim $Text_Filters = IniRead($DefaultLanguagePath, 'GuiText', 'Filters', 'Filters')
@@ -5355,77 +5355,57 @@ EndFunc   ;==>_ViewInPhilsGraph_Open
 
 Func _AddToYourWDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddToYourWDB()') ;#Debug Display
-	$WifiDbUploadGUI = GUICreate($Text_UploadApsToWifidb, 580, 525)
-	GUISetBkColor($BackgroundColor)
-	GUICtrlCreateLabel($Text_WifiDB_Upload_Discliamer, 24, 8, 532, 89)
+	If $UploadFileToWifiDBOpen = 0 Then
+		$UploadFileToWifiDBOpen = 1
+		$WifiDbUploadGUI = GUICreate($Text_UploadApsToWifidb, 580, 525)
+		GUISetBkColor($BackgroundColor)
+		GUICtrlCreateLabel($Text_WifiDB_Upload_Discliamer, 24, 8, 532, 89)
 
-	GUICtrlCreateGroup($Text_UserInformation, 24, 104, 281, 161)
-	GUICtrlCreateLabel($Text_WifiDB_Username, 39, 124, 236, 20)
-	$WifiDb_User_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
-	GUICtrlCreateLabel($Text_OtherUsers, 39, 169, 236, 20)
-	$WifiDb_OtherUsers_GUI = GUICtrlCreateInput($WifiDb_OtherUsers, 39, 189, 241, 20)
-	GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
-	$WifiDb_ApiKey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
+		GUICtrlCreateGroup($Text_UserInformation, 24, 104, 281, 161)
+		GUICtrlCreateLabel($Text_WifiDB_Username, 39, 124, 236, 20)
+		$WifiDb_User_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
+		GUICtrlCreateLabel($Text_OtherUsers, 39, 169, 236, 20)
+		$WifiDb_OtherUsers_GUI = GUICtrlCreateInput($WifiDb_OtherUsers, 39, 189, 241, 20)
+		GUICtrlSetState($WifiDb_OtherUsers_GUI, $GUI_DISABLE)
+		GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
+		$WifiDb_ApiKey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
+		GUICtrlSetState($WifiDb_ApiKey_GUI, $GUI_DISABLE)
 
-	GUICtrlCreateGroup($Text_FileType, 312, 104, 249, 161)
-	$VSZ_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVSZ, 327, 150, 220, 20)
-	If $WifiDb_UploadType = "VSZ" Then GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
-	$VS1_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVS1, 327, 170, 220, 20)
-	If $WifiDb_UploadType = "VS1" Then GUICtrlSetState($VS1_Radio_GUI, $GUI_CHECKED)
-	$CSV_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerCSV, 327, 190, 220, 20)
-	If $WifiDb_UploadType = "CSV" Then GUICtrlSetState($CSV_Radio_GUI, $GUI_CHECKED)
-	$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
-	If $WifiDb_UploadFiltered = 1 Then GUICtrlSetState($Export_Filtered_GUI, $GUI_CHECKED)
+		GUICtrlCreateGroup($Text_FileType, 312, 104, 249, 161)
+		$VSZ_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVSZ, 327, 150, 220, 20)
+		;If $WifiDb_UploadType = "VSZ" Then GUICtrlSetState($VSZ_Radio_GUI, $GUI_CHECKED)
+		GUICtrlSetState($VSZ_Radio_GUI, $GUI_DISABLE)
+		$VS1_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVS1, 327, 170, 220, 20)
+		If $WifiDb_UploadType = "VS1" Then GUICtrlSetState($VS1_Radio_GUI, $GUI_CHECKED)
+		If $WifiDb_UploadType = "VSZ" Then GUICtrlSetState($VS1_Radio_GUI, $GUI_CHECKED);temporarily make vsz export vs1 since vsz support is not ready
+		$CSV_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerCSV, 327, 190, 220, 20)
+		If $WifiDb_UploadType = "CSV" Then GUICtrlSetState($CSV_Radio_GUI, $GUI_CHECKED)
+		$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
+		If $WifiDb_UploadFiltered = 1 Then GUICtrlSetState($Export_Filtered_GUI, $GUI_CHECKED)
 
-	GUICtrlCreateGroup($Text_UploadInformation, 24, 272, 537, 201)
-	GUICtrlCreateLabel($Text_Title, 39, 297, 500, 20)
-	$upload_title_GUI = GUICtrlCreateInput($ldatetimestamp, 39, 317, 500, 21)
-	GUICtrlCreateLabel($Text_Notes, 39, 342, 500, 20)
-	$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
+		GUICtrlCreateGroup($Text_UploadInformation, 24, 272, 537, 201)
+		GUICtrlCreateLabel($Text_Title, 39, 297, 500, 20)
+		$upload_title_GUI = GUICtrlCreateInput($ldatetimestamp, 39, 317, 500, 21)
+		GUICtrlCreateLabel($Text_Notes, 39, 342, 500, 20)
+		$upload_notes_GUI = GUICtrlCreateEdit("", 39, 362, 497, 100)
 
-	$WifiDbUploadGUI_Upload = GUICtrlCreateButton($Text_UploadApsToWifidb, 35, 488, 241, 25)
-	$WifiDbUploadGUI_Cancel = GUICtrlCreateButton($Text_Cancel, 305, 487, 241, 25)
-	GUISetState(@SW_SHOW)
+		$WifiDbUploadGUI_Upload = GUICtrlCreateButton($Text_UploadApsToWifidb, 35, 488, 241, 25)
+		$WifiDbUploadGUI_Cancel = GUICtrlCreateButton($Text_Cancel, 305, 487, 241, 25)
+		GUISetState(@SW_SHOW)
 
-	GUICtrlSetOnEvent($WifiDbUploadGUI_Upload, '_UploadFileToWifiDB')
-	GUICtrlSetOnEvent($WifiDbUploadGUI_Cancel, '_CloseWifiDbUploadGUI')
-	GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseWifiDbUploadGUI')
+		GUICtrlSetOnEvent($WifiDbUploadGUI_Upload, '_UploadFileToWifiDB')
+		GUICtrlSetOnEvent($WifiDbUploadGUI_Cancel, '_CloseWifiDbUploadGUI')
+		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseWifiDbUploadGUI')
+	Else
+		WinActivate($WifiDbUploadGUI)
+	EndIf
 EndFunc   ;==>_AddToYourWDB
 
 Func _CloseWifiDbUploadGUI()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseWifiDbUploadGUI() ') ;#Debug Display
 	GUIDelete($WifiDbUploadGUI)
+	$UploadFileToWifiDBOpen = 0
 EndFunc   ;==>_CloseWifiDbUploadGUI
-
-Func _Get_HostPortPath($inURL)
-	Local $host, $port, $path
-	$hstring = StringTrimRight($inURL, StringLen($inURL) - (StringInStr($inURL, "/", 0, 3) - 1))
-	$path = StringTrimLeft($inURL, StringInStr($inURL, "/", 0, 3) - 1)
-	If StringInStr($hstring, ":", 0, 2) Then
-		$hpa = StringSplit($hstring, ":")
-		If $hpa[0] = 3 Then
-			$host = StringReplace($hpa[2], "//", "")
-			$port = $hpa[3]
-		EndIf
-	Else
-		$host = StringReplace(StringReplace($hstring, "https://", ""), "http://", "")
-		If StringInStr($hstring, "https://") Then
-			$port = 443
-		Else
-			$port = 80
-		EndIf
-	EndIf
-	If $host <> "" And $port <> "" And $path <> "" Then
-		Local $hpResults[4]
-		$hpResults[0] = 3
-		$hpResults[1] = $host
-		$hpResults[2] = $port
-		$hpResults[3] = $path
-		Return $hpResults
-	Else
-		SetError(1);something messed up splitting the given URL....who knows what.
-	EndIf
-EndFunc   ;==>_Get_HostPortPath
 
 Func _UploadFileToWifiDB()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UploadFileToWifiDB() ') ;#Debug Display
@@ -5473,17 +5453,17 @@ Func _UploadFileToWifiDB()
 		If $WifiDb_UploadType = "VS1" Then
 			$fileexported = _ExportVS1($WdbFile, $WifiDb_UploadFiltered)
 			$filetype = "text/plain; charset=""UTF-8"""
-			$fileuname = $ldatetimestamp & "_wdb_export.VS1"
+			$fileuname = $ldatetimestamp & "_VS.VS1"
 			If $fileexported = 1 Then $fileread = FileRead($WdbFile)
 		ElseIf $WifiDb_UploadType = "CSV" Then
 			$fileexported = _ExportToCSV($WdbFile, $WifiDb_UploadFiltered, 1)
 			$filetype = "text/plain; charset=""UTF-8"""
-			$fileuname = $ldatetimestamp & "_wdb_export.CSV"
+			$fileuname = $ldatetimestamp & "_VS.CSV"
 			If $fileexported = 1 Then $fileread = FileRead($WdbFile)
 		Else
 			$fileexported = _ExportVSZ($WdbFile, $WifiDb_UploadFiltered)
 			$filetype = "application/octet-stream"
-			$fileuname = $ldatetimestamp & "_wdb_export.VSZ"
+			$fileuname = $ldatetimestamp & "_VS.VSZ"
 			If $fileexported = 1 Then $fileread = FileRead($WdbFile) & @CRLF
 		EndIf
 
@@ -5538,25 +5518,65 @@ Func _UploadFileToWifiDB()
 	GUICtrlSetData($msgdisplay, '');Clear $msgdisplay
 EndFunc   ;==>_UploadFileToWifiDB
 
+Func _Get_HostPortPath($inURL)
+	Local $host, $port, $path
+	$hstring = StringTrimRight($inURL, StringLen($inURL) - (StringInStr($inURL, "/", 0, 3) - 1))
+	$path = StringTrimLeft($inURL, StringInStr($inURL, "/", 0, 3) - 1)
+	If StringInStr($hstring, ":", 0, 2) Then
+		$hpa = StringSplit($hstring, ":")
+		If $hpa[0] = 3 Then
+			$host = StringReplace($hpa[2], "//", "")
+			$port = $hpa[3]
+		EndIf
+	Else
+		$host = StringReplace(StringReplace($hstring, "https://", ""), "http://", "")
+		If StringInStr($hstring, "https://") Then
+			$port = 443
+		Else
+			$port = 80
+		EndIf
+	EndIf
+	If $host <> "" And $port <> "" And $path <> "" Then
+		Local $hpResults[4]
+		$hpResults[0] = 3
+		$hpResults[1] = $host
+		$hpResults[2] = $port
+		$hpResults[3] = $path
+		Return $hpResults
+	Else
+		SetError(1);something messed up splitting the given URL....who knows what.
+	EndIf
+EndFunc   ;==>_Get_HostPortPath
+
 Func _HTTPPost_WifiDB_File($host, $page, $socket, $file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
 	Local $command, $extra_commands
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-	$extra_commands = "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""apikey""" & @CRLF & @CRLF
-	$extra_commands &= $apikey & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""username""" & @CRLF & @CRLF
-	$extra_commands &= $user & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""otherusers""" & @CRLF & @CRLF
-	$extra_commands &= $otherusers & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""title""" & @CRLF & @CRLF
-	$extra_commands &= $title & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""notes""" & @CRLF & @CRLF
-	$extra_commands &= $notes & @CRLF
+	If $apikey <> "" Then
+		$extra_commands = "--" & $boundary & @CRLF
+		$extra_commands &= "Content-Disposition: form-data; name=""apikey""" & @CRLF & @CRLF
+		$extra_commands &= $apikey & @CRLF
+	EndIf
+	If $user <> "" Then
+		$extra_commands &= "--" & $boundary & @CRLF
+		$extra_commands &= "Content-Disposition: form-data; name=""username""" & @CRLF & @CRLF
+		$extra_commands &= $user & @CRLF
+	EndIf
+	If $otherusers <> "" Then
+		$extra_commands &= "--" & $boundary & @CRLF
+		$extra_commands &= "Content-Disposition: form-data; name=""otherusers""" & @CRLF & @CRLF
+		$extra_commands &= $otherusers & @CRLF
+	EndIf
+	If $title <> "" Then
+		$extra_commands &= "--" & $boundary & @CRLF
+		$extra_commands &= "Content-Disposition: form-data; name=""title""" & @CRLF & @CRLF
+		$extra_commands &= $title & @CRLF
+	EndIf
+	If $notes <> "" Then
+		$extra_commands &= "--" & $boundary & @CRLF
+		$extra_commands &= "Content-Disposition: form-data; name=""notes""" & @CRLF & @CRLF
+		$extra_commands &= $notes & @CRLF
+	EndIf
 	$extra_commands &= "--" & $boundary & @CRLF
 	$extra_commands &= "Content-Disposition: form-data; name=""file""; filename=""" & $filename & """" & @CRLF
 	$extra_commands &= "Content-Type: " & $contenttype & @CRLF & @CRLF
