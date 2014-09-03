@@ -19,7 +19,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
 $version = 'v10.6 Beta 2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2014/08/31'
+$last_modified = '2014/09/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -5580,6 +5580,7 @@ Func _UploadFileToWifiDB()
 	GUICtrlSetData($msgdisplay, $Text_UploadingApsToWifidb)
 	;Get Upload Information from upload GUI
 	$WifiDb_User = GUICtrlRead($WifiDb_User_GUI)
+	If $WifiDb_User = "" Then $WifiDb_User = "Unknown"
 	$WifiDb_OtherUsers = GUICtrlRead($WifiDb_OtherUsers_GUI)
 	$WifiDb_ApiKey = GUICtrlRead($WifiDb_ApiKey_GUI)
 	$upload_title = GUICtrlRead($upload_title_GUI)
