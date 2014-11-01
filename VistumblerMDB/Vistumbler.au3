@@ -17,9 +17,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 2'
+$version = 'v10.6 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2014/09/03'
+$last_modified = '2014/11/01'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -501,9 +501,9 @@ Dim $WifiDb_ApiKey = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_ApiKey', '')
 Dim $WifiDb_OtherUsers = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_OtherUsers', '')
 Dim $WifiDb_UploadType = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_UploadType', 'VSZ')
 Dim $WifiDb_UploadFiltered = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_UploadFiltered', 0)
-Dim $WifiDbGraphURL = IniRead($settings, 'WifiDbWifiTools', 'Graphing_SURL', 'https://api.wifidb.net/wifi/')
-Dim $WifiDbWdbURL = IniRead($settings, 'WifiDbWifiTools', 'WiFiDB_SURL', 'https://wifidb.vistumbler.net/wifidb/')
-Dim $WifiDbApiURL = IniRead($settings, 'WifiDbWifiTools', 'API_SURL', 'https://api.vistumbler.net/')
+Dim $WifiDbGraphURL = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_GRAPH_URL', 'https://api.wifidb.net/wifi/')
+Dim $WifiDbWdbURL = IniRead($settings, 'WifiDbWifiTools', 'WiFiDB_URL', 'https://live.wifidb.net/wifidb/')
+Dim $WifiDbApiURL = IniRead($settings, 'WifiDbWifiTools', 'WifiDB_API_URL', 'https://api.wifidb.net/')
 Dim $UseWiFiDbGpsLocate = IniRead($settings, 'WifiDbWifiTools', 'UseWiFiDbGpsLocate', 0)
 Dim $EnableAutoUpApsToWifiDB = IniRead($settings, 'WifiDbWifiTools', 'AutoUpApsToWifiDB', 0)
 Dim $AutoUpApsToWifiDBTime = IniRead($settings, 'WifiDbWifiTools', 'AutoUpApsToWifiDBTime', 60)
@@ -7362,9 +7362,9 @@ Func _WriteINI()
 	IniWrite($settings, 'WifiDbWifiTools', 'WifiDb_OtherUsers', $WifiDb_OtherUsers)
 	IniWrite($settings, 'WifiDbWifiTools', 'WifiDb_UploadType', $WifiDb_UploadType)
 	IniWrite($settings, 'WifiDbWifiTools', 'WifiDb_UploadFiltered', $WifiDb_UploadFiltered)
-	IniWrite($settings, 'WifiDbWifiTools', 'Graphing_SURL', $WifiDbGraphURL)
-	IniWrite($settings, 'WifiDbWifiTools', 'WiFiDB_SURL', $WifiDbWdbURL)
-	IniWrite($settings, 'WifiDbWifiTools', 'API_SURL', $WifiDbApiURL)
+	IniWrite($settings, 'WifiDbWifiTools', 'WifiDb_GRAPH_URL', $WifiDbGraphURL)
+	IniWrite($settings, 'WifiDbWifiTools', 'WiFiDB_URL', $WifiDbWdbURL)
+	IniWrite($settings, 'WifiDbWifiTools', 'WifiDB_API_URL', $WifiDbApiURL)
 	IniWrite($settings, "WifiDbWifiTools", 'UseWiFiDbGpsLocate', $UseWiFiDbGpsLocate)
 	IniWrite($settings, 'WifiDbWifiTools', 'AutoUpApsToWifiDB', $AutoUpApsToWifiDB)
 	IniWrite($settings, 'WifiDbWifiTools', 'AutoUpApsToWifiDBTime', $AutoUpApsToWifiDBTime)
