@@ -2353,7 +2353,7 @@ Func _MarkDeadAPs()
 		$Found_dts = StringReplace($Found_Date & $Found_Time, '-', '')
 		$Current_dts = StringReplace($datestamp & $Current_Time, '-', '')
 		;Set APs that have been inactive for specified time dead
-		If ($Current_dts - $Found_dts) > $TimeBeforeMarkedDead Then
+		If (($Current_dts - $Found_dts) > $TimeBeforeMarkedDead) Or $Scan = 0 Then
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
 			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '-100 dBm', $column_RSSI)
@@ -2364,8 +2364,17 @@ Func _MarkDeadAPs()
 	Next
 
 	;Fix APs that are marked dead but still have a signal
-	$query = "UPDATE AP SET Signal=0 WHERE Active=0 And Signal<>0"
-	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	$query = "SELECT ApID, ListRow, SecType FROM AP WHERE Active=0 And Signal<>0"
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	For $resetdead = 1 To $FoundApMatch
+		$Found_APID = $ApMatchArray[$resetdead][1]
+		$Found_ListRow = $ApMatchArray[$resetdead][2]
+		$Found_SecType = $ApMatchArray[$resetdead][3]
+		$query = "UPDATE AP SET Signal=0 WHERE ApID='" & $Found_APID & "'"
+		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+		_UpdateIcon($Found_ListRow, 0, $Found_SecType)
+	Next
 
 	;Update active/total ap label
 	$query = "Select COUNT(ApID) FROM AP WHERE Active=1"
