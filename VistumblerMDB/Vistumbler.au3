@@ -17,7 +17,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 3.5'
+$version = 'v10.6 Beta 4'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/02/08'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -973,6 +973,8 @@ Dim $Text_UploadApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadAp
 Dim $Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
 Dim $Text_GeoNamesInfo = IniRead($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo', 'Geonames Info')
 Dim $Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
+Dim $Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when not data is recieved in over 10 seconds')
+Dim $Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is recived in over 30 seconds')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -7854,6 +7856,10 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Notes', $Text_Notes)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UploadApsToWifidb', $Text_UploadApsToWifidb)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', $Text_UploadingApsToWifidb)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo', $Text_GeoNamesInfo)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', $Text_FindApInWifidb)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', $Text_GpsDisconnect)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsReset', $Text_GpsReset)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -11007,6 +11013,10 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Notes = IniRead($DefaultLanguagePath, 'GuiText', 'Notes', 'Notes')
 		$Text_UploadApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadApsToWifidb', 'Upload APs to WifiDB')
 		$Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
+		$Text_GeoNamesInfo = IniRead($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo', 'Geonames Info')
+		$Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
+		$Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when not data is recieved in over 10 seconds')
+		$Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is recived in over 30 seconds')
 
 		$RestartVistumbler = 1
 	EndIf
