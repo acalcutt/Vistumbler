@@ -7,7 +7,7 @@
 #AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2014 Andrew Calcutt
+;Copyright (C) 2015 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -17,9 +17,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 3'
+$version = 'v10.6 Beta 3.5'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2014/11/01'
+$last_modified = '2015/02/08'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -275,7 +275,7 @@ Dim $WifiDbUploadGUI, $WifiDb_User_GUI, $WifiDb_OtherUsers_GUI, $WifiDb_ApiKey_G
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
 Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
-Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
+Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $GUI_GpsDisconnect, $GUI_GpsReset, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
@@ -434,6 +434,8 @@ Dim $STOPBIT = IniRead($settings, 'GpsSettings', 'StopBit', '1')
 Dim $GpsType = IniRead($settings, 'GpsSettings', 'GpsType', '2')
 Dim $GPSformat = IniRead($settings, 'GpsSettings', 'GPSformat', 3)
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
+Dim $GpsDisconnect = IniRead($settings, 'GpsSettings', 'GpsDisconnect', 1)
+Dim $GpsReset = IniRead($settings, 'GpsSettings', 'GpsReset', 1)
 
 Dim $SortTime = IniRead($settings, 'AutoSort', 'AutoSortTime', 60)
 Dim $AutoSort = IniRead($settings, 'AutoSort', 'AutoSort', 0)
@@ -3837,7 +3839,7 @@ Func _GetGPS(); Recieves data from gps device
 		EndIf
 	Else
 		If $disconnected_time = -1 Then $disconnected_time = TimerInit()
-		If TimerDiff($disconnected_time) > 10000 Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
+		If (TimerDiff($disconnected_time) > 10000) And ($GpsDisconnect = 1) Then ; If nothing has been found in the buffer for 10 seconds, turn off gps
 			$disconnected_time = -1
 			$return = 0
 			_TurnOffGPS()
@@ -4274,43 +4276,45 @@ EndFunc   ;==>_UpdateGpsDetailsGUI
 Func _ClearGpsDetailsGUI();Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearGpsDetailsGUI()') ;#Debug Display
 	If $UseGPS = 1 Then
-		GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": GPGGA:" & Round(TimerDiff($GPGGA_Update) / 1000) & " / " & ($GpsTimeout / 1000) & " - " & "GPRMC:" & Round(TimerDiff($GPRMC_Update) / 1000) & " / " & ($GpsTimeout / 1000))
-		If Round(TimerDiff($GPGGA_Update)) > $GpsTimeout Then
-			If $UseWiFiDbGpsLocate = 0 Then
+		If $GpsReset = 1 Then
+			GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": GPGGA:" & Round(TimerDiff($GPGGA_Update) / 1000) & " / " & ($GpsTimeout / 1000) & " - " & "GPRMC:" & Round(TimerDiff($GPRMC_Update) / 1000) & " / " & ($GpsTimeout / 1000))
+			If Round(TimerDiff($GPGGA_Update)) > $GpsTimeout Then
+				If $UseWiFiDbGpsLocate = 0 Then
+					$Latitude = 'N 0000.0000'
+					$Longitude = 'E 0000.0000'
+				EndIf
+				$FixTime = ''
+				$NumberOfSatalites = '00'
+				$HorDilPitch = '0'
+				$Alt = '0'
+				$AltS = 'M'
+				$Geo = '0'
+				$GeoS = 'M'
+				$GPGGA_Update = TimerInit()
+			EndIf
+			If Round(TimerDiff($GPRMC_Update)) > $GpsTimeout Then
+				$FixTime2 = ''
+				$Latitude2 = 'N 0000.0000'
+				$Longitude2 = 'E 0000.0000'
+				$SpeedInKnots = '0'
+				$SpeedInMPH = '0'
+				$SpeedInKmH = '0'
+				$TrackAngle = '0'
+				$FixDate = ''
+				$GPRMC_Update = TimerInit()
+			EndIf
+		EndIf
+		If $UseWiFiDbGpsLocate = 1 Then
+			If Round(TimerDiff($WifidbGPS_Update)) > $GpsTimeout Then
+				GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": WifiDB:" & Round(TimerDiff($WifidbGPS_Update) / 1000) & " / " & ($GpsTimeout / 1000))
 				$Latitude = 'N 0000.0000'
 				$Longitude = 'E 0000.0000'
+				$LatitudeWifidb = 'N 0000.0000'
+				$LongitudeWifidb = 'E 0000.0000'
+				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
+				GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
+				$WifidbGPS_Update = TimerInit()
 			EndIf
-			$FixTime = ''
-			$NumberOfSatalites = '00'
-			$HorDilPitch = '0'
-			$Alt = '0'
-			$AltS = 'M'
-			$Geo = '0'
-			$GeoS = 'M'
-			$GPGGA_Update = TimerInit()
-		EndIf
-		If Round(TimerDiff($GPRMC_Update)) > $GpsTimeout Then
-			$FixTime2 = ''
-			$Latitude2 = 'N 0000.0000'
-			$Longitude2 = 'E 0000.0000'
-			$SpeedInKnots = '0'
-			$SpeedInMPH = '0'
-			$SpeedInKmH = '0'
-			$TrackAngle = '0'
-			$FixDate = ''
-			$GPRMC_Update = TimerInit()
-		EndIf
-	EndIf
-	If $UseWiFiDbGpsLocate = 1 Then
-		If Round(TimerDiff($WifidbGPS_Update)) > $GpsTimeout Then
-			GUICtrlSetData($msgdisplay, $Text_SecondsSinceGpsUpdate & ": WifiDB:" & Round(TimerDiff($WifidbGPS_Update) / 1000) & " / " & ($GpsTimeout / 1000))
-			$Latitude = 'N 0000.0000'
-			$Longitude = 'E 0000.0000'
-			$LatitudeWifidb = 'N 0000.0000'
-			$LongitudeWifidb = 'E 0000.0000'
-			GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
-			GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
-			$WifidbGPS_Update = TimerInit()
 		EndIf
 	EndIf
 EndFunc   ;==>_ClearGpsDetailsGUI
@@ -7308,6 +7312,8 @@ Func _WriteINI()
 	IniWrite($settings, 'GpsSettings', 'GpsType', $GpsType)
 	IniWrite($settings, 'GpsSettings', 'GPSformat', $GPSformat)
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
+	IniWrite($settings, 'GpsSettings', 'GpsDisconnect', $GpsDisconnect)
+	IniWrite($settings, 'GpsSettings', 'GpsReset', $GpsReset)
 
 	IniWrite($settings, "AutoSort", "AutoSortTime", $SortTime)
 	IniWrite($settings, "AutoSort", "AutoSort", $AutoSort)
@@ -9910,14 +9916,21 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_DataBit, 364, 235, 275, 15)
 		$GUI_DataBit = GUICtrlCreateCombo("4", 364, 250, 275, 25)
 		GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
-		$GroupGpsFormat = GUICtrlCreateGroup($Text_GPSFormat, 24, 360, 633, 50)
+		$GroupGpsOptions = GUICtrlCreateGroup($Text_GpsSettings, 24, 360, 633, 100)
 		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateLabel($Text_GPSFormat, 44, 380, 100, 15)
 		If $GPSformat = 1 Then $DefForm = "dd.dddd"
 		If $GPSformat = 2 Then $DefForm = "dd mm ss"
 		If $GPSformat = 3 Then $DefForm = "ddmm.mmmm"
-		$GUI_Format = GUICtrlCreateCombo("dd.dddd", 44, 380, 275, 25)
+		$GUI_Format = GUICtrlCreateCombo("dd.dddd", 44, 395, 275, 25)
 		GUICtrlSetData(-1, "ddmm.mmmm|dd mm ss", $DefForm)
 		GUICtrlSetColor($GUI_Format, $TextColor)
+		$GUI_GpsDisconnect = GUICtrlCreateCheckbox("Disconnect GPS when not data is recieved in over 10 seconds", 44, 420, 400, 15)
+		If $GpsDisconnect = 1 Then GUICtrlSetState($GUI_GpsDisconnect, $GUI_CHECKED)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_GpsReset = GUICtrlCreateCheckbox("Reset GPS position when no GPGGA data is recived in over 30 seconds", 44, 440, 400, 15)
+		If $GpsReset = 1 Then GUICtrlSetState($GUI_GpsReset, $GUI_CHECKED)
+		GUICtrlSetColor(-1, $TextColor)
 		;Language Tab
 		$Tab_Lan = GUICtrlCreateTabItem($Text_Language)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
@@ -10594,6 +10607,9 @@ Func _ApplySettingsGUI();Applys settings
 	$RestartVistumbler = 0
 	If $Apply_GPS = 1 Then
 		If GUICtrlRead($GUI_Comport) <> $ComPort And $UseGPS = 1 Then _GpsToggle() ;If the port has changed and gps is turned on then turn off the gps (it will be re-enabled with the new port)
+		If GUICtrlRead($Rad_UseCommMG) = 1 Then $GpsType = 0 ;Set CommMG as default comm interface
+		If GUICtrlRead($Rad_UseNetcomm) = 1 Then $GpsType = 1 ;Set Netcomm as default comm interface
+		If GUICtrlRead($Rad_UseKernel32) = 1 Then $GpsType = 2 ;Set Kernel32 as default comm interface
 		$ComPort = GUICtrlRead($GUI_Comport)
 		$BAUD = GUICtrlRead($GUI_Baud)
 		$STOPBIT = GUICtrlRead($GUI_StopBit)
@@ -10614,9 +10630,16 @@ Func _ApplySettingsGUI();Applys settings
 		If GUICtrlRead($GUI_Format) = "ddmm.mmmm" Then $GPSformat = 3
 		GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
 		GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
-		If GUICtrlRead($Rad_UseCommMG) = 1 Then $GpsType = 0 ;Set CommMG as default comm interface
-		If GUICtrlRead($Rad_UseNetcomm) = 1 Then $GpsType = 1 ;Set Netcomm as default comm interface
-		If GUICtrlRead($Rad_UseKernel32) = 1 Then $GpsType = 2 ;Set Kernel32 as default comm interface
+		If GUICtrlRead($GUI_GpsDisconnect) = 1 Then
+			$GpsDisconnect = 1
+		Else
+			$GpsDisconnect = 0
+		EndIf
+		If GUICtrlRead($GUI_GpsReset) = 1 Then
+			$GpsReset = 1
+		Else
+			$GpsReset = 0
+		EndIf
 	EndIf
 	If $Apply_Language = 1 Then
 		$DefaultLanguage = GUICtrlRead($LanguageBox)
