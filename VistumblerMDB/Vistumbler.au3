@@ -446,7 +446,7 @@ Dim $SaveTime = IniRead($settings, 'AutoSave', 'AutoSaveTime', 300)
 Dim $AutoSave = IniRead($settings, 'AutoSave', 'AutoSave', 1)
 Dim $AutoSaveDel = IniRead($settings, 'AutoSave', 'AutoSaveDel', 1)
 
-Dim $SoundOnGps = IniRead($settings, 'Sound', 'PlaySoundOnNewGps', 1)
+Dim $SoundOnGps = IniRead($settings, 'Sound', 'PlaySoundOnNewGps', 0)
 Dim $SoundOnAP = IniRead($settings, 'Sound', 'PlaySoundOnNewAP', 1)
 Dim $SoundPerAP = IniRead($settings, 'Sound', 'SoundPerAP', 0)
 Dim $NewSoundSigBased = IniRead($settings, 'Sound', 'NewSoundSigBased', 0)
@@ -976,7 +976,7 @@ Dim $Text_UploadApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadAp
 Dim $Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
 Dim $Text_GeoNamesInfo = IniRead($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo', 'Geonames Info')
 Dim $Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
-Dim $Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when not data is recieved in over 10 seconds')
+Dim $Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when no data is recieved in over 10 seconds')
 Dim $Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is recived in over 30 seconds')
 
 If $AutoCheckForUpdates = 1 Then
@@ -3429,7 +3429,7 @@ Func _GpsSoundToggle();turns new gps sound on or off
 		GUICtrlSetState($PlaySoundOnNewGPS, $GUI_CHECKED)
 		$SoundOnGps = 1
 	EndIf
-EndFunc   ;==>_SoundToggle
+EndFunc   ;==>_GpsSoundToggle
 
 Func _SaveGpsWithNoAPsToggle();turns saving gps data without APs on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveGpsWithNoAPsToggle()') ;#Debug Display
@@ -11037,7 +11037,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
 		$Text_GeoNamesInfo = IniRead($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo', 'Geonames Info')
 		$Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
-		$Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when not data is recieved in over 10 seconds')
+		$Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when no data is recieved in over 10 seconds')
 		$Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is recived in over 30 seconds')
 
 		$RestartVistumbler = 1
