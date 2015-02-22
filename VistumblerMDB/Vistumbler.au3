@@ -446,10 +446,12 @@ Dim $SaveTime = IniRead($settings, 'AutoSave', 'AutoSaveTime', 300)
 Dim $AutoSave = IniRead($settings, 'AutoSave', 'AutoSave', 1)
 Dim $AutoSaveDel = IniRead($settings, 'AutoSave', 'AutoSaveDel', 1)
 
+Dim $SoundOnGps = IniRead($settings, 'Sound', 'PlaySoundOnNewGps', 1)
 Dim $SoundOnAP = IniRead($settings, 'Sound', 'PlaySoundOnNewAP', 1)
 Dim $SoundPerAP = IniRead($settings, 'Sound', 'SoundPerAP', 0)
 Dim $NewSoundSigBased = IniRead($settings, 'Sound', 'NewSoundSigBased', 0)
 Dim $new_AP_sound = IniRead($settings, 'Sound', 'NewAP_Sound', 'new_ap.wav')
+Dim $new_GPS_sound = IniRead($settings, 'Sound', 'NewGPS_Sound', 'new_gps.wav')
 Dim $ErrorFlag_sound = IniRead($settings, 'Sound', 'Error_Sound', 'error.wav')
 
 Dim $SpeakSignal = IniRead($settings, 'MIDI', 'SpeakSignal', 0)
@@ -656,6 +658,7 @@ Dim $Text_Options = IniRead($DefaultLanguagePath, 'GuiText', 'Options', '&Option
 Dim $Text_AutoSort = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSort', 'AutoSort')
 Dim $Text_SortTree = IniRead($DefaultLanguagePath, 'GuiText', 'SortTree', 'Sort Tree  - (slow on big lists)')
 Dim $Text_PlaySound = IniRead($DefaultLanguagePath, 'GuiText', 'PlaySound', 'Play sound on new AP')
+Dim $Text_PlayGpsSound = IniRead($DefaultLanguagePath, 'GuiText', 'PlayGpsSound', 'Play sound on new GPS')
 Dim $Text_AddAPsToTop = IniRead($DefaultLanguagePath, 'GuiText', 'AddAPsToTop', 'Add new APs to top')
 
 Dim $Text_Extra = IniRead($DefaultLanguagePath, 'GuiText', 'Extra', 'Ex&tra')
@@ -1259,6 +1262,8 @@ $AutoScanMenu = GUICtrlCreateMenuItem($Text_AutoScanApsOnLaunch, $Options)
 If $AutoScan = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $PlaySoundOnNewAP = GUICtrlCreateMenuItem($Text_PlaySound, $Options)
 If $SoundOnAP = 1 Then GUICtrlSetState($PlaySoundOnNewAP, $GUI_CHECKED)
+$PlaySoundOnNewGPS = GUICtrlCreateMenuItem($Text_PlayGpsSound, $Options)
+If $SoundOnGps = 1 Then GUICtrlSetState($PlaySoundOnNewGPS, $GUI_CHECKED)
 $SpeakApSignal = GUICtrlCreateMenuItem($Text_SpeakSignal, $Options)
 If $SpeakSignal = 1 Then GUICtrlSetState($SpeakApSignal, $GUI_CHECKED)
 $GUI_MidiActiveAps = GUICtrlCreateMenuItem($Text_PlayMidiSounds, $Options)
@@ -1468,6 +1473,7 @@ GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
 GUICtrlSetOnEvent($AutoScanMenu, '_AutoScanToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
+GUICtrlSetOnEvent($PlaySoundOnNewGPS, '_GpsSoundToggle')
 GUICtrlSetOnEvent($SpeakApSignal, '_SpeakSigToggle')
 GUICtrlSetOnEvent($GUI_MidiActiveAps, '_ActiveApMidiToggle')
 GUICtrlSetOnEvent($MenuSaveGpsWithNoAps, '_SaveGpsWithNoAPsToggle')
@@ -3414,6 +3420,17 @@ Func _SoundToggle();turns new ap sound on or off
 	EndIf
 EndFunc   ;==>_SoundToggle
 
+Func _GpsSoundToggle();turns new gps sound on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GpsSoundToggle()') ;#Debug Display
+	If $SoundOnGps = 1 Then
+		GUICtrlSetState($PlaySoundOnNewGPS, $GUI_UNCHECKED)
+		$SoundOnGps = 0
+	Else
+		GUICtrlSetState($PlaySoundOnNewGPS, $GUI_CHECKED)
+		$SoundOnGps = 1
+	EndIf
+EndFunc   ;==>_SoundToggle
+
 Func _SaveGpsWithNoAPsToggle();turns saving gps data without APs on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveGpsWithNoAPsToggle()') ;#Debug Display
 	If $SaveGpsWithNoAps = 1 Then
@@ -3827,6 +3844,7 @@ Func _GetGPS(); Recieves data from gps device
 			$AltS = $Temp_AltS
 			$Geo = $Temp_Geo
 			$GeoS = $Temp_GeoS
+			If $SoundOnGps = 1 Then SoundPlay($SoundDir & $new_GPS_sound, 0)
 		EndIf
 		If $Temp_Status = "A" Then ;If the GPRMC data is Active(A) then write data to perminant variables
 			If $FixTime2 <> $Temp_FixTime2 Then $GPRMC_Update = TimerInit()
@@ -7326,10 +7344,12 @@ Func _WriteINI()
 	IniWrite($settings, "AutoSave", "AutoSaveDel", $AutoSaveDel)
 	IniWrite($settings, "AutoSave", "AutoSaveTime", $SaveTime)
 
+	IniWrite($settings, "Sound", 'PlaySoundOnNewGps', $SoundOnGps)
 	IniWrite($settings, "Sound", 'PlaySoundOnNewAP', $SoundOnAP)
 	IniWrite($settings, "Sound", 'SoundPerAP', $SoundPerAP)
 	IniWrite($settings, "Sound", 'NewSoundSigBased', $NewSoundSigBased)
 	IniWrite($settings, "Sound", "NewAP_Sound", $new_AP_sound)
+	IniWrite($settings, "Sound", "NewGPS_Sound", $new_GPS_sound)
 	IniWrite($settings, "Sound", "Error_Sound", $ErrorFlag_sound)
 
 	IniWrite($settings, "MIDI", 'SpeakSignal', $SpeakSignal)
@@ -7542,6 +7562,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "AutoSort", $Text_AutoSort)
 	IniWrite($DefaultLanguagePath, "GuiText", "SortTree", $Text_SortTree)
 	IniWrite($DefaultLanguagePath, "GuiText", "PlaySound", $Text_PlaySound)
+	IniWrite($DefaultLanguagePath, "GuiText", "PlayGpsSound", $Text_PlayGpsSound)
 	IniWrite($DefaultLanguagePath, "GuiText", "AddAPsToTop", $Text_AddAPsToTop)
 	IniWrite($DefaultLanguagePath, "GuiText", "Extra", $Text_Extra)
 	IniWrite($DefaultLanguagePath, "GuiText", "ScanAPs", $Text_ScanAPs)
@@ -10699,6 +10720,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AutoSort = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSort', 'AutoSort')
 		$Text_SortTree = IniRead($DefaultLanguagePath, 'GuiText', 'SortTree', 'Sort Tree(slow)')
 		$Text_PlaySound = IniRead($DefaultLanguagePath, 'GuiText', 'PlaySound', 'Play sound on new AP')
+		$Text_PlayGpsSound = IniRead($DefaultLanguagePath, 'GuiText', 'PlayGpsSound', 'Play sound on new GPS')
 		$Text_AddAPsToTop = IniRead($DefaultLanguagePath, 'GuiText', 'AddAPsToTop', 'Add new APs to top')
 		$Text_Extra = IniRead($DefaultLanguagePath, 'GuiText', 'Extra', 'Ex&tra')
 		$Text_ScanAPs = IniRead($DefaultLanguagePath, 'GuiText', 'ScanAPs', '&Scan APs')
