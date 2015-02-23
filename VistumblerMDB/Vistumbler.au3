@@ -1615,7 +1615,7 @@ While 1
 		If $Last_Latitude <> $Latitude Or $Last_Longitude <> $Longitude Then
 			_SoundPlay($new_GPS_sound_open_id, 0)
 			$Last_Latitude = $Latitude
-			$Last_Logitude = $Longitude
+			$Last_Longitude = $Longitude
 		EndIf
 	EndIf
 
