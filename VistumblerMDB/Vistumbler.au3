@@ -184,6 +184,8 @@ Dim $Latitude2 = 'N 0000.0000'
 Dim $Longitude2 = 'E 0000.0000'
 Dim $LatitudeWifidb = 'N 0000.0000'
 Dim $LongitudeWifidb = 'E 0000.0000'
+Dim $Last_Latitude = 'N 0000.0000'
+Dim $Last_Longitude = 'E 0000.0000'
 Dim $NumberOfSatalites = '00'
 Dim $HorDilPitch = '0'
 Dim $Alt = '0'
@@ -1600,6 +1602,15 @@ While 1
 			If $GpsType = 1 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorBufferEmpty)
 			If $GpsType = 0 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorStopped)
 			Sleep(1000)
+		EndIf
+	EndIf
+
+	;Play New GPS sound (if enabled)
+	If $SoundOnGps = 1 Then
+		If $Last_Latitude <> $Latitude And $Last_Longitude <> $Longitude Then
+			SoundPlay($SoundDir & $new_GPS_sound, 0)
+			$Last_Latitude = $Latitude
+			$Last_Logitude = $Longitude
 		EndIf
 	EndIf
 
@@ -3844,7 +3855,6 @@ Func _GetGPS(); Recieves data from gps device
 			$AltS = $Temp_AltS
 			$Geo = $Temp_Geo
 			$GeoS = $Temp_GeoS
-			If $SoundOnGps = 1 Then SoundPlay($SoundDir & $new_GPS_sound, 0)
 		EndIf
 		If $Temp_Status = "A" Then ;If the GPRMC data is Active(A) then write data to perminant variables
 			$GPRMC_Update = TimerInit()
