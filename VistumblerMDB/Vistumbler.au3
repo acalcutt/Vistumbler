@@ -3783,8 +3783,8 @@ Func _GetGPS(); Recieves data from gps device
 	$return = 1
 	$FoundData = 0
 
-	$maxtime = $RefreshLoopTime * 0.5; Set GPS timeout to 80% of the given timout time
-	If $maxtime < 500 Then $maxtime = 500;Set GPS timeout to 800 if it is under that
+	$maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
+	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
 
 	Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
 	Dim $Temp_Quality = 0, $Temp_Status = "V"
@@ -3829,7 +3829,7 @@ Func _GetGPS(); Recieves data from gps device
 				EndIf
 			EndIf
 		ElseIf $GpsType = 2 Then ;Use Kernel32
-			$gstring = StringStripWS(_rxwait($OpenedPort, '256', $maxtime), 8);Read data line from GPS
+			$gstring = StringStripWS(_rxwait($OpenedPort, '500', $maxtime), 8);Read data line from GPS
 			$dataline = $gstring; & $LastGpsString
 			$LastGpsString = $gstring
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
