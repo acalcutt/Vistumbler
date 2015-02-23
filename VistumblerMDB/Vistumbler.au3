@@ -3808,7 +3808,7 @@ Func _GetGPS(); Recieves data from gps device
 				EndIf
 			EndIf
 		ElseIf $GpsType = 2 Then ;Use Kernel32
-			$gstring = StringStripWS(_rxwait($OpenedPort, '100', $maxtime), 8);Read data line from GPS
+			$gstring = StringStripWS(_rxwait($OpenedPort, '128', $maxtime), 8);Read data line from GPS
 			$dataline = $gstring; & $LastGpsString
 			$LastGpsString = $gstring
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
@@ -3834,7 +3834,7 @@ Func _GetGPS(); Recieves data from gps device
 	If $FoundData = 1 Then
 		$disconnected_time = -1
 		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then ;If the GPGGA data has a fix(1) then write data to perminant variables
-			If $FixTime <> $Temp_FixTime Then $GPGGA_Update = TimerInit()
+			$GPGGA_Update = TimerInit()
 			$FixTime = $Temp_FixTime
 			$Latitude = _Format_GPS_DMM($Temp_Lat)
 			$Longitude = _Format_GPS_DMM($Temp_Lon)
@@ -3847,7 +3847,7 @@ Func _GetGPS(); Recieves data from gps device
 			If $SoundOnGps = 1 Then SoundPlay($SoundDir & $new_GPS_sound, 0)
 		EndIf
 		If $Temp_Status = "A" Then ;If the GPRMC data is Active(A) then write data to perminant variables
-			If $FixTime2 <> $Temp_FixTime2 Then $GPRMC_Update = TimerInit()
+			$GPRMC_Update = TimerInit()
 			$FixTime2 = $Temp_FixTime2
 			$Latitude2 = $Temp_Lat2
 			$Longitude2 = $Temp_Lon2
@@ -3948,10 +3948,10 @@ Func _GPGGA($data);Strips data from a gps $GPGGA data string
 				$Temp_Lat = $GPGGA_Split[4] & " " & StringFormat('%0.4f', $GPGGA_Split[3])
 				$Temp_Lon = $GPGGA_Split[6] & " " & StringFormat('%0.4f', $GPGGA_Split[5])
 				$Temp_NumberOfSatalites = $GPGGA_Split[8]
-				$Temp_HorDilPitch = $GPGGA_Split[9]
-				$Temp_Alt = $GPGGA_Split[10] * 3.2808399
+				$Temp_HorDilPitch = StringFormat('%0.2f', $GPGGA_Split[9])
+				$Temp_Alt = StringFormat('%0.2f', $GPGGA_Split[10] * 3.2808399)
 				$Temp_AltS = $GPGGA_Split[11]
-				$Temp_Geo = $GPGGA_Split[12]
+				$Temp_Geo = StringFormat('%0.2f', $GPGGA_Split[12])
 				$Temp_GeoS = $GPGGA_Split[13]
 			EndIf
 		EndIf
@@ -12939,3 +12939,4 @@ Func _CleanupFiles($cDIR, $cTYPE)
 		Next
 	EndIf
 EndFunc   ;==>_CleanupFiles
+
