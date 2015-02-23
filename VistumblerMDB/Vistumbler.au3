@@ -9952,10 +9952,10 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_Format = GUICtrlCreateCombo("dd.dddd", 44, 395, 275, 25)
 		GUICtrlSetData(-1, "ddmm.mmmm|dd mm ss", $DefForm)
 		GUICtrlSetColor($GUI_Format, $TextColor)
-		$GUI_GpsDisconnect = GUICtrlCreateCheckbox("Disconnect GPS when not data is recieved in over 10 seconds", 44, 420, 400, 15)
+		$GUI_GpsDisconnect = GUICtrlCreateCheckbox($Text_GpsDisconnect, 44, 420, 400, 15)
 		If $GpsDisconnect = 1 Then GUICtrlSetState($GUI_GpsDisconnect, $GUI_CHECKED)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_GpsReset = GUICtrlCreateCheckbox("Reset GPS position when no GPGGA data is recived in over 30 seconds", 44, 440, 400, 15)
+		$GUI_GpsReset = GUICtrlCreateCheckbox($Text_GpsReset, 44, 440, 400, 15)
 		If $GpsReset = 1 Then GUICtrlSetState($GUI_GpsReset, $GUI_CHECKED)
 		GUICtrlSetColor(-1, $TextColor)
 		;Language Tab
