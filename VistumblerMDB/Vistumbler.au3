@@ -38,6 +38,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include <INet.au3>
 #include <SQLite.au3>
 #include <GuiMenu.au3>
+#include <Sound.au3>
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
@@ -455,6 +456,10 @@ Dim $NewSoundSigBased = IniRead($settings, 'Sound', 'NewSoundSigBased', 0)
 Dim $new_AP_sound = IniRead($settings, 'Sound', 'NewAP_Sound', 'new_ap.wav')
 Dim $new_GPS_sound = IniRead($settings, 'Sound', 'NewGPS_Sound', 'new_gps.wav')
 Dim $ErrorFlag_sound = IniRead($settings, 'Sound', 'Error_Sound', 'error.wav')
+Dim $new_AP_sound_open_id = _SoundOpen($SoundDir & $new_AP_sound)
+Dim $new_GPS_sound_open_id = _SoundOpen($SoundDir & $new_GPS_sound)
+Dim $ErrorFlag_sound_open_id = _SoundOpen($SoundDir & $ErrorFlag_sound)
+
 
 Dim $SpeakSignal = IniRead($settings, 'MIDI', 'SpeakSignal', 0)
 Dim $SpeakSigSayPecent = IniRead($settings, 'MIDI', 'SpeakSigSayPecent', 1)
@@ -1608,7 +1613,7 @@ While 1
 	;Play New GPS sound (if enabled)
 	If $SoundOnGps = 1 Then
 		If $Last_Latitude <> $Latitude Or $Last_Longitude <> $Longitude Then
-			SoundPlay($SoundDir & $new_GPS_sound, 0)
+			_SoundPlay($new_GPS_sound_open_id, 0)
 			$Last_Latitude = $Latitude
 			$Last_Logitude = $Longitude
 		EndIf
@@ -1942,7 +1947,7 @@ Func _ScanAccessPoints()
 			EndIf
 		Next
 		;Play New AP sound if sounds are enabled if per-ap sound is disabled
-		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _SoundPlay($new_AP_sound_open_id, 0)
 		;Return number of active APs
 		Return ($FoundAPs)
 	Else
@@ -2033,7 +2038,7 @@ Func _ScanAccessPoints()
 					EndIf
 				Next
 				;Play New AP sound if sounds are enabled if per-ap sound is disabled
-				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then SoundPlay($SoundDir & $new_AP_sound, 0)
+				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _SoundPlay($new_AP_sound_open_id, 0)
 			EndIf
 			FileClose($netshtempfile)
 			;Return number of active APs
@@ -3199,10 +3204,15 @@ Func _Exit()
 	If $AutoSaveDel = 1 Then FileDelete($AutoSaveFile)
 	If $UseGPS = 1 Then ;If GPS is active, stop it so the COM port does not stay open
 		_TurnOffGPS()
-		Exit
-	Else
-		Exit
 	EndIf
+
+	;Close Sound Files
+	_SoundClose($new_AP_sound_open_id)
+	_SoundClose($new_GPS_sound_open_id)
+	_SoundClose($ErrorFlag_sound_open_id)
+
+	;Exit Vistumbler
+	Exit
 EndFunc   ;==>_Exit
 
 Func ScanToggle();Turns AP scanning on or off
@@ -3873,7 +3883,7 @@ Func _GetGPS(); Recieves data from gps device
 			$disconnected_time = -1
 			$return = 0
 			_TurnOffGPS()
-			SoundPlay($SoundDir & $ErrorFlag_sound, 0)
+			_SoundPlay($ErrorFlag_sound_open_id, 0)
 		EndIf
 	EndIf
 
