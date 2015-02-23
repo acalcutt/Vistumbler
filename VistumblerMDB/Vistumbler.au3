@@ -1607,7 +1607,7 @@ While 1
 
 	;Play New GPS sound (if enabled)
 	If $SoundOnGps = 1 Then
-		If $Last_Latitude <> $Latitude And $Last_Longitude <> $Longitude Then
+		If $Last_Latitude <> $Latitude Or $Last_Longitude <> $Longitude Then
 			SoundPlay($SoundDir & $new_GPS_sound, 0)
 			$Last_Latitude = $Latitude
 			$Last_Logitude = $Longitude
