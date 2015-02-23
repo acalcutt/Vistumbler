@@ -3878,10 +3878,15 @@ EndFunc   ;==>_GetGPS
 
 Func _FormatGpsTime($time)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FormatGpsTime()') ;#Debug Display
-	$time = StringTrimRight($time, 4)
-	$h = StringTrimRight($time, 4)
-	$m = StringTrimLeft(StringTrimRight($time, 2), 2)
-	$s = StringTrimLeft($time, 4)
+
+	$h = StringLeft($time, 2)
+	$m = StringMid($time, 3, 2)
+	$s = StringRight($time, StringLen($time) - 4)
+	ConsoleWrite($time & ' - ' & $h & ' - ' & $m & ' - ' & $s & @CRLF)
+	;$time = StringTrimRight($time, 4)
+	;$h = StringTrimRight($time, 4)
+	;$m = StringTrimLeft(StringTrimRight($time, 2), 2)
+	;$s = StringTrimLeft($time, 4)
 	If $h > 12 Then
 		$h = $h - 12
 		$l = "PM"
