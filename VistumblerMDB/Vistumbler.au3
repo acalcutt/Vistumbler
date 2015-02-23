@@ -17,7 +17,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 5'
+$version = 'v10.6 Beta 6'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/02/22'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -3808,7 +3808,7 @@ Func _GetGPS(); Recieves data from gps device
 				EndIf
 			EndIf
 		ElseIf $GpsType = 2 Then ;Use Kernel32
-			$gstring = StringStripWS(_rxwait($OpenedPort, '128', $maxtime), 8);Read data line from GPS
+			$gstring = StringStripWS(_rxwait($OpenedPort, '500', $maxtime), 8);Read data line from GPS
 			$dataline = $gstring; & $LastGpsString
 			$LastGpsString = $gstring
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
