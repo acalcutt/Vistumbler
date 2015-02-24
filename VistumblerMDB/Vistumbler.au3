@@ -1641,7 +1641,7 @@ While 1
 			;Remove APs that do not match the filter
 			_FilterRemoveNonMatchingInList()
 			;Add APs back into the listview that match but are not there
-			_UpdateListview()
+			_UpdateListview(0)
 			;_FilterReAddMatchingNotInList()
 			;Play Midi Sounds for all active APs (if enabled)
 			_PlayMidiForActiveAPs()
@@ -1665,7 +1665,7 @@ While 1
 		;Remove APs that do not match the filter
 		_FilterRemoveNonMatchingInList()
 		;Add APs back into the listview that match but are not there
-		_UpdateListview()
+		_UpdateListview(0)
 		;_FilterReAddMatchingNotInList()
 	EndIf
 	;Resize Controls / Control Resize Monitoring
@@ -2266,9 +2266,11 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			EndIf
 			If $Found_ListRow <> -1 Then
 				;Update AP Listview data
+				_GUICtrlListView_BeginUpdate($ListviewAPs)
 				_ListViewAdd($Found_ListRow, -1, $Exp_AP_Status, -1, -1, -1, -1, $Exp_AP_DisplaySig, $ExpHighSig, $Exp_AP_DisplayRSSI, $ExpHighRSSI, -1, -1, -1, -1, -1, $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, -1, -1)
 				;Update Signal Icon
 				_UpdateIcon($Found_ListRow, $Exp_AP_DisplaySig, $Found_SecType)
+				_GUICtrlListView_EndUpdate($ListviewAPs)
 			EndIf
 		EndIf
 	EndIf
@@ -2655,8 +2657,13 @@ Func _FilterRemoveNonMatchingInList()
 	EndIf
 EndFunc   ;==>_FilterRemoveNonMatchingInList
 
-Func _UpdateListview()
+Func _UpdateListview($Batch=0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateListview()') ;#Debug Display
+	If $Batch=1 Then
+		_GUICtrlListView_BeginUpdate($ListviewAPs)
+		_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
+		GUISetState(@SW_LOCK, $Vistumbler)
+	EndIf
 	;Find APs that meet criteria but are not in the listview
 	If StringInStr($AddQuery, "WHERE") Then
 		$fquery = $AddQuery & " AND ListRow=-1"
@@ -2735,16 +2742,16 @@ Func _UpdateListview()
 			EndIf
 
 			;Add New Listrow with Icon
-			_GUICtrlListView_BeginUpdate($ListviewAPs)
+			If $Batch=0 Then _GUICtrlListView_BeginUpdate($ListviewAPs)
 			$ListRow = _AddIconListRow($ImpSig, $ImpSecType, $ImpApID, $DBAddPos)
 			_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
-			_GUICtrlListView_EndUpdate($ListviewAPs)
+			If $Batch=0 Then _GUICtrlListView_EndUpdate($ListviewAPs)
 			$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $ImpApID
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Add Into TreeView
-			_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
+			If $Batch=0 Then _GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 			_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-			_GUICtrlTreeView_EndUpdate($TreeviewAPs)
+			If $Batch=0 Then _GUICtrlTreeView_EndUpdate($TreeviewAPs)
 		Next
 	Else
 		Local $ListRowPos = -1, $DbColName, $SortDir
@@ -2791,6 +2798,11 @@ Func _UpdateListview()
 			$query = "SELECT ListRow, ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, Signal, HighSignal, RSSI, HighRSSI FROM AP WHERE ListRow<>-1 ORDER BY " & $DbCol & " " & $SortDir & ", ApID " & $SortDir
 			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
 		EndIf
+	EndIf
+	If $Batch=1 Then
+		GUISetState(@SW_UNLOCK, $Vistumbler)
+		_GUICtrlListView_EndUpdate($ListviewAPs)
+		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 	EndIf
 EndFunc   ;==>_UpdateListview
 
@@ -2859,19 +2871,25 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 
 			If $wlv > $ListCurrentRowCount Then
 				;Add new row with icon to the bottom of the list
+				_GUICtrlListView_BeginUpdate($ListviewAPs)
 				$ListRow = _AddIconListRow($Found_Signal, $Found_SecType, $Found_APID, -1)
 				;Write changes to listview
 				_ListViewAdd($ListRow, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
+				_GUICtrlListView_EndUpdate($ListviewAPs)
 				;Update ListRow
 				$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $Found_APID
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				;Add Into TreeView
+				_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 				_TreeViewAdd($Found_APID, $Found_SSID, $Found_BSSID, $Found_CHAN, $Found_NETTYPE, $Found_ENCR, $Found_RADTYPE, $Found_AUTH, $Found_BTX, $Found_OTX, $Found_MANU, $Found_LABEL)
+				_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 			Else
 				;Write changes to listview
+				_GUICtrlListView_BeginUpdate($ListviewAPs)
 				_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
 				;Update ListRow Icon
 				_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
+				_GUICtrlListView_EndUpdate($ListviewAPs)
 				;Update ListRow
 				$query = "UPDATE AP SET ListRow=" & $listpos & " WHERE ApID=" & $Found_APID
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -2880,13 +2898,12 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 	Next
 	;Remove extra rows
 	If $ListCurrentRowCount > $FoundApMatch Then
+		_GUICtrlListView_BeginUpdate($ListviewAPs)
 		For $remrow = $FoundApMatch To $ListCurrentRowCount
 			_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $remrow)
 		Next
+		_GUICtrlListView_EndUpdate($ListviewAPs)
 	EndIf
-	GUISetState(@SW_UNLOCK, $Vistumbler)
-	_GUICtrlListView_EndUpdate($ListviewAPs)
-	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 EndFunc   ;==>__UpdateListviewDbQueryToList
 
 Func _ClearAllAp()
@@ -3056,15 +3073,7 @@ Func _RecoverMDB()
 	$query = "UPDATE AP SET ListRow=-1, Active=0, Signal=0"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 	;Add APs into Listview and Treeview
-	_UpdateListview()
-	;_FilterReAddMatchingNotInList()
-	;Sort
-	If $AddDirection = 0 Then
-		$v_sort = True;set ascending
-	Else
-		$v_sort = False;set descending
-	EndIf
-	_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
+	_UpdateListview(1)
 	;Update Labels and Manufacturers
 	_UpdateListMacLabels()
 	GUICtrlSetData($msgdisplay, '')
@@ -8058,15 +8067,9 @@ Func _ImportOk()
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
 		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_AddingApsIntoList)
 		;_FilterReAddMatchingNotInList()
-		_UpdateListview()
-		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_SortingList)
-		If $AddDirection = 0 Then
-			$v_sort = True;set ascending
-		Else
-			$v_sort = False;set descending
-		EndIf
-		_GUICtrlListView_SimpleSort($ListviewAPs, $v_sort, $column_Line)
-		_FixLineNumbers()
+		_UpdateListview(1)
+		;Update Labels and Manufacturers
+		_UpdateListMacLabels()
 		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
 		GUICtrlSetData($progressbar, 100)
