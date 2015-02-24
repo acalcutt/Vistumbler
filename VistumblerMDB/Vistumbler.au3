@@ -1418,7 +1418,8 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
-$TreeviewAPs = GUICtrlCreateTreeView(5, 65, 150, 585)
+;$TreeviewAPs = GUICtrlCreateTreeView(5, 65, 150, 585)
+$TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5, 65, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 GUISetState()
 
@@ -4408,6 +4409,7 @@ Func _SortListColumn($ListColName, $SortOrder)
 EndFunc   ;==>_SortListColumn
 
 Func _HeaderSort($column);Sort a column in ap list
+	ConsoleWrite($column & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_HeaderSort()') ;#Debug Display
 	;Get Column Name
 	Local $colInfo = _GUICtrlListView_GetColumn($ListviewAPs, $column)
@@ -4660,14 +4662,15 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top + ($Graphic_height + 1)
 			$ListviewAPs_height = $DataChild_Height - ($Graphic_height + 1)
 
-			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
+			;GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			WinSetState($TreeviewAPs, "", @SW_HIDE)
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
 			$Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics($Graphic_width, $Graphic_height, $Graphic)
 			$Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
-			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+			;GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		Else
 			$TreeviewAPs_left = $DataChild_Left
 			$TreeviewAPs_width = ($DataChild_Width * $SplitPercent) - $TreeviewAPs_left
@@ -4680,10 +4683,12 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_height = $DataChild_Height
 
 			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			WinMove($TreeviewAPs, "", $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
+			WinSetState($TreeviewAPs, "", @SW_SHOW)
 			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
-			GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
-			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+			;GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
+			;GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
+			;GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		EndIf
 		$sizes_old = $sizes
 		$Graph_old = $Graph
@@ -4707,7 +4712,8 @@ Func _TreeviewListviewResize()
 		If $MoveMode = True Then
 			GUISetCursor(13, 1);  13 = SIZEWE
 			$TreeviewAPs_width = $cursorInfo[0] - $TreeviewAPs_left
-			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
+			WinMove($TreeviewAPs, "", $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
+			;GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
 			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
 			$ListviewAPs_width = $DataChild_Width - $ListviewAPs_left
 			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
