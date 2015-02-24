@@ -1,4 +1,4 @@
-#RequireAdmin
+;#RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
@@ -17,9 +17,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 8'
+$version = 'v10.6 Beta 9'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/02/23'
+$last_modified = '2015/02/24'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1545,8 +1545,6 @@ GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
 GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
 GUICtrlSetOnEvent($VistumblerStore, '_OpenVistumblerStore')
-;Other
-GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 
 ;Set Listview Widths
 _SetListviewWidths()
@@ -3014,7 +3012,6 @@ Func _ClearAllAp()
 	;_GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 	;GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 	_SetListviewWidths()
-	GUICtrlSetOnEvent($ListviewAPs, '_SortColumnToggle')
 	_SetControlSizes()
 	;Clear Treeview
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $Authentication_tree)
@@ -3500,11 +3497,6 @@ Func _SpeakSigToggle();turns speak ap signal on or off
 		$SpeakSignal = 1
 	EndIf
 EndFunc   ;==>_SpeakSigToggle
-
-Func _SortColumnToggle(); Sets the ap list column header that was clicked
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SortColumnToggle()') ;#Debug Display
-	$SortColumn = GUICtrlGetState($ListviewAPs)
-EndFunc   ;==>_SortColumnToggle
 
 Func _AddApPosToggle();Sets if new aps are added to the top or bottom of the list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApPosToggle()') ;#Debug Display
@@ -4774,6 +4766,10 @@ Func WM_NOTIFY($hWnd, $iMsg, $iwParam, $ilParam)
 					ConsoleWrite("Listview Double Click" & @CRLF)
 					$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 					If $Selected <> -1 Then _GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False) ; Deselect selected AP
+				Case $LVN_COLUMNCLICK
+					ConsoleWrite("Listview Column Click" & @CRLF)
+					$tInfo = DllStructCreate($tagNMLISTVIEW, $ilParam)
+					$SortColumn = DllStructGetData($tInfo, "SubItem")
 			EndSwitch
 	EndSwitch
 	Return $GUI_RUNDEFMSG
