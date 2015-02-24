@@ -1621,7 +1621,7 @@ While 1
 	If $SoundOnGps = 1 Then
 		If $Last_Latitude <> $Latitude Or $Last_Longitude <> $Longitude Then
 			;_SoundPlay($new_GPS_sound_open_id, 0)
-			_PlayWavSound($new_GPS_sound)
+			_PlayWavSound($SoundDir & $new_GPS_sound)
 			$Last_Latitude = $Latitude
 			$Last_Longitude = $Longitude
 		EndIf
@@ -1955,7 +1955,7 @@ Func _ScanAccessPoints()
 			EndIf
 		Next
 		;Play New AP sound if sounds are enabled if per-ap sound is disabled
-		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _PlayWavSound($new_AP_sound);_SoundPlay($new_AP_sound_open_id, 0)
+		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _PlayWavSound($SoundDir & $new_AP_sound);_SoundPlay($new_AP_sound_open_id, 0)
 		;Return number of active APs
 		Return ($FoundAPs)
 	Else
@@ -2046,7 +2046,7 @@ Func _ScanAccessPoints()
 					EndIf
 				Next
 				;Play New AP sound if sounds are enabled if per-ap sound is disabled
-				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _PlayWavSound($new_AP_sound);_SoundPlay($new_AP_sound_open_id, 0)
+				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _PlayWavSound($SoundDir & $new_AP_sound);_SoundPlay($new_AP_sound_open_id, 0)
 			EndIf
 			FileClose($netshtempfile)
 			;Return number of active APs
@@ -3905,7 +3905,7 @@ Func _GetGPS(); Recieves data from gps device
 			$return = 0
 			_TurnOffGPS()
 			;_SoundPlay($ErrorFlag_sound_open_id, 0)
-			_PlayWavSound($ErrorFlag_sound)
+			_PlayWavSound($SoundDir & $ErrorFlag_sound)
 		EndIf
 	EndIf
 
