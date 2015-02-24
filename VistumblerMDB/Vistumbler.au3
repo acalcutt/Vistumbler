@@ -1401,6 +1401,7 @@ $ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585,
 _GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT, $LVS_EX_DOUBLEBUFFER))
 
 _GUICtrlListView_SetBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
+_GUICtrlListView_SetTextBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
 
 $hImage = _GUIImageList_Create()
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
