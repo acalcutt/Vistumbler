@@ -1178,11 +1178,12 @@ EndIf
 
 $var = IniReadSection($settings, "Columns")
 If @error Then
-	$headers = '#|Active|Mac Address|SSID|Signal|High Signal|RSSI|High RSSI|Channel|Authentication|Encryption|Network Type|Latitude|Longitude|Manufacturer|Label|Radio Type|Lat (dd mm ss)|Lon (dd mm ss)|Lat (ddmm.mmmm)|Lon (ddmm.mmmm)|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated|'
+	$headers = '#|Active|Mac Address|SSID|Signal|High Signal|RSSI|High RSSI|Channel|Authentication|Encryption|Network Type|Latitude|Longitude|Manufacturer|Label|Radio Type|Lat (dd mm ss)|Lon (dd mm ss)|Lat (ddmm.mmmm)|Lon (ddmm.mmmm)|Basic Transfer Rates|Other Transfer Rates|First Active|Last Updated'
 Else
 	For $a = 0 To ($var[0][0] - 1)
 		For $b = 1 To $var[0][0]
-			If $a = $var[$b][1] Then $headers &= IniRead($DefaultLanguagePath, 'Column_Names', $var[$b][0], IniRead($settings, 'Column_Names', $var[$b][0], '')) & '|'
+			If $a = $var[$b][1] Then $headers &= IniRead($DefaultLanguagePath, 'Column_Names', $var[$b][0], IniRead($settings, 'Column_Names', $var[$b][0], ''))
+			If $a = $var[$b][1] And $b <> $var[0][0] Then $headers &= '|'
 		Next
 	Next
 EndIf
@@ -1394,8 +1395,13 @@ $Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics(900, 400, $Graphic)
 $Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
 GUISwitch($Vistumbler)
 
-$ListviewAPs = GUICtrlCreateListView($headers, 260, 65, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
-GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+;$ListviewAPs = GUICtrlCreateListView($headers, 260, 65, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+;GUICtrlSetBkColor(-1, $ControlBackgroundColor)
+$ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
+_GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT, $LVS_EX_DOUBLEBUFFER))
+
+_GUICtrlListView_SetBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
+
 $hImage = _GUIImageList_Create()
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-red.ico")
@@ -2657,9 +2663,9 @@ Func _FilterRemoveNonMatchingInList()
 	EndIf
 EndFunc   ;==>_FilterRemoveNonMatchingInList
 
-Func _UpdateListview($Batch=0)
+Func _UpdateListview($Batch = 0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateListview()') ;#Debug Display
-	If $Batch=1 Then
+	If $Batch = 1 Then
 		_GUICtrlListView_BeginUpdate($ListviewAPs)
 		_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 		GUISetState(@SW_LOCK, $Vistumbler)
@@ -2742,16 +2748,16 @@ Func _UpdateListview($Batch=0)
 			EndIf
 
 			;Add New Listrow with Icon
-			If $Batch=0 Then _GUICtrlListView_BeginUpdate($ListviewAPs)
+			If $Batch = 0 Then _GUICtrlListView_BeginUpdate($ListviewAPs)
 			$ListRow = _AddIconListRow($ImpSig, $ImpSecType, $ImpApID, $DBAddPos)
 			_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
-			If $Batch=0 Then _GUICtrlListView_EndUpdate($ListviewAPs)
+			If $Batch = 0 Then _GUICtrlListView_EndUpdate($ListviewAPs)
 			$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $ImpApID
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Add Into TreeView
-			If $Batch=0 Then _GUICtrlTreeView_BeginUpdate($TreeviewAPs)
+			If $Batch = 0 Then _GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 			_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-			If $Batch=0 Then _GUICtrlTreeView_EndUpdate($TreeviewAPs)
+			If $Batch = 0 Then _GUICtrlTreeView_EndUpdate($TreeviewAPs)
 		Next
 	Else
 		Local $ListRowPos = -1, $DbColName, $SortDir
@@ -2799,7 +2805,7 @@ Func _UpdateListview($Batch=0)
 			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
 		EndIf
 	EndIf
-	If $Batch=1 Then
+	If $Batch = 1 Then
 		GUISetState(@SW_UNLOCK, $Vistumbler)
 		_GUICtrlListView_EndUpdate($ListviewAPs)
 		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
@@ -2809,9 +2815,6 @@ EndFunc   ;==>_UpdateListview
 Func __UpdateListviewDbQueryToList($query, $listpos)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '__UpdateListviewDbQueryToList()') ;#Debug Display
 	$ListCurrentRowCount = _GUICtrlListView_GetItemCount(GUICtrlGetHandle($ListviewAPs))
-	_GUICtrlListView_BeginUpdate($ListviewAPs)
-	_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
-	GUISetState(@SW_LOCK, $Vistumbler)
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $wlv = 1 To $FoundApMatch
@@ -2989,7 +2992,9 @@ Func _ClearAllAp()
 	;Recreate Listview
 	GUISwitch($Vistumbler)
 	GUICtrlDelete($ListviewAPs)
-	$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	;$ListviewAPs = GUICtrlCreateListView($headers, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
+	$ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
+	_GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT, $LVS_EX_DOUBLEBUFFER))
 	$hImage = _GUIImageList_Create()
 	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
 	_GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-red.ico")
@@ -4653,7 +4658,8 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top + ($Graphic_height + 1)
 			$ListviewAPs_height = $DataChild_Height - ($Graphic_height + 1)
 
-			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
@@ -4671,7 +4677,8 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top
 			$ListviewAPs_height = $DataChild_Height
 
-			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
 			GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
 			GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
@@ -4701,7 +4708,8 @@ Func _TreeviewListviewResize()
 			GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
 			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
 			$ListviewAPs_width = $DataChild_Width - $ListviewAPs_left
-			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitPercent = StringFormat('%0.2f', $TreeviewAPs_width / $DataChild_Width)
 		EndIf
 		If $MoveMode = True And $cursorInfo[2] = 0 Then
@@ -4725,7 +4733,8 @@ Func _TreeviewListviewResize()
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$ListviewAPs_top = $Graphic_top + $Graphic_height + 1
 			$ListviewAPs_height = $DataChild_Height - $Graphic_height
-			GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
+			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitHeightPercent = StringFormat('%0.2f', $Graphic_height / $DataChild_Height)
 			$Redraw = 1
 		EndIf
