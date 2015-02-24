@@ -2658,6 +2658,7 @@ EndFunc   ;==>_FilterRemoveNonMatchingInList
 Func _UpdateListview()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateListview()') ;#Debug Display
 	_GUICtrlListView_BeginUpdate($ListviewAPs)
+	_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 	;Find APs that meet criteria but are not in the listview
 	If StringInStr($AddQuery, "WHERE") Then
 		$fquery = $AddQuery & " AND ListRow=-1"
@@ -2790,12 +2791,14 @@ Func _UpdateListview()
 		EndIf
 	EndIf
 	_GUICtrlListView_EndUpdate($ListviewAPs)
+	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 EndFunc   ;==>_UpdateListview
 
 Func __UpdateListviewDbQueryToList($query, $listpos)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '__UpdateListviewDbQueryToList()') ;#Debug Display
 	$ListCurrentRowCount = _GUICtrlListView_GetItemCount(GUICtrlGetHandle($ListviewAPs))
 	_GUICtrlListView_BeginUpdate($ListviewAPs)
+	_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $wlv = 1 To $FoundApMatch
@@ -2881,6 +2884,7 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 		Next
 	EndIf
 	_GUICtrlListView_EndUpdate($ListviewAPs)
+	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 EndFunc   ;==>__UpdateListviewDbQueryToList
 
 Func _ClearAllAp()
