@@ -17,9 +17,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 8'
+$version = 'v10.6 Beta 9'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/02/23'
+$last_modified = '2015/02/24'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -2266,9 +2266,11 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			EndIf
 			If $Found_ListRow <> -1 Then
 				;Update AP Listview data
+				_GUICtrlListView_BeginUpdate($ListviewAPs)
 				_ListViewAdd($Found_ListRow, -1, $Exp_AP_Status, -1, -1, -1, -1, $Exp_AP_DisplaySig, $ExpHighSig, $Exp_AP_DisplayRSSI, $ExpHighRSSI, -1, -1, -1, -1, -1, $ExpFirstDateTime, $ExpLastDateTime, $DBLat, $DBLon, -1, -1)
 				;Update Signal Icon
 				_UpdateIcon($Found_ListRow, $Exp_AP_DisplaySig, $Found_SecType)
+				_GUICtrlListView_EndUpdate($ListviewAPs)
 			EndIf
 		EndIf
 	EndIf
@@ -2657,8 +2659,6 @@ EndFunc   ;==>_FilterRemoveNonMatchingInList
 
 Func _UpdateListview()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateListview()') ;#Debug Display
-	_GUICtrlListView_BeginUpdate($ListviewAPs)
-	_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 	;Find APs that meet criteria but are not in the listview
 	If StringInStr($AddQuery, "WHERE") Then
 		$fquery = $AddQuery & " AND ListRow=-1"
@@ -2737,12 +2737,16 @@ Func _UpdateListview()
 			EndIf
 
 			;Add New Listrow with Icon
+			_GUICtrlListView_BeginUpdate($ListviewAPs)
 			$ListRow = _AddIconListRow($ImpSig, $ImpSecType, $ImpApID, $DBAddPos)
 			_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
+			_GUICtrlListView_EndUpdate($ListviewAPs)
 			$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $ImpApID
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Add Into TreeView
+			_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 			_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+			_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 		Next
 	Else
 		Local $ListRowPos = -1, $DbColName, $SortDir
@@ -2790,15 +2794,11 @@ Func _UpdateListview()
 			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
 		EndIf
 	EndIf
-	_GUICtrlListView_EndUpdate($ListviewAPs)
-	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 EndFunc   ;==>_UpdateListview
 
 Func __UpdateListviewDbQueryToList($query, $listpos)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '__UpdateListviewDbQueryToList()') ;#Debug Display
 	$ListCurrentRowCount = _GUICtrlListView_GetItemCount(GUICtrlGetHandle($ListviewAPs))
-	_GUICtrlListView_BeginUpdate($ListviewAPs)
-	_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $wlv = 1 To $FoundApMatch
@@ -2857,20 +2857,26 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 			EndIf
 
 			If $wlv > $ListCurrentRowCount Then
+				_GUICtrlListView_BeginUpdate($ListviewAPs)
 				;Add new row with icon to the bottom of the list
 				$ListRow = _AddIconListRow($Found_Signal, $Found_SecType, $Found_APID, -1)
 				;Write changes to listview
 				_ListViewAdd($ListRow, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
+				_GUICtrlListView_EndUpdate($ListviewAPs)
 				;Update ListRow
 				$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $Found_APID
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 				;Add Into TreeView
+				_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 				_TreeViewAdd($Found_APID, $Found_SSID, $Found_BSSID, $Found_CHAN, $Found_NETTYPE, $Found_ENCR, $Found_RADTYPE, $Found_AUTH, $Found_BTX, $Found_OTX, $Found_MANU, $Found_LABEL)
+				_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 			Else
+				_GUICtrlListView_BeginUpdate($ListviewAPs)
 				;Write changes to listview
 				_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
 				;Update ListRow Icon
 				_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
+				_GUICtrlListView_EndUpdate($ListviewAPs)
 				;Update ListRow
 				$query = "UPDATE AP SET ListRow=" & $listpos & " WHERE ApID=" & $Found_APID
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -2883,8 +2889,6 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 			_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $remrow)
 		Next
 	EndIf
-	_GUICtrlListView_EndUpdate($ListviewAPs)
-	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 EndFunc   ;==>__UpdateListviewDbQueryToList
 
 Func _ClearAllAp()
@@ -4453,7 +4457,7 @@ EndFunc   ;==>_ListSort
 
 Func _SortDbQueryToList($query, $listpos)
 	;ConsoleWrite($query & @CRLF)
-	_GUICtrlListView_BeginUpdate($ListviewAPs)
+
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $wlv = 1 To $FoundApMatch
@@ -4511,18 +4515,19 @@ Func _SortDbQueryToList($query, $listpos)
 				$Found_Lon = $GpsMatchArray[1][2]
 			EndIf
 
+			_GUICtrlListView_BeginUpdate($ListviewAPs)
 			;Write changes to listview
 			_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
 
 			;Update ListRow Icon
 			_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
+			_GUICtrlListView_EndUpdate($ListviewAPs)
 
 			;Update ListRow
 			$query = "UPDATE AP SET ListRow=" & $listpos & " WHERE ApID=" & $Found_APID
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
 	Next
-	_GUICtrlListView_EndUpdate($ListviewAPs)
 	Return ($listpos)
 EndFunc   ;==>_SortDbQueryToList
 
