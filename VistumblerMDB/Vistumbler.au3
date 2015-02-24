@@ -2657,9 +2657,6 @@ EndFunc   ;==>_FilterRemoveNonMatchingInList
 
 Func _UpdateListview()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateListview()') ;#Debug Display
-	_GUICtrlListView_BeginUpdate($ListviewAPs)
-	_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
-	GUISetState(@SW_LOCK, $Vistumbler)
 	;Find APs that meet criteria but are not in the listview
 	If StringInStr($AddQuery, "WHERE") Then
 		$fquery = $AddQuery & " AND ListRow=-1"
@@ -2738,12 +2735,20 @@ Func _UpdateListview()
 			EndIf
 
 			;Add New Listrow with Icon
+			GUISetState(@SW_LOCK, $Vistumbler)
+			_GUICtrlListView_BeginUpdate($ListviewAPs)
 			$ListRow = _AddIconListRow($ImpSig, $ImpSecType, $ImpApID, $DBAddPos)
 			_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
+			_GUICtrlListView_EndUpdate($ListviewAPs)
+			GUISetState(@SW_UNLOCK, $Vistumbler)
 			$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $ImpApID
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Add Into TreeView
+			GUISetState(@SW_LOCK, $Vistumbler)
+			_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 			_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
+			_GUICtrlTreeView_EndUpdate($TreeviewAPs)
+			GUISetState(@SW_UNLOCK, $Vistumbler)
 		Next
 	Else
 		Local $ListRowPos = -1, $DbColName, $SortDir
@@ -2791,9 +2796,6 @@ Func _UpdateListview()
 			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
 		EndIf
 	EndIf
-	GUISetState(@SW_UNLOCK, $Vistumbler)
-	_GUICtrlListView_EndUpdate($ListviewAPs)
-	_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 EndFunc   ;==>_UpdateListview
 
 Func __UpdateListviewDbQueryToList($query, $listpos)
