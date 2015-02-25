@@ -13,12 +13,12 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.12.0
+;AutoIt Version: v3.3.13.19
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 9'
+$version = 'v10.6 Beta 10'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/02/24'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -2635,12 +2635,12 @@ Func _FilterRemoveNonMatchingInList()
 				$fApID = $ApMatchArray[$frnm][1]
 				;Get ListRow of AP
 				$query = "Select ListRow FROM AP WHERE ApID=" & $fApID
-				ConsoleWrite($query & @CRLF)
+				;ConsoleWrite($query & @CRLF)
 				$ListRowArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$fListRow = $ListRowArray[1][1]
 				_TreeViewRemove($fApID)
 				;Delete AP Row
-				_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $fListRow)
+				_GUICtrlListView_DeleteItem($ListviewAPs, $fListRow)
 				;Set AP ListRow to -1
 				$query = "UPDATE AP SET ListRow=-1 WHERE ApID=" & $fApID
 				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
@@ -2777,7 +2777,7 @@ Func _UpdateListview($Batch = 0)
 			$SortDir = "ASC"
 		EndIf
 		$DbCol = _GetDbColNameByListColName($SortBy) ;Set DB Column to sort by
-		ConsoleWrite("$DbCol:" & $DbCol & " $SortDir:" & $SortDir & @CRLF)
+		;ConsoleWrite("$DbCol:" & $DbCol & " $SortDir:" & $SortDir & @CRLF)
 		If $DbCol = "Latitude" Or $DbCol = "Longitude" Then ; Sort by Latitude Or Longitude
 			;Add results that have no GPS postion first if DESC
 			If $SortDir = "DESC" Then
@@ -2891,6 +2891,7 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 			Else
 				;Write changes to listview
 				_GUICtrlListView_BeginUpdate($ListviewAPs)
+				_GUICtrlListView_BeginUpdate($ListviewAPs)
 				_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
 				;Update ListRow Icon
 				_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
@@ -2905,7 +2906,7 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 	If $ListCurrentRowCount > $FoundApMatch Then
 		_GUICtrlListView_BeginUpdate($ListviewAPs)
 		For $remrow = $FoundApMatch To $ListCurrentRowCount
-			_GUICtrlListView_DeleteItem(GUICtrlGetHandle($ListviewAPs), $remrow)
+			_GUICtrlListView_DeleteItem($ListviewAPs, $remrow)
 		Next
 		_GUICtrlListView_EndUpdate($ListviewAPs)
 	EndIf
@@ -4404,7 +4405,7 @@ Func _SortListColumn($ListColName, $SortOrder)
 EndFunc   ;==>_SortListColumn
 
 Func _HeaderSort($column);Sort a column in ap list
-	ConsoleWrite($column & @CRLF)
+	;ConsoleWrite($column & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_HeaderSort()') ;#Debug Display
 	;Get Column Name
 	Local $colInfo = _GUICtrlListView_GetColumn($ListviewAPs, $column)
@@ -4935,7 +4936,7 @@ Func _LabelAdd_Ok()
 		$overwrite_entry = MsgBox(4, $Text_Overwrite & '?', $Text_MacExistsOverwriteIt)
 		If $overwrite_entry = 6 Then
 			$query = "UPDATE Labels SET Label='" & StringReplace($LabelAdd_LABEL, "'", "''") & "' WHERE BSSID='" & $LabelAdd_BSSID & "'"
-			ConsoleWrite('old: ' & $query & @CRLF)
+			;ConsoleWrite('old: ' & $query & @CRLF)
 			_ExecuteMDB($LabDB, $LabDB_OBJ, $query)
 		EndIf
 	Else ; Mac doesn't exist, Add it
@@ -11824,7 +11825,7 @@ EndFunc   ;==>_PlayMidiForActiveAPs
 Func _PlayWavSound($Sound)
 	$run = FileGetShortName(@ScriptDir & '\UDFs\sounder.exe') & ' ' & FileGetShortName($Sound)
 	Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
-EndFunc   ;==>_PlayMidiForActiveAPs
+EndFunc   ;==>_PlayWavSound
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       UPDATE FUNCTIONS
