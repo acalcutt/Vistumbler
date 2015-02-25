@@ -12,12 +12,12 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.13.19
+;AutoIt Version: v3.3.12.0
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 10'
+$version = 'v10.6 Beta 11'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/02/24'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -2815,7 +2815,7 @@ EndFunc   ;==>_UpdateListview
 
 Func __UpdateListviewDbQueryToList($query, $listpos)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '__UpdateListviewDbQueryToList()') ;#Debug Display
-	$ListCurrentRowCount = _GUICtrlListView_GetItemCount(GUICtrlGetHandle($ListviewAPs))
+	$ListCurrentRowCount = _GUICtrlListView_GetItemCount($ListviewAPs)
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	For $wlv = 1 To $FoundApMatch
