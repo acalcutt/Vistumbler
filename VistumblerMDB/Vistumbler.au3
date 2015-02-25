@@ -17,9 +17,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 11'
+$version = 'v10.6 Beta 12'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/02/24'
+$last_modified = '2015/02/25'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -215,7 +215,7 @@ Dim $data_old
 Dim $RefreshTimer
 Dim $sizes, $sizes_old
 Dim $GraphBack, $GraphGrid, $red, $black
-Dim $base_add = 0, $data, $data_old, $info_old, $Graph = 0, $Graph_old, $ResetSizes = 1, $Redraw = 1, $ReGraph = 1
+Dim $base_add = 0, $data, $data_old, $info_old, $Graph = 0, $Graph_old, $ResetSizes = 1, $ReGraph = 1
 Dim $LastSelected = -1
 Dim $save_timer
 Dim $AutoSaveFile
@@ -1370,7 +1370,6 @@ If @OSVersion = "WIN_XP" Then $UseWiFiDbGpsLocate = 0
 If $UseWiFiDbGpsLocate = 1 Then GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_CHECKED)
 $UseWiFiDbAutoUploadButton = GUICtrlCreateMenuItem($Text_AutoWiFiDbUploadAps & ' (' & $Text_Experimental & ')', $WifidbMenu)
 If $EnableAutoUpApsToWifiDB = 1 Then _WifiDbAutoUploadToggle(0)
-;GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_DISABLE); Upload to WifiDB is not ready yet. The button will be disabled until it is available
 $ViewWifiDbWDB = GUICtrlCreateMenuItem($Text_UploadDataToWifiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $LocateInWDB = GUICtrlCreateMenuItem($Text_LocateInWiFiDB & ' (' & $Text_Experimental & ')', $WifidbMenu)
 $ViewLiveInWDB = GUICtrlCreateMenuItem($Text_WifiDBOpenLiveAPWebpage & ' (' & $Text_Experimental & ')', $WifidbMenu)
@@ -1395,8 +1394,6 @@ $Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics(900, 400, $Graphic)
 $Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
 GUISwitch($Vistumbler)
 
-;$ListviewAPs = GUICtrlCreateListView($headers, 260, 65, 725, 585, $LVS_REPORT + $LVS_SINGLESEL, $LVS_EX_HEADERDRAGDROP + $LVS_EX_GRIDLINES + $LVS_EX_FULLROWSELECT)
-;GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 $ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
 _GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT, $LVS_EX_DOUBLEBUFFER))
 
@@ -1418,7 +1415,6 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
-;$TreeviewAPs = GUICtrlCreateTreeView(5, 65, 150, 585)
 $TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5, 65, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 GUISetState()
@@ -1503,7 +1499,6 @@ GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
 GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
 GUICtrlSetOnEvent($AutoSelectHighSignal, '_AutoSelHighSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
-;GUICtrlSetOnEvent($ShowEstDb, '_ShowDbToggle')
 GUICtrlSetOnEvent($UseRssiInGraphsGUI, '_UseRssiInGraphsToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 ;Settings Menu
@@ -1736,8 +1731,6 @@ While 1
 		EndIf
 	EndIf
 
-	;Sort Listview (if enabled)
-	;If $AutoSort = 1 And TimerDiff($sort_timer) >= ($SortTime * 1000) Then _SortListColumn($SortBy, $SortDirection)
 	If $AutoSave = 1 And $UpdateAutoSave = 1 And TimerDiff($save_timer) >= ($SaveTime * 1000) Then
 		_AutoSave()
 		$UpdateAutoSave = 0
@@ -3022,7 +3015,6 @@ Func _ClearAllAp()
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $NetworkType_tree)
 	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $SSID_tree)
 	$ClearAllAps = 0
-	$Redraw = 1
 EndFunc   ;==>_ClearAllAp
 
 Func _FixLineNumbers();Update Listview Row Numbers in DataArray
@@ -3394,7 +3386,6 @@ Func _GraphToggle(); Graph1 Button
 		GUISwitch($Vistumbler)
 	EndIf
 	_SetControlSizes()
-	$Redraw = 1
 EndFunc   ;==>_GraphToggle
 
 Func _GraphToggle2(); Graph2 Button
@@ -3417,7 +3408,6 @@ Func _GraphToggle2(); Graph2 Button
 		GUISwitch($Vistumbler)
 	EndIf
 	_SetControlSizes()
-	$Redraw = 1
 EndFunc   ;==>_GraphToggle2
 
 Func _DebugToggle() ;Sets if current function should be displayed in the gui
@@ -4708,12 +4698,11 @@ Func _TreeviewListviewResize()
 			GUISetCursor(13, 1);  13 = SIZEWE
 			$TreeviewAPs_width = $cursorInfo[0] - $TreeviewAPs_left
 			WinMove($TreeviewAPs, "", $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
-			;GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
 			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
 			$ListviewAPs_width = $DataChild_Width - $ListviewAPs_left
-			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitPercent = StringFormat('%0.2f', $TreeviewAPs_width / $DataChild_Width)
+			_WinAPI_RedrawWindow($ListviewAPs)
 		EndIf
 		If $MoveMode = True And $cursorInfo[2] = 0 Then
 			$MoveMode = False
@@ -4736,10 +4725,9 @@ Func _TreeviewListviewResize()
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$ListviewAPs_top = $Graphic_top + $Graphic_height + 1
 			$ListviewAPs_height = $DataChild_Height - $Graphic_height
-			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
 			$SplitHeightPercent = StringFormat('%0.2f', $Graphic_height / $DataChild_Height)
-			$Redraw = 1
+			_WinAPI_RedrawWindow($ListviewAPs)
 		EndIf
 		If $MoveMode = True And $cursorInfo[2] = 0 Then
 			$MoveMode = False
