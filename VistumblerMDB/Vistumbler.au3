@@ -216,8 +216,7 @@ Dim $sizes, $sizes_old
 Dim $GraphBack, $GraphGrid, $red, $black
 Dim $base_add = 0, $data, $data_old, $info_old, $Graph = 0, $Graph_old, $ResetSizes = 1, $ReGraph = 1
 Dim $LastSelected = -1
-Dim $save_timer
-Dim $AutoSaveFile
+Dim $AutoRecoveryVS1File
 Dim $SaveDbOnExit = 0
 Dim $ClearAllAps = 0
 Dim $UpdateAutoSave = 0
@@ -228,7 +227,7 @@ Dim $AddLabelOpen = 0
 Dim $AutoUpApsToWifiDB = 0
 Dim $SayProcess
 Dim $MidiProcess
-Dim $AutoSaveProcess
+Dim $AutoRecoveryVS1Process
 Dim $AutoKmlActiveProcess
 Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
@@ -276,7 +275,7 @@ Dim $GUI_ImportImageFiles
 Dim $WifiDbUploadGUI, $WifiDb_User_GUI, $WifiDb_OtherUsers_GUI, $WifiDb_ApiKey_GUI, $upload_title_GUI, $upload_notes_GUI, $VS1_Radio_GUI, $VSZ_Radio_GUI, $CSV_Radio_GUI, $Export_Filtered_GUI
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
-Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
+Dim $Apply_Misc = 1, $Apply_Save = 1, $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
 Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $GUI_GpsDisconnect, $GUI_GpsReset, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
@@ -284,7 +283,7 @@ Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
-Dim $AutoSaveBox, $AutoSaveDelBox, $AutoSaveSec, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
+Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, $AutoSaveAndClearAPsGUI, $AutoSaveAndClearTimeGUI, $AutoRecoveryBox, $AutoRecoveryDelBox, $AutoRecoveryTimeGUI, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
@@ -444,9 +443,15 @@ Dim $AutoSort = IniRead($settings, 'AutoSort', 'AutoSort', 0)
 Dim $SortBy = IniRead($settings, 'AutoSort', 'SortCombo', 'SSID')
 Dim $SortDirection = IniRead($settings, 'AutoSort', 'AscDecDefault', 0)
 
-Dim $SaveTime = IniRead($settings, 'AutoSave', 'AutoSaveTime', 300)
-Dim $AutoSave = IniRead($settings, 'AutoSave', 'AutoSave', 1)
-Dim $AutoSaveDel = IniRead($settings, 'AutoSave', 'AutoSaveDel', 1)
+Dim $AutoRecoveryVS1 = IniRead($settings, 'AutoRecovery', 'AutoRecovery', 1)
+Dim $AutoRecoveryVS1Del = IniRead($settings, 'AutoRecovery', 'AutoRecoveryDel', 1)
+Dim $AutoRecoveryTime = IniRead($settings, 'AutoRecovery', 'AutoRecoveryTime', 5)
+
+Dim $AutoSaveAndClear = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClear', 0)
+Dim $AutoSaveAndClearOnTime = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClearOnTime', 0)
+Dim $AutoSaveAndClearTime = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClearTime', 60)
+Dim $AutoSaveAndClearOnAPs = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClearOnAPs', 1)
+Dim $AutoSaveAndClearAPs = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClearAPs', 1000)
 
 Dim $SoundOnGps = IniRead($settings, 'Sound', 'PlaySoundOnNewGps', 0)
 Dim $SoundOnAP = IniRead($settings, 'Sound', 'PlaySoundOnNewAP', 1)
@@ -746,7 +751,8 @@ Dim $Text_AutoSortEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSortEver
 Dim $Text_Seconds = IniRead($DefaultLanguagePath, 'GuiText', 'Seconds', 'Seconds')
 Dim $Text_Ascending = IniRead($DefaultLanguagePath, 'GuiText', 'Ascending', 'Ascending')
 Dim $Text_Decending = IniRead($DefaultLanguagePath, 'GuiText', 'Decending', 'Decending')
-Dim $Text_AutoSave = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSave', 'Auto Save')
+Dim $Text_AutoRecoveryVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'AutoRecoveryVS1', 'Auto Recovery VS1')
+Dim $Text_AutoSaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClear', 'Auto Save And Clear')
 Dim $Text_AutoSaveEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', 'Auto Save Every')
 Dim $Text_DelAutoSaveOnExit = IniRead($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', 'Delete Auto Save file on exit')
 Dim $Text_OpenSaveFolder = IniRead($DefaultLanguagePath, 'GuiText', 'OpenSaveFolder', 'Open Save Folder')
@@ -1261,8 +1267,10 @@ If @OSVersion = "WIN_XP" Then GUICtrlSetState(-1, $GUI_DISABLE)
 $ScanWifiGUI = GUICtrlCreateMenuItem($Text_ScanAPs, $Options)
 $RefreshMenuButton = GUICtrlCreateMenuItem($Text_RefreshNetworks, $Options)
 If $RefreshNetworks = 1 Then GUICtrlSetState($RefreshMenuButton, $GUI_CHECKED)
-$AutoSaveGUI = GUICtrlCreateMenuItem($Text_AutoSave, $Options)
-If $AutoSave = 1 Then GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
+$AutoRecoveryVS1GUI = GUICtrlCreateMenuItem($Text_AutoRecoveryVS1, $Options)
+If $AutoRecoveryVS1 = 1 Then GUICtrlSetState($AutoRecoveryVS1GUI, $GUI_CHECKED)
+$AutoSaveAndClearGUI = GUICtrlCreateMenuItem($Text_AutoSaveAndClear, $Options)
+If $AutoSaveAndClear = 1 Then GUICtrlSetState($AutoSaveAndClearGUI, $GUI_CHECKED)
 $AutoSaveKML = GUICtrlCreateMenuItem($Text_AutoKml, $Options)
 If $AutoKML = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AutoScanMenu = GUICtrlCreateMenuItem($Text_AutoScanApsOnLaunch, $Options)
@@ -1333,7 +1341,8 @@ If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
 ;Settings Menu
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
-$SetMisc = GUICtrlCreateMenuItem($Text_VistumblerSettings, $SettingsMenu)
+$SetMisc = GUICtrlCreateMenuItem("Misc Settings", $SettingsMenu)
+$SetSave = GUICtrlCreateMenuItem("Save Settings", $SettingsMenu)
 $SetGPS = GUICtrlCreateMenuItem($Text_GpsSettings, $SettingsMenu)
 $SetLanguage = GUICtrlCreateMenuItem($Text_SetLanguage, $SettingsMenu)
 $SetSearchWords = GUICtrlCreateMenuItem($Text_SetSearchWords, $SettingsMenu)
@@ -1479,7 +1488,8 @@ GUICtrlSetOnEvent($SortTree, '_SortTree')
 ;Optons Menu
 GUICtrlSetOnEvent($ScanWifiGUI, 'ScanToggle')
 GUICtrlSetOnEvent($RefreshMenuButton, '_AutoRefreshToggle')
-GUICtrlSetOnEvent($AutoSaveGUI, '_AutoSaveToggle')
+GUICtrlSetOnEvent($AutoRecoveryVS1GUI, '_AutoRecoveryVS1Toggle')
+GUICtrlSetOnEvent($AutoSaveAndClearGUI, '_AutoSaveAndClearToggle')
 GUICtrlSetOnEvent($AutoSaveKML, '_AutoKmlToggle')
 GUICtrlSetOnEvent($AutoScanMenu, '_AutoScanToggle')
 GUICtrlSetOnEvent($PlaySoundOnNewAP, '_SoundToggle')
@@ -1502,6 +1512,7 @@ GUICtrlSetOnEvent($UseRssiInGraphsGUI, '_UseRssiInGraphsToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 ;Settings Menu
 GUICtrlSetOnEvent($SetMisc, '_SettingsGUI_Misc')
+GUICtrlSetOnEvent($SetSave, '_SettingsGUI_Save')
 GUICtrlSetOnEvent($SetGPS, '_SettingsGUI_GPS')
 GUICtrlSetOnEvent($SetLanguage, '_SettingsGUI_Lan')
 GUICtrlSetOnEvent($SetMacManu, '_SettingsGUI_Manu')
@@ -1573,6 +1584,8 @@ $WiFiDbLocate_Timer = TimerInit()
 $wifidb_au_timer = TimerInit()
 $cam_timer = TimerInit()
 $camtrig_timer = TimerInit()
+$save_timer = TimerInit()
+$autosave_timer = TimerInit()
 While 1
 	;Set TimeStamps (UTC Values)
 	$dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ') ;UTC Time
@@ -1730,9 +1743,17 @@ While 1
 		EndIf
 	EndIf
 
-	If $AutoSave = 1 And $UpdateAutoSave = 1 And TimerDiff($save_timer) >= ($SaveTime * 1000) Then
-		_AutoSave()
+	If $AutoRecoveryVS1 = 1 And $UpdateAutoSave = 1 And TimerDiff($save_timer) >= ($AutoRecoveryTime * 60000) Then
+		_AutoRecoveryVS1()
 		$UpdateAutoSave = 0
+	EndIf
+
+	If $AutoSaveAndClear= 1 Then
+		If $AutoSaveAndClearOnAPs = 1 And $APID >= $AutoSaveAndClearAPs Then
+			_AutoSaveAndClear()
+		ElseIf $AutoSaveAndClearOnTime = 1 And TimerDiff($autosave_timer) >= ($AutoSaveAndClearOnTime * 60000) Then
+			_AutoSaveAndClear()
+		EndIf
 	EndIf
 
 	;Check GPS Details Windows Position
@@ -3218,7 +3239,7 @@ Func _Exit()
 		FileDelete($VistumblerCamFolder & "*")
 		DirRemove($VistumblerCamFolder, 1)
 	EndIf
-	If $AutoSaveDel = 1 Then FileDelete($AutoSaveFile)
+	If $AutoRecoveryVS1Del = 1 Then FileDelete($AutoRecoveryVS1File)
 	If $UseGPS = 1 Then ;If GPS is active, stop it so the COM port does not stay open
 		_TurnOffGPS()
 	EndIf
@@ -3242,7 +3263,6 @@ Func ScanToggle();Turns AP scanning on or off
 		$Scan = 1
 		GUICtrlSetState($ScanWifiGUI, $GUI_CHECKED)
 		GUICtrlSetData($ScanButton, $Text_StopScanAps)
-		$save_timer = TimerInit()
 		;Refresh Wireless networks
 		_Wlan_Scan()
 	EndIf
@@ -3522,16 +3542,28 @@ Func _UseRssiInGraphsToggle();Sets if new aps are added to the top or bottom of 
 	EndIf
 EndFunc   ;==>_UseRssiInGraphsToggle
 
-Func _AutoSaveToggle();Turns auto save on or off
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveToggle()') ;#Debug Display
-	If $AutoSave = 1 Then
-		GUICtrlSetState($AutoSaveGUI, $GUI_UNCHECKED)
-		$AutoSave = 0
+Func _AutoRecoveryVS1Toggle();Turns auto recovery vs1 on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRecoveryVS1Toggle()') ;#Debug Display
+	If $AutoRecoveryVS1 = 1 Then
+		GUICtrlSetState($AutoRecoveryVS1GUI, $GUI_UNCHECKED)
+		$AutoRecoveryVS1 = 0
 	Else
-		GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
-		$AutoSave = 1
+		GUICtrlSetState($AutoRecoveryVS1GUI, $GUI_CHECKED)
+		$AutoRecoveryVS1 = 1
 	EndIf
-EndFunc   ;==>_AutoSaveToggle
+EndFunc   ;==>_AutoRecoveryVS1Toggle
+
+Func _AutoSaveAndClearToggle();Turns auto save and clear on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveAndClearToggle()') ;#Debug Display
+	If $AutoSaveAndClear = 1 Then
+		GUICtrlSetState($AutoSaveAndClearGUI, $GUI_UNCHECKED)
+		$AutoSaveAndClear = 0
+	Else
+		GUICtrlSetState($AutoSaveAndClearGUI, $GUI_CHECKED)
+		$AutoSaveAndClear = 1
+	EndIf
+EndFunc   ;==>_AutoRecoveryVS1Toggle
+
 
 Func _AutoSortToggle();Turns auto sort on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSortToggle()') ;#Debug Display
@@ -6727,16 +6759,30 @@ Func _OpenSaveFolder();Opens save folder in explorer
 	Run('RunDll32.exe url.dll,FileProtocolHandler "' & $SaveDir & '"')
 EndFunc   ;==>_OpenSaveFolder
 
-Func _AutoSave();Autosaves data to a file name based on current time
-	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSave()') ;#Debug Display
+Func _AutoRecoveryVS1();Autosaves data to a file name based on current time
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRecoveryVS1()') ;#Debug Display
 	DirCreate($SaveDirAuto)
-	FileDelete($AutoSaveFile)
-	$AutoSaveFile = $SaveDirAuto & 'AutoSave_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
-	If ProcessExists($AutoSaveProcess) = 0 Then
-		$AutoSaveProcess = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=d /f="' & $AutoSaveFile & '"', '', @SW_HIDE)
+	FileDelete($AutoRecoveryVS1File)
+	$AutoRecoveryVS1File = $SaveDirAuto & 'AutoRecoveryVS1_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
+	If ProcessExists($AutoRecoveryVS1Process) = 0 Then
+		$AutoRecoveryVS1Process = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=d /f="' & $AutoRecoveryVS1File & '"', '', @SW_HIDE)
 		$save_timer = TimerInit()
 	EndIf
-EndFunc   ;==>_AutoSave
+EndFunc   ;==>_AutoRecoveryVS1
+
+Func _AutoSaveAndClear();Autosaves data to a file name based on current time
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveAndClear()') ;#Debug Display
+	$AutoSaveAndClearFile = $SaveDirAuto & 'AutoSave_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
+	GUICtrlSetData($msgdisplay, "Running Auto Save and Clear")
+	$expvs1 = _ExportVS1($AutoSaveAndClearFile, 0)
+	If $expvs1 = 1 Then
+		GUICtrlSetData($msgdisplay, "File Exported Successfully. Clearing List")
+		_ClearAll()
+		$autosave_timer = TimerInit()
+	Else
+		GUICtrlSetData($msgdisplay, "Error Saving File. List will not be cleared.")
+	EndIf
+EndFunc   ;==>_AutoRecoveryVS1
 
 Func _ExportDetailedData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedData() ') ;#Debug Display
@@ -7385,9 +7431,15 @@ Func _WriteINI()
 	IniWrite($settings, "AutoSort", "SortCombo", $SortBy)
 	IniWrite($settings, "AutoSort", "AscDecDefault", $SortDirection)
 
-	IniWrite($settings, "AutoSave", "AutoSave", $AutoSave)
-	IniWrite($settings, "AutoSave", "AutoSaveDel", $AutoSaveDel)
-	IniWrite($settings, "AutoSave", "AutoSaveTime", $SaveTime)
+	IniWrite($settings, "AutoRecovery", "AutoRecovery", $AutoRecoveryVS1)
+	IniWrite($settings, "AutoRecovery", "AutoRecoveryDel", $AutoRecoveryVS1Del)
+	IniWrite($settings, "AutoRecovery", "AutoSaveTime", $AutoRecoveryTime)
+
+	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClear", $AutoSaveAndClear)
+	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClearOnTime", $AutoSaveAndClearOnTime)
+	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClearTime", $AutoSaveAndClearTime)
+	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClearOnAPs", $AutoSaveAndClearOnAPs)
+	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClearAPs", $AutoSaveAndClearAPs)
 
 	IniWrite($settings, "Sound", 'PlaySoundOnNewGps', $SoundOnGps)
 	IniWrite($settings, "Sound", 'PlaySoundOnNewAP', $SoundOnAP)
@@ -7691,7 +7743,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Seconds', $Text_Seconds)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Ascending', $Text_Ascending)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Decending', $Text_Decending)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSave', $Text_AutoSave)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoRecoveryVS1', $Text_AutoRecoveryVS1)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', $Text_AutoSaveEvery)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', $Text_DelAutoSaveOnExit)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'OpenSaveFolder', $Text_OpenSaveFolder)
@@ -9798,54 +9850,59 @@ Func _SettingsGUI_Misc();Opens GUI to Misc tab
 	_SettingsGUI(0)
 EndFunc   ;==>_SettingsGUI_Misc
 
+Func _SettingsGUI_Save();Opens GUI to Misc tab
+	$Apply_Save = 1
+	_SettingsGUI(1)
+EndFunc   ;==>_SettingsGUI_Misc
+
 Func _SettingsGUI_GPS();Opens GUI to GPS tab
 	$Apply_GPS = 1
-	_SettingsGUI(1)
+	_SettingsGUI(2)
 EndFunc   ;==>_SettingsGUI_GPS
 
 Func _SettingsGUI_Lan();Opens GUI to Language tab
 	$Apply_Language = 1
-	_SettingsGUI(2)
+	_SettingsGUI(3)
 EndFunc   ;==>_SettingsGUI_Lan
 
 Func _SettingsGUI_Manu();Opens GUI to Manufacturer tab
 	$Apply_Manu = 1
-	_SettingsGUI(3)
+	_SettingsGUI(4)
 EndFunc   ;==>_SettingsGUI_Manu
 
 Func _SettingsGUI_Lab();Opens GUI to Label tab
 	$Apply_Lab = 1
-	_SettingsGUI(4)
+	_SettingsGUI(5)
 EndFunc   ;==>_SettingsGUI_Lab
 
 Func _SettingsGUI_Col();Opens GUI to Column tab
 	$Apply_Column = 1
-	_SettingsGUI(5)
+	_SettingsGUI(6)
 EndFunc   ;==>_SettingsGUI_Col
 
 Func _SettingsGUI_SW();Opens GUI to Searchword tab
 	$Apply_Searchword = 1
-	_SettingsGUI(6)
+	_SettingsGUI(7)
 EndFunc   ;==>_SettingsGUI_SW
 
 Func _SettingsGUI_Auto();Opens GUI to Auto tab
 	$Apply_Auto = 1
-	_SettingsGUI(7)
+	_SettingsGUI(8)
 EndFunc   ;==>_SettingsGUI_Auto
 
 Func _SettingsGUI_Sound();Opens GUI to Auto tab
 	$Apply_Sound = 1
-	_SettingsGUI(8)
+	_SettingsGUI(9)
 EndFunc   ;==>_SettingsGUI_Sound
 
 Func _SettingsGUI_WifiDB();Opens GUI to Auto tab
 	$Apply_WifiDB = 1
-	_SettingsGUI(9)
+	_SettingsGUI(10)
 EndFunc   ;==>_SettingsGUI_WifiDB
 
 Func _SettingsGUI_Cam();Opens GUI to Auto tab
 	$Apply_Cam = 1
-	_SettingsGUI(10)
+	_SettingsGUI(11)
 EndFunc   ;==>_SettingsGUI_Cam
 
 Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
@@ -9853,109 +9910,111 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		WinActivate($Text_VistumblerSettings)
 	Else
 		$SettingsOpen = 1
-		$SetMisc = GUICreate($Text_VistumblerSettings, 640, 500, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+		$SetMisc = GUICreate($Text_VistumblerSettings, 680, 500, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($BackgroundColor)
-		$Settings_Tab = GUICtrlCreateTab(0, 0, 640, 470)
+		$Settings_Tab = GUICtrlCreateTab(0, 0, 680, 470)
+
+		;Misc Tab
+		$Tab_Misc = GUICtrlCreateTabItem($Text_Misc)
+		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
+		$GroupMiscSettings = GUICtrlCreateGroup("Misc Settings", 15, 50, 650, 200)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateLabel($Text_BackgroundColor, 31, 70, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 31, 85, 195, 21)
+		$cbrowse1 = GUICtrlCreateButton($Text_Browse, 235, 85, 97, 20, 0)
+		GUICtrlCreateLabel($Text_ControlColor, 353, 70, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_CBKColor = GUICtrlCreateInput(StringReplace($ControlBackgroundColor, '0x', ''), 353, 85, 195, 21)
+		$cbrowse2 = GUICtrlCreateButton($Text_Browse, 556, 85, 97, 20, 0)
+		GUICtrlCreateLabel($Text_BgFontColor, 31, 110, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_TextColor = GUICtrlCreateInput(StringReplace($TextColor, '0x', ''), 31, 125, 195, 21)
+		$cbrowse3 = GUICtrlCreateButton($Text_Browse, 235, 125, 97, 20, 0)
+		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 110, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 125, 195, 21)
+		GUICtrlCreateLabel("Max Signal (dBm)", 31, 150, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_dBmMaxSignal = GUICtrlCreateInput($dBmMaxSignal, 31, 165, 195, 21)
+		GUICtrlCreateLabel("Disassociation Signal (dBm)", 31, 190, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_dBmDisassociationSignal = GUICtrlCreateInput($dBmDissociationSignal, 31, 205, 195, 21)
+		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 353, 150, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 353, 165, 195, 21)
+
+		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 195, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
+		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 210, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
+		;Auto Refresh Group
+		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 250, 325, 110)
+		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 275, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 30, 295, 615, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 310, 115, 20)
+		GUICtrlSetColor(-1, $TextColor)
 
 		;Save Tab
 		$Tab_Save = GUICtrlCreateTabItem("Save")
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 		GUICtrlSetColor(-1, $TextColor)
-		$GroupSaveDirs = GUICtrlCreateGroup("Save Directories", 15, 30, 610, 200)
+		$GroupSaveDirs = GUICtrlCreateGroup("Save Directories", 15, 50, 650, 180)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 30, 50, 580, 15)
+		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 30, 70, 580, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDir = GUICtrlCreateInput($SaveDir, 30, 65, 480, 21)
-		$browse1 = GUICtrlCreateButton($Text_Browse, 520, 65, 97, 20, 0)
-		GUICtrlCreateLabel($Text_VistumblerAutoSaveDirectory, 30, 90, 580, 15)
+		$GUI_Set_SaveDir = GUICtrlCreateInput($SaveDir, 30, 85, 515, 21)
+		$browse1 = GUICtrlCreateButton($Text_Browse, 555, 85, 97, 20, 0)
+		GUICtrlCreateLabel($Text_VistumblerAutoSaveDirectory, 30, 110, 580, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDirAuto = GUICtrlCreateInput($SaveDirAuto, 30, 105, 480, 21)
-		$Browse2 = GUICtrlCreateButton($Text_Browse, 520, 105, 97, 20, 0)
-		GUICtrlCreateLabel($Text_VistumblerKmlSaveDirectory, 30, 130, 580, 15)
+		$GUI_Set_SaveDirAuto = GUICtrlCreateInput($SaveDirAuto, 30, 125, 515, 21)
+		$Browse2 = GUICtrlCreateButton($Text_Browse, 555, 125, 97, 20, 0)
+		GUICtrlCreateLabel($Text_VistumblerKmlSaveDirectory, 30, 150, 580, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDirKml = GUICtrlCreateInput($SaveDirKml, 30, 145, 480, 21)
-		$Browse3 = GUICtrlCreateButton($Text_Browse, 520, 145, 97, 20, 0)
-
-		;Auto Recovery
-		GUICtrlCreateGroup("Auto Recovery VS1", 10, 350, 325, 110)
-		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveBox = GUICtrlCreateCheckbox("Auto Recovery VS1", 25, 375, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $AutoSave = 1 Then GUICtrlSetState($AutoSaveBox, $GUI_CHECKED)
-		$AutoSaveDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 25, 395, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $AutoSaveDel = 1 Then GUICtrlSetState($AutoSaveDelBox, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_AutoSaveEvery & '(s)', 25, 415, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveSec = GUICtrlCreateInput($SaveTime, 25, 430, 115, 21)
-		GUICtrlSetColor(-1, $TextColor)
+		$GUI_Set_SaveDirKml = GUICtrlCreateInput($SaveDirKml, 30, 165, 515, 21)
+		$Browse3 = GUICtrlCreateButton($Text_Browse, 555, 165, 97, 20, 0)
 
 		;Auto Save and Clear
-		GUICtrlCreateGroup("Auto Save VS1 and Clear", 345, 350, 325, 110)
+		GUICtrlCreateGroup("Auto Save VS1 and Clear List", 15, 240, 320, 150)
 		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveBox = GUICtrlCreateCheckbox("Auto Save VS1 and Clear", 360, 375, 300, 15)
+		$AutoSaveAndClearBox = GUICtrlCreateCheckbox("Auto Save VS1 and Clear List", 25, 265, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		If $AutoSave = 1 Then GUICtrlSetState($AutoSaveBox, $GUI_CHECKED)
-		$AutoSaveDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 360, 395, 300, 15)
+		If $AutoSaveAndClear = 1 Then GUICtrlSetState($AutoSaveAndClearBox, $GUI_CHECKED)
+		$AutoSaveAndClearRadioAP = GUICtrlCreateRadio("Auto Save And Clear After Number of APs", 40, 285, 280, 15)
+		If $AutoSaveAndClearOnAPs = 1 Then GUICtrlSetState($AutoSaveAndClearRadioAP, $GUI_CHECKED)
 		GUICtrlSetColor(-1, $TextColor)
-		If $AutoSaveDel = 1 Then GUICtrlSetState($AutoSaveDelBox, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_AutoSaveEvery & '(s)', 360, 415, 300, 15)
+		$AutoSaveAndClearAPsGUI = GUICtrlCreateInput($AutoSaveAndClearAPs, 55, 305, 50, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveSec = GUICtrlCreateInput($SaveTime, 360, 430, 115, 21)
+		GUICtrlCreateLabel("APs", 107, 308, 100, 15)
 		GUICtrlSetColor(-1, $TextColor)
-
-
-
-
-		;Misc Tab
-		$Tab_Misc = GUICtrlCreateTabItem($Text_Misc)
-		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
+		$AutoSaveAndClearRadioTime = GUICtrlCreateRadio("Auto Save and Clear After Time", 40, 330, 280, 15)
+		If $AutoSaveAndClearOnTime = 1 Then GUICtrlSetState($AutoSaveAndClearRadioTime, $GUI_CHECKED)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_BackgroundColor, 31, 170, 300, 15)
+		$AutoSaveAndClearTimeGUI = GUICtrlCreateInput($AutoSaveAndClearTime, 55, 350, 50, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 31, 185, 195, 21)
-		$cbrowse1 = GUICtrlCreateButton($Text_Browse, 235, 185, 97, 20, 0)
-		GUICtrlCreateLabel($Text_ControlColor, 353, 170, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_CBKColor = GUICtrlCreateInput(StringReplace($ControlBackgroundColor, '0x', ''), 353, 185, 195, 21)
-		$cbrowse2 = GUICtrlCreateButton($Text_Browse, 556, 185, 97, 20, 0)
-		GUICtrlCreateLabel($Text_BgFontColor, 31, 210, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_TextColor = GUICtrlCreateInput(StringReplace($TextColor, '0x', ''), 31, 225, 195, 21)
-		$cbrowse3 = GUICtrlCreateButton($Text_Browse, 235, 225, 97, 20, 0)
-		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 210, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 225, 195, 21)
-		GUICtrlCreateLabel("Max Signal (dBm)", 31, 250, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_dBmMaxSignal = GUICtrlCreateInput($dBmMaxSignal, 31, 265, 195, 21)
-		GUICtrlCreateLabel("Disassociation Signal (dBm)", 31, 290, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_dBmDisassociationSignal = GUICtrlCreateInput($dBmDissociationSignal, 31, 305, 195, 21)
-		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 353, 250, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 353, 265, 195, 21)
-
-
-
-
-		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 295, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
-		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 310, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
-		;Auto Refresh Group
-		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 350, 325, 110)
-		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 375, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 30, 395, 615, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 410, 115, 20)
+		GUICtrlCreateLabel("Minutes", 107, 353, 100, 15)
 		GUICtrlSetColor(-1, $TextColor)
 
-
+		;Auto Recovery
+		GUICtrlCreateGroup("Auto Recovery VS1", 345, 240, 320, 150)
+		GUICtrlSetColor(-1, $TextColor)
+		$AutoRecoveryBox = GUICtrlCreateCheckbox("Auto Recovery VS1", 360, 265, 300, 15)
+		If $AutoRecoveryVS1 = 1 Then GUICtrlSetState($AutoRecoveryBox, $GUI_CHECKED)
+		GUICtrlSetColor(-1, $TextColor)
+		$AutoRecoveryDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 360, 290, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $AutoRecoveryVS1Del = 1 Then GUICtrlSetState($AutoRecoveryDelBox, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_AutoSaveEvery, 360, 315, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$AutoRecoveryTimeGUI = GUICtrlCreateInput($AutoRecoveryTime, 360, 335, 50, 21)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateLabel("Minutes", 412, 338, 100, 15)
+		GUICtrlSetColor(-1, $TextColor)
 
 		;GPS Tab
 		$Tab_Gps = GUICtrlCreateTabItem($Text_Gps)
@@ -10472,7 +10531,6 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_AutoUpApsToWifiDBTime = GUICtrlCreateInput($AutoUpApsToWifiDBTime, 360, 355, 115, 20)
 		GUICtrlSetColor(-1, $TextColor)
 
-
 		;Camera tab
 		$Tab_Cam = GUICtrlCreateTabItem($Text_Cameras)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
@@ -10515,23 +10573,22 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$csbrowse1 = GUICtrlCreateButton($Text_Browse, 556, 360, 97, 20, 0)
 		GUICtrlCreateTabItem("");END OF TABS
 
-		$GUI_Set_Apply = GUICtrlCreateButton($Text_Apply, 610, 470, 73, 25, 0)
-		$GUI_Set_Can = GUICtrlCreateButton($Text_Cancel, 535, 470, 75, 25, 0)
-		$GUI_Set_Ok = GUICtrlCreateButton($Text_Ok, 460, 470, 75, 25, 0)
-		;$GUI_Set_Export = GUICtrlCreateButton($Text_ExportSettings, 2, 470, 135, 25, 0)
-		;$GUI_Set_Import = GUICtrlCreateButton($Text_ImportSettings, 137, 470, 135, 25, 0)
+		$GUI_Set_Ok = GUICtrlCreateButton($Text_Ok, 455, 472, 75, 25, 0)
+		$GUI_Set_Can = GUICtrlCreateButton($Text_Cancel, 530, 472, 75, 25, 0)
+		$GUI_Set_Apply = GUICtrlCreateButton($Text_Apply, 605, 472, 73, 25, 0)
 
 		If $StartTab = 0 Then GUICtrlSetState($Tab_Misc, $GUI_SHOW)
-		If $StartTab = 1 Then GUICtrlSetState($Tab_Gps, $GUI_SHOW)
-		If $StartTab = 2 Then GUICtrlSetState($Tab_Lan, $GUI_SHOW)
-		If $StartTab = 3 Then GUICtrlSetState($Tab_Manu, $GUI_SHOW)
-		If $StartTab = 4 Then GUICtrlSetState($Tab_Lab, $GUI_SHOW)
-		If $StartTab = 5 Then GUICtrlSetState($Tab_Col, $GUI_SHOW)
-		If $StartTab = 6 Then GUICtrlSetState($Tab_SW, $GUI_SHOW)
-		If $StartTab = 7 Then GUICtrlSetState($Tab_Auto, $GUI_SHOW)
-		If $StartTab = 8 Then GUICtrlSetState($Tab_Sound, $GUI_SHOW)
-		If $StartTab = 9 Then GUICtrlSetState($Tab_WifiDB, $GUI_SHOW)
-		If $StartTab = 10 Then GUICtrlSetState($Tab_Cam, $GUI_SHOW)
+		If $StartTab = 1 Then GUICtrlSetState($Tab_Save, $GUI_SHOW)
+		If $StartTab = 2 Then GUICtrlSetState($Tab_Gps, $GUI_SHOW)
+		If $StartTab = 3 Then GUICtrlSetState($Tab_Lan, $GUI_SHOW)
+		If $StartTab = 4 Then GUICtrlSetState($Tab_Manu, $GUI_SHOW)
+		If $StartTab = 5 Then GUICtrlSetState($Tab_Lab, $GUI_SHOW)
+		If $StartTab = 6 Then GUICtrlSetState($Tab_Col, $GUI_SHOW)
+		If $StartTab = 7 Then GUICtrlSetState($Tab_SW, $GUI_SHOW)
+		If $StartTab = 8 Then GUICtrlSetState($Tab_Auto, $GUI_SHOW)
+		If $StartTab = 9 Then GUICtrlSetState($Tab_Sound, $GUI_SHOW)
+		If $StartTab = 10 Then GUICtrlSetState($Tab_WifiDB, $GUI_SHOW)
+		If $StartTab = 11 Then GUICtrlSetState($Tab_Cam, $GUI_SHOW)
 
 		GUICtrlSetOnEvent($Add_MANU, '_AddManu')
 		GUICtrlSetOnEvent($Edit_MANU, '_EditManu')
@@ -10696,6 +10753,65 @@ EndFunc   ;==>_OkSettingsGUI
 
 Func _ApplySettingsGUI();Applys settings
 	$RestartVistumbler = 0
+	If $Apply_Misc = 1 Then
+		$BackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_BKColor))
+		$ControlBackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_CBKColor))
+		$TextColor = '0x' & StringUpper(GUICtrlRead($GUI_TextColor))
+		$dBmMaxSignal = GUICtrlRead($GUI_dBmMaxSignal)
+		$dBmDissociationSignal = GUICtrlRead($GUI_dBmDisassociationSignal)
+		$RefreshLoopTime = GUICtrlRead($GUI_RefreshLoop)
+		$TimeBeforeMarkedDead = GUICtrlRead($GUI_TimeBeforeMarkingDead)
+		If $TimeBeforeMarkedDead > 86400 Then $TimeBeforeMarkedDead = 86400
+		If GUICtrlRead($GUI_AutoCheckForUpdates) = 1 Then
+			$AutoCheckForUpdates = 1
+		Else
+			$AutoCheckForUpdates = 0
+		EndIf
+		If GUICtrlRead($GUI_CheckForBetaUpdates) = 1 Then
+			$CheckForBetaUpdates = 1
+		Else
+			$CheckForBetaUpdates = 0
+		EndIf
+		;Auto Refresh
+		If GUICtrlRead($GUI_RefreshNetworks) = 4 And $RefreshNetworks = 1 Then _AutoRefreshToggle()
+		If GUICtrlRead($GUI_RefreshNetworks) = 1 And $RefreshNetworks = 0 Then _AutoRefreshToggle()
+		$RefreshTime = (GUICtrlRead($GUI_RefreshTime) * 1000)
+	EndIf
+	If $Apply_Save = 1 Then
+		$Tmp_SaveDir = GUICtrlRead($GUI_Set_SaveDir)
+		$Tmp_SaveDirAuto = GUICtrlRead($GUI_Set_SaveDirAuto)
+		$Tmp_SaveDirKml = GUICtrlRead($GUI_Set_SaveDirKml)
+		If StringTrimLeft($Tmp_SaveDir, StringLen($Tmp_SaveDir) - 1) <> "\" Then $Tmp_SaveDir = $Tmp_SaveDir & "\" ;If directory does not have trailing \ then add it
+		If StringTrimLeft($Tmp_SaveDirAuto, StringLen($Tmp_SaveDirAuto) - 1) <> "\" Then $Tmp_SaveDirAuto = $Tmp_SaveDirAuto & "\" ;If directory does not have trailing \ then add it
+		If StringTrimLeft($Tmp_SaveDirKml, StringLen($Tmp_SaveDirKml) - 1) <> "\" Then $Tmp_SaveDirKml = $Tmp_SaveDirKml & "\" ;If directory does not have trailing \ then add it
+		$SaveDir = $Tmp_SaveDir
+		$SaveDirAuto = $Tmp_SaveDirAuto
+		$SaveDirKml = $Tmp_SaveDirKml
+
+		;Auto Save and Clear
+		If GUICtrlRead($AutoSaveAndClearBox) = 4 And $AutoSaveAndClear = 1 Then _AutoSaveAndClearToggle()
+		If GUICtrlRead($AutoSaveAndClearBox) = 1 And $AutoSaveAndClear = 0 Then _AutoSaveAndClearToggle()
+
+		If GUICtrlRead($AutoSaveAndClearRadioAP) = 1 Then
+			$AutoSaveAndClearOnAPs = 1
+			$AutoSaveAndClearOnTime = 0
+		Else
+			$AutoSaveAndClearOnAPs = 0
+			$AutoSaveAndClearOnTime = 1
+		EndIf
+		$AutoSaveAndClearAPs = GUICtrlRead($AutoSaveAndClearAPsGUI)
+		$AutoSaveAndClearTime = GUICtrlRead($AutoSaveAndClearTimeGUI)
+
+		;Auto Recovery VS1
+		If GUICtrlRead($AutoRecoveryBox) = 4 And $AutoRecoveryVS1 = 1 Then _AutoRecoveryVS1Toggle()
+		If GUICtrlRead($AutoRecoveryBox) = 1 And $AutoRecoveryVS1 = 0 Then _AutoRecoveryVS1Toggle()
+		If GUICtrlRead($AutoRecoveryDelBox) = 1 Then
+			$AutoRecoveryVS1Del = 1
+		Else
+			$AutoRecoveryVS1Del = 0
+		EndIf
+		$AutoRecoveryTime = GUICtrlRead($AutoRecoveryTimeGUI)
+	EndIf
 	If $Apply_GPS = 1 Then
 		If GUICtrlRead($GUI_Comport) <> $ComPort And $UseGPS = 1 Then _GpsToggle() ;If the port has changed and gps is turned on then turn off the gps (it will be re-enabled with the new port)
 		If GUICtrlRead($Rad_UseCommMG) = 1 Then $GpsType = 0 ;Set CommMG as default comm interface
@@ -11180,54 +11296,6 @@ Func _ApplySettingsGUI();Applys settings
 		$SearchWord_Infrastructure = GUICtrlRead($SearchWord_Infrastructure_GUI)
 		$SearchWord_Adhoc = GUICtrlRead($SearchWord_Adhoc_GUI)
 	EndIf
-	If $Apply_Misc = 1 Then
-		$Tmp_SaveDir = GUICtrlRead($GUI_Set_SaveDir)
-		$Tmp_SaveDirAuto = GUICtrlRead($GUI_Set_SaveDirAuto)
-		$Tmp_SaveDirKml = GUICtrlRead($GUI_Set_SaveDirKml)
-		If StringTrimLeft($Tmp_SaveDir, StringLen($Tmp_SaveDir) - 1) <> "\" Then $Tmp_SaveDir = $Tmp_SaveDir & "\" ;If directory does not have trailing \ then add it
-		If StringTrimLeft($Tmp_SaveDirAuto, StringLen($Tmp_SaveDirAuto) - 1) <> "\" Then $Tmp_SaveDirAuto = $Tmp_SaveDirAuto & "\" ;If directory does not have trailing \ then add it
-		If StringTrimLeft($Tmp_SaveDirKml, StringLen($Tmp_SaveDirKml) - 1) <> "\" Then $Tmp_SaveDirKml = $Tmp_SaveDirKml & "\" ;If directory does not have trailing \ then add it
-		$SaveDir = $Tmp_SaveDir
-		$SaveDirAuto = $Tmp_SaveDirAuto
-		$SaveDirKml = $Tmp_SaveDirKml
-		$BackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_BKColor))
-		$ControlBackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_CBKColor))
-		$TextColor = '0x' & StringUpper(GUICtrlRead($GUI_TextColor))
-		$dBmMaxSignal = GUICtrlRead($GUI_dBmMaxSignal)
-		$dBmDissociationSignal = GUICtrlRead($GUI_dBmDisassociationSignal)
-		$RefreshLoopTime = GUICtrlRead($GUI_RefreshLoop)
-		$TimeBeforeMarkedDead = GUICtrlRead($GUI_TimeBeforeMarkingDead)
-		If $TimeBeforeMarkedDead > 86400 Then $TimeBeforeMarkedDead = 86400
-		If GUICtrlRead($GUI_AutoCheckForUpdates) = 1 Then
-			$AutoCheckForUpdates = 1
-		Else
-			$AutoCheckForUpdates = 0
-		EndIf
-		If GUICtrlRead($GUI_CheckForBetaUpdates) = 1 Then
-			$CheckForBetaUpdates = 1
-		Else
-			$CheckForBetaUpdates = 0
-		EndIf
-		;AutoSave
-		If GUICtrlRead($AutoSaveBox) = 1 Then
-			$AutoSave = 1
-			$save_timer = TimerInit()
-			GUICtrlSetState($AutoSaveGUI, $GUI_CHECKED)
-		Else
-			$AutoSave = 0
-			GUICtrlSetState($AutoSaveGUI, $GUI_UNCHECKED)
-		EndIf
-		If GUICtrlRead($AutoSaveDelBox) = 1 Then
-			$AutoSaveDel = 1
-		Else
-			$AutoSaveDel = 0
-		EndIf
-		$SaveTime = GUICtrlRead($AutoSaveSec)
-		;Auto Refresh
-		If GUICtrlRead($GUI_RefreshNetworks) = 4 And $RefreshNetworks = 1 Then _AutoRefreshToggle()
-		If GUICtrlRead($GUI_RefreshNetworks) = 1 And $RefreshNetworks = 0 Then _AutoRefreshToggle()
-		$RefreshTime = (GUICtrlRead($GUI_RefreshTime) * 1000)
-	EndIf
 	If $Apply_Auto = 1 Then
 		;Auto KML
 		If GUICtrlRead($AutoSaveKML) = 4 And $AutoKML = 1 Then _AutoKmlToggle()
@@ -11336,7 +11404,7 @@ Func _ApplySettingsGUI();Applys settings
 		$CamTriggerScript = GUICtrlRead($GUI_CamTriggerScript)
 		$CamTriggerTime = GUICtrlRead($GUI_CamTriggerTime)
 	EndIf
-	Dim $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Misc = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
+	Dim $Apply_Misc = 1, $Apply_Save = 1, $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
 	If $RestartVistumbler = 1 Then MsgBox(0, $Text_Restart, $Text_RestartMsg)
 EndFunc   ;==>_ApplySettingsGUI
 
@@ -13008,4 +13076,3 @@ Func _CleanupFiles($cDIR, $cTYPE)
 		Next
 	EndIf
 EndFunc   ;==>_CleanupFiles
-
