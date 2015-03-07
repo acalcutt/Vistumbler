@@ -3,8 +3,7 @@
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Res_Fileversion=10.3.2.0
-#AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
-#AutoIt3Wrapper_Run_Tidy=y
+#AutoIt3Wrapper_Res_requestedExecutionLevel=highestAvailable
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2015 Andrew Calcutt
@@ -17,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 12'
+$version = 'v10.6 Beta 13'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/02/25'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -9854,27 +9853,64 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		WinActivate($Text_VistumblerSettings)
 	Else
 		$SettingsOpen = 1
-		$SetMisc = GUICreate($Text_VistumblerSettings, 690, 500, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+		$SetMisc = GUICreate($Text_VistumblerSettings, 640, 500, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 		GUISetBkColor($BackgroundColor)
-		$Settings_Tab = GUICtrlCreateTab(0, 0, 690, 470)
+		$Settings_Tab = GUICtrlCreateTab(0, 0, 640, 470)
+
+		;Save Tab
+		$Tab_Save = GUICtrlCreateTabItem("Save")
+		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
+		GUICtrlSetColor(-1, $TextColor)
+		$GroupSaveDirs = GUICtrlCreateGroup("Save Directories", 15, 30, 610, 200)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 30, 50, 580, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_Set_SaveDir = GUICtrlCreateInput($SaveDir, 30, 65, 480, 21)
+		$browse1 = GUICtrlCreateButton($Text_Browse, 520, 65, 97, 20, 0)
+		GUICtrlCreateLabel($Text_VistumblerAutoSaveDirectory, 30, 90, 580, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_Set_SaveDirAuto = GUICtrlCreateInput($SaveDirAuto, 30, 105, 480, 21)
+		$Browse2 = GUICtrlCreateButton($Text_Browse, 520, 105, 97, 20, 0)
+		GUICtrlCreateLabel($Text_VistumblerKmlSaveDirectory, 30, 130, 580, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_Set_SaveDirKml = GUICtrlCreateInput($SaveDirKml, 30, 145, 480, 21)
+		$Browse3 = GUICtrlCreateButton($Text_Browse, 520, 145, 97, 20, 0)
+
+		;Auto Recovery
+		GUICtrlCreateGroup("Auto Recovery VS1", 10, 350, 325, 110)
+		GUICtrlSetColor(-1, $TextColor)
+		$AutoSaveBox = GUICtrlCreateCheckbox("Auto Recovery VS1", 25, 375, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $AutoSave = 1 Then GUICtrlSetState($AutoSaveBox, $GUI_CHECKED)
+		$AutoSaveDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 25, 395, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $AutoSaveDel = 1 Then GUICtrlSetState($AutoSaveDelBox, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_AutoSaveEvery & '(s)', 25, 415, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$AutoSaveSec = GUICtrlCreateInput($SaveTime, 25, 430, 115, 21)
+		GUICtrlSetColor(-1, $TextColor)
+
+		;Auto Save and Clear
+		GUICtrlCreateGroup("Auto Save VS1 and Clear", 345, 350, 325, 110)
+		GUICtrlSetColor(-1, $TextColor)
+		$AutoSaveBox = GUICtrlCreateCheckbox("Auto Save VS1 and Clear", 360, 375, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $AutoSave = 1 Then GUICtrlSetState($AutoSaveBox, $GUI_CHECKED)
+		$AutoSaveDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 360, 395, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		If $AutoSaveDel = 1 Then GUICtrlSetState($AutoSaveDelBox, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_AutoSaveEvery & '(s)', 360, 415, 300, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$AutoSaveSec = GUICtrlCreateInput($SaveTime, 360, 430, 115, 21)
+		GUICtrlSetColor(-1, $TextColor)
+
+
+
+
 		;Misc Tab
 		$Tab_Misc = GUICtrlCreateTabItem($Text_Misc)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 		GUICtrlSetColor(-1, $TextColor)
-		$GroupVistSet = GUICtrlCreateGroup($Text_VistumblerSettings, 16, 30, 649, 310)
-		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 31, 50, 620, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDir = GUICtrlCreateInput($SaveDir, 31, 65, 515, 21)
-		$browse1 = GUICtrlCreateButton($Text_Browse, 556, 65, 97, 20, 0)
-		GUICtrlCreateLabel($Text_VistumblerAutoSaveDirectory, 31, 90, 620, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDirAuto = GUICtrlCreateInput($SaveDirAuto, 31, 105, 515, 21)
-		$Browse2 = GUICtrlCreateButton($Text_Browse, 556, 105, 97, 20, 0)
-		GUICtrlCreateLabel($Text_VistumblerKmlSaveDirectory, 31, 130, 620, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDirKml = GUICtrlCreateInput($SaveDirKml, 31, 145, 515, 21)
-		$Browse3 = GUICtrlCreateButton($Text_Browse, 556, 145, 97, 20, 0)
 		GUICtrlCreateLabel($Text_BackgroundColor, 31, 170, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 31, 185, 195, 21)
@@ -9918,19 +9954,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 410, 115, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		;Auto Save Group
-		GUICtrlCreateGroup($Text_AutoSave, 345, 350, 325, 110)
-		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveBox = GUICtrlCreateCheckbox($Text_AutoSave, 360, 375, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $AutoSave = 1 Then GUICtrlSetState($AutoSaveBox, $GUI_CHECKED)
-		$AutoSaveDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 360, 395, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		If $AutoSaveDel = 1 Then GUICtrlSetState($AutoSaveDelBox, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_AutoSaveEvery & '(s)', 360, 415, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveSec = GUICtrlCreateInput($SaveTime, 360, 430, 115, 21)
-		GUICtrlSetColor(-1, $TextColor)
+
 
 
 		;GPS Tab
