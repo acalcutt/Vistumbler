@@ -18,7 +18,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
 $version = 'v10.6 Beta 13'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/02/25'
+$last_modified = '2015/03/07'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -283,7 +283,7 @@ Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
-Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, $AutoSaveAndClearAPsGUI, $AutoSaveAndClearTimeGUI, $AutoRecoveryBox, $AutoRecoveryDelBox, $AutoRecoveryTimeGUI, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
+Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, $AutoSaveAndClearAPsGUI, $AutoSaveAndClearTimeGUI, $AutoRecoveryBox, $AutoRecoveryDelBox, $AutoSaveAndClearPlaySoundGUI, $AutoRecoveryTimeGUI, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
@@ -448,6 +448,7 @@ Dim $AutoRecoveryVS1Del = IniRead($settings, 'AutoRecovery', 'AutoRecoveryDel', 
 Dim $AutoRecoveryTime = IniRead($settings, 'AutoRecovery', 'AutoRecoveryTime', 5)
 
 Dim $AutoSaveAndClear = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClear', 0)
+Dim $AutoSaveAndClearPlaySound = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClearPlaySound', 1)
 Dim $AutoSaveAndClearOnTime = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClearOnTime', 0)
 Dim $AutoSaveAndClearTime = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClearTime', 60)
 Dim $AutoSaveAndClearOnAPs = IniRead($settings, 'AutoSaveAndClear', 'AutoSaveAndClearOnAPs', 1)
@@ -459,11 +460,8 @@ Dim $SoundPerAP = IniRead($settings, 'Sound', 'SoundPerAP', 0)
 Dim $NewSoundSigBased = IniRead($settings, 'Sound', 'NewSoundSigBased', 0)
 Dim $new_AP_sound = IniRead($settings, 'Sound', 'NewAP_Sound', 'new_ap.wav')
 Dim $new_GPS_sound = IniRead($settings, 'Sound', 'NewGPS_Sound', 'new_gps.wav')
+Dim $AutoSave_sound = IniRead($settings, 'Sound', 'AutoSave_Sound', 'autosave.wav')
 Dim $ErrorFlag_sound = IniRead($settings, 'Sound', 'Error_Sound', 'error.wav')
-;Dim $new_AP_sound_open_id = _SoundOpen($SoundDir & $new_AP_sound)
-;Dim $new_GPS_sound_open_id = _SoundOpen($SoundDir & $new_GPS_sound)
-;Dim $ErrorFlag_sound_open_id = _SoundOpen($SoundDir & $ErrorFlag_sound)
-
 
 Dim $SpeakSignal = IniRead($settings, 'MIDI', 'SpeakSignal', 0)
 Dim $SpeakSigSayPecent = IniRead($settings, 'MIDI', 'SpeakSigSayPecent', 1)
@@ -678,10 +676,12 @@ Dim $Text_StopScanAps = IniRead($DefaultLanguagePath, 'GuiText', 'StopScanAps', 
 Dim $Text_UseGPS = IniRead($DefaultLanguagePath, 'GuiText', 'UseGPS', 'Use &GPS')
 Dim $Text_StopGPS = IniRead($DefaultLanguagePath, 'GuiText', 'StopGPS', 'Stop &GPS')
 
-Dim $Text_Settings = IniRead($DefaultLanguagePath, 'GuiText', 'Settings', 'S&ettings')
-Dim $Text_GpsSettings = IniRead($DefaultLanguagePath, 'GuiText', 'GpsSettings', 'G&PS Settings')
-Dim $Text_SetLanguage = IniRead($DefaultLanguagePath, 'GuiText', 'SetLanguage', 'Set &Language')
-Dim $Text_SetSearchWords = IniRead($DefaultLanguagePath, 'GuiText', 'SetSearchWords', 'Set Search &Words')
+Dim $Text_Settings = IniRead($DefaultLanguagePath, 'GuiText', 'Settings', 'Settings')
+Dim $Text_MiscSettings = IniRead($DefaultLanguagePath, 'GuiText', 'MiscSettings', 'Misc Settings')
+Dim $Text_SaveSettings = IniRead($DefaultLanguagePath, 'GuiText', 'SaveSettings', 'Save Settings')
+Dim $Text_GpsSettings = IniRead($DefaultLanguagePath, 'GuiText', 'GpsSettings', 'GPS Settings')
+Dim $Text_SetLanguage = IniRead($DefaultLanguagePath, 'GuiText', 'SetLanguage', 'Set Language')
+Dim $Text_SetSearchWords = IniRead($DefaultLanguagePath, 'GuiText', 'SetSearchWords', 'Set Search Words')
 Dim $Text_SetMacLabel = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacLabel', 'Set Labels by Mac')
 Dim $Text_SetMacManu = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacManu', 'Set Manufactures by Mac')
 
@@ -711,7 +711,7 @@ Dim $Text_EditMan = IniRead($DefaultLanguagePath, 'GuiText', 'EditMan', 'Edit Se
 Dim $Text_NewMac = IniRead($DefaultLanguagePath, 'GuiText', 'NewMac', 'New Mac Address:')
 Dim $Text_NewMan = IniRead($DefaultLanguagePath, 'GuiText', 'NewMan', 'New Manufacturer:')
 Dim $Text_NewLabel = IniRead($DefaultLanguagePath, 'GuiText', 'NewLabel', 'New Label:')
-Dim $Text_Save = IniRead($DefaultLanguagePath, 'GuiText', 'Save', 'Save?')
+Dim $Text_Save = IniRead($DefaultLanguagePath, 'GuiText', 'Save', 'Save')
 Dim $Text_SaveQuestion = IniRead($DefaultLanguagePath, 'GuiText', 'SaveQuestion', 'Data has changed. Would you like to save?')
 
 Dim $Text_GpsDetails = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDetails', 'GPS Details')
@@ -990,6 +990,13 @@ Dim $Text_GeoNamesInfo = IniRead($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo'
 Dim $Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
 Dim $Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when no data is recieved in over 10 seconds')
 Dim $Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is recived in over 30 seconds')
+Dim $Text_APs = IniRead($DefaultLanguagePath, 'GuiText', 'APs', 'APs')
+Dim $Text_MaxSignal = IniRead($DefaultLanguagePath, 'GuiText', 'MaxSignal', 'Max Signal')
+Dim $Text_DisassociationSignal = IniRead($DefaultLanguagePath, 'GuiText', 'DisassociationSignal', 'Disassociation Signal')
+Dim $Text_SaveDirectories = IniRead($DefaultLanguagePath, 'GuiText', 'SaveDirectories', 'Save Directories')
+Dim $Text_AutoSaveAndClearAfterNumberofAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClearAfterNumberofAPs', 'Auto Save And Clear After Number of APs')
+Dim $Text_AutoSaveandClearAfterTime = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveandClearAfterTime', 'Auto Save and Clear After Time')
+Dim $Text_PlaySoundWhenSaving = IniRead($DefaultLanguagePath, 'GuiText', 'PlaySoundWhenSaving', 'Play Sound When Saving')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1341,8 +1348,8 @@ If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
 ;Settings Menu
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
-$SetMisc = GUICtrlCreateMenuItem("Misc Settings", $SettingsMenu)
-$SetSave = GUICtrlCreateMenuItem("Save Settings", $SettingsMenu)
+$SetMisc = GUICtrlCreateMenuItem($Text_MiscSettings, $SettingsMenu)
+$SetSave = GUICtrlCreateMenuItem($Text_SaveSettings, $SettingsMenu)
 $SetGPS = GUICtrlCreateMenuItem($Text_GpsSettings, $SettingsMenu)
 $SetLanguage = GUICtrlCreateMenuItem($Text_SetLanguage, $SettingsMenu)
 $SetSearchWords = GUICtrlCreateMenuItem($Text_SetSearchWords, $SettingsMenu)
@@ -1748,10 +1755,10 @@ While 1
 		$UpdateAutoSave = 0
 	EndIf
 
-	If $AutoSaveAndClear= 1 Then
+	If $AutoSaveAndClear = 1 Then
 		If $AutoSaveAndClearOnAPs = 1 And $APID >= $AutoSaveAndClearAPs Then
 			_AutoSaveAndClear()
-		ElseIf $AutoSaveAndClearOnTime = 1 And TimerDiff($autosave_timer) >= ($AutoSaveAndClearOnTime * 60000) Then
+		ElseIf $AutoSaveAndClearOnTime = 1 And TimerDiff($autosave_timer) >= ($AutoSaveAndClearTime * 60000) Then
 			_AutoSaveAndClear()
 		EndIf
 	EndIf
@@ -3244,11 +3251,6 @@ Func _Exit()
 		_TurnOffGPS()
 	EndIf
 
-	;Close Sound Files
-	;_SoundClose($new_AP_sound_open_id)
-	;_SoundClose($new_GPS_sound_open_id)
-	;_SoundClose($ErrorFlag_sound_open_id)
-
 	;Exit Vistumbler
 	Exit
 EndFunc   ;==>_Exit
@@ -3562,7 +3564,7 @@ Func _AutoSaveAndClearToggle();Turns auto save and clear on or off
 		GUICtrlSetState($AutoSaveAndClearGUI, $GUI_CHECKED)
 		$AutoSaveAndClear = 1
 	EndIf
-EndFunc   ;==>_AutoRecoveryVS1Toggle
+EndFunc   ;==>_AutoSaveAndClearToggle
 
 
 Func _AutoSortToggle();Turns auto sort on or off
@@ -6763,7 +6765,7 @@ Func _AutoRecoveryVS1();Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRecoveryVS1()') ;#Debug Display
 	DirCreate($SaveDirAuto)
 	FileDelete($AutoRecoveryVS1File)
-	$AutoRecoveryVS1File = $SaveDirAuto & 'AutoRecoveryVS1_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
+	$AutoRecoveryVS1File = $SaveDirAuto & 'AutoRecovery_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
 	If ProcessExists($AutoRecoveryVS1Process) = 0 Then
 		$AutoRecoveryVS1Process = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=d /f="' & $AutoRecoveryVS1File & '"', '', @SW_HIDE)
 		$save_timer = TimerInit()
@@ -6773,16 +6775,17 @@ EndFunc   ;==>_AutoRecoveryVS1
 Func _AutoSaveAndClear();Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveAndClear()') ;#Debug Display
 	$AutoSaveAndClearFile = $SaveDirAuto & 'AutoSave_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
+	If $AutoSaveAndClearPlaySound = 1 Then _PlayWavSound($SoundDir & $AutoSave_sound)
 	GUICtrlSetData($msgdisplay, "Running Auto Save and Clear")
 	$expvs1 = _ExportVS1($AutoSaveAndClearFile, 0)
 	If $expvs1 = 1 Then
 		GUICtrlSetData($msgdisplay, "File Exported Successfully. Clearing List")
 		_ClearAll()
-		$autosave_timer = TimerInit()
 	Else
 		GUICtrlSetData($msgdisplay, "Error Saving File. List will not be cleared.")
 	EndIf
-EndFunc   ;==>_AutoRecoveryVS1
+	$autosave_timer = TimerInit()
+EndFunc   ;==>_AutoSaveAndClear
 
 Func _ExportDetailedData();Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedData() ') ;#Debug Display
@@ -7436,6 +7439,7 @@ Func _WriteINI()
 	IniWrite($settings, "AutoRecovery", "AutoSaveTime", $AutoRecoveryTime)
 
 	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClear", $AutoSaveAndClear)
+	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClearPlaySound", $AutoSaveAndClearPlaySound)
 	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClearOnTime", $AutoSaveAndClearOnTime)
 	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClearTime", $AutoSaveAndClearTime)
 	IniWrite($settings, "AutoSaveAndClear", "AutoSaveAndClearOnAPs", $AutoSaveAndClearOnAPs)
@@ -7447,6 +7451,7 @@ Func _WriteINI()
 	IniWrite($settings, "Sound", 'NewSoundSigBased', $NewSoundSigBased)
 	IniWrite($settings, "Sound", "NewAP_Sound", $new_AP_sound)
 	IniWrite($settings, "Sound", "NewGPS_Sound", $new_GPS_sound)
+	IniWrite($settings, "Sound", "AutoSave_Sound", $AutoSave_sound)
 	IniWrite($settings, "Sound", "Error_Sound", $ErrorFlag_sound)
 
 	IniWrite($settings, "MIDI", 'SpeakSignal', $SpeakSignal)
@@ -7667,6 +7672,8 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, "GuiText", "UseGPS", $Text_UseGPS)
 	IniWrite($DefaultLanguagePath, "GuiText", "StopGPS", $Text_StopGPS)
 	IniWrite($DefaultLanguagePath, "GuiText", "Settings", $Text_Settings)
+	IniWrite($DefaultLanguagePath, "GuiText", "MiscSettings", $Text_MiscSettings)
+	IniWrite($DefaultLanguagePath, "GuiText", "SaveSettings", $Text_SaveSettings)
 	IniWrite($DefaultLanguagePath, "GuiText", "GpsSettings", $Text_GpsSettings)
 	IniWrite($DefaultLanguagePath, "GuiText", "SetLanguage", $Text_SetLanguage)
 	IniWrite($DefaultLanguagePath, "GuiText", "SetSearchWords", $Text_SetSearchWords)
@@ -7978,6 +7985,13 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', $Text_FindApInWifidb)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', $Text_GpsDisconnect)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'GpsReset', $Text_GpsReset)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'APs', $Text_APs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MaxSignal', $Text_MaxSignal)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DisassociationSignal', $Text_DisassociationSignal)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SaveDirectories', $Text_SaveDirectories)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClearAfterNumberofAPs', $Text_AutoSaveAndClearAfterNumberofAPs)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveandClearAfterTime', $Text_AutoSaveandClearAfterTime)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'PlaySoundWhenSaving', $Text_PlaySoundWhenSaving)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -9853,7 +9867,7 @@ EndFunc   ;==>_SettingsGUI_Misc
 Func _SettingsGUI_Save();Opens GUI to Misc tab
 	$Apply_Save = 1
 	_SettingsGUI(1)
-EndFunc   ;==>_SettingsGUI_Misc
+EndFunc   ;==>_SettingsGUI_Save
 
 Func _SettingsGUI_GPS();Opens GUI to GPS tab
 	$Apply_GPS = 1
@@ -9917,7 +9931,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		;Misc Tab
 		$Tab_Misc = GUICtrlCreateTabItem($Text_Misc)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		$GroupMiscSettings = GUICtrlCreateGroup("Misc Settings", 15, 50, 650, 200)
+		$GroupMiscSettings = GUICtrlCreateGroup($Text_MiscSettings, 15, 50, 650, 200)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateLabel($Text_BackgroundColor, 31, 70, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
@@ -9934,10 +9948,10 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 110, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 125, 195, 21)
-		GUICtrlCreateLabel("Max Signal (dBm)", 31, 150, 300, 15)
+		GUICtrlCreateLabel($Text_MaxSignal & " (dBm)", 31, 150, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_dBmMaxSignal = GUICtrlCreateInput($dBmMaxSignal, 31, 165, 195, 21)
-		GUICtrlCreateLabel("Disassociation Signal (dBm)", 31, 190, 300, 15)
+		GUICtrlCreateLabel($Text_DisassociationSignal & " (dBm)", 31, 190, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_dBmDisassociationSignal = GUICtrlCreateInput($dBmDissociationSignal, 31, 205, 195, 21)
 		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 353, 150, 300, 15)
@@ -9961,10 +9975,10 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 
 		;Save Tab
-		$Tab_Save = GUICtrlCreateTabItem("Save")
+		$Tab_Save = GUICtrlCreateTabItem($Text_Save)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 		GUICtrlSetColor(-1, $TextColor)
-		$GroupSaveDirs = GUICtrlCreateGroup("Save Directories", 15, 50, 650, 180)
+		$GroupSaveDirs = GUICtrlCreateGroup($Text_SaveDirectories, 15, 50, 650, 180)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateLabel($Text_VistumblerSaveDirectory, 30, 70, 580, 15)
 		GUICtrlSetColor(-1, $TextColor)
@@ -9980,30 +9994,32 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$Browse3 = GUICtrlCreateButton($Text_Browse, 555, 165, 97, 20, 0)
 
 		;Auto Save and Clear
-		GUICtrlCreateGroup("Auto Save VS1 and Clear List", 15, 240, 320, 150)
+		GUICtrlCreateGroup($Text_AutoSaveAndClear, 15, 240, 320, 170)
 		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveAndClearBox = GUICtrlCreateCheckbox("Auto Save VS1 and Clear List", 25, 265, 300, 15)
+		$AutoSaveAndClearBox = GUICtrlCreateCheckbox($Text_AutoSaveAndClear, 25, 265, 300, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		If $AutoSaveAndClear = 1 Then GUICtrlSetState($AutoSaveAndClearBox, $GUI_CHECKED)
-		$AutoSaveAndClearRadioAP = GUICtrlCreateRadio("Auto Save And Clear After Number of APs", 40, 285, 280, 15)
+		$AutoSaveAndClearRadioAP = GUICtrlCreateRadio($Text_AutoSaveAndClearAfterNumberofAPs, 40, 285, 280, 15)
 		If $AutoSaveAndClearOnAPs = 1 Then GUICtrlSetState($AutoSaveAndClearRadioAP, $GUI_CHECKED)
 		GUICtrlSetColor(-1, $TextColor)
 		$AutoSaveAndClearAPsGUI = GUICtrlCreateInput($AutoSaveAndClearAPs, 55, 305, 50, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel("APs", 107, 308, 100, 15)
+		GUICtrlCreateLabel($Text_APs, 107, 308, 100, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$AutoSaveAndClearRadioTime = GUICtrlCreateRadio("Auto Save and Clear After Time", 40, 330, 280, 15)
+		$AutoSaveAndClearRadioTime = GUICtrlCreateRadio($Text_AutoSaveandClearAfterTime, 40, 330, 280, 15)
 		If $AutoSaveAndClearOnTime = 1 Then GUICtrlSetState($AutoSaveAndClearRadioTime, $GUI_CHECKED)
 		GUICtrlSetColor(-1, $TextColor)
 		$AutoSaveAndClearTimeGUI = GUICtrlCreateInput($AutoSaveAndClearTime, 55, 350, 50, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel("Minutes", 107, 353, 100, 15)
+		GUICtrlCreateLabel($Text_Minutes, 107, 353, 100, 15)
 		GUICtrlSetColor(-1, $TextColor)
+		$AutoSaveAndClearPlaySoundGUI = GUICtrlCreateCheckbox($Text_PlaySoundWhenSaving, 40, 380, 280, 15)
+		If $AutoSaveAndClearPlaySound = 1 Then GUICtrlSetState($AutoSaveAndClearPlaySoundGUI, $GUI_CHECKED)
 
 		;Auto Recovery
-		GUICtrlCreateGroup("Auto Recovery VS1", 345, 240, 320, 150)
+		GUICtrlCreateGroup($Text_AutoRecoveryVS1, 345, 240, 320, 170)
 		GUICtrlSetColor(-1, $TextColor)
-		$AutoRecoveryBox = GUICtrlCreateCheckbox("Auto Recovery VS1", 360, 265, 300, 15)
+		$AutoRecoveryBox = GUICtrlCreateCheckbox($Text_AutoRecoveryVS1, 360, 265, 300, 15)
 		If $AutoRecoveryVS1 = 1 Then GUICtrlSetState($AutoRecoveryBox, $GUI_CHECKED)
 		GUICtrlSetColor(-1, $TextColor)
 		$AutoRecoveryDelBox = GUICtrlCreateCheckbox($Text_DelAutoSaveOnExit, 360, 290, 300, 15)
@@ -10013,7 +10029,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$AutoRecoveryTimeGUI = GUICtrlCreateInput($AutoRecoveryTime, 360, 335, 50, 21)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel("Minutes", 412, 338, 100, 15)
+		GUICtrlCreateLabel($Text_Minutes, 412, 338, 100, 15)
 		GUICtrlSetColor(-1, $TextColor)
 
 		;GPS Tab
@@ -10811,6 +10827,11 @@ Func _ApplySettingsGUI();Applys settings
 			$AutoRecoveryVS1Del = 0
 		EndIf
 		$AutoRecoveryTime = GUICtrlRead($AutoRecoveryTimeGUI)
+		If GUICtrlRead($AutoSaveAndClearPlaySoundGUI) = 1 Then
+			$AutoSaveAndClearPlaySound = 1
+		Else
+			$AutoSaveAndClearPlaySound = 0
+		EndIf
 	EndIf
 	If $Apply_GPS = 1 Then
 		If GUICtrlRead($GUI_Comport) <> $ComPort And $UseGPS = 1 Then _GpsToggle() ;If the port has changed and gps is turned on then turn off the gps (it will be re-enabled with the new port)
@@ -10907,10 +10928,12 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_StopScanAps = IniRead($DefaultLanguagePath, 'GuiText', 'StopScanAps', '&Stop')
 		$Text_UseGPS = IniRead($DefaultLanguagePath, 'GuiText', 'UseGPS', 'Use &GPS')
 		$Text_StopGPS = IniRead($DefaultLanguagePath, 'GuiText', 'StopGPS', 'Stop &GPS')
-		$Text_Settings = IniRead($DefaultLanguagePath, 'GuiText', 'Settings', 'S&ettings')
-		$Text_GpsSettings = IniRead($DefaultLanguagePath, 'GuiText', 'GpsSettings', 'G&PS Settings')
-		$Text_SetLanguage = IniRead($DefaultLanguagePath, 'GuiText', 'SetLanguage', 'Set &Language')
-		$Text_SetSearchWords = IniRead($DefaultLanguagePath, 'GuiText', 'SetSearchWords', 'Set Search &Words')
+		$Text_Settings = IniRead($DefaultLanguagePath, 'GuiText', 'Settings', 'Settings')
+		$Text_MiscSettings = IniRead($DefaultLanguagePath, 'GuiText', 'MiscSettings', 'Misc Settings')
+		$Text_SaveSettings = IniRead($DefaultLanguagePath, 'GuiText', 'SaveSettings', 'Save Settings')
+		$Text_GpsSettings = IniRead($DefaultLanguagePath, 'GuiText', 'GpsSettings', 'GPS Settings')
+		$Text_SetLanguage = IniRead($DefaultLanguagePath, 'GuiText', 'SetLanguage', 'Set Language')
+		$Text_SetSearchWords = IniRead($DefaultLanguagePath, 'GuiText', 'SetSearchWords', 'Set Search Words')
 		$Text_SetMacLabel = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacLabel', 'Set Labels by Mac')
 		$Text_SetMacManu = IniRead($DefaultLanguagePath, 'GuiText', 'SetMacManu', 'Set Manufactures by Mac')
 		$Text_Export = IniRead($DefaultLanguagePath, 'GuiText', 'Export', 'Ex&port')
@@ -11219,6 +11242,13 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
 		$Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when no data is recieved in over 10 seconds')
 		$Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is recived in over 30 seconds')
+		$Text_APs = IniRead($DefaultLanguagePath, 'GuiText', 'APs', 'APs')
+		$Text_MaxSignal = IniRead($DefaultLanguagePath, 'GuiText', 'MaxSignal', 'Max Signal')
+		$Text_DisassociationSignal = IniRead($DefaultLanguagePath, 'GuiText', 'DisassociationSignal', 'Disassociation Signal')
+		$Text_SaveDirectories = IniRead($DefaultLanguagePath, 'GuiText', 'SaveDirectories', 'Save Directories')
+		$Text_AutoSaveAndClearAfterNumberofAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClearAfterNumberofAPs', 'Auto Save And Clear After Number of APs')
+		$Text_AutoSaveandClearAfterTime = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveandClearAfterTime', 'Auto Save and Clear After Time')
+		$Text_PlaySoundWhenSaving = IniRead($DefaultLanguagePath, 'GuiText', 'PlaySoundWhenSaving', 'Play Sound When Saving')
 
 		$RestartVistumbler = 1
 	EndIf
