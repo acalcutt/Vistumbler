@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 13'
+$version = 'v10.6 Beta 14'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/03/07'
+$last_modified = '2015/03/16'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -6765,7 +6765,7 @@ Func _AutoRecoveryVS1();Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRecoveryVS1()') ;#Debug Display
 	DirCreate($SaveDirAuto)
 	FileDelete($AutoRecoveryVS1File)
-	$AutoRecoveryVS1File = $SaveDirAuto & 'AutoRecovery_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
+	$AutoRecoveryVS1File = $SaveDirAuto & $ldatetimestamp & '_AutoRecovery' & '.VS1'
 	If ProcessExists($AutoRecoveryVS1Process) = 0 Then
 		$AutoRecoveryVS1Process = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=d /f="' & $AutoRecoveryVS1File & '"', '', @SW_HIDE)
 		$save_timer = TimerInit()
@@ -6774,7 +6774,7 @@ EndFunc   ;==>_AutoRecoveryVS1
 
 Func _AutoSaveAndClear();Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveAndClear()') ;#Debug Display
-	$AutoSaveAndClearFile = $SaveDirAuto & 'AutoSave_' & $datestamp & ' ' & StringReplace(StringReplace($timestamp, ':', '-'), '.', '-') & '.VS1'
+	$AutoSaveAndClearFile = $SaveDirAuto & $ldatetimestamp & '_AutoSave' & '.VS1'
 	If $AutoSaveAndClearPlaySound = 1 Then _PlayWavSound($SoundDir & $AutoSave_sound)
 	GUICtrlSetData($msgdisplay, "Running Auto Save and Clear")
 	$expvs1 = _ExportVS1($AutoSaveAndClearFile, 0)
