@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 14'
+$version = 'v10.6 Beta 15'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/03/16'
+$last_modified = '2015/03/20'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -37,7 +37,6 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include <INet.au3>
 #include <SQLite.au3>
 #include <GuiMenu.au3>
-;#include <Sound.au3>
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
@@ -214,7 +213,7 @@ Dim $data_old
 Dim $RefreshTimer
 Dim $sizes, $sizes_old
 Dim $GraphBack, $GraphGrid, $red, $black
-Dim $base_add = 0, $data, $data_old, $info_old, $Graph = 0, $Graph_old, $ResetSizes = 1, $ReGraph = 1
+Dim $base_add = 0, $data, $data_old, $info_old, $Graph = 0, $Graph_old, $MinimalGuiMode_old, $ResetSizes = 1, $ReGraph = 1
 Dim $LastSelected = -1
 Dim $AutoRecoveryVS1File
 Dim $SaveDbOnExit = 0
@@ -225,6 +224,7 @@ Dim $SettingsOpen = 0
 Dim $AddMacOpen = 0
 Dim $AddLabelOpen = 0
 Dim $AutoUpApsToWifiDB = 0
+Dim $ClearListAndTree = 0
 Dim $SayProcess
 Dim $MidiProcess
 Dim $AutoRecoveryVS1Process
@@ -419,6 +419,10 @@ Dim $DefFiltID = IniRead($settings, 'Vistumbler', 'DefFiltID', '-1')
 Dim $AutoScan = IniRead($settings, 'Vistumbler', 'AutoScan', '0')
 Dim $dBmMaxSignal = IniRead($settings, 'Vistumbler', 'dBmMaxSignal', '-30')
 Dim $dBmDissociationSignal = IniRead($settings, 'Vistumbler', 'dBmDissociationSignal', '-85')
+Dim $MinimalGuiMode = IniRead($settings, 'Vistumbler', 'MinimalGuiMode', 0)
+Dim $MinimalGuiExitHeight = IniRead($settings, 'Vistumbler', 'MinimalGuiExitHeight', 695)
+Dim $AutoScrollToBottom = IniRead($settings, 'Vistumbler', 'AutoScrollToBottom', 0)
+Dim $BatchListviewInsert = IniRead($settings, 'Vistumbler', 'BatchListviewInsert', 0)
 
 Dim $VistumblerState = IniRead($settings, 'WindowPositions', 'VistumblerState', 'Window')
 Dim $VistumblerPosition = IniRead($settings, 'WindowPositions', 'VistumblerPosition', '')
@@ -997,6 +1001,9 @@ Dim $Text_SaveDirectories = IniRead($DefaultLanguagePath, 'GuiText', 'SaveDirect
 Dim $Text_AutoSaveAndClearAfterNumberofAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClearAfterNumberofAPs', 'Auto Save And Clear After Number of APs')
 Dim $Text_AutoSaveandClearAfterTime = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveandClearAfterTime', 'Auto Save and Clear After Time')
 Dim $Text_PlaySoundWhenSaving = IniRead($DefaultLanguagePath, 'GuiText', 'PlaySoundWhenSaving', 'Play Sound When Saving')
+Dim $Text_MinimalGuiMode = IniRead($DefaultLanguagePath, 'GuiText', 'MinimalGuiMode', 'Minimal GUI Mode')
+Dim $Text_AutoScrollToBottom = IniRead($DefaultLanguagePath, 'GuiText', 'AutoScrollToBottom', 'Auto Scroll to Bottom of List')
+Dim $Text_ListviewBatchInsertMode = IniRead($DefaultLanguagePath, 'GuiText', 'ListviewBatchInsertMode', 'Listview Batch Insert Mode')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1296,12 +1303,13 @@ $GUI_DownloadImages = GUICtrlCreateMenuItem($Text_DownloadImages & " (" & $Text_
 If $DownloadImages = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GUI_CamTriggerMenu = GUICtrlCreateMenuItem($Text_EnableCamTriggerScript & " (" & $Text_Experimental & ")", $Options)
 If $CamTrigger = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GuiMinimalGuiMode = GUICtrlCreateMenuItem($Text_MinimalGuiMode & " (" & $Text_Experimental & ")", $Options)
+If $MinimalGuiMode = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugMenu = GUICtrlCreateMenu($Text_Debug, $Options)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $DebugMenu)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugComGUI = GUICtrlCreateMenuItem($Text_DisplayComErrors, $DebugMenu)
 If $DebugCom = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-
 
 $ViewMenu = GUICtrlCreateMenu($Text_View)
 $FilterMenu = GUICtrlCreateMenu($Text_Filters, $ViewMenu)
@@ -1345,6 +1353,10 @@ $AutoSelectHighSignal = GUICtrlCreateMenuItem($Text_AutoSelectHighSignal, $ViewM
 If $AutoSelectHS = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $AddNewAPsToTop = GUICtrlCreateMenuItem($Text_AddAPsToTop, $ViewMenu)
 If $AddDirection = 0 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GuiAutoScrollToBottom = GUICtrlCreateMenuItem($Text_AutoScrollToBottom, $ViewMenu)
+If $AutoScrollToBottom = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GuiBatchListviewInsert = GUICtrlCreateMenuItem($Text_ListviewBatchInsertMode & " (" & $Text_Experimental & ")", $ViewMenu)
+If $BatchListviewInsert = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
 ;Settings Menu
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
@@ -1411,9 +1423,9 @@ GUISwitch($Vistumbler)
 
 $ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
 _GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT, $LVS_EX_DOUBLEBUFFER))
-
 _GUICtrlListView_SetBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
 _GUICtrlListView_SetTextBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
+WinSetState($ListviewAPs, "", @SW_HIDE)
 
 $hImage = _GUIImageList_Create()
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\open-grey.ico")
@@ -1432,7 +1444,7 @@ _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
 $TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5, 65, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
-GUISetState()
+WinSetState($TreeviewAPs, "", @SW_HIDE)
 
 $ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 20, 0)
 If $AutoScan = 1 Then ScanToggle()
@@ -1454,8 +1466,9 @@ $msgdisplay = GUICtrlCreateLabel('', 155, 40, 610, 15)
 GUICtrlSetColor(-1, $TextColor)
 
 GUISwitch($Vistumbler)
-_SetControlSizes()
 GUISetState(@SW_SHOW)
+_SetControlSizes()
+
 $VistumblerGuiOpen = 1
 
 ;Button-Events-------------------------------------------
@@ -1509,6 +1522,7 @@ GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
 GUICtrlSetOnEvent($DebugComGUI, '_DebugComToggle')
 GUICtrlSetOnEvent($GUI_DownloadImages, '_DownloadImagesToggle')
 GUICtrlSetOnEvent($GUI_CamTriggerMenu, '_CamTriggerToggle')
+GUICtrlSetOnEvent($GuiMinimalGuiMode, '_MinimalGuiModeToggle')
 ;View Menu
 GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
@@ -1517,6 +1531,8 @@ GUICtrlSetOnEvent($AutoSelectHighSignal, '_AutoSelHighSigToggle')
 GUICtrlSetOnEvent($AddNewAPsToTop, '_AddApPosToggle')
 GUICtrlSetOnEvent($UseRssiInGraphsGUI, '_UseRssiInGraphsToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
+GUICtrlSetOnEvent($GuiAutoScrollToBottom, '_AutoScrollToBottomToggle')
+GUICtrlSetOnEvent($GuiBatchListviewInsert, '_BatchListviewInsertToggle')
 ;Settings Menu
 GUICtrlSetOnEvent($SetMisc, '_SettingsGUI_Misc')
 GUICtrlSetOnEvent($SetSave, '_SettingsGUI_Save')
@@ -1659,11 +1675,12 @@ While 1
 			EndIf
 			;Mark Dead Access Points
 			_MarkDeadAPs()
-			;Remove APs that do not match the filter
-			_FilterRemoveNonMatchingInList()
-			;Add APs back into the listview that match but are not there
-			_UpdateListview(0)
-			;_FilterReAddMatchingNotInList()
+			If $MinimalGuiMode = 0 Then
+				;Remove APs that do not match the filter
+				_FilterRemoveNonMatchingInList()
+				;Add APs back into the listview that match but are not there
+				_UpdateListview($BatchListviewInsert)
+			EndIf
 			;Play Midi Sounds for all active APs (if enabled)
 			_PlayMidiForActiveAPs()
 		EndIf
@@ -1683,11 +1700,12 @@ While 1
 		EndIf
 		;Mark Dead Access Points
 		_MarkDeadAPs()
-		;Remove APs that do not match the filter
-		_FilterRemoveNonMatchingInList()
-		;Add APs back into the listview that match but are not there
-		_UpdateListview(0)
-		;_FilterReAddMatchingNotInList()
+		If $MinimalGuiMode = 0 Then
+			;Remove APs that do not match the filter
+			_FilterRemoveNonMatchingInList()
+			;Add APs back into the listview that match but are not there
+			_UpdateListview($BatchListviewInsert)
+		EndIf
 	EndIf
 	;Resize Controls / Control Resize Monitoring
 	_TreeviewListviewResize()
@@ -1810,7 +1828,7 @@ While 1
 		EndIf
 		$winpos_old = $winpos
 		$winpos = $VistumblerPosition & '-' & $VistumblerState
-		If $winpos <> $winpos_old Then _SetControlSizes()
+		If $winpos <> $winpos_old Or $MinimalGuiMode <> $MinimalGuiMode_old Then _SetControlSizes()
 	EndIf
 
 	;Flag Actions
@@ -1818,6 +1836,8 @@ While 1
 	If $Close = 1 Then _ExitVistumbler() ;If the close flag has been set, exit visumbler
 	If $SortColumn <> -1 Then _HeaderSort($SortColumn);Sort clicked listview column
 	If $ClearAllAps = 1 Then _ClearAllAp();Clear all access points
+	If $ClearListAndTree = 1 Then _ClearListAndTree() ;Clear list and tree for Minimal GUI Mode
+	If $AutoScrollToBottom = 1 Then _GUICtrlListView_Scroll($ListviewAPs, 0, _GUICtrlListView_GetItemCount($ListviewAPs) * 16)
 
 	;Release Memory (Working Set)
 	If TimerDiff($ReleaseMemory_Timer) > 30000 Then
@@ -2409,10 +2429,10 @@ Func _MarkDeadAPs()
 		$Current_dts = StringReplace($datestamp & $Current_Time, '-', '')
 		;Set APs that have been inactive for specified time dead
 		If (($Current_dts - $Found_dts) > $TimeBeforeMarkedDead) Or $Scan = 0 Then
-			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, $Text_Dead, $column_Active)
-			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '0%', $column_Signal)
-			_GUICtrlListView_SetItemText($ListviewAPs, $Found_ListRow, '-100 dBm', $column_RSSI)
-			_UpdateIcon($Found_ListRow, 0, $Found_SecType)
+			If $MinimalGuiMode = 0 Then
+				_ListViewAdd($Found_ListRow, -1, $Text_Dead, -1, -1, -1, -1, '0', -1, '-100', -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1)
+				_UpdateIcon($Found_ListRow, 0, $Found_SecType)
+			EndIf
 			$query = "UPDATE AP SET Active=0, Signal=0, RSSI=-100 WHERE ApID=" & $Found_APID
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 		EndIf
@@ -2428,7 +2448,7 @@ Func _MarkDeadAPs()
 		$Found_SecType = $ApMatchArray[$resetdead][3]
 		$query = "UPDATE AP SET Signal=0 WHERE ApID='" & $Found_APID & "'"
 		_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-		_UpdateIcon($Found_ListRow, 0, $Found_SecType)
+		If $MinimalGuiMode = 0 Then _UpdateIcon($Found_ListRow, 0, $Found_SecType)
 	Next
 
 	;Update active/total ap label
@@ -2689,7 +2709,7 @@ Func _UpdateListview($Batch = 0)
 	If $Batch = 1 Then
 		_GUICtrlListView_BeginUpdate($ListviewAPs)
 		_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
-		GUISetState(@SW_LOCK, $Vistumbler)
+		;GUISetState(@SW_LOCK, $Vistumbler)
 	EndIf
 	;Find APs that meet criteria but are not in the listview
 	If StringInStr($AddQuery, "WHERE") Then
@@ -2827,7 +2847,7 @@ Func _UpdateListview($Batch = 0)
 		EndIf
 	EndIf
 	If $Batch = 1 Then
-		GUISetState(@SW_UNLOCK, $Vistumbler)
+		;GUISetState(@SW_UNLOCK, $Vistumbler)
 		_GUICtrlListView_EndUpdate($ListviewAPs)
 		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 	EndIf
@@ -3044,6 +3064,25 @@ Func _ClearAllAp()
 	$ClearAllAps = 0
 EndFunc   ;==>_ClearAllAp
 
+Func _ClearListAndTree()
+	;Clear Listview
+	_GUICtrlListView_DeleteAllItems($ListviewAPs)
+	;Clear Treeview
+	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $Authentication_tree)
+	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $channel_tree)
+	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $Encryption_tree)
+	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $NetworkType_tree)
+	_GUICtrlTreeView_DeleteChildren($TreeviewAPs, $SSID_tree)
+	;Reset Listview positions
+	$query = "UPDATE AP SET ListRow=-1"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	;Reset Treeview positions
+	$query = "DELETE * FROM TreeviewPos"
+	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+	;Reset flag
+	$ClearListAndTree = 0
+EndFunc   ;==>_ClearListAndTree
+
 Func _FixLineNumbers();Update Listview Row Numbers in DataArray
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FixLineNumbers()') ;#Debug Display
 	$ListViewSize = _GUICtrlListView_GetItemCount($ListviewAPs) - 1; Get List Size
@@ -3098,10 +3137,12 @@ Func _RecoverMDB()
 	;Reset Listview positions and set all access points to inactive
 	$query = "UPDATE AP SET ListRow=-1, Active=0, Signal=0"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-	;Add APs into Listview and Treeview
-	_UpdateListview(1)
-	;Update Labels and Manufacturers
-	_UpdateListMacLabels()
+	If $MinimalGuiMode = 0 Then
+		;Add APs into Listview and Treeview
+		_UpdateListview(1)
+		;Update Labels and Manufacturers
+		_UpdateListMacLabels()
+	EndIf
 	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_RecoverMDB
 
@@ -3386,25 +3427,18 @@ EndFunc   ;==>_TurnOffGPS
 
 Func _GraphToggle(); Graph1 Button
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphToggle()') ;#Debug Display
+	GUISetState(@SW_LOCK, $Vistumbler);lock gui - will be unlocked by _SetControlSizes
 	If $Graph = 1 Then
-		;_DeletePens()
-		;_DrawingShutDown($GraphicGUI)
 		$Graph = 0
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
-		GUISetState(@SW_HIDE, $GraphicGUI)
-		GUISwitch($Vistumbler)
 	ElseIf $Graph = 2 Then
 		$Graph = 1
 		GUISwitch($Vistumbler)
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
 	ElseIf $Graph = 0 Then
-		;_DrawingStartUp($GraphicGUI)
-		;_CreatePens()
 		$Graph = 1
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
-		GUISetState(@SW_SHOW, $GraphicGUI)
-		GUISwitch($Vistumbler)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle
@@ -3414,22 +3448,55 @@ Func _GraphToggle2(); Graph2 Button
 	If $Graph = 2 Then
 		$Graph = 0
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
-		GUISetState(@SW_HIDE, $GraphicGUI)
-		GUISwitch($Vistumbler)
 	ElseIf $Graph = 1 Then
 		$Graph = 2
-		;GUISwitch($ControlChild)
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
-		GUISwitch($Vistumbler)
 	ElseIf $Graph = 0 Then
 		$Graph = 2
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
-		GUISetState(@SW_SHOW, $GraphicGUI)
-		GUISwitch($Vistumbler)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle2
+
+Func _MinimalGuiModeToggle()
+	If $MinimalGuiMode = 1 Then
+		$MinimalGuiMode = 0
+		GUICtrlSetState($GuiMinimalGuiMode, $GUI_UNCHECKED)
+		GUICtrlSetData($msgdisplay, "Restoring GUI")
+		_UpdateListview(1)
+		$a = WinGetPos($Vistumbler)
+		WinMove($title, "", $a[0], $a[1], $a[2], $MinimalGuiExitHeight);Resize window to Minimal GUI Height
+		GUICtrlSetData($msgdisplay, "")
+	Else
+		$MinimalGuiMode = 1
+		$ClearListAndTree = 1
+		GUICtrlSetState($GuiMinimalGuiMode, $GUI_CHECKED)
+		$a = WinGetPos($Vistumbler)
+		$MinimalGuiExitHeight = $a[3]
+		WinMove($title, "", $a[0], $a[1], $a[2], 120);Resize window to Minimal GUI Height
+	EndIf
+EndFunc   ;==>_MinimalGuiModeToggle
+
+Func _AutoScrollToBottomToggle()
+	If $AutoScrollToBottom = 1 Then
+		$AutoScrollToBottom = 0
+		GUICtrlSetState($GuiAutoScrollToBottom, $GUI_UNCHECKED)
+	Else
+		$AutoScrollToBottom = 1
+		GUICtrlSetState($GuiAutoScrollToBottom, $GUI_CHECKED)
+	EndIf
+EndFunc   ;==>_AutoScrollToBottomToggle
+
+Func _BatchListviewInsertToggle()
+	If $BatchListviewInsert = 1 Then
+		$BatchListviewInsert = 0
+		GUICtrlSetState($GuiBatchListviewInsert, $GUI_UNCHECKED)
+	Else
+		$BatchListviewInsert = 1
+		GUICtrlSetState($GuiBatchListviewInsert, $GUI_CHECKED)
+	EndIf
+EndFunc   ;==>_BatchListviewInsertToggle
 
 Func _DebugToggle() ;Sets if current function should be displayed in the gui
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DebugToggle()') ;#Debug Display
@@ -4661,12 +4728,20 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 	$a = _WinAPI_GetClientRect($Vistumbler)
 	$b = _WinAPI_GetClientRect($GraphicGUI)
 	$sizes = DllStructGetData($a, "Right") & '-' & DllStructGetData($a, "Bottom") & '-' & DllStructGetData($b, "Right") & '-' & DllStructGetData($b, "Bottom")
-	If $sizes <> $sizes_old Or $Graph <> $Graph_old Then
+	If $sizes <> $sizes_old Or $Graph <> $Graph_old Or $MinimalGuiMode <> $MinimalGuiMode_old Then
 		$DataChild_Left = 2
 		$DataChild_Width = DllStructGetData($a, "Right")
 		$DataChild_Top = 65
 		$DataChild_Height = DllStructGetData($a, "Bottom") - $DataChild_Top
-		If $Graph <> 0 Then
+		If $MinimalGuiMode = 1 Then
+			GUISetState(@SW_LOCK, $Vistumbler)
+			WinSetState($TreeviewAPs, "", @SW_HIDE)
+			WinSetState($ListviewAPs, "", @SW_HIDE)
+			GUISetState(@SW_HIDE, $GraphicGUI)
+			GUICtrlSetState($GraphButton1, $GUI_HIDE)
+			GUICtrlSetState($GraphButton2, $GUI_HIDE)
+			GUISetState(@SW_UNLOCK, $Vistumbler)
+		ElseIf $Graph <> 0 Then
 			$Graphic_left = $DataChild_Left
 			$Graphic_width = $DataChild_Width - $Graphic_left
 			$Graphic_top = $DataChild_Top
@@ -4680,15 +4755,19 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top + ($Graphic_height + 1)
 			$ListviewAPs_height = $DataChild_Height - ($Graphic_height + 1)
 
-			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			;GUICtrlSetState($TreeviewAPs, $GUI_HIDE)
+			GUISetState(@SW_LOCK, $Vistumbler)
 			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			WinSetState($TreeviewAPs, "", @SW_HIDE)
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
+			WinSetState($TreeviewAPs, "", @SW_HIDE)
+			WinSetState($ListviewAPs, "", @SW_SHOW)
+			GUISetState(@SW_SHOW, $GraphicGUI)
+			GUICtrlSetState($GraphButton1, $GUI_SHOW)
+			GUICtrlSetState($GraphButton2, $GUI_SHOW)
+			GUISetState(@SW_UNLOCK, $Vistumbler)
+
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
 			$Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics($Graphic_width, $Graphic_height, $Graphic)
 			$Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
-			;GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
 		Else
 			$TreeviewAPs_left = $DataChild_Left
 			$TreeviewAPs_width = ($DataChild_Width * $SplitPercent) - $TreeviewAPs_left
@@ -4700,16 +4779,19 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			$ListviewAPs_top = $DataChild_Top
 			$ListviewAPs_height = $DataChild_Height
 
+			GUISetState(@SW_LOCK, $Vistumbler)
 			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
 			WinMove($TreeviewAPs, "", $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
 			WinSetState($TreeviewAPs, "", @SW_SHOW)
-			;GUICtrlSetPos($ListviewAPs, $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height)
-			;GUICtrlSetPos($TreeviewAPs, $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height)
-			;GUICtrlSetState($TreeviewAPs, $GUI_SHOW)
-			;GUICtrlSetState($ListviewAPs, $GUI_FOCUS)
+			WinSetState($ListviewAPs, "", @SW_SHOW)
+			GUISetState(@SW_HIDE, $GraphicGUI)
+			GUICtrlSetState($GraphButton1, $GUI_SHOW)
+			GUICtrlSetState($GraphButton2, $GUI_SHOW)
+			GUISetState(@SW_UNLOCK, $Vistumbler)
 		EndIf
 		$sizes_old = $sizes
 		$Graph_old = $Graph
+		$MinimalGuiMode_old = $MinimalGuiMode
 	EndIf
 EndFunc   ;==>_SetControlSizes
 
@@ -7400,7 +7482,6 @@ Func _WriteINI()
 	IniWrite($settings, 'Vistumbler', 'GraphDeadTime', $GraphDeadTime)
 	IniWrite($settings, 'Vistumbler', 'UseRssiInGraphs', $UseRssiInGraphs)
 	IniWrite($settings, "Vistumbler", 'SaveGpsWithNoAps', $SaveGpsWithNoAps)
-	;IniWrite($settings, "Vistumbler", 'ShowEstimatedDB', $ShowEstimatedDB)
 	IniWrite($settings, "Vistumbler", 'TimeBeforeMarkedDead', $TimeBeforeMarkedDead)
 	IniWrite($settings, "Vistumbler", 'AutoSelect', $AutoSelect)
 	IniWrite($settings, "Vistumbler", 'AutoSelectHS', $AutoSelectHS)
@@ -7408,6 +7489,10 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", 'AutoScan', $AutoScan)
 	IniWrite($settings, "Vistumbler", 'dBmMaxSignal', $dBmMaxSignal)
 	IniWrite($settings, "Vistumbler", 'dBmDissociationSignal', $dBmDissociationSignal)
+	IniWrite($settings, "Vistumbler", 'MinimalGuiMode', $MinimalGuiMode)
+	IniWrite($settings, "Vistumbler", 'MinimalGuiExitHeight', $MinimalGuiExitHeight)
+	IniWrite($settings, "Vistumbler", 'BatchListviewInsert', $BatchListviewInsert)
+	IniWrite($settings, "Vistumbler", 'AutoScrollToBottom', $AutoScrollToBottom)
 
 	IniWrite($settings, 'WindowPositions', 'VistumblerState', $VistumblerState)
 	IniWrite($settings, 'WindowPositions', 'VistumblerPosition', $VistumblerPosition)
@@ -7992,6 +8077,9 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClearAfterNumberofAPs', $Text_AutoSaveAndClearAfterNumberofAPs)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveandClearAfterTime', $Text_AutoSaveandClearAfterTime)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'PlaySoundWhenSaving', $Text_PlaySoundWhenSaving)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'MinimalGuiMode', $Text_MinimalGuiMode)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoScrollToBottom', $Text_AutoScrollToBottom)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ListviewBatchInsertMode', $Text_ListviewBatchInsertMode)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -11249,6 +11337,9 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_AutoSaveAndClearAfterNumberofAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClearAfterNumberofAPs', 'Auto Save And Clear After Number of APs')
 		$Text_AutoSaveandClearAfterTime = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveandClearAfterTime', 'Auto Save and Clear After Time')
 		$Text_PlaySoundWhenSaving = IniRead($DefaultLanguagePath, 'GuiText', 'PlaySoundWhenSaving', 'Play Sound When Saving')
+		$Text_MinimalGuiMode = IniRead($DefaultLanguagePath, 'GuiText', 'MinimalGuiMode', 'Minimal GUI Mode')
+		$Text_AutoScrollToBottom = IniRead($DefaultLanguagePath, 'GuiText', 'AutoScrollToBottom', 'Auto Scroll to Bottom of List')
+		$Text_ListviewBatchInsertMode = IniRead($DefaultLanguagePath, 'GuiText', 'ListviewBatchInsertMode', 'Listview Batch Insert Mode')
 
 		$RestartVistumbler = 1
 	EndIf
