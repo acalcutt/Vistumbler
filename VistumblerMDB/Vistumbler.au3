@@ -16,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 15'
+$version = 'v10.6 Beta 16'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/03/20'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -2855,99 +2855,101 @@ EndFunc   ;==>_UpdateListview
 
 Func __UpdateListviewDbQueryToList($query, $listpos)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '__UpdateListviewDbQueryToList()') ;#Debug Display
-	$ListCurrentRowCount = _GUICtrlListView_GetItemCount($ListviewAPs)
-	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-	$FoundApMatch = UBound($ApMatchArray) - 1
-	For $wlv = 1 To $FoundApMatch
-		$listpos += 1
-		$Found_ListRow = $ApMatchArray[$wlv][1]
-		If $Found_ListRow <> $listpos Then ;If row has changed, update list information
-			$Found_APID = $ApMatchArray[$wlv][2]
-			$Found_SSID = $ApMatchArray[$wlv][3]
-			$Found_BSSID = $ApMatchArray[$wlv][4]
-			$Found_NETTYPE = $ApMatchArray[$wlv][5]
-			$Found_RADTYPE = $ApMatchArray[$wlv][6]
-			$Found_CHAN = $ApMatchArray[$wlv][7]
-			$Found_AUTH = $ApMatchArray[$wlv][8]
-			$Found_ENCR = $ApMatchArray[$wlv][9]
-			$Found_SecType = $ApMatchArray[$wlv][10]
-			$Found_BTX = $ApMatchArray[$wlv][11]
-			$Found_OTX = $ApMatchArray[$wlv][12]
-			$Found_MANU = $ApMatchArray[$wlv][13]
-			$Found_LABEL = $ApMatchArray[$wlv][14]
-			$Found_HighGpsHistId = $ApMatchArray[$wlv][15]
-			$Found_FirstHistID = $ApMatchArray[$wlv][16]
-			$Found_LastHistID = $ApMatchArray[$wlv][17]
-			$Found_LastGpsID = $ApMatchArray[$wlv][18]
-			$Found_Active = $ApMatchArray[$wlv][19]
-			$Found_Signal = $ApMatchArray[$wlv][20]
-			$Found_HighSignal = $ApMatchArray[$wlv][21]
-			$Found_RSSI = $ApMatchArray[$wlv][22]
-			$Found_HighRSSI = $ApMatchArray[$wlv][23]
+	If $MinimalGuiMode = 0 Then
+		$ListCurrentRowCount = _GUICtrlListView_GetItemCount($ListviewAPs)
+		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		$FoundApMatch = UBound($ApMatchArray) - 1
+		For $wlv = 1 To $FoundApMatch
+			$listpos += 1
+			$Found_ListRow = $ApMatchArray[$wlv][1]
+			If $Found_ListRow <> $listpos Then ;If row has changed, update list information
+				$Found_APID = $ApMatchArray[$wlv][2]
+				$Found_SSID = $ApMatchArray[$wlv][3]
+				$Found_BSSID = $ApMatchArray[$wlv][4]
+				$Found_NETTYPE = $ApMatchArray[$wlv][5]
+				$Found_RADTYPE = $ApMatchArray[$wlv][6]
+				$Found_CHAN = $ApMatchArray[$wlv][7]
+				$Found_AUTH = $ApMatchArray[$wlv][8]
+				$Found_ENCR = $ApMatchArray[$wlv][9]
+				$Found_SecType = $ApMatchArray[$wlv][10]
+				$Found_BTX = $ApMatchArray[$wlv][11]
+				$Found_OTX = $ApMatchArray[$wlv][12]
+				$Found_MANU = $ApMatchArray[$wlv][13]
+				$Found_LABEL = $ApMatchArray[$wlv][14]
+				$Found_HighGpsHistId = $ApMatchArray[$wlv][15]
+				$Found_FirstHistID = $ApMatchArray[$wlv][16]
+				$Found_LastHistID = $ApMatchArray[$wlv][17]
+				$Found_LastGpsID = $ApMatchArray[$wlv][18]
+				$Found_Active = $ApMatchArray[$wlv][19]
+				$Found_Signal = $ApMatchArray[$wlv][20]
+				$Found_HighSignal = $ApMatchArray[$wlv][21]
+				$Found_RSSI = $ApMatchArray[$wlv][22]
+				$Found_HighRSSI = $ApMatchArray[$wlv][23]
 
-			;Get First Time
-			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_FirstHistID
-			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$Found_FirstDate = $HistMatchArray[1][1]
-			$Found_FirstTime = $HistMatchArray[1][2]
-			$Found_FirstDateTime = $Found_FirstDate & ' ' & $Found_FirstTime
-
-			;Get Last Time
-			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_LastHistID
-			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$Found_LastDate = $HistMatchArray[1][1]
-			$Found_LastTime = $HistMatchArray[1][2]
-			$Found_LastDateTime = $Found_LastDate & ' ' & $Found_LastTime
-
-			;Get GPS Position
-			If $Found_HighGpsHistId = 0 Then
-				$Found_Lat = "N 0000.0000"
-				$Found_Lon = "E 0000.0000"
-			Else
-				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $Found_HighGpsHistId
+				;Get First Time
+				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_FirstHistID
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$Found_GpsID = $HistMatchArray[1][1]
-				$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID=" & $Found_GpsID
-				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$Found_Lat = $GpsMatchArray[1][1]
-				$Found_Lon = $GpsMatchArray[1][2]
-			EndIf
+				$Found_FirstDate = $HistMatchArray[1][1]
+				$Found_FirstTime = $HistMatchArray[1][2]
+				$Found_FirstDateTime = $Found_FirstDate & ' ' & $Found_FirstTime
 
-			If $wlv > $ListCurrentRowCount Then
-				;Add new row with icon to the bottom of the list
-				_GUICtrlListView_BeginUpdate($ListviewAPs)
-				$ListRow = _AddIconListRow($Found_Signal, $Found_SecType, $Found_APID, -1)
-				;Write changes to listview
-				_ListViewAdd($ListRow, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
-				_GUICtrlListView_EndUpdate($ListviewAPs)
-				;Update ListRow
-				$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $Found_APID
-				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
-				;Add Into TreeView
-				_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
-				_TreeViewAdd($Found_APID, $Found_SSID, $Found_BSSID, $Found_CHAN, $Found_NETTYPE, $Found_ENCR, $Found_RADTYPE, $Found_AUTH, $Found_BTX, $Found_OTX, $Found_MANU, $Found_LABEL)
-				_GUICtrlTreeView_EndUpdate($TreeviewAPs)
-			Else
-				;Write changes to listview
-				_GUICtrlListView_BeginUpdate($ListviewAPs)
-				_GUICtrlListView_BeginUpdate($ListviewAPs)
-				_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
-				;Update ListRow Icon
-				_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
-				_GUICtrlListView_EndUpdate($ListviewAPs)
-				;Update ListRow
-				$query = "UPDATE AP SET ListRow=" & $listpos & " WHERE ApID=" & $Found_APID
-				_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				;Get Last Time
+				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_LastHistID
+				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$Found_LastDate = $HistMatchArray[1][1]
+				$Found_LastTime = $HistMatchArray[1][2]
+				$Found_LastDateTime = $Found_LastDate & ' ' & $Found_LastTime
+
+				;Get GPS Position
+				If $Found_HighGpsHistId = 0 Then
+					$Found_Lat = "N 0000.0000"
+					$Found_Lon = "E 0000.0000"
+				Else
+					$query = "SELECT GpsID FROM Hist WHERE HistID=" & $Found_HighGpsHistId
+					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$Found_GpsID = $HistMatchArray[1][1]
+					$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID=" & $Found_GpsID
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$Found_Lat = $GpsMatchArray[1][1]
+					$Found_Lon = $GpsMatchArray[1][2]
+				EndIf
+
+				If $wlv > $ListCurrentRowCount Then
+					;Add new row with icon to the bottom of the list
+					_GUICtrlListView_BeginUpdate($ListviewAPs)
+					$ListRow = _AddIconListRow($Found_Signal, $Found_SecType, $Found_APID, -1)
+					;Write changes to listview
+					_ListViewAdd($ListRow, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
+					_GUICtrlListView_EndUpdate($ListviewAPs)
+					;Update ListRow
+					$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $Found_APID
+					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+					;Add Into TreeView
+					_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
+					_TreeViewAdd($Found_APID, $Found_SSID, $Found_BSSID, $Found_CHAN, $Found_NETTYPE, $Found_ENCR, $Found_RADTYPE, $Found_AUTH, $Found_BTX, $Found_OTX, $Found_MANU, $Found_LABEL)
+					_GUICtrlTreeView_EndUpdate($TreeviewAPs)
+				Else
+					;Write changes to listview
+					_GUICtrlListView_BeginUpdate($ListviewAPs)
+					_GUICtrlListView_BeginUpdate($ListviewAPs)
+					_ListViewAdd($listpos, $Found_APID, $Found_Active, $Found_BSSID, $Found_SSID, $Found_AUTH, $Found_ENCR, $Found_Signal, $Found_HighSignal, $Found_RSSI, $Found_HighRSSI, $Found_CHAN, $Found_RADTYPE, $Found_BTX, $Found_OTX, $Found_NETTYPE, $Found_FirstDateTime, $Found_LastDateTime, $Found_Lat, $Found_Lon, $Found_MANU, $Found_LABEL)
+					;Update ListRow Icon
+					_UpdateIcon($listpos, $Found_Signal, $Found_SecType)
+					_GUICtrlListView_EndUpdate($ListviewAPs)
+					;Update ListRow
+					$query = "UPDATE AP SET ListRow=" & $listpos & " WHERE ApID=" & $Found_APID
+					_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+				EndIf
 			EndIf
-		EndIf
-	Next
-	;Remove extra rows
-	If $ListCurrentRowCount > $FoundApMatch Then
-		_GUICtrlListView_BeginUpdate($ListviewAPs)
-		For $remrow = $FoundApMatch To $ListCurrentRowCount
-			_GUICtrlListView_DeleteItem($ListviewAPs, $remrow)
 		Next
-		_GUICtrlListView_EndUpdate($ListviewAPs)
+		;Remove extra rows
+		If $ListCurrentRowCount > $FoundApMatch Then
+			_GUICtrlListView_BeginUpdate($ListviewAPs)
+			For $remrow = $FoundApMatch To $ListCurrentRowCount
+				_GUICtrlListView_DeleteItem($ListviewAPs, $remrow)
+			Next
+			_GUICtrlListView_EndUpdate($ListviewAPs)
+		EndIf
 	EndIf
 EndFunc   ;==>__UpdateListviewDbQueryToList
 
@@ -8224,11 +8226,12 @@ Func _ImportOk()
 		EndIf
 		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-		GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_AddingApsIntoList)
-		;_FilterReAddMatchingNotInList()
-		_UpdateListview(1)
-		;Update Labels and Manufacturers
-		_UpdateListMacLabels()
+		If $MinimalGuiMode = 0 Then
+			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & $Text_AddingApsIntoList)
+			_UpdateListview(1)
+			;Update Labels and Manufacturers
+			_UpdateListMacLabels()
+		EndIf
 		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
 		GUICtrlSetData($progressbar, 100)
