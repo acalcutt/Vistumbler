@@ -3474,7 +3474,9 @@ Func _MinimalGuiModeToggle()
 		GUICtrlSetState($GuiMinimalGuiMode, $GUI_CHECKED)
 		$a = WinGetPos($Vistumbler)
 		$MinimalGuiExitHeight = $a[3]
-		WinMove($title, "", $a[0], $a[1], $a[2], 120);Resize window to Minimal GUI Height
+		$b = _WinAPI_GetClientRect($Vistumbler)
+		$titlebar_height = $a[3] - (DllStructGetData($b, "Bottom") - DllStructGetData($b, "Top"))
+		WinMove($title, "", $a[0], $a[1], $a[2], $titlebar_height + 65);Resize window to Minimal GUI Height
 	EndIf
 EndFunc   ;==>_MinimalGuiModeToggle
 
