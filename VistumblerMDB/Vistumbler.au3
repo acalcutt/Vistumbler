@@ -16,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 16.1'
+$version = 'v10.6 Beta 16.2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/03/20'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -3474,14 +3474,14 @@ Func _MinimalGuiModeToggle()
 		$MinimalGuiMode = 1
 		$ClearListAndTree = 1
 		GUICtrlSetState($GuiMinimalGuiMode, $GUI_CHECKED)
-		$a = WinGetPos($Vistumbler)
-		$MinimalGuiExitHeight = $a[3]
-		$b = _WinAPI_GetClientRect($Vistumbler)
-		$titlebar_height = $a[3] - (DllStructGetData($b, "Bottom") - DllStructGetData($b, "Top"))
 		If $VistumblerState = "Maximized" Then
 			WinSetState($title, "", @SW_RESTORE)
 			$VistumblerState = "Window"
 		EndIf
+		$a = WinGetPos($Vistumbler)
+		$MinimalGuiExitHeight = $a[3]
+		$b = _WinAPI_GetClientRect($Vistumbler)
+		$titlebar_height = $a[3] - (DllStructGetData($b, "Bottom") - DllStructGetData($b, "Top"))
 		WinMove($title, "", $a[0], $a[1], $a[2], $titlebar_height + 65);Resize window to Minimal GUI Height
 	EndIf
 EndFunc   ;==>_MinimalGuiModeToggle
