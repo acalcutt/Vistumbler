@@ -225,6 +225,8 @@ Dim $AddMacOpen = 0
 Dim $AddLabelOpen = 0
 Dim $AutoUpApsToWifiDB = 0
 Dim $ClearListAndTree = 0
+Dim $TempBatchListviewInsert = 0
+Dim $TempBatchListviewDelete = 0
 Dim $SayProcess
 Dim $MidiProcess
 Dim $AutoRecoveryVS1Process
@@ -2672,8 +2674,13 @@ Func _RemoveTreeviewItem($Treeview, $RootTree, $ImpApID)
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 EndFunc   ;==>_RemoveTreeviewItem
 
-Func _FilterRemoveNonMatchingInList()
+Func _FilterRemoveNonMatchingInList($Batch = 0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FilterRemoveNonMatchingInList()') ;#Debug Display
+	If $Batch = 1 Or $TempBatchListviewDelete = 1 Then
+		_GUICtrlListView_BeginUpdate($ListviewAPs)
+		_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
+		;GUISetState(@SW_LOCK, $Vistumbler)
+	EndIf
 	If StringInStr($RemoveQuery, 'WHERE') Then
 		$query = $RemoveQuery & " And (Listrow<>-1)"
 		$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -2710,11 +2717,17 @@ Func _FilterRemoveNonMatchingInList()
 			Next
 		EndIf
 	EndIf
+	If $Batch = 1  Or $TempBatchListviewDelete = 1 Then
+		;GUISetState(@SW_UNLOCK, $Vistumbler)
+		_GUICtrlListView_EndUpdate($ListviewAPs)
+		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
+		$TempBatchListviewDelete = 0
+	EndIf
 EndFunc   ;==>_FilterRemoveNonMatchingInList
 
 Func _UpdateListview($Batch = 0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateListview()') ;#Debug Display
-	If $Batch = 1 Then
+	If $Batch = 1 Or $TempBatchListviewInsert = 1 Then
 		_GUICtrlListView_BeginUpdate($ListviewAPs)
 		_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 		;GUISetState(@SW_LOCK, $Vistumbler)
@@ -2797,16 +2810,16 @@ Func _UpdateListview($Batch = 0)
 			EndIf
 
 			;Add New Listrow with Icon
-			If $Batch = 0 Then _GUICtrlListView_BeginUpdate($ListviewAPs)
+			If $Batch = 0 And $TempBatchListviewInsert = 0 Then _GUICtrlListView_BeginUpdate($ListviewAPs)
 			$ListRow = _AddIconListRow($ImpSig, $ImpSecType, $ImpApID, $DBAddPos)
 			_ListViewAdd($ListRow, $ImpApID, $LActive, $ImpBSSID, $ImpSSID, $ImpAUTH, $ImpENCR, $ImpSig, $ImpHighSignal, $ImpRSSI, $ImpHighRSSI, $ImpCHAN, $ImpRAD, $ImpBTX, $ImpOTX, $ImpNET, $ImpFirstDateTime, $ImpLastDateTime, $ImpLat, $ImpLon, $ImpMANU, $ImpLAB)
-			If $Batch = 0 Then _GUICtrlListView_EndUpdate($ListviewAPs)
+			If $Batch = 0 And $TempBatchListviewInsert = 0 Then _GUICtrlListView_EndUpdate($ListviewAPs)
 			$query = "UPDATE AP SET ListRow=" & $ListRow & " WHERE ApID=" & $ImpApID
 			_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
 			;Add Into TreeView
-			If $Batch = 0 Then _GUICtrlTreeView_BeginUpdate($TreeviewAPs)
+			If $Batch = 0 And $TempBatchListviewInsert = 0 Then _GUICtrlTreeView_BeginUpdate($TreeviewAPs)
 			_TreeViewAdd($ImpApID, $ImpSSID, $ImpBSSID, $ImpCHAN, $ImpNET, $ImpENCR, $ImpRAD, $ImpAUTH, $ImpBTX, $ImpOTX, $ImpMANU, $ImpLAB)
-			If $Batch = 0 Then _GUICtrlTreeView_EndUpdate($TreeviewAPs)
+			If $Batch = 0 And $TempBatchListviewInsert = 0 Then _GUICtrlTreeView_EndUpdate($TreeviewAPs)
 		Next
 	Else
 		Local $ListRowPos = -1, $DbColName, $SortDir
@@ -2854,10 +2867,11 @@ Func _UpdateListview($Batch = 0)
 			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
 		EndIf
 	EndIf
-	If $Batch = 1 Then
+	If $Batch = 1  Or $TempBatchListviewInsert = 1 Then
 		;GUISetState(@SW_UNLOCK, $Vistumbler)
 		_GUICtrlListView_EndUpdate($ListviewAPs)
 		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
+		$TempBatchListviewInsert = 0
 	EndIf
 EndFunc   ;==>_UpdateListview
 
@@ -4880,16 +4894,16 @@ Func WM_NOTIFY($hWnd, $iMsg, $iwParam, $ilParam)
 		Case $hWndListView
 			Switch $iCode
 				Case $NM_CLICK
-					ConsoleWrite('Listview Left Click' & @CRLF)
+					;ConsoleWrite('Listview Left Click' & @CRLF)
 				Case $NM_RCLICK
-					ConsoleWrite('Listview Right Click' & @CRLF)
+					;ConsoleWrite('Listview Right Click' & @CRLF)
 					ListViewAPs_RClick()
 				Case $NM_DBLCLK
-					ConsoleWrite("Listview Double Click" & @CRLF)
+					;ConsoleWrite("Listview Double Click" & @CRLF)
 					$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
 					If $Selected <> -1 Then _GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False) ; Deselect selected AP
 				Case $LVN_COLUMNCLICK
-					ConsoleWrite("Listview Column Click" & @CRLF)
+					;ConsoleWrite("Listview Column Click" & @CRLF)
 					$tInfo = DllStructCreate($tagNMLISTVIEW, $ilParam)
 					$SortColumn = DllStructGetData($tInfo, "SubItem")
 			EndSwitch
@@ -10491,7 +10505,8 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		If $OpenKmlNetLink = 1 Then GUICtrlSetState($GUI_OpenKmlNetLink, $GUI_CHECKED)
 		GUICtrlCreateLabel($Text_GoogleEarthEXE, 30, 100, 62, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_GoogleEXE = GUICtrlCreateInput($GoogleEarthExe, 30, 115, 537, 20)
+		$GUI_GoogleEXE = GUICtrlCreateInput($GoogleEarthExe, 30, 115, 515, 20)
+		$browsege = GUICtrlCreateButton($Text_Browse, 555, 115, 97, 20, 0)
 		GUICtrlCreateLabel($Text_ActiveRefreshTime & '(s)', 30, 140, 115, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_AutoKmlActiveTime = GUICtrlCreateInput($AutoKmlActiveTime, 30, 155, 115, 20)
@@ -10725,6 +10740,8 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetOnEvent($Browse2, '_BrowseAutoSave')
 		GUICtrlSetOnEvent($Browse3, '_BrowseKmlSave')
 
+		GUICtrlSetOnEvent($browsege, '_BrowseGoogleEarth')
+
 		GUICtrlSetOnEvent($cbrowse1, '_ColorBrowse1')
 		GUICtrlSetOnEvent($cbrowse2, '_ColorBrowse2')
 		GUICtrlSetOnEvent($cbrowse3, '_ColorBrowse3')
@@ -10792,6 +10809,13 @@ Func _ColorBrowse3()
 	$color = _ChooseColor(2, $TextColor, 2, $SetMisc)
 	If $color <> -1 Then GUICtrlSetData($GUI_TextColor, StringReplace($color, "0x", ""))
 EndFunc   ;==>_ColorBrowse3
+
+Func _BrowseGoogleEarth()
+	$file = FileOpenDialog($Text_GoogleEarthEXE, "C:\Program Files (x86)\Google\Google Earth\client\", "Google Earth (googleearth.exe)", $FD_FILEMUSTEXIST)
+	If Not @error Then
+		GUICtrlSetData($GUI_GoogleEXE, $file)
+	EndIf
+EndFunc   ;==>_BrowseSave
 
 Func _BrowseSave()
 	$folder = FileSelectFolder($Text_VistumblerSaveDirectory, '', 1, GUICtrlRead($GUI_Set_SaveDir))
@@ -12409,6 +12433,8 @@ Func _FilterChanged()
 		EndIf
 	Next
 	_CreateFilterQuerys()
+	$TempBatchListviewInsert = 1
+	$TempBatchListviewDelete = 1
 EndFunc   ;==>_FilterChanged
 
 Func _CreateFilterQuerys()
