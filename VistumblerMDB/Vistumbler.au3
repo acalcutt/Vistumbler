@@ -2668,7 +2668,7 @@ Func _RemoveTreeviewItem($Treeview, $RootTree, $ImpApID)
 		$query = "SELECT TOP 1 SubTreePos FROM TreeviewPos WHERE ApID<>" & $ImpApID & " And SubTreePos=" & $STP & " And RootTree='" & $RootTree & "'"
 		$TreeMatchArray2 = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundTreeMatch2 = UBound($TreeMatchArray2) - 1
-		If $FoundTreeMatch2 = 0 Then _GUICtrlTreeView_Delete(GUICtrlGetHandle($Treeview), $STP)
+		If $FoundTreeMatch2 = 0 Then _GUICtrlTreeView_Delete($Treeview, $STP)
 	EndIf
 	$query = "DELETE FROM TreeviewPos WHERE ApID=" & $ImpApID & " And RootTree='" & $RootTree & "'"
 	_ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
