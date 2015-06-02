@@ -2679,7 +2679,6 @@ Func _FilterRemoveNonMatchingInList($Batch = 0)
 	If $Batch = 1 Or $TempBatchListviewDelete = 1 Then
 		_GUICtrlListView_BeginUpdate($ListviewAPs)
 		_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
-		;GUISetState(@SW_LOCK, $Vistumbler)
 	EndIf
 	If StringInStr($RemoveQuery, 'WHERE') Then
 		$query = $RemoveQuery & " And (Listrow<>-1)"
@@ -2718,7 +2717,6 @@ Func _FilterRemoveNonMatchingInList($Batch = 0)
 		EndIf
 	EndIf
 	If $Batch = 1  Or $TempBatchListviewDelete = 1 Then
-		;GUISetState(@SW_UNLOCK, $Vistumbler)
 		_GUICtrlListView_EndUpdate($ListviewAPs)
 		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 		$TempBatchListviewDelete = 0
@@ -2730,7 +2728,6 @@ Func _UpdateListview($Batch = 0)
 	If $Batch = 1 Or $TempBatchListviewInsert = 1 Then
 		_GUICtrlListView_BeginUpdate($ListviewAPs)
 		_GUICtrlTreeView_BeginUpdate($TreeviewAPs)
-		;GUISetState(@SW_LOCK, $Vistumbler)
 	EndIf
 	;Find APs that meet criteria but are not in the listview
 	If StringInStr($AddQuery, "WHERE") Then
@@ -2868,7 +2865,6 @@ Func _UpdateListview($Batch = 0)
 		EndIf
 	EndIf
 	If $Batch = 1  Or $TempBatchListviewInsert = 1 Then
-		;GUISetState(@SW_UNLOCK, $Vistumbler)
 		_GUICtrlListView_EndUpdate($ListviewAPs)
 		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 		$TempBatchListviewInsert = 0
