@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6 Beta 16.2'
+$version = 'v10.6 Beta 17'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/03/20'
+$last_modified = '2015/06/01'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -239,6 +239,7 @@ Dim $WifiDbSessionID
 
 Dim $AddQuery
 Dim $RemoveQuery
+Dim $CountQuery
 
 Dim $ListviewAPs
 Dim $TreeviewAPs
@@ -2458,10 +2459,17 @@ Func _MarkDeadAPs()
 	If $DefFiltID = '-1' Then
 		GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveCount & " / " & $APID)
 	Else
-		$query = "Select COUNT(ApID) FROM AP WHERE ListRow<>-1"
-		$FilteredCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		;$query = "Select COUNT(ApID) FROM AP WHERE ListRow<>-1"
+		$FilteredCountArray = _RecordSearch($VistumblerDB, $CountQuery, $DB_OBJ)
 		$FilteredCount = $FilteredCountArray[1][1]
-		$query = "Select COUNT(ApID) FROM AP WHERE Active=1 And ListRow<>-1"
+
+		Local $query
+		If StringInStr($CountQuery, "WHERE") Then
+			$query = $CountQuery & " AND Active=1"
+		Else
+			$query = $CountQuery & " WHERE Active=1"
+		EndIf
+		;$query = "Select COUNT(ApID) FROM AP WHERE Active=1 And ListRow<>-1"
 		$ActiveFilteredCountArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$ActiveFilteredCount = $ActiveFilteredCountArray[1][1]
 		GUICtrlSetData($ActiveAPs, $Text_ActiveAPs & ': ' & $ActiveFilteredCount & " / " & $FilteredCount & " " & $Text_Filtered & "    " & $ActiveCount & " / " & $APID & " " & $Text_Total)
@@ -12406,6 +12414,8 @@ EndFunc   ;==>_FilterChanged
 Func _CreateFilterQuerys()
 	$AddQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal, HighRSSI, ListRow FROM AP"
 	$RemoveQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	$CountQuery = "Select COUNT(ApID) FROM AP"
+
 	If $DefFiltID <> '-1' Then
 		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, HighSig, RSSI, HighRSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
 		$FiltMatchArray = _RecordSearch($FiltDB, $query, $FiltDB_OBJ)
@@ -12442,8 +12452,10 @@ Func _CreateFilterQuerys()
 		$aquery = _AddFilerString($aquery, 'ApID', $Filter_Line)
 		$aquery = _AddFilerString($aquery, 'Active', $Filter_Active)
 		If $aquery <> '' Then $AddQuery &= ' WHERE (' & $aquery & ')'
+		If $aquery <> '' Then $CountQuery &= ' WHERE (' & $aquery & ')'
 
 		ConsoleWrite($AddQuery & @CRLF)
+		ConsoleWrite($CountQuery & @CRLF)
 
 		$rquery = ''
 		$rquery = _RemoveFilterString($rquery, 'SSID', $Filter_SSID)
