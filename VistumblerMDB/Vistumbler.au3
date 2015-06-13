@@ -1942,7 +1942,11 @@ Func _ScanAccessPoints()
 						$BSSID = StringReplace($apinfo[$addinfo][2], " ", ":")
 						$Flags = $apinfo[$addinfo][3]
 						$NetworkType = $apinfo[$addinfo][4]
-						$RadioType = "802.11" & $apinfo[$addinfo][5]
+						If $apinfo[$addinfo][5] = "Unknown/Any Phy Type" Then
+							$RadioType = "Unknown"
+						Else
+							$RadioType = "802.11" & $apinfo[$addinfo][5]
+						EndIf
 						$Signal = $apinfo[$addinfo][6]
 						$RSSI = $apinfo[$addinfo][7]
 						$Channel = $apinfo[$addinfo][8]
