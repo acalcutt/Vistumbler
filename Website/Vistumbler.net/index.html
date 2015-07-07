@@ -30,6 +30,7 @@
 		//-->
 		</script>
 		<script type="text/javascript" src="js/adframe.js"></script>
+		<script type="text/javascript" src="js/linkanalytics.js"></script>
 		<table style="width: 90%; height: 100%" class="no_border" align="center">
 			<tr>
 				<td>
@@ -93,7 +94,6 @@
 								<div class="inside_text_bold"><a href="https://live.wifidb.net/wifidb/">WiFiDB</a></div>
 								<div class="inside_text_bold"><a href="https://github.com/RIEI/Vistumbler/wiki">Wiki</a></div>
 								<div class="inside_text_bold"><a href="https://github.com/RIEI/Vistumbler">Git Repository</a></div>								
-								<div class="inside_text_bold"><a href="https://sourceforge.net/projects/vistumbler/">Sourceforge Page</a></div>
 								<div class="inside_text_bold"><a href="downloads.html">Downloads</a></div>
 								<div class="inside_text_bold"><a href="verhist.html">Version History</a></div>
 								<div class="inside_text_bold"><a href="donate.htm">Donate</a></div>
@@ -180,20 +180,16 @@
 																	<div>
 																		<table style="width: 100%">
 																			<tr>
-																				<td class="inside_dark_header">Vistumber v10.5</td>
+																				<td class="inside_dark_header">Vistumber v10.6</td>
 																			</tr>
 																			<tr>
 																				<td style="width: 350px">
 																					<br />
 																					<ul>
-																						<li class="inside_text_bold">Released: 03/08/2013</li>
-																						<li class="inside_text_bold">Download v10.5<br />
-																						<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.exe', 'Vistumbler_v10-5.exe (Github)']);">EXE Installer</a>
-																						<a href="http://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v10/Vistumbler_v10-5.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'http://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v10/Vistumbler_v10-5.exe', 'Vistumbler_v10-5.exe (Sourceforge)']);">(Mirror)</a>
-																						<br />
-																						<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.zip', 'Vistumbler_v10-5.zip (Github)']);">ZIP Source</a>
-																						<a href="http://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v10/Vistumbler_v10-5.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'http://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v10/Vistumbler_v10-5.zip', 'Vistumbler_v10-5.zip (Sourceforge)']);">(Mirror)</a>
-																						<br /></li>
+																						<li class="inside_text_bold">Released: 06/12/2015</li>
+																						<li class="inside_text_bold">Download v10.6<br />
+																						<a onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.exe'); return false;" href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.exe">EXE Installer</a> (<a onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.exe'); return false;" href="http://www.vistumbler.net/Downloads/Vistumbler_v10-6.exe">Mirror</a>)<br />
+																						<a onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.zip'); return false;" href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.zip">ZIP Source</a> (<a onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.zip'); return false;" href="http://www.vistumbler.net/Downloads/Vistumbler_v10-6.zip">Mirror</a>)<br /></li>
 																					</ul>
 																					<a href="http://donate.vistumbler.net"><img alt="Donate" src="images/donate-paypal-bitcoin.png" /></a>																																																							
 																				</td>
@@ -220,8 +216,13 @@
 															Supports Windows 
 															Vista, Windows 7, 
 															and Windows 8</li>
-															<li class="inside_text">Find Wireless access points - Uses the Vista command &#39;netsh wlan show networks mode=bssid&#39; to get wireless information</li>
-															<li class="inside_text">GPS Support</li>
+															<li class="inside_text">Uses the 
+															Windows Native Wifi 
+															API or netsh to find 
+															access points and get wireless information</li>
+															<li class="inside_text">GPS Support.&nbsp; 
+															Supports COM based 
+															NMEA recievers.</li>
 															<li class="inside_text">
 															Export/Import access 
 															points from 
@@ -254,10 +255,14 @@
 												<tr>
 													<td class="inside_text">
 														<ul>
-															<li>For best results, disconnect from all access points while 
-															scanning for networks. The results from netsh seem to be more 
-															accurate when you are disconnected. </li>
-															<li>To use Vistumbler in another language other than 
+															<li>For best 
+															results, disconnect 
+															from all access 
+															points while 
+															scanning for 
+															networks.</li>
+															<li>To use Vistumbler 
+															in a language other than 
 															English, 
 															you first need to change the language in (Settings -&gt; Language). 
 															If you language is not yet supported you can manually change 
@@ -306,6 +311,25 @@
 															the bottom of the 
 															list (Options --&gt; 
 															Add new APs to top)</li>
+															<li>GPS receivers 
+															need to be serial 
+															based and show up as 
+															a COM port. If you 
+															have a built in 
+															sensor that uses the 
+															windows location 
+															platform you may be 
+															able to use a tool 
+															like &#39;Centrafuse 
+															Localizer&#39; to create 
+															a virtual com port 
+															that vistumbler can 
+															use.&nbsp; &#39;GPSGate 
+															Splitter&#39; also has 
+															some tools to create 
+															a compatible virtual 
+															com port that 
+															vistumbler can use.</li>
 														</ul>
 													</td>
 												</tr>
