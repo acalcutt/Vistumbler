@@ -3,6 +3,7 @@
 #AutoIt3Wrapper_Change2CUI=Y
 #AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+Opt("GUIResizeMode", 576) ; 802
 ;#RequireAdmin
 ;#include "UDFs\_XMLDomWrapper.au3"
 #include "UDFs\FileListToArray3.au3"
@@ -13,24 +14,34 @@
 #include <Array.au3>
 #include <File.au3>
 #include <INet.au3>
- #include <String.au3>
+#include <String.au3>
+#include <ButtonConstants.au3>
+#include <EditConstants.au3>
+#include <GUIConstantsEx.au3>
+#include <GUIListBox.au3>
+#include <StaticConstants.au3>
+#include <WindowsConstants.au3>
+#include <GuiListView.au3>
 
 $Script_Name = 'WifiDB Uploader'
 $version = 'v0.1'
 
 Dim $settings = 'settings.ini'
-Dim $SearchWord_None = 'None';IniRead($DefaultLanguagePath, 'SearchWords', 'None', 'None')
-Dim $SearchWord_Open = 'Open';IniRead($DefaultLanguagePath, 'SearchWords', 'Open', 'Open')
-Dim $SearchWord_Wep = 'WEP';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
+Dim $WdbUser = IniRead($settings, 'Settings', 'WdbUser', 'Unknown')
+Dim $WdbApiKey = IniRead($settings, 'Settings', 'WdbApiKey', '')
+Dim $WdbOtherUser = IniRead($settings, 'Settings', 'WdbOtherUser', '')
+Dim $DefaultTitle = IniRead($settings, 'Settings', 'DefaultTitle', 'WDB Batch Upload')
+Dim $DefaultNotes = IniRead($settings, 'Settings', 'DefaultNotes', '')
+Dim $WifiDbApiURL =  IniRead($settings, 'Settings', 'WifiDbApiURL', 'https://api.wifidb.net/')
+Dim $DefaultStatus = 'new'
+Dim $DefaultStatusText = 'Not Yet Checked'
 
-Dim $WdbUser = 'ACalcutt';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
-Dim $WdbApiKey = '';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
-Dim $WdbOtherUser = '';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
-Dim $DefaultTitle = 'WDB Batch Test';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
-Dim $DefaultNotes = '';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
-Dim $DefaultStatus = 'new';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
-Dim $DefaultStatusText = 'Not Yet Checked';IniRead($DefaultLanguagePath, 'SearchWords', 'WEP', 'WEP')
-Dim $WifiDbApiURL = "https://api.wifidb.net/"
+Dim $ColFile = 0
+Dim $ColMD5 = 1
+Dim $ColTitle = 2
+Dim $ColNotes = 3
+Dim $ColStatus = 4
+Dim $ColStatusMessage = 5
 
 Dim $FILE_ID
 Dim $RetryAttempts = 1 ;Number of times to retry getting location
@@ -74,19 +85,109 @@ EndIf
 _CheckNewFiles()
 
 
-_UploadUnknownFiles()
+$UploadForm = GUICreate("WifiDB Uploader v0.1", 615, 437, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+
+$ulist = _GUICtrlListView_Create($UploadForm, 'File|Hash|Title|Notes|WDB Status|WDB Status Message', 8, 8, 601, 318, BitOR($LVS_REPORT, $LVS_SINGLESEL))
+_UpdateListview()
+
+$Group1 = GUICtrlCreateGroup("User Information", 16, 336, 593, 89)
+GUICtrlCreateLabel("WifiDB Username", 32, 363, 125, 17)
+$WdbUser_GUI = GUICtrlCreateInput($WdbUser, 32, 384, 125, 21)
+GUICtrlCreateLabel("Other users", 173, 364, 125, 17)
+$WdbOtherUser_GUI = GUICtrlCreateInput($WdbOtherUser, 173, 385, 125, 21)
+GUICtrlCreateLabel("WifiDB Api Key", 319, 365, 125, 17)
+$WdbApiKey_GUI = GUICtrlCreateInput($WdbApiKey, 319, 386, 125, 21)
+$Upload = GUICtrlCreateButton("Upload 'unknown'", 472, 368, 121, 41)
+
+GUISetState(@SW_SHOW)
+GUIRegisterMsg($WM_SIZE, "WM_SIZE")
+
+While 1
+	$nMsg = GUIGetMsg()
+	Switch $nMsg
+		Case $GUI_EVENT_CLOSE
+			$WdbUser = GUICtrlRead($WdbUser_GUI)
+			$WdbOtherUser = GUICtrlRead($WdbOtherUser_GUI)
+			$WdbApiKey = GUICtrlRead($WdbApiKey_GUI)
+			ExitLoop
+		Case $Upload
+			$WdbUser = GUICtrlRead($WdbUser_GUI)
+			$WdbOtherUser = GUICtrlRead($WdbOtherUser_GUI)
+			$WdbApiKey = GUICtrlRead($WdbApiKey_GUI)
+			_UploadUnknownFiles()
+			_UpdateListview()
+	EndSwitch
+WEnd
+
+_SaveSettings()
+_AccessCloseConn($DB_OBJ)
+FileDelete($DB)
+
+
 
 ;------------------------------------------------------------------------------------------------------------------------------------
 ;														SCRIPT FUNCTIONS
 ;------------------------------------------------------------------------------------------------------------------------------------
+
+Func _SaveSettings()
+	IniWrite($settings, 'Settings', 'WdbUser', $WdbUser)
+	IniWrite($settings, 'Settings', 'WdbApiKey', $WdbApiKey)
+	IniWrite($settings, 'Settings', 'WdbOtherUser', $WdbOtherUser)
+	IniWrite($settings, 'Settings', 'DefaultTitle', $DefaultTitle)
+	IniWrite($settings, 'Settings', 'DefaultNotes', $DefaultNotes)
+	IniWrite($settings, 'Settings', 'WifiDbApiURL', $WifiDbApiURL)
+EndFunc
+
+Func WM_SIZE($hWnd, $Msg, $wParam, $lParam)
+
+    Local $iHeight, $iWidth
+    $iWidth = BitAND($lParam, 0xFFFF) ; _WinAPI_LoWord
+    $iHeight = BitShift($lParam, 16) ; _WinAPI_HiWord
+    _WinAPI_MoveWindow($ulist, 10, 10, $iWidth - 20, $iHeight - 120)
+    Return $GUI_RUNDEFMSG
+EndFunc
+
+Func _UpdateListview()
+	local $szDrive, $szDir, $szFName, $szExt
+	_GUICtrlListView_BeginUpdate ($ulist)
+	_GUICtrlListView_DeleteAllItems ($ulist)
+	$query = "SELECT filename, md5, uploadtitle, uploadnotes, wdbstatus, wdbstatustext FROM UploadFiles ORDER BY wdbstatus DESC"; WHERE wdbstatus='unknown'"
+	ConsoleWrite("$query:" & $query & @CRLF)
+	$FileMatchArray = _RecordSearch($DB, $query, $DB_OBJ)
+	$FoundFileMatch = UBound($FileMatchArray) - 1
+
+	For $cf = 1 To $FoundFileMatch
+		$filefullname = $FileMatchArray[$cf][1]
+		$md5 = $FileMatchArray[$cf][2]
+		$uploadtitle = $FileMatchArray[$cf][3]
+		$uploadnotes = $FileMatchArray[$cf][4]
+		$wdbstatus = $FileMatchArray[$cf][5]
+		$wdbstatustext = $FileMatchArray[$cf][6]
+
+
+		_PathSplit($filefullname, $szDrive, $szDir, $szFName, $szExt)
+		$filename=$szFName & $szExt
+
+		$line = _GUICtrlListView_AddItem($ulist, $filename, $ColFile)
+		_GUICtrlListView_AddSubItem($ulist, $line, $md5, $ColMD5)
+		_GUICtrlListView_AddSubItem($ulist, $line, $uploadtitle, $ColTitle)
+		_GUICtrlListView_AddSubItem($ulist, $line, $uploadnotes, $ColNotes)
+		_GUICtrlListView_AddSubItem($ulist, $line, $wdbstatus, $ColStatus)
+		_GUICtrlListView_AddSubItem($ulist, $line, $wdbstatustext, $ColStatusMessage)
+
+	Next
+	_GUICtrlListView_EndUpdate ($ulist)
+EndFunc
 
 Func _SearchVistumblerFiles($VistumblerFilesFolder)
    If @error=1 Then
 	  MsgBox(0, "Error", "No folder selected, exiting")
 	  Exit
    Else
+		SplashTextOn ( "Status", "Loading Files in '" & $VistumblerFilesFolder & "'" , 400, 100)
 		$VistumblerFiles = _FileListToArray3($VistumblerFilesFolder, "*.VS1", 1, 1, 1)
 		For $f=1 to $VistumblerFiles[0]
+			ControlSetText("Status", "", "Static1", "Loading File ( " & $f & " of " & $VistumblerFiles[0] & " )")
 			;Safe Kill Import if killswitch is set
 			$KillSwitch = IniRead($settings, 'Settings', 'KillSwitch', '0')
 			If $KillSwitch = 1 Then
@@ -97,7 +198,7 @@ Func _SearchVistumblerFiles($VistumblerFilesFolder)
 			ConsoleWrite('File:' & $f & '/' & $VistumblerFiles[0] & ' | File:' & $VistumblerFiles[$f] & @CRLF)
 			_LoadVistumblerFile($VistumblerFiles[$f])
 		Next
-
+		SplashOff()
    EndIf
 EndFunc
 
@@ -175,7 +276,9 @@ Func _CheckNewFiles()
 	$FileMatchArray = _RecordSearch($DB, $query, $DB_OBJ)
 	$FoundFileMatch = UBound($FileMatchArray) - 1
 
+	SplashTextOn ( "Status", "Checking file status in WifiDB", 400, 100)
 	For $cf = 1 To $FoundFileMatch
+		ControlSetText("Status", "", "Static1", "Checking file status in WifiDB ( " & $cf & " of " & $FoundFileMatch & " )")
 		$filename = $FileMatchArray[$cf][1]
 		$md5 = $FileMatchArray[$cf][2]
 
@@ -190,6 +293,7 @@ Func _CheckNewFiles()
 
 		EndIf
 	Next
+	SplashOff()
 EndFunc
 
 Func _CheckFile($hash)
@@ -266,6 +370,8 @@ Func _UploadUnknownFiles()
 	$FileMatchArray = _RecordSearch($DB, $query, $DB_OBJ)
 	$FoundFileMatch = UBound($FileMatchArray) - 1
 
+	If $FoundFileMatch = 0 Then MsgBox(0, "Error", "There are no files that are unknown to the wifidb. There is nothing to upload at this time.")
+
 	For $cf = 1 To $FoundFileMatch
 		$filename = $FileMatchArray[$cf][1]
 		$md5 = $FileMatchArray[$cf][2]
@@ -278,10 +384,15 @@ Func _UploadUnknownFiles()
 			ConsoleWrite('$fstatus:' & $filestatus[0] & @CRLF)
 			ConsoleWrite('$fstatustext:' & $filestatus[1] & @CRLF)
 
-			$query = "UPDATE UploadFiles SET wdbstatus='" & $filestatus[0] & "', wdbstatustext='" & $filestatus[1] & "' WHERE md5='" & $md5 & "'"
-			ConsoleWrite($query & @CRLF)
-			_ExecuteMDB($DB, $DB_OBJ, $query)
-
+			If $filestatus[0] <> 'unknown' Then
+				$query = "UPDATE UploadFiles SET wdbstatus='" & $filestatus[0] & "', wdbstatustext='" & $filestatus[1] & "' WHERE md5='" & $md5 & "'"
+				ConsoleWrite($query & @CRLF)
+				_ExecuteMDB($DB, $DB_OBJ, $query)
+			Else
+				$query = "UPDATE UploadFiles SET wdbstatus='error', wdbstatustext='File still not found after upload. It may be an invalid file.' WHERE md5='" & $md5 & "'"
+				ConsoleWrite($query & @CRLF)
+				_ExecuteMDB($DB, $DB_OBJ, $query)
+			EndIf
 		EndIf
 	Next
 EndFunc
@@ -293,7 +404,7 @@ Func _UploadToWifiDB($file, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $u
 	_PathSplit($file, $szDrive, $szDir, $szFName, $szExt)
 	$filetype = "text/plain; charset=""UTF-8"""
 	$fileuname = $szFName & $szExt
-	$fileread = FileRead($file)
+	$fileread = FileRead($file) & @CRLF
 
 	;Get Host, Path, and Port from WifiDB api url
 	$hpparr = _Get_HostPortPath($WifiDbApiURL)
