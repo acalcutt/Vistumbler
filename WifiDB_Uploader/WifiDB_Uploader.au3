@@ -1,9 +1,8 @@
 ﻿#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
-#AutoIt3Wrapper_Icon=..\..\VistumblerMDB\Icons\icon.ico
-#AutoIt3Wrapper_Change2CUI=Y
-#AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
+#AutoIt3Wrapper_Icon=..\VistumblerMDB\Icons\icon.ico
+#AutoIt3Wrapper_Res_requestedExecutionLevel=highestAvailable
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
-Opt("GUIResizeMode", 576) ; 802
+Opt("GUIResizeMode", 576)
 ;#RequireAdmin
 ;#include "UDFs\_XMLDomWrapper.au3"
 #include "UDFs\FileListToArray3.au3"
@@ -184,7 +183,7 @@ Func _SearchVistumblerFiles($VistumblerFilesFolder)
 	  MsgBox(0, "Error", "No folder selected, exiting")
 	  Exit
    Else
-		SplashTextOn ( "Status", "Loading Files in '" & $VistumblerFilesFolder & "'" , 400, 100)
+		SplashTextOn ( "Status", "Loading Files in '" & $VistumblerFilesFolder & "'" , 400, 100, -1, -1, 2 + 16)
 		$VistumblerFiles = _FileListToArray3($VistumblerFilesFolder, "*.VS1", 1, 1, 1)
 		For $f=1 to $VistumblerFiles[0]
 			ControlSetText("Status", "", "Static1", "Loading File ( " & $f & " of " & $VistumblerFiles[0] & " )")
@@ -276,7 +275,7 @@ Func _CheckNewFiles()
 	$FileMatchArray = _RecordSearch($DB, $query, $DB_OBJ)
 	$FoundFileMatch = UBound($FileMatchArray) - 1
 
-	SplashTextOn ( "Status", "Checking file status in WifiDB", 400, 100)
+	SplashTextOn ( "Status", "Checking file status in WifiDB", 400, 100, -1, -1, 2 + 16)
 	For $cf = 1 To $FoundFileMatch
 		ControlSetText("Status", "", "Static1", "Checking file status in WifiDB ( " & $cf & " of " & $FoundFileMatch & " )")
 		$filename = $FileMatchArray[$cf][1]
