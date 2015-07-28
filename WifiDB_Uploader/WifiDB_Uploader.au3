@@ -7,6 +7,7 @@ Opt("GUIResizeMode", 576)
 ;#include "UDFs\_XMLDomWrapper.au3"
 #include "UDFs\FileListToArray3.au3"
 #include "UDFs\MD5.au3"
+#include "UDFs\Base64.au3"
 #include "UDFs\AccessCom.au3"
 #include "UDFs\HTTP.au3"
 #include "UDFs\JSON.au3"
@@ -24,6 +25,8 @@ Opt("GUIResizeMode", 576)
 
 $Script_Name = 'WifiDB Uploader'
 $version = 'v0.1'
+
+$oMyError = ObjEvent("AutoIt.Error","MyErrFunc")
 
 Dim $settings = 'settings.ini'
 Dim $WdbUser = IniRead($settings, 'Settings', 'WdbUser', 'Unknown')
@@ -299,67 +302,32 @@ Func _CheckFile($hash)
 	Local $command, $extra_commands
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-	;Get Host, Path, and Port from WifiDB api url
-	$hpparr = _Get_HostPortPath($WifiDbApiURL)
-	If Not @error Then
-		Local $host, $port, $path
-		$host = $hpparr[1]
-		$port = $hpparr[2]
-		$path = $hpparr[3]
-		$page = $path & "import.php?func=check_hash"
-		;ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
-		;ConsoleWrite($path & @CRLF)
-		$socket = _HTTPConnect($host, $port)
-		If Not @error Then
-
-			$extra_commands = "--" & $boundary & @CRLF
-			$extra_commands &= "Content-Disposition: form-data; name=""hash""" & @CRLF & @CRLF
-			$extra_commands &= $hash & @CRLF
-			$extra_commands &= "--" & $boundary & "--"
-
-			Dim $datasize = StringLen($extra_commands)
-
-			$command = "POST " & $page & " HTTP/1.1" & @CRLF
-			$command &= "Host: " & $host & @CRLF
-			$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
-			$command &= "Connection: close" & @CRLF
-			$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
-			$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
-			$command &= $extra_commands
-			;ConsoleWrite($command & @CRLF)
-
-			Dim $bytessent = TCPSend($socket, $command)
-
-			If $bytessent == 0 Then
-				SetExtended(@error)
-				SetError(2)
-				Return
-			EndIf
-
-			$recv = _HTTPRead($socket, 1)
-			If @error Then
-				ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-			Else
-				;Read WifiDB JSON Response
-				Local $httprecv, $import_json_response, $json_array_size
-				$httprecv = $recv[4]
-				$httprecv = StringTrimRight(StringTrimLeft($httprecv, 1), 1)
-				;ConsoleWrite($httprecv & @CRLF)
-				$import_json_response = _JSONDecode($httprecv)
-				$import_json_response_iRows = UBound($import_json_response, 1)
-				$import_json_response_iCols = UBound($import_json_response, 2)
-				;ConsoleWrite('$import_json_response_iRows:' & $import_json_response_iRows & @CRLF)
-				;ConsoleWrite('$import_json_response_iCols:' & $import_json_response_iCols & @CRLF)
-				If $import_json_response_iRows = 2 And $import_json_response_iCols = 2 Then
-					Local $FileStatus[2]
-					$FileStatus[0] = $import_json_response[1][0]
-					$FileStatus[1] = $import_json_response[1][1]
-					SetError(0)
-					Return($FileStatus)
-				EndIf
-			EndIf
-		EndIf
+    $sUrl = $WifiDbApiURL & "import.php?func=check_hash"
+    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+    $oHttpRequest.Option(4) = 13056
+    $oHttpRequest.Open ("POST", $sUrl, False)
+    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
+	$PostData = "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""hash""" & @CRLF & @CRLF
+	$PostData &= $hash & @CRLF
+	$PostData &= "--" & $boundary & "--"
+	$oHttpRequest.Send (StringToBinary($PostData))
+	$Response = $oHttpRequest.ResponseText
+	$httprecv = StringTrimRight(StringTrimLeft($Response, 1), 1)
+	ConsoleWrite($httprecv & @CRLF)
+	$import_json_response = _JSONDecode($httprecv)
+	$import_json_response_iRows = UBound($import_json_response, 1)
+	$import_json_response_iCols = UBound($import_json_response, 2)
+	;ConsoleWrite('$import_json_response_iRows:' & $import_json_response_iRows & @CRLF)
+	;ConsoleWrite('$import_json_response_iCols:' & $import_json_response_iCols & @CRLF)
+	If $import_json_response_iRows = 2 And $import_json_response_iCols = 2 Then
+		Local $FileStatus[2]
+		$FileStatus[0] = $import_json_response[1][0]
+		$FileStatus[1] = $import_json_response[1][1]
+		SetError(0)
+		Return($FileStatus)
 	EndIf
+
 	SetError(1)
 EndFunc
 
@@ -397,129 +365,111 @@ Func _UploadUnknownFiles()
 EndFunc
 
 Func _UploadToWifiDB($file, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
-	Local $command, $extra_commands
-	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 	local $szDrive, $szDir, $szFName, $szExt
 	_PathSplit($file, $szDrive, $szDir, $szFName, $szExt)
 	$filetype = "text/plain; charset=""UTF-8"""
 	$fileuname = $szFName & $szExt
-	$fileread = FileRead($file) & @CRLF
+	;$fileread = FileRead($file)
+	ConsoleWrite($fileuname & @CRLF)
 
-	;Get Host, Path, and Port from WifiDB api url
-	$hpparr = _Get_HostPortPath($WifiDbApiURL)
-	If Not @error Then
-		Local $host, $port, $path
-		$host = $hpparr[1]
-		$port = $hpparr[2]
-		$path = $hpparr[3]
-		$page = $path & "import.php"
-		;ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
-		;ConsoleWrite($path & @CRLF)
-		$socket = _HTTPConnect($host, $port)
-		If Not @error Then
-			_HTTPPost_WifiDB_File($host, $page, $socket, $fileread, $fileuname, $filetype, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
-			$recv = _HTTPRead($socket, 1)
-			If @error Then
-				ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-			Else
-				Local $httprecv, $import_json_response, $json_array_size, $json_msg
-				$httprecv = $recv[4]
-				ConsoleWrite($httprecv & @CRLF)
-				$import_json_response = _JSONDecode($httprecv)
-				$import_json_response_iRows = UBound($import_json_response, 1)
-				$import_json_response_iCols = UBound($import_json_response, 2)
-				;Pull out information from decoded json array
-				If $import_json_response_iCols = 2 Then
-					Local $imtitle, $imuser, $immessage, $imimportnum, $imfilehash, $imerror
-					For $ji = 0 To ($import_json_response_iRows - 1)
-						If $import_json_response[$ji][0] = 'title' Then $imtitle = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'user' Then $imuser = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'message' Then $immessage = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'importnum' Then $imimportnum = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'filehash' Then $imfilehash = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'error' Then $imerror = $import_json_response[$ji][1]
-					Next
-					If $imtitle <> "" Or $imuser <> "" Or $immessage <> "" Or $imimportnum <> "" Or $imfilehash <> "" Then
-						ConsoleWrite("Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
-						Local $FileStatus[5]
-						$FileStatus[0] = $imtitle
-						$FileStatus[1] = $imuser
-						$FileStatus[2] = $immessage
-						$FileStatus[3] = $imimportnum
-						$FileStatus[4] = $imfilehash
-						SetError(0)
-						Return($FileStatus)
-					EndIf
 
-				EndIf
-			EndIf
-		Else
-			ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
+	$httprecv = _HTTPPost_WifiDB_File($file, $fileuname, $filetype, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
+	ConsoleWrite($httprecv & @CRLF)
+
+	Local $import_json_response, $json_array_size, $json_msg
+	$import_json_response = _JSONDecode($httprecv)
+	$import_json_response_iRows = UBound($import_json_response, 1)
+	$import_json_response_iCols = UBound($import_json_response, 2)
+	;Pull out information from decoded json array
+	If $import_json_response_iCols = 2 Then
+		Local $imtitle, $imuser, $immessage, $imimportnum, $imfilehash, $imerror
+		For $ji = 0 To ($import_json_response_iRows - 1)
+			If $import_json_response[$ji][0] = 'title' Then $imtitle = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'user' Then $imuser = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'message' Then $immessage = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'importnum' Then $imimportnum = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'filehash' Then $imfilehash = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'error' Then $imerror = $import_json_response[$ji][1]
+		Next
+		If $imtitle <> "" Or $imuser <> "" Or $immessage <> "" Or $imimportnum <> "" Or $imfilehash <> "" Then
+			ConsoleWrite("Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
+			Local $FileStatus[5]
+			$FileStatus[0] = $imtitle
+			$FileStatus[1] = $imuser
+			$FileStatus[2] = $immessage
+			$FileStatus[3] = $imimportnum
+			$FileStatus[4] = $imfilehash
+			SetError(0)
+			Return($FileStatus)
 		EndIf
 	EndIf
+
 	SetError(1)
 EndFunc
 
-Func _HTTPPost_WifiDB_File($host, $page, $socket, $file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
-	Local $command, $extra_commands
+Func _HTTPPost_WifiDB_File($file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
+	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
+	$fileopen = FileOpen($file,128)
+	$file = FileRead($fileopen)
+	FileClose($fileopen)
+
+    $sUrl = $WifiDbApiURL & "import.php"
+	ConsoleWrite($sUrl & @CRLF)
+    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+    $oHttpRequest.Option(4) = 13056
+    $oHttpRequest.Open ("POST", $sUrl, False)
+    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
 
 	If $apikey <> "" Then
-		$extra_commands = "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""apikey""" & @CRLF & @CRLF
-		$extra_commands &= $apikey & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""apikey""" & @CRLF & @CRLF
+		$PostData &= $apikey & @CRLF
 	EndIf
 	If $user <> "" Then
-		$extra_commands &= "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""username""" & @CRLF & @CRLF
-		$extra_commands &= $user & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""username""" & @CRLF & @CRLF
+		$PostData &= $user & @CRLF
 	EndIf
 	If $otherusers <> "" Then
-		$extra_commands &= "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""otherusers""" & @CRLF & @CRLF
-		$extra_commands &= $otherusers & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""otherusers""" & @CRLF & @CRLF
+		$PostData &= $otherusers & @CRLF
 	EndIf
 	If $title <> "" Then
-		$extra_commands &= "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""title""" & @CRLF & @CRLF
-		$extra_commands &= $title & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""title""" & @CRLF & @CRLF
+		$PostData &= $title & @CRLF
 	EndIf
 	If $notes <> "" Then
-		$extra_commands &= "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""notes""" & @CRLF & @CRLF
-		$extra_commands &= $notes & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""notes""" & @CRLF & @CRLF
+		$PostData &= $notes & @CRLF
 	EndIf
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""file""; filename=""" & $filename & """" & @CRLF
-	$extra_commands &= "Content-Type: " & $contenttype & @CRLF & @CRLF
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""file""; filename=""" & $filename & """" & @CRLF
+	$PostData &= "Content-Type: " & $contenttype & @CRLF & @CRLF
+	$PostData &= $file & @crlf
+	$PostData &= "--" & $boundary & "--"
 
-	$extra_commands &= $file
-	$extra_commands &= "--" & $boundary & "--"
+	;ConsoleWrite($PostData & @CRLF)
+	ConsoleWrite(StringReplace($PostData, $file, "## DATA FILE ##" & @CRLF) & @CRLF)
 
-	Dim $datasize = StringLen($extra_commands)
+	$oHttpRequest.Send (StringToBinary($PostData))
 
-	$command = "POST " & $page & " HTTP/1.1" & @CRLF
-	$command &= "Host: " & $host & @CRLF
-	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
-	$command &= "Connection: close" & @CRLF
-	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
-	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
-	$command &= $extra_commands
+	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
 
-	If $contenttype = "application/octet-stream" Then
-		ConsoleWrite(StringReplace($command, $file, "## BINARY DATA FILE ##" & @CRLF) & @CRLF)
-	Else
-		ConsoleWrite($command & @CRLF)
-	EndIf
 
-	Dim $bytessent = TCPSend($socket, $command)
+	$Response = $oHttpRequest.ResponseText
 
-	If $bytessent == 0 Then
-		SetExtended(@error)
-		SetError(2)
-		Return 0
-	EndIf
-
-	SetError(0)
-	Return $bytessent
+	$oHttpRequest = ""
+	Return($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_File
+
+Func MyErrFunc()
+	$HexNumber=hex($oMyError.number,8)
+	Msgbox(0,"","We intercepted a COM Error !" & @CRLF & _
+	"Number is: " & $HexNumber & @CRLF & _
+	"Windescription is: " & $oMyError.windescription )
+	$_eventerror = 1
+Endfunc
