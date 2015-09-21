@@ -24,6 +24,13 @@
 		<!-- End Analytics Tracking Code-->
 	</head>
 	<body class="body">
+		<script type="text/javascript">
+		<!--
+		    var vidonate = true;
+		//-->
+		</script>
+		<script type="text/javascript" src="js/adframe.js"></script>
+		<script type="text/javascript" src="js/linkanalytics.js"></script>
 		<table style="width: 90%; height: 100%" class="no_border" align="center">
 			<tr>
 				<td>
@@ -66,7 +73,7 @@
 		<table style="width: 90%" align="center">
 			<tr>
 				<td style="width: 160px; height: 114px" valign="top">
-					<table style="width: 100%" cellpadding="0" cellspacing="0">
+					<table style="width: 100%" class="no_border" cellspacing="0" cellpadding="0">
 						<tr>
 							<td style="width: 10px; height: 20px" class="cell_top_left">
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
@@ -87,7 +94,6 @@
 								<div class="inside_text_bold"><a href="https://live.wifidb.net/wifidb/">WiFiDB</a></div>
 								<div class="inside_text_bold"><a href="https://github.com/RIEI/Vistumbler/wiki">Wiki</a></div>
 								<div class="inside_text_bold"><a href="https://github.com/RIEI/Vistumbler">Git Repository</a></div>								
-								<div class="inside_text_bold"><a href="https://sourceforge.net/projects/vistumbler/">Sourceforge Page</a></div>
 								<div class="inside_text_bold"><a href="downloads.html">Downloads</a></div>
 								<div class="inside_text_bold"><a href="verhist.html">Version History</a></div>
 								<div class="inside_text_bold"><a href="donate.htm">Donate</a></div>
@@ -107,7 +113,7 @@
 							<td class="cell_bot_right">&nbsp;</td>
 						</tr>
 					</table>
-					<table style="width: 100%" cellpadding="0" cellspacing="0">
+					<table style="width: 100%" class="no_border" cellspacing="0" cellpadding="0">
 						<tr>
 							<td style="width: 10px; height: 20px" class="cell_top_left">
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
@@ -134,9 +140,7 @@
 								<div class="inside_dark_header">Donate</div>
 								<div class="center">
 								<br />
-								<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JZRGSY2S4J6MC"><img alt="Donate" src="images/btn-donate-LG.gif" width="92" height="26" class="style5" /></a>
-								<br />
-								<a class="coinbase-button" data-code="836024d7a04774ae3f27c233c8b02ade" data-button-style="donation_small" href="https://coinbase.com/checkouts/836024d7a04774ae3f27c233c8b02ade">Donate Bitcoins</a><script src="https://coinbase.com/assets/button.js" type="text/javascript"></script>																																						
+								<a href="http://donate.vistumbler.net>"><img alt="Donate" src="images/donate-paypal-bitcoin.png" class="style5" /></a>
 								<br />
 								</div>
 							</td>
@@ -150,7 +154,7 @@
 					</table>				
 				</td>
 				<td style="height: 114px" valign="top" class="center">
-					<table style="width: 100%" cellpadding="0" cellspacing="0">
+					<table style="width: 100%" cellpadding="0" cellspacing="0" class="no_border">
 						<tr>
 							<td style="width: 10px; height: 20px" class="cell_top_left">
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
@@ -167,14 +171,33 @@
 								<table style="width: 95%; height: 95%" class="style7">
 									<tr>
 										<td class="leftalign">
+											<div class="inside_dark_header">Vistumbler v10.6 06/12/2015</div>
+											<div>
+												<ul>
+													<li>Download EXE: 
+													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.exe" onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.exe'); return false;">
+													Vistumbler v10.6</a></li>
+													<li>Download ZIP: 
+													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.zip" onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-6.zip'); return false;">
+													Vistumbler v10.6 source</a></li>
+												</ul>
+											</div>	
+											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes </strong></div>
+												<ul>
+													<li>Added "Minimal GUI Mode". This feature is meant to increase performance while scanning by turing off the list and treeview.</li>
+													<li>Added features to automatically save and clear a list after a certain number of access points or after a certain amount of time</li>
+													<li>Updates to WifiDB intergration. New api for uploading, geonames lookup, and graphing</li>
+													<li>Added batch inserts when adding into the listview to try to increase performance. this is also now used when sorting lists</li>
+												</ul>
+
 											<div class="inside_dark_header">Vistumbler v10.5 03/08/2013</div>
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.exe', 'Vistumbler_v10-5.exe (Github)']);">
+													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.exe" onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.exe'); return false;">
 													Vistumbler v10.5</a></li>
 													<li>Download ZIP: 
-													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.zip', 'Vistumbler_v10-5.zip (Github)']);">
+													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.zip" onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-5.zip'); return false;">
 													Vistumbler v10.5 source</a></li>
 												</ul>
 											</div>	
@@ -188,10 +211,10 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-4.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-4.exe', 'Vistumbler_v10-4.exe (Github)']);">
+													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-4.exe" onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-4.exe'); return false;">
 													Vistumbler v10.4</a></li>
 													<li>Download ZIP: 
-													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-4.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-4.zip', 'Vistumbler_v10-4.zip (Github)']);">
+													<a href="https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-4.zip" onclick="trackOutboundLink('https://raw.github.com/RIEI/Releases/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-4.zip'); return false;">
 													Vistumbler v10.4 source</a></li>
 												</ul>
 											</div>	
@@ -209,11 +232,10 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-3.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-3.exe', 'Vistumbler_v10-3.exe (Github)']);">
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-3.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-3.exe'); return false;">
 													Vistumbler v10.3</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-3.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-3.zip', 'Vistumbler_v10-3.zip (Github)']);">
-													Vistumbler v10.3 source</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-3.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10-3.zip'); return false;">													Vistumbler v10.3 source</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes </strong></div>
@@ -231,10 +253,10 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10.exe', 'Vistumbler_v10.exe (Github)']);">
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10.exe'); return false;">
 													Vistumbler v10</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10.zip', 'Vistumbler_v10.zip (Github)']);">
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v10/Vistumbler_v10.zip'); return false;">
 													Vistumbler v10 source</a></li>
 												</ul>
 											</div>	
@@ -261,9 +283,9 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v9.8/Vistumbler_v9-8.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-8.exe', 'Vistumbler_v9-8.exe (Github)']);">Vistumbler v9.8</a></li>
+													<a href="https://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v9.8/Vistumbler_v9-8.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-8.exe'); return false;">Vistumbler v9.8</a></li>
 													<li>Download ZIP: 
-													<a href="https://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v9.8/Vistumbler9-8.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-8.zip', 'Vistumbler_v9-8.zip (Github)']);">Vistumbler v9.8 source</a></li>
+													<a href="https://sourceforge.net/projects/vistumbler/files/Vistumbler%20MDB/Vistumbler%20v9.8/Vistumbler9-8.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-8.zip'); return false;">Vistumbler v9.8 source</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes </strong></div>
@@ -289,9 +311,9 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-7.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-7.exe', 'Vistumbler_v9-7.zip (Github)']);">Vistumbler v9.7</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-7.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-7.exe'); return false;">Vistumbler v9.7</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-7.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-7.zip', 'Vistumbler_v9-7.zip (Github)']);">Vistumbler v9.7 source</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-7.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-7.zip'); return false;">Vistumbler v9.7 source</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes </strong></div>
@@ -335,10 +357,10 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-6.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-6.exe', 'Vistumbler_v9-6.zip (Github)']);">
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-6.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-6.exe'); return false;">
 													Vistumbler v9.6</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_9-6.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-6.zip', 'Vistumbler_v9-6.zip (Github)']);">
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_9-6.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-6.zip'); return false;">
 													Vistumbler v9.6 source</a></li>
 												</ul>
 											</div>	
@@ -365,10 +387,10 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-4.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-4.exe', 'Vistumbler_v9-4.exe (Github)']);">
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-4.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-4.exe'); return false;">
 													Vistumbler v9.4</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-4.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-4.zip', 'Vistumbler_v9-4.zip (Github)']);">
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-4.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-4.zip'); return false;">
 													Vistumbler v9.4 source</a></li>
 												</ul>
 											</div>	
@@ -398,9 +420,9 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-3.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-3.exe', 'Vistumbler_v9-3.exe (Github)']);">Vistumbler v9.3</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-3.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-3.exe'); return false;">Vistumbler v9.3</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-3.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-3.zip', 'Vistumbler_v9-3.zip (Github)']);">Vistumbler v9.3 source</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-3.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-3.zip'); return false;">Vistumbler v9.3 source</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>
@@ -417,9 +439,9 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-2.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-2.exe', 'Vistumbler_v9-2.exe (Github)']);">Vistumbler v9.2</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-2.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-2.exe'); return false;">Vistumbler v9.2</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-2.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-2.zip', 'Vistumbler_v9-2.zip (Github)']);">Vistumbler v9.2 Source</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-2.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler_v9-2.zip'); return false;">Vistumbler v9.2 Source</a></li>
 												</ul>
 											</div>
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -452,9 +474,9 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler9-0_Installer.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler9-0_Installer.exe', 'Vistumbler9-0_Installer.exe (Sourceforge)']);">Vistumbler v9.0</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler9-0_Installer.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler9-0_Installer.exe'); return false;">Vistumbler v9.0</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler9-0.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler9-0.zip', 'Vistumbler_v9-0.zip (Github)']);">Vistumbler v9.0 Source</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler9-0.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v09/Vistumbler9-0.zip'); return false;">Vistumbler v9.0 Source</a></li>
 												</ul>
 											</div>
 											<div class="verchanges_text"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Changes</strong></div>
@@ -512,9 +534,9 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/VistumblerInstaller8.1.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/VistumblerInstaller8.1.exe', 'VistumblerInstaller8.1.exe (Sourceforge)']);">Vistumbler v8.1</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/VistumblerInstaller8.1.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/VistumblerInstaller8.1.exe'); return false;">Vistumbler v8.1</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/Vistumbler8.1.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/Vistumbler8.1.zip', 'Vistumbler8.1.zip (Github)']);">Vistumbler v8.1 source</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/Vistumbler8.1.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/Vistumbler8.1.zip'); return false;">Vistumbler v8.1 source</a></li>
 												</ul>
 											</div>
 											<div class="verchanges_text"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Changes</strong></div>
@@ -536,9 +558,9 @@
 											<div class="inside_dark_header">Vistumbler v8.0 7/11/2008</div>
 											<ul>
 												<li>Download EXE: 
-												<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/VistumblerInstaller8.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/VistumblerInstaller8.exe', 'VistumblerInstaller8.exe (Sourceforge)']);">Vistumbler v8.0</a></li>
+												<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/VistumblerInstaller8.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/VistumblerInstaller8.exe'); return false;">Vistumbler v8.0</a></li>
 												<li>Download ZIP: 
-												<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/Vistumbler8.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/Vistumbler8.zip', 'Vistumbler8.zip (Github)']);">Vistumbler v8.0 source</a></li>
+												<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/Vistumbler8.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v08/Vistumbler8.zip'); return false;">Vistumbler v8.0 source</a></li>
 											</ul>
 											<div class="verchanges_text"><strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Changes</strong></div>
 											<div>
@@ -561,9 +583,9 @@
 											<div>
 												<ul>
 													<li>Download EXE: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/VistumblerInstaller7.6.exe" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/VistumblerInstaller7.6.exe', 'VistumblerInstaller7.6.exe (Sourceforge)']);">Vistumbler v7.6</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/VistumblerInstaller7.6.exe" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/VistumblerInstaller7.6.exe'); return false;">Vistumbler v7.6</a></li>
 													<li>Download ZIP: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7.6.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7.6.zip', 'Vistumbler7.6.zip (Github)']);">Vistumbler v7.6 source</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7.6.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7.6.zip'); return false;">Vistumbler v7.6 source</a></li>
 												</ul>
 											</div>
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -581,7 +603,7 @@
 												<ul>
 													<li>Re-Uploaded 05/18/2008 to fix a problem</li>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-5.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-5.zip', 'Vistumbler7-5.zip (Github)']);">Vistumbler v7.5</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-5.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-5.zip'); return false;">Vistumbler v7.5</a></li>
 												</ul>
 											</div>
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>
@@ -604,7 +626,7 @@
 											<div>
 												<ul>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-43.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-43.zip', 'Vistumbler7-43.zip (Github)']);">Vistumbler v7.43</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-43.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-43.zip'); return false;">Vistumbler v7.43</a></li>
 												</ul>
 											</div>
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>						<br />
@@ -623,7 +645,7 @@
 											<div>
 												<ul>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-42.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-42.zip', 'Vistumbler7-42.zip (Github)']);">Vistumbler v7.42</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-42.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-42.zip'); return false;">Vistumbler v7.42</a></li>
 												</ul>
 											</div>						
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>
@@ -638,7 +660,7 @@
 											<div>
 												<ul>						
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-41.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-41.zip', 'Vistumbler7-41.zip (Github)']);">Vistumbler v7.41</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-41.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-41.zip'); return false;">Vistumbler v7.41</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>
@@ -652,7 +674,7 @@
 											<div>
 												<ul>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-4.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-4.zip', 'Vistumbler7-4.zip (Github)']);">Vistumbler v7.4</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-4.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-4.zip'); return false;">Vistumbler v7.4</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>
@@ -671,7 +693,7 @@
 											<div>
 												<ul>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-3.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-3.zip', 'Vistumbler7-3.zip (Github)']);">Vistumbler v7.3</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-3.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-3.zip'); return false;">Vistumbler v7.3</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>
@@ -686,7 +708,7 @@
 											<div>
 												<ul>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-2.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-2.zip', 'Vistumbler7-2.zip (Github)']);">Vistumbler v7.2</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-2.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-2.zip'); return false;">Vistumbler v7.2</a></li>
 													<li>To use GPS you can use &#39;CommMG&#39; or &#39;Netcomm OCX&#39;. &#39;CommMG&#39; 
 													is included, but it is less stable. With &#39;CommMG&#39; if you 
 													unplug the GPS without turning it off then Vistumbler 
@@ -711,7 +733,7 @@
 											<div>
 												<ul>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-1.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-1.zip', 'Vistumbler7-1.zip (Github)']);">Vistumbler v7.1</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-1.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7-1.zip'); return false;">Vistumbler v7.1</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>
@@ -730,7 +752,7 @@
 											<div>
 												<ul>	
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7.zip', 'Vistumbler7.zip (Sourceforge)']);">Vistumbler v7</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v07/Vistumbler7.zip'); return false;">Vistumbler v7</a></li>
 												</ul>
 											</div>	
 											<div class="verchanges_text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>Changes</strong></div>
@@ -761,7 +783,7 @@
 											<div>
 												<ul>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v06/Vistumbler6-1.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v06/Vistumbler6-1.zip', 'Vistumbler6-1.zip (Github)']);">Vistumbler v6.1</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v06/Vistumbler6-1.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v06/Vistumbler6-1.zip'); return false;">Vistumbler v6.1</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm)</li>
 												</ul>
 											</div>	
@@ -779,7 +801,7 @@
 											<div>
 												<ul>
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v06/Vistumbler6.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v06/Vistumbler6.zip', 'Vistumbler6.zip (Github)']);">Vistumbler v6</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v06/Vistumbler6.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v06/Vistumbler6.zip'); return false;">Vistumbler v6</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm)</li>
 												</ul>
 											</div>	
@@ -794,7 +816,7 @@
 											<div>
 												<ul>
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-9.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-9.zip', 'Vistumbler5-9.zip (Github)']);">Vistumbler 5.9</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-9.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-9.zip'); return false;">Vistumbler 5.9</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm)</li>
 												</ul>
 											</div>	
@@ -813,7 +835,7 @@
 											<div>
 												<ul>
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-81.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-81.zip', 'Vistumbler5-81.zip (Github)']);">Vistumbler 5.81</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-81.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-81.zip'); return false;">Vistumbler 5.81</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>
 												</ul>
 											</div>	
@@ -828,7 +850,7 @@
 											<div>
 												<ul>
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-8.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-8.zip', 'Vistumbler5-8.zip (Github)']);">Vistumbler 5.8</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-8.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-8.zip'); return false;">Vistumbler 5.8</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>
 												</ul>
 											</div>	
@@ -846,7 +868,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-71.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-71.zip', 'Vistumbler5-71.zip (Github)']);">Vistumbler 5.7</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-71.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-71.zip'); return false;">Vistumbler 5.7</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>
 												</ul>
 											</div>	
@@ -862,7 +884,7 @@
 											<div>
 												<ul>
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-6.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-6.zip', 'Vistumbler5-6.zip (Github)']);">Vistumbler 5.6</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-6.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-6.zip'); return false;">Vistumbler 5.6</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>
 												</ul>
 											</div>																
@@ -876,7 +898,7 @@
 											<div>
 												<ul>
 													<li>Download:
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-5.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-5.zip', 'Vistumbler5-5.zip (Github)']);">Vistumbler v5.5</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-5.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-5.zip'); return false;">Vistumbler v5.5</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>
 												</ul>
 											</div>	
@@ -898,7 +920,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-4.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-4.zip', 'Vistumbler5-4.zip (Github)']);">Vistumbler v5.4</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-4.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-4.zip'); return false;">Vistumbler v5.4</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>
 												</ul>
 											</div>								
@@ -912,7 +934,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-3.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-3.zip', 'Vistumbler5-3.zip (Github)']);">Vistumbler v5.3</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-3.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-3.zip'); return false;">Vistumbler v5.3</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>
 												</ul>
 											</div>	
@@ -928,7 +950,7 @@
 											<div>
 												<ul>				
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-2.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-2.zip', 'Vistumbler5-2.zip (Github)']);">Vistumbler v5.2</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-2.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-2.zip'); return false;">Vistumbler v5.2</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -949,7 +971,7 @@
 											<div>
 												<ul>
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-1.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-1.zip', 'Vistumbler5-1.zip (Github)']);">Vistumbler v5.1</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-1.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-1.zip'); return false;">Vistumbler v5.1</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -968,7 +990,7 @@
 											<div>
 												<ul>
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-05.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-05.zip', 'Vistumbler5-05.zip (Github)']);">Vistumbler v5.05</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-05.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5-05.zip'); return false;">Vistumbler v5.05</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -982,7 +1004,7 @@
 											<div>
 												<ul>		
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5.zip', 'Vistumbler5.zip (Github)']);">Vistumbler v5</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v05/Vistumbler5.zip'); return false;">Vistumbler v5</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -1002,7 +1024,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-3.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-3.zip', 'Vistumbler4-3.zip (Github)']);">Vistumbler 4.3</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-3.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-3.zip'); return false;">Vistumbler 4.3</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -1019,7 +1041,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-2.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-2.zip', 'Vistumbler4-2.zip (Github)']);">Vistumbler 4.2</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-2.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-2.zip'); return false;">Vistumbler 4.2</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -1035,7 +1057,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-1.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-1.zip', 'Vistumbler4-1.zip (Github)']);">Vistumbler 4.1</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-1.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4-1.zip'); return false;">Vistumbler 4.1</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -1051,7 +1073,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4.zip', 'Vistumbler4.zip (Github)']);">Vistumbler 4.0</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v04/Vistumbler4.zip'); return false;">Vistumbler 4.0</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -1067,7 +1089,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-31.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-31.zip', 'Vistumbler3-31.zip (Github)']);">Vistumbler 3.31</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-31.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-31.zip'); return false;">Vistumbler 3.31</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>	
@@ -1083,7 +1105,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-2.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-2.zip', 'Vistumbler3-2.zip (Github)']);">Vistumbler 3.2</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-2.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-2.zip'); return false;">Vistumbler 3.2</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>
@@ -1102,7 +1124,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-1.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-1.zip', 'Vistumbler3-1.zip (Github)']);">Vistumbler 3.1</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-1.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3-1.zip'); return false;">Vistumbler 3.1</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>
@@ -1118,7 +1140,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3.zip', 'Vistumbler3.zip (Github)']);">Vistumbler 3.0</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v03/Vistumbler3.zip'); return false;">Vistumbler 3.0</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>
@@ -1137,7 +1159,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2-2.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2-2.zip', 'Vistumbler2-2.zip (Github)']);">Vistumbler 2.2</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2-2.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2-2.zip'); return false;">Vistumbler 2.2</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>
@@ -1152,7 +1174,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2-1.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2-1.zip', 'Vistumbler2-1.zip (Github)']);">Vistumbler 2.1</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2-1.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2-1.zip'); return false;">Vistumbler 2.1</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>
@@ -1171,7 +1193,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2.zip', 'Vistumbler2.zip (Github)']);">Vistumbler 2.0</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v02/Vistumbler2.zip'); return false;">Vistumbler 2.0</a></li>
 													<li>To use GPS you will need the &#39;Netcomm OCX&#39; ( http://home.comcast.net/~hardandsoftware/NETCommOCX.htm )</li>								
 												</ul>
 											</div>
@@ -1186,7 +1208,7 @@
 											<div>
 												<ul>	
 													<li>Download: 
-													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v01/Vistumbler1.zip" onclick="_gaq.push(['_trackEvent', 'Vistumbler Downloads', 'https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v01/Vistumbler1.zip', 'Vistumbler1.zip (Github)']);">Vistumbler 1.0</a></li>
+													<a href="https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v01/Vistumbler1.zip" onclick="trackOutboundLink('https://github.com/RIEI/Releases/raw/master/Vistumbler/VistumblerMDB/v01/Vistumbler1.zip'); return false;">Vistumbler 1.0</a></li>
 													<li>First Release</li>
 												</ul>
 											</div>		
@@ -1203,38 +1225,48 @@
 							<td class="cell_bot_right">&nbsp;</td>
 						</tr>
 					</table>
-				<br />
-				<table cellspacing="0" cellpadding="0" align="center">
+				<br />	
+				<table class="no_border" align="center" width="100%">
 					<tr>
 						<td>
 							<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-							<!-- Vistumbler Bottom 1 -->
+							<!-- Vistumbler - Responsive 1 -->
 							<ins class="adsbygoogle"
-							     style="display:inline-block;width:728px;height:90px"
+							     style="display:block"
 							     data-ad-client="ca-pub-4275640341473005"
-							     data-ad-slot="5223071023"></ins>
+							     data-ad-slot="7116569131"
+							     data-ad-format="horizontal"></ins>
 							<script>
 							(adsbygoogle = window.adsbygoogle || []).push({});
-							</script>					
+							</script>
 						</td>
 					</tr>
 					<tr>
 						<td>
 							<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-							<!-- Vistumbler Bottom 2 -->
+							<!-- Vistumbler - Responsive 2 -->
 							<ins class="adsbygoogle"
-							     style="display:inline-block;width:728px;height:90px"
+							     style="display:block"
 							     data-ad-client="ca-pub-4275640341473005"
-							     data-ad-slot="7034525797"></ins>
+							     data-ad-slot="8593302336"
+							     data-ad-format="horizontal"></ins>
 							<script>
 							(adsbygoogle = window.adsbygoogle || []).push({});
-							</script>			
+							</script>
+						
+							<script type="text/javascript">
+							<!--
+								if(vidonate) {
+								//Show donate images instead
+									document.write('<div class="vidonate_b1"><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_vi_wide.png" alt="Donate to Vistumbler"></a><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_ti_wide.png" alt="Donate to Vistumbler"></a></div>');								}
+							//-->
+							</script>
 	    				</td>
 					</tr>
 				</table>
 				</td>
 				<td style="height: 114px; width: 180px;" valign="top">
-					<table style="width: 100%" cellpadding="0" cellspacing="0">
+					<table style="width: 100%" cellpadding="0" cellspacing="0" class="no_border">
 						<tr>
 							<td style="width: 10px; height: 20px" class="cell_top_left">
 								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
@@ -1252,16 +1284,26 @@
 								<div class="inside_dark_header">Ads</div>
 								<div class="inside_text_bold">
 									<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-									<!-- Vistumbler Right Ad -->
+									<!-- Vistumbler - Responsive Right -->
 									<ins class="adsbygoogle"
-									     style="display:inline-block;width:160px;height:600px"
+									     style="display:block"
 									     data-ad-client="ca-pub-4275640341473005"
-									     data-ad-slot="6541819990"></ins>
+									     data-ad-slot="2546768734"
+									     data-ad-format="vertical"></ins>
 									<script>
 									(adsbygoogle = window.adsbygoogle || []).push({});
-									</script>							
+									</script>					
 								</div>
-							</td>
+								<script type="text/javascript">
+								<!--
+								    if(vidonate) {
+								    	//Show donate images instead
+								        document.write('<div class="vidonate_t1"><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_vi_tall.png" alt="Donate to Vistumbler"></a></div>');
+								        document.write('<div class="vidonate_t2"><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_ti_tall.png" alt="Donate to Vistumbler"></a></div>');
+									}
+								//-->
+								</script>
+								</td>
 							<td class="cell_side_right">&nbsp;</td>
 						</tr>
 						<tr>
