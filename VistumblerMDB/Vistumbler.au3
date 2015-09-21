@@ -1,9 +1,9 @@
-#RequireAdmin
+;#RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Res_Fileversion=10.3.2.0
-#AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
+#AutoIt3Wrapper_Res_requestedExecutionLevel=highestAvailable
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2015 Andrew Calcutt
@@ -290,6 +290,8 @@ Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, 
 Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
+
+Dim $WifiDbSessionGuiOpen, $WifiDbAutoUploadForm, $inp_autoupload_username, $inp_autoupload_key, $inp_autoupload_title, $inp_autoupload_notes
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal, $CWCB_HighSignal, $CWIB_HighSignal, $CWCB_RSSI, $CWIB_RSSI, $CWCB_HighRSSI, $CWIB_HighRSSI
@@ -3704,18 +3706,97 @@ Func _WifiDbAutoUploadToggle($Warn = 1)
 		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
 		$AutoUpApsToWifiDB = 0
 	Else
-		If $Warn = 0 Then $UploadWarn = 6
-		If $Warn <> 0 Then $UploadWarn = MsgBox(4, $Text_Warning, $Text_WifiDBAutoUploadWarning)
-		If $UploadWarn = 6 Then
-			GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
-			;Set WifiDB Session ID
-			$WifiDbSessionID = StringTrimLeft(_MD5(Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & $ldatetimestamp & '-' & @MSEC), 2)
-			ConsoleWrite("WifiDb Session ID:" & $WifiDbSessionID & @CRLF)
-			$AutoUpApsToWifiDB = 1
-			$wifidb_au_timer = TimerInit()
-		EndIf
+		_WifiDbCreateSessionGUI()
 	EndIf
 EndFunc   ;==>_WifiDbAutoUploadToggle
+
+Func _WifiDbCreateSessionGUI()
+	If $WifiDbSessionGuiOpen = 0 Then
+		$WifiDbAutoUploadForm = GUICreate($Text_AutoWiFiDbUploadAps, 496, 398)
+		GUISetBkColor($BackgroundColor)
+		$Group1 = GUICtrlCreateGroup($Text_Warning, 8, 16, 473, 105)
+		$lab_api_warning = GUICtrlCreateLabel($Text_WifiDBAutoUploadWarning, 16, 40, 452, 65)
+		GUICtrlCreateGroup("", -99, -99, 1, 1)
+		GUICtrlCreateLabel($Text_WifiDB_Username, 15, 147, 465, 17)
+		$inp_autoupload_username = GUICtrlCreateInput($WifiDb_User, 15, 165, 465, 21)
+		GUICtrlCreateLabel($Text_WifiDB_Api_Key, 15, 192, 465, 17)
+		$inp_autoupload_key = GUICtrlCreateInput($WifiDb_ApiKey, 15, 210, 465, 21)
+		GUICtrlCreateLabel($Text_Title, 15, 237, 465, 17)
+		$inp_autoupload_title = GUICtrlCreateInput($dt, 15, 255, 465, 21)
+		GUICtrlCreateLabel($Text_Notes, 15, 282, 465, 17)
+		$inp_autoupload_notes = GUICtrlCreateInput("", 15, 300, 465, 21)
+		$btn_autoupload_ok = GUICtrlCreateButton($Text_Ok, 88, 344, 153, 33)
+		$btn_autoupload_can = GUICtrlCreateButton($Text_Cancel, 251, 344, 153, 33)
+		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseWifiDbAutoUpload')
+		GUICtrlSetOnEvent($btn_autoupload_can, '_CloseWifiDbAutoUpload')
+		GUICtrlSetOnEvent($btn_autoupload_ok, '_StartWifiDBAutoUpload')
+		GUISetState(@SW_SHOW)
+		$WifiDbSessionGuiOpen = 1
+	Else
+		WinActivate($WifiDbAutoUploadForm)
+	EndIf
+EndFunc
+
+Func _CloseWifiDbAutoUpload()
+	GUIDelete($WifiDbAutoUploadForm)
+EndFunc
+
+Func _StartWifiDBAutoUpload()
+	$WifiDb_User = GUICtrlRead($inp_autoupload_username)
+	$WifiDb_ApiKey = GUICtrlRead($inp_autoupload_key)
+	$AutoUpload_Title = GUICtrlRead($inp_autoupload_title)
+	$AutoUpload_Notes = GUICtrlRead($inp_autoupload_notes)
+
+	$url_root = $WifiDbApiURL & 'live.php?'
+	$url_data = ""
+	;Set Username And Api Key
+	If $WifiDb_User <> '' And $WifiDb_ApiKey <> '' Then
+		$url_data &= "&username=" & $WifiDb_User & "&apikey=" & $WifiDb_ApiKey
+	Else
+		MsgBox(0, $Text_Warning, "Username or Api Key were not entered. Your username will be set to 'AnonCoward'.")
+		$url_data &= "&username=AnonCoward&apikey=scaredycat"
+	EndIf
+	;Set Session Title
+	If $AutoUpload_Title <> '' Then
+		$url_data &= "&title=" & $AutoUpload_Title
+	Else
+		$url_data &= "&title=" & $dt
+	EndIf
+	;Set Session Notes
+	If $AutoUpload_Title <> '' Then
+		$url_data &= "&notes=" & $AutoUpload_Title
+	EndIf
+
+	If $Debug = 1 Then FileWrite("templog.txt", StringLen($url_root & $url_data) & ' - ' & $url_root & $url_data & @CRLF)
+	$webpagesource = _INetGetSource($url_root & $url_data)
+	If $Debug = 1 Then FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
+	ConsoleWrite($webpagesource & @CRLF)
+	$import_json_response = _JSONDecode($webpagesource)
+	$import_json_response_iRows = UBound($import_json_response, 1)
+	$import_json_response_iCols = UBound($import_json_response, 2)
+	;Pull out information from decoded json array
+	If $import_json_response_iCols = 2 Then
+		Local $WifiDbSessionID, $WifiDbSessionError
+		For $ji = 0 To ($import_json_response_iRows - 1)
+			ConsoleWrite($import_json_response[$ji][0] & ' -- ' & $import_json_response[$ji][1] & @CRLF)
+			If $import_json_response[$ji][0] = 'error' Then $WifiDbSessionError = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'SessionID' Then $WifiDbSessionID = $import_json_response[$ji][1]
+		Next
+		If $WifiDbSessionID <> "" Then
+			ConsoleWrite("WifiDB Session '" & $WifiDbSessionID & "' Created" & @CRLF)
+			$AutoUpApsToWifiDB = 1
+			$wifidb_au_timer = TimerInit()
+			_CloseWifiDbAutoUpload()
+		ElseIf $WifiDbSessionError <> "" Then
+			MsgBox(0, $Text_Error, $WifiDbSessionError)
+		Else
+			MsgBox(0, $Text_Error, "An Unknown Error Occured")
+		EndIf
+	Else
+		MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $webpagesource)
+	EndIf
+EndFunc
+
 
 Func _DownloadImagesToggle();Turns Estimated DB value on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DownloadImagesToggle()') ;#Debug Display
