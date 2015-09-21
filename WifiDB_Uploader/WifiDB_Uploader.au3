@@ -367,7 +367,7 @@ EndFunc
 Func _UploadToWifiDB($file, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
 	local $szDrive, $szDir, $szFName, $szExt
 	_PathSplit($file, $szDrive, $szDir, $szFName, $szExt)
-	$filetype = "text/plain; charset=""UTF-8"""
+	$filetype = "application/octet-stream"
 	$fileuname = $szFName & $szExt
 	;$fileread = FileRead($file)
 	ConsoleWrite($fileuname & @CRLF)
@@ -410,16 +410,22 @@ EndFunc
 Func _HTTPPost_WifiDB_File($file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
 	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
-	$fileopen = FileOpen($file,128)
+	$fileopen = FileOpen($file)
 	$file = FileRead($fileopen)
 	FileClose($fileopen)
 
     $sUrl = $WifiDbApiURL & "import.php"
 	ConsoleWrite($sUrl & @CRLF)
     $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
-    $oHttpRequest.Option(4) = 13056
+    ;$oHttpRequest.Option(4) = 13056
     $oHttpRequest.Open ("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
     $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
+
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""file""; filename=""" & $filename & """" & @CRLF
+	$PostData &= "Content-Type: " & $contenttype & @CRLF & @CRLF
+	$PostData &= $file & @CRLF
 
 	If $apikey <> "" Then
 		$PostData &= "--" & $boundary & @CRLF
@@ -446,14 +452,11 @@ Func _HTTPPost_WifiDB_File($file, $filename, $contenttype, $apikey, $user, $othe
 		$PostData &= "Content-Disposition: form-data; name=""notes""" & @CRLF & @CRLF
 		$PostData &= $notes & @CRLF
 	EndIf
-	$PostData &= "--" & $boundary & @CRLF
-	$PostData &= "Content-Disposition: form-data; name=""file""; filename=""" & $filename & """" & @CRLF
-	$PostData &= "Content-Type: " & $contenttype & @CRLF & @CRLF
-	$PostData &= $file & @crlf
-	$PostData &= "--" & $boundary & "--"
+	$PostData &= "--" & $boundary & "--" & @CRLF
 
 	;ConsoleWrite($PostData & @CRLF)
-	ConsoleWrite(StringReplace($PostData, $file, "## DATA FILE ##" & @CRLF) & @CRLF)
+	;ConsoleWrite(StringReplace($PostData, $file, "## DATA FILE ##" & @CRLF) & @CRLF)
+	ConsoleWrite($PostData & @CRLF)
 
 	$oHttpRequest.Send (StringToBinary($PostData))
 
