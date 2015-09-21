@@ -5911,179 +5911,112 @@ Func _UploadFileToWifiDB()
 	ConsoleWrite("$WifiDb_UploadType:" & $WifiDb_UploadType & "$WifiDb_UploadFiltered:" & $WifiDb_UploadFiltered & " $WifiDb_User:" & $WifiDb_User & " $WifiDb_OtherUsers:" & $WifiDb_OtherUsers & " $WifiDb_ApiKey:" & $WifiDb_ApiKey & " $upload_title:" & $upload_title & " $upload_notes:" & $upload_notes & @CRLF)
 	_CloseWifiDbUploadGUI()
 
-	;Get Host, Path, and Port from WifiDB api url
-	$hpparr = _Get_HostPortPath($WifiDbApiURL)
-	If Not @error Then
-		Local $host, $port, $path
-		$host = $hpparr[1]
-		$port = $hpparr[2]
-		$path = $hpparr[3]
-		$page = $path & "import.php"
-		ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
-		ConsoleWrite($path & @CRLF)
 
-		;Export WDB File
-		Local $fileexported, $filetype, $fileuname, $fileread
-		If $WifiDb_UploadType = "VS1" Then
-			$fileexported = _ExportVS1($WdbFile, $WifiDb_UploadFiltered)
-			$filetype = "text/plain; charset=""UTF-8"""
-			$fileuname = $ldatetimestamp & "_VS.VS1"
-			If $fileexported = 1 Then $fileread = FileRead($WdbFile)
-		ElseIf $WifiDb_UploadType = "CSV" Then
-			$fileexported = _ExportToCSV($WdbFile, $WifiDb_UploadFiltered, 1)
-			$filetype = "text/plain; charset=""UTF-8"""
-			$fileuname = $ldatetimestamp & "_VS.CSV"
-			If $fileexported = 1 Then $fileread = FileRead($WdbFile)
-		Else
-			$fileexported = _ExportVSZ($WdbFile, $WifiDb_UploadFiltered)
-			$filetype = "application/octet-stream"
-			$fileuname = $ldatetimestamp & "_VS.VSZ"
-			If $fileexported = 1 Then $fileread = FileRead($WdbFile) & @CRLF
-		EndIf
-
-		If $fileexported = 1 Then ;Upload File to WifiDB
-			$socket = _HTTPConnect($host, $port)
-			If Not @error Then
-				_HTTPPost_WifiDB_File($host, $page, $socket, $fileread, $fileuname, $filetype, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
-				$recv = _HTTPRead($socket, 1)
-				If @error Then
-					ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-					MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
-				Else
-					Local $httprecv, $import_json_response, $json_array_size, $json_msg
-					$httprecv = $recv[4]
-					ConsoleWrite($httprecv & @CRLF)
-					$import_json_response = _JSONDecode($httprecv)
-					$import_json_response_iRows = UBound($import_json_response, 1)
-					$import_json_response_iCols = UBound($import_json_response, 2)
-					;Pull out information from decoded json array
-					If $import_json_response_iCols = 2 Then
-						Local $imtitle, $imuser, $immessage, $imimportnum, $imfilehash, $imerror
-						For $ji = 0 To ($import_json_response_iRows - 1)
-							If $import_json_response[$ji][0] = 'title' Then $imtitle = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'user' Then $imuser = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'message' Then $immessage = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'importnum' Then $imimportnum = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'filehash' Then $imfilehash = $import_json_response[$ji][1]
-							If $import_json_response[$ji][0] = 'error' Then $imerror = $import_json_response[$ji][1]
-						Next
-						If $imtitle <> "" Or $imuser <> "" Or $immessage <> "" Or $imimportnum <> "" Or $imfilehash <> "" Then
-							MsgBox(0, $Text_Information, "Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
-							ConsoleWrite("Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
-						Else
-							MsgBox(0, $Text_Error, $httprecv)
-						EndIf
-					Else
-						MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
-					EndIf
-				EndIf
-			Else
-				MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
-				ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
-			EndIf
-		Else ;File Export failed
-			ConsoleWrite("No export created for some reason... are there APs to be exported?" & @CRLF)
-			MsgBox(0, $Text_Error, "No export created for some reason... are there APs to be exported?")
-		EndIf
+	;Export WDB File
+	Local $fileexported, $filetype, $fileuname, $fileread
+	If $WifiDb_UploadType = "VS1" Then
+		$fileexported = _ExportVS1($WdbFile, $WifiDb_UploadFiltered)
+		$filetype = "text/plain; charset=""UTF-8"""
+		$fileuname = $ldatetimestamp & "_VS.VS1"
+		If $fileexported = 1 Then $fileread = FileRead($WdbFile)
+	ElseIf $WifiDb_UploadType = "CSV" Then
+		$fileexported = _ExportToCSV($WdbFile, $WifiDb_UploadFiltered, 1)
+		$filetype = "text/plain; charset=""UTF-8"""
+		$fileuname = $ldatetimestamp & "_VS.CSV"
+		If $fileexported = 1 Then $fileread = FileRead($WdbFile)
 	Else
-		ConsoleWrite("error getting host, path, and port from url """ & $WifiDbApiURL & """" & @CRLF)
-		MsgBox(0, $Text_Error, "error getting host, path, and port from url """ & $WifiDbApiURL & """")
+		$fileexported = _ExportVSZ($WdbFile, $WifiDb_UploadFiltered)
+		$filetype = "application/octet-stream"
+		$fileuname = $ldatetimestamp & "_VS.VSZ"
+		If $fileexported = 1 Then $fileread = FileRead($WdbFile) & @CRLF
 	EndIf
+
+	If $fileexported = 1 Then ;Upload File to WifiDB
+		$httprecv = _HTTPPost_WifiDB_File($WifiDbApiURL, $fileread, $fileuname, $filetype, $WifiDb_ApiKey, $WifiDb_User, $WifiDb_OtherUsers, $upload_title, $upload_notes)
+		ConsoleWrite($httprecv & @CRLF)
+
+		Local $import_json_response, $json_array_size, $json_msg
+		$import_json_response = _JSONDecode($httprecv)
+		$import_json_response_iRows = UBound($import_json_response, 1)
+		$import_json_response_iCols = UBound($import_json_response, 2)
+		;Pull out information from decoded json array
+		If $import_json_response_iCols = 2 Then
+			Local $imtitle, $imuser, $immessage, $imimportnum, $imfilehash, $imerror
+			For $ji = 0 To ($import_json_response_iRows - 1)
+				If $import_json_response[$ji][0] = 'title' Then $imtitle = $import_json_response[$ji][1]
+				If $import_json_response[$ji][0] = 'user' Then $imuser = $import_json_response[$ji][1]
+				If $import_json_response[$ji][0] = 'message' Then $immessage = $import_json_response[$ji][1]
+				If $import_json_response[$ji][0] = 'importnum' Then $imimportnum = $import_json_response[$ji][1]
+				If $import_json_response[$ji][0] = 'filehash' Then $imfilehash = $import_json_response[$ji][1]
+				If $import_json_response[$ji][0] = 'error' Then $imerror = $import_json_response[$ji][1]
+			Next
+			If $imtitle <> "" Or $imuser <> "" Or $immessage <> "" Or $imimportnum <> "" Or $imfilehash <> "" Then
+				MsgBox(0, $Text_Information, "Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
+				ConsoleWrite("Title: " & $imtitle & @CRLF & "User: " & $imuser & @CRLF & "Message: " & $immessage & @CRLF & "Import Number: " & $imimportnum & @CRLF & "File Hash: " & $imfilehash & @CRLF)
+			Else
+				MsgBox(0, $Text_Error, $httprecv)
+			EndIf
+		Else
+			MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
+		EndIf
+	Else ;File Export failed
+		ConsoleWrite("No export created for some reason... are there APs to be exported?" & @CRLF)
+		MsgBox(0, $Text_Error, "No export created for some reason... are there APs to be exported?")
+	EndIf
+
 	GUICtrlSetData($msgdisplay, '');Clear $msgdisplay
 EndFunc   ;==>_UploadFileToWifiDB
 
-Func _Get_HostPortPath($inURL)
-	Local $host, $port, $path
-	$hstring = StringTrimRight($inURL, StringLen($inURL) - (StringInStr($inURL, "/", 0, 3) - 1))
-	$path = StringTrimLeft($inURL, StringInStr($inURL, "/", 0, 3) - 1)
-	If StringInStr($hstring, ":", 0, 2) Then
-		$hpa = StringSplit($hstring, ":")
-		If $hpa[0] = 3 Then
-			$host = StringReplace($hpa[2], "//", "")
-			$port = $hpa[3]
-		EndIf
-	Else
-		$host = StringReplace(StringReplace($hstring, "https://", ""), "http://", "")
-		If StringInStr($hstring, "https://") Then
-			$port = 443
-		Else
-			$port = 80
-		EndIf
-	EndIf
-	If $host <> "" And $port <> "" And $path <> "" Then
-		Local $hpResults[4]
-		$hpResults[0] = 3
-		$hpResults[1] = $host
-		$hpResults[2] = $port
-		$hpResults[3] = $path
-		Return $hpResults
-	Else
-		SetError(1);something messed up splitting the given URL....who knows what.
-	EndIf
-EndFunc   ;==>_Get_HostPortPath
-
-Func _HTTPPost_WifiDB_File($host, $page, $socket, $file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
-	Local $command, $extra_commands
+Func _HTTPPost_WifiDB_File($apiurl, $file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
+	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
+    $sUrl = $apiurl & "import.php"
+    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+    ;$oHttpRequest.Option(4) = 13056
+    $oHttpRequest.Open ("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
+    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
+
 	If $apikey <> "" Then
-		$extra_commands = "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""apikey""" & @CRLF & @CRLF
-		$extra_commands &= $apikey & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""apikey""" & @CRLF & @CRLF
+		$PostData &= $apikey & @CRLF
 	EndIf
 	If $user <> "" Then
-		$extra_commands &= "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""username""" & @CRLF & @CRLF
-		$extra_commands &= $user & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""username""" & @CRLF & @CRLF
+		$PostData &= $user & @CRLF
 	EndIf
 	If $otherusers <> "" Then
-		$extra_commands &= "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""otherusers""" & @CRLF & @CRLF
-		$extra_commands &= $otherusers & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""otherusers""" & @CRLF & @CRLF
+		$PostData &= $otherusers & @CRLF
 	EndIf
 	If $title <> "" Then
-		$extra_commands &= "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""title""" & @CRLF & @CRLF
-		$extra_commands &= $title & @CRLF
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""title""" & @CRLF & @CRLF
+		$PostData &= $title & @CRLF
 	EndIf
 	If $notes <> "" Then
-		$extra_commands &= "--" & $boundary & @CRLF
-		$extra_commands &= "Content-Disposition: form-data; name=""notes""" & @CRLF & @CRLF
-		$extra_commands &= $notes & @CRLF
-	EndIf
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""file""; filename=""" & $filename & """" & @CRLF
-	$extra_commands &= "Content-Type: " & $contenttype & @CRLF & @CRLF
-
-	$extra_commands &= $file
-	$extra_commands &= "--" & $boundary & "--"
-
-	Dim $datasize = StringLen($extra_commands)
-
-	$command = "POST " & $page & " HTTP/1.1" & @CRLF
-	$command &= "Host: " & $host & @CRLF
-	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
-	$command &= "Connection: close" & @CRLF
-	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
-	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
-	$command &= $extra_commands
-
-	If $contenttype = "application/octet-stream" Then
-		ConsoleWrite(StringReplace($command, $file, "## BINARY DATA FILE ##" & @CRLF) & @CRLF)
-	Else
-		ConsoleWrite($command & @CRLF)
+		$PostData &= "--" & $boundary & @CRLF
+		$PostData &= "Content-Disposition: form-data; name=""notes""" & @CRLF & @CRLF
+		$PostData &= $notes & @CRLF
 	EndIf
 
-	Dim $bytessent = TCPSend($socket, $command)
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""file""; filename=""" & $filename & """" & @CRLF
+	$PostData &= "Content-Type: " & $contenttype & @CRLF & @CRLF
+	$PostData &= $file & @CRLF
+	$PostData &= "--" & $boundary & "--" & @CRLF
+	ConsoleWrite(StringReplace($PostData, $file, "## DATA FILE ##" & @CRLF) & @CRLF)
 
-	If $bytessent == 0 Then
-		SetExtended(@error)
-		SetError(2)
-		Return 0
-	EndIf
+	$oHttpRequest.Send (StringToBinary($PostData))
+	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
+	$Response = $oHttpRequest.ResponseText
 
-	SetError(0)
-	Return $bytessent
+	$oHttpRequest = ""
+	Return($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_File
 
 Func _LocatePositionInWiFiDB();Finds GPS based on active acess points displays information in message box
@@ -6103,84 +6036,55 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 			$ActiveMacs &= $BssidMatchArray[$exb][1] & '|' & ($BssidMatchArray[$exb][2] + 0)
 		Next
 		If $ActiveMacs <> "" Then
-			;Get Host, Path, and Port from WifiDB api url
-			$hpparr = _Get_HostPortPath($WifiDbApiURL)
-			If Not @error Then
-				Local $host, $port, $path
-				$host = $hpparr[1]
-				$port = $hpparr[2]
-				$path = $hpparr[3]
-				$page = $path & "locate.php"
-				ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
-				ConsoleWrite($path & @CRLF)
-				;Get information from WifiDB
-				$socket = _HTTPConnect($host, $port)
-				If Not @error Then
-					_HTTPPost_WifiDB_LocateGPS($host, $page, $socket, $ActiveMacs)
-					$recv = _HTTPRead($socket, 1)
-					If @error Then
-						ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-						If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
+			$httprecv = _HTTPPost_WifiDB_LocateGPS($WifiDbApiURL, $ActiveMacs)
+			ConsoleWrite($httprecv & @CRLF)
+			$import_json_response = _JSONDecode($httprecv)
+			$import_json_response_iRows = UBound($import_json_response, 1)
+			$import_json_response_iCols = UBound($import_json_response, 2)
+			If $import_json_response_iCols = 2 Then
+				;Pull out information from decoded json array
+				Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
+				For $ji = 0 To ($import_json_response_iRows - 1)
+					If $import_json_response[$ji][0] = 'lat' Then $lglat = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'long' Then $lglon = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'date' Then $lgdate = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'time' Then $lgtime = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'sats' Then $lgsats = $import_json_response[$ji][1]
+					If $import_json_response[$ji][0] = 'error' Then $lgerror = $import_json_response[$ji][1]
+				Next
+				;Update Vistumbler GPS info with what was pulled from wifidb
+				If $lglat <> '' And $lglon <> '' Then
+					;Format Lat/Lon
+					If StringInStr($lglat, "-") Then
+						$lglat = "S " & StringReplace(StringReplace($lglat, "-", ""), "0.0000", "0000.0000")
 					Else
-						;Read WifiDB JSON Response
-						Local $httprecv, $import_json_response, $json_array_size
-						$httprecv = $recv[4]
-						ConsoleWrite($httprecv & @CRLF)
-						$import_json_response = _JSONDecode($httprecv)
-						$import_json_response_iRows = UBound($import_json_response, 1)
-						$import_json_response_iCols = UBound($import_json_response, 2)
-						If $import_json_response_iCols = 2 Then
-							;Pull out information from decoded json array
-							Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
-							For $ji = 0 To ($import_json_response_iRows - 1)
-								If $import_json_response[$ji][0] = 'lat' Then $lglat = $import_json_response[$ji][1]
-								If $import_json_response[$ji][0] = 'long' Then $lglon = $import_json_response[$ji][1]
-								If $import_json_response[$ji][0] = 'date' Then $lgdate = $import_json_response[$ji][1]
-								If $import_json_response[$ji][0] = 'time' Then $lgtime = $import_json_response[$ji][1]
-								If $import_json_response[$ji][0] = 'sats' Then $lgsats = $import_json_response[$ji][1]
-								If $import_json_response[$ji][0] = 'error' Then $lgerror = $import_json_response[$ji][1]
-							Next
-							;Update Vistumbler GPS info with what was pulled from wifidb
-							If $lglat <> '' And $lglon <> '' Then
-								;Format Lat/Lon
-								If StringInStr($lglat, "-") Then
-									$lglat = "S " & StringReplace(StringReplace($lglat, "-", ""), "0.0000", "0000.0000")
-								Else
-									$lglat = "N " & StringReplace(StringReplace($lglat, "+", ""), "0.0000", "0000.0000")
-								EndIf
-								If StringInStr($lglon, "-") Then
-									$lglon = "W " & StringReplace(StringReplace($lglon, "-", ""), "0.0000", "0000.0000")
-								Else
-									$lglon = "E " & StringReplace(StringReplace($lglon, "+", ""), "0.0000", "0000.0000")
-								EndIf
-								;Set WifiDB Lat/Lon
-								$LatitudeWifidb = $lglat
-								$LongitudeWifidb = $lglon
-								;Show Prompt
-								If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, $Text_Latitude & ': ' & $lglat & @CRLF & $Text_Longitude & ': ' & $lglon & @CRLF & $Text_Date & ': ' & $lgdate & @CRLF & $Text_Time & ': ' & $lgtime & @CRLF)
-								ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
-								;Reset update timer
-								$WifidbGPS_Update = TimerInit()
-								$return = 1
-							ElseIf $lgerror <> '' Then
-								If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $lgerror)
-								ConsoleWrite($Text_Error & ': ' & $lgerror & @CRLF)
-							Else
-								If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $httprecv)
-								ConsoleWrite($Text_Error & ': ' & $httprecv & @CRLF)
-							EndIf
-						Else
-							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
-						EndIf
+						$lglat = "N " & StringReplace(StringReplace($lglat, "+", ""), "0.0000", "0000.0000")
 					EndIf
+					If StringInStr($lglon, "-") Then
+						$lglon = "W " & StringReplace(StringReplace($lglon, "-", ""), "0.0000", "0000.0000")
+					Else
+						$lglon = "E " & StringReplace(StringReplace($lglon, "+", ""), "0.0000", "0000.0000")
+					EndIf
+					;Set WifiDB Lat/Lon
+					$LatitudeWifidb = $lglat
+					$LongitudeWifidb = $lglon
+					;Show Prompt
+					If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, $Text_Latitude & ': ' & $lglat & @CRLF & $Text_Longitude & ': ' & $lglon & @CRLF & $Text_Date & ': ' & $lgdate & @CRLF & $Text_Time & ': ' & $lgtime & @CRLF)
+					ConsoleWrite('$lglat:' & $lglat & ' $lglon:' & $lglon & ' $lgdate:' & $lgdate & ' $lgtime:' & $lgtime & ' $lgsats:' & $lgsats & @CRLF)
+					;Reset update timer
+					$WifidbGPS_Update = TimerInit()
+					$return = 1
+				ElseIf $lgerror <> '' Then
+					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $lgerror)
+					ConsoleWrite($Text_Error & ': ' & $lgerror & @CRLF)
 				Else
-					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
-					ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
+					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_Error & ': ' & $httprecv)
+					ConsoleWrite($Text_Error & ': ' & $httprecv & @CRLF)
 				EndIf
 			Else
-				If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "error getting host, path, and port from url """ & $WifiDbApiURL & """")
-				ConsoleWrite("error getting host, path, and port from url """ & $WifiDbApiURL & """" & @CRLF)
+				If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 			EndIf
+
 		EndIf
 	Else
 		If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, $Text_NoActiveApFound)
@@ -6193,36 +6097,29 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 	Return ($return)
 EndFunc   ;==>_LocateGpsInWifidb
 
-Func _HTTPPost_WifiDB_LocateGPS($host, $page, $socket, $ActiveBSSIDs)
-	Local $command, $extra_commands
+Func _HTTPPost_WifiDB_LocateGPS($apiurl, $ActiveBSSIDs)
+	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-	$extra_commands = "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""ActiveBSSIDs""" & @CRLF & @CRLF
-	$extra_commands &= $ActiveBSSIDs & @CRLF
-	$extra_commands &= "--" & $boundary & "--"
+    $sUrl = $apiurl & "import.php"
+    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+    ;$oHttpRequest.Option(4) = 13056
+    $oHttpRequest.Open ("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
+    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
 
-	Dim $datasize = StringLen($extra_commands)
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""ActiveBSSIDs""" & @CRLF & @CRLF
+	$PostData &= $ActiveBSSIDs & @CRLF
+	$PostData &= "--" & $boundary & "--" & @CRLF
+	ConsoleWrite($PostData & @CRLF)
 
-	$command = "POST " & $page & " HTTP/1.1" & @CRLF
-	$command &= "Host: " & $host & @CRLF
-	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
-	$command &= "Connection: close" & @CRLF
-	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
-	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
-	$command &= $extra_commands
-	ConsoleWrite($command & @CRLF)
+	$oHttpRequest.Send (StringToBinary($PostData))
+	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
+	$Response = $oHttpRequest.ResponseText
 
-	Dim $bytessent = TCPSend($socket, $command)
-
-	If $bytessent == 0 Then
-		SetExtended(@error)
-		SetError(2)
-		Return 0
-	EndIf
-
-	SetError(0)
-	Return $bytessent
+	$oHttpRequest = ""
+	Return($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_LocateGPS
 
 Func _GeoLocate($lat, $lon, $ShowPrompts = 0)
@@ -6230,106 +6127,75 @@ Func _GeoLocate($lat, $lon, $ShowPrompts = 0)
 	Local $return = 0
 	$lat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lat), "N", ""), "S", "-"), " ", "")
 	$lon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($lon), "E", ""), "W", "-"), " ", "")
-	$hpparr = _Get_HostPortPath($WifiDbApiURL)
-	If Not @error Then
-		Local $host, $port, $path
-		$host = $hpparr[1]
-		$port = $hpparr[2]
-		$path = $hpparr[3]
-		$page = $path & "geonames.php"
-		ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
-		ConsoleWrite($path & @CRLF)
-		;Get information from WifiDB
-		$socket = _HTTPConnect($host, $port)
-		If Not @error Then
-			_HTTPPost_WifiDB_GeoLocate($host, $page, $socket, $lat, $lon)
-			$recv = _HTTPRead($socket, 1)
-			If @error Then
-				ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-				If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
-			Else
-				;Read WifiDB JSON Response
-				Local $httprecv, $import_json_response, $json_array_size
-				$httprecv = $recv[4]
-				ConsoleWrite($httprecv & @CRLF)
-				$import_json_response = _JSONDecode($httprecv)
-				$import_json_response_iRows = UBound($import_json_response, 1)
-				$import_json_response_iCols = UBound($import_json_response, 2)
-				If $import_json_response_iCols = 2 Then
-					;Pull out information from decoded json array
-					Local $gncc, $gncn, $gna1c, $gna1n, $gna2n, $gnan, $gnerr, $gnm, $gnkm
-					For $ji = 0 To ($import_json_response_iRows - 1)
-						If $import_json_response[$ji][0] = 'Country Code' Then $gncc = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'Country Name' Then $gncn = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'Admin1 Code' Then $gna1c = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'Admin1 Name' Then $gna1n = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'Admin2 Name' Then $gna2n = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'Area Name' Then $gnan = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'miles' Then $gnm = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'km' Then $gnkm = $import_json_response[$ji][1]
-						If $import_json_response[$ji][0] = 'error' Then $gnerr = $import_json_response[$ji][1]
-					Next
-					If $gncc <> "" Or $gncn <> "" Or $gna1c <> "" Or $gna1n <> "" Or $gna2n <> "" Or $gnan <> "" Or $gnm <> "" Or $gnkm <> "" Or $gnerr <> "" Then
-						Local $aReturn[9]
-						$aReturn[1] = $gncc
-						$aReturn[2] = $gncn
-						$aReturn[3] = $gna1c
-						$aReturn[4] = $gna1n
-						$aReturn[5] = $gna2n
-						$aReturn[6] = $gnan
-						$aReturn[7] = $gnm
-						$aReturn[8] = $gnkm
-						Return $aReturn
-					Else
-						Local $aReturn[2]
-						$aReturn[1] = $gnerr
-						SetError(1)
-						Return
-					EndIf
-				Else
-					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
-				EndIf
-			EndIf
+
+	$httprecv = _HTTPPost_WifiDB_GeoLocate($WifiDbApiURL, $lat, $lon)
+	ConsoleWrite($httprecv & @CRLF)
+	$import_json_response = _JSONDecode($httprecv)
+	$import_json_response_iRows = UBound($import_json_response, 1)
+	$import_json_response_iCols = UBound($import_json_response, 2)
+	If $import_json_response_iCols = 2 Then
+		;Pull out information from decoded json array
+		Local $gncc, $gncn, $gna1c, $gna1n, $gna2n, $gnan, $gnerr, $gnm, $gnkm
+		For $ji = 0 To ($import_json_response_iRows - 1)
+			If $import_json_response[$ji][0] = 'Country Code' Then $gncc = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'Country Name' Then $gncn = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'Admin1 Code' Then $gna1c = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'Admin1 Name' Then $gna1n = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'Admin2 Name' Then $gna2n = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'Area Name' Then $gnan = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'miles' Then $gnm = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'km' Then $gnkm = $import_json_response[$ji][1]
+			If $import_json_response[$ji][0] = 'error' Then $gnerr = $import_json_response[$ji][1]
+		Next
+		If $gncc <> "" Or $gncn <> "" Or $gna1c <> "" Or $gna1n <> "" Or $gna2n <> "" Or $gnan <> "" Or $gnm <> "" Or $gnkm <> "" Or $gnerr <> "" Then
+			Local $aReturn[9]
+			$aReturn[1] = $gncc
+			$aReturn[2] = $gncn
+			$aReturn[3] = $gna1c
+			$aReturn[4] = $gna1n
+			$aReturn[5] = $gna2n
+			$aReturn[6] = $gnan
+			$aReturn[7] = $gnm
+			$aReturn[8] = $gnkm
+			Return $aReturn
 		Else
-			If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
-			ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
+			Local $aReturn[2]
+			$aReturn[1] = $gnerr
+			SetError(1)
+			Return
 		EndIf
+	Else
+		If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 	EndIf
 EndFunc   ;==>_GeoLocate
 
-Func _HTTPPost_WifiDB_GeoLocate($host, $page, $socket, $lat, $lon)
-	Local $command, $extra_commands
+Func _HTTPPost_WifiDB_GeoLocate($apiurl, $lat, $lon)
+	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-	$extra_commands = "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""lat""" & @CRLF & @CRLF
-	$extra_commands &= $lat & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""long""" & @CRLF & @CRLF
-	$extra_commands &= $lon & @CRLF
-	$extra_commands &= "--" & $boundary & "--"
+    $sUrl = $apiurl & "geonames.php"
+	ConsoleWrite($sUrl & @CRLF)
+    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+    ;$oHttpRequest.Option(4) = 13056
+    $oHttpRequest.Open ("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
+    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
 
-	Dim $datasize = StringLen($extra_commands)
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""lat""" & @CRLF & @CRLF
+	$PostData &= $lat & @CRLF
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""long""" & @CRLF & @CRLF
+	$PostData &= $lon & @CRLF
+	$PostData &= "--" & $boundary & "--" & @CRLF
+	ConsoleWrite($PostData & @CRLF)
 
-	$command = "POST " & $page & " HTTP/1.1" & @CRLF
-	$command &= "Host: " & $host & @CRLF
-	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
-	$command &= "Connection: close" & @CRLF
-	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
-	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
-	$command &= $extra_commands
-	ConsoleWrite($command & @CRLF)
+	$oHttpRequest.Send (StringToBinary($PostData))
+	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
+	$Response = $oHttpRequest.ResponseText
 
-	Dim $bytessent = TCPSend($socket, $command)
-
-	If $bytessent == 0 Then
-		SetExtended(@error)
-		SetError(2)
-		Return 0
-	EndIf
-
-	SetError(0)
-	Return $bytessent
+	$oHttpRequest = ""
+	Return($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_GeoLocate
 
 Func _GeonamesInfo($SelectedRow)
@@ -6380,80 +6246,50 @@ Func _LocateAPInWifidb($Selected, $ShowPrompts = 0);Finds AP in WifiDB
 			$ExpAUTH = $ApMatchArray[1][5]
 			$ExpENCR = $ApMatchArray[1][6]
 
-			;Get Host, Path, and Port from WifiDB api url
-			$hpparr = _Get_HostPortPath($WifiDbApiURL)
-			If Not @error Then
-				Local $host, $port, $path
-				$host = $hpparr[1]
-				$port = $hpparr[2]
-				$path = $hpparr[3]
-				$page = $path & "search.php"
-				ConsoleWrite('$host:' & $host & ' ' & '$port:' & $port & @CRLF)
-				ConsoleWrite($page & @CRLF)
-				;Get information from WifiDB
-				$socket = _HTTPConnect($host, $port)
-				If Not @error Then
-					_HTTPPost_WifiDB_LocateAP($host, $page, $socket, $ExpSSID, $ExpBSSID, $ExpRAD, $ExpCHAN, $ExpAUTH, $ExpENCR)
-					$recv = _HTTPRead($socket, 1)
-					If @error Then
-						ConsoleWrite("_HTTPRead Error:" & @error & @CRLF)
-						If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPRead Error:" & @error)
-					Else
-						;Read WifiDB JSON Response
-						Local $httprecv, $import_json_response, $iRows, $iCols
-						$httprecv = $recv[4]
-						ConsoleWrite($httprecv & @CRLF)
-						$import_json_response = _JSONDecode($httprecv)
-						$import_json_response_iRows = UBound($import_json_response, 1)
-						$import_json_response_iCols = UBound($import_json_response, 2)
-						ConsoleWrite('$import_json_response_iCols:' & $import_json_response_iCols & @CRLF)
-						If $import_json_response_iRows <> 0 And $import_json_response_iCols = 0 Then
-							;Pull out information from decoded json array
-							Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
-							For $ji = 0 To ($import_json_response_iRows - 1)
-								$aparr = $import_json_response[$ji]
-								$aparr_iRows = UBound($aparr, 1)
-								$aparr_iCols = UBound($aparr, 2)
-								ConsoleWrite('$aparr_iCols:' & $aparr_iCols & @CRLF)
-								If $aparr_iCols = 2 Then
-									Local $aid, $assid, $amac, $asectype, $achan, $aauth, $aencry, $aradio, $abtx, $aotx, $alabel, $afa, $ala, $ant, $amanuf, $ageonames_id, $aadmin1_id, $aadmin2_id, $ausername, $aap_hash
-									For $ai = 0 To ($aparr_iRows - 1)
-										If $aparr[$ai][0] = 'id' Then $aid = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'ssid' Then $assid = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'mac' Then $amac = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'sectype' Then $asectype = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'chan' Then $achan = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'auth' Then $aauth = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'encry' Then $aencry = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'radio' Then $aradio = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'BTx' Then $abtx = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'OTx' Then $aotx = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'label' Then $alabel = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'FA' Then $afa = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'LA' Then $ala = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'NT' Then $ant = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'manuf' Then $amanuf = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'geonames_id' Then $ageonames_id = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'admin1_id' Then $aadmin1_id = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'admin2_id' Then $aadmin2_id = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'username' Then $ausername = $aparr[$ai][1]
-										If $aparr[$ai][0] = 'ap_hash' Then $aap_hash = $aparr[$ai][1]
-									Next
-									If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, 'ID: ' & $aid & @CRLF & 'SSID: ' & $assid & @CRLF & 'BSSID: ' & $amac & @CRLF & 'SecType: ' & $asectype & @CRLF & 'Channel: ' & $achan & @CRLF & 'Authentication: ' & $aauth & @CRLF & 'Encrytion: ' & $aencry & @CRLF & 'Radio Type' & $aradio & @CRLF & 'BTX: ' & $abtx & @CRLF & 'OTX: ' & $aotx & @CRLF & 'Label: ' & $alabel & @CRLF & 'First Seen: ' & $afa & @CRLF & 'Last Seen: ' & $ala & @CRLF & 'Network Type: ' & $ant & @CRLF & 'Manufacturer: ' & $amanuf & @CRLF & 'Geonames ID: ' & $ageonames_id & @CRLF & 'Admin ID:' & $aadmin1_id & @CRLF & 'Admin2 ID: ' & $aadmin2_id & @CRLF & 'Username: ' & $ausername & @CRLF & 'Hash: ' & $aap_hash)
-									ConsoleWrite($aid & ' - ' & $assid & ' - ' & $amac & ' - ' & $asectype & ' - ' & $achan & ' - ' & $aauth & ' - ' & $aencry & ' - ' & $aradio & ' - ' & $abtx & ' - ' & $aotx & ' - ' & $alabel & ' - ' & $afa & ' - ' & $ala & ' - ' & $ant & ' - ' & $amanuf & ' - ' & $ageonames_id & ' - ' & $aadmin1_id & ' - ' & $aadmin2_id & ' - ' & $ausername & ' - ' & $aap_hash & @CRLF)
-								EndIf
-							Next
-						Else
-							If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
-						EndIf
+			$httprecv = _HTTPPost_WifiDB_LocateAP($WifiDbApiURL, $ExpSSID, $ExpBSSID, $ExpRAD, $ExpCHAN, $ExpAUTH, $ExpENCR)
+			ConsoleWrite($httprecv & @CRLF)
+			$import_json_response = _JSONDecode($httprecv)
+			$import_json_response_iRows = UBound($import_json_response, 1)
+			$import_json_response_iCols = UBound($import_json_response, 2)
+			ConsoleWrite('$import_json_response_iCols:' & $import_json_response_iCols & @CRLF)
+			If $import_json_response_iRows <> 0 And $import_json_response_iCols = 0 Then
+				;Pull out information from decoded json array
+				Local $lglat, $lglon, $lgdate, $lgtime, $lgsats, $lgerror
+				For $ji = 0 To ($import_json_response_iRows - 1)
+					$aparr = $import_json_response[$ji]
+					$aparr_iRows = UBound($aparr, 1)
+					$aparr_iCols = UBound($aparr, 2)
+					ConsoleWrite('$aparr_iCols:' & $aparr_iCols & @CRLF)
+					If $aparr_iCols = 2 Then
+						Local $aid, $assid, $amac, $asectype, $achan, $aauth, $aencry, $aradio, $abtx, $aotx, $alabel, $afa, $ala, $ant, $amanuf, $ageonames_id, $aadmin1_id, $aadmin2_id, $ausername, $aap_hash
+						For $ai = 0 To ($aparr_iRows - 1)
+							If $aparr[$ai][0] = 'id' Then $aid = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'ssid' Then $assid = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'mac' Then $amac = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'sectype' Then $asectype = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'chan' Then $achan = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'auth' Then $aauth = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'encry' Then $aencry = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'radio' Then $aradio = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'BTx' Then $abtx = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'OTx' Then $aotx = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'label' Then $alabel = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'FA' Then $afa = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'LA' Then $ala = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'NT' Then $ant = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'manuf' Then $amanuf = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'geonames_id' Then $ageonames_id = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'admin1_id' Then $aadmin1_id = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'admin2_id' Then $aadmin2_id = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'username' Then $ausername = $aparr[$ai][1]
+							If $aparr[$ai][0] = 'ap_hash' Then $aap_hash = $aparr[$ai][1]
+						Next
+						If $ShowPrompts = 1 Then MsgBox(0, $Text_Information, 'ID: ' & $aid & @CRLF & 'SSID: ' & $assid & @CRLF & 'BSSID: ' & $amac & @CRLF & 'SecType: ' & $asectype & @CRLF & 'Channel: ' & $achan & @CRLF & 'Authentication: ' & $aauth & @CRLF & 'Encrytion: ' & $aencry & @CRLF & 'Radio Type' & $aradio & @CRLF & 'BTX: ' & $abtx & @CRLF & 'OTX: ' & $aotx & @CRLF & 'Label: ' & $alabel & @CRLF & 'First Seen: ' & $afa & @CRLF & 'Last Seen: ' & $ala & @CRLF & 'Network Type: ' & $ant & @CRLF & 'Manufacturer: ' & $amanuf & @CRLF & 'Geonames ID: ' & $ageonames_id & @CRLF & 'Admin ID:' & $aadmin1_id & @CRLF & 'Admin2 ID: ' & $aadmin2_id & @CRLF & 'Username: ' & $ausername & @CRLF & 'Hash: ' & $aap_hash)
+						ConsoleWrite($aid & ' - ' & $assid & ' - ' & $amac & ' - ' & $asectype & ' - ' & $achan & ' - ' & $aauth & ' - ' & $aencry & ' - ' & $aradio & ' - ' & $abtx & ' - ' & $aotx & ' - ' & $alabel & ' - ' & $afa & ' - ' & $ala & ' - ' & $ant & ' - ' & $amanuf & ' - ' & $ageonames_id & ' - ' & $aadmin1_id & ' - ' & $aadmin2_id & ' - ' & $ausername & ' - ' & $aap_hash & @CRLF)
 					EndIf
-				Else
-					If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended)
-					ConsoleWrite("_HTTPConnect Error: Unable to open socket - WSAGetLasterror:" & @extended & @CRLF)
-				EndIf
+				Next
 			Else
-				If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "error getting host, path, and port from url """ & $WifiDbApiURL & """")
-				ConsoleWrite("error getting host, path, and port from url """ & $WifiDbApiURL & """" & @CRLF)
+				If $ShowPrompts = 1 Then MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 			EndIf
 		EndIf
 	Else
@@ -6461,51 +6297,45 @@ Func _LocateAPInWifidb($Selected, $ShowPrompts = 0);Finds AP in WifiDB
 	EndIf
 EndFunc   ;==>_LocateAPInWifidb
 
-Func _HTTPPost_WifiDB_LocateAP($host, $page, $socket, $SSID, $mac, $radio, $CHAN, $AUTH, $encry)
-	Local $command, $extra_commands
+Func _HTTPPost_WifiDB_LocateAP($apiurl, $SSID, $mac, $radio, $CHAN, $AUTH, $encry)
+	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-	$extra_commands = "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""ssid""" & @CRLF & @CRLF
-	$extra_commands &= $SSID & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""mac""" & @CRLF & @CRLF
-	$extra_commands &= $mac & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""radio""" & @CRLF & @CRLF
-	$extra_commands &= $radio & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""chan""" & @CRLF & @CRLF
-	$extra_commands &= $CHAN & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""auth""" & @CRLF & @CRLF
-	$extra_commands &= $AUTH & @CRLF
-	$extra_commands &= "--" & $boundary & @CRLF
-	$extra_commands &= "Content-Disposition: form-data; name=""encry""" & @CRLF & @CRLF
-	$extra_commands &= $encry & @CRLF
-	$extra_commands &= "--" & $boundary & "--"
+    $sUrl = $apiurl & "import.php"
+	ConsoleWrite($sUrl & @CRLF)
+    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+    ;$oHttpRequest.Option(4) = 13056
+    $oHttpRequest.Open ("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
+    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
 
-	Dim $datasize = StringLen($extra_commands)
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""ssid""" & @CRLF & @CRLF
+	$PostData &= $SSID & @CRLF
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""mac""" & @CRLF & @CRLF
+	$PostData &= $mac & @CRLF
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""radio""" & @CRLF & @CRLF
+	$PostData &= $radio & @CRLF
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""chan""" & @CRLF & @CRLF
+	$PostData &= $CHAN & @CRLF
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""auth""" & @CRLF & @CRLF
+	$PostData &= $AUTH & @CRLF
+	$PostData &= "--" & $boundary & @CRLF
+	$PostData &= "Content-Disposition: form-data; name=""encry""" & @CRLF & @CRLF
+	$PostData &= $encry & @CRLF
+	$PostData &= "--" & $boundary & "--" & @CRLF
+	ConsoleWrite($PostData & @CRLF)
 
-	$command = "POST " & $page & " HTTP/1.1" & @CRLF
-	$command &= "Host: " & $host & @CRLF
-	$command &= "User-Agent: " & $Script_Name & ' ' & $version & @CRLF
-	$command &= "Connection: close" & @CRLF
-	$command &= "Content-Type: multipart/form-data; boundary=" & $boundary & @CRLF
-	$command &= "Content-Length: " & $datasize & @CRLF & @CRLF
-	$command &= $extra_commands
-	ConsoleWrite($command & @CRLF)
+	$oHttpRequest.Send (StringToBinary($PostData))
+	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
+	$Response = $oHttpRequest.ResponseText
 
-	Dim $bytessent = TCPSend($socket, $command)
-
-	If $bytessent == 0 Then
-		SetExtended(@error)
-		SetError(2)
-		Return 0
-	EndIf
-
-	SetError(0)
-	Return $bytessent
+	$oHttpRequest = ""
+	Return($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_LocateAP
 
 Func _ViewWDBWebpage();View wifidb live aps in browser
