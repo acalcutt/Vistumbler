@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6'
+$version = 'v10.6.1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/06/12'
+$last_modified = '2015/09/21'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -3777,7 +3777,7 @@ Func _StartWifiDBAutoUpload()
 	$import_json_response_iCols = UBound($import_json_response, 2)
 	;Pull out information from decoded json array
 	If $import_json_response_iCols = 2 Then
-		Local $WifiDbSessionID, $WifiDbSessionError
+		Local $WifiDbSessionError
 		For $ji = 0 To ($import_json_response_iRows - 1)
 			ConsoleWrite($import_json_response[$ji][0] & ' -- ' & $import_json_response[$ji][1] & @CRLF)
 			If $import_json_response[$ji][0] = 'error' Then $WifiDbSessionError = $import_json_response[$ji][1]
@@ -5844,7 +5844,6 @@ Func _AddToYourWDB()
 		GUICtrlSetState($WifiDb_OtherUsers_GUI, $GUI_DISABLE)
 		GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
 		$WifiDb_ApiKey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
-		GUICtrlSetState($WifiDb_ApiKey_GUI, $GUI_DISABLE)
 
 		GUICtrlCreateGroup($Text_FileType, 312, 104, 249, 161)
 		$VSZ_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVSZ, 327, 150, 220, 20)
@@ -10550,7 +10549,6 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GUI_WifiDB_User = GUICtrlCreateInput($WifiDb_User, 123, 75, 185, 20)
 		GUICtrlCreateLabel("WifiDB API Key", 328, 77, 78, 15)
 		$GUI_WifiDB_ApiKey = GUICtrlCreateInput($WifiDb_ApiKey, 411, 75, 185, 20)
-		;GUICtrlSetState($GUI_WifiDB_ApiKey, $GUI_DISABLE);disable because wifidb api key is not yet implemented
 		GUICtrlCreateLabel($Text_PHPgraphing, 31, 110, 620, 15)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_WifiDbGraphURL = GUICtrlCreateInput($WifiDbGraphURL, 31, 125, 620, 20)
