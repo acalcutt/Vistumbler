@@ -11,7 +11,7 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.12.0
+;AutoIt Version: v3.3.14.2
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
@@ -3185,7 +3185,7 @@ Func _SetUpDbTables($dbfile)
 	_CreatMultipleFields($dbfile, 'GPS', $DB_OBJ, 'GPSID INTEGER|Latitude TEXT(20)|Longitude TEXT(20)|NumOfSats TEXT(2)|HorDilPitch TEXT(255)|Alt TEXT(255)|Geo TEXT(255)|SpeedInMPH TEXT(255)|SpeedInKmH TEXT(255)|TrackAngle TEXT(255)|Date1 TEXT(50)|Time1 TEXT(50)')
 	_CreatMultipleFields($dbfile, 'AP', $DB_OBJ, 'ApID INTEGER|ListRow INTEGER|Active INTEGER|BSSID TEXT(20)|SSID TEXT(255)|CHAN INTEGER|AUTH TEXT(20)|ENCR TEXT(20)|SECTYPE INTEGER|NETTYPE TEXT(20)|RADTYPE TEXT(20)|BTX TEXT(100)|OTX TEXT(100)|HighGpsHistId INTEGER|LastGpsID INTEGER|FirstHistID INTEGER|LastHistID INTEGER|MANU TEXT(100)|LABEL TEXT(100)|Signal INTEGER|HighSignal INTEGER|RSSI INTEGER|HighRSSI INTEGER|CountryCode TEXT(100)|CountryName TEXT(100)|AdminCode TEXT(100)|AdminName TEXT(100)|Admin2Name TEXT(100)|AreaName TEXT(100)|GNAmiles FLOAT|GNAkm FLOAT')
 	_CreatMultipleFields($dbfile, 'Hist', $DB_OBJ, 'HistID INTEGER|ApID INTEGER|GpsID INTEGER|Signal INTEGER|RSSI INTEGER|Date1 TEXT(50)|Time1 TEXT(50)')
-	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID INTEGER|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos INTEGER|InfoSubPos INTEGER|SsidPos INTEGER|BssidPos INTEGER|ChanPos INTEGER|NetPos INTEGER|EncrPos INTEGER|RadPos  INTEGER|AuthPos INTEGER|BtxPos INTEGER|OtxPos INTEGER|ManuPos INTEGER|LabPos INTEGER')
+	_CreatMultipleFields($dbfile, 'TreeviewPos', $DB_OBJ, 'ApID INTEGER|RootTree TEXT(255)|SubTreeName TEXT(255)|SubTreePos INTEGER|InfoSubPos INTEGER|SsidPos INTEGER|BssidPos INTEGER|ChanPos INTEGER|NetPos INTEGER|EncrPos INTEGER|RadPos INTEGER|AuthPos INTEGER|BtxPos INTEGER|OtxPos INTEGER|ManuPos INTEGER|LabPos INTEGER')
 	_CreatMultipleFields($dbfile, 'LoadedFiles', $DB_OBJ, 'File TEXT(255)|MD5 TEXT(255)')
 	_CreatMultipleFields($dbfile, 'CAM', $DB_OBJ, 'CamID INTEGER|CamGroup TEXT(255)|GpsID INTEGER|CamName TEXT(255)|CamFile TEXT(255)|ImgMD5 TEXT(255)|Date1 TEXT(255)|Time1 TEXT(255)')
 EndFunc   ;==>_SetUpDbTables
@@ -3722,7 +3722,7 @@ Func _WifiDbCreateSessionGUI()
 		GUICtrlCreateLabel($Text_WifiDB_Api_Key, 15, 192, 465, 17)
 		$inp_autoupload_key = GUICtrlCreateInput($WifiDb_ApiKey, 15, 210, 465, 21)
 		GUICtrlCreateLabel($Text_Title, 15, 237, 465, 17)
-		$inp_autoupload_title = GUICtrlCreateInput($dt, 15, 255, 465, 21)
+		$inp_autoupload_title = GUICtrlCreateInput($datestamp & ' ' & $timestamp, 15, 255, 465, 21)
 		GUICtrlCreateLabel($Text_Notes, 15, 282, 465, 17)
 		$inp_autoupload_notes = GUICtrlCreateInput("", 15, 300, 465, 21)
 		$btn_autoupload_ok = GUICtrlCreateButton($Text_Ok, 88, 344, 153, 33)
@@ -3739,6 +3739,7 @@ EndFunc
 
 Func _CloseWifiDbAutoUpload()
 	GUIDelete($WifiDbAutoUploadForm)
+	$WifiDbSessionGuiOpen = 0
 EndFunc
 
 Func _StartWifiDBAutoUpload()
@@ -3760,7 +3761,7 @@ Func _StartWifiDBAutoUpload()
 	If $AutoUpload_Title <> '' Then
 		$url_data &= "&title=" & $AutoUpload_Title
 	Else
-		$url_data &= "&title=" & $dt
+		$url_data &= "&title=" & $datestamp & ' ' & $timestamp
 	EndIf
 	;Set Session Notes
 	If $AutoUpload_Title <> '' Then
@@ -3784,6 +3785,7 @@ Func _StartWifiDBAutoUpload()
 		Next
 		If $WifiDbSessionID <> "" Then
 			ConsoleWrite("WifiDB Session '" & $WifiDbSessionID & "' Created" & @CRLF)
+			GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
 			$AutoUpApsToWifiDB = 1
 			$wifidb_au_timer = TimerInit()
 			_CloseWifiDbAutoUpload()
