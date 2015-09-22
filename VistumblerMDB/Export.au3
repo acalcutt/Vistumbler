@@ -3,18 +3,18 @@
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2013 Andrew Calcutt
+;Copyright (C) 2015 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.12.0
+;AutoIt Version: v3.3.14.2
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Exporter'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports based on input options'
-$version = 'v7'
-$last_modified = '2014/08/28'
+$version = 'v7.1'
+$last_modified = '2015/09/22'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
@@ -135,7 +135,7 @@ Exit
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 Func _ExportVS1($savefile);writes vistumbler detailed data to a txt file
-	$file = "# Vistumbler VS1 - Detailed Export Version 3.0" & @CRLF & _
+	$file = "# Vistumbler VS1 - Detailed Export Version 4.0" & @CRLF & _
 			"# Created By: " & $Script_Name & ' ' & $version & @CRLF & _
 			"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
 			"# GpsID|Latitude|Longitude|NumOfSatalites|HorizontalDilutionOfPrecision|Altitude(m)|HeightOfGeoidAboveWGS84Ellipsoid(m)|Speed(km/h)|Speed(MPH)|TrackAngle(Deg)|Date(UTC y-m-d)|Time(UTC h:m:s.ms)" & @CRLF & _
@@ -162,10 +162,10 @@ Func _ExportVS1($savefile);writes vistumbler detailed data to a txt file
 
 	;Export AP Information
 	$file &= "# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
-			"# SSID|BSSID|MANUFACTURER|Authetication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|Network Type|Label|GID,SIGNAL" & @CRLF & _
+			"# SSID|BSSID|MANUFACTURER|Authentication|Encryption|Security Type|Radio Type|Channel|Basic Transfer Rates|Other Transfer Rates|High Signal|High RSSI|Network Type|Label|GID,SIGNAL,RSSI" & @CRLF & _
 			"# ---------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF
 
-	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID FROM AP"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundApMatch = UBound($ApMatchArray) - 1
 	If $FoundApMatch > 0 Then
@@ -181,28 +181,31 @@ Func _ExportVS1($savefile);writes vistumbler detailed data to a txt file
 			$ExpSECTYPE = $ApMatchArray[$exp][9]
 			$ExpBTX = $ApMatchArray[$exp][10]
 			$ExpOTX = $ApMatchArray[$exp][11]
-			$ExpMANU = $ApMatchArray[$exp][12]
-			$ExpLAB = $ApMatchArray[$exp][13]
-			$ExpHighGpsID = $ApMatchArray[$exp][14]
-			$ExpFirstID = $ApMatchArray[$exp][15]
-			$ExpLastID = $ApMatchArray[$exp][16]
-			$ExpGidSid = ''
+			$ExpHighSig = $ApMatchArray[$exp][12]
+			$ExpHighRSSI = $ApMatchArray[$exp][13]
+			$ExpMANU = $ApMatchArray[$exp][14]
+			$ExpLAB = $ApMatchArray[$exp][15]
+			$ExpHighGpsID = $ApMatchArray[$exp][16]
+			$ExpFirstID = $ApMatchArray[$exp][17]
+			$ExpLastID = $ApMatchArray[$exp][18]
 
 			;Create GID,SIG String
-			$query = "SELECT GpsID, Signal FROM Hist WHERE ApID=" & $ExpApID
+			$ExpGidSid = ''
+			$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$FoundHistMatch = UBound($HistMatchArray) - 1
 			For $epgs = 1 To $FoundHistMatch
 				$ExpGID = $HistMatchArray[$epgs][1]
 				$ExpSig = $HistMatchArray[$epgs][2]
+				$ExpRSSI = $HistMatchArray[$epgs][3]
 				If $epgs = 1 Then
-					$ExpGidSid = $ExpGID & ',' & $ExpSig
+					$ExpGidSid = $ExpGID & ',' & $ExpSig & ',' & $ExpRSSI
 				Else
-					$ExpGidSid &= '-' & $ExpGID & ',' & $ExpSig
+					$ExpGidSid &= '\' & $ExpGID & ',' & $ExpSig & ',' & $ExpRSSI
 				EndIf
 			Next
 
-			$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
+			$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpHighSig & '|' & $ExpHighRSSI & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
 		Next
 		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
 		FileWrite($savefile, $file)
