@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.2'
+$version = 'v10.6.3 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/09/21'
+$last_modified = '2015/09/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -291,7 +291,7 @@ Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
 
-Dim $WifiDbSessionGuiOpen, $WifiDbAutoUploadForm, $inp_autoupload_username, $inp_autoupload_key, $inp_autoupload_title, $inp_autoupload_notes
+Dim $WifiDbSessionGuiOpen, $WifiDbAutoUploadForm, $inp_autoupload_username, $inp_autoupload_key, $inp_autoupload_title, $inp_autoupload_notes, $wua_user , $wua_apikey, $wua_title, $wua_notes, $wua_ver
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal, $CWCB_HighSignal, $CWIB_HighSignal, $CWCB_RSSI, $CWIB_RSSI, $CWCB_HighRSSI, $CWIB_HighRSSI
@@ -3703,8 +3703,7 @@ EndFunc   ;==>_WifiDbAutoUploadToggleWarn
 
 Func _WifiDbAutoUploadToggle($Warn = 1)
 	If $AutoUpApsToWifiDB = 1 Then
-		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
-		$AutoUpApsToWifiDB = 0
+		_StopWifiDBAutoUpload()
 	Else
 		_WifiDbCreateSessionGUI()
 	EndIf
@@ -6358,6 +6357,7 @@ Func _StartWifiDBAutoUpload()
 		_CloseWifiDbAutoUpload()
 	ElseIf StringLeft($webpagesource, 1) <> "{" Or StringRight($webpagesource, 1) <> "}" Then
 		;Version 1 API
+		$wua_ver = 1
 		;Set WifiDB Session ID
 		$WifiDbSessionID = StringTrimLeft(_MD5(Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & $ldatetimestamp & '-' & @MSEC), 2)
 		ConsoleWrite("WifiDb Session ID:" & $WifiDbSessionID & @CRLF)
@@ -6367,6 +6367,7 @@ Func _StartWifiDBAutoUpload()
 		_CloseWifiDbAutoUpload()
 	Else
 		;Version 2.0+ API
+		$wua_ver = 2
 		If $wua_user = '' Or $wua_apikey = '' Then
 			$setanon = MsgBox(1, $Text_Warning, "Username or Api Key were not entered. Your username will be set to 'AnonCoward' if you continue.")
 			If $setanon = "-1" Or $setanon = "2" Then Return(0)
@@ -6402,6 +6403,17 @@ Func _StartWifiDBAutoUpload()
 		Else
 			MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 		EndIf
+	EndIf
+EndFunc
+
+
+Func _StopWifiDBAutoUpload()
+	GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
+	$AutoUpApsToWifiDB = 0
+	If $wua_ver <> 1 Then
+		$url = $WifiDbApiURL & 	"live.php?completed=1&username=" & $wua_user & "&apikey=" & $wua_apikey & "&SessionID=" & $WifiDbSessionID
+		$webpagesource = _INetGetSource($url)
+		ConsoleWrite( "--- " & $webpagesource & " ---" & @CRLF)
 	EndIf
 EndFunc
 
