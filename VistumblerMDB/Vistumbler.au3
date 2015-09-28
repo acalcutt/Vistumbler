@@ -16,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.3 Beta 2'
+$version = 'v10.6.3 Beta 3'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/09/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -4166,9 +4166,9 @@ Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddd
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DDD
 
-Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
+Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'ddÂ° mm' ss"
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM_to_DMS()') ;#Debug Display
-	$return = '0° 0' & Chr(39) & ' 0"'
+	$return = '0Â° 0' & Chr(39) & ' 0"'
 	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
 		$splitlatlon2 = StringSplit($splitlatlon1[2], ".")
@@ -4177,9 +4177,9 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 			$MM = StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2)
 			$SS = StringFormat('%0.4f', (('.' & $splitlatlon2[2]) * 60)); multiply remaining minutes by 60 to get ss
 			If $DD = "" Then $DD = "0"
-			$return = $splitlatlon1[1] & ' ' & $DD & '° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd° mm' ss"N)
+			$return = $splitlatlon1[1] & ' ' & $DD & 'Â° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd° mm' ss"N)
 		Else
-			$return = $splitlatlon1[1] & ' 0° 0' & Chr(39) & ' 0"'
+			$return = $splitlatlon1[1] & ' 0Â° 0' & Chr(39) & ' 0"'
 		EndIf
 	EndIf
 	Return ($return)
@@ -13142,21 +13142,9 @@ EndFunc   ;==>_TimeToSeconds
 
 Func _DecToMinSec($dec) ;Convert a decimal value of time to "(XX)XXm XXsec" format
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DecToMinSec()') ;#Debug Display
-	$hdec = $dec / 60
-	$mdec = StringRegExpReplace($hdec, "(\d*\.)", ".") * 60
-	$sdec = StringRegExpReplace($mdec, "(\d*\.)", ".") * 60
-	$Hour = StringFormat("%d\n", $hdec);StringTrimRight($hdec, (StringLen($hdec) - StringInStr($hdec, ".", 1, -1)) + 1)
-	$Mins = StringFormat("%d\n", $mdec);StringTrimRight($mdec, (StringLen($mdec) - StringInStr($mdec, ".", 1, -1)) + 1)
-	$Secs = Round($sdec, 1);StringTrimRight($sdec, (StringLen($sdec) - StringInStr($sdec, ".", 1, -1)) + 1)
-
-	ConsoleWrite(' $dec:' & $dec & '$hdec: ' & $hdec & '$mdec: ' & $mdec & '$sdec:' & $sdec & @CRLF)
-	ConsoleWrite('$Hour: ' & $Hour & '$Mins:' & $Mins & ' $Secs:' & $Secs & @CRLF)
-
-	$rettime = ""
-	If $Hour <> 0 Then $rettime &= $Hour & 'h '
-	If $Mins <> 0 Then $rettime &= $Mins & 'm '
-	If $Secs <> 0 Then $rettime &= $Secs & 's'
-
+	$Mins = Int($dec)
+	$Secs = ($dec - $Mins) * 60
+	$rettime = Round($Mins) & "m " & Round($Secs) & "s"
 	Return ($rettime)
 EndFunc   ;==>_DecToMinSec
 
