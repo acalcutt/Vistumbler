@@ -1,9 +1,9 @@
-;#RequireAdmin
+#RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Res_Fileversion=10.3.2.0
-#AutoIt3Wrapper_Res_requestedExecutionLevel=highestAvailable
+#AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2015 Andrew Calcutt
@@ -16,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.3 Beta 1'
+$version = 'v10.6.3 Beta 2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/09/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -4185,7 +4185,7 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DMS
 
-Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'ddï¿½ mm' ss", or ddmm.mmmm to ddmm.mmmm
+Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd° mm' ss", or ddmm.mmmm to ddmm.mmmm
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_All_to_DMM()') ;#Debug Display
 	;All GPS Formats to ddmm.mmmm
 	$return = '0.0000'
