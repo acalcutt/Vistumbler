@@ -16,7 +16,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.3 Beta 3'
+$version = 'v10.6.3 Beta 4'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2015/09/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -1474,7 +1474,6 @@ GUISetState(@SW_SHOW)
 _SetControlSizes()
 
 $VistumblerGuiOpen = 1
-If $EnableAutoUpApsToWifiDB = 1 Then _WifiDbAutoUploadToggle(0)
 
 ;Button-Events-------------------------------------------
 GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseToggle')
@@ -1589,8 +1588,8 @@ Dim $NetworkType_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_
 Dim $SSID_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_SSID)
 
 If $Recover = 1 Then _RecoverMDB()
-
 If $Load <> '' Then _LoadListGUI($Load)
+If $EnableAutoUpApsToWifiDB = 1 Then _WifiDbAutoUploadToggle(0)
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PROGRAM RUNNING LOOP
