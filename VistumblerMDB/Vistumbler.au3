@@ -6345,44 +6345,63 @@ Func _StartWifiDBAutoUpload()
 	$wua_title = GUICtrlRead($inp_autoupload_title)
 	$wua_notes = GUICtrlRead($inp_autoupload_notes)
 
-	;Set Username, Api Key, and title
-	If $wua_user <> '' And $wua_apikey <> '' Then
-		$WifiDb_User = $wua_user
-		$WifiDb_ApiKey = $wua_apikey
-	Else
-		MsgBox(0, $Text_Warning, "Username or Api Key were not entered. Your username will be set to 'AnonCoward'.")
-		$wua_user = "AnonCoward"
-		$wua_apikey = "scaredycat"
-	EndIf
+	If $wua_user <> '' Then $WifiDb_User = $wua_user
+	If $wua_apikey <> '' Then $WifiDb_ApiKey = $wua_apikey
 	If $wua_title = '' Then $wua_title = $datestamp & ' ' & $timestamp
 
-	$httprecv = _HTTPPost_WifiDB_Live_Start($WifiDbApiURL, $wua_user, $wua_apikey, $wua_title, $wua_notes)
-	ConsoleWrite($httprecv & @CRLF)
-	$import_json_response = _JSONDecode($httprecv)
-	$import_json_response_iRows = UBound($import_json_response, 1)
-	$import_json_response_iCols = UBound($import_json_response, 2)
-	;Pull out information from decoded json array
-	If $import_json_response_iCols = 2 Then
-		Local $WifiDbSessionError
-		$WifiDbSessionID = ""
-		For $ji = 0 To ($import_json_response_iRows - 1)
-			ConsoleWrite($import_json_response[$ji][0] & ' -- ' & $import_json_response[$ji][1] & @CRLF)
-			If $import_json_response[$ji][0] = 'error' Then $WifiDbSessionError = $import_json_response[$ji][1]
-			If $import_json_response[$ji][0] = 'SessionID' Then $WifiDbSessionID = $import_json_response[$ji][1]
-		Next
-		If $WifiDbSessionID <> "" Then
-			ConsoleWrite("WifiDB Session '" & $WifiDbSessionID & "' Created" & @CRLF)
-			GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
-			$AutoUpApsToWifiDB = 1
-			$wifidb_au_timer = TimerInit()
-			_CloseWifiDbAutoUpload()
-		ElseIf $WifiDbSessionError <> "" Then
-			MsgBox(0, $Text_Error, $WifiDbSessionError)
-		Else
-			MsgBox(0, $Text_Error, "An Unknown Error Occured")
-		EndIf
+	;Check API Version
+	$url = $WifiDbApiURL & 	"live.php?LiveVersion=1"
+	$webpagesource = _INetGetSource($url)
+	ConsoleWrite( "--- " & $webpagesource & " ---" & @CRLF)
+	If @error Then
+		Msgbox(0, $Text_Error, "There was an error connection to the API. Auto Upload will not be started")
+		_CloseWifiDbAutoUpload()
+	ElseIf StringLeft($webpagesource, 1) <> "{" Or StringRight($webpagesource, 1) <> "}" Then
+		;Version 1 API
+		;Set WifiDB Session ID
+		$WifiDbSessionID = StringTrimLeft(_MD5(Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & $ldatetimestamp & '-' & @MSEC), 2)
+		ConsoleWrite("WifiDb Session ID:" & $WifiDbSessionID & @CRLF)
+		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
+		$AutoUpApsToWifiDB = 1
+		$wifidb_au_timer = TimerInit()
+		_CloseWifiDbAutoUpload()
 	Else
-		MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
+		;Version 2.0+ API
+		If $wua_user = '' Or $wua_apikey = '' Then
+			$setanon = MsgBox(1, $Text_Warning, "Username or Api Key were not entered. Your username will be set to 'AnonCoward' if you continue.")
+			If $setanon = "-1" Or $setanon = "2" Then Return(0)
+			$wua_user = "AnonCoward"
+			$wua_apikey = "scaredycat"
+		EndIf
+		;Request Session ID
+		$httprecv = _HTTPPost_WifiDB_Live_Start($WifiDbApiURL, $wua_user, $wua_apikey, $wua_title, $wua_notes)
+		ConsoleWrite($httprecv & @CRLF)
+		$import_json_response = _JSONDecode($httprecv)
+		$import_json_response_iRows = UBound($import_json_response, 1)
+		$import_json_response_iCols = UBound($import_json_response, 2)
+		;Pull out information from decoded json array
+		If $import_json_response_iCols = 2 Then
+			Local $WifiDbSessionError
+			$WifiDbSessionID = ""
+			For $ji = 0 To ($import_json_response_iRows - 1)
+				ConsoleWrite($import_json_response[$ji][0] & ' -- ' & $import_json_response[$ji][1] & @CRLF)
+				If $import_json_response[$ji][0] = 'error' Then $WifiDbSessionError = $import_json_response[$ji][1]
+				If $import_json_response[$ji][0] = 'SessionID' Then $WifiDbSessionID = $import_json_response[$ji][1]
+			Next
+			If $WifiDbSessionID <> "" Then
+				ConsoleWrite("WifiDb Session ID:" & $WifiDbSessionID & @CRLF)
+				GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_CHECKED)
+				$AutoUpApsToWifiDB = 1
+				$wifidb_au_timer = TimerInit()
+				_CloseWifiDbAutoUpload()
+			ElseIf $WifiDbSessionError <> "" Then
+				MsgBox(0, $Text_Error, $WifiDbSessionError)
+			Else
+				MsgBox(0, $Text_Error, "An Unknown Error Occured")
+			EndIf
+		Else
+			MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
+		EndIf
 	EndIf
 EndFunc
 
