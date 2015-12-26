@@ -24,7 +24,7 @@ Opt("GUIResizeMode", 576)
 #include <GuiListView.au3>
 
 $Script_Name = 'WifiDB Uploader'
-$version = 'v0.1'
+$version = 'v0.2'
 
 $oMyError = ObjEvent("AutoIt.Error","MyErrFunc")
 
@@ -410,8 +410,8 @@ EndFunc
 Func _HTTPPost_WifiDB_File($file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
 	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
-	$fileopen = FileOpen($file)
-	$file = FileRead($fileopen)
+	$fileopen = FileOpen($file,16)
+	$file = BinaryToString(FileRead($fileopen))
 	FileClose($fileopen)
 
     $sUrl = $WifiDbApiURL & "import.php"
@@ -455,8 +455,8 @@ Func _HTTPPost_WifiDB_File($file, $filename, $contenttype, $apikey, $user, $othe
 	$PostData &= "--" & $boundary & "--" & @CRLF
 
 	;ConsoleWrite($PostData & @CRLF)
-	;ConsoleWrite(StringReplace($PostData, $file, "## DATA FILE ##" & @CRLF) & @CRLF)
-	ConsoleWrite($PostData & @CRLF)
+	ConsoleWrite(StringReplace($PostData, $file, "## DATA FILE ##" & @CRLF) & @CRLF)
+	;ConsoleWrite($PostData & @CRLF)
 
 	$oHttpRequest.Send (StringToBinary($PostData))
 
