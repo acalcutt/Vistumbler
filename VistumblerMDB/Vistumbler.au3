@@ -1,9 +1,9 @@
-;#RequireAdmin
+#RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Res_Fileversion=10.3.2.0
-#AutoIt3Wrapper_Res_requestedExecutionLevel=highestAvailable
+#AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2015 Andrew Calcutt
@@ -16,9 +16,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.2'
+$version = 'v10.6.3 Beta 4'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/09/21'
+$last_modified = '2015/09/27'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -291,7 +291,7 @@ Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
 
-Dim $WifiDbSessionGuiOpen, $WifiDbAutoUploadForm, $inp_autoupload_username, $inp_autoupload_key, $inp_autoupload_title, $inp_autoupload_notes
+Dim $WifiDbSessionGuiOpen, $WifiDbAutoUploadForm, $inp_autoupload_username, $inp_autoupload_key, $inp_autoupload_title, $inp_autoupload_notes, $wua_user , $wua_apikey, $wua_title, $wua_notes, $wua_ver
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal, $CWCB_HighSignal, $CWIB_HighSignal, $CWCB_RSSI, $CWIB_RSSI, $CWCB_HighRSSI, $CWIB_HighRSSI
@@ -1474,7 +1474,6 @@ GUISetState(@SW_SHOW)
 _SetControlSizes()
 
 $VistumblerGuiOpen = 1
-If $EnableAutoUpApsToWifiDB = 1 Then _WifiDbAutoUploadToggle(0)
 
 ;Button-Events-------------------------------------------
 GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseToggle')
@@ -1589,8 +1588,8 @@ Dim $NetworkType_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_
 Dim $SSID_tree = _GUICtrlTreeView_InsertItem($TreeviewAPs, $Column_Names_SSID)
 
 If $Recover = 1 Then _RecoverMDB()
-
 If $Load <> '' Then _LoadListGUI($Load)
+If $EnableAutoUpApsToWifiDB = 1 Then _WifiDbAutoUploadToggle(0)
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       PROGRAM RUNNING LOOP
@@ -3703,8 +3702,7 @@ EndFunc   ;==>_WifiDbAutoUploadToggleWarn
 
 Func _WifiDbAutoUploadToggle($Warn = 1)
 	If $AutoUpApsToWifiDB = 1 Then
-		GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
-		$AutoUpApsToWifiDB = 0
+		_StopWifiDBAutoUpload()
 	Else
 		_WifiDbCreateSessionGUI()
 	EndIf
@@ -4167,9 +4165,9 @@ Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddd
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DDD
 
-Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
+Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'ddÂ° mm' ss"
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM_to_DMS()') ;#Debug Display
-	$return = '0° 0' & Chr(39) & ' 0"'
+	$return = '0Â° 0' & Chr(39) & ' 0"'
 	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
 		$splitlatlon2 = StringSplit($splitlatlon1[2], ".")
@@ -4178,15 +4176,15 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 			$MM = StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2)
 			$SS = StringFormat('%0.4f', (('.' & $splitlatlon2[2]) * 60)); multiply remaining minutes by 60 to get ss
 			If $DD = "" Then $DD = "0"
-			$return = $splitlatlon1[1] & ' ' & $DD & '° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd° mm' ss"N)
+			$return = $splitlatlon1[1] & ' ' & $DD & 'Â° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd° mm' ss"N)
 		Else
-			$return = $splitlatlon1[1] & ' 0° 0' & Chr(39) & ' 0"'
+			$return = $splitlatlon1[1] & ' 0Â° 0' & Chr(39) & ' 0"'
 		EndIf
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DMS
 
-Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'ddï¿½ mm' ss", or ddmm.mmmm to ddmm.mmmm
+Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd° mm' ss", or ddmm.mmmm to ddmm.mmmm
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_All_to_DMM()') ;#Debug Display
 	;All GPS Formats to ddmm.mmmm
 	$return = '0.0000'
@@ -6358,6 +6356,7 @@ Func _StartWifiDBAutoUpload()
 		_CloseWifiDbAutoUpload()
 	ElseIf StringLeft($webpagesource, 1) <> "{" Or StringRight($webpagesource, 1) <> "}" Then
 		;Version 1 API
+		$wua_ver = 1
 		;Set WifiDB Session ID
 		$WifiDbSessionID = StringTrimLeft(_MD5(Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & Random(1000, 9999, 1) & $ldatetimestamp & '-' & @MSEC), 2)
 		ConsoleWrite("WifiDb Session ID:" & $WifiDbSessionID & @CRLF)
@@ -6367,6 +6366,7 @@ Func _StartWifiDBAutoUpload()
 		_CloseWifiDbAutoUpload()
 	Else
 		;Version 2.0+ API
+		$wua_ver = 2
 		If $wua_user = '' Or $wua_apikey = '' Then
 			$setanon = MsgBox(1, $Text_Warning, "Username or Api Key were not entered. Your username will be set to 'AnonCoward' if you continue.")
 			If $setanon = "-1" Or $setanon = "2" Then Return(0)
@@ -6402,6 +6402,17 @@ Func _StartWifiDBAutoUpload()
 		Else
 			MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 		EndIf
+	EndIf
+EndFunc
+
+
+Func _StopWifiDBAutoUpload()
+	GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
+	$AutoUpApsToWifiDB = 0
+	If $wua_ver <> 1 Then
+		$url = $WifiDbApiURL & 	"live.php?completed=1&username=" & $wua_user & "&apikey=" & $wua_apikey & "&SessionID=" & $WifiDbSessionID
+		$webpagesource = _INetGetSource($url)
+		ConsoleWrite( "--- " & $webpagesource & " ---" & @CRLF)
 	EndIf
 EndFunc
 
@@ -13130,21 +13141,9 @@ EndFunc   ;==>_TimeToSeconds
 
 Func _DecToMinSec($dec) ;Convert a decimal value of time to "(XX)XXm XXsec" format
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DecToMinSec()') ;#Debug Display
-	$hdec = $dec / 60
-	$mdec = StringRegExpReplace($hdec, "(\d*\.)", ".") * 60
-	$sdec = StringRegExpReplace($mdec, "(\d*\.)", ".") * 60
-	$Hour = StringFormat("%d\n", $hdec);StringTrimRight($hdec, (StringLen($hdec) - StringInStr($hdec, ".", 1, -1)) + 1)
-	$Mins = StringFormat("%d\n", $mdec);StringTrimRight($mdec, (StringLen($mdec) - StringInStr($mdec, ".", 1, -1)) + 1)
-	$Secs = Round($sdec, 1);StringTrimRight($sdec, (StringLen($sdec) - StringInStr($sdec, ".", 1, -1)) + 1)
-
-	ConsoleWrite(' $dec:' & $dec & '$hdec: ' & $hdec & '$mdec: ' & $mdec & '$sdec:' & $sdec & @CRLF)
-	ConsoleWrite('$Hour: ' & $Hour & '$Mins:' & $Mins & ' $Secs:' & $Secs & @CRLF)
-
-	$rettime = ""
-	If $Hour <> 0 Then $rettime &= $Hour & 'h '
-	If $Mins <> 0 Then $rettime &= $Mins & 'm '
-	If $Secs <> 0 Then $rettime &= $Secs & 's'
-
+	$Mins = Int($dec)
+	$Secs = ($dec - $Mins) * 60
+	$rettime = Round($Mins) & "m " & Round($Secs) & "s"
 	Return ($rettime)
 EndFunc   ;==>_DecToMinSec
 
