@@ -12,7 +12,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'WiFiDB Uploader'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A program to batch upload files to the wifidb using the api'
-$version = 'v0.3.1'
+$version = 'v0.3.2'
 $last_modified = '2015/12/28'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------#include "UDFs\FileListToArray3.au3"
@@ -261,18 +261,20 @@ EndFunc   ;==>_LoadFolderSelect
 Func _LoadFolder($loadfolder)
 	GUICtrlSetData($msgdisplay, "Loading Files in '" & $loadfolder & "'")
 	$VistumblerFiles = _FileListToArray($loadfolder, "*.VS1", 1, 1)
-	For $f = 1 To $VistumblerFiles[0]
-		GUICtrlSetData($msgdisplay, "Loading File ( " & $f & " of " & $VistumblerFiles[0] & " )")
-		;Safe Kill Import if killswitch is set
-		$KillSwitch = IniRead($settings, 'Settings', 'KillSwitch', '0')
-		If $KillSwitch = 1 Then
-			GUICtrlSetData($msgdisplay, "! Kill switch is enabled. Exiting...")
-			ConsoleWrite("! Kill switch is enabled. Exiting...")
-			ExitLoop
-		EndIf
-		ConsoleWrite('File:' & $f & '/' & $VistumblerFiles[0] & ' | File:' & $VistumblerFiles[$f])
-		_LoadFile($VistumblerFiles[$f])
-	Next
+	If IsArray($VistumblerFiles) Then
+		For $f = 1 To $VistumblerFiles[0]
+			GUICtrlSetData($msgdisplay, "Loading File ( " & $f & " of " & $VistumblerFiles[0] & " )")
+			;Safe Kill Import if killswitch is set
+			$KillSwitch = IniRead($settings, 'Settings', 'KillSwitch', '0')
+			If $KillSwitch = 1 Then
+				GUICtrlSetData($msgdisplay, "! Kill switch is enabled. Exiting...")
+				ConsoleWrite("! Kill switch is enabled. Exiting...")
+				ExitLoop
+			EndIf
+			ConsoleWrite('File:' & $f & '/' & $VistumblerFiles[0] & ' | File:' & $VistumblerFiles[$f])
+			_LoadFile($VistumblerFiles[$f])
+		Next
+	EndIf
 EndFunc   ;==>_LoadFolder
 
 Func _LoadFileSelect()
