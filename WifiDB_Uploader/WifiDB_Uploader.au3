@@ -1,4 +1,21 @@
-﻿#include "UDFs\FileListToArray3.au3"
+﻿#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Icon=..\VistumblerMDB\Icons\icon.ico
+#EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
+;License Information------------------------------------
+;Copyright (C) 2015 Andrew Calcutt
+;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
+;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
+;--------------------------------------------------------
+;AutoIt Version: v3.3.14.2
+$Script_Author = 'Andrew Calcutt'
+$Script_Name = 'WiFiDB Uploader'
+$Script_Website = 'http://www.Vistumbler.net'
+$Script_Function = 'A program to batch upload files to the wifidb using the api'
+$version = 'v0.3'
+$last_modified = '2015/12/28'
+HttpSetUserAgent($Script_Name & ' ' & $version)
+;Includes------------------------------------------------#include "UDFs\FileListToArray3.au3"
 #include "UDFs\MD5.au3"
 #include "UDFs\Base64.au3"
 #include "UDFs\AccessCom.au3"
@@ -17,10 +34,7 @@
 #include <GuiListView.au3>
 ;Options-------------------------------------------------
 Opt("TrayIconHide", 1);Hide icon in system tray
-Opt("GUIResizeMode", 802)
-;Settings------------------------------------------------
-$Script_Name = 'WifiDB Uploader'
-$version = '0.3'
+Opt("GUIResizeMode", 576)
 
 $oMyError = ObjEvent("AutoIt.Error", "MyErrFunc")
 
@@ -65,7 +79,7 @@ EndIf
 If $ExistingDB = 0 Then _SetUpDbTables($DB)
 
 ;Create GUI
-$GUI_wifidbuploader = GUICreate($Script_Name & " " & $version, 700, 513);, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+$GUI_wifidbuploader = GUICreate($Script_Name & " " & $version, 700, 513, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 $Menu_File = GUICtrlCreateMenu("File")
 $Menu_ImportFolder = GUICtrlCreateMenuItem("Import Folder", $Menu_File)
 $Menu_ImportFile = GUICtrlCreateMenuItem("Import File", $Menu_File)
@@ -245,7 +259,7 @@ EndFunc   ;==>_LoadFolderSelect
 
 Func _LoadFolder($loadfolder)
 	GUICtrlSetData($msgdisplay, "Loading Files in '" & $loadfolder & "'")
-	$VistumblerFiles = _FileListToArray3($loadfolder, "*.VS1", 1, 1, 1)
+	$VistumblerFiles = _FileListToArray($loadfolder, "*.VS1", 1, 1)
 	For $f = 1 To $VistumblerFiles[0]
 		GUICtrlSetData($msgdisplay, "Loading File ( " & $f & " of " & $VistumblerFiles[0] & " )")
 		;Safe Kill Import if killswitch is set
