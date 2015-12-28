@@ -12,7 +12,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'WiFiDB Uploader'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A program to batch upload files to the wifidb using the api'
-$version = 'v0.3'
+$version = 'v0.3.1'
 $last_modified = '2015/12/28'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------#include "UDFs\FileListToArray3.au3"
@@ -34,7 +34,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include <GuiListView.au3>
 ;Options-------------------------------------------------
 Opt("TrayIconHide", 1);Hide icon in system tray
-Opt("GUIResizeMode", 576)
+Opt("GUIResizeMode", 802)
 
 $oMyError = ObjEvent("AutoIt.Error", "MyErrFunc")
 
@@ -55,13 +55,13 @@ Dim $AutoUploadDefaults = IniRead($settings, 'AutoSettings', 'AutoUploadDefaults
 Dim $DefaultStatus = 'new'
 Dim $DefaultStatusText = 'Not Yet Checked'
 
-Dim $ColStatus = 0
-Dim $ColStatusMessage = 1
-Dim $ColFile = 2
+Dim $ColFile = 0
+Dim $ColStatus = 1
+Dim $ColStatusMessage = 2
 Dim $ColTitle = 3
 Dim $ColNotes = 4
 Dim $ColMD5 = 5
-Dim $columns = 'WDB Status|WDB Status Message|File|Title|Notes|Hash'
+Dim $columns = 'File|WDB Status|WDB Status Message|Title|Notes|Hash'
 
 Dim $FILE_ID
 Dim $DB = $TmpDir & 'files.mdb'
@@ -95,14 +95,15 @@ $btn_refresh = GUICtrlCreateButton("Refresh unfinished files", 164, 5, 145, 33)
 $msgdisplay = GUICtrlCreateLabel("", 8, 40, 484, 20)
 $ulist = _GUICtrlListView_Create($GUI_wifidbuploader, $columns, 5, 65, 690, 422, $LVS_REPORT)
 _GUICtrlListView_SetExtendedListViewStyle($ulist, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT, $LVS_EX_DOUBLEBUFFER))
+_GUICtrlListView_SetColumnWidth($ulist, $ColFile, 200)
 _GUICtrlListView_SetColumnWidth($ulist, $ColStatus, 75)
 _GUICtrlListView_SetColumnWidth($ulist, $ColStatusMessage, 150)
-_GUICtrlListView_SetColumnWidth($ulist, $ColFile, 200)
 _GUICtrlListView_SetColumnWidth($ulist, $ColTitle, 100)
 _GUICtrlListView_SetColumnWidth($ulist, $ColNotes, 100)
 _GUICtrlListView_SetColumnWidth($ulist, $ColMD5, 250)
-
 GUISetState(@SW_SHOW)
+GUIRegisterMsg($WM_SIZE, "WM_SIZE")
+
 If $AutoImport = 1 And $AutoImportFolder <> "" Then _LoadFolderSelect($AutoImportFolder)
 If $AutoUpload = 1 Then _UploadUnknownFiles()
 _UpdateListview()
@@ -216,12 +217,12 @@ Func _UpdateListview()
 		_PathSplit($filefullname, $szDrive, $szDir, $szFName, $szExt)
 		$filename = $szFName & $szExt
 
-		$line = _GUICtrlListView_AddItem($ulist, $wdbstatus, $ColStatus)
-		_GUICtrlListView_AddSubItem($ulist, $line, $md5, $ColMD5)
+		$line = _GUICtrlListView_AddItem($ulist, $filename, $ColFile)
+		_GUICtrlListView_AddSubItem($ulist, $line, $wdbstatus, $ColStatus)
+		_GUICtrlListView_AddSubItem($ulist, $line, $wdbstatustext, $ColStatusMessage)
 		_GUICtrlListView_AddSubItem($ulist, $line, $uploadtitle, $ColTitle)
 		_GUICtrlListView_AddSubItem($ulist, $line, $uploadnotes, $ColNotes)
-		_GUICtrlListView_AddSubItem($ulist, $line, $filename, $ColFile)
-		_GUICtrlListView_AddSubItem($ulist, $line, $wdbstatustext, $ColStatusMessage)
+		_GUICtrlListView_AddSubItem($ulist, $line, $md5, $ColMD5)
 
 	Next
 	_GUICtrlListView_EndUpdate($ulist)
@@ -706,3 +707,12 @@ Func MyErrFunc()
 	"Windescription is: " & $oMyError.windescription )
 	$_eventerror = 1
 Endfunc
+
+Func WM_SIZE($hWnd, $Msg, $wParam, $lParam)
+
+    Local $iHeight, $iWidth
+    $iWidth = BitAND($lParam, 0xFFFF) ; _WinAPI_LoWord
+    $iHeight = BitShift($lParam, 16) ; _WinAPI_HiWord
+    _WinAPI_MoveWindow($ulist, 5, 65, $iWidth - 10, $iHeight - 75)
+    Return $GUI_RUNDEFMSG
+EndFunc
