@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=..\VistumblerMDB\Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2015 Andrew Calcutt
+;Copyright (C) 2016 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -10,12 +10,12 @@
 ;AutoIt Version: v3.3.14.2
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'WiFiDB Uploader'
-$Script_Website = 'http://www.Vistumbler.net'
+$Script_Website = 'http://live.wifidb.net'
 $Script_Function = 'A program to batch upload files to the wifidb using the api'
-$version = 'v0.3.2'
-$last_modified = '2015/12/28'
+$version = 'v0.4'
+$last_modified = '2016/01/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
-;Includes------------------------------------------------#include "UDFs\FileListToArray3.au3"
+;Includes------------------------------------------------
 #include "UDFs\MD5.au3"
 #include "UDFs\Base64.au3"
 #include "UDFs\AccessCom.au3"
@@ -38,17 +38,26 @@ Opt("GUIResizeMode", 802)
 
 $oMyError = ObjEvent("AutoIt.Error", "MyErrFunc")
 
+
+
 Dim $TmpDir = @ScriptDir & '\'
 Dim $settings = $TmpDir & 'settings.ini'
 Dim $WdbUser = IniRead($settings, 'Settings', 'WdbUser', 'Unknown')
 Dim $WdbApiKey = IniRead($settings, 'Settings', 'WdbApiKey', '')
 Dim $WdbOtherUser = IniRead($settings, 'Settings', 'WdbOtherUser', '')
-Dim $DefaultTitle = IniRead($settings, 'Settings', 'DefaultTitle', 'WDB Batch Upload')
-Dim $DefaultNotes = IniRead($settings, 'Settings', 'DefaultNotes', '')
 Dim $WifiDbApiURL = IniRead($settings, 'Settings', 'WifiDbApiURL', 'https://api.wifidb.net/')
+
+$default_title = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & ':' & @MIN & ':' & @SEC
+Dim $ImportTitle = IniRead($settings, 'Import', 'Title', $default_title)
+$default_notes = $Script_Name & " " & $version
+Dim $ImportNotes = IniRead($settings, 'Import', 'Notes', $default_notes)
+
 Dim $AutoImportFolder = IniRead($settings, 'AutoSettings', 'AutoImportFolder', '')
+Dim $AutoArchiveFolder = IniRead($settings, 'AutoSettings', 'AutoArchiveFolder', '')
 Dim $AutoImport = IniRead($settings, 'AutoSettings', 'AutoImport', 0)
 Dim $AutoUpload = IniRead($settings, 'AutoSettings', 'AutoUpload', 0)
+Dim $AutoArchive = IniRead($settings, 'AutoSettings', 'AutoArchive', 0)
+Dim $AutoExit = IniRead($settings, 'AutoSettings', 'AutoExit', 0)
 Dim $AutoRefreshWating = IniRead($settings, 'AutoSettings', 'AutoRefreshWating', 1)
 Dim $AutoImportDefaults = IniRead($settings, 'AutoSettings', 'AutoImportDefaults', 0)
 Dim $AutoUploadDefaults = IniRead($settings, 'AutoSettings', 'AutoUploadDefaults', 0)
@@ -105,7 +114,11 @@ GUISetState(@SW_SHOW)
 GUIRegisterMsg($WM_SIZE, "WM_SIZE")
 
 If $AutoImport = 1 And $AutoImportFolder <> "" Then _LoadFolderSelect($AutoImportFolder)
-If $AutoUpload = 1 Then _UploadUnknownFiles()
+If $AutoUpload = 1 Then
+	_UploadUnknownFiles()
+	If $AutoArchive = 1 Then _ArchiveImportedFiles()
+	If $AutoExit = 1 Then _AutoExit()
+EndIf
 _UpdateListview()
 
 $RefreshTimer = TimerInit()
@@ -168,13 +181,26 @@ Func _SaveSettings()
 	IniWrite($settings, 'Settings', 'WdbUser', $WdbUser)
 	IniWrite($settings, 'Settings', 'WdbApiKey', $WdbApiKey)
 	IniWrite($settings, 'Settings', 'WdbOtherUser', $WdbOtherUser)
-	IniWrite($settings, 'Settings', 'DefaultTitle', $DefaultTitle)
-	IniWrite($settings, 'Settings', 'DefaultNotes', $DefaultNotes)
 	IniWrite($settings, 'Settings', 'WifiDbApiURL', $WifiDbApiURL)
 
+	If $ImportTitle <> $default_title Then
+		IniWrite($settings, 'Import', 'Title', $ImportTitle)
+	Else
+		IniDelete($settings, 'Import', 'Title')
+	EndIf
+	If $ImportNotes <> $default_notes Then
+		IniWrite($settings, 'Import', 'Notes', $ImportNotes)
+	Else
+		IniDelete($settings, 'Import', 'Notes')
+	EndIf
+
+
 	IniWrite($settings, 'AutoSettings', 'AutoImportFolder', $AutoImportFolder)
+	IniWrite($settings, 'AutoSettings', 'AutoArchiveFolder', $AutoArchiveFolder)
 	IniWrite($settings, 'AutoSettings', 'AutoImport', $AutoImport)
 	IniWrite($settings, 'AutoSettings', 'AutoUpload', $AutoUpload)
+	IniWrite($settings, 'AutoSettings', 'AutoArchive', $AutoArchive)
+	IniWrite($settings, 'AutoSettings', 'AutoExit', $AutoExit)
 	IniWrite($settings, 'AutoSettings', 'AutoRefreshWating', $AutoRefreshWating)
 	IniWrite($settings, 'AutoSettings', 'AutoImportDefaults', $AutoImportDefaults)
 	IniWrite($settings, 'AutoSettings', 'AutoUploadDefaults', $AutoUploadDefaults)
@@ -208,8 +234,8 @@ Func _UpdateListview()
 	For $cf = 1 To $FoundFileMatch
 		$filefullname = $FileMatchArray[$cf][1]
 		$md5 = $FileMatchArray[$cf][2]
-		$uploadtitle = $FileMatchArray[$cf][3]
-		$uploadnotes = $FileMatchArray[$cf][4]
+		$ImportTitle = $FileMatchArray[$cf][3]
+		$ImportNotes = $FileMatchArray[$cf][4]
 		$wdbstatus = $FileMatchArray[$cf][5]
 		$wdbstatustext = $FileMatchArray[$cf][6]
 
@@ -220,8 +246,8 @@ Func _UpdateListview()
 		$line = _GUICtrlListView_AddItem($ulist, $filename, $ColFile)
 		_GUICtrlListView_AddSubItem($ulist, $line, $wdbstatus, $ColStatus)
 		_GUICtrlListView_AddSubItem($ulist, $line, $wdbstatustext, $ColStatusMessage)
-		_GUICtrlListView_AddSubItem($ulist, $line, $uploadtitle, $ColTitle)
-		_GUICtrlListView_AddSubItem($ulist, $line, $uploadnotes, $ColNotes)
+		_GUICtrlListView_AddSubItem($ulist, $line, $ImportTitle, $ColTitle)
+		_GUICtrlListView_AddSubItem($ulist, $line, $ImportNotes, $ColNotes)
 		_GUICtrlListView_AddSubItem($ulist, $line, $md5, $ColMD5)
 
 	Next
@@ -313,7 +339,7 @@ Func _LoadFile($loadfile)
 		Else
 			ConsoleWrite('+> Importing New File ' & $loadfile & @CRLF)
 			$FILE_ID += 1
-			_AddRecord($DB, "UploadFiles", $DB_OBJ, $loadfile & '|' & $loadfileMD5 & '|' & $DefaultTitle & '|' & $DefaultNotes & '|' & $DefaultStatus & '|' & $DefaultStatusText)
+			_AddRecord($DB, "UploadFiles", $DB_OBJ, $loadfile & '|' & $loadfileMD5 & '|' & $ImportTitle & '|' & $ImportNotes & '|' & $DefaultStatus & '|' & $DefaultStatusText)
 		EndIf
 	EndIf
 EndFunc   ;==>_LoadFile
@@ -405,21 +431,26 @@ EndFunc   ;==>_CheckFile
 
 Func _GuiAutoSettings()
 	GUISetState(@SW_HIDE, $GUI_wifidbuploader)
-	$GUI_AutoSettings = GUICreate("Auto Settings", 404, 224)
+	$GUI_AutoSettings = GUICreate("Auto Settings", 404, 245)
 	$chk_autoimport = GUICtrlCreateCheckbox("Automatically Import Folder on Load", 10, 16, 375, 20)
 	If $AutoImport = 1 Then GUICtrlSetState($chk_autoimport, $GUI_CHECKED)
 	$inp_autoimpfolder = GUICtrlCreateInput($AutoImportFolder, 40, 40, 273, 21)
 	$btn_browse = GUICtrlCreateButton("Browse", 320, 38, 73, 25)
 	$chk_autoupload = GUICtrlCreateCheckbox("Automatically Upload 'unknown' files to WiFiDB on Load", 10, 70, 375, 20)
 	If $AutoUpload = 1 Then GUICtrlSetState($chk_autoupload, $GUI_CHECKED)
-	$chk_autorefreshwaiting = GUICtrlCreateCheckbox("Automatically refresh unfinished files every 5 minutes", 10, 95, 375, 20)
+	$chk_autoarchive = GUICtrlCreateCheckbox("Automatically archive 'imported' and 'bad' files to folder", 40, 95, 375, 20)
+	If $AutoArchive = 1 Then GUICtrlSetState($chk_autoarchive, $GUI_CHECKED)
+	$inp_autoarchfolder = GUICtrlCreateInput($AutoArchiveFolder, 65, 120, 250, 21)
+	$btn_browsearc = GUICtrlCreateButton("Browse", 320, 118, 73, 25)
+	$chk_autoexit = GUICtrlCreateCheckbox("Automatically exit after upload", 40, 145, 375, 20)
+	If $AutoExit = 1 Then GUICtrlSetState($chk_autoexit, $GUI_CHECKED)
+
+	$chk_autorefreshwaiting = GUICtrlCreateCheckbox("Automatically refresh unfinished files every 5 minutes", 10, 170, 375, 20)
 	If $AutoRefreshWating = 1 Then GUICtrlSetState($chk_autorefreshwaiting, $GUI_CHECKED)
-	$chk_autoimpdefault = GUICtrlCreateCheckbox("Automatically use 'Import Settings' when importing", 10, 120, 375, 20)
-	If $AutoImportDefaults = 1 Then GUICtrlSetState($chk_autoimpdefault, $GUI_CHECKED)
-	$chk_autoupdefault = GUICtrlCreateCheckbox("Automatically use 'Upload Settings' when uploading", 11, 146, 375, 20)
-	If $AutoUploadDefaults = 1 Then GUICtrlSetState($chk_autoupdefault, $GUI_CHECKED)
-	$btn_autook = GUICtrlCreateButton("OK", 104, 181, 89, 25)
-	$btn_autocan = GUICtrlCreateButton("Cancel", 204, 181, 89, 25)
+	;$chk_autoupdefault = GUICtrlCreateCheckbox("Automatically use 'Upload Settings' when uploading", 11, 146, 375, 20)
+	;If $AutoUploadDefaults = 1 Then GUICtrlSetState($chk_autoupdefault, $GUI_CHECKED)
+	$btn_autook = GUICtrlCreateButton("OK", 104, 205, 89, 25)
+	$btn_autocan = GUICtrlCreateButton("Cancel", 204, 205, 89, 25)
 	GUISetState(@SW_SHOW)
 
 	While 1
@@ -436,8 +467,12 @@ Func _GuiAutoSettings()
 			Case $btn_browse
 				$loadfolder = FileSelectFolder("Select folder that contains vistumbler vs1 files", @ScriptDir)
 				If Not @error Then GUICtrlSetData($inp_autoimpfolder, $loadfolder)
+			Case $btn_browsearc
+				$loadfolder = FileSelectFolder("Select folder that you want to put finished vistumbler vs1 files", @ScriptDir)
+				If Not @error Then GUICtrlSetData($inp_autoarchfolder, $loadfolder)
 			Case $btn_autook
 				$AutoImportFolder = GUICtrlRead($inp_autoimpfolder)
+				$AutoArchiveFolder = GUICtrlRead($inp_autoarchfolder)
 
 				If GUICtrlRead($chk_autoimport) = 1 Then
 					$AutoImport = 1
@@ -451,22 +486,22 @@ Func _GuiAutoSettings()
 					$AutoUpload = 0
 				EndIf
 
+				If GUICtrlRead($chk_autoarchive) = 1 Then
+					$AutoArchive = 1
+				Else
+					$AutoArchive = 0
+				EndIf
+
+				If GUICtrlRead($chk_autoexit) = 1 Then
+					$AutoExit = 1
+				Else
+					$AutoExit = 0
+				EndIf
+
 				If GUICtrlRead($chk_autorefreshwaiting) = 1 Then
 					$AutoRefreshWating = 1
 				Else
 					$AutoRefreshWating = 0
-				EndIf
-
-				If GUICtrlRead($chk_autoimpdefault) = 1 Then
-					$AutoImportDefaults = 1
-				Else
-					$AutoImportDefaults = 0
-				EndIf
-
-				If GUICtrlRead($chk_autoupdefault) = 1 Then
-					$AutoUploadDefaults = 1
-				Else
-					$AutoUploadDefaults = 0
 				EndIf
 
 				_SaveSettings()
@@ -527,9 +562,9 @@ Func _GuiImportSettings()
 	GUISetState(@SW_HIDE, $GUI_wifidbuploader)
 	$Gui_ImportSettings = GUICreate("Import Settings", 420, 185)
 	GUICtrlCreateLabel("Import Title", 10, 17, 400, 20)
-	$imp_imptitle = GUICtrlCreateInput($DefaultTitle, 10, 37, 400, 21)
+	$imp_imptitle = GUICtrlCreateInput($ImportTitle, 10, 37, 400, 21)
 	GUICtrlCreateLabel("Import Notes", 10, 67, 400, 20)
-	$imp_impnotes = GUICtrlCreateInput($DefaultNotes, 10, 87, 400, 21)
+	$imp_impnotes = GUICtrlCreateInput($ImportNotes, 10, 87, 400, 21)
 	$chk_autoimpdefault = GUICtrlCreateCheckbox("Automatically use 'Import Settings' when importing", 10, 117, 375, 20)
 	If $AutoImportDefaults = 1 Then GUICtrlSetState($chk_autoimpdefault, $GUI_CHECKED)
 	$btn_impok = GUICtrlCreateButton("OK", 104, 145, 97, 25)
@@ -548,8 +583,11 @@ Func _GuiImportSettings()
 				GUISetState(@SW_SHOW, $GUI_wifidbuploader)
 				Return(0)
 			Case $btn_impok
-				$DefaultTitle = GUICtrlRead($imp_imptitle)
-				$DefaultNotes = GUICtrlRead($imp_impnotes)
+				$ImportTitle = GUICtrlRead($imp_imptitle)
+				If $ImportTitle = "" Then $ImportTitle = $default_title
+				$ImportNotes = GUICtrlRead($imp_impnotes)
+				If $ImportNotes = "" Then $ImportNotes = $default_notes
+
 				If GUICtrlRead($chk_autoimpdefault) = 1 Then
 					$AutoImportDefaults = 1
 				Else
@@ -564,21 +602,46 @@ Func _GuiImportSettings()
 
 EndFunc
 
+Func _ArchiveImportedFiles()
+	;Archive imported files
+	$query = "SELECT filename FROM UploadFiles WHERE wdbstatus='imported'"
+	ConsoleWrite("$query:" & $query & @CRLF)
+	$FileMatchArray = _RecordSearch($DB, $query, $DB_OBJ)
+	$FoundFileMatch = UBound($FileMatchArray) - 1
+	For $cf = 1 To $FoundFileMatch
+		$filename = $FileMatchArray[$cf][1]
+		If FileExists($filename) Then FileMove($filename, $AutoArchiveFolder)
+	Next
+	;Archive bad files
+	$query = "SELECT filename FROM UploadFiles WHERE wdbstatus='bad'"
+	ConsoleWrite("$query:" & $query & @CRLF)
+	$FileMatchArray = _RecordSearch($DB, $query, $DB_OBJ)
+	$FoundFileMatch = UBound($FileMatchArray) - 1
+	If $FoundFileMatch > 0 Then
+		$bad_dir = $AutoArchiveFolder & "bad\"
+		DirCreate ($bad_dir)
+		For $cf = 1 To $FoundFileMatch
+			$filename = $FileMatchArray[$cf][1]
+			If FileExists($filename) Then FileMove($filename, $AutoArchiveFolder)
+		Next
+	EndIf
+EndFunc
+
 Func _UploadUnknownFiles()
 	$query = "SELECT filename, md5, uploadtitle, uploadnotes FROM UploadFiles WHERE wdbstatus='unknown'"
 	ConsoleWrite("$query:" & $query & @CRLF)
 	$FileMatchArray = _RecordSearch($DB, $query, $DB_OBJ)
 	$FoundFileMatch = UBound($FileMatchArray) - 1
 
-	If $FoundFileMatch = 0 Then MsgBox(0, "Error", "There are no files that are unknown to the wifidb. There is nothing to upload at this time.")
+	If $FoundFileMatch = 0 And $AutoExit = 0 Then MsgBox(0, "Error", "There are no files that are unknown to the wifidb. There is nothing to upload at this time.")
 
 	For $cf = 1 To $FoundFileMatch
 		$filename = $FileMatchArray[$cf][1]
 		$md5 = $FileMatchArray[$cf][2]
-		$uploadtitle = $FileMatchArray[$cf][3]
-		$uploadnotes = $FileMatchArray[$cf][4]
+		$ImportTitle = $FileMatchArray[$cf][3]
+		$ImportNotes = $FileMatchArray[$cf][4]
 
-		_UploadToWifiDB($filename, $WdbApiKey, $WdbUser, $WdbOtherUser, $uploadtitle, $uploadnotes)
+		_UploadToWifiDB($filename, $WdbApiKey, $WdbUser, $WdbOtherUser, $ImportTitle, $ImportNotes)
 		$filestatus = _CheckFile($md5)
 		If Not @error Then
 			ConsoleWrite('$fstatus:' & $filestatus[0] & @CRLF)
@@ -717,4 +780,40 @@ Func WM_SIZE($hWnd, $Msg, $wParam, $lParam)
     $iHeight = BitShift($lParam, 16) ; _WinAPI_HiWord
     _WinAPI_MoveWindow($ulist, 5, 65, $iWidth - 10, $iHeight - 75)
     Return $GUI_RUNDEFMSG
+EndFunc
+
+Func _AutoExit()
+	GUISetState(@SW_HIDE, $GUI_wifidbuploader)
+	Local $ae_waittime = "10000"
+	$GUI_AutoExit = GUICreate("Auto Exiting", 379, 126)
+	$lab_aeinfo = GUICtrlCreateLabel("WiFiDB Uploader is automatically exiting. Click cancel to prevent this. Click Exit to exit now", 16, 16, 348, 50)
+	$lab_aetimer = GUICtrlCreateLabel("", 16, 64, 348, 17)
+	$btn_aeexit = GUICtrlCreateButton("Exit", 72, 88, 113, 25)
+	$btn_aecan = GUICtrlCreateButton("Cancel", 196, 88, 113, 25)
+	GUISetState(@SW_SHOW)
+
+	$ae_timer = TimerInit()
+	While 1
+		$nMsg = GUIGetMsg()
+		Switch $nMsg
+			Case $GUI_EVENT_CLOSE
+				GUIDelete($GUI_AutoExit)
+				GUISetState(@SW_SHOW, $GUI_wifidbuploader)
+				ExitLoop
+			Case $btn_aecan
+				GUIDelete($GUI_AutoExit)
+				GUISetState(@SW_SHOW, $GUI_wifidbuploader)
+				ExitLoop
+			Case $btn_aeexit
+				_Exit()
+		EndSwitch
+
+
+		$ae_timeleft = $ae_waittime - TimerDiff($ae_timer)
+		If $ae_timeleft > 0 Then
+			GUICtrlSetData($lab_aetimer, "Exiting in " & Round($ae_timeleft / 1000) & " second(s)")
+		Else
+			_Exit()
+		EndIf
+	WEnd
 EndFunc
