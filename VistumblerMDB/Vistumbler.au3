@@ -1,4 +1,3 @@
-#RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
@@ -6,7 +5,7 @@
 #AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2015 Andrew Calcutt
+;Copyright (C) 2016 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -16,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.3 Beta 4'
+$version = 'v10.6.3 Beta 6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2015/09/27'
+$last_modified = '2016/03/05'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -48,35 +47,79 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\ZIP.au3"
 #include "UDFs\FileInUse.au3"
 #include "UDFs\UnixTime.au3"
+#include "UDFs\CompareFileTimeEx.au3"
 ;Set setting folder--------------------------------------
-Dim $SettingsDir = @ScriptDir & '\Settings\'
-DirCreate($SettingsDir)
-;Set Settings file
-Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
-IniWrite($settings, "Vistumbler", "Name", $Script_Name)
-IniWrite($settings, "Vistumbler", "Version", $version)
-;Set if Vistumbler Should run in portable mode (keep all directories in the vistumbler folder)
-Dim $PortableMode = IniRead($settings, 'Vistumbler', 'PortableMode', 0)
-;Set directories
-If $PortableMode = 0 Then ;Use Local User %temp% directory for temp and users my document folder for save
-	Dim $DefaultSaveDir = @MyDocumentsDir & '\Vistumbler\'
-	Dim $TmpDir = @TempDir & '\Vistumbler\'
-Else;Use folders inside the Vistumbler directory
-	Dim $DefaultSaveDir = @ScriptDir & '\Save\'
-	Dim $TmpDir = @ScriptDir & '\temp\'
+Dim $Default_TmpDir = @ScriptDir & '\temp\'
+Dim $Default_SaveDir = @ScriptDir & '\Save\'
+Dim $Default_SettingsDir = @ScriptDir & '\Settings\'
+Dim $Default_settings = $Default_SettingsDir & 'vistumbler_settings.ini'
+Dim $Default_ManuDB = $Default_SettingsDir & 'Manufacturers.mdb'
+Dim $Default_LabDB = $Default_SettingsDir & 'Labels.mdb'
+Dim $Default_CamDB = $Default_SettingsDir & 'Cameras.mdb'
+Dim $Default_InstDB = $Default_SettingsDir & 'Instruments.mdb'
+Dim $Default_FiltDB = $Default_SettingsDir & 'Filters.mdb'
+Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
+If $PortableMode = 1 Then
+	$TmpDir = $Default_TmpDir
+	$DefaultSaveDir = $Default_SaveDir
+	$SettingsDir = $Default_SettingsDir
+	$settings = $Default_settings
+	$ManuDB = $Default_ManuDB
+	$LabDB = $Default_LabDB
+	$CamDB = $Default_CamDB
+	$InstDB = $Default_InstDB
+	$FiltDB = $Default_FiltDB
+Else
+	$TmpDir = @TempDir & '\Vistumbler\'
+	$DefaultSaveDir = @MyDocumentsDir & '\Vistumbler\'
+	$SettingsDir = @AppDataDir & '\Vistumbler\'
+	$settings = $SettingsDir & 'vistumbler_settings.ini'
+	$ManuDB = $SettingsDir & 'Manufacturers.mdb'
+	$LabDB = $SettingsDir & 'Labels.mdb'
+	$CamDB = $SettingsDir & 'Cameras.mdb'
+	$InstDB = $SettingsDir & 'Instruments.mdb'
+	$FiltDB = $SettingsDir & 'Filters.mdb'
+	DirCreate($TmpDir)
+	DirCreate($DefaultSaveDir)
+	DirCreate($SettingsDir)
+
+	If FileExists($Default_settings) Then
+		If FileExists($settings) = 0 Or _CompareFileTimeEx($Default_settings, $settings, 0) = 1 Then FileCopy($Default_settings, $settings, 1)
+	EndIf
+
+	If FileExists($Default_ManuDB) Then
+		If FileExists($ManuDB) = 0 Or _CompareFileTimeEx($Default_ManuDB, $ManuDB, 0) = 1 Then FileCopy($Default_ManuDB, $ManuDB, 1)
+	EndIf
+
+	If FileExists($Default_LabDB) Then
+		If FileExists($LabDB) = 0 Or _CompareFileTimeEx($Default_LabDB, $LabDB, 0) = 1 Then FileCopy($Default_LabDB, $LabDB, 1)
+	EndIf
+
+	If FileExists($Default_CamDB) Then
+		If FileExists($CamDB) = 0 Or _CompareFileTimeEx($Default_CamDB, $CamDB, 0) = 1 Then FileCopy($Default_CamDB, $CamDB, 1)
+	EndIf
+
+	If FileExists($Default_InstDB) Then
+		If FileExists($InstDB) = 0 Or _CompareFileTimeEx($Default_InstDB, $InstDB, 0) = 1 Then FileCopy($Default_InstDB, $InstDB, 1)
+	EndIf
+
+	If FileExists($Default_FiltDB) Then
+		If FileExists($FiltDB) = 0 Or _CompareFileTimeEx($Default_FiltDB, $FiltDB, 0) = 1 Then FileCopy($Default_FiltDB, $FiltDB, 1)
+	EndIf
+
 EndIf
+;Set directories
 Dim $LanguageDir = @ScriptDir & '\Languages\'
 Dim $SoundDir = @ScriptDir & '\Sounds\'
 Dim $ImageDir = @ScriptDir & '\Images\'
 Dim $IconDir = @ScriptDir & '\Icons\'
-;Create directories
-DirCreate($SettingsDir)
-DirCreate($DefaultSaveDir)
-DirCreate($TmpDir)
 DirCreate($LanguageDir)
 DirCreate($SoundDir)
 DirCreate($ImageDir)
 DirCreate($IconDir)
+;Write Name And Version to settings file
+IniWrite($settings, "Vistumbler", "Name", $Script_Name)
+IniWrite($settings, "Vistumbler", "Version", $version)
 ;Cleanup Old Temp Files----------------------------------
 _CleanupFiles($TmpDir, '*.tmp')
 _CleanupFiles($TmpDir, '*.ldb')
