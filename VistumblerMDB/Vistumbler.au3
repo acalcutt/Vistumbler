@@ -2,7 +2,7 @@
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
 #AutoIt3Wrapper_Res_Fileversion=10.3.2.0
-#AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
+#AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2016 Andrew Calcutt
@@ -14,10 +14,10 @@
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
-$Script_Function = 'A wireless network scanner for Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.3 Beta 6'
+$Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
+$version = 'v10.6.4 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2016/03/05'
+$last_modified = '2016/03/06'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -326,7 +326,7 @@ Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, 
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
-Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
+Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirAutoRecovery, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
 Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, $AutoSaveAndClearAPsGUI, $AutoSaveAndClearTimeGUI, $AutoRecoveryBox, $AutoRecoveryDelBox, $AutoSaveAndClearPlaySoundGUI, $AutoRecoveryTimeGUI, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
@@ -441,6 +441,7 @@ Dim $OldGraphData[1]
 ;Load-Settings-From-INI-File----------------------------
 Dim $SaveDir = IniRead($settings, 'Vistumbler', 'SaveDir', $DefaultSaveDir)
 Dim $SaveDirAuto = IniRead($settings, 'Vistumbler', 'SaveDirAuto', $DefaultSaveDir)
+Dim $SaveDirAutoRecovery = IniRead($settings, 'Vistumbler', 'SaveDirAutoRecovery', $DefaultSaveDir)
 Dim $SaveDirKml = IniRead($settings, 'Vistumbler', 'SaveDirKml', $DefaultSaveDir)
 Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
 Dim $AutoCheckForUpdates = IniRead($settings, 'Vistumbler', 'AutoCheckForUpdates', 1)
@@ -834,6 +835,7 @@ Dim $Text_Ready = IniRead($DefaultLanguagePath, 'GuiText', 'Ready', 'Ready')
 Dim $Text_Done = IniRead($DefaultLanguagePath, 'GuiText', 'Done', 'Done')
 Dim $Text_VistumblerSaveDirectory = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerSaveDirectory', 'Vistumbler Save Directory')
 Dim $Text_VistumblerAutoSaveDirectory = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerAutoSaveDirectory', 'Vistumbler Auto Save Directory')
+Dim $Text_VistumblerAutoRecoverySaveDirectory = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerAutoRecoverySaveDirectory', 'Vistumbler Auto Recovery Save Directory')
 Dim $Text_VistumblerKmlSaveDirectory = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerKmlSaveDirectory', 'Vistumbler KML Save Directory')
 Dim $Text_BackgroundColor = IniRead($DefaultLanguagePath, 'GuiText', 'BackgroundColor', 'Background Color')
 Dim $Text_ControlColor = IniRead($DefaultLanguagePath, 'GuiText', 'ControlColor', 'Control Color')
@@ -1052,6 +1054,11 @@ Dim $Text_PlaySoundWhenSaving = IniRead($DefaultLanguagePath, 'GuiText', 'PlaySo
 Dim $Text_MinimalGuiMode = IniRead($DefaultLanguagePath, 'GuiText', 'MinimalGuiMode', 'Minimal GUI Mode')
 Dim $Text_AutoScrollToBottom = IniRead($DefaultLanguagePath, 'GuiText', 'AutoScrollToBottom', 'Auto Scroll to Bottom of List')
 Dim $Text_ListviewBatchInsertMode = IniRead($DefaultLanguagePath, 'GuiText', 'ListviewBatchInsertMode', 'Listview Batch Insert Mode')
+Dim $Text_ExportVistumblerSettings = IniRead($DefaultLanguagePath, 'GuiText', 'ExportVistumblerSettings', 'Export Vistumbler Settings')
+Dim $Text_ImportVistumblerSettings = IniRead($DefaultLanguagePath, 'GuiText', 'ImportVistumblerSettings', 'Import Vistumbler Settings')
+Dim $Text_ErrorSavingFile = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorSavingFile', 'Error Saving File')
+Dim $Text_ErrorImportingFile = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorImportingFile', 'Error Importing File')
+Dim $Text_SettingsImportedSuccess = IniRead($DefaultLanguagePath, 'GuiText', 'SettingsImportedSuccess', 'Settings Imported Successfully. Please restart Vistumbler to apply the new settings.')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1433,6 +1440,8 @@ $GpsDetails = GUICtrlCreateMenuItem($Text_GpsDetails, $ExtraMenu)
 $GpsCompass = GUICtrlCreateMenuItem($Text_GpsCompass, $ExtraMenu)
 $OpenKmlNetworkLink = GUICtrlCreateMenuItem($Text_OpenKmlNetLink, $ExtraMenu)
 $OpenSaveFolder = GUICtrlCreateMenuItem($Text_OpenSaveFolder, $ExtraMenu)
+$ExportSettings = GUICtrlCreateMenuItem($Text_ExportVistumblerSettings, $ExtraMenu)
+$ImportSettings = GUICtrlCreateMenuItem($Text_ImportVistumblerSettings, $ExtraMenu)
 $UpdateManufacturers = GUICtrlCreateMenuItem($Text_UpdateManufacturers, $ExtraMenu)
 ;$GUI_ImportImageFolder = GUICtrlCreateMenuItem("Import Image Folder (" & $Text_Experimental & ")", $ExtraMenu)
 ;$GUI_CleanupNonMatchingImages = GUICtrlCreateMenuItem("Cleanup non-matching images (" & $Text_Experimental & ")", $ExtraMenu)
@@ -1600,6 +1609,8 @@ GUICtrlSetOnEvent($GUI_2400ChannelGraph, '_Channels2400_GUI')
 GUICtrlSetOnEvent($GUI_5000ChannelGraph, '_Channels5000_GUI')
 GUICtrlSetOnEvent($OpenSaveFolder, '_OpenSaveFolder')
 GUICtrlSetOnEvent($OpenKmlNetworkLink, '_StartGoogleAutoKmlRefresh')
+GUICtrlSetOnEvent($ExportSettings, '_ExportSettings')
+GUICtrlSetOnEvent($ImportSettings, '_ImportSettings')
 GUICtrlSetOnEvent($UpdateManufacturers, '_ManufacturerUpdate')
 ;GUICtrlSetOnEvent($GUI_ImportImageFolder, '_GUI_ImportImageFiles')
 ;GUICtrlSetOnEvent($GUI_CleanupNonMatchingImages, '_RemoveNonMatchingImages')
@@ -3315,15 +3326,15 @@ Func _ExitVistumbler()
 		$savemsg = MsgBox(3, $Text_Save, $Text_SaveQuestion)
 		If $savemsg <> 2 Then
 			If $savemsg = 6 Then _ExportDetailedData()
-			_Exit()
+			_Exit(1)
 		EndIf
 	Else
-		_Exit()
+		_Exit(1)
 	EndIf
 	$Close = 0
 EndFunc   ;==>_ExitVistumbler
 
-Func _Exit()
+Func _Exit($SaveSettings = 1)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Exit()') ;#Debug Display
 	_GDIPlus_Shutdown()
 	GUISetState(@SW_HIDE, $Vistumbler)
@@ -3332,7 +3343,7 @@ Func _Exit()
 	_AccessCloseConn($LabDB_OBJ)
 	_AccessCloseConn($InstDB_OBJ)
 	; Write current settings to back to INI file
-	_WriteINI()
+	If $SaveSettings = 1 Then _WriteINI()
 	$PID = -1
 	$CloseTimer = TimerInit()
 	While $PID <> 0
@@ -4219,7 +4230,7 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 			$MM = StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2)
 			$SS = StringFormat('%0.4f', (('.' & $splitlatlon2[2]) * 60)); multiply remaining minutes by 60 to get ss
 			If $DD = "" Then $DD = "0"
-			$return = $splitlatlon1[1] & ' ' & $DD & '° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd� mm' ss"N)
+			$return = $splitlatlon1[1] & ' ' & $DD & '° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd� mm' ss"N)
 		Else
 			$return = $splitlatlon1[1] & ' 0° 0' & Chr(39) & ' 0"'
 		EndIf
@@ -4227,7 +4238,7 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DMS
 
-Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd� mm' ss", or ddmm.mmmm to ddmm.mmmm
+Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd� mm' ss", or ddmm.mmmm to ddmm.mmmm
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_All_to_DMM()') ;#Debug Display
 	;All GPS Formats to ddmm.mmmm
 	$return = '0.0000'
@@ -6885,7 +6896,7 @@ Func _AutoRecoveryVS1();Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRecoveryVS1()') ;#Debug Display
 	DirCreate($SaveDirAuto)
 	FileDelete($AutoRecoveryVS1File)
-	$AutoRecoveryVS1File = $SaveDirAuto & $ldatetimestamp & '_AutoRecovery' & '.VS1'
+	$AutoRecoveryVS1File = $SaveDirAutoRecovery & $ldatetimestamp & '_AutoRecovery' & '.VS1'
 	If ProcessExists($AutoRecoveryVS1Process) = 0 Then
 		$AutoRecoveryVS1Process = Run(@ComSpec & " /C " & FileGetShortName(@ScriptDir & '\Export.exe') & ' /db="' & $VistumblerDB & '" /t=d /f="' & $AutoRecoveryVS1File & '"', '', @SW_HIDE)
 		$save_timer = TimerInit()
@@ -7493,6 +7504,11 @@ Func _WriteINI()
 	Else
 		IniDelete($settings, "Vistumbler", "SaveDirAuto");delete entry from the ini file
 	EndIf
+	If $SaveDirAutoRecovery <> $DefaultSaveDir Then
+		IniWrite($settings, "Vistumbler", "SaveDirAutoRecovery", $SaveDirAutoRecovery);Write new auto save dir ro ini
+	Else
+		IniDelete($settings, "Vistumbler", "SaveDirAutoRecovery");delete entry from the ini file
+	EndIf
 	If $SaveDirKml <> $DefaultSaveDir Then
 		IniWrite($settings, "Vistumbler", "SaveDirKml", $SaveDirKml);Write new save kml dir ro ini
 	Else
@@ -7903,6 +7919,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Done', $Text_Done)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerSaveDirectory', $Text_VistumblerSaveDirectory)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerAutoSaveDirectory', $Text_VistumblerAutoSaveDirectory)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerAutoRecoverySaveDirectory', $Text_VistumblerAutoRecoverySaveDirectory)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'VistumblerKmlSaveDirectory', $Text_VistumblerKmlSaveDirectory)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'BackgroundColor', $Text_BackgroundColor)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ControlColor', $Text_ControlColor)
@@ -8118,6 +8135,11 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'MinimalGuiMode', $Text_MinimalGuiMode)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoScrollToBottom', $Text_AutoScrollToBottom)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ListviewBatchInsertMode', $Text_ListviewBatchInsertMode)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ExportVistumblerSettings', $Text_ExportVistumblerSettings)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ImportVistumblerSettings', $Text_ImportVistumblerSettings)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorSavingFile', $Text_ErrorSavingFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorImportingFile', $Text_ErrorImportingFile)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SettingsImportedSuccess', $Text_SettingsImportedSuccess)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -10115,10 +10137,14 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_Set_SaveDirAuto = GUICtrlCreateInput($SaveDirAuto, 30, 125, 515, 21)
 		$Browse2 = GUICtrlCreateButton($Text_Browse, 555, 125, 97, 20, 0)
-		GUICtrlCreateLabel($Text_VistumblerKmlSaveDirectory, 30, 150, 580, 15)
+		GUICtrlCreateLabel($Text_VistumblerAutoRecoverySaveDirectory, 30, 150, 580, 15)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Set_SaveDirKml = GUICtrlCreateInput($SaveDirKml, 30, 165, 515, 21)
+		$GUI_Set_SaveDirAutoRecovery = GUICtrlCreateInput($SaveDirAutoRecovery, 30, 165, 515, 21)
 		$Browse3 = GUICtrlCreateButton($Text_Browse, 555, 165, 97, 20, 0)
+		GUICtrlCreateLabel($Text_VistumblerKmlSaveDirectory, 30, 190, 580, 15)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_Set_SaveDirKml = GUICtrlCreateInput($SaveDirKml, 30, 205, 515, 21)
+		$Browse4 = GUICtrlCreateButton($Text_Browse, 555, 205, 97, 20, 0)
 
 		;Auto Save and Clear
 		GUICtrlCreateGroup($Text_AutoSaveAndClear, 15, 240, 320, 170)
@@ -10745,7 +10771,8 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 
 		GUICtrlSetOnEvent($browse1, '_BrowseSave')
 		GUICtrlSetOnEvent($Browse2, '_BrowseAutoSave')
-		GUICtrlSetOnEvent($Browse3, '_BrowseKmlSave')
+		GUICtrlSetOnEvent($Browse3, '_BrowseAutoSaveRecovery')
+		GUICtrlSetOnEvent($Browse4, '_BrowseKmlSave')
 
 		GUICtrlSetOnEvent($browsege, '_BrowseGoogleEarth')
 
@@ -10840,6 +10867,14 @@ Func _BrowseAutoSave()
 	EndIf
 EndFunc   ;==>_BrowseAutoSave
 
+Func _BrowseAutoSaveRecovery()
+	$folder = FileSelectFolder($Text_VistumblerAutoRecoverySaveDirectory, '', 1, GUICtrlRead($GUI_Set_SaveDirAutoRecovery))
+	If Not @error Then
+		If StringTrimLeft($folder, StringLen($folder) - 1) <> "\" Then $folder = $folder & "\" ;If directory does not have training \ then add it
+		GUICtrlSetData($GUI_Set_SaveDirAutoRecovery, $folder)
+	EndIf
+EndFunc
+
 Func _BrowseKmlSave()
 	$folder = FileSelectFolder($Text_VistumblerKmlSaveDirectory, '', 1, GUICtrlRead($GUI_Set_SaveDirKml))
 	If Not @error Then
@@ -10932,12 +10967,15 @@ Func _ApplySettingsGUI();Applys settings
 	If $Apply_Save = 1 Then
 		$Tmp_SaveDir = GUICtrlRead($GUI_Set_SaveDir)
 		$Tmp_SaveDirAuto = GUICtrlRead($GUI_Set_SaveDirAuto)
+		$Tmp_SaveDirAutoRecovery = GUICtrlRead($GUI_Set_SaveDirAutoRecovery)
 		$Tmp_SaveDirKml = GUICtrlRead($GUI_Set_SaveDirKml)
 		If StringTrimLeft($Tmp_SaveDir, StringLen($Tmp_SaveDir) - 1) <> "\" Then $Tmp_SaveDir = $Tmp_SaveDir & "\" ;If directory does not have trailing \ then add it
 		If StringTrimLeft($Tmp_SaveDirAuto, StringLen($Tmp_SaveDirAuto) - 1) <> "\" Then $Tmp_SaveDirAuto = $Tmp_SaveDirAuto & "\" ;If directory does not have trailing \ then add it
+		If StringTrimLeft($Tmp_SaveDirAutoRecovery, StringLen($Tmp_SaveDirAutoRecovery) - 1) <> "\" Then $Tmp_SaveDirAutoRecovery = $Tmp_SaveDirAutoRecovery & "\" ;If directory does not have trailing \ then add it
 		If StringTrimLeft($Tmp_SaveDirKml, StringLen($Tmp_SaveDirKml) - 1) <> "\" Then $Tmp_SaveDirKml = $Tmp_SaveDirKml & "\" ;If directory does not have trailing \ then add it
 		$SaveDir = $Tmp_SaveDir
 		$SaveDirAuto = $Tmp_SaveDirAuto
+		$SaveDirAutoRecovery = $Tmp_SaveDirAutoRecovery
 		$SaveDirKml = $Tmp_SaveDirKml
 
 		;Auto Save and Clear
@@ -11173,6 +11211,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_Done = IniRead($DefaultLanguagePath, 'GuiText', 'Done', 'Done')
 		$Text_VistumblerSaveDirectory = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerSaveDirectory', 'Vistumbler Save Directory')
 		$Text_VistumblerAutoSaveDirectory = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerAutoSaveDirectory', 'Vistumbler Auto Save Directory')
+		$Text_VistumblerAutoRecoverySaveDirectory = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerAutoRecoverySaveDirectory', 'Vistumbler Auto Recovery Save Directory')
 		$Text_VistumblerKmlSaveDirectory = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerKmlSaveDirectory', 'Vistumbler KML Save Directory')
 		$Text_BackgroundColor = IniRead($DefaultLanguagePath, 'GuiText', 'BackgroundColor', 'Background Color')
 		$Text_ControlColor = IniRead($DefaultLanguagePath, 'GuiText', 'ControlColor', 'Control Color')
@@ -11388,6 +11427,11 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_MinimalGuiMode = IniRead($DefaultLanguagePath, 'GuiText', 'MinimalGuiMode', 'Minimal GUI Mode')
 		$Text_AutoScrollToBottom = IniRead($DefaultLanguagePath, 'GuiText', 'AutoScrollToBottom', 'Auto Scroll to Bottom of List')
 		$Text_ListviewBatchInsertMode = IniRead($DefaultLanguagePath, 'GuiText', 'ListviewBatchInsertMode', 'Listview Batch Insert Mode')
+		$Text_ExportVistumblerSettings = IniRead($DefaultLanguagePath, 'GuiText', 'ExportVistumblerSettings', 'Export Vistumbler Settings')
+		$Text_ImportVistumblerSettings = IniRead($DefaultLanguagePath, 'GuiText', 'ImportVistumblerSettings', 'Import Vistumbler Settings')
+		$Text_ErrorSavingFile = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorSavingFile', 'Error Saving File')
+		$Text_ErrorImportingFile = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorImportingFile', 'Error Importing File')
+		$Text_SettingsImportedSuccess = IniRead($DefaultLanguagePath, 'GuiText', 'SettingsImportedSuccess', 'Settings Imported Successfully. Please restart Vistumbler to apply the new settings.')
 
 		$RestartVistumbler = 1
 	EndIf
@@ -12090,7 +12134,8 @@ EndFunc   ;==>_MenuUpdate
 
 Func _StartUpdate()
 	_WriteINI()
-	Run(@ScriptDir & '\update.exe')
+	$command = @ScriptDir & '\update_updater.exe'
+	Run(@ComSpec & ' /c start "" "' & $command & '"')
 	Exit
 EndFunc   ;==>_StartUpdate
 
@@ -12111,21 +12156,7 @@ Func _CheckForUpdates()
 				$filename = $fv[$i][0]
 				$fversion = $fv[$i][1]
 				If IniRead($CurrentVersionFile, "FileVersions", $filename, '0') <> $fversion Or FileExists(@ScriptDir & '\' & $filename) = 0 Then
-					If $filename = 'update.exe' Then ;Download updated update.exe
-						$dloadupdatemsg = MsgBox(4, $Text_Information, $Text_UpdateUpdaterMsg)
-						If $dloadupdatemsg = 6 Then
-							$sourcefile = $GIT_ROOT & $fversion & '/VistumblerMDB/' & $filename
-							$desttmpfile = $TmpDir & $filename & '.tmp'
-							$destfile = @ScriptDir & '\' & $filename
-							$get = InetGet($sourcefile, $desttmpfile, 1)
-							If $get <> 0 And FileGetSize($desttmpfile) <> 0 Then ;Download Successful
-								If FileMove($desttmpfile, $destfile, 9) = 1 Then IniWrite($CurrentVersionFile, "FileVersions", $filename, $fversion)
-							EndIf
-							FileDelete($desttmpfile)
-						EndIf
-					Else
-						$UpdatesAvalible = 1
-					EndIf
+					$UpdatesAvalible = 1
 				EndIf
 			Next
 		EndIf
@@ -12134,7 +12165,8 @@ Func _CheckForUpdates()
 EndFunc   ;==>_CheckForUpdates
 
 Func _ManufacturerUpdate()
-	Run(@ScriptDir & '\UpdateManufactures.exe')
+	$command = @ScriptDir & '\UpdateManufactures.exe'
+	Run(@ComSpec & ' /c start "" "' & $command & '"')
 	Exit
 EndFunc   ;==>_ManufacturerUpdate
 
@@ -13239,3 +13271,28 @@ Func _CleanupFiles($cDIR, $cTYPE)
 		Next
 	EndIf
 EndFunc   ;==>_CleanupFiles
+
+Func _ExportSettings()
+	$file = FileSaveDialog($Text_ExportVistumblerSettings, $SaveDir, $Text_VistumblerSettings & ' (*.ini)', $FD_PATHMUSTEXIST + $FD_PROMPTOVERWRITE, "vistumbler_settings.ini")
+	If Not @error Then
+		$copy = FileCopy($settings, $file, 1)
+		If $copy = 1 And FileExists($file) Then
+			MsgBox(0, $Text_Information, $Text_SavedAs & ' "' & $file & '"')
+		Else
+			MsgBox(0, $Text_Error, $Text_ErrorSavingFile)
+		EndIf
+	EndIf
+EndFunc
+
+Func _ImportSettings()
+	$file = FileOpenDialog($Text_ImportVistumblerSettings, $SaveDir, $Text_VistumblerSettings & ' (*.ini)', 1)
+	If Not @error Then
+		$copy = FileCopy($file, $settings, 1)
+		If $copy = 1 And FileExists($settings) Then
+			MsgBox(0, $Text_Information, $Text_SettingsImportedSuccess)
+			_Exit(0)
+		Else
+			MsgBox(0, $Text_Error, $Text_ErrorImportingFile)
+		EndIf
+	EndIf
+EndFunc
