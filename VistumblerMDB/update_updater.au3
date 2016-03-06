@@ -23,11 +23,12 @@ Dim $TmpDir = @TempDir & '\Vistumbler\'
 DirCreate($TmpDir)
 
 Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
+Dim $Profile_settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
 Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
-If $PortableMode = 1 Then
+If $PortableMode = 1 Or FileExists($Profile_settings) = 0 Then
 	$settings = $Default_settings
 Else
-	$settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
+	$settings = $Profile_settings
 EndIf
 
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
