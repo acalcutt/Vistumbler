@@ -22,9 +22,16 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 Dim $TmpDir = @TempDir & '\Vistumbler\'
 DirCreate($TmpDir)
 
+Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
+Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
+If $PortableMode = 1 Then
+	$settings = $Default_settings
+Else
+	$settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
+EndIf
+
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
-Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
 Dim $GIT_ROOT = 'https://raw.github.com/RIEI/Vistumbler/'
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
 
