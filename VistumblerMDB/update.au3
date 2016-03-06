@@ -1,20 +1,22 @@
+#RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2013 Andrew Calcutt
+;Copyright (C) 2016 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.9.4
+;AutoIt Version: v3.3.14.2
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
-$Script_Function = 'Updates Vistumbler from SVN based on version.ini'
-$version = 'v9'
+$Script_Function = 'Updates Vistumbler from git based on version.ini'
+$version = 'v10'
 $origional_date = '2010/09/01'
-$last_modified = '2013/03/08'
+$last_modified = '2015/03/05'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include <EditConstants.au3>
@@ -27,8 +29,6 @@ DirCreate($TmpDir)
 
 Dim $Errors
 Dim $NewFiles
-Dim $LoadVersionFile
-Dim $UseBackupSVN = 0
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
@@ -79,13 +79,6 @@ GUICtrlSetColor(-1, $TextColor)
 $UpdateEdit = GUICtrlCreateEdit($data, 10, 30, 330, 260)
 GUICtrlSetBkColor(-1, $ControlBackgroundColor)
 GUISetState(@SW_SHOW)
-
-For $loop = 1 To $CmdLine[0]
-	If StringInStr($CmdLine[$loop], '/s') Then
-		$filesplit = StringSplit($CmdLine[$loop], "=")
-		If $filesplit[0] = 2 Then $LoadVersionFile = $filesplit[2]
-	EndIf
-Next
 
 FileDelete($NewVersionFile)
 If $CheckForBetaUpdates = 1 Then
