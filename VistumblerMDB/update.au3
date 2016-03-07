@@ -209,7 +209,7 @@ If $Errors <> '' Then
 	EndIf
 EndIf
 
-_WriteLanguageINI()
+_WriteINI()
 
 $updatemsg = _MsgBox($Text_Done, $Text_DoneWouldYouLikeToLoadVistumbler & @CRLF & @CRLF & $NewFiles, $Text_Yes, $Text_No)
 If $updatemsg = 1 Then Run(@ScriptDir & '\Vistumbler.exe')
@@ -240,7 +240,8 @@ Func _MsgBox($title, $msg, $But1txt, $But2txt)
 	WEnd
 EndFunc   ;==>_MsgBox
 
-Func _WriteLanguageINI()
+Func _WriteINI()
+	IniWrite($settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
 	IniWrite($DefaultLanguagePath, "GuiText", "Done", $Text_Done)
 	IniWrite($DefaultLanguagePath, "GuiText", "Error", $Text_Error)
 	IniWrite($DefaultLanguagePath, "GuiText", "Updating", $Text_Updating)
