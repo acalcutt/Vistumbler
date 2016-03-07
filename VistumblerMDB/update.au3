@@ -29,11 +29,11 @@ DirCreate($TmpDir)
 
 Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
 Dim $Profile_settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
-Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
-If $PortableMode = 1 Or FileExists($Profile_settings) = 0 Then
-	$settings = $Default_settings
-Else
-	$settings = $Profile_settings
+Dim $settings = $Default_settings
+If FileExists($Profile_settings) Then
+	$CheckForBetaUpdates = IniRead($Profile_settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
+	IniWrite($Default_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
+	FileDelete($Profile_settings)
 EndIf
 
 Dim $Errors
@@ -42,8 +42,6 @@ Dim $NewVersionFile = $TmpDir & 'versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $GIT_ROOT = 'https://raw.github.com/RIEI/Vistumbler/'
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
-If FileExists($Default_settings) Then IniWrite($Default_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
-If FileExists($Profile_settings) Then IniWrite($Profile_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
 Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4C2")
