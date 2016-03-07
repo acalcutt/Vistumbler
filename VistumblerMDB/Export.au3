@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2015 Andrew Calcutt
+;Copyright (C) 2016 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -13,8 +13,8 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Exporter'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Reads the vistumbler DB and exports based on input options'
-$version = 'v7.1'
-$last_modified = '2015/09/22'
+$version = 'v7.2'
+$last_modified = '2016/03/06'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 #include "UDFs\AccessCom.au3"
@@ -23,37 +23,55 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #Include <String.au3>
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
+Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
+Dim $Profile_settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
+Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
+If $PortableMode = 1 Then
+	$settings = $Default_settings
+	$TmpDir = @ScriptDir & '\temp\'
+Else
+	$settings = $Profile_settings
+	If FileExists($Default_settings) And FileExists($settings) = 0 Then FileCopy($Default_settings, $settings, 1)
+	$TmpDir = @TempDir & '\Vistumbler\'
+EndIf
+
 Dim $DB_OBJ
 Dim $Debug = 0
 Dim $filetype = 'cd';Default file type (d=detailed VS1, cd=detailed CSV, cs=summary CSV, k=KML, w=WifiDB Upload)
-Dim $filename = @ScriptDir & '\Temp\Save.csv'
-Dim $settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
-Dim $VistumblerDB = @ScriptDir & '\Temp\Vistumbler.mdb'
+Dim $filename = $TmpDir & 'Save.csv'
+Dim $VistumblerDB = $TmpDir & 'Vistumbler.mdb'
 Dim $ImageDir = @ScriptDir & '\Images\'
-Dim $TmpDir = @ScriptDir & '\temp\'
 
-Dim $Column_Names_Line = IniRead($settings, 'Column_Names', 'Column_Line', '#')
-Dim $Column_Names_Active = IniRead($settings, 'Column_Names', 'Column_Active', 'Active')
-Dim $Column_Names_SSID = IniRead($settings, 'Column_Names', 'Column_SSID', 'SSID')
-Dim $Column_Names_BSSID = IniRead($settings, 'Column_Names', 'Column_BSSID', 'Mac Address')
-Dim $Column_Names_MANUF = IniRead($settings, 'Column_Names', 'Column_Manufacturer', 'Manufacturer')
-Dim $Column_Names_Signal = IniRead($settings, 'Column_Names', 'Column_Signal', 'Signal')
-Dim $Column_Names_Authentication = IniRead($settings, 'Column_Names', 'Column_Authentication', 'Authentication')
-Dim $Column_Names_Encryption = IniRead($settings, 'Column_Names', 'Column_Encryption', 'Encryption')
-Dim $Column_Names_RadioType = IniRead($settings, 'Column_Names', 'Column_RadioType', 'Radio Type')
-Dim $Column_Names_Channel = IniRead($settings, 'Column_Names', 'Column_Channel', 'Channel')
-Dim $Column_Names_Latitude = IniRead($settings, 'Column_Names', 'Column_Latitude', 'Latitude')
-Dim $Column_Names_Longitude = IniRead($settings, 'Column_Names', 'Column_Longitude', 'Longitude')
-Dim $Column_Names_LatitudeDMS = IniRead($settings, 'Column_Names', 'Column_LatitudeDMS', 'Latitude (DDMMSS)')
-Dim $Column_Names_LongitudeDMS = IniRead($settings, 'Column_Names', 'Column_LongitudeDMS', 'Longitude (DDMMSS)')
-Dim $Column_Names_LatitudeDMM = IniRead($settings, 'Column_Names', 'Column_LatitudeDMM', 'Latitude (DDMMMM)')
-Dim $Column_Names_LongitudeDMM = IniRead($settings, 'Column_Names', 'Column_LongitudeDMM', 'Longitude (DDMMMM)')
-Dim $Column_Names_BasicTransferRates = IniRead($settings, 'Column_Names', 'Column_BasicTransferRates', 'Basic Transfer Rates')
-Dim $Column_Names_OtherTransferRates = IniRead($settings, 'Column_Names', 'Column_OtherTransferRates', 'Other Transfer Rates')
-Dim $Column_Names_FirstActive = IniRead($settings, 'Column_Names', 'Column_FirstActive', 'First Active')
-Dim $Column_Names_LastActive = IniRead($settings, 'Column_Names', 'Column_LastActive', 'Last Active')
-Dim $Column_Names_NetworkType = IniRead($settings, 'Column_Names', 'Column_NetworkType', 'Network Type')
-Dim $Column_Names_Label = IniRead($settings, 'Column_Names', 'Column_Label', 'Label')
+;Set GUI text based on default language
+Dim $LanguageDir = @ScriptDir & '\Languages\'
+Dim $DefaultLanguageFile = IniRead($settings, 'Vistumbler', 'LanguageFile', 'English.ini')
+Dim $DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
+If FileExists($DefaultLanguagePath) = 0 Then
+	$DefaultLanguageFile = 'English.ini'
+	$DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
+EndIf
+Dim $Column_Names_Line = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Line', '#')
+Dim $Column_Names_Active = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Active', 'Active')
+Dim $Column_Names_SSID = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_SSID', 'SSID')
+Dim $Column_Names_BSSID = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_BSSID', 'Mac Address')
+Dim $Column_Names_MANUF = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Manufacturer', 'Manufacturer')
+Dim $Column_Names_Signal = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Signal', 'Signal')
+Dim $Column_Names_Authentication = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Authentication', 'Authentication')
+Dim $Column_Names_Encryption = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Encryption', 'Encryption')
+Dim $Column_Names_RadioType = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_RadioType', 'Radio Type')
+Dim $Column_Names_Channel = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Channel', 'Channel')
+Dim $Column_Names_Latitude = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Latitude', 'Latitude')
+Dim $Column_Names_Longitude = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Longitude', 'Longitude')
+Dim $Column_Names_LatitudeDMS = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_LatitudeDMS', 'Latitude (DDMMSS)')
+Dim $Column_Names_LongitudeDMS = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_LongitudeDMS', 'Longitude (DDMMSS)')
+Dim $Column_Names_LatitudeDMM = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_LatitudeDMM', 'Latitude (DDMMMM)')
+Dim $Column_Names_LongitudeDMM = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_LongitudeDMM', 'Longitude (DDMMMM)')
+Dim $Column_Names_BasicTransferRates = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_BasicTransferRates', 'Basic Transfer Rates')
+Dim $Column_Names_OtherTransferRates = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_OtherTransferRates', 'Other Transfer Rates')
+Dim $Column_Names_FirstActive = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_FirstActive', 'First Active')
+Dim $Column_Names_LastActive = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_LastActive', 'Last Active')
+Dim $Column_Names_NetworkType = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_NetworkType', 'Network Type')
+Dim $Column_Names_Label = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Label', 'Label')
 
 Dim $MapActiveAPs = 0
 Dim $MapDeadAPs = 0
