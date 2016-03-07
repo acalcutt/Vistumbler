@@ -42,8 +42,6 @@ Dim $NewVersionFile = $TmpDir & 'versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $GIT_ROOT = 'https://raw.github.com/RIEI/Vistumbler/'
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
-If FileExists($Default_settings) Then IniWrite($Default_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
-If FileExists($Profile_settings) Then IniWrite($Profile_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
 Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4C2")
@@ -211,7 +209,7 @@ If $Errors <> '' Then
 	EndIf
 EndIf
 
-_WriteLanguageINI()
+_WriteINI()
 
 $updatemsg = _MsgBox($Text_Done, $Text_DoneWouldYouLikeToLoadVistumbler & @CRLF & @CRLF & $NewFiles, $Text_Yes, $Text_No)
 If $updatemsg = 1 Then Run(@ScriptDir & '\Vistumbler.exe')
@@ -242,7 +240,9 @@ Func _MsgBox($title, $msg, $But1txt, $But2txt)
 	WEnd
 EndFunc   ;==>_MsgBox
 
-Func _WriteLanguageINI()
+Func _WriteINI()
+	If FileExists($Default_settings) Then IniWrite($Default_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
+	If FileExists($Profile_settings) Then IniWrite($Profile_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
 	IniWrite($DefaultLanguagePath, "GuiText", "Done", $Text_Done)
 	IniWrite($DefaultLanguagePath, "GuiText", "Error", $Text_Error)
 	IniWrite($DefaultLanguagePath, "GuiText", "Updating", $Text_Updating)
