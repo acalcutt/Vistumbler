@@ -12134,7 +12134,7 @@ EndFunc   ;==>_MenuUpdate
 
 Func _StartUpdate()
 	_WriteINI()
-	$command = @ScriptDir & '\update_updater.exe'
+	$command = @ScriptDir & '\vistumbler_updater.exe'
 	Run(@ComSpec & ' /c start "" "' & $command & '"')
 	Exit
 EndFunc   ;==>_StartUpdate
