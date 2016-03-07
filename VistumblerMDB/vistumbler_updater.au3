@@ -16,7 +16,7 @@ $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Updates the vistumbler update.exe file from git based on version.ini'
 $version = 'v1'
 $origional_date = '2015/03/05'
-$last_modified = '2015/03/05'
+$last_modified = '2015/03/06'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;--------------------------------------------------------
 Dim $TmpDir = @TempDir & '\Vistumbler\'
@@ -25,10 +25,11 @@ DirCreate($TmpDir)
 Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
 Dim $Profile_settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
 Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
-If $PortableMode = 1 Or FileExists($Profile_settings) = 0 Then
+If $PortableMode = 1 Then
 	$settings = $Default_settings
 Else
 	$settings = $Profile_settings
+	If FileExists($Default_settings) And FileExists($settings) = 0 Then FileCopy($Default_settings, $settings, 1)
 EndIf
 
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
