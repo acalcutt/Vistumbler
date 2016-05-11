@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.4 Beta 1'
+$version = 'v10.6.4 Beta 2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2016/03/06'
+$last_modified = '2016/05/10'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -326,7 +326,7 @@ Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, 
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
-Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirAutoRecovery, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
+Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirAutoRecovery, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_CBAColor, $GUI_CBIColor, $GUI_TextSize, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
 Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, $AutoSaveAndClearAPsGUI, $AutoSaveAndClearTimeGUI, $AutoRecoveryBox, $AutoRecoveryDelBox, $AutoSaveAndClearPlaySoundGUI, $AutoRecoveryTimeGUI, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
@@ -447,9 +447,12 @@ Dim $netsh = IniRead($settings, 'Vistumbler', 'Netsh_exe', 'netsh.exe')
 Dim $AutoCheckForUpdates = IniRead($settings, 'Vistumbler', 'AutoCheckForUpdates', 1)
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 1)
 Dim $DefaultApapter = IniRead($settings, 'Vistumbler', 'DefaultApapter', 'Wireless Network Connection')
+Dim $TextSize = IniRead($settings, 'Vistumbler', 'TextSize', 8.5)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
 Dim $ControlBackgroundColor = IniRead($settings, 'Vistumbler', 'ControlBackgroundColor', "0xD7E4C2")
+Dim $ButtonActiveColor = IniRead($settings, 'Vistumbler', 'ButtonActiveColor', "0xE1F2D0")
+Dim $ButtonInactiveColor = IniRead($settings, 'Vistumbler', 'ButtonInactiveColor', "0xF2D0D0")
 Dim $SplitPercent = IniRead($settings, 'Vistumbler', 'SplitPercent', '0.2')
 Dim $SplitHeightPercent = IniRead($settings, 'Vistumbler', 'SplitHeightPercent', '0.65')
 Dim $RefreshLoopTime = IniRead($settings, 'Vistumbler', 'Sleeptime', 1000)
@@ -1042,8 +1045,8 @@ Dim $Text_UploadApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadAp
 Dim $Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
 Dim $Text_GeoNamesInfo = IniRead($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo', 'Geonames Info')
 Dim $Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
-Dim $Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when no data is recieved in over 10 seconds')
-Dim $Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is recived in over 30 seconds')
+Dim $Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when no data is received in over 10 seconds')
+Dim $Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is received in over 30 seconds')
 Dim $Text_APs = IniRead($DefaultLanguagePath, 'GuiText', 'APs', 'APs')
 Dim $Text_MaxSignal = IniRead($DefaultLanguagePath, 'GuiText', 'MaxSignal', 'Max Signal')
 Dim $Text_DisassociationSignal = IniRead($DefaultLanguagePath, 'GuiText', 'DisassociationSignal', 'Disassociation Signal')
@@ -1059,6 +1062,10 @@ Dim $Text_ImportVistumblerSettings = IniRead($DefaultLanguagePath, 'GuiText', 'I
 Dim $Text_ErrorSavingFile = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorSavingFile', 'Error Saving File')
 Dim $Text_ErrorImportingFile = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorImportingFile', 'Error Importing File')
 Dim $Text_SettingsImportedSuccess = IniRead($DefaultLanguagePath, 'GuiText', 'SettingsImportedSuccess', 'Settings Imported Successfully. Please restart Vistumbler to apply the new settings.')
+Dim $Text_ButtonActiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonActiveColor', 'Button Active Color')
+Dim $Text_ButtonInactiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', 'Button Inactive Color')
+Dim $Text_Text = IniRead($DefaultLanguagePath, 'GuiText', 'Text', 'Text')
+Dim $Text_GUITextSize = IniRead($DefaultLanguagePath, 'GuiText', 'GUITextSize', 'GUI Text Size')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1274,6 +1281,7 @@ $FontFamily_Arial = _GDIPlus_FontFamilyCreate("Arial")
 Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & _DateLocalFormat($last_modified) & ' - (' & $VistumblerDbName & ')'
 $Vistumbler = GUICreate($title, 980, 692, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
+GUISetFont($TextSize)
 
 ;Set windows position and size
 If $VistumblerPosition = "" Then
@@ -1502,11 +1510,15 @@ $TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5, 65, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 WinSetState($TreeviewAPs, "", @SW_HIDE)
 
-$ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 20, 0)
+$ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 22)
+GUICtrlSetBkColor ($ScanButton, $ButtonInactiveColor)
 If $AutoScan = 1 Then ScanToggle()
-$GpsButton = GUICtrlCreateButton($Text_UseGPS, 80, 8, 70, 20, 0)
-$GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 20, 0)
-$GraphButton2 = GUICtrlCreateButton($Text_Graph2, 80, 35, 70, 20, 0)
+$GpsButton = GUICtrlCreateButton($Text_UseGPS, 80, 8, 70, 22)
+GUICtrlSetBkColor ($GpsButton, $ButtonInactiveColor)
+$GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 22)
+GUICtrlSetBkColor ($GraphButton1, $ButtonInactiveColor)
+$GraphButton2 = GUICtrlCreateButton($Text_Graph2, 80, 35, 70, 22)
+GUICtrlSetBkColor ($GraphButton2, $ButtonInactiveColor)
 
 $ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 155, 10, 300, 15)
 GUICtrlSetColor(-1, $TextColor)
@@ -3381,10 +3393,12 @@ Func ScanToggle();Turns AP scanning on or off
 		$Scan = 0
 		GUICtrlSetState($ScanWifiGUI, $GUI_UNCHECKED)
 		GUICtrlSetData($ScanButton, $Text_ScanAPs)
+		GUICtrlSetBkColor ($ScanButton, $ButtonInactiveColor)
 	Else
 		$Scan = 1
 		GUICtrlSetState($ScanWifiGUI, $GUI_CHECKED)
 		GUICtrlSetData($ScanButton, $Text_StopScanAps)
+		GUICtrlSetBkColor ($ScanButton, $ButtonActiveColor)
 		;Refresh Wireless networks
 		_Wlan_Scan()
 	EndIf
@@ -3471,6 +3485,7 @@ Func _GpsToggle();Turns GPS on or off
 		If $openport = 1 Then
 			$UseGPS = 1
 			GUICtrlSetData($GpsButton, $Text_StopGPS)
+			GUICtrlSetBkColor ($GpsButton, $ButtonActiveColor)
 			$GPGGA_Update = TimerInit()
 			$GPRMC_Update = TimerInit()
 		Else
@@ -3501,6 +3516,7 @@ Func _TurnOffGPS();Turns off GPS, resets variable
 	$TrackAngle = '0'
 	_CloseComPort($ComPort) ;Close The GPS COM port
 	GUICtrlSetData($GpsButton, $Text_UseGPS)
+	GUICtrlSetBkColor ($GpsButton, $ButtonInactiveColor)
 	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_TurnOffGPS
 
@@ -3510,14 +3526,18 @@ Func _GraphToggle(); Graph1 Button
 	If $Graph = 1 Then
 		$Graph = 0
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
+		GUICtrlSetBkColor ($GraphButton1, $ButtonInactiveColor)
 	ElseIf $Graph = 2 Then
 		$Graph = 1
 		GUISwitch($Vistumbler)
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
+		GUICtrlSetBkColor ($GraphButton1, $ButtonActiveColor)
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
+		GUICtrlSetBkColor ($GraphButton2, $ButtonInactiveColor)
 	ElseIf $Graph = 0 Then
 		$Graph = 1
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
+		GUICtrlSetBkColor ($GraphButton1, $ButtonActiveColor)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle
@@ -3527,13 +3547,17 @@ Func _GraphToggle2(); Graph2 Button
 	If $Graph = 2 Then
 		$Graph = 0
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
+		GUICtrlSetBkColor ($GraphButton2, $ButtonInactiveColor)
 	ElseIf $Graph = 1 Then
 		$Graph = 2
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
+		GUICtrlSetBkColor ($GraphButton2, $ButtonActiveColor)
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
+		GUICtrlSetBkColor ($GraphButton1, $ButtonInactiveColor)
 	ElseIf $Graph = 0 Then
 		$Graph = 2
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
+		GUICtrlSetBkColor ($GraphButton2, $ButtonActiveColor)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle2
@@ -7520,9 +7544,12 @@ Func _WriteINI()
 	IniWrite($settings, "Vistumbler", "AutoCheckForUpdates", $AutoCheckForUpdates)
 	IniWrite($settings, "Vistumbler", "CheckForBetaUpdates", $CheckForBetaUpdates)
 	IniWrite($settings, "Vistumbler", "DefaultApapter", $DefaultApapter)
+	IniWrite($settings, "Vistumbler", "TextSize", $TextSize)
 	IniWrite($settings, "Vistumbler", "TextColor", $TextColor)
 	IniWrite($settings, "Vistumbler", "BackgroundColor", $BackgroundColor)
 	IniWrite($settings, "Vistumbler", "ControlBackgroundColor", $ControlBackgroundColor)
+	IniWrite($settings, "Vistumbler", "ButtonActiveColor", $ButtonActiveColor)
+	IniWrite($settings, "Vistumbler", "ButtonInactiveColor", $ButtonInactiveColor)
 	IniWrite($settings, "Vistumbler", "SplitPercent", $SplitPercent)
 	IniWrite($settings, "Vistumbler", "SplitHeightPercent", $SplitHeightPercent)
 	IniWrite($settings, "Vistumbler", "Sleeptime", $RefreshLoopTime)
@@ -8140,6 +8167,10 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorSavingFile', $Text_ErrorSavingFile)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ErrorImportingFile', $Text_ErrorImportingFile)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SettingsImportedSuccess', $Text_SettingsImportedSuccess)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ButtonActiveColor', $Text_ButtonActiveColor)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', $Text_ButtonInactiveColor)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'Text', $Text_Text)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GUITextSize', $Text_GUITextSize)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -10080,48 +10111,67 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		;Misc Tab
 		$Tab_Misc = GUICtrlCreateTabItem($Text_Misc)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		$GroupMiscSettings = GUICtrlCreateGroup($Text_MiscSettings, 15, 50, 650, 200)
+		GUICtrlCreateGroup($Text_Update, 40, 32, 275, 73)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_BackgroundColor, 31, 70, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 31, 85, 195, 21)
-		$cbrowse1 = GUICtrlCreateButton($Text_Browse, 235, 85, 97, 20, 0)
-		GUICtrlCreateLabel($Text_ControlColor, 353, 70, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_CBKColor = GUICtrlCreateInput(StringReplace($ControlBackgroundColor, '0x', ''), 353, 85, 195, 21)
-		$cbrowse2 = GUICtrlCreateButton($Text_Browse, 556, 85, 97, 20, 0)
-		GUICtrlCreateLabel($Text_BgFontColor, 31, 110, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_TextColor = GUICtrlCreateInput(StringReplace($TextColor, '0x', ''), 31, 125, 195, 21)
-		$cbrowse3 = GUICtrlCreateButton($Text_Browse, 235, 125, 97, 20, 0)
-		GUICtrlCreateLabel($Text_RefreshLoopTime, 353, 110, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 353, 125, 195, 21)
-		GUICtrlCreateLabel($Text_MaxSignal & " (dBm)", 31, 150, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_dBmMaxSignal = GUICtrlCreateInput($dBmMaxSignal, 31, 165, 195, 21)
-		GUICtrlCreateLabel($Text_DisassociationSignal & " (dBm)", 31, 190, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_dBmDisassociationSignal = GUICtrlCreateInput($dBmDissociationSignal, 31, 205, 195, 21)
-		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 353, 150, 300, 15)
-		GUICtrlSetColor(-1, $TextColor)
-		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 353, 165, 195, 21)
-
-		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 353, 195, 300, 15)
+		$GUI_AutoCheckForUpdates = GUICtrlCreateCheckbox($Text_AutoCheckUpdates, 56, 56, 233, 17)
 		GUICtrlSetColor(-1, $TextColor)
 		If $AutoCheckForUpdates = 1 Then GUICtrlSetState($GUI_AutoCheckForUpdates, $GUI_CHECKED)
-		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 353, 210, 300, 15)
+		$GUI_CheckForBetaUpdates = GUICtrlCreateCheckbox($Text_CheckBetaUpdates, 56, 80, 241, 17)
 		GUICtrlSetColor(-1, $TextColor)
 		If $CheckForBetaUpdates = 1 Then GUICtrlSetState($GUI_CheckForBetaUpdates, $GUI_CHECKED)
-		;Auto Refresh Group
-		GUICtrlCreateGroup($Text_RefreshNetworks, 16, 250, 325, 110)
-		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 30, 275, 300, 15)
+
+		GUICtrlCreateGroup($Text_Misc, 40, 120, 275, 217)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateLabel($Text_RefreshLoopTime, 54, 149, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_RefreshLoop = GUICtrlCreateInput($RefreshLoopTime, 54, 169, 250, 21)
+		GUICtrlCreateLabel($Text_MaxSignal & " (dBm)", 54, 194, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_dBmMaxSignal = GUICtrlCreateInput($dBmMaxSignal, 54, 214, 250, 21)
+		GUICtrlCreateLabel($Text_DisassociationSignal & " (dBm)", 54, 239, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_dBmDisassociationSignal = GUICtrlCreateInput($dBmDissociationSignal, 54, 259, 250, 21)
+		GUICtrlCreateLabel($Text_TimeBeforeMarkedDead, 54, 284, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_TimeBeforeMarkingDead = GUICtrlCreateInput($TimeBeforeMarkedDead, 54, 304, 250, 21)
+
+		GUICtrlCreateGroup($Text_RefreshNetworks, 40, 344, 275, 105)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_RefreshNetworks = GUICtrlCreateCheckbox($Text_RefreshNetworks, 56, 368, 249, 17)
 		GUICtrlSetColor(-1, $TextColor)
 		If $RefreshNetworks = 1 Then GUICtrlSetState($GUI_RefreshNetworks, $GUI_CHECKED)
-		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 30, 295, 615, 15)
+		GUICtrlCreateLabel($Text_RefreshTime & '(s)', 56, 392, 74, 17)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 30, 310, 115, 20)
+		$GUI_RefreshTime = GUICtrlCreateInput(($RefreshTime / 1000), 56, 416, 249, 21)
+
+
+		GUICtrlCreateGroup($Text_Color, 352, 32, 275, 265)
 		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateLabel($Text_BackgroundColor, 367, 57, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_BKColor = GUICtrlCreateInput(StringReplace($BackgroundColor, '0x', ''), 367, 77, 170, 21)
+		$cbrowse1 = GUICtrlCreateButton($Text_Browse, 544, 77, 73, 21)
+		GUICtrlCreateLabel($Text_ControlColor, 367, 102, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_CBKColor = GUICtrlCreateInput(StringReplace($ControlBackgroundColor, '0x', ''), 367, 122, 170, 21)
+		$cbrowse2 = GUICtrlCreateButton($Text_Browse, 544, 122, 73, 21)
+		GUICtrlCreateLabel($Text_BgFontColor, 367, 147, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_TextColor = GUICtrlCreateInput(StringReplace($TextColor, '0x', ''), 367, 167, 170, 21)
+		$cbrowse3 = GUICtrlCreateButton($Text_Browse, 544, 167, 73, 21)
+		GUICtrlCreateLabel($Text_ButtonActiveColor, 367, 192, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_CBAColor = GUICtrlCreateInput(StringReplace($ButtonActiveColor, '0x', ''), 367, 212, 170, 21)
+		$cbrowse4 = GUICtrlCreateButton($Text_Browse, 544, 212, 73, 21)
+		GUICtrlCreateLabel($Text_ButtonInactiveColor, 367, 237, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_CBIColor = GUICtrlCreateInput(StringReplace($ButtonInactiveColor, '0x', ''), 367, 257, 170, 21)
+		$cbrowse5 = GUICtrlCreateButton($Text_Browse, 544, 257, 73, 21)
+		GUICtrlCreateGroup($Text_Text, 352, 312, 275, 81)
+		GUICtrlSetColor(-1, $TextColor)
+		GUICtrlCreateLabel($Text_GUITextSize, 366, 338, 250, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_TextSize = GUICtrlCreateInput($TextSize, 366, 358, 250, 21)
 
 		;Save Tab
 		$Tab_Save = GUICtrlCreateTabItem($Text_Save)
@@ -10779,6 +10829,8 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetOnEvent($cbrowse1, '_ColorBrowse1')
 		GUICtrlSetOnEvent($cbrowse2, '_ColorBrowse2')
 		GUICtrlSetOnEvent($cbrowse3, '_ColorBrowse3')
+		GUICtrlSetOnEvent($cbrowse4, '_ColorBrowse4')
+		GUICtrlSetOnEvent($cbrowse5, '_ColorBrowse5')
 
 		GUICtrlSetOnEvent($csbrowse1, '_CamScriptBrowse')
 
@@ -10842,6 +10894,16 @@ EndFunc   ;==>_ColorBrowse2
 Func _ColorBrowse3()
 	$color = _ChooseColor(2, $TextColor, 2, $SetMisc)
 	If $color <> -1 Then GUICtrlSetData($GUI_TextColor, StringReplace($color, "0x", ""))
+EndFunc   ;==>_ColorBrowse3
+
+Func _ColorBrowse4()
+	$color = _ChooseColor(2, $ButtonActiveColor, 2, $SetMisc)
+	If $color <> -1 Then GUICtrlSetData($GUI_CBAColor, StringReplace($color, "0x", ""))
+EndFunc   ;==>_ColorBrowse3
+
+Func _ColorBrowse5()
+	$color = _ChooseColor(2, $ButtonInactiveColor, 2, $SetMisc)
+	If $color <> -1 Then GUICtrlSetData($GUI_CBIColor, StringReplace($color, "0x", ""))
 EndFunc   ;==>_ColorBrowse3
 
 Func _BrowseGoogleEarth()
@@ -10941,14 +11003,7 @@ EndFunc   ;==>_OkSettingsGUI
 Func _ApplySettingsGUI();Applys settings
 	$RestartVistumbler = 0
 	If $Apply_Misc = 1 Then
-		$BackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_BKColor))
-		$ControlBackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_CBKColor))
-		$TextColor = '0x' & StringUpper(GUICtrlRead($GUI_TextColor))
-		$dBmMaxSignal = GUICtrlRead($GUI_dBmMaxSignal)
-		$dBmDissociationSignal = GUICtrlRead($GUI_dBmDisassociationSignal)
-		$RefreshLoopTime = GUICtrlRead($GUI_RefreshLoop)
-		$TimeBeforeMarkedDead = GUICtrlRead($GUI_TimeBeforeMarkingDead)
-		If $TimeBeforeMarkedDead > 86400 Then $TimeBeforeMarkedDead = 86400
+
 		If GUICtrlRead($GUI_AutoCheckForUpdates) = 1 Then
 			$AutoCheckForUpdates = 1
 		Else
@@ -10959,10 +11014,26 @@ Func _ApplySettingsGUI();Applys settings
 		Else
 			$CheckForBetaUpdates = 0
 		EndIf
+
+		$dBmMaxSignal = GUICtrlRead($GUI_dBmMaxSignal)
+		$dBmDissociationSignal = GUICtrlRead($GUI_dBmDisassociationSignal)
+		$RefreshLoopTime = GUICtrlRead($GUI_RefreshLoop)
+		$TimeBeforeMarkedDead = GUICtrlRead($GUI_TimeBeforeMarkingDead)
+		If $TimeBeforeMarkedDead > 86400 Then $TimeBeforeMarkedDead = 86400
+
 		;Auto Refresh
 		If GUICtrlRead($GUI_RefreshNetworks) = 4 And $RefreshNetworks = 1 Then _AutoRefreshToggle()
 		If GUICtrlRead($GUI_RefreshNetworks) = 1 And $RefreshNetworks = 0 Then _AutoRefreshToggle()
 		$RefreshTime = (GUICtrlRead($GUI_RefreshTime) * 1000)
+
+		$BackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_BKColor))
+		$ControlBackgroundColor = '0x' & StringUpper(GUICtrlRead($GUI_CBKColor))
+		$TextColor = '0x' & StringUpper(GUICtrlRead($GUI_TextColor))
+		$ButtonActiveColor = '0x' & StringUpper(GUICtrlRead($GUI_CBAColor))
+		$ButtonInactiveColor = '0x' & StringUpper(GUICtrlRead($GUI_CBIColor))
+
+		$TextSize = GUICtrlRead($GUI_TextSize)
+
 	EndIf
 	If $Apply_Save = 1 Then
 		$Tmp_SaveDir = GUICtrlRead($GUI_Set_SaveDir)
@@ -11432,6 +11503,10 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_ErrorSavingFile = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorSavingFile', 'Error Saving File')
 		$Text_ErrorImportingFile = IniRead($DefaultLanguagePath, 'GuiText', 'ErrorImportingFile', 'Error Importing File')
 		$Text_SettingsImportedSuccess = IniRead($DefaultLanguagePath, 'GuiText', 'SettingsImportedSuccess', 'Settings Imported Successfully. Please restart Vistumbler to apply the new settings.')
+		$Text_ButtonActiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonActiveColor', 'Button Active Color')
+		$Text_ButtonInactiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', 'Button Inactive Color')
+		$Text_Text = IniRead($DefaultLanguagePath, 'GuiText', 'Text', 'Text')
+		$Text_GUITextSize = IniRead($DefaultLanguagePath, 'GuiText', 'GUITextSize', 'GUI Text Size (Restart Required)')
 
 		$RestartVistumbler = 1
 	EndIf
