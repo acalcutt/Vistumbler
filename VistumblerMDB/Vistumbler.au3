@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.4 Beta 2'
+$version = 'v10.6.4 Beta 3'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2016/05/10'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -11486,8 +11486,8 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_UploadingApsToWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'UploadingApsToWifidb', 'Uploading APs to WifiDB')
 		$Text_GeoNamesInfo = IniRead($DefaultLanguagePath, 'GuiText', 'GeoNamesInfo', 'Geonames Info')
 		$Text_FindApInWifidb = IniRead($DefaultLanguagePath, 'GuiText', 'FindApInWifidb', 'Find AP in WifiDB')
-		$Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when no data is recieved in over 10 seconds')
-		$Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is recived in over 30 seconds')
+		$Text_GpsDisconnect = IniRead($DefaultLanguagePath, 'GuiText', 'GpsDisconnect', 'Disconnect GPS when no data is received in over 10 seconds')
+		$Text_GpsReset = IniRead($DefaultLanguagePath, 'GuiText', 'GpsReset', 'Reset GPS position when no GPGGA data is received in over 30 seconds')
 		$Text_APs = IniRead($DefaultLanguagePath, 'GuiText', 'APs', 'APs')
 		$Text_MaxSignal = IniRead($DefaultLanguagePath, 'GuiText', 'MaxSignal', 'Max Signal')
 		$Text_DisassociationSignal = IniRead($DefaultLanguagePath, 'GuiText', 'DisassociationSignal', 'Disassociation Signal')
