@@ -1,0 +1,8 @@
+C:\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\Interop.ADOX.dll
+C:\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.csproj.ResolveComReference.cache
+C:\GitHub\Vistumbler\macmanuf\macmanuf\bin\Release\macmanuf.exe
+C:\GitHub\Vistumbler\macmanuf\macmanuf\bin\Release\macmanuf.pdb
+C:\GitHub\Vistumbler\macmanuf\macmanuf\bin\Release\Interop.ADOX.dll
+C:\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.csprojResolveAssemblyReference.cache
+C:\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.exe
+C:\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.pdb
