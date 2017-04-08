@@ -299,7 +299,7 @@ Dim $CopyGUI_BSSID, $CopyGUI_Line, $CopyGUI_SSID, $CopyGUI_CHAN, $CopyGUI_AUTH, 
 Dim $GUI_COPY, $CopyFlag = 0, $CopyAPID, $Copy_Line, $Copy_BSSID, $Copy_SSID, $Copy_CHAN, $Copy_AUTH, $Copy_ENCR, $Copy_NETTYPE, $Copy_RADTYPE, $Copy_SIG, $Copy_HIGHSIG, $Copy_RSSI, $Copy_HIGHRSSI, $Copy_LAB, $Copy_MANU, $Copy_LAT, $Copy_LON, $Copy_LATDMS, $Copy_LONDMS, $Copy_LATDMM, $Copy_LONDMM, $Copy_BTX, $Copy_OTX, $Copy_FirstActive, $Copy_LastActive
 
 Dim $Filter_SSID_GUI, $Filter_BSSID_GUI, $Filter_CHAN_GUI, $Filter_AUTH_GUI, $Filter_ENCR_GUI, $Filter_RADTYPE_GUI, $Filter_NETTYPE_GUI, $Filter_SIG_GUI, $Filter_HighSig_GUI, $Filter_RSSI_GUI, $Filter_HighRSSI_GUI, $Filter_BTX_GUI, $Filter_OTX_GUI, $Filter_Line_GUI, $Filter_Active_GUI
-Dim $GIT_ROOT = 'https://raw.github.com/RIEI/Vistumbler/'
+Dim $GIT_ROOT = 'https://raw.github.com/acalcutt/Vistumbler/'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
 

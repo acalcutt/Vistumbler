@@ -40,7 +40,7 @@ Dim $Errors
 Dim $NewFiles
 Dim $NewVersionFile = $TmpDir & 'versions.ini'
 Dim $CurrentVersionFile = @ScriptDir & '\versions.ini'
-Dim $GIT_ROOT = 'https://raw.github.com/RIEI/Vistumbler/'
+Dim $GIT_ROOT = 'https://raw.github.com/acalcutt/Vistumbler/'
 Dim $CheckForBetaUpdates = IniRead($settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
 Dim $TextColor = IniRead($settings, 'Vistumbler', 'TextColor', "0x000000")
 Dim $BackgroundColor = IniRead($settings, 'Vistumbler', 'BackgroundColor', "0x99B4A1")
