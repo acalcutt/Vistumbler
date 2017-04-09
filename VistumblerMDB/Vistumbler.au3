@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.4 Beta 4'
+$version = 'v10.6.4 Beta 5'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2017/04/08'
+$last_modified = '2017/04/09'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -7224,7 +7224,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 				$LastDateTime = $GpsMatchArray[1][1] & ' ' & $GpsMatchArray[1][2]
 				;Write summary csv line
-				$file &= StringReplace($ExpSSID, ',', '') & ',' & $ExpBSSID & ',' & StringReplace($ExpMANU, ',', '') & ',' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',' & $ExpBTX & ',' & $ExpOTX & ',' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',' & StringReplace($ExpLAB, ',', '') & ',' & $ExpHighSig & ',' & $ExpHighRSSI & @CRLF
+				$file &= '"' & $ExpSSID & '",' & $ExpBSSID & ',"' & $ExpMANU & '",' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',"' & $ExpBTX & '","' & $ExpOTX & '",' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',"' & $ExpLAB & '",' & $ExpHighSig & ',' & $ExpHighRSSI & @CRLF
 			ElseIf $Detailed = 1 Then
 				;Get All Signals and GpsIDs for current ApID
 				$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID & " And Signal<>0 ORDER BY Date1, Time1"
