@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.4 Beta 6'
+$version = 'v10.6.4 Beta 7'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2017/04/17'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -8761,7 +8761,9 @@ Func _ImportCSV($CSVfile)
 				$ImpLat = _Format_GPS_DDD_to_DMM($CSVArray[$lc][8], "N", "S")
 				$ImpLon = _Format_GPS_DDD_to_DMM($CSVArray[$lc][9], "E", "W")
 				$ImpBTX = $CSVArray[$lc][10]
+				If StringLeft($ImpBTX, 1) = '"' And StringRight($ImpBTX, 1) = '"' Then $ImpBTX = StringTrimLeft(StringTrimRight($ImpBTX, 1), 1)
 				$ImpOTX = $CSVArray[$lc][11]
+				If StringLeft($ImpOTX, 1) = '"' And StringRight($ImpOTX, 1) = '"' Then $ImpOTX = StringTrimLeft(StringTrimRight($ImpOTX, 1), 1)
 				$ImpFirstDateTime = $CSVArray[$lc][12]
 				$ImpLastDateTime = $CSVArray[$lc][13]
 				$ImpNET = $CSVArray[$lc][14]
