@@ -15,9 +15,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.4 Beta 5'
+$version = 'v10.6.4 Beta 6'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2017/04/09'
+$last_modified = '2017/04/17'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -8617,7 +8617,9 @@ Func _ImportCSV($CSVfile)
 				$ImpRAD = $CSVArray[$lc][6]
 				$ImpCHAN = $CSVArray[$lc][7]
 				$ImpBTX = $CSVArray[$lc][8]
+				If StringLeft($ImpBTX, 1) = '"' And StringRight($ImpBTX, 1) = '"' Then $ImpBTX = StringTrimLeft(StringTrimRight($ImpBTX, 1), 1)
 				$ImpOTX = $CSVArray[$lc][9]
+				If StringLeft($ImpOTX, 1) = '"' And StringRight($ImpOTX, 1) = '"' Then $ImpOTX = StringTrimLeft(StringTrimRight($ImpOTX, 1), 1)
 				$ImpNET = $CSVArray[$lc][10]
 				$ImpLAB = $CSVArray[$lc][11]
 				If StringLeft($ImpLAB, 1) = '"' And StringRight($ImpLAB, 1) = '"' Then $ImpLAB = StringTrimLeft(StringTrimRight($ImpLAB, 1), 1)
