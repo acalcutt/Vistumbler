@@ -15,7 +15,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.4'
+$version = 'v10.6.5 Beta 1'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2018/02/10'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -36,6 +36,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include <INet.au3>
 #include <SQLite.au3>
 #include <GuiMenu.au3>
+#include <sound.au3>
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
@@ -1719,8 +1720,7 @@ While 1
 	;Play New GPS sound (if enabled)
 	If $SoundOnGps = 1 Then
 		If $Last_Latitude <> $Latitude Or $Last_Longitude <> $Longitude Then
-			;_SoundPlay($new_GPS_sound_open_id, 0)
-			_PlayWavSound($SoundDir & $new_GPS_sound)
+			_SoundPlay($SoundDir & $new_GPS_sound)
 			$Last_Latitude = $Latitude
 			$Last_Longitude = $Longitude
 		EndIf
@@ -2068,7 +2068,7 @@ Func _ScanAccessPoints()
 			EndIf
 		Next
 		;Play New AP sound if sounds are enabled if per-ap sound is disabled
-		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _PlayWavSound($SoundDir & $new_AP_sound);_SoundPlay($new_AP_sound_open_id, 0)
+		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _SoundPlay($SoundDir & $new_AP_sound)
 		;Return number of active APs
 		Return ($FoundAPs)
 	Else
@@ -2159,7 +2159,7 @@ Func _ScanAccessPoints()
 					EndIf
 				Next
 				;Play New AP sound if sounds are enabled if per-ap sound is disabled
-				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _PlayWavSound($SoundDir & $new_AP_sound);_SoundPlay($new_AP_sound_open_id, 0)
+				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _SoundPlay($SoundDir & $new_AP_sound)
 			EndIf
 			FileClose($netshtempfile)
 			;Return number of active APs
@@ -4093,8 +4093,7 @@ Func _GetGPS(); Recieves data from gps device
 			$disconnected_time = -1
 			$return = 0
 			_TurnOffGPS()
-			;_SoundPlay($ErrorFlag_sound_open_id, 0)
-			_PlayWavSound($SoundDir & $ErrorFlag_sound)
+			_SoundPlay($SoundDir & $ErrorFlag_sound)
 		EndIf
 	EndIf
 
@@ -6930,7 +6929,7 @@ EndFunc   ;==>_AutoRecoveryVS1
 Func _AutoSaveAndClear();Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveAndClear()') ;#Debug Display
 	$AutoSaveAndClearFile = $SaveDirAuto & $ldatetimestamp & '_AutoSave' & '.VS1'
-	If $AutoSaveAndClearPlaySound = 1 Then _PlayWavSound($SoundDir & $AutoSave_sound)
+	If $AutoSaveAndClearPlaySound = 1 Then _SoundPlay($SoundDir & $AutoSave_sound)
 	GUICtrlSetData($msgdisplay, "Running Auto Save and Clear")
 	$expvs1 = _ExportVS1($AutoSaveAndClearFile, 0)
 	If $expvs1 = 1 Then
@@ -12192,11 +12191,6 @@ Func _PlayMidiForActiveAPs()
 		EndIf
 	EndIf
 EndFunc   ;==>_PlayMidiForActiveAPs
-
-Func _PlayWavSound($Sound)
-	$run = FileGetShortName(@ScriptDir & '\UDFs\sounder.exe') & ' ' & FileGetShortName($Sound)
-	Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
-EndFunc   ;==>_PlayWavSound
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       UPDATE FUNCTIONS
