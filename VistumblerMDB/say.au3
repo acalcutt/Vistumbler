@@ -3,27 +3,35 @@
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2015 Andrew Calcutt
+;Copyright (C) 2016 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.12.0
+;AutoIt Version: v3.3.14.2
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/19/2008'
 $Script_Name = 'SayText'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Uses Sound files, Microsoft SAPI, or MIDI sounds to say a number from 0 - 100'
-$version = 'v5'
-$last_modified = '2015/06/12'
+$version = 'v5.1'
+$last_modified = '2016/03/06'
 ;--------------------------------------------------------
 #include <String.au3>
 #include "UDFs\MIDIFunctions.au3"
 #include "UDFs\MIDIConstants.au3"
 
+Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
+Dim $Profile_settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
+Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
+If $PortableMode = 1 Then
+	$settings = $Default_settings
+Else
+	$settings = $Profile_settings
+	If FileExists($Default_settings) And FileExists($settings) = 0 Then FileCopy($Default_settings, $settings, 1)
+EndIf
+
 Dim $SoundDir = @ScriptDir & '\Sounds\'
-Dim $SettingsDir = @ScriptDir & '\Settings\'
-Dim $settings = $SettingsDir & 'vistumbler_settings.ini'
 Dim $new_AP_sound = IniRead($settings, 'Sound', 'NewAP_Sound', 'new_ap.wav')
 Dim $say = 'test'
 Dim $midistring = ''

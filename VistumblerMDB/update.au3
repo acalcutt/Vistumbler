@@ -4,12 +4,12 @@
 #AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2016 Andrew Calcutt
+;Copyright (C) 2018 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.14.2
+;AutoIt Version: v3.3.14.3
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Updater'
 $Script_Website = 'http://www.Vistumbler.net'
@@ -29,11 +29,12 @@ DirCreate($TmpDir)
 
 Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
 Dim $Profile_settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
-Dim $settings = $Default_settings
-If FileExists($Profile_settings) Then
-	$CheckForBetaUpdates = IniRead($Profile_settings, 'Vistumbler', 'CheckForBetaUpdates', 0)
-	IniWrite($Default_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
-	FileDelete($Profile_settings)
+Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
+If $PortableMode = 1 Then
+	$settings = $Default_settings
+Else
+	$settings = $Profile_settings
+	If FileExists($Default_settings) And FileExists($settings) = 0 Then FileCopy($Default_settings, $settings, 1)
 EndIf
 
 Dim $Errors
@@ -241,7 +242,8 @@ Func _MsgBox($title, $msg, $But1txt, $But2txt)
 EndFunc   ;==>_MsgBox
 
 Func _WriteINI()
-	IniWrite($settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
+	If FileExists($Default_settings) Then IniWrite($Default_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
+	If FileExists($Profile_settings) Then IniWrite($Profile_settings, 'Vistumbler', 'CheckForBetaUpdates', $CheckForBetaUpdates)
 	IniWrite($DefaultLanguagePath, "GuiText", "Done", $Text_Done)
 	IniWrite($DefaultLanguagePath, "GuiText", "Error", $Text_Error)
 	IniWrite($DefaultLanguagePath, "GuiText", "Updating", $Text_Updating)
