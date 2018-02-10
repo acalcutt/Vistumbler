@@ -16,8 +16,8 @@ namespace macmanuf
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Script Name: Update Manufacturers");
-            Console.WriteLine("By: Andrew Calcutt");
-            Console.WriteLine("2016/02/05");
+            Console.WriteLine("By: Andrew Calcutt - Improved by Phil Ferland");
+            Console.WriteLine("2018/02/10");
             Console.ForegroundColor = ConsoleColor.White;
             var cd = Directory.GetCurrentDirectory();
             var MDB = cd + "\\Manufacturers.mdb";
@@ -74,7 +74,7 @@ namespace macmanuf
             // Close the connection to the database after we are done creating it and adding the table to it.
             ADODB.Connection con = (ADODB.Connection)catalog.ActiveConnection;
             if (con != null && con.State != 0)
-                con.Close();
+               con.Close();
         }
 
         public static void AddManu(string file, string BSSID, string Manufacturer)

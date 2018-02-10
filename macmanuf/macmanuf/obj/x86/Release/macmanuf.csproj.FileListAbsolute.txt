@@ -1,0 +1,8 @@
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\x86\Release\Interop.ADOX.dll
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\x86\Release\Interop.ADODB.dll
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\x86\Release\macmanuf.csproj.ResolveComReference.cache
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\x86\Release\macmanuf.csproj.CoreCompileInputs.cache
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\bin\x86\Release\macmanuf.exe.config
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\bin\x86\Release\macmanuf.exe
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\x86\Release\macmanuf.csprojResolveAssemblyReference.cache
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\x86\Release\macmanuf.exe
