@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,6 +10,8 @@ namespace macmanuf
 {
     class Program
     {
+        private static int FinishedDownloadFlag;
+
         static void Main(string[] args)
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -21,9 +24,20 @@ namespace macmanuf
             File.Delete(MDB);
             Console.WriteLine(" - Creating MDB file '" + MDB + "'");
             CreateAccessDatabase(MDB);
+            FinishedDownloadFlag = 0;
             var url = "http://standards.ieee.org/develop/regauth/oui/oui.txt";
-            Console.WriteLine(" - Getting Manufacturers from '" + url + "'");
+            Console.WriteLine(" - Downloading Manufacturers from '" + url + "'");
+            DownLoadFileInBackground(url);
+
+            WaitForDownloadToFinish();
+
+            Console.WriteLine(" - Parsing OUI.txt file and inserting into MDB.");
             GetManufacturers(MDB, url);
+        }
+
+        public static void WaitForDownloadToFinish()
+        {
+            while(FinishedDownloadFlag == 0){}
         }
 
         public static void CreateAccessDatabase(string file)
@@ -81,6 +95,7 @@ namespace macmanuf
                     command.Parameters.AddWithValue("@BSSID", BSSID);
                     command.Parameters.AddWithValue("@Manufacturer", Manufacturer);
                     command.ExecuteNonQuery();
+                    System.Console.Write(" . ");
                 }
             }
         }
@@ -88,25 +103,63 @@ namespace macmanuf
         public static void GetManufacturers(string file, string url)
         {
             var client = new WebClient();
-            using (var stream = client.OpenRead(url))
-            using (var reader = new StreamReader(stream))
+            
+            using (var reader = new StreamReader("oui.txt"))
             {
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
                     if (line.Contains("(base 16)"))
                     {
-
                         string[] parts = line.Split(new string[] { "(base 16)" }, StringSplitOptions.None);
                         string bssidval = parts[0].Trim();
                         string manuval = parts[1].Trim();
 
                         AddManu(file, bssidval, manuval);
-                        //Console.WriteLine(bssidval + " " + manuval);
-
+                        Console.WriteLine(bssidval + " " + manuval);
                     }
                 }
             }
+        }
+        
+        public static void DownLoadFileInBackground(string address)
+        {
+            WebClient client = new WebClient();
+            Uri uri = new Uri(address);
+
+            // Specify that the DownloadFileCallback method gets called
+            // when the download completes.
+            client.DownloadFileCompleted += new AsyncCompletedEventHandler(DownloadFileCompletedCallback);
+            // Specify a progress notification handler.
+            client.DownloadProgressChanged += new DownloadProgressChangedEventHandler(DownloadProgressCallback);
+            client.DownloadFileAsync(uri, "oui.txt");
+        }
+
+        private static void UploadProgressCallback(object sender, UploadProgressChangedEventArgs e)
+        {
+            // Displays the operation identifier, and the transfer progress.
+            Console.WriteLine("{0}    downloaded {1} of {2} bytes. {3} % complete...",
+                (string)e.UserState,
+                e.BytesSent,
+                e.TotalBytesToSend,
+                e.ProgressPercentage);
+        }
+
+        private static void DownloadProgressCallback(object sender, DownloadProgressChangedEventArgs e)
+        {
+            // Displays the operation identifier, and the transfer progress.
+            Console.WriteLine("{0}    downloaded {1} of {2} bytes. {3} % complete...",
+                (string)e.UserState,
+                e.BytesReceived,
+                e.TotalBytesToReceive,
+                e.ProgressPercentage);
+        }
+
+        private static void DownloadFileCompletedCallback(object sender, AsyncCompletedEventArgs e)
+        {
+            // Displays the operation identifier, and the transfer progress.
+            Console.WriteLine("Done!");
+            FinishedDownloadFlag = 1;
         }
 
     }
