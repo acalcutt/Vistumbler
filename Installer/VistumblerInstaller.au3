@@ -4,12 +4,12 @@
 #AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2015 Andrew Calcutt
+;Copyright (C) 2018 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.12.0
+;AutoIt Version: v3.3.14.3
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler Installer'
 $Script_Website = 'http://www.vistumbler.net'
@@ -28,6 +28,7 @@ Dim $TempSourceFiles = @TempDir & '\vi_files.zip'
 Dim $TempLicense = @TempDir & '\vi_license.txt'
 Dim $TempSettings = @TempDir & '\vi_settings.ini'
 
+Dim $TmpDir = @TempDir & '\Vistumbler\'
 Dim $Destination = @ProgramFilesDir & '\Vistumbler\'
 Dim $StartMenu_AllUsers = @ProgramsCommonDir & '\Vistumbler\'
 Dim $StartMenu_CurrentUser = @ProgramsDir & '\Vistumbler\'
@@ -92,12 +93,12 @@ GUICtrlCreateGroup("Create start menu shortcuts", 16, 88, 230, 89)
 $SMS_AllUsers = GUICtrlCreateRadio("All Users", 32, 144, 100, 17)
 $SMS_CurrentUser = GUICtrlCreateRadio("Current User", 32, 128, 100, 17)
 $SMS_None = GUICtrlCreateRadio("None", 32, 112, 100, 17)
-GUICtrlSetState($SMS_CurrentUser, $GUI_CHECKED)
+GUICtrlSetState($SMS_AllUsers, $GUI_CHECKED)
 GUICtrlCreateGroup("Create desktop shortcuts", 266, 88, 230, 89)
 $DS_AllUsers = GUICtrlCreateRadio("All Users", 282, 144, 100, 17)
 $DS_CurrentUser  = GUICtrlCreateRadio("Current User", 282, 128, 100, 17)
 $DS_None = GUICtrlCreateRadio("None", 282, 112, 100, 17)
-GUICtrlSetState($DS_CurrentUser, $GUI_CHECKED)
+GUICtrlSetState($DS_AllUsers, $GUI_CHECKED)
 $RVD_Check = GUICtrlCreateCheckbox("Remove old vistumbler directories (make sure you have a backup of your scans)", 16, 184, 481, 17)
 GUICtrlSetState($RVD_Check, $GUI_CHECKED)
 $IO_Install = GUICtrlCreateButton("Install", 104, 220, 130, 25, $WS_GROUP)
@@ -196,6 +197,7 @@ Func _Install($source_zip, $dest_dir, $RemOldDir=1, $StartShortcuts=1, $DesktopS
 EndFunc
 
 Func _RemoveOldFiles()
+	DirRemove ($TmpDir, 1)
 	DirRemove ($Destination, 1)
 	DirRemove ($StartMenu_AllUsers, 1)
 	DirRemove ($StartMenu_CurrentUser, 1)
