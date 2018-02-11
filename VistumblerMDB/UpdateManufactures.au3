@@ -14,8 +14,8 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Update Manufactures'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Creates Manufacturer.mdb using macmanuf.exe'
-$version = 'v3'
-$origional_date = '2016/03/05'
+$version = 'v4'
+$origional_date = '2018/02/10'
 ;--------------------------------------------------------
 #include <File.au3>
 #include "UDFs\FileInUse.au3"
@@ -30,7 +30,6 @@ Dim $ManuDB = @ScriptDir & "\Settings\" & "Manufacturers.mdb" ;Destination Manuf
 
 ;manufacturer script to temp dir
 FileInstall("macmanuf.exe", $TmpDir, 1)
-FileInstall("Interop.ADOX.dll", $TmpDir, 1)
 
 ;Run script to get manuactures
 RunWait($ManufMacEXE, $TmpDir)
@@ -46,6 +45,7 @@ If FileExists($Temp_ManuDB) Then
 			EndIf
 			$fms = FileMove($Temp_ManuDB, $ManuDB, 1)
 			If $fms = 1 Then
+				RunWait(@ComSpec & ' /c ' & 'icacls.exe "' & $ManuDB & '" /inheritance:e', @SystemDir, @SW_HIDE)
 				$updatemsg = MsgBox(4, "Done", "Done. Would you like to load vistumbler?")
 				If $updatemsg = 6 Then Run(@ScriptDir & '\Vistumbler.exe')
 				ExitLoop
