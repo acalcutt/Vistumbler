@@ -16,8 +16,8 @@ namespace macmanuf
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Script Name: Update Manufacturers");
-            Console.WriteLine("By: Andrew Calcutt - Improved by Phil Ferland");
-            Console.WriteLine("2018/02/10");
+            Console.WriteLine("By: Andrew Calcutt and Phil Ferland");
+            Console.WriteLine("2018/02/11");
             Console.ForegroundColor = ConsoleColor.White;
             var cd = Directory.GetCurrentDirectory();
             var MDB = cd + "\\Manufacturers.mdb";
