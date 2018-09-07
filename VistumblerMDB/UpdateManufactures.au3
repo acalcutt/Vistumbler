@@ -9,13 +9,13 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.14.3
+;AutoIt Version: v3.3.14.5
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Update Manufactures'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Creates Manufacturer.mdb using macmanuf.exe'
 $version = 'v4'
-$origional_date = '2018/02/10'
+$date = '2018/09/07'
 ;--------------------------------------------------------
 #include <File.au3>
 #include "UDFs\FileInUse.au3"
