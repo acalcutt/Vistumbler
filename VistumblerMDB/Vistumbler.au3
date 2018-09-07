@@ -10,14 +10,14 @@
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.14.3
+;AutoIt Version: v3.3.14.5
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.5 Beta 1'
+$version = 'v10.6.5 Beta 2'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2018/02/10'
+$last_modified = '2018/09/07'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -1367,8 +1367,6 @@ $GUI_DownloadImages = GUICtrlCreateMenuItem($Text_DownloadImages & " (" & $Text_
 If $DownloadImages = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GUI_CamTriggerMenu = GUICtrlCreateMenuItem($Text_EnableCamTriggerScript & " (" & $Text_Experimental & ")", $Options)
 If $CamTrigger = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GuiMinimalGuiMode = GUICtrlCreateMenuItem($Text_MinimalGuiMode & " (" & $Text_Experimental & ")", $Options)
-If $MinimalGuiMode = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugMenu = GUICtrlCreateMenu($Text_Debug, $Options)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $DebugMenu)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
@@ -1421,6 +1419,8 @@ $GuiAutoScrollToBottom = GUICtrlCreateMenuItem($Text_AutoScrollToBottom, $ViewMe
 If $AutoScrollToBottom = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GuiBatchListviewInsert = GUICtrlCreateMenuItem($Text_ListviewBatchInsertMode & " (" & $Text_Experimental & ")", $ViewMenu)
 If $BatchListviewInsert = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GuiMinimalGuiMode = GUICtrlCreateMenuItem($Text_MinimalGuiMode & " (" & $Text_Experimental & ")", $ViewMenu)
+If $MinimalGuiMode = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
 ;Settings Menu
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
@@ -1520,6 +1520,13 @@ $GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 22)
 GUICtrlSetBkColor ($GraphButton1, $ButtonInactiveColor)
 $GraphButton2 = GUICtrlCreateButton($Text_Graph2, 80, 35, 70, 22)
 GUICtrlSetBkColor ($GraphButton2, $ButtonInactiveColor)
+$SaveAndClearButton = GUICtrlCreateButton($Text_AutoSaveAndClear, 10, 35, 140, 22)
+If $MinimalGuiMode = 1 Then
+	GUICtrlSetState($GraphButton1, $GUI_HIDE)
+	GUICtrlSetState($GraphButton2, $GUI_HIDE)
+Else
+	GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
+EndIf
 
 $ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 155, 10, 300, 15)
 GUICtrlSetColor(-1, $TextColor)
@@ -1551,6 +1558,7 @@ GUICtrlSetOnEvent($ScanButton, 'ScanToggle')
 GUICtrlSetOnEvent($GpsButton, '_GpsToggle')
 GUICtrlSetOnEvent($GraphButton1, '_GraphToggle')
 GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
+GUICtrlSetOnEvent($SaveAndClearButton, '_AutoSaveAndClear')
 ;File Menu
 GUICtrlSetOnEvent($NewSession, '_NewSession')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
@@ -4838,6 +4846,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			GUISetState(@SW_HIDE, $GraphicGUI)
 			GUICtrlSetState($GraphButton1, $GUI_HIDE)
 			GUICtrlSetState($GraphButton2, $GUI_HIDE)
+			GUICtrlSetState($SaveAndClearButton, $GUI_SHOW)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 		ElseIf $Graph <> 0 Then
 			$Graphic_left = $DataChild_Left
@@ -4861,6 +4870,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			GUISetState(@SW_SHOW, $GraphicGUI)
 			GUICtrlSetState($GraphButton1, $GUI_SHOW)
 			GUICtrlSetState($GraphButton2, $GUI_SHOW)
+			GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
