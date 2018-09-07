@@ -17,7 +17,7 @@ namespace macmanuf
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Script Name: Update Manufacturers");
             Console.WriteLine("By: Andrew Calcutt and Phil Ferland");
-            Console.WriteLine("2018/02/11");
+            Console.WriteLine("2018/09/07");
             Console.ForegroundColor = ConsoleColor.White;
             var cd = Directory.GetCurrentDirectory();
             var MDB = cd + "\\Manufacturers.mdb";
@@ -25,7 +25,7 @@ namespace macmanuf
             Console.WriteLine(" - Creating MDB file '" + MDB + "'");
             CreateAccessDatabase(MDB);
             FinishedDownloadFlag = 0;
-            var url = "http://standards.ieee.org/develop/regauth/oui/oui.txt";
+            var url = "http://standards-oui.ieee.org/oui/oui.txt";
             Console.WriteLine(" - Downloading Manufacturers from '" + url + "'");
             DownLoadFileInBackground(url);
 
