@@ -5836,7 +5836,6 @@ Func _AddToYourWDB()
 		$WifiDb_User_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
 		GUICtrlCreateLabel($Text_OtherUsers, 39, 169, 236, 20)
 		$WifiDb_OtherUsers_GUI = GUICtrlCreateInput($WifiDb_OtherUsers, 39, 189, 241, 20)
-		GUICtrlSetState($WifiDb_OtherUsers_GUI, $GUI_DISABLE)
 		GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
 		$WifiDb_ApiKey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
 
