@@ -6022,7 +6022,7 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs = ""
 	Local $return = 0
-	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1 And ListRow<>-1 And BSSID<>''"
+	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1 And ListRow<>-1 And BSSID<>'' ORDER BY Signal DESC"
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundBssidMatch = UBound($BssidMatchArray) - 1
 	If $FoundBssidMatch <> 0 Then
