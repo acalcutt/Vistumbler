@@ -1,3 +1,4 @@
+#RequireAdmin
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=..\..\VistumblerMDB\Icons\icon.ico
 #AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
