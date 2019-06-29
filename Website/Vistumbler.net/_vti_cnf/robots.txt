@@ -1,7 +1,0 @@
-vti_encoding:SR|utf8-nl
-vti_timelastmodified:TR|30 Aug 2015 19:19:34 -0000
-vti_extenderversion:SR|12.0.0.6211
-vti_cacheddtm:TX|08 Mar 2013 23:47:51 -0000
-vti_filesize:IR|569
-vti_backlinkinfo:VX|
-vti_modifiedby:SR|DESKTOP-K2566GP\\Andrew
