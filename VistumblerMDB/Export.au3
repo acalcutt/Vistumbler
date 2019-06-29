@@ -1,6 +1,7 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2019 Andrew Calcutt
@@ -20,7 +21,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\AccessCom.au3"
 #include "UDFs\ZIP.au3"
 #include <INet.au3>
-#Include <String.au3>
+#include <String.au3>
 $oMyError = ObjEvent("AutoIt.Error", "_Error")
 
 Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
@@ -37,7 +38,7 @@ EndIf
 
 Dim $DB_OBJ
 Dim $Debug = 0
-Dim $filetype = 'cd';Default file type (d=detailed VS1, cd=detailed CSV, cs=summary CSV, k=KML, w=WifiDB Upload)
+Dim $filetype = 'cd' ;Default file type (d=detailed VS1, cd=detailed CSV, cs=summary CSV, k=KML, w=WifiDB Upload)
 Dim $filename = $TmpDir & 'Save.csv'
 Dim $VistumblerDB = $TmpDir & 'Vistumbler.mdb'
 Dim $ImageDir = @ScriptDir & '\Images\'
@@ -84,11 +85,11 @@ Dim $WifiDb_SessionID
 
 For $loop = 1 To $CmdLine[0]
 	If StringInStr($CmdLine[$loop], '/f') Then
-		$filesplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		$filesplit = _StringExplode($CmdLine[$loop], "=", 1)
 		If IsArray($filesplit) Then $filename = $filesplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/t') Then
-		$filesplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		$filesplit = _StringExplode($CmdLine[$loop], "=", 1)
 		If IsArray($filesplit) Then $filetype = $filesplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/a') Then
@@ -99,7 +100,7 @@ For $loop = 1 To $CmdLine[0]
 		$MapTrack = 1
 	EndIf
 	If StringInStr($CmdLine[$loop], '/db') Then
-		$filesplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		$filesplit = _StringExplode($CmdLine[$loop], "=", 1)
 		If IsArray($filesplit) Then $VistumblerDB = $filesplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/d') And StringInStr($CmdLine[$loop], '/db') = 0 Then
@@ -107,19 +108,19 @@ For $loop = 1 To $CmdLine[0]
 		$MapAccessPoints = 1
 	EndIf
 	If StringInStr($CmdLine[$loop], '/u') Then
-		$urlsplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		$urlsplit = _StringExplode($CmdLine[$loop], "=", 1)
 		If IsArray($urlsplit) Then $apiurl = $urlsplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/wa') Then
-		$wasplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		$wasplit = _StringExplode($CmdLine[$loop], "=", 1)
 		If IsArray($wasplit) Then $WifiDb_User = $wasplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/wk') Then
-		$wksplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		$wksplit = _StringExplode($CmdLine[$loop], "=", 1)
 		If IsArray($wksplit) Then $WifiDb_ApiKey = $wksplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/wsid') Then
-		$wsidsplit = _StringExplode($CmdLine[$loop], "=" , 1)
+		$wsidsplit = _StringExplode($CmdLine[$loop], "=", 1)
 		If IsArray($wsidsplit) Then $WifiDb_SessionID = $wsidsplit[1]
 	EndIf
 	If StringInStr($CmdLine[$loop], '/?') Then
@@ -152,7 +153,7 @@ Exit
 ;                                                       FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _ExportVS1($savefile);writes vistumbler detailed data to a txt file
+Func _ExportVS1($savefile) ;writes vistumbler detailed data to a txt file
 	$file = "# Vistumbler VS1 - Detailed Export Version 4.0" & @CRLF & _
 			"# Created By: " & $Script_Name & ' ' & $version & @CRLF & _
 			"# -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------" & @CRLF & _
@@ -225,7 +226,7 @@ Func _ExportVS1($savefile);writes vistumbler detailed data to a txt file
 
 			$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpHighSig & '|' & $ExpHighRSSI & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
 		Next
-		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		$savefile = FileOpen($savefile, 128 + 2) ;Open in UTF-8 write mode
 		FileWrite($savefile, $file)
 		FileClose($savefile)
 		Return (1)
@@ -248,7 +249,7 @@ Func _ExportVSZ($savefile)
 	FileDelete($vs1_file)
 EndFunc   ;==>_ExportVSZ
 
-Func _ExportToCSV($savefile, $Detailed = 0);writes vistumbler data to a csv file
+Func _ExportToCSV($savefile, $Detailed = 0) ;writes vistumbler data to a csv file
 	If $Detailed = 0 Then
 		$file = "SSID,BSSID,MANUFACTURER,HIGHEST SIGNAL W/GPS,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,LATITUDE,LONGITUDE,BTX,OTX,FIRST SEEN(UTC),LAST SEEN(UTC),NETWORK TYPE,LABEL" & @CRLF
 	ElseIf $Detailed = 1 Then
@@ -334,7 +335,7 @@ Func _ExportToCSV($savefile, $Detailed = 0);writes vistumbler data to a csv file
 				Next
 			EndIf
 		Next
-		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		$savefile = FileOpen($savefile, 128 + 2) ;Open in UTF-8 write mode
 		FileWrite($savefile, $file)
 		FileClose($savefile)
 		Return (1)
@@ -613,19 +614,19 @@ Func _UploadActiveApsToWifidb()
 					$webpagesource = _INetGetSource($url_root & $url_data)
 					If $Debug = 1 Then FileWrite("templog.txt", $webpagesource & @CRLF & '---------------------------------------------------------------------------------------------' & @CRLF)
 				EndIf
-			EndIF
+			EndIf
 		EndIf
 	Next
 EndFunc   ;==>_UploadActiveApsToWifidb
 
-Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
+Func _Format_GPS_DMM_to_DDD($gps) ;converts gps position from ddmm.mmmm to dd.ddddddd
 	$return = '0.0000000'
-	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	$splitlatlon1 = StringSplit($gps, " ") ;Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
-		$splitlatlon2 = StringSplit($splitlatlon1[2], ".");Split dd from data
+		$splitlatlon2 = StringSplit($splitlatlon1[2], ".") ;Split dd from data
 		$latlonleft = StringTrimRight($splitlatlon2[1], 2)
 		$latlonright = (StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2) & '.' & $splitlatlon2[2]) / 60
-		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.7f', $latlonleft + $latlonright);set return
+		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.7f', $latlonleft + $latlonright) ;set return
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DDD

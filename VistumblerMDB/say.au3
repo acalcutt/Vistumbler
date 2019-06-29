@@ -1,6 +1,7 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
+#AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2019 Andrew Calcutt
@@ -99,7 +100,7 @@ Func _TalkOBJ($s_text)
 	$o_speech = ""
 EndFunc   ;==>_TalkOBJ
 
-Func _SpeakSignal($SpeakNum);Says then signal given
+Func _SpeakSignal($SpeakNum) ;Says then signal given
 	$SpeakSplit = StringSplit(StringReverse($SpeakNum), '')
 	$OnesPlayed = 0
 	If $SpeakSplit[0] = 3 Then
@@ -358,10 +359,10 @@ Func _PlayMidi($Instrument = 0, $Signal = 0, $Sleeptime = 500)
 	EndIf
 	If $Pitch <> '' Then
 		$open = _midiOutOpen()
-		MidiSetInstrument($open, $Instrument);Select Instrument
-		NoteOn($open, $Pitch, 1, $MIDI_MAX_VALUE)	;Start playing Instrument
+		MidiSetInstrument($open, $Instrument) ;Select Instrument
+		NoteOn($open, $Pitch, 1, $MIDI_MAX_VALUE)    ;Start playing Instrument
 		Sleep($Sleeptime)
-		NoteOff($open, $Pitch, 1, $MIDI_MAX_VALUE);Stop playing Instrument
+		NoteOff($open, $Pitch, 1, $MIDI_MAX_VALUE) ;Stop playing Instrument
 		_MidiOutClose($open)
 	EndIf
 EndFunc   ;==>_PlayMidi

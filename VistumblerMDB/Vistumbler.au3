@@ -6,6 +6,7 @@
 #AutoIt3Wrapper_Res_CompanyName=Vistumbler.net
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
+#AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2019 Andrew Calcutt
@@ -167,8 +168,8 @@ If @OSVersion = "WIN_XP" Then $UseNativeWifi = 1
 ; -------------------------------------------------------
 GUIRegisterMsg($WM_NOTIFY, "WM_NOTIFY")
 ;Options-------------------------------------------------
-Opt("TrayIconHide", 1);Hide icon in system tray
-Opt("GUIOnEventMode", 1);Change to OnEvent mode
+Opt("TrayIconHide", 1) ;Hide icon in system tray
+Opt("GUIOnEventMode", 1) ;Change to OnEvent mode
 Opt("GUIResizeMode", 802)
 ;Get Date/Time-------------------------------------------
 $dt = StringSplit(_DateTimeUtcConvert(StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY), @HOUR & ':' & @MIN & ':' & @SEC & '.' & StringFormat("%03i", @MSEC), 1), ' ')
@@ -344,7 +345,7 @@ Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
 
-Dim $WifiDbSessionGuiOpen, $WifiDbAutoUploadForm, $inp_autoupload_username, $inp_autoupload_key, $inp_autoupload_title, $inp_autoupload_notes, $wua_user , $wua_apikey, $wua_title, $wua_notes, $wua_ver
+Dim $WifiDbSessionGuiOpen, $WifiDbAutoUploadForm, $inp_autoupload_username, $inp_autoupload_key, $inp_autoupload_title, $inp_autoupload_notes, $wua_user, $wua_apikey, $wua_title, $wua_notes, $wua_ver
 
 Dim $CWCB_RadioType, $CWIB_RadioType, $CWCB_Channel, $CWIB_Channel, $CWCB_Latitude, $CWIB_Latitude, $CWCB_Longitude, $CWIB_Longitude, $CWCB_LatitudeDMS, $CWIB_LatitudeDMS, $CWCB_LongitudeDMS, $CWIB_LongitudeDMS, $CWCB_LatitudeDMM, $CWIB_LatitudeDMM, $CWCB_LongitudeDMM, $CWIB_LongitudeDMM, $CWCB_BtX, $CWIB_BtX, $CWCB_OtX, $CWIB_OtX, $CWCB_FirstActive, $CWIB_FirstActive
 Dim $CWCB_LastActive, $CWIB_LastActive, $CWCB_Line, $CWIB_Line, $CWCB_Active, $CWIB_Active, $CWCB_SSID, $CWIB_SSID, $CWCB_BSSID, $CWIB_BSSID, $CWCB_Manu, $CWIB_Manu, $CWCB_Signal, $CWIB_Signal, $CWCB_HighSignal, $CWIB_HighSignal, $CWCB_RSSI, $CWIB_RSSI, $CWCB_HighRSSI, $CWIB_HighRSSI
@@ -444,7 +445,7 @@ Dim $KmlSignalMapStyles = '	<Style id="SigCat1">' & @CRLF _
 		 & '	</Style>' & @CRLF
 
 ;Define Arrays
-Dim $Direction[26];Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
+Dim $Direction[26] ;Direction array for sorting by clicking on the header. Needs to be 1 greatet (or more) than the amount of columns
 Dim $Direction2[3]
 Dim $Direction3[3]
 Dim $OldGraphData[1]
@@ -649,7 +650,7 @@ If FileExists($DefaultLanguagePath) = 0 Then
 	$DefaultLanguageFile = 'English.ini'
 	$DefaultLanguagePath = $LanguageDir & $DefaultLanguageFile
 EndIf
-IniDelete($settings, 'GuiText');Delete old GuiText section of the setting file if it exists
+IniDelete($settings, 'GuiText') ;Delete old GuiText section of the setting file if it exists
 
 Dim $Column_Names_Line = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Line', '#')
 Dim $Column_Names_Active = IniRead($DefaultLanguagePath, 'Column_Names', 'Column_Active', 'Active')
@@ -1088,33 +1089,33 @@ EndIf
 Dim $MDBfiles[1][4]
 $MDBfiles[0][0] = 0
 ;Add MDB Files from temp dir
-$tempMDB = _FileListToArray($TmpDir, '*.MDB', 1);Find all files in the folder that end in .MDB
+$tempMDB = _FileListToArray($TmpDir, '*.MDB', 1) ;Find all files in the folder that end in .MDB
 If IsArray($tempMDB) Then
 	For $af = 1 To $tempMDB[0]
 		$mdbfile = $tempMDB[$af]
 		If _FileInUse($TmpDir & $mdbfile) = 0 Then
 			ReDim $MDBfiles[UBound($MDBfiles) + 1][4]
 			$ArraySize = UBound($MDBfiles) - 1
-			$MDBfiles[0][0] = $ArraySize;Array Size
-			$MDBfiles[$ArraySize][0] = $ArraySize;ID
-			$MDBfiles[$ArraySize][1] = $mdbfile;File Name
-			$MDBfiles[$ArraySize][2] = $TmpDir & $mdbfile;File Path
+			$MDBfiles[0][0] = $ArraySize ;Array Size
+			$MDBfiles[$ArraySize][0] = $ArraySize ;ID
+			$MDBfiles[$ArraySize][1] = $mdbfile ;File Name
+			$MDBfiles[$ArraySize][2] = $TmpDir & $mdbfile ;File Path
 			$MDBfiles[$ArraySize][3] = (FileGetSize($TmpDir & $mdbfile) / 1024) & 'kb'
 		EndIf
 	Next
 EndIf
 ;Add MDB Files from save dir
-$saveMDB = _FileListToArray($SaveDir, '*.MDB', 1);Find all files in the folder that end in .MDB
+$saveMDB = _FileListToArray($SaveDir, '*.MDB', 1) ;Find all files in the folder that end in .MDB
 If IsArray($saveMDB) Then
 	For $af = 1 To $saveMDB[0]
 		$mdbfile = $saveMDB[$af]
 		If _FileInUse($SaveDir & $mdbfile) = 0 Then
 			ReDim $MDBfiles[UBound($MDBfiles) + 1][4]
 			$ArraySize = UBound($MDBfiles) - 1
-			$MDBfiles[0][0] = $ArraySize;Array Size
-			$MDBfiles[$ArraySize][0] = $ArraySize;ID
-			$MDBfiles[$ArraySize][1] = $mdbfile;File Name
-			$MDBfiles[$ArraySize][2] = $SaveDir & $mdbfile;File Path
+			$MDBfiles[0][0] = $ArraySize ;Array Size
+			$MDBfiles[$ArraySize][0] = $ArraySize ;ID
+			$MDBfiles[$ArraySize][1] = $mdbfile ;File Name
+			$MDBfiles[$ArraySize][2] = $SaveDir & $mdbfile ;File Path
 			$MDBfiles[$ArraySize][3] = (FileGetSize($SaveDir & $mdbfile) / 1024) & 'kb'
 		EndIf
 	Next
@@ -1160,7 +1161,7 @@ If $MDBfiles[0][0] > 0 Then
 			Case $Recover_Exit
 				Exit
 			Case $Recover_Rec
-				$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
+				$Selected = _GUICtrlListView_GetNextItem($Recover_List) ; find what AP is selected in the list. returns -1 is nothing is selected
 				If $Selected = '-1' Then
 					MsgBox(0, $Text_Error, $Text_NoMdbSelected)
 				Else
@@ -1181,7 +1182,7 @@ If $MDBfiles[0][0] > 0 Then
 					ExitLoop
 				EndIf
 			Case $Recover_Del
-				$Selected = _GUICtrlListView_GetNextItem($Recover_List); find what AP is selected in the list. returns -1 is nothing is selected
+				$Selected = _GUICtrlListView_GetNextItem($Recover_List) ; find what AP is selected in the list. returns -1 is nothing is selected
 				If $Selected = '-1' Then
 					MsgBox(0, $Text_Error, $Text_NoMdbSelected)
 				Else
@@ -1303,7 +1304,7 @@ $b = StringSplit($VistumblerPosition, ",")
 If $VistumblerState = "Maximized" Then
 	WinSetState($title, "", @SW_MAXIMIZE)
 Else
-	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]);Resize window to ini value
+	WinMove($title, "", $b[1], $b[2], $b[3], $b[4]) ;Resize window to ini value
 EndIf
 
 ;File Menu
@@ -1344,7 +1345,7 @@ $SortTree = GUICtrlCreateMenuItem($Text_SortTree, $Edit)
 $SelectConnected = GUICtrlCreateMenuItem($Text_SelectConnectedAP, $Edit)
 
 $Options = GUICtrlCreateMenu($Text_Options)
-If @OSVersion = "WIN_XP" Then;Added extened 'Use Native Wifi' message (Since XP does not support BSSID, CHAN, Basic Transfer Rate)
+If @OSVersion = "WIN_XP" Then ;Added extened 'Use Native Wifi' message (Since XP does not support BSSID, CHAN, Basic Transfer Rate)
 	$Text_UseNativeWifi = $Text_UseNativeWifiMsg & " " & $Text_UseNativeWifiXpExtMsg
 Else
 	$Text_UseNativeWifi = $Text_UseNativeWifiMsg
@@ -1524,14 +1525,14 @@ _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 WinSetState($TreeviewAPs, "", @SW_HIDE)
 
 $ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 22)
-GUICtrlSetBkColor ($ScanButton, $ButtonInactiveColor)
+GUICtrlSetBkColor($ScanButton, $ButtonInactiveColor)
 If $AutoScan = 1 Then ScanToggle()
 $GpsButton = GUICtrlCreateButton($Text_UseGPS, 80, 8, 70, 22)
-GUICtrlSetBkColor ($GpsButton, $ButtonInactiveColor)
+GUICtrlSetBkColor($GpsButton, $ButtonInactiveColor)
 $GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 22)
-GUICtrlSetBkColor ($GraphButton1, $ButtonInactiveColor)
+GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
 $GraphButton2 = GUICtrlCreateButton($Text_Graph2, 80, 35, 70, 22)
-GUICtrlSetBkColor ($GraphButton2, $ButtonInactiveColor)
+GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
 $SaveAndClearButton = GUICtrlCreateButton($Text_AutoSaveAndClear, 10, 35, 140, 22)
 If $MinimalGuiMode = 1 Then
 	GUICtrlSetState($GraphButton1, $GUI_HIDE)
@@ -1716,8 +1717,8 @@ While 1
 				$Latitude = $LatitudeWifidb
 				$Longitude = $LongitudeWifidb
 			EndIf
-			GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
-			GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
+			GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude)) ;Set GPS Latitude in GUI
+			GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude)) ;Set GPS Longitude in GUI
 		EndIf
 		$WiFiDbLocate_Timer = TimerInit()
 		$UpdatedWiFiDbGPS = 1
@@ -1726,10 +1727,10 @@ While 1
 
 	;Get GPS Information (if enabled)
 	If $UseGPS = 1 And $UpdatedGPS <> 1 Then ; If 'Use GPS' is checked then scan gps and display information
-		$GetGpsSuccess = _GetGPS();Scan for GPS if GPS enabled
+		$GetGpsSuccess = _GetGPS() ;Scan for GPS if GPS enabled
 		If $GetGpsSuccess = 1 Then
-			GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
-			GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
+			GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude)) ;Set GPS Latitude in GUI
+			GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude)) ;Set GPS Longitude in GUI
 			$UpdatedGPS = 1
 		Else
 			If $GpsType = 1 Then GUICtrlSetData($msgdisplay, $Text_GpsErrorBufferEmpty)
@@ -1750,7 +1751,7 @@ While 1
 	;Get AP Information (if enabled)
 	If $Scan = 1 And $UpdatedAPs <> 1 Then
 		;Scan For New Aps
-		$ScanResults = _ScanAccessPoints();Scan for Access Points if scanning enabled
+		$ScanResults = _ScanAccessPoints() ;Scan for Access Points if scanning enabled
 		If $ScanResults = -1 Then
 			GUICtrlSetData($msgdisplay, $Text_ErrorScanningNetsh)
 			Sleep(1000)
@@ -1912,7 +1913,7 @@ While 1
 		If $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] <> $VistumblerPosition Then $VistumblerPosition = $p[0] & ',' & $p[1] & ',' & $p[2] & ',' & $p[3] ;If the $VistumblerPosition has moved or resized, set $pompassPosition to current window size
 		;Set Window State
 		$ws = WinGetState($title, "")
-		If BitAND($ws, 32) Then;Set
+		If BitAND($ws, 32) Then ;Set
 			$VistumblerState = "Maximized"
 		Else
 			$VistumblerState = "Window"
@@ -1925,8 +1926,8 @@ While 1
 	;Flag Actions
 	If $CopyFlag = 1 Then _CopySetClipboard()
 	If $Close = 1 Then _ExitVistumbler() ;If the close flag has been set, exit visumbler
-	If $SortColumn <> -1 Then _HeaderSort($SortColumn);Sort clicked listview column
-	If $ClearAllAps = 1 Then _ClearAllAp();Clear all access points
+	If $SortColumn <> -1 Then _HeaderSort($SortColumn) ;Sort clicked listview column
+	If $ClearAllAps = 1 Then _ClearAllAp() ;Clear all access points
 	If $ClearListAndTree = 1 Then _ClearListAndTree() ;Clear list and tree for Minimal GUI Mode
 	If $AutoScrollToBottom = 1 Then _GUICtrlListView_Scroll($ListviewAPs, 0, _GUICtrlListView_GetItemCount($ListviewAPs) * 16)
 
@@ -1945,7 +1946,7 @@ While 1
 		$UpdatedSpeechSig = 0
 		GUICtrlSetData($msgdisplay, '') ;Clear Message
 		$time = TimerDiff($begin)
-		GUICtrlSetData($timediff, $Text_ActualLoopTime & ': ' & StringFormat("%04i", $time) & ' ms'); Set 'Actual Loop Time' in GUI
+		GUICtrlSetData($timediff, $Text_ActualLoopTime & ': ' & StringFormat("%04i", $time) & ' ms') ; Set 'Actual Loop Time' in GUI
 		$begin = TimerInit() ;Start $begin timer, used to measure loop time
 	Else
 		Sleep(10)
@@ -2239,7 +2240,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				$SecType = 3
 			EndIf
 			;Get Label and Manufacturer information
-			$MANUF = _FindManufacturer($BSSID);Set Manufacturer
+			$MANUF = _FindManufacturer($BSSID) ;Set Manufacturer
 			$LABEL = _SetLabels($BSSID)
 			;Set HISTID
 			If $New_Lat <> 'N 0000.0000' And $New_Lon <> 'E 0000.0000' Then
@@ -2275,14 +2276,14 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			$AddApRecordArray[21] = $SIG
 			$AddApRecordArray[22] = $AP_DisplayRSSI
 			$AddApRecordArray[23] = $RSSI
-			$AddApRecordArray[24] = "";Geonames CountryCode
-			$AddApRecordArray[25] = "";Geonames CountryName
-			$AddApRecordArray[26] = "";Geonames AdminCode
-			$AddApRecordArray[27] = "";Geonames AdminName
-			$AddApRecordArray[28] = "";Geonames Admin2Name
-			$AddApRecordArray[29] = "";Geonames Areaname
-			$AddApRecordArray[30] = -1;Geonames Accuracy(miles)
-			$AddApRecordArray[31] = -1;Geonames Accuracy(km)
+			$AddApRecordArray[24] = "" ;Geonames CountryCode
+			$AddApRecordArray[25] = "" ;Geonames CountryName
+			$AddApRecordArray[26] = "" ;Geonames AdminCode
+			$AddApRecordArray[27] = "" ;Geonames AdminName
+			$AddApRecordArray[28] = "" ;Geonames Admin2Name
+			$AddApRecordArray[29] = "" ;Geonames Areaname
+			$AddApRecordArray[30] = -1 ;Geonames Accuracy(miles)
+			$AddApRecordArray[31] = -1 ;Geonames Accuracy(km)
 			_AddRecord($VistumblerDB, "AP", $DB_OBJ, $AddApRecordArray)
 		ElseIf $FoundApMatch = 1 Then ;If the AP is already in the AP table, update it
 			$Found_APID = $ApMatchArray[1][1]
@@ -2331,7 +2332,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					$DBLat = $New_Lat
 					$DBLon = $New_Lon
 					$DBHighGpsHistId = $HISTID
-				Else;If old HighGpsHistId has a postion, check if the new posion has a higher number of satalites/higher signal
+				Else ;If old HighGpsHistId has a postion, check if the new posion has a higher number of satalites/higher signal
 					;Get Old GpsID and Signal
 					$query = "SELECT GpsID, RSSI FROM HIST WHERE HistID=" & $Found_HighGpsHistId
 					$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -2808,7 +2809,7 @@ Func _FilterRemoveNonMatchingInList($Batch = 0)
 			Next
 		EndIf
 	EndIf
-	If $Batch = 1  Or $TempBatchListviewDelete = 1 Then
+	If $Batch = 1 Or $TempBatchListviewDelete = 1 Then
 		_GUICtrlListView_EndUpdate($ListviewAPs)
 		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 		$TempBatchListviewDelete = 0
@@ -2956,7 +2957,7 @@ Func _UpdateListview($Batch = 0)
 			$ListRowPos = __UpdateListviewDbQueryToList($query, $ListRowPos)
 		EndIf
 	EndIf
-	If $Batch = 1  Or $TempBatchListviewInsert = 1 Then
+	If $Batch = 1 Or $TempBatchListviewInsert = 1 Then
 		_GUICtrlListView_EndUpdate($ListviewAPs)
 		_GUICtrlTreeView_EndUpdate($TreeviewAPs)
 		$TempBatchListviewInsert = 0
@@ -3195,9 +3196,9 @@ Func _ClearListAndTree()
 	$ClearListAndTree = 0
 EndFunc   ;==>_ClearListAndTree
 
-Func _FixLineNumbers();Update Listview Row Numbers in DataArray
+Func _FixLineNumbers() ;Update Listview Row Numbers in DataArray
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FixLineNumbers()') ;#Debug Display
-	$ListViewSize = _GUICtrlListView_GetItemCount($ListviewAPs) - 1; Get List Size
+	$ListViewSize = _GUICtrlListView_GetItemCount($ListviewAPs) - 1 ; Get List Size
 	For $lisviewrow = 0 To $ListViewSize
 		$APNUM = _GUICtrlListView_GetItemText($ListviewAPs, $lisviewrow, $column_Line)
 		$query = "UPDATE AP SET ListRow=" & $lisviewrow & " WHERE ApId=" & $APNUM
@@ -3280,7 +3281,7 @@ EndFunc   ;==>_SetUpDbTables
 ;                                                       MANUFACTURER/LABEL FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _FindManufacturer($findmac);Returns Manufacturer for given Mac Address
+Func _FindManufacturer($findmac) ;Returns Manufacturer for given Mac Address
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FindManufacturer()') ;#Debug Display
 	$findmac = StringReplace($findmac, ':', '')
 	If StringLen($findmac) <> 6 Then $findmac = StringTrimRight($findmac, StringLen($findmac) - 6)
@@ -3295,7 +3296,7 @@ Func _FindManufacturer($findmac);Returns Manufacturer for given Mac Address
 	EndIf
 EndFunc   ;==>_FindManufacturer
 
-Func _SetLabels($findmac);Returns Label for given Mac Address
+Func _SetLabels($findmac) ;Returns Label for given Mac Address
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetLabels()') ;#Debug Display
 	$findmac = StringReplace($findmac, ':', '')
 	$query = "SELECT Label FROM Labels WHERE BSSID = '" & $findmac & "'"
@@ -3392,7 +3393,7 @@ Func _Exit($SaveSettings = 1)
 	FileDelete($tempfile)
 	FileDelete($tempfile_showint)
 	If $SaveDbOnExit = 1 Then
-		FileMove($VistumblerDB, $SaveDir, 9);Move to save directory for later use
+		FileMove($VistumblerDB, $SaveDir, 9) ;Move to save directory for later use
 		DirMove($VistumblerCamFolder, $SaveDir & StringTrimRight($VistumblerDbName, 4) & "\", 1)
 	Else
 		FileDelete($VistumblerDB)
@@ -3408,24 +3409,24 @@ Func _Exit($SaveSettings = 1)
 	Exit
 EndFunc   ;==>_Exit
 
-Func ScanToggle();Turns AP scanning on or off
+Func ScanToggle() ;Turns AP scanning on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, 'ScanToggle()') ;#Debug Display
 	If $Scan = 1 Then
 		$Scan = 0
 		GUICtrlSetState($ScanWifiGUI, $GUI_UNCHECKED)
 		GUICtrlSetData($ScanButton, $Text_ScanAPs)
-		GUICtrlSetBkColor ($ScanButton, $ButtonInactiveColor)
+		GUICtrlSetBkColor($ScanButton, $ButtonInactiveColor)
 	Else
 		$Scan = 1
 		GUICtrlSetState($ScanWifiGUI, $GUI_CHECKED)
 		GUICtrlSetData($ScanButton, $Text_StopScanAps)
-		GUICtrlSetBkColor ($ScanButton, $ButtonActiveColor)
+		GUICtrlSetBkColor($ScanButton, $ButtonActiveColor)
 		;Refresh Wireless networks
 		_Wlan_Scan()
 	EndIf
 EndFunc   ;==>ScanToggle
 
-Func _AutoScanToggle();Turns auto scan on or off
+Func _AutoScanToggle() ;Turns auto scan on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoScanToggle()') ;#Debug Display
 	If $AutoScan = 1 Then
 		GUICtrlSetState($AutoScanMenu, $GUI_UNCHECKED)
@@ -3496,17 +3497,17 @@ Func _AutoKmlToggle()
 	EndIf
 EndFunc   ;==>_AutoKmlToggle
 
-Func _GpsToggle();Turns GPS on or off
+Func _GpsToggle() ;Turns GPS on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GpsToggle()') ;#Debug Display
 	If $UseGPS = 1 Then
 		$TurnOffGPS = 1
 	Else
-		$openport = _OpenComPort($ComPort, $BAUD, $PARITY, $DATABIT, $STOPBIT);Open The GPS COM port
+		$openport = _OpenComPort($ComPort, $BAUD, $PARITY, $DATABIT, $STOPBIT) ;Open The GPS COM port
 
 		If $openport = 1 Then
 			$UseGPS = 1
 			GUICtrlSetData($GpsButton, $Text_StopGPS)
-			GUICtrlSetBkColor ($GpsButton, $ButtonActiveColor)
+			GUICtrlSetBkColor($GpsButton, $ButtonActiveColor)
 			$GPGGA_Update = TimerInit()
 			$GPRMC_Update = TimerInit()
 		Else
@@ -3516,7 +3517,7 @@ Func _GpsToggle();Turns GPS on or off
 	EndIf
 EndFunc   ;==>_GpsToggle
 
-Func _TurnOffGPS();Turns off GPS, resets variable
+Func _TurnOffGPS() ;Turns off GPS, resets variable
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_TurnOffGPS()') ;#Debug Display
 	$UseGPS = 0
 	$TurnOffGPS = 0
@@ -3537,48 +3538,48 @@ Func _TurnOffGPS();Turns off GPS, resets variable
 	$TrackAngle = '0'
 	_CloseComPort($ComPort) ;Close The GPS COM port
 	GUICtrlSetData($GpsButton, $Text_UseGPS)
-	GUICtrlSetBkColor ($GpsButton, $ButtonInactiveColor)
+	GUICtrlSetBkColor($GpsButton, $ButtonInactiveColor)
 	GUICtrlSetData($msgdisplay, '')
 EndFunc   ;==>_TurnOffGPS
 
-Func _GraphToggle(); Graph1 Button
+Func _GraphToggle() ; Graph1 Button
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphToggle()') ;#Debug Display
-	GUISetState(@SW_LOCK, $Vistumbler);lock gui - will be unlocked by _SetControlSizes
+	GUISetState(@SW_LOCK, $Vistumbler) ;lock gui - will be unlocked by _SetControlSizes
 	If $Graph = 1 Then
 		$Graph = 0
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
-		GUICtrlSetBkColor ($GraphButton1, $ButtonInactiveColor)
+		GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
 	ElseIf $Graph = 2 Then
 		$Graph = 1
 		GUISwitch($Vistumbler)
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
-		GUICtrlSetBkColor ($GraphButton1, $ButtonActiveColor)
+		GUICtrlSetBkColor($GraphButton1, $ButtonActiveColor)
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
-		GUICtrlSetBkColor ($GraphButton2, $ButtonInactiveColor)
+		GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
 	ElseIf $Graph = 0 Then
 		$Graph = 1
 		GUICtrlSetData($GraphButton1, $Text_NoGraph)
-		GUICtrlSetBkColor ($GraphButton1, $ButtonActiveColor)
+		GUICtrlSetBkColor($GraphButton1, $ButtonActiveColor)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle
 
-Func _GraphToggle2(); Graph2 Button
+Func _GraphToggle2() ; Graph2 Button
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphToggle2()') ;#Debug Display
 	If $Graph = 2 Then
 		$Graph = 0
 		GUICtrlSetData($GraphButton2, $Text_Graph2)
-		GUICtrlSetBkColor ($GraphButton2, $ButtonInactiveColor)
+		GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
 	ElseIf $Graph = 1 Then
 		$Graph = 2
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
-		GUICtrlSetBkColor ($GraphButton2, $ButtonActiveColor)
+		GUICtrlSetBkColor($GraphButton2, $ButtonActiveColor)
 		GUICtrlSetData($GraphButton1, $Text_Graph1)
-		GUICtrlSetBkColor ($GraphButton1, $ButtonInactiveColor)
+		GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
 	ElseIf $Graph = 0 Then
 		$Graph = 2
 		GUICtrlSetData($GraphButton2, $Text_NoGraph)
-		GUICtrlSetBkColor ($GraphButton2, $ButtonActiveColor)
+		GUICtrlSetBkColor($GraphButton2, $ButtonActiveColor)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle2
@@ -3590,7 +3591,7 @@ Func _MinimalGuiModeToggle()
 		GUICtrlSetData($msgdisplay, "Restoring GUI")
 		_UpdateListview(1)
 		$a = WinGetPos($Vistumbler)
-		WinMove($title, "", $a[0], $a[1], $a[2], $MinimalGuiExitHeight);Resize window to Minimal GUI Height
+		WinMove($title, "", $a[0], $a[1], $a[2], $MinimalGuiExitHeight) ;Resize window to Minimal GUI Height
 		GUICtrlSetData($msgdisplay, "")
 	Else
 		$MinimalGuiMode = 1
@@ -3604,7 +3605,7 @@ Func _MinimalGuiModeToggle()
 		$MinimalGuiExitHeight = $a[3]
 		$b = _WinAPI_GetClientRect($Vistumbler)
 		$titlebar_height = $a[3] - (DllStructGetData($b, "Bottom") - DllStructGetData($b, "Top"))
-		WinMove($title, "", $a[0], $a[1], $a[2], $titlebar_height + 65);Resize window to Minimal GUI Height
+		WinMove($title, "", $a[0], $a[1], $a[2], $titlebar_height + 65) ;Resize window to Minimal GUI Height
 	EndIf
 EndFunc   ;==>_MinimalGuiModeToggle
 
@@ -3664,7 +3665,7 @@ Func _NativeWifiToggle()
 	_ExitVistumbler()
 EndFunc   ;==>_NativeWifiToggle
 
-Func _SoundToggle();turns new ap sound on or off
+Func _SoundToggle() ;turns new ap sound on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SoundToggle()') ;#Debug Display
 	If $SoundOnAP = 1 Then
 		GUICtrlSetState($PlaySoundOnNewAP, $GUI_UNCHECKED)
@@ -3675,7 +3676,7 @@ Func _SoundToggle();turns new ap sound on or off
 	EndIf
 EndFunc   ;==>_SoundToggle
 
-Func _GpsSoundToggle();turns new gps sound on or off
+Func _GpsSoundToggle() ;turns new gps sound on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GpsSoundToggle()') ;#Debug Display
 	If $SoundOnGps = 1 Then
 		GUICtrlSetState($PlaySoundOnNewGPS, $GUI_UNCHECKED)
@@ -3686,7 +3687,7 @@ Func _GpsSoundToggle();turns new gps sound on or off
 	EndIf
 EndFunc   ;==>_GpsSoundToggle
 
-Func _SaveGpsWithNoAPsToggle();turns saving gps data without APs on or off
+Func _SaveGpsWithNoAPsToggle() ;turns saving gps data without APs on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveGpsWithNoAPsToggle()') ;#Debug Display
 	If $SaveGpsWithNoAps = 1 Then
 		GUICtrlSetState($MenuSaveGpsWithNoAps, $GUI_UNCHECKED)
@@ -3697,7 +3698,7 @@ Func _SaveGpsWithNoAPsToggle();turns saving gps data without APs on or off
 	EndIf
 EndFunc   ;==>_SaveGpsWithNoAPsToggle
 
-Func _SpeakSigToggle();turns speak ap signal on or off
+Func _SpeakSigToggle() ;turns speak ap signal on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SpeakSigToggle()') ;#Debug Display
 	If $SpeakSignal = 1 Then
 		GUICtrlSetState($SpeakApSignal, $GUI_UNCHECKED)
@@ -3708,7 +3709,7 @@ Func _SpeakSigToggle();turns speak ap signal on or off
 	EndIf
 EndFunc   ;==>_SpeakSigToggle
 
-Func _AddApPosToggle();Sets if new aps are added to the top or bottom of the list
+Func _AddApPosToggle() ;Sets if new aps are added to the top or bottom of the list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddApPosToggle()') ;#Debug Display
 	If $AddDirection = 0 Then
 		GUICtrlSetState($AddNewAPsToTop, $GUI_UNCHECKED)
@@ -3719,7 +3720,7 @@ Func _AddApPosToggle();Sets if new aps are added to the top or bottom of the lis
 	EndIf
 EndFunc   ;==>_AddApPosToggle
 
-Func _GraphDeadTimeToggle();Sets if new aps are added to the top or bottom of the list
+Func _GraphDeadTimeToggle() ;Sets if new aps are added to the top or bottom of the list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphDeadTimeToggle') ;#Debug Display
 	If $GraphDeadTime = 1 Then
 		GUICtrlSetState($GraphDeadTimeGUI, $GUI_UNCHECKED)
@@ -3730,7 +3731,7 @@ Func _GraphDeadTimeToggle();Sets if new aps are added to the top or bottom of th
 	EndIf
 EndFunc   ;==>_GraphDeadTimeToggle
 
-Func _UseRssiInGraphsToggle();Sets if new aps are added to the top or bottom of the list
+Func _UseRssiInGraphsToggle() ;Sets if new aps are added to the top or bottom of the list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UseRssiInGraphsToggle') ;#Debug Display
 	If $UseRssiInGraphs = 1 Then
 		GUICtrlSetState($UseRssiInGraphsGUI, $GUI_UNCHECKED)
@@ -3741,7 +3742,7 @@ Func _UseRssiInGraphsToggle();Sets if new aps are added to the top or bottom of 
 	EndIf
 EndFunc   ;==>_UseRssiInGraphsToggle
 
-Func _AutoRecoveryVS1Toggle();Turns auto recovery vs1 on or off
+Func _AutoRecoveryVS1Toggle() ;Turns auto recovery vs1 on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRecoveryVS1Toggle()') ;#Debug Display
 	If $AutoRecoveryVS1 = 1 Then
 		GUICtrlSetState($AutoRecoveryVS1GUI, $GUI_UNCHECKED)
@@ -3752,7 +3753,7 @@ Func _AutoRecoveryVS1Toggle();Turns auto recovery vs1 on or off
 	EndIf
 EndFunc   ;==>_AutoRecoveryVS1Toggle
 
-Func _AutoSaveAndClearToggle();Turns auto save and clear on or off
+Func _AutoSaveAndClearToggle() ;Turns auto save and clear on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveAndClearToggle()') ;#Debug Display
 	If $AutoSaveAndClear = 1 Then
 		GUICtrlSetState($AutoSaveAndClearGUI, $GUI_UNCHECKED)
@@ -3764,7 +3765,7 @@ Func _AutoSaveAndClearToggle();Turns auto save and clear on or off
 EndFunc   ;==>_AutoSaveAndClearToggle
 
 
-Func _AutoSortToggle();Turns auto sort on or off
+Func _AutoSortToggle() ;Turns auto sort on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSortToggle()') ;#Debug Display
 	If $AutoSort = 1 Then
 		GUICtrlSetState($AutoSortGUI, $GUI_UNCHECKED)
@@ -3776,7 +3777,7 @@ Func _AutoSortToggle();Turns auto sort on or off
 	EndIf
 EndFunc   ;==>_AutoSortToggle
 
-Func _WifiDbLocateToggle();Turns wifi gps locate on or off
+Func _WifiDbLocateToggle() ;Turns wifi gps locate on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WifiDbLocateToggle()') ;#Debug Display
 	If $UseWiFiDbGpsLocate = 1 Then
 		GUICtrlSetState($UseWiFiDbGpsLocateButton, $GUI_UNCHECKED)
@@ -3807,7 +3808,7 @@ Func _WifiDbAutoUploadToggle($Warn = 1)
 	EndIf
 EndFunc   ;==>_WifiDbAutoUploadToggle
 
-Func _DownloadImagesToggle();Turns Estimated DB value on or off
+Func _DownloadImagesToggle() ;Turns Estimated DB value on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_DownloadImagesToggle()') ;#Debug Display
 	If $DownloadImages = 1 Then
 		GUICtrlSetState($GUI_DownloadImages, $GUI_UNCHECKED)
@@ -3818,7 +3819,7 @@ Func _DownloadImagesToggle();Turns Estimated DB value on or off
 	EndIf
 EndFunc   ;==>_DownloadImagesToggle
 
-Func _CamTriggerToggle();Turns cam trigger on or off
+Func _CamTriggerToggle() ;Turns cam trigger on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CamTriggerToggle()') ;#Debug Display
 	If $CamTrigger = 1 Then
 		GUICtrlSetState($GUI_CamTriggerMenu, $GUI_UNCHECKED)
@@ -3829,7 +3830,7 @@ Func _CamTriggerToggle();Turns cam trigger on or off
 	EndIf
 EndFunc   ;==>_CamTriggerToggle
 
-Func _PortableModeToggle();Turns portable mode on or off
+Func _PortableModeToggle() ;Turns portable mode on or off
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_PortableModeToggle()') ;#Debug Display
 	If $PortableMode = 1 Then
 		GUICtrlSetState($GUI_PortableMode, $GUI_UNCHECKED)
@@ -3848,7 +3849,7 @@ Func _ResetSizes()
 	$ResetSizes = 1
 EndFunc   ;==>_ResetSizes
 
-Func _ClearAll();Clear all APs
+Func _ClearAll() ;Clear all APs
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearAll()') ;#Debug Display
 	$ClearAllAps = 1
 EndFunc   ;==>_ClearAll
@@ -3868,7 +3869,7 @@ Func _SelectConnectedAp()
 	$return = 0
 	FileDelete($tempfile_showint)
 	_RunDos($netsh & ' wlan show interfaces interface="' & $DefaultApapter & '" > ' & '"' & $tempfile_showint & '"') ;copy the output of the 'netsh wlan show interfaces' command to the temp file
-	$showintarraysize = _FileReadToArray($tempfile_showint, $TempFileArrayShowInt);read the tempfile into the '$TempFileArrayShowInt' Araay
+	$showintarraysize = _FileReadToArray($tempfile_showint, $TempFileArrayShowInt) ;read the tempfile into the '$TempFileArrayShowInt' Araay
 	If $showintarraysize = 1 Then
 		For $strip_ws = 1 To $TempFileArrayShowInt[0]
 			$TempFileArrayShowInt[$strip_ws] = StringStripWS($TempFileArrayShowInt[$strip_ws], 3)
@@ -3939,7 +3940,7 @@ EndFunc   ;==>_SelectHighSignalAp
 ;                                                       GPS FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = '8', $sStopBit = '1', $sFlow = '0');Open specified COM port
+Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = '8', $sStopBit = '1', $sFlow = '0') ;Open specified COM port
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenComPort()') ;#Debug Display
 	If $GpsType = 0 Then
 		If $sPARITY = 'O' Then ;Odd
@@ -3951,7 +3952,7 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = 
 		ElseIf $sPARITY = 'S' Then ;Space
 			$iPar = '4'
 		Else
-			$iPar = '0';None
+			$iPar = '0' ;None
 		EndIf
 		$OpenedPort = _CommSetPort($CommPort, $sErr, $sBAUD, $sDataBit, $iPar, $sStopBit, $sFlow)
 		If $OpenedPort = 1 Then
@@ -3989,7 +3990,7 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = 
 		ElseIf $sPARITY = 'S' Then ;Space
 			$iPar = '4'
 		Else
-			$iPar = '0';None
+			$iPar = '0' ;None
 		EndIf
 		If $sStopBit = '1' Then
 			$iStop = '0'
@@ -4007,7 +4008,7 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = 
 	EndIf
 EndFunc   ;==>_OpenComPort
 
-Func _CloseComPort($CommPort = '8');Closes specified COM port
+Func _CloseComPort($CommPort = '8') ;Closes specified COM port
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseComPort()') ;#Debug Display
 	;Close the COM Port
 	If $GpsType = 0 Then
@@ -4022,14 +4023,14 @@ Func _CloseComPort($CommPort = '8');Closes specified COM port
 	EndIf
 EndFunc   ;==>_CloseComPort
 
-Func _GetGPS(); Recieves data from gps device
+Func _GetGPS() ; Recieves data from gps device
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GetGPS()') ;#Debug Display
 	$timeout = TimerInit()
 	$return = 1
 	$FoundData = 0
 
-	$maxtime = $RefreshLoopTime * 0.8; Set GPS timeout to 80% of the given timout time
-	If $maxtime < 800 Then $maxtime = 800;Set GPS timeout to 800 if it is under that
+	$maxtime = $RefreshLoopTime * 0.8 ; Set GPS timeout to 80% of the given timout time
+	If $maxtime < 800 Then $maxtime = 800 ;Set GPS timeout to 800 if it is under that
 
 	Dim $Temp_FixTime, $Temp_FixTime2, $Temp_FixDate, $Temp_Lat, $Temp_Lon, $Temp_Lat2, $Temp_Lon2, $Temp_Quality, $Temp_NumberOfSatalites, $Temp_HorDilPitch, $Temp_Alt, $Temp_AltS, $Temp_Geo, $Temp_GeoS, $Temp_Status, $Temp_SpeedInKnots, $Temp_SpeedInMPH, $Temp_SpeedInKmH, $Temp_TrackAngle
 	Dim $Temp_Quality = 0, $Temp_Status = "V"
@@ -4037,15 +4038,15 @@ Func _GetGPS(); Recieves data from gps device
 	While 1 ;Loop to extract gps data untill location is found or timout time is reached
 		If $UseGPS = 0 Then ExitLoop
 		If $GpsType = 0 Then ;Use CommMG
-			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8);Read data line from GPS
-			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline);Show data line in "GPS Details" GUI if it is open
+			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8) ;Read data line from GPS
+			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline) ;Show data line in "GPS Details" GUI if it is open
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 				$FoundData = 1
 				If StringInStr($dataline, "$GPGGA") Then
-					_GPGGA($dataline);Split GPGGA data from data string
+					_GPGGA($dataline) ;Split GPGGA data from data string
 					$disconnected_time = -1
 				ElseIf StringInStr($dataline, "$GPRMC") Then
-					_GPRMC($dataline);Split GPRMC data from data string
+					_GPRMC($dataline) ;Split GPRMC data from data string
 					$disconnected_time = -1
 				EndIf
 			EndIf
@@ -4056,46 +4057,46 @@ Func _GetGPS(); Recieves data from gps device
 					$inputdata = $NetComm.inputdata
 					If StringInStr($inputdata, '$') And StringInStr($inputdata, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 						$FoundData = 1
-						$gps = StringSplit($inputdata, @CR);Split data string by CR and put data into the $gps array
-						For $readloop = 1 To $gps[0];go through array
+						$gps = StringSplit($inputdata, @CR) ;Split data string by CR and put data into the $gps array
+						For $readloop = 1 To $gps[0] ;go through array
 							$gpsline = StringStripWS($gps[$readloop], 3)
-							If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline);Show data line in "GPS Details" GUI if it is open
+							If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline) ;Show data line in "GPS Details" GUI if it is open
 							If StringInStr($gpsline, '$') And StringInStr($gpsline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 								If StringInStr($gpsline, "$GPGGA") Then
-									_GPGGA($gpsline);Split GPGGA data from data string
+									_GPGGA($gpsline) ;Split GPGGA data from data string
 								ElseIf StringInStr($gpsline, "$GPRMC") Then
-									_GPRMC($gpsline);Split GPRMC data from data string
+									_GPRMC($gpsline) ;Split GPRMC data from data string
 								EndIf
 							EndIf
-							If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
-							If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
+							If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop ;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
+							If TimerDiff($timeout) > $maxtime Then ExitLoop ;If time is over timeout period, exitloop
 						Next
 					EndIf
 				EndIf
 			EndIf
 		ElseIf $GpsType = 2 Then ;Use Kernel32
-			$gstring = StringStripWS(_rxwait($OpenedPort, '500', $maxtime), 8);Read data line from GPS
-			$dataline = $gstring; & $LastGpsString
+			$gstring = StringStripWS(_rxwait($OpenedPort, '500', $maxtime), 8) ;Read data line from GPS
+			$dataline = $gstring ; & $LastGpsString
 			$LastGpsString = $gstring
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
 				$FoundData = 1
 				$dlsplit = StringSplit($dataline, '$')
 				For $gda = 1 To $dlsplit[0]
-					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]);Show data line in "GPS Details" GUI if it is open
+					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]) ;Show data line in "GPS Details" GUI if it is open
 					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 						If StringInStr($dlsplit[$gda], "GPGGA") Then
-							_GPGGA($dlsplit[$gda]);Split GPGGA data from data string
+							_GPGGA($dlsplit[$gda]) ;Split GPGGA data from data string
 							$disconnected_time = -1
 						ElseIf StringInStr($dlsplit[$gda], "GPRMC") Then
-							_GPRMC($dlsplit[$gda]);Split GPRMC data from data string
+							_GPRMC($dlsplit[$gda]) ;Split GPRMC data from data string
 							$disconnected_time = -1
 						EndIf
 					EndIf
 				Next
 			EndIf
 		EndIf
-		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
-		If TimerDiff($timeout) > $maxtime Then ExitLoop;If time is over timeout period, exitloop
+		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop ;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
+		If TimerDiff($timeout) > $maxtime Then ExitLoop ;If time is over timeout period, exitloop
 	WEnd
 	If $FoundData = 1 Then
 		$disconnected_time = -1
@@ -4132,8 +4133,8 @@ Func _GetGPS(); Recieves data from gps device
 		EndIf
 	EndIf
 
-	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
-	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
+	_ClearGpsDetailsGUI() ;Reset variables if they are over the allowed timeout
+	_UpdateGpsDetailsGUI() ;Write changes to "GPS Details" GUI if it is open
 	$Degree = $TrackAngle
 
 	If $TurnOffGPS = 1 Then _TurnOffGPS()
@@ -4163,17 +4164,17 @@ Func _FormatGpsDate($Date)
 	Return (StringReplace(StringReplace(StringReplace($DateFormat, 'M', $m), 'd', $d), 'yyyy', $y))
 EndFunc   ;==>_FormatGpsDate
 
-Func _CheckGpsChecksum($checkdata);Checks if GPS Data Checksum is correct. Returns 1 if it is correct, else Returns 0
+Func _CheckGpsChecksum($checkdata) ;Checks if GPS Data Checksum is correct. Returns 1 if it is correct, else Returns 0
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CheckGpsChecksum') ;#Debug Display
 	$end = 0
 	$calc_checksum = 0
 	$checkdata_checksum = ''
-	$gps_data_split = StringSplit($checkdata, '');Seperate all characters of data and put them into an array
+	$gps_data_split = StringSplit($checkdata, '') ;Seperate all characters of data and put them into an array
 	For $gds = 1 To $gps_data_split[0]
 		If $gps_data_split[$gds] <> '$' And $gps_data_split[$gds] <> '*' And $end = 0 Then
 			If $calc_checksum = 0 Then ;If $calc_checksum is equal 0, set $calc_checksum to the ascii value of this character
 				$calc_checksum = Asc($gps_data_split[$gds])
-			Else;If $calc_checksum is not equal 0 then XOR the new character ascii value with the $calc_checksum value
+			Else ;If $calc_checksum is not equal 0 then XOR the new character ascii value with the $calc_checksum value
 				$calc_checksum = BitXOR($calc_checksum, Asc($gps_data_split[$gds]))
 			EndIf
 		ElseIf $gps_data_split[$gds] = '*' Then ;If the checksum has been reached, set the $end flag
@@ -4190,11 +4191,11 @@ Func _CheckGpsChecksum($checkdata);Checks if GPS Data Checksum is correct. Retur
 	EndIf
 EndFunc   ;==>_CheckGpsChecksum
 
-Func _GPGGA($data);Strips data from a gps $GPGGA data string
+Func _GPGGA($data) ;Strips data from a gps $GPGGA data string
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GPGGA()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $data)
 	If _CheckGpsChecksum($data) = 1 Then
-		$GPGGA_Split = StringSplit($data, ",");
+		$GPGGA_Split = StringSplit($data, ",") ;
 		If $GPGGA_Split[0] >= 14 Then
 			$Temp_Quality = $GPGGA_Split[7]
 			If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 Then
@@ -4222,7 +4223,7 @@ Func _GPGGA($data);Strips data from a gps $GPGGA data string
 	EndIf
 EndFunc   ;==>_GPGGA
 
-Func _GPRMC($data);Strips data from a gps $GPRMC data string
+Func _GPRMC($data) ;Strips data from a gps $GPRMC data string
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GPRMC()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $data)
 	If _CheckGpsChecksum($data) = 1 Then
@@ -4256,37 +4257,37 @@ EndFunc   ;==>_GPRMC
 Func _Format_GPS_DMM($gps)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM()') ;#Debug Display
 	$return = '0000.0000'
-	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	$splitlatlon1 = StringSplit($gps, " ") ;Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
-		$splitlatlon2 = StringSplit(StringFormat("%0.4f", $splitlatlon1[2]), ".");Split dd from data
-		$return = $splitlatlon1[1] & ' ' & StringFormat("%04i", $splitlatlon2[1]) & '.' & $splitlatlon2[2];set return
+		$splitlatlon2 = StringSplit(StringFormat("%0.4f", $splitlatlon1[2]), ".") ;Split dd from data
+		$return = $splitlatlon1[1] & ' ' & StringFormat("%04i", $splitlatlon2[1]) & '.' & $splitlatlon2[2] ;set return
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM
 
-Func _Format_GPS_DMM_to_DDD($gps);converts gps position from ddmm.mmmm to dd.ddddddd
+Func _Format_GPS_DMM_to_DDD($gps) ;converts gps position from ddmm.mmmm to dd.ddddddd
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM_to_DDD()') ;#Debug Display
 	$return = '0.0000000'
-	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	$splitlatlon1 = StringSplit($gps, " ") ;Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
-		$splitlatlon2 = StringSplit($splitlatlon1[2], ".");Split dd from data
+		$splitlatlon2 = StringSplit($splitlatlon1[2], ".") ;Split dd from data
 		$latlonleft = StringTrimRight($splitlatlon2[1], 2)
 		$latlonright = (StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2) & '.' & $splitlatlon2[2]) / 60
-		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.7f', $latlonleft + $latlonright);set return
+		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.7f', $latlonleft + $latlonright) ;set return
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DDD
 
-Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
+Func _Format_GPS_DMM_to_DMS($gps) ;converts gps ddmm.mmmm to 'dd° mm' ss"
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_DMM_to_DMS()') ;#Debug Display
 	$return = '0° 0' & Chr(39) & ' 0"'
-	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	$splitlatlon1 = StringSplit($gps, " ") ;Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
 		$splitlatlon2 = StringSplit($splitlatlon1[2], ".")
 		If $splitlatlon2[0] = 2 Then
 			$DD = StringTrimRight($splitlatlon2[1], 2)
 			$MM = StringTrimLeft($splitlatlon2[1], StringLen($splitlatlon2[1]) - 2)
-			$SS = StringFormat('%0.4f', (('.' & $splitlatlon2[2]) * 60)); multiply remaining minutes by 60 to get ss
+			$SS = StringFormat('%0.4f', (('.' & $splitlatlon2[2]) * 60)) ; multiply remaining minutes by 60 to get ss
 			If $DD = "" Then $DD = "0"
 			$return = $splitlatlon1[1] & ' ' & $DD & '° ' & $MM & Chr(39) & ' ' & $SS & '"' ;Format data properly (ex. dd� mm' ss"N)
 		Else
@@ -4296,11 +4297,11 @@ Func _Format_GPS_DMM_to_DMS($gps);converts gps ddmm.mmmm to 'dd° mm' ss"
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DMM_to_DMS
 
-Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd� mm' ss", or ddmm.mmmm to ddmm.mmmm
+Func _Format_GPS_All_to_DMM($gps) ;converts dd.ddddddd, 'dd� mm' ss", or ddmm.mmmm to ddmm.mmmm
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GPS_All_to_DMM()') ;#Debug Display
 	;All GPS Formats to ddmm.mmmm
 	$return = '0.0000'
-	$splitlatlon1 = StringSplit($gps, " ");Split N,S,E,W from data
+	$splitlatlon1 = StringSplit($gps, " ") ;Split N,S,E,W from data
 	If $splitlatlon1[0] = 2 Then
 		$splitlatlon2 = StringSplit($splitlatlon1[2], ".")
 		If StringLen($splitlatlon2[2]) = 4 Then ;ddmm.mmmm to ddmm.mmmm
@@ -4308,9 +4309,9 @@ Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd� mm' ss", or ddmm.m
 		ElseIf StringLen($splitlatlon2[2]) = 7 Then ; dd.dddd to ddmm.mmmm
 			$DD = $splitlatlon2[1] * 100
 			$MM = ('.' & $splitlatlon2[2]) * 60 ;multiply remaining decimal by 60 to get mm.mmmm
-			$return = $splitlatlon1[1] & ' ' & StringFormat('%0.4f', $DD + $MM);Format data properly (ex. N ddmm.mmmm)
+			$return = $splitlatlon1[1] & ' ' & StringFormat('%0.4f', $DD + $MM) ;Format data properly (ex. N ddmm.mmmm)
 		EndIf
-	ElseIf $splitlatlon1[0] = 4 Then; ddmmss to ddmm.mmmm
+	ElseIf $splitlatlon1[0] = 4 Then ; ddmmss to ddmm.mmmm
 		$DD = StringTrimRight($splitlatlon1[2], 1) * 100
 		$MM = StringTrimRight($splitlatlon1[3], 1) + (StringTrimRight($splitlatlon1[4], 1) / 60)
 		$return = $splitlatlon1[1] & ' ' & StringFormat('%0.4f', $DD + $MM)
@@ -4318,7 +4319,7 @@ Func _Format_GPS_All_to_DMM($gps);converts dd.ddddddd, 'dd� mm' ss", or ddmm.m
 	Return ($return)
 EndFunc   ;==>_Format_GPS_All_to_DMM
 
-Func _Format_GPS_DDD_to_DMM($gps, $PosChr, $NegChr);converts dd.ddddddd, to ddmm.mmmm
+Func _Format_GPS_DDD_to_DMM($gps, $PosChr, $NegChr) ;converts dd.ddddddd, to ddmm.mmmm
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_Format_GP_DDD_to_DMM()') ;#Debug Display
 	;dd.ddddddd to ddmm.mmmm
 	$return = '0000.0000'
@@ -4332,12 +4333,12 @@ Func _Format_GPS_DDD_to_DMM($gps, $PosChr, $NegChr);converts dd.ddddddd, to ddmm
 	If $splitlatlon1[0] = 2 Then
 		$DD = $splitlatlon1[1] * 100
 		$MM = ('.' & $splitlatlon1[2]) * 60 ;multiply remaining decimal by 60 to get mm.mmmm
-		$return = $gDir & ' ' & StringFormat('%0.4f', $DD + $MM);Format data properly (ex. N ddmm.mmmm)
+		$return = $gDir & ' ' & StringFormat('%0.4f', $DD + $MM) ;Format data properly (ex. N ddmm.mmmm)
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DDD_to_DMM
 
-Func _GpsFormat($gps);Converts ddmm.mmmm to the users set gps format
+Func _GpsFormat($gps) ;Converts ddmm.mmmm to the users set gps format
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GpsFormat()') ;#Debug Display
 	If $GPSformat = 1 Then $return = _Format_GPS_DMM_to_DDD($gps)
 	If $GPSformat = 2 Then $return = _Format_GPS_DMM_to_DMS($gps)
@@ -4376,13 +4377,13 @@ Func _CompassGUI()
 	EndIf
 EndFunc   ;==>_CompassGUI
 
-Func _CloseCompassGui();closes the compass window
+Func _CloseCompassGui() ;closes the compass window
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseCompassGui()') ;#Debug Display
 	GUIDelete($CompassGUI)
 	$CompassOpen = 0
 EndFunc   ;==>_CloseCompassGui
 
-Func _SetCompassSizes();Takes the size of a hidden label in the compass window and determines the Width/Height of the compass
+Func _SetCompassSizes() ;Takes the size of a hidden label in the compass window and determines the Width/Height of the compass
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetCompassSizes()') ;#Debug Display
 	;---- Keep Window Square ----
 	$cs = WinGetPos($CompassGUI)
@@ -4466,7 +4467,7 @@ EndFunc   ;==>_DrawCompass
 ;                                                       GPS DETAILS GUI FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _OpenGpsDetailsGUI();Opens GPS Details GUI
+Func _OpenGpsDetailsGUI() ;Opens GPS Details GUI
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenGpsDetailsGUI()') ;#Debug Display
 	If $GpsDetailsOpen = 0 Then
 		Opt("GUIResizeMode", 1)
@@ -4533,7 +4534,7 @@ Func _OpenGpsDetailsGUI();Opens GPS Details GUI
 	EndIf
 EndFunc   ;==>_OpenGpsDetailsGUI
 
-Func _UpdateGpsDetailsGUI();Updates information on GPS Details GUI
+Func _UpdateGpsDetailsGUI() ;Updates information on GPS Details GUI
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_UpdateGpsDetailsGUI()') ;#Debug Display
 	If $GpsDetailsOpen = 1 Then
 		GUICtrlSetData($GPGGA_Time, $Text_Time & ": " & $FixTime)
@@ -4557,7 +4558,7 @@ Func _UpdateGpsDetailsGUI();Updates information on GPS Details GUI
 	EndIf
 EndFunc   ;==>_UpdateGpsDetailsGUI
 
-Func _ClearGpsDetailsGUI();Clears all GPS Details information
+Func _ClearGpsDetailsGUI() ;Clears all GPS Details information
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ClearGpsDetailsGUI()') ;#Debug Display
 	If $UseGPS = 1 Then
 		If $GpsReset = 1 Then
@@ -4595,15 +4596,15 @@ Func _ClearGpsDetailsGUI();Clears all GPS Details information
 				$Longitude = 'E 0000.0000'
 				$LatitudeWifidb = 'N 0000.0000'
 				$LongitudeWifidb = 'E 0000.0000'
-				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
-				GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
+				GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude)) ;Set GPS Latitude in GUI
+				GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude)) ;Set GPS Longitude in GUI
 				$WifidbGPS_Update = TimerInit()
 			EndIf
 		EndIf
 	EndIf
 EndFunc   ;==>_ClearGpsDetailsGUI
 
-Func _CloseGpsDetailsGUI(); Closes GPS Details GUI
+Func _CloseGpsDetailsGUI() ; Closes GPS Details GUI
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CloseGpsDetailsGUI()') ;#Debug Display
 	GUIDelete($GpsDetailsGUI)
 	$GpsDetailsOpen = 0
@@ -4612,7 +4613,7 @@ EndFunc   ;==>_CloseGpsDetailsGUI
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       SORT FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
-Func _SortTree();Sort the data in the treeview
+Func _SortTree() ;Sort the data in the treeview
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SortTree()') ;#Debug Display
 	GUICtrlSetData($msgdisplay, $Text_SortingTreeview)
 	_GUICtrlTreeView_Sort($TreeviewAPs)
@@ -4622,11 +4623,11 @@ EndFunc   ;==>_SortTree
 Func _SortListColumn($ListColName, $SortOrder)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SortListColumn()') ;#Debug Display
 	Local $DbColName = _GetDbColNameByListColName($ListColName) ;Set DB Column to sort by
-	_ListSort($DbColName, $SortOrder);Sort List
-	$sort_timer = TimerInit();Reset Sort Timer
+	_ListSort($DbColName, $SortOrder) ;Sort List
+	$sort_timer = TimerInit() ;Reset Sort Timer
 EndFunc   ;==>_SortListColumn
 
-Func _HeaderSort($column);Sort a column in ap list
+Func _HeaderSort($column) ;Sort a column in ap list
 	;ConsoleWrite($column & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_HeaderSort()') ;#Debug Display
 	;Get Column Name
@@ -4823,28 +4824,28 @@ Func _GetDbColNameByListColName($colName)
 	Return ($DbSortCol)
 EndFunc   ;==>_GetDbColNameByListColName
 
-Func _ManufacturerSort();Sorts manufacturer column in manufacturer list
+Func _ManufacturerSort() ;Sorts manufacturer column in manufacturer list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ManufacturerSort()') ;#Debug Display
 	$column = GUICtrlGetState($GUI_Manu_List)
 	If $Direction2[$column] = 0 Then
-		Dim $v_sort = False;set descending
+		Dim $v_sort = False ;set descending
 		$Direction2[$column] = 1
 	Else
-		Dim $v_sort = True;set ascending
+		Dim $v_sort = True ;set ascending
 		$Direction2[$column] = 0
 	EndIf
 	_GUICtrlListView_SimpleSort($GUI_Manu_List, $v_sort, $column)
 	$Apply_Manu = 1
 EndFunc   ;==>_ManufacturerSort
 
-Func _LabelSort();Sorts manufacturer column in manufacturer list
+Func _LabelSort() ;Sorts manufacturer column in manufacturer list
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LabelSort()') ;#Debug Display
 	$column = GUICtrlGetState($GUI_Lab_List)
 	If $Direction3[$column] = 0 Then
-		Dim $v_sort = False;set descending
+		Dim $v_sort = False ;set descending
 		$Direction3[$column] = 1
 	Else
-		Dim $v_sort = True;set ascending
+		Dim $v_sort = True ;set ascending
 		$Direction3[$column] = 0
 	EndIf
 	_GUICtrlListView_SimpleSort($GUI_Lab_List, $v_sort, $column)
@@ -4856,7 +4857,7 @@ EndFunc   ;==>_LabelSort
 ;-------------------------------------------------------------------------------------------------------------------------------
 
 
-Func _SetControlSizes();Sets control positions in GUI based on the windows current size
+Func _SetControlSizes() ;Sets control positions in GUI based on the windows current size
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetControlSizes()') ;#Debug Display
 	$a = _WinAPI_GetClientRect($Vistumbler)
 	$b = _WinAPI_GetClientRect($GraphicGUI)
@@ -4936,52 +4937,52 @@ Func _TreeviewListviewResize()
 	If $Graph = 0 Then
 		If WinActive($Vistumbler) And $cursorInfo[0] > ($TreeviewAPs_left + $TreeviewAPs_width - 5) And $cursorInfo[0] < ($TreeviewAPs_left + $TreeviewAPs_width + 5) And $cursorInfo[1] > $TreeviewAPs_top And $cursorInfo[1] < ($TreeviewAPs_top + $TreeviewAPs_height) And $MoveMode = False Then
 			$MoveArea = True
-			GUISetCursor(13, 1);  13 = SIZEWE
+			GUISetCursor(13, 1) ;  13 = SIZEWE
 		ElseIf $MoveArea = True Then
 			$MoveArea = False
-			GUISetCursor(2, 1);  2 = ARROW
+			GUISetCursor(2, 1) ;  2 = ARROW
 		EndIf
 		If $MoveArea = True And $cursorInfo[2] = 1 Then
 			$MoveMode = True
 		EndIf
 		If $MoveMode = True Then
-			GUISetCursor(13, 1);  13 = SIZEWE
+			GUISetCursor(13, 1) ;  13 = SIZEWE
 			$TreeviewAPs_width = $cursorInfo[0] - $TreeviewAPs_left
-			WinMove($TreeviewAPs, "", $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height); resize treeview
+			WinMove($TreeviewAPs, "", $TreeviewAPs_left, $TreeviewAPs_top, $TreeviewAPs_width, $TreeviewAPs_height) ; resize treeview
 			$ListviewAPs_left = $TreeviewAPs_left + $TreeviewAPs_width + 1
 			$ListviewAPs_width = $DataChild_Width - $ListviewAPs_left
-			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height) ; resize listview
 			$SplitPercent = StringFormat('%0.2f', $TreeviewAPs_width / $DataChild_Width)
 			_WinAPI_RedrawWindow($ListviewAPs)
 		EndIf
 		If $MoveMode = True And $cursorInfo[2] = 0 Then
 			$MoveMode = False
-			GUISetCursor(2, 1);  2 = ARROW
+			GUISetCursor(2, 1) ;  2 = ARROW
 		EndIf
 	Else
 		If WinActive($Vistumbler) And $cursorInfo[1] > $ListviewAPs_top - 5 And $cursorInfo[1] < $ListviewAPs_top + 5 And $MoveMode = False Then
 			$MoveArea = True
-			GUISetCursor(11, 1);  11 = SIZENS
+			GUISetCursor(11, 1) ;  11 = SIZENS
 		ElseIf $MoveArea = True Then
 			$MoveArea = False
-			GUISetCursor(2, 1);  2 = ARROW
+			GUISetCursor(2, 1) ;  2 = ARROW
 		EndIf
 		If $MoveArea = True And $cursorInfo[2] = 1 Then
 			$MoveMode = True
 		EndIf
 		If $MoveMode = True Then
-			GUISetCursor(11, 1);  11 = SIZENS
+			GUISetCursor(11, 1) ;  11 = SIZENS
 			$Graphic_height = $cursorInfo[1] - $Graphic_top
 			WinMove($GraphicGUI, "", $Graphic_left, $Graphic_top, $Graphic_width, $Graphic_height)
 			$ListviewAPs_top = $Graphic_top + $Graphic_height + 1
 			$ListviewAPs_height = $DataChild_Height - $Graphic_height
-			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height); resize listview
+			WinMove($ListviewAPs, "", $ListviewAPs_left, $ListviewAPs_top, $ListviewAPs_width, $ListviewAPs_height) ; resize listview
 			$SplitHeightPercent = StringFormat('%0.2f', $Graphic_height / $DataChild_Height)
 			_WinAPI_RedrawWindow($ListviewAPs)
 		EndIf
 		If $MoveMode = True And $cursorInfo[2] = 0 Then
 			$MoveMode = False
-			GUISetCursor(2, 1);  2 = ARROW
+			GUISetCursor(2, 1) ;  2 = ARROW
 		EndIf
 	EndIf
 EndFunc   ;==>_TreeviewListviewResize
@@ -5005,7 +5006,7 @@ Func WM_NOTIFY($hWnd, $iMsg, $iwParam, $ilParam)
 					ListViewAPs_RClick()
 				Case $NM_DBLCLK
 					;ConsoleWrite("Listview Double Click" & @CRLF)
-					$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+					$Selected = _GUICtrlListView_GetNextItem($ListviewAPs) ; find what AP is selected in the list. returns -1 is nothing is selected
 					If $Selected <> -1 Then _GUICtrlListView_SetItemSelected($ListviewAPs, $Selected, False) ; Deselect selected AP
 				Case $LVN_COLUMNCLICK
 					;ConsoleWrite("Listview Column Click" & @CRLF)
@@ -5059,9 +5060,9 @@ Func ListViewAPs_RClick()
 	EndIf
 EndFunc   ;==>ListViewAPs_RClick
 
-Func _RClick_AddManu();Adds new manucaturer to settings gui manufacturer list
+Func _RClick_AddManu() ;Adds new manucaturer to settings gui manufacturer list
 	If $AddMacOpen = 1 Then _MacAdd_Close()
-	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs) ; find what AP is selected in the list. returns -1 is nothing is selected
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 		;Get Mac Address
 		$query = "SELECT BSSID FROM AP WHERE ListRow=" & $Selected
@@ -5121,15 +5122,15 @@ Func _MacAdd_Ok()
 	_MacAdd_Close()
 EndFunc   ;==>_MacAdd_Ok
 
-Func _MacAdd_Close();Close edit manufacturer window
+Func _MacAdd_Close() ;Close edit manufacturer window
 	GUIDelete($MacAdd_GUI)
 	$AddMacOpen = 0
 	_UpdateListMacLabels()
 EndFunc   ;==>_MacAdd_Close
 
-Func _RClick_AddLabel();Adds new manucaturer to settings gui manufacturer list
+Func _RClick_AddLabel() ;Adds new manucaturer to settings gui manufacturer list
 	If $AddLabelOpen = 1 Then _LabelAdd_Close()
-	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs) ; find what AP is selected in the list. returns -1 is nothing is selected
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 		;Get Mac Address
 		$query = "SELECT BSSID FROM AP WHERE ListRow=" & $Selected
@@ -5186,7 +5187,7 @@ Func _LabelAdd_Ok()
 	_LabelAdd_Close()
 EndFunc   ;==>_LabelAdd_Ok
 
-Func _LabelAdd_Close();Close edit manufacturer window
+Func _LabelAdd_Close() ;Close edit manufacturer window
 	GUIDelete($LabelAdd_GUI)
 	$AddLabelOpen = 0
 	_UpdateListMacLabels()
@@ -5201,14 +5202,14 @@ Func _GraphDraw()
 	;Set Background Color
 	_GDIPlus_GraphicsClear($Graph_backbuffer, StringReplace($ControlBackgroundColor, "0x", "0xFF"))
 	;Draw % or dBm labels and lines
-	If $UseRssiInGraphs = 1 Then;Draw dBm labels
+	If $UseRssiInGraphs = 1 Then ;Draw dBm labels
 		For $sn = 0 To 10
 			$RSSI = ($sn * -10)
 			$vposition = $Graph_topborder + (($Graph_height / 10) * $sn)
 			_GDIPlus_GraphicsDrawString($Graph_backbuffer, $RSSI, 0, $vposition - 5)
 			_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $Graph_leftborder, $vposition, $Graph_leftborder + $Graph_width, $vposition, $Pen_GraphGrid)
 		Next
-	Else;Draw % labels
+	Else ;Draw % labels
 		For $sn = 0 To 10
 			$percent = ($sn * 10) & "%"
 			$vposition = $Graph_topborder + ($Graph_height - (($Graph_height / 10) * $sn))
@@ -5218,7 +5219,7 @@ Func _GraphDraw()
 	EndIf
 
 	;Graph Selected AP
-	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs) ; find what AP is selected in the list. returns -1 is nothing is selected
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 		$query = "SELECT ApID FROM AP WHERE ListRow=" & $Selected
 		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5757,11 +5758,11 @@ EndFunc   ;==>_Draw5000ChanLine
 ;-------------------------------------------------------------------------------------------------------------------------------
 Func _ViewInWifiDbGraph()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewInWifiDbGraph()') ;#Debug Display
-	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs) ; find what AP is selected in the list. returns -1 is nothing is selected
 	_ViewInWifiDbGraph_Open($Selected)
 EndFunc   ;==>_ViewInWifiDbGraph
 
-Func _ViewInWifiDbGraph_Open($Selected);Sends data to WifiDb php graphing script
+Func _ViewInWifiDbGraph_Open($Selected) ;Sends data to WifiDb php graphing script
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewInWifiDbGraph_Open()') ;#Debug Display
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 		$query = "SELECT ApID, SSID, BSSID, AUTH, ENCR, RADTYPE, NETTYPE, CHAN, BTX, OTX, MANU, LABEL, HighGpsHistID FROM AP WHERE ListRow=" & $Selected
@@ -5840,8 +5841,8 @@ Func _ViewInWifiDbGraph_Open($Selected);Sends data to WifiDb php graphing script
 					$url_data = "?SSID=" & $Found_SSID & "&Mac=" & $Found_BSSID & "&Manuf=" & $Found_MANU & "&Auth=" & $Found_AUTH & "&Encry=" & $Found_ENCR & "&radio=" & $Found_RADTYPE & "&Chn=" & $Found_CHAN & "&Lat=" & $Found_Lat & "&Long=" & $Found_Lon & "&BTx=" & $Found_BTX & "&OTx=" & $Found_OTX & "&FA=" & $Found_FirstSeen & "&LU=" & $Found_LastSeen & "&NT=" & $Found_NETTYPE & "&Label=" & $Found_LAB & "&Sig=" & $pgsigdata
 					$url_full = $url_root & $url_data
 					$url_trimmed = StringTrimRight($url_full, (StringLen($url_full) - 2048)) ;trim sting to internet explorer max url lenth
-					$url_trimmed2 = StringTrimRight($url_trimmed, (StringLen($url_trimmed) - StringInStr($url_trimmed, "-", 1, -1)) + 1);find - that marks the last full data and get rid of the rest
-					Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_trimmed2);open url with rundll 32
+					$url_trimmed2 = StringTrimRight($url_trimmed, (StringLen($url_trimmed) - StringInStr($url_trimmed, "-", 1, -1)) + 1) ;find - that marks the last full data and get rid of the rest
+					Run("RunDll32.exe url.dll,FileProtocolHandler " & $url_trimmed2) ;open url with rundll 32
 				EndIf
 			EndIf
 		EndIf
@@ -5872,7 +5873,7 @@ Func _AddToYourWDB()
 		GUICtrlSetState($VSZ_Radio_GUI, $GUI_DISABLE)
 		$VS1_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerVS1, 327, 170, 220, 20)
 		If $WifiDb_UploadType = "VS1" Then GUICtrlSetState($VS1_Radio_GUI, $GUI_CHECKED)
-		If $WifiDb_UploadType = "VSZ" Then GUICtrlSetState($VS1_Radio_GUI, $GUI_CHECKED);temporarily make vsz export vs1 since vsz support is not ready
+		If $WifiDb_UploadType = "VSZ" Then GUICtrlSetState($VS1_Radio_GUI, $GUI_CHECKED) ;temporarily make vsz export vs1 since vsz support is not ready
 		$CSV_Radio_GUI = GUICtrlCreateRadio($Text_VistumblerCSV, 327, 190, 220, 20)
 		If $WifiDb_UploadType = "CSV" Then GUICtrlSetState($CSV_Radio_GUI, $GUI_CHECKED)
 		$Export_Filtered_GUI = GUICtrlCreateCheckbox($Text_Filtered, 327, 210, 220, 20)
@@ -5986,19 +5987,19 @@ Func _UploadFileToWifiDB()
 		MsgBox(0, $Text_Error, "No export created for some reason... are there APs to be exported?")
 	EndIf
 
-	GUICtrlSetData($msgdisplay, '');Clear $msgdisplay
+	GUICtrlSetData($msgdisplay, '') ;Clear $msgdisplay
 EndFunc   ;==>_UploadFileToWifiDB
 
 Func _HTTPPost_WifiDB_File($apiurl, $file, $filename, $contenttype, $apikey, $user, $otherusers, $title, $notes)
 	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-    $sUrl = $apiurl & "import.php"
-    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
-    ;$oHttpRequest.Option(4) = 13056
-    $oHttpRequest.Open ("POST", $sUrl, False)
-	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
-    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
+	$sUrl = $apiurl & "import.php"
+	$oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+	;$oHttpRequest.Option(4) = 13056
+	$oHttpRequest.Open("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader("User-Agent", $Script_Name & ' ' & $version)
+	$oHttpRequest.setRequestHeader("Content-Type", "multipart/form-data; boundary=" & $boundary)
 
 	If $apikey <> "" Then
 		$PostData &= "--" & $boundary & @CRLF
@@ -6033,19 +6034,19 @@ Func _HTTPPost_WifiDB_File($apiurl, $file, $filename, $contenttype, $apikey, $us
 	$PostData &= "--" & $boundary & "--" & @CRLF
 	ConsoleWrite(StringReplace($PostData, $file, "## DATA FILE ##" & @CRLF) & @CRLF)
 
-	$oHttpRequest.Send (StringToBinary($PostData))
+	$oHttpRequest.Send(StringToBinary($PostData))
 	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
 	$Response = $oHttpRequest.ResponseText
 
 	$oHttpRequest = ""
-	Return($Response)
+	Return ($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_File
 
-Func _LocatePositionInWiFiDB();Finds GPS based on active acess points displays information in message box
+Func _LocatePositionInWiFiDB() ;Finds GPS based on active acess points displays information in message box
 	_LocateGpsInWifidb(1)
 EndFunc   ;==>_LocatePositionInWiFiDB
 
-Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points based on WifiDB for use in vistumbler
+Func _LocateGpsInWifidb($ShowPrompts = 0) ;Finds GPS based on active acess points based on WifiDB for use in vistumbler
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs = ""
 	Local $return = 0
@@ -6113,8 +6114,8 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 	EndIf
 
 	;Update GPS Information in GUI
-	_ClearGpsDetailsGUI();Reset variables if they are over the allowed timeout
-	_UpdateGpsDetailsGUI();Write changes to "GPS Details" GUI if it is open
+	_ClearGpsDetailsGUI() ;Reset variables if they are over the allowed timeout
+	_UpdateGpsDetailsGUI() ;Write changes to "GPS Details" GUI if it is open
 
 	Return ($return)
 EndFunc   ;==>_LocateGpsInWifidb
@@ -6123,12 +6124,12 @@ Func _HTTPPost_WifiDB_LocateGPS($apiurl, $ActiveBSSIDs)
 	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-    $sUrl = $apiurl & "locate.php"
-    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
-    ;$oHttpRequest.Option(4) = 13056
-    $oHttpRequest.Open ("POST", $sUrl, False)
-	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
-    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
+	$sUrl = $apiurl & "locate.php"
+	$oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+	;$oHttpRequest.Option(4) = 13056
+	$oHttpRequest.Open("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader("User-Agent", $Script_Name & ' ' & $version)
+	$oHttpRequest.setRequestHeader("Content-Type", "multipart/form-data; boundary=" & $boundary)
 
 	$PostData &= "--" & $boundary & @CRLF
 	$PostData &= "Content-Disposition: form-data; name=""ActiveBSSIDs""" & @CRLF & @CRLF
@@ -6136,12 +6137,12 @@ Func _HTTPPost_WifiDB_LocateGPS($apiurl, $ActiveBSSIDs)
 	$PostData &= "--" & $boundary & "--" & @CRLF
 	ConsoleWrite($PostData & @CRLF)
 
-	$oHttpRequest.Send (StringToBinary($PostData))
+	$oHttpRequest.Send(StringToBinary($PostData))
 	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
 	$Response = $oHttpRequest.ResponseText
 
 	$oHttpRequest = ""
-	Return($Response)
+	Return ($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_LocateGPS
 
 Func _GeoLocate($lat, $lon, $ShowPrompts = 0)
@@ -6195,13 +6196,13 @@ Func _HTTPPost_WifiDB_GeoLocate($apiurl, $lat, $lon)
 	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-    $sUrl = $apiurl & "geonames.php"
+	$sUrl = $apiurl & "geonames.php"
 	ConsoleWrite($sUrl & @CRLF)
-    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
-    ;$oHttpRequest.Option(4) = 13056
-    $oHttpRequest.Open ("POST", $sUrl, False)
-	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
-    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
+	$oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+	;$oHttpRequest.Option(4) = 13056
+	$oHttpRequest.Open("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader("User-Agent", $Script_Name & ' ' & $version)
+	$oHttpRequest.setRequestHeader("Content-Type", "multipart/form-data; boundary=" & $boundary)
 
 	$PostData &= "--" & $boundary & @CRLF
 	$PostData &= "Content-Disposition: form-data; name=""lat""" & @CRLF & @CRLF
@@ -6212,12 +6213,12 @@ Func _HTTPPost_WifiDB_GeoLocate($apiurl, $lat, $lon)
 	$PostData &= "--" & $boundary & "--" & @CRLF
 	ConsoleWrite($PostData & @CRLF)
 
-	$oHttpRequest.Send (StringToBinary($PostData))
+	$oHttpRequest.Send(StringToBinary($PostData))
 	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
 	$Response = $oHttpRequest.ResponseText
 
 	$oHttpRequest = ""
-	Return($Response)
+	Return ($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_GeoLocate
 
 Func _GeonamesInfo($SelectedRow)
@@ -6245,13 +6246,13 @@ Func _GeonamesInfo($SelectedRow)
 	EndIf
 EndFunc   ;==>_GeonamesInfo
 
-Func _ViewLiveInWDB();View wifidb live aps in browser
+Func _ViewLiveInWDB() ;View wifidb live aps in browser
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewLiveInWDB()') ;#Debug Display
 	$url = $WifiDbWdbURL & 'opt/live.php'
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url) ;open url with rundll 32
 EndFunc   ;==>_ViewLiveInWDB
 
-Func _LocateAPInWifidb($Selected, $ShowPrompts = 0);Finds AP in WifiDB
+Func _LocateAPInWifidb($Selected, $ShowPrompts = 0) ;Finds AP in WifiDB
 	ConsoleWrite("$Selected:" & $Selected & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocateAPInWifidb()') ;#Debug Display
 	If $Selected <> -1 Then
@@ -6323,13 +6324,13 @@ Func _HTTPPost_WifiDB_LocateAP($apiurl, $SSID, $mac, $radio, $CHAN, $AUTH, $encr
 	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-    $sUrl = $apiurl & "import.php"
+	$sUrl = $apiurl & "import.php"
 	ConsoleWrite($sUrl & @CRLF)
-    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
-    ;$oHttpRequest.Option(4) = 13056
-    $oHttpRequest.Open ("POST", $sUrl, False)
-	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
-    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
+	$oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+	;$oHttpRequest.Option(4) = 13056
+	$oHttpRequest.Open("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader("User-Agent", $Script_Name & ' ' & $version)
+	$oHttpRequest.setRequestHeader("Content-Type", "multipart/form-data; boundary=" & $boundary)
 
 	$PostData &= "--" & $boundary & @CRLF
 	$PostData &= "Content-Disposition: form-data; name=""ssid""" & @CRLF & @CRLF
@@ -6352,18 +6353,18 @@ Func _HTTPPost_WifiDB_LocateAP($apiurl, $SSID, $mac, $radio, $CHAN, $AUTH, $encr
 	$PostData &= "--" & $boundary & "--" & @CRLF
 	ConsoleWrite($PostData & @CRLF)
 
-	$oHttpRequest.Send (StringToBinary($PostData))
+	$oHttpRequest.Send(StringToBinary($PostData))
 	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
 	$Response = $oHttpRequest.ResponseText
 
 	$oHttpRequest = ""
-	Return($Response)
+	Return ($Response)
 EndFunc   ;==>_HTTPPost_WifiDB_LocateAP
 
-Func _ViewWDBWebpage();View wifidb live aps in browser
+Func _ViewWDBWebpage() ;View wifidb live aps in browser
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ViewWDBWebpage()') ;#Debug Display
 	$url = $WifiDbWdbURL
-	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url);open url with rundll 32
+	Run("RunDll32.exe url.dll,FileProtocolHandler " & $url) ;open url with rundll 32
 EndFunc   ;==>_ViewWDBWebpage
 
 Func _GeoLocateAllAps()
@@ -6443,12 +6444,12 @@ Func _WifiDbCreateSessionGUI()
 	Else
 		WinActivate($WifiDbAutoUploadForm)
 	EndIf
-EndFunc
+EndFunc   ;==>_WifiDbCreateSessionGUI
 
 Func _CloseWifiDbAutoUpload()
 	GUIDelete($WifiDbAutoUploadForm)
 	$WifiDbSessionGuiOpen = 0
-EndFunc
+EndFunc   ;==>_CloseWifiDbAutoUpload
 
 Func _StartWifiDBAutoUpload()
 	$wua_user = GUICtrlRead($inp_autoupload_username)
@@ -6461,11 +6462,11 @@ Func _StartWifiDBAutoUpload()
 	If $wua_title = '' Then $wua_title = $datestamp & ' ' & $timestamp
 
 	;Check API Version
-	$url = $WifiDbApiURL & 	"live.php?LiveVersion=1"
+	$url = $WifiDbApiURL & "live.php?LiveVersion=1"
 	$webpagesource = _INetGetSource($url)
-	ConsoleWrite( "--- " & $webpagesource & " ---" & @CRLF)
+	ConsoleWrite("--- " & $webpagesource & " ---" & @CRLF)
 	If @error Then
-		Msgbox(0, $Text_Error, "There was an error connection to the API. Auto Upload will not be started")
+		MsgBox(0, $Text_Error, "There was an error connection to the API. Auto Upload will not be started")
 		_CloseWifiDbAutoUpload()
 	ElseIf StringLeft($webpagesource, 1) <> "{" Or StringRight($webpagesource, 1) <> "}" Then
 		;Version 1 API
@@ -6482,7 +6483,7 @@ Func _StartWifiDBAutoUpload()
 		$wua_ver = 2
 		If $wua_user = '' Or $wua_apikey = '' Then
 			$setanon = MsgBox(1, $Text_Warning, "Username or Api Key were not entered. Your username will be set to 'AnonCoward' if you continue.")
-			If $setanon = "-1" Or $setanon = "2" Then Return(0)
+			If $setanon = "-1" Or $setanon = "2" Then Return (0)
 			$wua_user = "AnonCoward"
 			$wua_apikey = "scaredycat"
 		EndIf
@@ -6516,29 +6517,29 @@ Func _StartWifiDBAutoUpload()
 			MsgBox(0, $Text_Error, "Unexpected array size from _JSONDecode()" & @CRLF & @CRLF & "-- HTTP Response --" & @CRLF & $httprecv)
 		EndIf
 	EndIf
-EndFunc
+EndFunc   ;==>_StartWifiDBAutoUpload
 
 
 Func _StopWifiDBAutoUpload()
 	GUICtrlSetState($UseWiFiDbAutoUploadButton, $GUI_UNCHECKED)
 	$AutoUpApsToWifiDB = 0
 	If $wua_ver <> 1 Then
-		$url = $WifiDbApiURL & 	"live.php?completed=1&username=" & $wua_user & "&apikey=" & $wua_apikey & "&SessionID=" & $WifiDbSessionID
+		$url = $WifiDbApiURL & "live.php?completed=1&username=" & $wua_user & "&apikey=" & $wua_apikey & "&SessionID=" & $WifiDbSessionID
 		$webpagesource = _INetGetSource($url)
-		ConsoleWrite( "--- " & $webpagesource & " ---" & @CRLF)
+		ConsoleWrite("--- " & $webpagesource & " ---" & @CRLF)
 	EndIf
-EndFunc
+EndFunc   ;==>_StopWifiDBAutoUpload
 
 Func _HTTPPost_WifiDB_Live_Start($apiurl, $WifiDb_User, $WifiDb_ApiKey, $WifiDB_Title, $WifiDB_Notes)
 	Local $PostData
 	Local $boundary = "------------" & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Chr(Random(Asc("A"), Asc("Z"), 3)) & Chr(Random(Asc("a"), Asc("z"), 3)) & Random(1, 9, 1) & Random(1, 9, 1) & Random(1, 9, 1)
 
-    $sUrl = $apiurl & "live.php"
-    $oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
-    ;$oHttpRequest.Option(4) = 13056
-    $oHttpRequest.Open ("POST", $sUrl, False)
-	$oHttpRequest.setRequestHeader  ("User-Agent",$Script_Name & ' ' & $version)
-    $oHttpRequest.setRequestHeader  ("Content-Type","multipart/form-data; boundary=" & $boundary)
+	$sUrl = $apiurl & "live.php"
+	$oHttpRequest = ObjCreate("WinHttp.WinHttpRequest.5.1")
+	;$oHttpRequest.Option(4) = 13056
+	$oHttpRequest.Open("POST", $sUrl, False)
+	$oHttpRequest.setRequestHeader("User-Agent", $Script_Name & ' ' & $version)
+	$oHttpRequest.setRequestHeader("Content-Type", "multipart/form-data; boundary=" & $boundary)
 
 	$PostData &= "--" & $boundary & @CRLF
 	$PostData &= "Content-Disposition: form-data; name=""username""" & @CRLF & @CRLF
@@ -6555,13 +6556,13 @@ Func _HTTPPost_WifiDB_Live_Start($apiurl, $WifiDb_User, $WifiDb_ApiKey, $WifiDB_
 	$PostData &= "--" & $boundary & "--" & @CRLF
 	ConsoleWrite($PostData & @CRLF)
 
-	$oHttpRequest.Send (StringToBinary($PostData))
+	$oHttpRequest.Send(StringToBinary($PostData))
 	ConsoleWrite("STATUS:" & $oHttpRequest.Status & @CRLF)
 	$Response = $oHttpRequest.ResponseText
 
 	$oHttpRequest = ""
-	Return($Response)
-EndFunc   ;==>_HTTPPost_WifiDB_LocateGPS
+	Return ($Response)
+EndFunc   ;==>_HTTPPost_WifiDB_Live_Start
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       REFRESH NETWORK FUNCTION
@@ -6581,17 +6582,17 @@ EndFunc   ;==>_RefreshNetworks
 ;                                                       HELP FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _OpenVistumblerHome();Opens Vistumbler Website
+Func _OpenVistumblerHome() ;Opens Vistumbler Website
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerHome() ') ;#Debug Display
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://www.vistumbler.net')
 EndFunc   ;==>_OpenVistumblerHome
 
-Func _OpenVistumblerForum();Opens Vistumbler Forum
+Func _OpenVistumblerForum() ;Opens Vistumbler Forum
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerForum() ') ;#Debug Display
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://forum.vistumbler.net')
 EndFunc   ;==>_OpenVistumblerForum
 
-Func _OpenVistumblerWiki();Opens Vistumbler Wiki
+Func _OpenVistumblerWiki() ;Opens Vistumbler Wiki
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerWiki() ') ;#Debug Display
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'https://github.com/RIEI/Vistumbler/wiki')
 EndFunc   ;==>_OpenVistumblerWiki
@@ -6600,12 +6601,12 @@ EndFunc   ;==>_OpenVistumblerWiki
 ;                                                       SUPPORT VISTUMBLER FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _OpenVistumblerDonate();Opens Vistumbler Donate
+Func _OpenVistumblerDonate() ;Opens Vistumbler Donate
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerDonate() ') ;#Debug Display
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://donate.vistumbler.net')
 EndFunc   ;==>_OpenVistumblerDonate
 
-Func _OpenVistumblerStore();Opens Vistumbler Store
+Func _OpenVistumblerStore() ;Opens Vistumbler Store
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenVistumblerStore() ') ;#Debug Display
 	Run("RunDll32.exe url.dll,FileProtocolHandler " & 'http://store.vistumbler.net')
 EndFunc   ;==>_OpenVistumblerStore
@@ -6615,7 +6616,7 @@ EndFunc   ;==>_OpenVistumblerStore
 
 Func _CopySelectedAP()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopySelectedAP() ') ;#Debug Display
-	$CopySelected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	$CopySelected = _GUICtrlListView_GetNextItem($ListviewAPs) ; find what AP is selected in the list. returns -1 is nothing is selected
 	_CopyAP_GUI($CopySelected)
 EndFunc   ;==>_CopySelectedAP
 
@@ -6946,12 +6947,12 @@ EndFunc   ;==>_CopySetClipboard
 ;                                                       VISTUMBLER SAVE FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _OpenSaveFolder();Opens save folder in explorer
+Func _OpenSaveFolder() ;Opens save folder in explorer
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_OpenSaveFolder() ') ;#Debug Display
 	Run('RunDll32.exe url.dll,FileProtocolHandler "' & $SaveDir & '"')
 EndFunc   ;==>_OpenSaveFolder
 
-Func _AutoRecoveryVS1();Autosaves data to a file name based on current time
+Func _AutoRecoveryVS1() ;Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoRecoveryVS1()') ;#Debug Display
 	DirCreate($SaveDirAuto)
 	FileDelete($AutoRecoveryVS1File)
@@ -6962,7 +6963,7 @@ Func _AutoRecoveryVS1();Autosaves data to a file name based on current time
 	EndIf
 EndFunc   ;==>_AutoRecoveryVS1
 
-Func _AutoSaveAndClear();Autosaves data to a file name based on current time
+Func _AutoSaveAndClear() ;Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveAndClear()') ;#Debug Display
 	$AutoSaveAndClearFile = $SaveDirAuto & $ldatetimestamp & '_AutoSave' & '.VS1'
 	If $AutoSaveAndClearPlaySound = 1 Then _SoundPlay($SoundDir & $AutoSave_sound)
@@ -6977,17 +6978,17 @@ Func _AutoSaveAndClear();Autosaves data to a file name based on current time
 	$autosave_timer = TimerInit()
 EndFunc   ;==>_AutoSaveAndClear
 
-Func _ExportDetailedData();Saves data to a selected file
+Func _ExportDetailedData() ;Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedData() ') ;#Debug Display
 	_ExportDetailedDataGui(0)
 EndFunc   ;==>_ExportDetailedData
 
-Func _ExportFilteredDetailedData();Saves filtered data to a selected file
+Func _ExportFilteredDetailedData() ;Saves filtered data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportFilteredDetailedData() ') ;#Debug Display
 	_ExportDetailedDataGui(1)
 EndFunc   ;==>_ExportFilteredDetailedData
 
-Func _ExportDetailedDataGui($Filter = 0);Save VS1 GUI
+Func _ExportDetailedDataGui($Filter = 0) ;Save VS1 GUI
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedDataGui()') ;#Debug Display
 	DirCreate($SaveDir)
 	$filename = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_VistumblerFile & ' (*.VS1)', '', $ldatetimestamp & '.VS1')
@@ -7004,7 +7005,7 @@ Func _ExportDetailedDataGui($Filter = 0);Save VS1 GUI
 	EndIf
 EndFunc   ;==>_ExportDetailedDataGui
 
-Func _ExportVS1($savefile, $Filter = 0);writes vistumbler detailed data to a txt file
+Func _ExportVS1($savefile, $Filter = 0) ;writes vistumbler detailed data to a txt file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportDetailedTXT()') ;#Debug Display
 	$file = "# Vistumbler VS1 - Detailed Export Version 4.0" & @CRLF & _
 			"# Created By: " & $Script_Name & ' ' & $version & @CRLF & _
@@ -7083,7 +7084,7 @@ Func _ExportVS1($savefile, $Filter = 0);writes vistumbler detailed data to a txt
 
 			$file &= $ExpSSID & '|' & $ExpBSSID & '|' & $ExpMANU & '|' & $ExpAUTH & '|' & $ExpENCR & '|' & $ExpSECTYPE & '|' & $ExpRAD & '|' & $ExpCHAN & '|' & $ExpBTX & '|' & $ExpOTX & '|' & $ExpHighSig & '|' & $ExpHighRSSI & '|' & $ExpNET & '|' & $ExpLAB & '|' & $ExpGidSid & @CRLF
 		Next
-		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		$savefile = FileOpen($savefile, 128 + 2) ;Open in UTF-8 write mode
 		FileWrite($savefile, $file)
 		FileClose($savefile)
 		Return (1)
@@ -7124,17 +7125,17 @@ Func _ExportVSZ($savefile, $Filter = 0)
 	Return (0)
 EndFunc   ;==>_ExportVSZ
 
-Func _ExportCsvData();Saves data to a selected file
+Func _ExportCsvData() ;Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvData()') ;#Debug Display
 	_ExportCsvDataGui(0)
 EndFunc   ;==>_ExportCsvData
 
-Func _ExportCsvFilteredData();Saves data to a selected file
+Func _ExportCsvFilteredData() ;Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvFilteredData()') ;#Debug Display
 	_ExportCsvDataGui(1)
 EndFunc   ;==>_ExportCsvFilteredData
 
-Func _ExportCsvDataGui($Gui_CsvFilter = 0);Saves data to a selected file
+Func _ExportCsvDataGui($Gui_CsvFilter = 0) ;Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui()') ;#Debug Display
 	$Gui_Csv = GUICreate($Text_ExportToCSV, 543, 132)
 	GUISetBkColor($BackgroundColor)
@@ -7191,7 +7192,7 @@ Func _ExportCsvDataGui_Close()
 	GUIDelete($Gui_Csv)
 EndFunc   ;==>_ExportCsvDataGui_Close
 
-Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data to a csv file
+Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0) ;writes vistumbler data to a csv file
 	ConsoleWrite("$Filter:" & $Filter & ' - $Detailed:' & $Detailed & @CRLF)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
 	If $Filter = 1 Then
@@ -7288,7 +7289,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0);writes vistumbler data 
 				Next
 			EndIf
 		Next
-		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		$savefile = FileOpen($savefile, 128 + 2) ;Open in UTF-8 write mode
 		FileWrite($savefile, $file)
 		FileClose($savefile)
 		Return (1)
@@ -7540,7 +7541,7 @@ Func _SaveGarminGPX($savefile, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, 
 	$file &= '</gpx>' & @CRLF
 
 	If $FoundApWithGps = 1 Then
-		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		$savefile = FileOpen($savefile, 128 + 2) ;Open in UTF-8 write mode
 		FileWrite($savefile, $file)
 		FileClose($savefile)
 		Return (1)
@@ -7554,24 +7555,24 @@ Func _WriteINI()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_WriteINI()') ;#Debug Display
 	;write ini settings
 	If $SaveDir <> $DefaultSaveDir Then
-		IniWrite($settings, "Vistumbler", "SaveDir", $SaveDir);Write new save dir ro ini
+		IniWrite($settings, "Vistumbler", "SaveDir", $SaveDir) ;Write new save dir ro ini
 	Else
-		IniDelete($settings, "Vistumbler", "SaveDir");delete entry from the ini file
+		IniDelete($settings, "Vistumbler", "SaveDir") ;delete entry from the ini file
 	EndIf
 	If $SaveDirAuto <> $DefaultSaveDir Then
-		IniWrite($settings, "Vistumbler", "SaveDirAuto", $SaveDirAuto);Write new auto save dir ro ini
+		IniWrite($settings, "Vistumbler", "SaveDirAuto", $SaveDirAuto) ;Write new auto save dir ro ini
 	Else
-		IniDelete($settings, "Vistumbler", "SaveDirAuto");delete entry from the ini file
+		IniDelete($settings, "Vistumbler", "SaveDirAuto") ;delete entry from the ini file
 	EndIf
 	If $SaveDirAutoRecovery <> $DefaultSaveDir Then
-		IniWrite($settings, "Vistumbler", "SaveDirAutoRecovery", $SaveDirAutoRecovery);Write new auto save dir ro ini
+		IniWrite($settings, "Vistumbler", "SaveDirAutoRecovery", $SaveDirAutoRecovery) ;Write new auto save dir ro ini
 	Else
-		IniDelete($settings, "Vistumbler", "SaveDirAutoRecovery");delete entry from the ini file
+		IniDelete($settings, "Vistumbler", "SaveDirAutoRecovery") ;delete entry from the ini file
 	EndIf
 	If $SaveDirKml <> $DefaultSaveDir Then
-		IniWrite($settings, "Vistumbler", "SaveDirKml", $SaveDirKml);Write new save kml dir ro ini
+		IniWrite($settings, "Vistumbler", "SaveDirKml", $SaveDirKml) ;Write new save kml dir ro ini
 	Else
-		IniDelete($settings, "Vistumbler", "SaveDirKml");delete entry from the ini file
+		IniDelete($settings, "Vistumbler", "SaveDirKml") ;delete entry from the ini file
 	EndIf
 	IniWrite($settings, "Vistumbler", "Netsh_exe", $netsh)
 	IniWrite($settings, "Vistumbler", 'PortableMode', $PortableMode)
@@ -8235,7 +8236,7 @@ Func _LoadFolder()
 	$FoundFiles = 0
 	$LoadFolder = FileSelectFolder($Text_ImportFolder & "(VS1/VSZ)", "")
 	If Not @error Then
-		$vs1files = _FileListToArray($LoadFolder, '*.vs1', 1);Find all files in the folder that end in .vs1
+		$vs1files = _FileListToArray($LoadFolder, '*.vs1', 1) ;Find all files in the folder that end in .vs1
 		If IsArray($vs1files) Then
 			For $b = 1 To $vs1files[0]
 				GUICtrlSetData($msgdisplay, $Text_Loading & " - " & $b & "/" & $vs1files[0] & " (" & $LoadFolder & "\" & $vs1files[$b] & ")")
@@ -8244,7 +8245,7 @@ Func _LoadFolder()
 			Next
 			$FoundFiles = 1
 		EndIf
-		$vszfiles = _FileListToArray($LoadFolder, '*.vsz', 1);Find all files in the folder that end in .vsz
+		$vszfiles = _FileListToArray($LoadFolder, '*.vsz', 1) ;Find all files in the folder that end in .vsz
 		If IsArray($vszfiles) Then
 			For $b = 1 To $vszfiles[0]
 				GUICtrlSetData($msgdisplay, $Text_Loading & " - " & $b & "/" & $vszfiles[0] & " (" & $LoadFolder & "\" & $vszfiles[$b] & ")")
@@ -8383,10 +8384,10 @@ Func _ImportVS1($VS1file)
 		WEnd
 		;Start Importing File
 		For $Load = 1 To $totallines
-			$linein = FileReadLine($vistumblerfile, $Load);Open Line in file
+			$linein = FileReadLine($vistumblerfile, $Load) ;Open Line in file
 			If @error = -1 Then ExitLoop
 			If StringTrimRight($linein, StringLen($linein) - 1) <> "#" Then
-				$loadlist = StringSplit($linein, '|');Split Infomation of AP on line
+				$loadlist = StringSplit($linein, '|') ;Split Infomation of AP on line
 				ConsoleWrite($loadlist[0] & @CRLF)
 				If $loadlist[0] = 6 Or $loadlist[0] = 12 Then ; If Line is GPS ID Line
 					If $loadlist[0] = 6 Then
@@ -8891,12 +8892,12 @@ Func _ImportNS1($NS1file)
 		$AddAP = 0
 		$AddGID = 0
 		For $Load = 1 To $totallines
-			$linein = FileReadLine($netstumblerfile, $Load);Open Line in file
+			$linein = FileReadLine($netstumblerfile, $Load) ;Open Line in file
 			If @error = -1 Then ExitLoop
 			;ConsoleWrite($linein & @CRLF)
-			If StringInStr($linein, "# $DateGMT:") Then $Date = StringTrimLeft($linein, 12);If the date tag is found, set date
+			If StringInStr($linein, "# $DateGMT:") Then $Date = StringTrimLeft($linein, 12) ;If the date tag is found, set date
 			If StringLeft($linein, 1) <> "#" Then ;If the line is not commented out, get AP information
-				$array = StringSplit($linein, "	");Seperate AP information
+				$array = StringSplit($linein, "	") ;Seperate AP information
 				If $array[0] = 13 Then
 					If $linein <> "" And IsArray($array) Then
 						;Decode Flags
@@ -8992,7 +8993,7 @@ EndFunc   ;==>_ImportNS1
 Func _ImportWardriveDb3($DB3file)
 	_SQLite_Startup()
 	$WardriveImpDB = _SQLite_Open($DB3file, $SQLITE_OPEN_READWRITE + $SQLITE_OPEN_CREATE, $SQLITE_ENCODING_UTF16)
-	_SQLite_Exec($WardriveImpDB, "pragma integrity_check");Speed vs Data security. Speed Wins for now.
+	_SQLite_Exec($WardriveImpDB, "pragma integrity_check") ;Speed vs Data security. Speed Wins for now.
 	Local $NetworkMatchArray, $iRows, $iColumns, $iRval
 	$query = "SELECT bssid, ssid, capabilities, level, frequency, lat, lon, alt, timestamp FROM networks"
 	$iRval = _SQLite_GetTable2d($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
@@ -9527,7 +9528,7 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 			 & '</kml>' & @CRLF
 
 	If $FoundApWithGps = 1 Then
-		$savefile = FileOpen($savefile, 128 + 2);Open in UTF-8 write mode
+		$savefile = FileOpen($savefile, 128 + 2) ;Open in UTF-8 write mode
 		FileWrite($savefile, $file_header & $file_data & $file_footer)
 		FileClose($savefile)
 		Return (1)
@@ -9541,7 +9542,7 @@ Func _KmlSignalMapSelectedAP()
 	Local $file_header
 	Local $file_data
 	Local $file_footer
-	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	$Selected = _GUICtrlListView_GetNextItem($ListviewAPs) ; find what AP is selected in the list. returns -1 is nothing is selected
 	If $Selected = -1 Then
 		MsgBox(0, $Text_Error, $Text_NoApSelected)
 	Else
@@ -9953,7 +9954,7 @@ EndFunc   ;==>_AutoKmlGpsFile
 ;                                                       NETSTUMBLER SAVE/OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
+Func _ExportNS1() ;Saves netstumbler data to a netstumbler summary .ns1
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportNS1()') ;#Debug Display
 	DirCreate($SaveDir)
 	$filename = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_NetstumblerTxtFile & ' (*.NS1)', '', $ldatetimestamp & '.NS1')
@@ -10062,7 +10063,7 @@ Func _ExportNS1();Saves netstumbler data to a netstumbler summary .ns1
 				EndIf
 				$file &= $Found_Lat & "	" & $Found_Lon & "	( " & $Found_SSID & " )	" & $BSS & "	( " & $Found_BSSID & " )	" & $Found_Time & " (GMT)	[ " & $Found_Sig & " " & $Found_Sig + 50 & " 50 ]	# ( " & $Found_LAB & ' - ' & $Found_MANU & " )	" & $Flags & "	" & $CHAN & "	1000	" & $radio & "	" & $Found_CHAN & @CRLF
 			Next
-			$savefile = FileOpen($filename, 128 + 2);Open in UTF-8 write mode
+			$savefile = FileOpen($filename, 128 + 2) ;Open in UTF-8 write mode
 			FileWrite($savefile, $file)
 			FileClose($savefile)
 			MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $filename & '"')
@@ -10079,67 +10080,67 @@ EndFunc   ;==>_ExportNS1
 ;                                                       SETTINGS WINDOW FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _SettingsGUI_Misc();Opens GUI to Misc tab
+Func _SettingsGUI_Misc() ;Opens GUI to Misc tab
 	$Apply_Misc = 1
 	_SettingsGUI(0)
 EndFunc   ;==>_SettingsGUI_Misc
 
-Func _SettingsGUI_Save();Opens GUI to Misc tab
+Func _SettingsGUI_Save() ;Opens GUI to Misc tab
 	$Apply_Save = 1
 	_SettingsGUI(1)
 EndFunc   ;==>_SettingsGUI_Save
 
-Func _SettingsGUI_GPS();Opens GUI to GPS tab
+Func _SettingsGUI_GPS() ;Opens GUI to GPS tab
 	$Apply_GPS = 1
 	_SettingsGUI(2)
 EndFunc   ;==>_SettingsGUI_GPS
 
-Func _SettingsGUI_Lan();Opens GUI to Language tab
+Func _SettingsGUI_Lan() ;Opens GUI to Language tab
 	$Apply_Language = 1
 	_SettingsGUI(3)
 EndFunc   ;==>_SettingsGUI_Lan
 
-Func _SettingsGUI_Manu();Opens GUI to Manufacturer tab
+Func _SettingsGUI_Manu() ;Opens GUI to Manufacturer tab
 	$Apply_Manu = 1
 	_SettingsGUI(4)
 EndFunc   ;==>_SettingsGUI_Manu
 
-Func _SettingsGUI_Lab();Opens GUI to Label tab
+Func _SettingsGUI_Lab() ;Opens GUI to Label tab
 	$Apply_Lab = 1
 	_SettingsGUI(5)
 EndFunc   ;==>_SettingsGUI_Lab
 
-Func _SettingsGUI_Col();Opens GUI to Column tab
+Func _SettingsGUI_Col() ;Opens GUI to Column tab
 	$Apply_Column = 1
 	_SettingsGUI(6)
 EndFunc   ;==>_SettingsGUI_Col
 
-Func _SettingsGUI_SW();Opens GUI to Searchword tab
+Func _SettingsGUI_SW() ;Opens GUI to Searchword tab
 	$Apply_Searchword = 1
 	_SettingsGUI(7)
 EndFunc   ;==>_SettingsGUI_SW
 
-Func _SettingsGUI_Auto();Opens GUI to Auto tab
+Func _SettingsGUI_Auto() ;Opens GUI to Auto tab
 	$Apply_Auto = 1
 	_SettingsGUI(8)
 EndFunc   ;==>_SettingsGUI_Auto
 
-Func _SettingsGUI_Sound();Opens GUI to Auto tab
+Func _SettingsGUI_Sound() ;Opens GUI to Auto tab
 	$Apply_Sound = 1
 	_SettingsGUI(9)
 EndFunc   ;==>_SettingsGUI_Sound
 
-Func _SettingsGUI_WifiDB();Opens GUI to Auto tab
+Func _SettingsGUI_WifiDB() ;Opens GUI to Auto tab
 	$Apply_WifiDB = 1
 	_SettingsGUI(10)
 EndFunc   ;==>_SettingsGUI_WifiDB
 
-Func _SettingsGUI_Cam();Opens GUI to Auto tab
+Func _SettingsGUI_Cam() ;Opens GUI to Auto tab
 	$Apply_Cam = 1
 	_SettingsGUI(11)
 EndFunc   ;==>_SettingsGUI_Cam
 
-Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
+Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 	If $SettingsOpen = 1 Then
 		WinActivate($Text_VistumblerSettings)
 	Else
@@ -10346,8 +10347,8 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		$GroupLan = GUICtrlCreateGroup($Text_SetLanguage, 16, 40, 641, 297)
 		GUICtrlSetColor(-1, $TextColor)
 		Dim $Languages1 = '', $Languages2 = ''
-		$languagefiles = _FileListToArray($LanguageDir, '*.ini', 1);Find all files in the folder that end in .ini . These are automatically assumed to a language file
-		For $b = 1 To $languagefiles[0];Set Languages into proper format for the combo box
+		$languagefiles = _FileListToArray($LanguageDir, '*.ini', 1) ;Find all files in the folder that end in .ini . These are automatically assumed to a language file
+		For $b = 1 To $languagefiles[0] ;Set Languages into proper format for the combo box
 			If $b = 1 Then
 				$Languages1 = StringTrimRight($languagefiles[$b], 4)
 			ElseIf $b > 1 Then
@@ -10619,7 +10620,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		;----------------------------
 		$Tab_Auto = GUICtrlCreateTabItem($Text_Auto)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		GUICtrlCreateGroup($Text_AutoKml, 16, 40, 650, 240);Auto Save Group
+		GUICtrlCreateGroup($Text_AutoKml, 16, 40, 650, 240) ;Auto Save Group
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_AutoSaveKml = GUICtrlCreateCheckbox($Text_AutoKml, 30, 60, 625, 15)
 		GUICtrlSetColor(-1, $TextColor)
@@ -10830,7 +10831,7 @@ Func _SettingsGUI($StartTab);Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_CamTriggerTime = GUICtrlCreateInput($CamTriggerTime, 31, 400, 515, 21)
 		$csbrowse1 = GUICtrlCreateButton($Text_Browse, 556, 360, 97, 20, 0)
-		GUICtrlCreateTabItem("");END OF TABS
+		GUICtrlCreateTabItem("") ;END OF TABS
 
 		$GUI_Set_Ok = GUICtrlCreateButton($Text_Ok, 455, 472, 75, 25, 0)
 		$GUI_Set_Can = GUICtrlCreateButton($Text_Cancel, 530, 472, 75, 25, 0)
@@ -10939,19 +10940,19 @@ EndFunc   ;==>_ColorBrowse3
 Func _ColorBrowse4()
 	$color = _ChooseColor(2, $ButtonActiveColor, 2, $SetMisc)
 	If $color <> -1 Then GUICtrlSetData($GUI_CBAColor, StringReplace($color, "0x", ""))
-EndFunc   ;==>_ColorBrowse3
+EndFunc   ;==>_ColorBrowse4
 
 Func _ColorBrowse5()
 	$color = _ChooseColor(2, $ButtonInactiveColor, 2, $SetMisc)
 	If $color <> -1 Then GUICtrlSetData($GUI_CBIColor, StringReplace($color, "0x", ""))
-EndFunc   ;==>_ColorBrowse3
+EndFunc   ;==>_ColorBrowse5
 
 Func _BrowseGoogleEarth()
 	$file = FileOpenDialog($Text_GoogleEarthEXE, "C:\Program Files (x86)\Google\Google Earth\client\", "Google Earth (googleearth.exe)", $FD_FILEMUSTEXIST)
 	If Not @error Then
 		GUICtrlSetData($GUI_GoogleEXE, $file)
 	EndIf
-EndFunc   ;==>_BrowseSave
+EndFunc   ;==>_BrowseGoogleEarth
 
 Func _BrowseSave()
 	$folder = FileSelectFolder($Text_VistumblerSaveDirectory, '', 1, GUICtrlRead($GUI_Set_SaveDir))
@@ -10975,7 +10976,7 @@ Func _BrowseAutoSaveRecovery()
 		If StringTrimLeft($folder, StringLen($folder) - 1) <> "\" Then $folder = $folder & "\" ;If directory does not have training \ then add it
 		GUICtrlSetData($GUI_Set_SaveDirAutoRecovery, $folder)
 	EndIf
-EndFunc
+EndFunc   ;==>_BrowseAutoSaveRecovery
 
 Func _BrowseKmlSave()
 	$folder = FileSelectFolder($Text_VistumblerKmlSaveDirectory, '', 1, GUICtrlRead($GUI_Set_SaveDirKml))
@@ -10985,14 +10986,14 @@ Func _BrowseKmlSave()
 	EndIf
 EndFunc   ;==>_BrowseKmlSave
 
-Func _ImportLanguageBrowse();opens a browse window to import a language file
+Func _ImportLanguageBrowse() ;opens a browse window to import a language file
 	$languagefile = FileOpenDialog("Select Language File", $SaveDir, "Vistumbler Language File (*.ini)", 1)
 	If Not @error Then
 		GUICtrlSetData($ImpLanFile, $languagefile)
 	EndIf
 EndFunc   ;==>_ImportLanguageBrowse
 
-Func _ImportLanguage();Copies language file to the languages directory
+Func _ImportLanguage() ;Copies language file to the languages directory
 	$imfile = GUICtrlRead($ImpLanFile)
 	If $imfile <> '' Then
 		$lastslash = StringInStr($imfile, "\", 0, -1)
@@ -11002,7 +11003,7 @@ Func _ImportLanguage();Copies language file to the languages directory
 	EndIf
 EndFunc   ;==>_ImportLanguage
 
-Func _LanguageChanged();Sets language information in gui if language changed
+Func _LanguageChanged() ;Sets language information in gui if language changed
 	$Apply_Language = 1
 	$Apply_Searchword = 1
 	$Language = GUICtrlRead($LanguageBox)
@@ -11029,18 +11030,18 @@ Func _LanguageChanged();Sets language information in gui if language changed
 	GUICtrlSetData($SearchWord_Adhoc_GUI, IniRead($languagefile, 'SearchWords', 'Adhoc', 'Adhoc'))
 EndFunc   ;==>_LanguageChanged
 
-Func _CloseSettingsGUI();closes settings gui
+Func _CloseSettingsGUI() ;closes settings gui
 	GUIDelete($SetMisc)
 	$SettingsOpen = 0
 EndFunc   ;==>_CloseSettingsGUI
 
-Func _OkSettingsGUI();Applys settings and closes settings gui
+Func _OkSettingsGUI() ;Applys settings and closes settings gui
 	_ApplySettingsGUI()
 	_CloseSettingsGUI()
 	_WriteINI()
 EndFunc   ;==>_OkSettingsGUI
 
-Func _ApplySettingsGUI();Applys settings
+Func _ApplySettingsGUI() ;Applys settings
 	$RestartVistumbler = 0
 	If $Apply_Misc = 1 Then
 
@@ -11141,8 +11142,8 @@ Func _ApplySettingsGUI();Applys settings
 		If GUICtrlRead($GUI_Format) = "dd.dddd" Then $GPSformat = 1
 		If GUICtrlRead($GUI_Format) = "dd mm ss" Then $GPSformat = 2
 		If GUICtrlRead($GUI_Format) = "ddmm.mmmm" Then $GPSformat = 3
-		GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude));Set GPS Latitude in GUI
-		GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude));Set GPS Longitude in GUI
+		GUICtrlSetData($GuiLat, $Text_Latitude & ': ' & _GpsFormat($Latitude)) ;Set GPS Latitude in GUI
+		GUICtrlSetData($GuiLon, $Text_Longitude & ': ' & _GpsFormat($Longitude)) ;Set GPS Longitude in GUI
 		If GUICtrlRead($GUI_GpsDisconnect) = 1 Then
 			$GpsDisconnect = 1
 		Else
@@ -11556,7 +11557,7 @@ Func _ApplySettingsGUI();Applys settings
 		$query = "DELETE * FROM Manufacturers"
 		_ExecuteMDB($ManuDB, $ManuDB_OBJ, $query)
 		;Rewrite Mac address/labels from listview into the array
-		$itemcount = _GUICtrlListView_GetItemCount($GUI_Manu_List) - 1; Get List Size
+		$itemcount = _GUICtrlListView_GetItemCount($GUI_Manu_List) - 1 ; Get List Size
 		For $findloop = 0 To $itemcount
 			$o_manu_mac = StringUpper(StringReplace(_GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 0), '"', ''))
 			$o_manu = _GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 1)
@@ -11570,7 +11571,7 @@ Func _ApplySettingsGUI();Applys settings
 		$query = "DELETE * FROM Labels"
 		_ExecuteMDB($LabDB, $LabDB_OBJ, $query)
 		;Rewrite Mac address/labels from listview into the array
-		$itemcount = _GUICtrlListView_GetItemCount($GUI_Lab_List) - 1; Get List Size
+		$itemcount = _GUICtrlListView_GetItemCount($GUI_Lab_List) - 1 ; Get List Size
 		For $findloop = 0 To $itemcount
 			$o_lab_mac = StringUpper(StringReplace(_GUICtrlListView_GetItemText($GUI_Lab_List, $findloop, 0), '"', ''))
 			$o_lab = _GUICtrlListView_GetItemText($GUI_Lab_List, $findloop, 1)
@@ -11668,8 +11669,8 @@ Func _ApplySettingsGUI();Applys settings
 	EndIf
 	If $Apply_Sound = 1 Then
 		;New AP Sound Settings
-		If GUICtrlRead($GUI_NewApSound) = 4 And $SoundOnAP = 1 Then _SoundToggle();Turn off new ap sound
-		If GUICtrlRead($GUI_NewApSound) = 1 And $SoundOnAP = 0 Then _SoundToggle();Turn on new ap sound
+		If GUICtrlRead($GUI_NewApSound) = 4 And $SoundOnAP = 1 Then _SoundToggle() ;Turn off new ap sound
+		If GUICtrlRead($GUI_NewApSound) = 1 And $SoundOnAP = 0 Then _SoundToggle() ;Turn on new ap sound
 		If GUICtrlRead($GUI_ASperloop) = 1 Then
 			$SoundPerAP = 0
 		ElseIf GUICtrlRead($GUI_ASperap) = 1 Then
@@ -11680,8 +11681,8 @@ Func _ApplySettingsGUI();Applys settings
 			$NewSoundSigBased = 1
 		EndIf
 		;Save Speak Settings
-		If GUICtrlRead($GUI_SpeakSignal) = 4 And $SpeakSignal = 1 Then _SpeakSigToggle();Turn off speak signal
-		If GUICtrlRead($GUI_SpeakSignal) = 1 And $SpeakSignal = 0 Then _SpeakSigToggle();Turn on speak signal
+		If GUICtrlRead($GUI_SpeakSignal) = 4 And $SpeakSignal = 1 Then _SpeakSigToggle() ;Turn off speak signal
+		If GUICtrlRead($GUI_SpeakSignal) = 1 And $SpeakSignal = 0 Then _SpeakSigToggle() ;Turn on speak signal
 		If GUICtrlRead($GUI_SpeakSoundsVis) = 1 Then
 			$SpeakType = 1 ;Set Vistumbler Sounds as default speak signal interface
 		ElseIf GUICtrlRead($GUI_SpeakSoundsSapi) = 1 Then
@@ -11690,13 +11691,13 @@ Func _ApplySettingsGUI();Applys settings
 			$SpeakType = 3 ;Set MIDI as default speak signal interface
 		EndIf
 		If GUICtrlRead($GUI_SpeakPercent) = 1 Then
-			$SpeakSigSayPecent = 1;Say Percent
+			$SpeakSigSayPecent = 1 ;Say Percent
 		Else
-			$SpeakSigSayPecent = 0;Don't say percent
+			$SpeakSigSayPecent = 0 ;Don't say percent
 		EndIf
 		$SpeakSigTime = GUICtrlRead($GUI_SpeakSigTime)
-		If GUICtrlRead($GUI_PlayMidiSounds) = 4 And $Midi_PlayForActiveAps = 1 Then _ActiveApMidiToggle();Turn off MIDI signal
-		If GUICtrlRead($GUI_PlayMidiSounds) = 1 And $Midi_PlayForActiveAps = 0 Then _ActiveApMidiToggle();Turn on MIDI signal
+		If GUICtrlRead($GUI_PlayMidiSounds) = 4 And $Midi_PlayForActiveAps = 1 Then _ActiveApMidiToggle() ;Turn off MIDI signal
+		If GUICtrlRead($GUI_PlayMidiSounds) = 1 And $Midi_PlayForActiveAps = 0 Then _ActiveApMidiToggle() ;Turn on MIDI signal
 		$MidiInstSplit = StringSplit(GUICtrlRead($GUI_Midi_Instument), ' - ', 1)
 		$Midi_Instument = $MidiInstSplit[1]
 		$Midi_PlayTime = GUICtrlRead($GUI_Midi_PlayTime)
@@ -11721,7 +11722,7 @@ Func _ApplySettingsGUI();Applys settings
 		$query = "DELETE * FROM Cameras"
 		_ExecuteMDB($CamDB, $CamDB_OBJ, $query)
 		;Rewrite cameras from listview into the array
-		$itemcount = _GUICtrlListView_GetItemCount($GUI_Cam_List) - 1; Get List Size
+		$itemcount = _GUICtrlListView_GetItemCount($GUI_Cam_List) - 1 ; Get List Size
 		For $findloop = 0 To $itemcount
 			$o_camname = StringReplace(_GUICtrlListView_GetItemText($GUI_Cam_List, $findloop, 0), '"', '')
 			$o_camurl = _GUICtrlListView_GetItemText($GUI_Cam_List, $findloop, 1)
@@ -11813,14 +11814,14 @@ Func _SetWidthValue_Label()
 	_SetWidthValue($CWCB_Label, $CWIB_Label, $column_Width_Label, $settings, 'Column_Width', 'Column_Label', 100)
 EndFunc   ;==>_SetWidthValue_Label
 
-Func _AddManu();Adds new manucaturer to settings gui manufacturer list
+Func _AddManu() ;Adds new manucaturer to settings gui manufacturer list
 	$Apply_Manu = 1
 	$StrippedMac = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace(GUICtrlRead($GUI_Manu_NewMac), ':', ''), '-', ''), '"', ''), ' ', ''))
 	$AddMac = '"' & StringTrimRight($StrippedMac, StringLen($StrippedMac) - 6) & '"'
 	$AddLM = GUICtrlRead($GUI_Manu_NewManu)
 	$arraysearch = -1
-	$itemcount = _GUICtrlListView_GetItemCount($GUI_Manu_List) - 1; Get List Size
-	For $findloop = 0 To $itemcount; Find BSSID list; If found, set $arraysearch with position
+	$itemcount = _GUICtrlListView_GetItemCount($GUI_Manu_List) - 1 ; Get List Size
+	For $findloop = 0 To $itemcount ; Find BSSID list; If found, set $arraysearch with position
 		If _GUICtrlListView_GetItemText($GUI_Manu_List, $findloop, 0) = $AddMac Then
 			$arraysearch = $findloop
 			ExitLoop
@@ -11839,7 +11840,7 @@ Func _AddManu();Adds new manucaturer to settings gui manufacturer list
 	EndIf
 EndFunc   ;==>_AddManu
 
-Func _EditManu();Opens edit manufacturer window
+Func _EditManu() ;Opens edit manufacturer window
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Manu_List)
 	If $EditLine <> $LV_ERR Then
 		$EditMac = StringTrimRight(StringTrimLeft(_GUICtrlListView_GetItemText($GUI_Manu_List, $EditLine, 0), 1), 1)
@@ -11858,17 +11859,17 @@ Func _EditManu();Opens edit manufacturer window
 	EndIf
 EndFunc   ;==>_EditManu
 
-Func _RemoveManu();Removed manufactuer from list
+Func _RemoveManu() ;Removed manufactuer from list
 	$Apply_Manu = 1
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Manu_List)
 	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem($GUI_Manu_List, $EditLine)
 EndFunc   ;==>_RemoveManu
 
-Func _EditManu_Close();Close edit manufacturer window
+Func _EditManu_Close() ;Close edit manufacturer window
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditManu_Close
 
-Func _EditManu_Ok();Apply edit manufacture window settings and close it
+Func _EditManu_Ok() ;Apply edit manufacture window settings and close it
 	$Apply_Manu = 1
 	$StrippedMac = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace(GUICtrlRead($EditMac_Mac), ':', ''), '-', ''), '"', ''), ' ', ''))
 	_GUICtrlListView_SetItemText($GUI_Manu_List, $EditLine, '"' & StringTrimRight($StrippedMac, StringLen($StrippedMac) - 6) & '"', 0)
@@ -11876,14 +11877,14 @@ Func _EditManu_Ok();Apply edit manufacture window settings and close it
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditManu_Ok
 
-Func _AddLabel();Adds new label to settings gui label list
+Func _AddLabel() ;Adds new label to settings gui label list
 	$Apply_Lab = 1
 	$StrippedMac = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace(GUICtrlRead($GUI_Lab_NewMac), ':', ''), '-', ''), '"', ''), ' ', ''))
 	$AddMac = '"' & StringTrimRight($StrippedMac, StringLen($StrippedMac) - 12) & '"'
 	$AddLM = GUICtrlRead($GUI_Lab_NewLabel)
 	$arraysearch = -1
-	$itemcount = _GUICtrlListView_GetItemCount($GUI_Lab_List) - 1; Get List Size
-	For $findloop = 0 To $itemcount; Find BSSID list; If found, set $arraysearch with position
+	$itemcount = _GUICtrlListView_GetItemCount($GUI_Lab_List) - 1 ; Get List Size
+	For $findloop = 0 To $itemcount ; Find BSSID list; If found, set $arraysearch with position
 		If _GUICtrlListView_GetItemText($GUI_Lab_List, $findloop, 0) = $AddMac Then
 			$arraysearch = $findloop
 			ExitLoop
@@ -11902,7 +11903,7 @@ Func _AddLabel();Adds new label to settings gui label list
 	EndIf
 EndFunc   ;==>_AddLabel
 
-Func _EditLabel();Opens edit label window
+Func _EditLabel() ;Opens edit label window
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Lab_List)
 	If $EditLine <> $LV_ERR Then
 		$EditMac = StringTrimRight(StringTrimLeft(_GUICtrlListView_GetItemText($GUI_Lab_List, $EditLine, 0), 1), 1)
@@ -11921,7 +11922,7 @@ Func _EditLabel();Opens edit label window
 	EndIf
 EndFunc   ;==>_EditLabel
 
-Func _RemoveLabel();Close edit label window
+Func _RemoveLabel() ;Close edit label window
 	$Apply_Lab = 1
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Lab_List)
 	;ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
@@ -11929,11 +11930,11 @@ Func _RemoveLabel();Close edit label window
 EndFunc   ;==>_RemoveLabel
 
 
-Func _EditLabel_Close();Close edit label window
+Func _EditLabel_Close() ;Close edit label window
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditLabel_Close
 
-Func _EditLabel_Ok();Apply edit label window settings and close it
+Func _EditLabel_Ok() ;Apply edit label window settings and close it
 	$Apply_Lab = 1
 	$StrippedMac = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace(GUICtrlRead($EditMac_Mac), ':', ''), '-', ''), '"', ''), ' ', ''))
 	_GUICtrlListView_SetItemText($GUI_Lab_List, $EditLine, '"' & StringTrimRight($StrippedMac, StringLen($StrippedMac) - 12) & '"', 0)
@@ -11941,13 +11942,13 @@ Func _EditLabel_Ok();Apply edit label window settings and close it
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditLabel_Ok
 
-Func _AddCam();Adds new Camcaturer to settings gui Camfacturer list
+Func _AddCam() ;Adds new Camcaturer to settings gui Camfacturer list
 	$Apply_Cam = 1
 	$AddID = '"' & GUICtrlRead($GUI_Cam_NewID) & '"'
 	$AddLOC = GUICtrlRead($GUI_Cam_NewLOC)
 	$arraysearch = -1
-	$itemcount = _GUICtrlListView_GetItemCount($GUI_Cam_List) - 1; Get List Size
-	For $findloop = 0 To $itemcount; Find cam in list; If found, set $arraysearch with position
+	$itemcount = _GUICtrlListView_GetItemCount($GUI_Cam_List) - 1 ; Get List Size
+	For $findloop = 0 To $itemcount ; Find cam in list; If found, set $arraysearch with position
 		If _GUICtrlListView_GetItemText($GUI_Cam_List, $findloop, 0) = $AddID Then
 			$arraysearch = $findloop
 			ExitLoop
@@ -11966,7 +11967,7 @@ Func _AddCam();Adds new Camcaturer to settings gui Camfacturer list
 	EndIf
 EndFunc   ;==>_AddCam
 
-Func _EditCam();Opens edit Camfacturer window
+Func _EditCam() ;Opens edit Camfacturer window
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Cam_List)
 	If $EditLine <> $LV_ERR Then
 		$EditCamID = StringTrimRight(StringTrimLeft(_GUICtrlListView_GetItemText($GUI_Cam_List, $EditLine, 0), 1), 1)
@@ -11985,11 +11986,11 @@ Func _EditCam();Opens edit Camfacturer window
 	EndIf
 EndFunc   ;==>_EditCam
 
-Func _EditCam_Close();Close edit Camfacturer window
+Func _EditCam_Close() ;Close edit Camfacturer window
 	GUIDelete($EditCamGUIForm)
 EndFunc   ;==>_EditCam_Close
 
-Func _EditCam_Ok();Apply edit Camfacture window settings and close it
+Func _EditCam_Ok() ;Apply edit Camfacture window settings and close it
 	$Apply_Cam = 1
 	$AddID = '"' & GUICtrlRead($GUI_Edit_CamID) & '"'
 	$AddLOC = GUICtrlRead($GUI_Edit_CamLOC)
@@ -11998,14 +11999,14 @@ Func _EditCam_Ok();Apply edit Camfacture window settings and close it
 	GUIDelete($EditMacGUIForm)
 EndFunc   ;==>_EditCam_Ok
 
-Func _RemoveCam();Removed Camfactuer from list
+Func _RemoveCam() ;Removed Camfactuer from list
 	$Apply_Cam = 1
 	$EditLine = _GUICtrlListView_GetNextItem($GUI_Cam_List)
 	;ConsoleWrite($EditLine & ' - ' & $LV_ERR & @CRLF)
 	If $EditLine <> $LV_ERR Then _GUICtrlListView_DeleteItem(GUICtrlGetHandle($GUI_Cam_List), $EditLine)
 EndFunc   ;==>_RemoveCam
 
-Func _SetWidthValue(ByRef $wcheckbox, ByRef $winput, $wcurrentwidth, $wsettings, $wsection, $wvalue, $wdef);Enable or disable a column in settings gui. reset width
+Func _SetWidthValue(ByRef $wcheckbox, ByRef $winput, $wcurrentwidth, $wsettings, $wsection, $wvalue, $wdef) ;Enable or disable a column in settings gui. reset width
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetWidthValue()') ;#Debug Display
 	If GUICtrlRead($wcheckbox) = $GUI_UNCHECKED Then
 		GUICtrlSetData($winput, 0)
@@ -12025,7 +12026,7 @@ Func _SetWidthValue(ByRef $wcheckbox, ByRef $winput, $wcurrentwidth, $wsettings,
 	EndIf
 EndFunc   ;==>_SetWidthValue
 
-Func _SetCWCBIB(ByRef $CWIB, ByRef $CWCB);Sets column enabled or disabled based on width
+Func _SetCWCBIB(ByRef $CWIB, ByRef $CWCB) ;Sets column enabled or disabled based on width
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetCWCBIB()') ;#Debug Display
 	If GUICtrlRead($CWIB) = 0 Then
 		GUICtrlSetState($CWIB, $GUI_DISABLE)
@@ -12036,7 +12037,7 @@ Func _SetCWCBIB(ByRef $CWIB, ByRef $CWCB);Sets column enabled or disabled based 
 	EndIf
 EndFunc   ;==>_SetCWCBIB
 
-Func _SetCwState(); Set All columns in settings gui enabled or disabled
+Func _SetCwState() ; Set All columns in settings gui enabled or disabled
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SetCwState()') ;#Debug Display
 	_SetCWCBIB($CWIB_Line, $CWCB_Line)
 	_SetCWCBIB($CWIB_Active, $CWCB_Active)
@@ -12079,7 +12080,7 @@ Func _GuessNetshSearchwords()
 		_RunDos($netsh & ' wlan show networks interface="' & $DefaultApapter & '" mode=bssid > ' & '"' & $tempfile & '"') ;copy the output of the 'netsh wlan show networks mode=bssid' command to the temp file
 	EndIf
 
-	$arrayadded = _FileReadToArray($tempfile, $TempFileArray);read the tempfile into the '$TempFileArray' Araay
+	$arrayadded = _FileReadToArray($tempfile, $TempFileArray) ;read the tempfile into the '$TempFileArray' Araay
 	If $arrayadded = 1 Then
 		;Strip out whitespace before and after text on each line
 		For $stripws = 1 To $TempFileArray[0]
@@ -12158,10 +12159,10 @@ EndFunc   ;==>_GUICtrlTab_SetBkColor
 ;                                                       SAY SIGNAL / MIDI FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal strenth
+Func _SpeakSelectedSignal() ;Finds the slected access point and speaks its signal strenth
 	$ErrorFlag = 0
-	If $SpeakSignal = 1 Then; If the signal speaking is turned on
-		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs); find what AP is selected in the list. returns -1 is nothing is selected
+	If $SpeakSignal = 1 Then ; If the signal speaking is turned on
+		$Selected = _GUICtrlListView_GetNextItem($ListviewAPs) ; find what AP is selected in the list. returns -1 is nothing is selected
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
 			$query = "SELECT LastHistID, Active, SSID FROM AP WHERE ListRow=" & $Selected
 			$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -12179,7 +12180,7 @@ Func _SpeakSelectedSignal();Finds the slected access point and speaks its signal
 					Else
 						$say = '0'
 					EndIf
-					If ProcessExists($SayProcess) = 0 Then;If Say.exe is still running, skip opening it again
+					If ProcessExists($SayProcess) = 0 Then ;If Say.exe is still running, skip opening it again
 						If $SpeakType = 1 Then ;Use Sound Files
 							$run = FileGetShortName(@ScriptDir & '\say.exe') & ' /s="' & $say & '" /t=1'
 							If $SpeakSigSayPecent = 1 Then $run &= ' /p'
@@ -13085,7 +13086,7 @@ Func _ExportCamFile()
 			$file &= $ExpCamID & ',' & $ExpCamGroup & ',' & $ExpGpsID & ',' & $ExpCamName & ',' & $ExpCamFile & ',' & $ExpCamDate & ',' & $ExpCamTime & ',' & $ExpLat & ',' & $ExpLon & ',' & $ExpSat & ',' & $ExpHorDilPitch & ',' & $ExpAlt & ',' & $ExpGeo & ',' & $ExpSpeedKmh & ',' & $ExpSpeedMPH & ',' & $ExpTrack & @CRLF
 		Next
 		;Add cam data to zip
-		$filetmp = FileOpen($datafiletmp, 128 + 2);Open in UTF-8 write mode
+		$filetmp = FileOpen($datafiletmp, 128 + 2) ;Open in UTF-8 write mode
 		FileWrite($filetmp, $file)
 		FileClose($filetmp)
 		;ConsoleWrite($datafiletmp & @CRLF)
@@ -13165,7 +13166,7 @@ Func _ImportImageFiles()
 						$day = $dts2[2]
 						$year = $dts2[3]
 						$ImgDateUTC = $year & '-' & $mon & '-' & $day ;Image Date in UTC year-month-day format
-						$ImgTimeUTC = $dts1[2];Image time in UTC Hour:minute:second
+						$ImgTimeUTC = $dts1[2] ;Image time in UTC Hour:minute:second
 						;ConsoleWrite($ImgDateUTC & ' ' & $ImgTimeUTC & @CRLF)
 						;Find matching GPS point
 						$query = "SELECT TOP 1 GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "%'"
@@ -13230,12 +13231,12 @@ Func _rad2deg($radian) ;convert radians to degrees
 	Return ($radian * (180 / $PI))
 EndFunc   ;==>_rad2deg
 
-Func _SignalPercentToDb($InSig);Estimated value
+Func _SignalPercentToDb($InSig) ;Estimated value
 	$dBm = ((($dBmMaxSignal - $dBmDissociationSignal) * $InSig) - (20 * $dBmMaxSignal) + (100 * $dBmDissociationSignal)) / 80
 	Return (Round($dBm))
 EndFunc   ;==>_SignalPercentToDb
 
-Func _DbToSignalPercent($InDB);Estimated value
+Func _DbToSignalPercent($InDB) ;Estimated value
 	$SIG = 100 - 80 * ($dBmMaxSignal - $InDB) / ($dBmMaxSignal - $dBmDissociationSignal)
 	If $SIG < 0 Then $SIG = 0
 	Return (Round($SIG))
@@ -13301,7 +13302,7 @@ Func _DateLocalFormat($DateString)
 	EndIf
 EndFunc   ;==>_DateLocalFormat
 
-Func _CompareDate($d1, $d2);If $d1 is greater than $d2, return 1 ELSE return 2
+Func _CompareDate($d1, $d2) ;If $d1 is greater than $d2, return 1 ELSE return 2
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CompareDate()') ;#Debug Display
 
 	$d1 = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($d1, '-', ''), '/', ''), ':', ''), ':', ''), ' ', '')
@@ -13374,7 +13375,7 @@ Func _NewSession()
 EndFunc   ;==>_NewSession
 
 Func _CleanupFiles($cDIR, $cTYPE)
-	$Tmpfiles = _FileListToArray($cDIR, $cTYPE, 1);Find all files in the folder that end in .tmp
+	$Tmpfiles = _FileListToArray($cDIR, $cTYPE, 1) ;Find all files in the folder that end in .tmp
 	If IsArray($Tmpfiles) Then
 		For $FoundTmp = 1 To $Tmpfiles[0]
 			$tmpname = $TmpDir & $Tmpfiles[$FoundTmp]
@@ -13386,24 +13387,24 @@ EndFunc   ;==>_CleanupFiles
 Func _ExportSettings()
 	$file = FileSaveDialog($Text_ExportVistumblerSettings, $SaveDir, $Text_VistumblerSettings & ' (*.ini)', $FD_PATHMUSTEXIST + $FD_PROMPTOVERWRITE, "vistumbler_settings.ini")
 	If Not @error Then
-		$copy = FileCopy($settings, $file, 1)
-		If $copy = 1 And FileExists($file) Then
+		$Copy = FileCopy($settings, $file, 1)
+		If $Copy = 1 And FileExists($file) Then
 			MsgBox(0, $Text_Information, $Text_SavedAs & ' "' & $file & '"')
 		Else
 			MsgBox(0, $Text_Error, $Text_ErrorSavingFile)
 		EndIf
 	EndIf
-EndFunc
+EndFunc   ;==>_ExportSettings
 
 Func _ImportSettings()
 	$file = FileOpenDialog($Text_ImportVistumblerSettings, $SaveDir, $Text_VistumblerSettings & ' (*.ini)', 1)
 	If Not @error Then
-		$copy = FileCopy($file, $settings, 1)
-		If $copy = 1 And FileExists($settings) Then
+		$Copy = FileCopy($file, $settings, 1)
+		If $Copy = 1 And FileExists($settings) Then
 			MsgBox(0, $Text_Information, $Text_SettingsImportedSuccess)
 			_Exit(0)
 		Else
 			MsgBox(0, $Text_Error, $Text_ErrorImportingFile)
 		EndIf
 	EndIf
-EndFunc
+EndFunc   ;==>_ImportSettings
