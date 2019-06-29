@@ -9,3 +9,7 @@
 /VistumblerMDB/Settings/Labels.mdb
 /VistumblerMDB/Settings/Manufacturers.ldb
 *.config
+#Ignore _vti folders in ExpressionWeb
+desktop.ini
+_vti_cnf/
+_vti_pvt/
