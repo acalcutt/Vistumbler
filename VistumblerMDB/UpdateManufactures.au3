@@ -4,18 +4,18 @@
 #AutoIt3Wrapper_Res_requestedExecutionLevel=requireAdministrator
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2012 Andrew Calcutt
+;Copyright (C) 2018 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.14.2
+;AutoIt Version: v3.3.14.5
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Update Manufactures'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'Creates Manufacturer.mdb using macmanuf.exe'
-$version = 'v3'
-$origional_date = '2016/03/05'
+$version = 'v4'
+$date = '2018/09/07'
 ;--------------------------------------------------------
 #include <File.au3>
 #include "UDFs\FileInUse.au3"
@@ -30,7 +30,6 @@ Dim $ManuDB = @ScriptDir & "\Settings\" & "Manufacturers.mdb" ;Destination Manuf
 
 ;manufacturer script to temp dir
 FileInstall("macmanuf.exe", $TmpDir, 1)
-FileInstall("Interop.ADOX.dll", $TmpDir, 1)
 
 ;Run script to get manuactures
 RunWait($ManufMacEXE, $TmpDir)
@@ -46,6 +45,7 @@ If FileExists($Temp_ManuDB) Then
 			EndIf
 			$fms = FileMove($Temp_ManuDB, $ManuDB, 1)
 			If $fms = 1 Then
+				RunWait(@ComSpec & ' /c ' & 'icacls.exe "' & $ManuDB & '" /inheritance:e', @SystemDir, @SW_HIDE)
 				$updatemsg = MsgBox(4, "Done", "Done. Would you like to load vistumbler?")
 				If $updatemsg = 6 Then Run(@ScriptDir & '\Vistumbler.exe')
 				ExitLoop

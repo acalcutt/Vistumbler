@@ -1,23 +1,27 @@
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
-#AutoIt3Wrapper_Res_Fileversion=10.3.2.0
+#AutoIt3Wrapper_Res_Fileversion=10.6.5.3
+#AutoIt3Wrapper_Res_ProductName=Vistumbler
+#AutoIt3Wrapper_Res_CompanyName=Vistumbler.net
+#AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2018 Andrew Calcutt
+;Copyright (C) 2019 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.14.3
+;AutoIt Version: v3.3.15.1
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.4'
+$version = 'v10.6.5 Beta 3'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2018/02/10'
+$last_modified = '2019/05/18'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -36,6 +40,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include <INet.au3>
 #include <SQLite.au3>
 #include <GuiMenu.au3>
+#include <sound.au3>
 #include "UDFs\AccessCom.au3"
 #include "UDFs\CommMG.au3"
 #include "UDFs\cfxUDF.au3"
@@ -69,6 +74,10 @@ If $PortableMode = 1 Then
 	$CamDB = $Default_CamDB
 	$InstDB = $Default_InstDB
 	$FiltDB = $Default_FiltDB
+
+	DirCreate($TmpDir)
+	DirCreate($DefaultSaveDir)
+	DirCreate($SettingsDir)
 Else
 	$TmpDir = @TempDir & '\Vistumbler\'
 	$DefaultSaveDir = @MyDocumentsDir & '\Vistumbler\'
@@ -79,6 +88,7 @@ Else
 	$CamDB = $SettingsDir & 'Cameras.mdb'
 	$InstDB = $SettingsDir & 'Instruments.mdb'
 	$FiltDB = $SettingsDir & 'Filters.mdb'
+
 	DirCreate($TmpDir)
 	DirCreate($DefaultSaveDir)
 	DirCreate($SettingsDir)
@@ -108,6 +118,7 @@ Else
 	EndIf
 
 EndIf
+
 ;Set directories
 Dim $LanguageDir = @ScriptDir & '\Languages\'
 Dim $SoundDir = @ScriptDir & '\Sounds\'
@@ -796,7 +807,7 @@ Dim $Text_Checked = IniRead($DefaultLanguagePath, 'GuiText', 'Checked', 'Checked
 Dim $Text_UnChecked = IniRead($DefaultLanguagePath, 'GuiText', 'UnChecked', 'UnChecked')
 Dim $Text_Unknown = IniRead($DefaultLanguagePath, 'GuiText', 'Unknown', 'Unknown')
 Dim $Text_Restart = IniRead($DefaultLanguagePath, 'GuiText', 'Restart', 'Restart')
-Dim $Text_RestartMsg = IniRead($DefaultLanguagePath, 'GuiText', 'RestartMsg', 'Please restart Vistumbler for language change to take effect')
+Dim $Text_RestartMsg = IniRead($DefaultLanguagePath, 'GuiText', 'RestartMsg', 'Please restart Vistumbler for the change to take effect')
 Dim $Text_Error = IniRead($DefaultLanguagePath, 'GuiText', 'Error', 'Error')
 Dim $Text_NoSignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', 'No signal history found, check to make sure your netsh search words are correct')
 Dim $Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected', 'You did not select an access point')
@@ -1013,6 +1024,7 @@ Dim $Text_RemoveCamera = IniRead($DefaultLanguagePath, 'GuiText', 'RemoveCamera'
 Dim $Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
 Dim $Text_DownloadImages = IniRead($DefaultLanguagePath, 'GuiText', 'DownloadImages', 'Download Images')
 Dim $Text_EnableCamTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', 'Enable camera trigger script')
+Dim $Text_PortableMode = IniRead($DefaultLanguagePath, 'GuiText', 'PortableMode', 'Portable Mode')
 Dim $Text_CameraTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'CameraTriggerScript', 'Camera Trigger Script')
 Dim $Text_CameraTriggerScriptTypes = IniRead($DefaultLanguagePath, 'GuiText', 'CameraTriggerScriptTypes', 'Camera Trigger Script (exe,bat)')
 Dim $Text_SetCameras = IniRead($DefaultLanguagePath, 'GuiText', 'SetCameras', 'Set Cameras')
@@ -1366,8 +1378,8 @@ $GUI_DownloadImages = GUICtrlCreateMenuItem($Text_DownloadImages & " (" & $Text_
 If $DownloadImages = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GUI_CamTriggerMenu = GUICtrlCreateMenuItem($Text_EnableCamTriggerScript & " (" & $Text_Experimental & ")", $Options)
 If $CamTrigger = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
-$GuiMinimalGuiMode = GUICtrlCreateMenuItem($Text_MinimalGuiMode & " (" & $Text_Experimental & ")", $Options)
-If $MinimalGuiMode = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GUI_PortableMode = GUICtrlCreateMenuItem($Text_PortableMode & " (" & $Text_Experimental & ")", $Options)
+If $PortableMode = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $DebugMenu = GUICtrlCreateMenu($Text_Debug, $Options)
 $DebugFunc = GUICtrlCreateMenuItem($Text_DisplayDebug, $DebugMenu)
 If $Debug = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
@@ -1420,6 +1432,8 @@ $GuiAutoScrollToBottom = GUICtrlCreateMenuItem($Text_AutoScrollToBottom, $ViewMe
 If $AutoScrollToBottom = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GuiBatchListviewInsert = GUICtrlCreateMenuItem($Text_ListviewBatchInsertMode & " (" & $Text_Experimental & ")", $ViewMenu)
 If $BatchListviewInsert = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
+$GuiMinimalGuiMode = GUICtrlCreateMenuItem($Text_MinimalGuiMode & " (" & $Text_Experimental & ")", $ViewMenu)
+If $MinimalGuiMode = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 
 ;Settings Menu
 $SettingsMenu = GUICtrlCreateMenu($Text_Settings)
@@ -1519,6 +1533,13 @@ $GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 22)
 GUICtrlSetBkColor ($GraphButton1, $ButtonInactiveColor)
 $GraphButton2 = GUICtrlCreateButton($Text_Graph2, 80, 35, 70, 22)
 GUICtrlSetBkColor ($GraphButton2, $ButtonInactiveColor)
+$SaveAndClearButton = GUICtrlCreateButton($Text_AutoSaveAndClear, 10, 35, 140, 22)
+If $MinimalGuiMode = 1 Then
+	GUICtrlSetState($GraphButton1, $GUI_HIDE)
+	GUICtrlSetState($GraphButton2, $GUI_HIDE)
+Else
+	GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
+EndIf
 
 $ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 155, 10, 300, 15)
 GUICtrlSetColor(-1, $TextColor)
@@ -1550,6 +1571,7 @@ GUICtrlSetOnEvent($ScanButton, 'ScanToggle')
 GUICtrlSetOnEvent($GpsButton, '_GpsToggle')
 GUICtrlSetOnEvent($GraphButton1, '_GraphToggle')
 GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
+GUICtrlSetOnEvent($SaveAndClearButton, '_AutoSaveAndClear')
 ;File Menu
 GUICtrlSetOnEvent($NewSession, '_NewSession')
 GUICtrlSetOnEvent($ImportFromTXT, 'LoadList')
@@ -1590,7 +1612,7 @@ GUICtrlSetOnEvent($DebugFunc, '_DebugToggle')
 GUICtrlSetOnEvent($DebugComGUI, '_DebugComToggle')
 GUICtrlSetOnEvent($GUI_DownloadImages, '_DownloadImagesToggle')
 GUICtrlSetOnEvent($GUI_CamTriggerMenu, '_CamTriggerToggle')
-GUICtrlSetOnEvent($GuiMinimalGuiMode, '_MinimalGuiModeToggle')
+GUICtrlSetOnEvent($GUI_PortableMode, '_PortableModeToggle')
 ;View Menu
 GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
@@ -1601,6 +1623,7 @@ GUICtrlSetOnEvent($UseRssiInGraphsGUI, '_UseRssiInGraphsToggle')
 GUICtrlSetOnEvent($GraphDeadTimeGUI, '_GraphDeadTimeToggle')
 GUICtrlSetOnEvent($GuiAutoScrollToBottom, '_AutoScrollToBottomToggle')
 GUICtrlSetOnEvent($GuiBatchListviewInsert, '_BatchListviewInsertToggle')
+GUICtrlSetOnEvent($GuiMinimalGuiMode, '_MinimalGuiModeToggle')
 ;Settings Menu
 GUICtrlSetOnEvent($SetMisc, '_SettingsGUI_Misc')
 GUICtrlSetOnEvent($SetSave, '_SettingsGUI_Save')
@@ -1719,8 +1742,7 @@ While 1
 	;Play New GPS sound (if enabled)
 	If $SoundOnGps = 1 Then
 		If $Last_Latitude <> $Latitude Or $Last_Longitude <> $Longitude Then
-			;_SoundPlay($new_GPS_sound_open_id, 0)
-			_PlayWavSound($SoundDir & $new_GPS_sound)
+			_SoundPlay($SoundDir & $new_GPS_sound)
 			$Last_Latitude = $Latitude
 			$Last_Longitude = $Longitude
 		EndIf
@@ -2068,7 +2090,7 @@ Func _ScanAccessPoints()
 			EndIf
 		Next
 		;Play New AP sound if sounds are enabled if per-ap sound is disabled
-		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _PlayWavSound($SoundDir & $new_AP_sound);_SoundPlay($new_AP_sound_open_id, 0)
+		If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _SoundPlay($SoundDir & $new_AP_sound)
 		;Return number of active APs
 		Return ($FoundAPs)
 	Else
@@ -2159,7 +2181,7 @@ Func _ScanAccessPoints()
 					EndIf
 				Next
 				;Play New AP sound if sounds are enabled if per-ap sound is disabled
-				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _PlayWavSound($SoundDir & $new_AP_sound);_SoundPlay($new_AP_sound_open_id, 0)
+				If $SoundPerAP = 0 And $FilterMatches <> 0 And $SoundOnAP = 1 Then _SoundPlay($SoundDir & $new_AP_sound)
 			EndIf
 			FileClose($netshtempfile)
 			;Return number of active APs
@@ -3808,6 +3830,20 @@ Func _CamTriggerToggle();Turns cam trigger on or off
 	EndIf
 EndFunc   ;==>_CamTriggerToggle
 
+Func _PortableModeToggle();Turns portable mode on or off
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_PortableModeToggle()') ;#Debug Display
+	If $PortableMode = 1 Then
+		GUICtrlSetState($GUI_PortableMode, $GUI_UNCHECKED)
+		$PortableMode = 0
+	Else
+		GUICtrlSetState($GUI_PortableMode, $GUI_CHECKED)
+		$PortableMode = 1
+	EndIf
+	IniWrite($Default_settings, "Vistumbler", "PortableMode", $PortableMode)
+	MsgBox(0, $Text_Restart, $Text_RestartMsg)
+EndFunc   ;==>_PortableModeToggle
+
+
 Func _ResetSizes()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ResetSizes()') ;#Debug Display
 	$ResetSizes = 1
@@ -4093,8 +4129,7 @@ Func _GetGPS(); Recieves data from gps device
 			$disconnected_time = -1
 			$return = 0
 			_TurnOffGPS()
-			;_SoundPlay($ErrorFlag_sound_open_id, 0)
-			_PlayWavSound($SoundDir & $ErrorFlag_sound)
+			_SoundPlay($SoundDir & $ErrorFlag_sound)
 		EndIf
 	EndIf
 
@@ -4517,8 +4552,8 @@ Func _UpdateGpsDetailsGUI();Updates information on GPS Details GUI
 		GUICtrlSetData($GPRMC_Lon, $Column_Names_Longitude & ": " & _GpsFormat($Longitude2))
 		GUICtrlSetData($GPRMC_Status, $Text_Status & ": " & $Temp_Status)
 		GUICtrlSetData($GPRMC_SpeedKnots, $Text_SpeedInKnots & ": " & $SpeedInKnots & " Kn")
-		GUICtrlSetData($GPRMC_SpeedMPH, $Text_SpeedInMPH & ": " & $SpeedInMPH & " Km/H")
-		GUICtrlSetData($GPRMC_SpeedKmh, $Text_SpeedInKmh & ": " & $SpeedInKmH & " MPH")
+		GUICtrlSetData($GPRMC_SpeedMPH, $Text_SpeedInMPH & ": " & $SpeedInMPH & " MPH")
+		GUICtrlSetData($GPRMC_SpeedKmh, $Text_SpeedInKmh & ": " & $SpeedInKmH & " Km/H")
 		GUICtrlSetData($GPRMC_TrackAngle, $Text_TrackAngle & ": " & $TrackAngle)
 	EndIf
 EndFunc   ;==>_UpdateGpsDetailsGUI
@@ -4839,6 +4874,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			GUISetState(@SW_HIDE, $GraphicGUI)
 			GUICtrlSetState($GraphButton1, $GUI_HIDE)
 			GUICtrlSetState($GraphButton2, $GUI_HIDE)
+			GUICtrlSetState($SaveAndClearButton, $GUI_SHOW)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 		ElseIf $Graph <> 0 Then
 			$Graphic_left = $DataChild_Left
@@ -4862,6 +4898,7 @@ Func _SetControlSizes();Sets control positions in GUI based on the windows curre
 			GUISetState(@SW_SHOW, $GraphicGUI)
 			GUICtrlSetState($GraphButton1, $GUI_SHOW)
 			GUICtrlSetState($GraphButton2, $GUI_SHOW)
+			GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
@@ -5827,7 +5864,6 @@ Func _AddToYourWDB()
 		$WifiDb_User_GUI = GUICtrlCreateInput($WifiDb_User, 39, 144, 241, 20)
 		GUICtrlCreateLabel($Text_OtherUsers, 39, 169, 236, 20)
 		$WifiDb_OtherUsers_GUI = GUICtrlCreateInput($WifiDb_OtherUsers, 39, 189, 241, 20)
-		GUICtrlSetState($WifiDb_OtherUsers_GUI, $GUI_DISABLE)
 		GUICtrlCreateLabel($Text_WifiDB_Api_Key, 39, 213, 236, 20)
 		$WifiDb_ApiKey_GUI = GUICtrlCreateInput($WifiDb_ApiKey, 39, 233, 241, 21)
 
@@ -6014,7 +6050,7 @@ Func _LocateGpsInWifidb($ShowPrompts = 0);Finds GPS based on active acess points
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_LocatePositionInWiFiDB()') ;#Debug Display
 	Local $ActiveMacs = ""
 	Local $return = 0
-	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1 And ListRow<>-1 And BSSID<>''"
+	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1 And ListRow<>-1 And BSSID<>'' ORDER BY Signal DESC"
 	$BssidMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 	$FoundBssidMatch = UBound($BssidMatchArray) - 1
 	If $FoundBssidMatch <> 0 Then
@@ -6930,7 +6966,7 @@ EndFunc   ;==>_AutoRecoveryVS1
 Func _AutoSaveAndClear();Autosaves data to a file name based on current time
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AutoSaveAndClear()') ;#Debug Display
 	$AutoSaveAndClearFile = $SaveDirAuto & $ldatetimestamp & '_AutoSave' & '.VS1'
-	If $AutoSaveAndClearPlaySound = 1 Then _PlayWavSound($SoundDir & $AutoSave_sound)
+	If $AutoSaveAndClearPlaySound = 1 Then _SoundPlay($SoundDir & $AutoSave_sound)
 	GUICtrlSetData($msgdisplay, "Running Auto Save and Clear")
 	$expvs1 = _ExportVS1($AutoSaveAndClearFile, 0)
 	If $expvs1 = 1 Then
@@ -8118,6 +8154,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'EditCamera', $Text_EditCamera)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'DownloadImages', $Text_DownloadImages)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', $Text_EnableCamTriggerScript)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'PortableMode', $Text_PortableMode)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'CameraTriggerScript', $Text_CameraTriggerScript)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'CameraTriggerScriptTypes', $Text_CameraTriggerScriptTypes)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SetCameras', $Text_SetCameras)
@@ -11245,7 +11282,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_UnChecked = IniRead($DefaultLanguagePath, 'GuiText', 'UnChecked', 'UnChecked')
 		$Text_Unknown = IniRead($DefaultLanguagePath, 'GuiText', 'Unknown', 'Unknown')
 		$Text_Restart = IniRead($DefaultLanguagePath, 'GuiText', 'Restart', 'Restart')
-		$Text_RestartMsg = IniRead($DefaultLanguagePath, 'GuiText', 'RestartMsg', 'Please restart Vistumbler for language change to take effect')
+		$Text_RestartMsg = IniRead($DefaultLanguagePath, 'GuiText', 'RestartMsg', 'Please restart Vistumbler for the change to take effect')
 		$Text_Error = IniRead($DefaultLanguagePath, 'GuiText', 'Error', 'Error')
 		$Text_NoSignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', 'No signal history found, check to make sure your netsh search words are correct')
 		$Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected', 'You did not select an access point')
@@ -11458,6 +11495,7 @@ Func _ApplySettingsGUI();Applys settings
 		$Text_EditCamera = IniRead($DefaultLanguagePath, 'GuiText', 'EditCamera', 'Edit Camera')
 		$Text_DownloadImages = IniRead($DefaultLanguagePath, 'GuiText', 'DownloadImages', 'Download Images')
 		$Text_EnableCamTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'EnableCamTriggerScript', 'Enable camera trigger script')
+		$Text_PortableMode = IniRead($DefaultLanguagePath, 'GuiText', 'PortableMode', 'Portable Mode')
 		$Text_CameraTriggerScript = IniRead($DefaultLanguagePath, 'GuiText', 'CameraTriggerScript', 'Camera Trigger Script')
 		$Text_CameraTriggerScriptTypes = IniRead($DefaultLanguagePath, 'GuiText', 'CameraTriggerScriptTypes', 'Camera Trigger Script (exe,bat)')
 		$Text_SetCameras = IniRead($DefaultLanguagePath, 'GuiText', 'SetCameras', 'Set Cameras')
@@ -12192,11 +12230,6 @@ Func _PlayMidiForActiveAPs()
 		EndIf
 	EndIf
 EndFunc   ;==>_PlayMidiForActiveAPs
-
-Func _PlayWavSound($Sound)
-	$run = FileGetShortName(@ScriptDir & '\UDFs\sounder.exe') & ' ' & FileGetShortName($Sound)
-	Run(@ComSpec & " /C " & $run, '', @SW_HIDE)
-EndFunc   ;==>_PlayWavSound
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       UPDATE FUNCTIONS

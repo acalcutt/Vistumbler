@@ -1,0 +1,10 @@
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\bin\Release\macmanuf_mysql.exe.config
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\bin\Release\macmanuf_mysql.exe
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\bin\Release\macmanuf_mysql.pdb
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\bin\Release\MySql.Data.dll
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\bin\Release\Google.Protobuf.dll
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\bin\Release\MySql.Data.xml
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\obj\Release\macmanuf_mysql.csprojResolveAssemblyReference.cache
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\obj\Release\macmanuf_mysql.csproj.CoreCompileInputs.cache
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\obj\Release\macmanuf_mysql.exe
+C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf_mysql\macmanuf_mysql\obj\Release\macmanuf_mysql.pdb
