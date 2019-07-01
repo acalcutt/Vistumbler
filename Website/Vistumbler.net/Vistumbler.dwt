@@ -49,7 +49,6 @@
 						<li><a href="https://github.com/acalcutt/Vistumbler/wiki">Wiki</a></li>
 						<li><a href="https://github.com/acalcutt/Vistumbler">Git Repository</a></li>
 						<li><a href="downloads.html">Downloads</a></li>
-						<li><a href="verhist.html">Version History</a></li>
 						<li><a href="donate.htm">Donate</a></li>
 						<li><a href="http://www.zazzle.com/acalcutt/products">Store</a></li>
 						<li class="inside_dark_header">Other Projects</li>
@@ -69,7 +68,6 @@
 					<p class="center">
 						<span class="nowrap"><a href="/">Home</a></span> | 
 						<span class="nowrap"><a href="downloads.html">Downloads</a></span> | 
-						<span class="nowrap"><a href="verhist.html">Versions</a></span> | 
 						<span class="nowrap"><a href="https://forum.techidiots.net/forum/">Forum</a></span> | 
 						<span class="nowrap"><a href="https://github.com/acalcutt/Vistumbler/wiki">Wiki</a></span> | 
 						<span class="nowrap"><a href="https://github.com/acalcutt/Vistumbler">Git</a></span> | 
@@ -85,28 +83,16 @@
 			</div>
 			<div class="foot">
 				<div class="inside_text_center">
-					<!-- TechIdiots - Bottom Responsive 1 -->
 					<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-					<!-- TechIdiots - Bottom Responsive 1 -->
-					<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4275640341473005" data-ad-slot="1988365535" data-ad-format="auto"></ins>
+					<ins class="adsbygoogle"
+						 style="display:block"
+						 data-ad-client="ca-pub-4275640341473005"
+						 data-ad-slot="3954826537"
+						 data-ad-format="auto"
+						 data-full-width-responsive="true"></ins>
 					<script>
 					(adsbygoogle = window.adsbygoogle || []).push({});
-					</script>
-					<br />
-					<!-- TechIdiots - Bottom Responsive 2 -->
-					<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-					<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4275640341473005" data-ad-slot="4941831933" data-ad-format="auto"></ins>
-					<script>
-					(adsbygoogle = window.adsbygoogle || []).push({});
-					</script>
-					<!-- Start: Show donate images if adblock is enabled -->
-					<script type="text/javascript">
-					<!--
-					    var vidonate = true;
-					//-->
-					</script>
-					<script type="text/javascript" src="https://www.vistumbler.net/js/adframe.js"></script>
-					<script type="text/javascript">
+					</script>					<script type="text/javascript">
 					    if(vidonate) {
 					    //Show donate images instead
 					    	document.write('<a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_vi_wide.png" alt="Donate to Vistumbler"></a><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_ti_wide.png" alt="Donate to Vistumbler"></a>');
