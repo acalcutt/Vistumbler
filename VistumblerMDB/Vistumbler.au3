@@ -1,7 +1,7 @@
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
-#AutoIt3Wrapper_Res_Fileversion=10.6.5.4
+#AutoIt3Wrapper_Res_Fileversion=10.7
 #AutoIt3Wrapper_Res_ProductName=Vistumbler
 #AutoIt3Wrapper_Res_CompanyName=Vistumbler.net
 #AutoIt3Wrapper_Res_Language=1033
@@ -9,19 +9,19 @@
 #AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2019 Andrew Calcutt
+;Copyright (C) 2020 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.15.1
+;AutoIt Version: v3.3.15.3
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.5'
+$version = 'v10.7 Beta 1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2019/06/28'
+$last_modified = '2020/09/06'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -289,6 +289,7 @@ Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
 Dim $NsCancel
 Dim $DefaultApapterID
+Dim $DefaultApapterDesc
 Dim $OpenedPort
 Dim $LastGpsString
 Dim $WifiDbSessionID
@@ -341,7 +342,7 @@ Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDi
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
 Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, $AutoSaveAndClearAPsGUI, $AutoSaveAndClearTimeGUI, $AutoRecoveryBox, $AutoRecoveryDelBox, $AutoSaveAndClearPlaySoundGUI, $AutoRecoveryTimeGUI, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
-Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
+Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvRadWigle, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
 
@@ -999,8 +1000,9 @@ Dim $Text_FilterNameRequired = IniRead($DefaultLanguagePath, "GuiText", "FilterN
 Dim $Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "UpdateManufacturers", "Update Manufacturers")
 Dim $Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
 Dim $Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler file')
-Dim $Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed Comma Delimited file')
-Dim $Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Summary Comma Delimited file')
+Dim $Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Vistumbler Detailed CSV')
+Dim $Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Vistumbler Summary CSV')
+Dim $Text_WigleCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'WigleCsvFile', 'WigleWifi 1.4 Compatible CSV')
 Dim $Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler wi-scan file')
 Dim $Text_WardriveDb3File = IniRead($DefaultLanguagePath, "GuiText", "WardriveDb3File", "Wardrive-android file")
 Dim $Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
@@ -7137,17 +7139,18 @@ EndFunc   ;==>_ExportCsvFilteredData
 
 Func _ExportCsvDataGui($Gui_CsvFilter = 0) ;Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui()') ;#Debug Display
-	$Gui_Csv = GUICreate($Text_ExportToCSV, 543, 132)
+	$Gui_Csv = GUICreate($Text_ExportToCSV, 543, 150)
 	GUISetBkColor($BackgroundColor)
 	$Gui_CsvFile = GUICtrlCreateInput($SaveDir & $ldatetimestamp & '.csv', 20, 20, 409, 21)
 	$GUI_CsvSaveAs = GUICtrlCreateButton($Text_Browse, 440, 20, 81, 22, $WS_GROUP)
 	$Gui_CsvRadDetailed = GUICtrlCreateRadio($Text_DetailedCsvFile, 20, 50, 250, 20)
 	GUICtrlSetState($Gui_CsvRadDetailed, $GUI_CHECKED)
 	$Gui_CsvRadSummary = GUICtrlCreateRadio($Text_SummaryCsvFile, 20, 70, 250, 20)
+	$Gui_CsvRadWigle = GUICtrlCreateRadio($Text_WigleCsvFile, 20, 90, 250, 20)
 	$Gui_CsvFiltered = GUICtrlCreateCheckbox($Text_Filtered, 300, 50, 250, 20)
 	If $Gui_CsvFilter = 1 Then GUICtrlSetState($Gui_CsvFiltered, $GUI_CHECKED)
-	$Gui_CsvOk = GUICtrlCreateButton($Text_Ok, 128, 95, 97, 25, $WS_GROUP)
-	$Gui_CsvCancel = GUICtrlCreateButton($Text_Cancel, 290, 95, 97, 25, $WS_GROUP)
+	$Gui_CsvOk = GUICtrlCreateButton($Text_Ok, 128, 115, 97, 25, $WS_GROUP)
+	$Gui_CsvCancel = GUICtrlCreateButton($Text_Cancel, 290, 115, 97, 25, $WS_GROUP)
 	GUISetState(@SW_SHOW)
 	GUICtrlSetOnEvent($GUI_CsvSaveAs, "_ExportCsvDataGui_SaveAs")
 	GUICtrlSetOnEvent($Gui_CsvOk, "_ExportCsvDataGui_Ok")
@@ -7158,7 +7161,9 @@ EndFunc   ;==>_ExportCsvDataGui
 Func _ExportCsvDataGui_Ok()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui_Ok()') ;#Debug Display
 	$filename = GUICtrlRead($Gui_CsvFile)
-	If GUICtrlRead($Gui_CsvRadSummary) = 1 Then
+	If GUICtrlRead($Gui_CsvRadWigle) = 1 Then
+		$CsvWigleWifi = 1
+	ElseIf GUICtrlRead($Gui_CsvRadSummary) = 1 Then
 		$CsvDetailed = 0
 	Else
 		$CsvDetailed = 1
@@ -7168,10 +7173,15 @@ Func _ExportCsvDataGui_Ok()
 	Else
 		$CsvFiltered = 0
 	EndIf
+
 	_ExportCsvDataGui_Close()
 
 	If StringInStr($filename, '.csv') = 0 Then $filename = $filename & '.csv'
-	$saved = _ExportToCSV($filename, $CsvFiltered, $CsvDetailed)
+	If $CsvWigleWifi = 1 Then
+		$saved = _ExportToWigleCSV($filename, $CsvFiltered)
+	Else
+		$saved = _ExportToCSV($filename, $CsvFiltered, $CsvDetailed)
+	EndIf
 	If $saved = 1 Then
 		MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $filename & '"')
 	Else
@@ -7297,6 +7307,114 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0) ;writes vistumbler data
 		Return (0)
 	EndIf
 EndFunc   ;==>_ExportToCSV
+
+Func _ExportToWigleCSV($savefile, $Filter = 0) ;writes vistumbler data to a csv file
+	ConsoleWrite("$Filter:" & $Filter & @CRLF)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
+	If $Filter = 1 Then
+		$query = $AddQuery
+	Else
+		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	EndIf
+
+	$dev_model = ""
+	$dev_brand = ""
+	$dev_version = ""
+	$wbemFlagReturnImmediately = 0x10
+	$wbemFlagForwardOnly = 0x20
+	$objWMIService = ObjGet("winmgmts:\\.\root\CIMV2")
+	$colItems = $objWMIService.ExecQuery("SELECT * FROM Win32_ComputerSystemProduct", "WQL", $wbemFlagReturnImmediately + $wbemFlagForwardOnly)
+	If IsObj($colItems) Then
+		For $objItem In $colItems
+			$dev_model = $objItem.Name
+			$dev_brand = $objItem.Vendor
+			$dev_version = $objItem.Version
+		Next
+	EndIf
+
+	$file = "WigleWifi-1.4,appRelease=" & StringReplace($Script_Name, ",", "") & " " & StringReplace($version, ",", "") & ",model=" & StringReplace($DefaultApapterDesc, ",", "") & ",release=" & StringReplace($dev_version, ",", "") & ",device=" & StringReplace($dev_model, ",", "") & ",display=,board=,brand=" & StringReplace($dev_brand, ",", "") & @LF
+	$file &= "MAC,SSID,AuthMode,FirstSeen,Channel,RSSI,CurrentLatitude,CurrentLongitude,AltitudeMeters,AccuracyMeters,Type" & @LF
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	If $FoundApMatch > 0 Then
+		For $exp = 1 To $FoundApMatch
+			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
+			$ExpApID = $ApMatchArray[$exp][1]
+			$ExpSSID = $ApMatchArray[$exp][2]
+			$ExpBSSID = StringLower($ApMatchArray[$exp][3])
+			$ExpNET = $ApMatchArray[$exp][4]
+			$ExpRAD = $ApMatchArray[$exp][5]
+			$ExpCHAN = $ApMatchArray[$exp][6]
+			$ExpAUTH = $ApMatchArray[$exp][7]
+			$ExpENCR = $ApMatchArray[$exp][8]
+			$ExpSECTYPE = $ApMatchArray[$exp][9]
+			$ExpBTX = $ApMatchArray[$exp][10]
+			$ExpOTX = $ApMatchArray[$exp][11]
+			$ExpHighSig = $ApMatchArray[$exp][12]
+			$ExpHighRSSI = $ApMatchArray[$exp][13]
+			$ExpMANU = $ApMatchArray[$exp][14]
+			$ExpLAB = $ApMatchArray[$exp][15]
+			$ExpHighGpsID = $ApMatchArray[$exp][16]
+			$ExpFirstID = $ApMatchArray[$exp][17]
+			$ExpLastID = $ApMatchArray[$exp][18]
+
+			;Get All Signals and GpsIDs for current ApID
+			$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID & " And Signal<>0 ORDER BY Date1, Time1"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundHistMatch = UBound($HistMatchArray) - 1
+			For $exph = 1 To $FoundHistMatch
+				$ExpGID = $HistMatchArray[$exph][1]
+				$ExpSig = $HistMatchArray[$exph][2]
+				$ExpRSSI = $HistMatchArray[$exph][3]
+				;Get GPS Data Based on GpsID
+				$query = "SELECT Latitude, Longitude, HorDilPitch, Alt, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID=" & $ExpGID
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpHDOP = $GpsMatchArray[1][3]
+				$ExpAlt = $GpsMatchArray[1][4]
+				$ExpTrack = $GpsMatchArray[1][5]
+				$ExpDate = $GpsMatchArray[1][6]
+				$ExpTime = StringTrimRight($GpsMatchArray[1][7], 4)
+				$Exp_Accuracy = $ExpHDOP * 5
+
+				$ExpFlags = ""
+				If $ExpAUTH = "WPA2-Enterprise" And $ExpENCR = "CCMP" Then
+					$ExpFlags &= "[WPA2-EAP-CCMP]"
+				ElseIf $ExpAUTH = "WPA-Enterprise" And $ExpENCR = "CCMP" Then
+					$ExpFlags &= "[WPA-EAP-CCMP]"
+				ElseIf $ExpAUTH = "WPA2-Personal" And $ExpENCR = "CCMP" Then
+					$ExpFlags &= "[WPA2-PSK-CCMP]"
+				ElseIf $ExpAUTH = "WPA-Personal" And $ExpENCR = "CCMP" Then
+					$ExpFlags &= "[WPA-PSK-CCMP]"
+				ElseIf $ExpAUTH = "WPA2-Enterprise" And $ExpENCR = "TKIP" Then
+					$ExpFlags &= "[WPA2-EAP-TKIP]"
+				ElseIf $ExpAUTH = "WPA-Enterprise" And $ExpENCR = "TKIP" Then
+					$ExpFlags &= "[WPA-EAP-TKIP]"
+				ElseIf $ExpAUTH = "WPA2-Personal" And $ExpENCR = "TKIP" Then
+					$ExpFlags &= "[WPA2-PSK-TKIP]"
+				ElseIf $ExpAUTH = "WPA-Personal" And $ExpENCR = "TKIP" Then
+					$ExpFlags &= "[WPA-PSK-TKIP]"
+				ElseIf $ExpAUTH = "Open" And $ExpENCR = "WEP" Then
+					$ExpFlags &= "[WEP]"
+				EndIf
+
+				If $ExpNET = $SearchWord_Adhoc Or $ExpNET = "Ad Hoc" Then
+					$ExpFlags += "[IBSS]"
+				EndIf
+				;Write wigle wifi csv line
+				$file &= $ExpBSSID & "," & StringReplace($ExpSSID, ",", "") & "," & $ExpFlags & "," & $ExpDate & " " & $ExpTime & "," & $ExpCHAN & "," & $ExpRSSI & "," & $ExpLat & "," & $ExpLon & "," & $ExpAlt & "," & $Exp_Accuracy & ",WIFI" & @LF
+
+			Next
+		Next
+		$savefile = FileOpen($savefile, 128 + 2) ;Open in UTF-8 write mode
+		FileWrite($savefile, $file)
+		FileClose($savefile)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+EndFunc   ;==>_ExportToWigleCSV
 
 Func _SaveToGPX()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveToGPX()') ;#Debug Display
@@ -8996,7 +9114,7 @@ Func _ImportWardriveDb3($DB3file)
 	_SQLite_Exec($WardriveImpDB, "pragma integrity_check") ;Speed vs Data security. Speed Wins for now.
 	Local $NetworkMatchArray, $iRows, $iColumns, $iRval
 	$query = "SELECT bssid, ssid, capabilities, level, frequency, lat, lon, alt, timestamp FROM networks"
-	$iRval = _SQLite_GetTable2d($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
+	$iRval = _SQLite_GetTable2D($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
 	$WardriveAPs = $iRows
 
 	$UpdateTimer = TimerInit()
@@ -9060,7 +9178,7 @@ Func _ImportWardriveDb3($DB3file)
 
 		;Get Network Type from capabilities
 		If StringInStr($Found_Capabilities, "[IBSS]") Then
-			$Found_NETTYPE = "Adhoc"
+			$Found_NETTYPE = "Ad Hoc"
 		Else
 			$Found_NETTYPE = "Infrastructure"
 		EndIf
@@ -10047,7 +10165,7 @@ Func _ExportNS1() ;Saves netstumbler data to a netstumbler summary .ns1
 					If $Found_CHAN = 34 Then $CHAN = '80000000'
 
 					$Flags = 0
-					If $Found_NETTYPE = $SearchWord_Adhoc Then
+					If $Found_NETTYPE = $SearchWord_Adhoc Or $Found_NETTYPE = "Ad Hoc" Then
 						$Flags += 2 ;Set IBSS (Ad hoc) flag
 						$BSS = 'ad-hoc'
 					Else
@@ -11470,8 +11588,9 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "UpdateManufacturers", "Update Manufacturers")
 		$Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
 		$Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler file')
-		$Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed Comma Delimited file')
-		$Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Summary Comma Delimited file')
+		$Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Vistumbler Detailed CSV')
+		$Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Vistumbler Summary CSV')
+		$Text_WigleCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'WigleCsvFile', 'WigleWifi 1.4 Compatible CSV')
 		$Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler wi-scan file')
 		$Text_WardriveDb3File = IniRead($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', 'Wardrive-android file')
 		$Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
@@ -12908,6 +13027,7 @@ Func _AddInterfaces()
 			If $DefaultApapter = $adaptername Then
 				$found_adapter = 1
 				$DefaultApapterID = $adapterid
+				$DefaultApapterDesc = $adapterdesc
 				_Wlan_SelectInterface($DefaultApapterID)
 				GUICtrlSetState($menuid, $GUI_CHECKED)
 			EndIf
@@ -12915,6 +13035,7 @@ Func _AddInterfaces()
 		If $menuid <> 0 And $found_adapter = 0 Then
 			$DefaultApapter = $adaptername
 			$DefaultApapterID = $adapterid
+			$DefaultApapterDesc = $adapterdesc
 			_Wlan_SelectInterface($DefaultApapterID)
 			GUICtrlSetState($menuid, $GUI_CHECKED)
 		EndIf
@@ -12922,7 +13043,6 @@ Func _AddInterfaces()
 		$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
 	Else
 		;Get network interfaces and add the to the interface menu
-		Local $DefaultApapterDesc
 		$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
 		$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
 		For $object In $colNIC
