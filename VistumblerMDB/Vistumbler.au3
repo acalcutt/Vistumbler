@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7 Beta 1'
+$version = 'v10.7 Beta 2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2020/09/06'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -326,7 +326,7 @@ Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GP
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
 Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
-Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
+Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD, $RadWigle
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
 
@@ -8393,8 +8393,9 @@ Func _LoadListGUI($imfile1 = "")
 	$RadCsv = GUICtrlCreateRadio($Text_DetailedCsvFile & ' (CSV)', 10, 60, 240, 20)
 	$RadNs = GUICtrlCreateRadio($Text_NetstumblerTxtFile & ' (TXT, NS1)', 255, 40, 240, 20)
 	$RadWD = GUICtrlCreateRadio($Text_WardriveDb3File & ' (DB3)', 255, 60, 240, 20)
-	$NsOk = GUICtrlCreateButton($Text_Ok, 95, 95, 150, 25, $WS_GROUP)
-	$NsCancel = GUICtrlCreateButton($Text_Close, 255, 95, 150, 25, $WS_GROUP)
+	$RadWigle = GUICtrlCreateRadio($Text_WigleCsvFile & ' (CSV)', 255, 80, 240, 20)
+	$NsOk = GUICtrlCreateButton($Text_Ok, 95, 105, 150, 25, $WS_GROUP)
+	$NsCancel = GUICtrlCreateButton($Text_Close, 255, 105, 150, 25, $WS_GROUP)
 	$progressbar = GUICtrlCreateProgress(10, 135, 480, 20)
 	$percentlabel = GUICtrlCreateLabel($Text_Progress & ': ' & $Text_Ready, 10, 165, 230, 20)
 	$linetotal = GUICtrlCreateLabel($Text_LineTotal & ':', 10, 190, 250, 20)
@@ -8424,7 +8425,10 @@ Func _ImportFileBrowse()
 		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_NetstumblerTxtFile & ' (*.txt;*.ns1)', 1)
 		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 	ElseIf GUICtrlRead($RadWD) = 1 Then
-		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, "Wardrive-android file" & ' (*.db3)', 1)
+		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_WardriveDb3File & ' (*.db3)', 1)
+		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
+	ElseIf GUICtrlRead($RadWigle) = 1 Then
+		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_WigleCsvFile & ' (*.csv)', 1)
 		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 	EndIf
 EndFunc   ;==>_ImportFileBrowse
@@ -8465,6 +8469,8 @@ Func _ImportOk()
 			_ImportNS1($loadfile)
 		ElseIf GUICtrlRead($RadWD) = 1 Then
 			_ImportWardriveDb3($loadfile)
+		ElseIf GUICtrlRead($RadWigle) = 1 Then
+			_ImportWigleCSV($loadfile)
 		EndIf
 		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
@@ -8992,6 +8998,138 @@ Func _ImportCSV($CSVfile)
 		EndIf
 	EndIf
 EndFunc   ;==>_ImportCSV
+
+Func _ImportWigleCSV($CSVfile)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportWigleCSV()') ;#Debug Display
+	$vistumblerfile = FileOpen($CSVfile, 0)
+	If $vistumblerfile <> -1 Then
+		$begintime = TimerInit()
+		$currentline = 1
+		$AddAP = 0
+		$AddGID = 0
+		;Start Importing File
+		$CSVArray = _ParseCSV($CSVfile, ',|', '"')
+		$iSize = UBound($CSVArray) - 1
+		$iCol = UBound($CSVArray, 2)
+		ConsoleWrite($iCol)
+		If $iCol = 11 Then ;Import Wigle Wifi Line
+			For $lc = 2 To $iSize
+				$currentline = $lc
+				$ImpBSSID = StringUpper($CSVArray[$lc][0])
+				$ImpSSID = $CSVArray[$lc][1]
+				If StringLeft($ImpSSID, 1) = '"' And StringRight($ImpSSID, 1) = '"' Then $ImpSSID = StringTrimLeft(StringTrimRight($ImpSSID, 1), 1)
+				$ImpAuthMode = $CSVArray[$lc][2]
+				$ImpDateTime = $CSVArray[$lc][3]
+				$ImpCHAN = $CSVArray[$lc][4]
+				$ImpRSSI = $CSVArray[$lc][5]
+				$ImpSig = _DbToSignalPercent($ImpRSSI)
+				$ImpLat = _Format_GPS_DDD_to_DMM($CSVArray[$lc][6], "N", "S")
+				$ImpLon = _Format_GPS_DDD_to_DMM($CSVArray[$lc][7], "E", "W")
+				$ImpAlt = $CSVArray[$lc][8]
+				$ImpAccuracy = $CSVArray[$lc][9]
+				$ImpHDOP = $ImpAccuracy / 5
+				$ImpType = $CSVArray[$lc][10]
+
+				If $ImpType = "WIFI" And StringLeft($ImpDateTime, 4) <> "1969" Then
+					If StringInStr($ImpAuthMode, "WPA2") And StringInStr($ImpAuthMode, "CCMP") And StringInStr($ImpAuthMode, "EAP") Then
+						$ImpAUTH = "WPA2-Enterprise"
+						$ImpENCR = "CCMP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA") And StringInStr($ImpAuthMode, "CCMP") And StringInStr($ImpAuthMode, "EAP") Then
+						$ImpAUTH = "WPA-Enterprise"
+						$ImpENCR = "CCMP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA2") And StringInStr($ImpAuthMode, "CCMP") Then
+						$ImpAUTH = "WPA2-Personal"
+						$ImpENCR = "CCMP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA") And StringInStr($ImpAuthMode, "CCMP") Then
+						$ImpAUTH = "WPA-Personal"
+						$ImpENCR = "CCMP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA2") And StringInStr($ImpAuthMode, "TKIP") And StringInStr($ImpAuthMode, "EAP") Then
+						$ImpAUTH = "WPA2-Enterprise"
+						$ImpENCR = "TKIP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA") And StringInStr($ImpAuthMode, "TKIP") And StringInStr($ImpAuthMode, "EAP") Then
+						$ImpAUTH = "WPA-Enterprise"
+						$ImpENCR = "TKIP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA2") And StringInStr($ImpAuthMode, "TKIP") Then
+						$ImpAUTH = "WPA2-Personal"
+						$ImpENCR = "TKIP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA") And StringInStr($ImpAuthMode, "TKIP") Then
+						$ImpAUTH = "WPA-Personal"
+						$ImpENCR = "TKIP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WEP") Then
+						$ImpAUTH = "Open"
+						$ImpENCR = "WEP"
+						$Found_SecType = 2
+					Else
+						$ImpAUTH = "Open"
+						$ImpENCR = "None"
+						$Found_SecType = 1
+					EndIf
+
+					If StringInStr($ImpAuthMode, "IBSS") Then
+						$ImpNET = "Ad Hoc" ;
+					Else
+						$ImpNET = "Infrastructure" ;
+					EndIf
+
+					If $ImpCHAN >= 1 And $ImpCHAN <= 14 Then
+						$ImpRAD = "802.11g"
+					ElseIf $ImpCHAN > 14 Then
+						$ImpRAD = "802.11n"
+					Else
+						$ImpRAD = "802.11"
+					EndIf
+
+					$tsplit = StringSplit($ImpDateTime, ' ')
+					$LoadFirstActive_Date = $tsplit[1]
+					$LoadFirstActive_Time = $tsplit[2]
+
+					;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
+					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$FoundGpsMatch = UBound($GpsMatchArray) - 1
+					If $FoundGpsMatch = 0 Then
+						$AddGID += 1
+						$GPS_ID += 1
+						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $ImpLat & '|' & $ImpLon & '|0|' & $ImpHDOP & '|' & $ImpAlt & '|0|0|0|0|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
+						$LoadGID = $GPS_ID
+					Else
+						$LoadGID = $GpsMatchArray[1][1]
+					EndIf
+					;Add First AP Info to DB, Listview, and Treeview
+					$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, "", "", $ImpSig, $ImpRSSI)
+					If $NewApAdded <> 0 Then $AddAP += 1
+				EndIf
+
+				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $iSize) Then
+					$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+					$percent = ($currentline / $iSize) * 100
+					GUICtrlSetData($progressbar, $percent)
+					GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+					GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
+					GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+					GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+					GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline + 1 & "/" & $iSize + 1)
+					GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($iSize / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($iSize / Round($currentline / $min, 1), 1))
+					$UpdateTimer = TimerInit()
+				EndIf
+				If TimerDiff($MemReleaseTimer) > 10000 Then
+					_ReduceMemory()
+					$MemReleaseTimer = TimerInit()
+				EndIf
+				$closebtn = _GUICtrlButton_GetState($NsCancel)
+				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
+			Next
+		EndIf
+	EndIf
+EndFunc   ;==>_ImportWigleCSV
 
 Func _ImportNS1($NS1file)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportNS1()') ;#Debug Display
