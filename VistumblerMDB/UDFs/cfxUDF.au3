@@ -61,7 +61,7 @@ Func _OpenComm($CommPort, $CommBaud = '4800', $CommBits = '8', $CommParity = '0'
 	$commtimeout_Struct=DllStructCreate($commtimeouts)
 	if @error Then errpr()
 
-	$hSerialPort = DllCall($commDll, "hwnd", "CreateFile", "str", "COM" & $CommPort, _
+	$hSerialPort = DllCall($commDll, "hwnd", "CreateFile", "str", "\\.\\COM" & $CommPort, _
 									"int", $GENERIC_READ_WRITE, _
 									"int", 0, _
 									"ptr", 0, _
