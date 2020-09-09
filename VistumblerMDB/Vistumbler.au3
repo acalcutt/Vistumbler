@@ -20,7 +20,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7 Beta 4'
+$version = 'v10.7 Beta 5'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2020/09/09' ;Happy Birthday to me
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -1421,6 +1421,9 @@ _CreateFilterQuerys()
 $GraphViewOptions = GUICtrlCreateMenu($Text_Graph, $ViewMenu)
 $ShowGraph1 = GUICtrlCreateMenuItem($Text_Graph1, $GraphViewOptions)
 $ShowGraph2 = GUICtrlCreateMenuItem($Text_Graph2, $GraphViewOptions)
+If $MinimalGuiMode = 1 Then
+	GUICtrlSetState($GraphViewOptions, $GUI_DISABLE)
+EndIf
 $UseRssiInGraphsGUI = GUICtrlCreateMenuItem($Text_UseRssiInGraphs, $GraphViewOptions)
 If $UseRssiInGraphs = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $GraphViewOptions)
@@ -3568,8 +3571,8 @@ EndFunc   ;==>_GraphToggle2
 Func _MinimalGuiModeToggle()
 	If $MinimalGuiMode = 1 Then
 		$MinimalGuiMode = 0
-		GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
 		GUICtrlSetState($GuiMinimalGuiMode, $GUI_UNCHECKED)
+		GUICtrlSetState($GraphViewOptions, $GUI_ENABLE)
 		GUICtrlSetData($msgdisplay, "Restoring GUI")
 		_UpdateListview(1)
 		$a = WinGetPos($Vistumbler)
@@ -3578,8 +3581,8 @@ Func _MinimalGuiModeToggle()
 	Else
 		$MinimalGuiMode = 1
 		$ClearListAndTree = 1
-		GUICtrlSetState($SaveAndClearButton, $GUI_SHOW)
 		GUICtrlSetState($GuiMinimalGuiMode, $GUI_CHECKED)
+		GUICtrlSetState($GraphViewOptions, $GUI_DISABLE)
 		If $VistumblerState = "Maximized" Then
 			WinSetState($title, "", @SW_RESTORE)
 			$VistumblerState = "Window"
