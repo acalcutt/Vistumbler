@@ -20,7 +20,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7 Beta 3'
+$version = 'v10.7 Beta 4'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2020/09/09' ;Happy Birthday to me
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -813,8 +813,9 @@ Dim $Text_RestartMsg = IniRead($DefaultLanguagePath, 'GuiText', 'RestartMsg', 'P
 Dim $Text_Error = IniRead($DefaultLanguagePath, 'GuiText', 'Error', 'Error')
 Dim $Text_NoSignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', 'No signal history found, check to make sure your netsh search words are correct')
 Dim $Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected', 'You did not select an access point')
-Dim $Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Use Netcomm OCX (more stable) - x32')
-Dim $Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'Use CommMG (less stable) - x32 - x64')
+Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Kernel32')
+Dim $Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX')
+Dim $Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (less stable)')
 Dim $Text_SignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'SignalHistory', 'Signal History')
 Dim $Text_AutoSortEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', 'Auto Sort Every')
 Dim $Text_Seconds = IniRead($DefaultLanguagePath, 'GuiText', 'Seconds', 'Seconds')
@@ -973,7 +974,6 @@ Dim $Text_VistumblerNeedsToRestart = IniRead($DefaultLanguagePath, 'GuiText', 'V
 Dim $Text_AddingApsIntoList = IniRead($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', 'Adding new APs into list')
 Dim $Text_GoogleEarthDoesNotExist = IniRead($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', 'Google earth file does not exist or is set wrong in the AutoKML settings')
 Dim $Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
-Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
 Dim $Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
 Dim $Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 Dim $Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
@@ -1419,6 +1419,8 @@ _CreateFilterQuerys()
 
 ;View Menu
 $GraphViewOptions = GUICtrlCreateMenu($Text_Graph, $ViewMenu)
+$ShowGraph1 = GUICtrlCreateMenuItem($Text_Graph1, $GraphViewOptions)
+$ShowGraph2 = GUICtrlCreateMenuItem($Text_Graph2, $GraphViewOptions)
 $UseRssiInGraphsGUI = GUICtrlCreateMenuItem($Text_UseRssiInGraphs, $GraphViewOptions)
 If $UseRssiInGraphs = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $GraphViewOptions)
@@ -1502,7 +1504,7 @@ $Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics(900, 400, $Graphic)
 $Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
 GUISwitch($Vistumbler)
 
-$ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
+$ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 67, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
 _GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT, $LVS_EX_DOUBLEBUFFER))
 _GUICtrlListView_SetBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
 _GUICtrlListView_SetTextBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
@@ -1523,38 +1525,29 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
-$TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5, 65, 150, 585)
+$TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5, 67, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 WinSetState($TreeviewAPs, "", @SW_HIDE)
 
-$ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 22)
+$ScanButton = GUICtrlCreateButton($Text_ScanAPs, 5, 5, 75, 45)
 GUICtrlSetBkColor($ScanButton, $ButtonInactiveColor)
 If $AutoScan = 1 Then ScanToggle()
-$GpsButton = GUICtrlCreateButton($Text_UseGPS, 80, 8, 70, 22)
+$GpsButton = GUICtrlCreateButton($Text_UseGPS, 82, 5, 75, 45)
 GUICtrlSetBkColor($GpsButton, $ButtonInactiveColor)
-$GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 22)
-GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
-$GraphButton2 = GUICtrlCreateButton($Text_Graph2, 80, 35, 70, 22)
-GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
-$SaveAndClearButton = GUICtrlCreateButton($Text_AutoSaveAndClear, 10, 35, 140, 22)
-If $MinimalGuiMode = 1 Then
-	GUICtrlSetState($GraphButton1, $GUI_HIDE)
-	GUICtrlSetState($GraphButton2, $GUI_HIDE)
-Else
-	GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
-EndIf
+$SaveAndClearButton = GUICtrlCreateButton($Text_AutoSaveAndClear, 159, 5, 75, 45, BitOR($BS_MULTILINE, $BS_VCENTER))
+$msgdisplay = GUICtrlCreateLabel('', 10, 50, 385, 15)
+GUICtrlSetColor(-1, $TextColor)
 
-$ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 155, 10, 300, 15)
+$GuiLat = GUICtrlCreateLabel($Text_Latitude & ': ' & _GpsFormat($Latitude), 245, 15, 150, 15)
 GUICtrlSetColor(-1, $TextColor)
-$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 155, 25, 300, 15)
+$GuiLon = GUICtrlCreateLabel($Text_Longitude & ': ' & _GpsFormat($Longitude), 245, 30, 150, 15)
 GUICtrlSetColor(-1, $TextColor)
-$GuiLat = GUICtrlCreateLabel($Text_Latitude & ': ' & _GpsFormat($Latitude), 460, 10, 300, 15)
+
+$ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 400, 15, 200, 15)
 GUICtrlSetColor(-1, $TextColor)
-$GuiLon = GUICtrlCreateLabel($Text_Longitude & ': ' & _GpsFormat($Longitude), 460, 25, 300, 15)
+$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 400, 30, 200, 15)
 GUICtrlSetColor(-1, $TextColor)
-$debugdisplay = GUICtrlCreateLabel('', 765, 10, 200, 15)
-GUICtrlSetColor(-1, $TextColor)
-$msgdisplay = GUICtrlCreateLabel('', 155, 40, 610, 15)
+$debugdisplay = GUICtrlCreateLabel('', 400, 50, 200, 15)
 GUICtrlSetColor(-1, $TextColor)
 
 GUISwitch($Vistumbler)
@@ -1572,8 +1565,6 @@ GUISetOnEvent($GUI_EVENT_MAXIMIZE, '_ResetSizes')
 ;Buttons
 GUICtrlSetOnEvent($ScanButton, 'ScanToggle')
 GUICtrlSetOnEvent($GpsButton, '_GpsToggle')
-GUICtrlSetOnEvent($GraphButton1, '_GraphToggle')
-GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
 GUICtrlSetOnEvent($SaveAndClearButton, '_AutoSaveAndClear')
 ;File Menu
 GUICtrlSetOnEvent($NewSession, '_NewSession')
@@ -1617,6 +1608,8 @@ GUICtrlSetOnEvent($GUI_DownloadImages, '_DownloadImagesToggle')
 GUICtrlSetOnEvent($GUI_CamTriggerMenu, '_CamTriggerToggle')
 GUICtrlSetOnEvent($GUI_PortableMode, '_PortableModeToggle')
 ;View Menu
+GUICtrlSetOnEvent($ShowGraph1, '_GraphToggle')
+GUICtrlSetOnEvent($ShowGraph2, '_GraphToggle2')
 GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
 GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
@@ -3550,19 +3543,11 @@ Func _GraphToggle() ; Graph1 Button
 	GUISetState(@SW_LOCK, $Vistumbler) ;lock gui - will be unlocked by _SetControlSizes
 	If $Graph = 1 Then
 		$Graph = 0
-		GUICtrlSetData($GraphButton1, $Text_Graph1)
-		GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
-	ElseIf $Graph = 2 Then
+		GUICtrlSetState($ShowGraph1, $GUI_UNCHECKED)
+	Else
 		$Graph = 1
-		GUISwitch($Vistumbler)
-		GUICtrlSetData($GraphButton1, $Text_NoGraph)
-		GUICtrlSetBkColor($GraphButton1, $ButtonActiveColor)
-		GUICtrlSetData($GraphButton2, $Text_Graph2)
-		GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
-	ElseIf $Graph = 0 Then
-		$Graph = 1
-		GUICtrlSetData($GraphButton1, $Text_NoGraph)
-		GUICtrlSetBkColor($GraphButton1, $ButtonActiveColor)
+		GUICtrlSetState($ShowGraph1, $GUI_CHECKED)
+		GUICtrlSetState($ShowGraph2, $GUI_UNCHECKED)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle
@@ -3571,18 +3556,11 @@ Func _GraphToggle2() ; Graph2 Button
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphToggle2()') ;#Debug Display
 	If $Graph = 2 Then
 		$Graph = 0
-		GUICtrlSetData($GraphButton2, $Text_Graph2)
-		GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
-	ElseIf $Graph = 1 Then
+		GUICtrlSetState($ShowGraph2, $GUI_UNCHECKED)
+	Else
 		$Graph = 2
-		GUICtrlSetData($GraphButton2, $Text_NoGraph)
-		GUICtrlSetBkColor($GraphButton2, $ButtonActiveColor)
-		GUICtrlSetData($GraphButton1, $Text_Graph1)
-		GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
-	ElseIf $Graph = 0 Then
-		$Graph = 2
-		GUICtrlSetData($GraphButton2, $Text_NoGraph)
-		GUICtrlSetBkColor($GraphButton2, $ButtonActiveColor)
+		GUICtrlSetState($ShowGraph2, $GUI_CHECKED)
+		GUICtrlSetState($ShowGraph1, $GUI_UNCHECKED)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle2
@@ -3590,6 +3568,7 @@ EndFunc   ;==>_GraphToggle2
 Func _MinimalGuiModeToggle()
 	If $MinimalGuiMode = 1 Then
 		$MinimalGuiMode = 0
+		GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
 		GUICtrlSetState($GuiMinimalGuiMode, $GUI_UNCHECKED)
 		GUICtrlSetData($msgdisplay, "Restoring GUI")
 		_UpdateListview(1)
@@ -3599,6 +3578,7 @@ Func _MinimalGuiModeToggle()
 	Else
 		$MinimalGuiMode = 1
 		$ClearListAndTree = 1
+		GUICtrlSetState($SaveAndClearButton, $GUI_SHOW)
 		GUICtrlSetState($GuiMinimalGuiMode, $GUI_CHECKED)
 		If $VistumblerState = "Maximized" Then
 			WinSetState($title, "", @SW_RESTORE)
@@ -4868,16 +4848,13 @@ Func _SetControlSizes() ;Sets control positions in GUI based on the windows curr
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Or $MinimalGuiMode <> $MinimalGuiMode_old Then
 		$DataChild_Left = 2
 		$DataChild_Width = DllStructGetData($a, "Right")
-		$DataChild_Top = 65
+		$DataChild_Top = 67
 		$DataChild_Height = DllStructGetData($a, "Bottom") - $DataChild_Top
 		If $MinimalGuiMode = 1 Then
 			GUISetState(@SW_LOCK, $Vistumbler)
 			WinSetState($TreeviewAPs, "", @SW_HIDE)
 			WinSetState($ListviewAPs, "", @SW_HIDE)
 			GUISetState(@SW_HIDE, $GraphicGUI)
-			GUICtrlSetState($GraphButton1, $GUI_HIDE)
-			GUICtrlSetState($GraphButton2, $GUI_HIDE)
-			GUICtrlSetState($SaveAndClearButton, $GUI_SHOW)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 		ElseIf $Graph <> 0 Then
 			$Graphic_left = $DataChild_Left
@@ -4899,9 +4876,6 @@ Func _SetControlSizes() ;Sets control positions in GUI based on the windows curr
 			WinSetState($TreeviewAPs, "", @SW_HIDE)
 			WinSetState($ListviewAPs, "", @SW_SHOW)
 			GUISetState(@SW_SHOW, $GraphicGUI)
-			GUICtrlSetState($GraphButton1, $GUI_SHOW)
-			GUICtrlSetState($GraphButton2, $GUI_SHOW)
-			GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
@@ -4924,8 +4898,6 @@ Func _SetControlSizes() ;Sets control positions in GUI based on the windows curr
 			WinSetState($TreeviewAPs, "", @SW_SHOW)
 			WinSetState($ListviewAPs, "", @SW_SHOW)
 			GUISetState(@SW_HIDE, $GraphicGUI)
-			GUICtrlSetState($GraphButton1, $GUI_SHOW)
-			GUICtrlSetState($GraphButton2, $GUI_SHOW)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 		EndIf
 		$sizes_old = $sizes
@@ -6975,6 +6947,7 @@ Func _AutoSaveAndClear() ;Autosaves data to a file name based on current time
 	If $expvs1 = 1 Then
 		GUICtrlSetData($msgdisplay, "File Exported Successfully. Clearing List")
 		_ClearAll()
+		$newdata = 0
 	Else
 		GUICtrlSetData($msgdisplay, "Error Saving File. List will not be cleared.")
 	EndIf
@@ -8064,6 +8037,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Error', $Text_Error)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', $Text_NoSignalHistory)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoApSelected', $Text_NoApSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNetcomm', $Text_UseNetcomm)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseCommMG', $Text_UseCommMG)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SignalHistory', $Text_SignalHistory)
@@ -8220,7 +8194,6 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', $Text_AddingApsIntoList)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', $Text_GoogleEarthDoesNotExist)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', $Text_AutoKmlIsNotStarted)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', $Text_UnableToGuessSearchwords)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectedAP', $Text_SelectedAP)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AllAPs', $Text_AllAPs)
@@ -10538,12 +10511,14 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
 		$GroupComInt = GUICtrlCreateGroup($Text_ComInterface, 24, 48, 633, 105)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseNetcomm = GUICtrlCreateRadio($Text_UseNetcomm, 40, 70, 361, 20)
+
+		$Rad_UseKernel32 = GUICtrlCreateRadio($Text_UseKernel32, 40, 70, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 95, 361, 20)
+		$Rad_UseNetcomm = GUICtrlCreateRadio($Text_UseNetcomm, 40, 95, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseKernel32 = GUICtrlCreateRadio($Text_UseKernel32, 40, 120, 361, 20)
+		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 120, 361, 20)
 		GUICtrlSetColor(-1, $TextColor)
+
 		If $GpsType = 0 Then
 			GUICtrlSetState($Rad_UseCommMG, $GUI_CHECKED)
 		ElseIf $GpsType = 1 Then
@@ -11543,8 +11518,9 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_Error = IniRead($DefaultLanguagePath, 'GuiText', 'Error', 'Error')
 		$Text_NoSignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', 'No signal history found, check to make sure your netsh search words are correct')
 		$Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected', 'You did not select an access point')
-		$Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Use Netcomm OCX (more stable) - x32')
-		$Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'Use CommMG (less stable) - x32 - x64')
+		$Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Kernel32')
+		$Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX')
+		$Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (less stable)')
 		$Text_SignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'SignalHistory', 'Signal History')
 		$Text_AutoSortEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', 'Auto Sort Every')
 		$Text_Seconds = IniRead($DefaultLanguagePath, 'GuiText', 'Seconds', 'Seconds')
@@ -11699,7 +11675,6 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_AddingApsIntoList = IniRead($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', 'Adding new APs into list')
 		$Text_GoogleEarthDoesNotExist = IniRead($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', 'Google earth file does not exist or is set wrong in the AutoKML settings')
 		$Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
-		$Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
 		$Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
 		$Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 		$Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
