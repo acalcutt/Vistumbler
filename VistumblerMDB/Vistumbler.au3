@@ -20,7 +20,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7 Beta 6'
+$version = 'v10.7 Beta 7'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2020/09/10'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -823,7 +823,7 @@ Dim $Text_Ascending = IniRead($DefaultLanguagePath, 'GuiText', 'Ascending', 'Asc
 Dim $Text_Decending = IniRead($DefaultLanguagePath, 'GuiText', 'Decending', 'Decending')
 Dim $Text_AutoRecoveryVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'AutoRecoveryVS1', 'Auto Recovery VS1')
 Dim $Text_AutoSaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClear', 'Auto Save And Clear')
-Dim $Text_SaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAndClear', 'Save And Clear')
+Dim $Text_SaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAndClear', 'Sav&e && Clear')
 Dim $Text_AutoSaveEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', 'Auto Save Every')
 Dim $Text_DelAutoSaveOnExit = IniRead($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', 'Delete Auto Save file on exit')
 Dim $Text_OpenSaveFolder = IniRead($DefaultLanguagePath, 'GuiText', 'OpenSaveFolder', 'Open Save Folder')
@@ -1295,7 +1295,7 @@ $FontFamily_Arial = _GDIPlus_FontFamilyCreate("Arial")
 ;                                                       GUI
 ;-------------------------------------------------------------------------------------------------------------------------------
 Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & _DateLocalFormat($last_modified) & ' - (' & $VistumblerDbName & ')'
-$Vistumbler = GUICreate($title, 980, 692, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+$Vistumbler = GUICreate($title, 700, 600, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
 GUISetFont($TextSize)
 
@@ -1529,29 +1529,30 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
-$TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5, 67, 150, 585)
+$TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5735, 67, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 WinSetState($TreeviewAPs, "", @SW_HIDE)
 
-$ScanButton = GUICtrlCreateButton($Text_ScanAPs, 5, 5, 85, 45)
+$ScanButton = GUICtrlCreateButton($Text_ScanAPs, 5, 5, 90, 45)
 GUICtrlSetBkColor($ScanButton, $ButtonInactiveColor)
 If $AutoScan = 1 Then ScanToggle()
-$GpsButton = GUICtrlCreateButton($Text_UseGPS, 90, 5, 85, 45)
+$GpsButton = GUICtrlCreateButton($Text_UseGPS, 95, 5, 90, 45)
 GUICtrlSetBkColor($GpsButton, $ButtonInactiveColor)
-$SaveAndClearButton = GUICtrlCreateButton($Text_SaveAndClear, 175, 5, 85, 45, BitOR($BS_MULTILINE, $BS_VCENTER))
-$msgdisplay = GUICtrlCreateLabel('', 10, 50, 435, 15)
+$SaveAndClearButton = GUICtrlCreateButton($Text_SaveAndClear, 185, 5, 90, 45, BitOR($BS_MULTILINE, $BS_VCENTER))
+
+$GuiLat = GUICtrlCreateLabel($Text_Latitude & ': ' & _GpsFormat($Latitude), 285, 10, 200, 20)
+GUICtrlSetColor(-1, $TextColor)
+$GuiLon = GUICtrlCreateLabel($Text_Longitude & ': ' & _GpsFormat($Longitude), 285, 30, 200, 20)
 GUICtrlSetColor(-1, $TextColor)
 
-$GuiLat = GUICtrlCreateLabel($Text_Latitude & ': ' & _GpsFormat($Latitude), 265, 15, 170, 15)
+$ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 485, 10, 300, 20)
 GUICtrlSetColor(-1, $TextColor)
-$GuiLon = GUICtrlCreateLabel($Text_Longitude & ': ' & _GpsFormat($Longitude), 265, 30, 170, 15)
+$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 485, 30, 300, 20)
 GUICtrlSetColor(-1, $TextColor)
 
-$ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 435, 15, 250, 15)
+$msgdisplay = GUICtrlCreateLabel('', 7, 50, 478, 20)
 GUICtrlSetColor(-1, $TextColor)
-$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 435, 30, 250, 15)
-GUICtrlSetColor(-1, $TextColor)
-$debugdisplay = GUICtrlCreateLabel('', 400, 50, 200, 15)
+$debugdisplay = GUICtrlCreateLabel('', 485, 50, 300, 20)
 GUICtrlSetColor(-1, $TextColor)
 
 GUISwitch($Vistumbler)
@@ -4852,7 +4853,7 @@ Func _SetControlSizes() ;Sets control positions in GUI based on the windows curr
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Or $MinimalGuiMode <> $MinimalGuiMode_old Then
 		$DataChild_Left = 2
 		$DataChild_Width = DllStructGetData($a, "Right")
-		$DataChild_Top = 67
+		$DataChild_Top = 70
 		$DataChild_Height = DllStructGetData($a, "Bottom") - $DataChild_Top
 		If $MinimalGuiMode = 1 Then
 			GUISetState(@SW_LOCK, $Vistumbler)
@@ -11534,7 +11535,7 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_Decending = IniRead($DefaultLanguagePath, 'GuiText', 'Decending', 'Decending')
 		$Text_AutoRecoveryVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'AutoRecoveryVS1', 'Auto Recovery VS1')
 		$Text_AutoSaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClear', 'Auto Save And Clear')
-		$Text_SaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAndClear', 'Save And Clear')
+		$Text_SaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAndClear', 'Sav&e && Clear')
 		$Text_AutoSave = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSave', 'AutoSave')
 		$Text_AutoSaveEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', 'AutoSave Every')
 		$Text_DelAutoSaveOnExit = IniRead($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', 'Delete Autosave file on exit')
