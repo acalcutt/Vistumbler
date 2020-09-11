@@ -8,6 +8,8 @@
 	Andrew Calcutt 05/16/2009 - Started converting to UDF
 	V2.1
 	Mikko Keski-Heroja 02/23/2011 - UDF is now compatible with Opt("MustDeclareVars",1) and Date.au3. Global variable $dll is renamed to $commDll.
+	V2.2
+	Andrew Calcutt - Fixed COM10 + Support
 #ce
 
 Global $commDll
@@ -61,7 +63,7 @@ Func _OpenComm($CommPort, $CommBaud = '4800', $CommBits = '8', $CommParity = '0'
 	$commtimeout_Struct=DllStructCreate($commtimeouts)
 	if @error Then errpr()
 
-	$hSerialPort = DllCall($commDll, "hwnd", "CreateFile", "str", "\\.\\COM" & $CommPort, _
+	$hSerialPort = DllCall($commDll, "hwnd", "CreateFile", "str", "\\.\COM" & $CommPort, _
 									"int", $GENERIC_READ_WRITE, _
 									"int", 0, _
 									"ptr", 0, _
