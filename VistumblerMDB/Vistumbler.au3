@@ -20,9 +20,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7 Beta 8'
+$version = 'v10.7 Beta 9'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2020/09/11'
+$last_modified = '2020/09/12'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -340,6 +340,7 @@ Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioTyp
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirAutoRecovery, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_CBAColor, $GUI_CBIColor, $GUI_TextSize, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
+Dim $GUI_GpsLogFileLocation, $GUI_GpsLogEnabled, $GUI_GpsLogDeleteOnExit
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
 Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, $AutoSaveAndClearAPsGUI, $AutoSaveAndClearTimeGUI, $AutoRecoveryBox, $AutoRecoveryDelBox, $AutoSaveAndClearPlaySoundGUI, $AutoRecoveryTimeGUI, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
@@ -506,6 +507,9 @@ Dim $GPSformat = IniRead($settings, 'GpsSettings', 'GPSformat', 3)
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 Dim $GpsDisconnect = IniRead($settings, 'GpsSettings', 'GpsDisconnect', 1)
 Dim $GpsReset = IniRead($settings, 'GpsSettings', 'GpsReset', 1)
+Dim $GpsLogLocation = IniRead($settings, 'AutoKML', 'GpsLogLocation', $SaveDir & "gps_nmea_log.txt")
+Dim $GpsLogEnabled = IniRead($settings, 'GpsSettings', 'GpsLogEnabled', 0)
+Dim $GpsLogDeleteOnExit = IniRead($settings, 'GpsSettings', 'GpsLogDeleteOnExit', 1)
 
 Dim $SortTime = IniRead($settings, 'AutoSort', 'AutoSortTime', 60)
 Dim $AutoSort = IniRead($settings, 'AutoSort', 'AutoSort', 0)
@@ -814,8 +818,8 @@ Dim $Text_Error = IniRead($DefaultLanguagePath, 'GuiText', 'Error', 'Error')
 Dim $Text_NoSignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', 'No signal history found, check to make sure your netsh search words are correct')
 Dim $Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected', 'You did not select an access point')
 Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Kernel32')
-Dim $Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX')
-Dim $Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (less stable)')
+Dim $Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX (Needs http://www.hardandsoftware.net/NETCommOCX.htm)')
+Dim $Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (included, but will crash if gps is disconnected improperly)')
 Dim $Text_SignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'SignalHistory', 'Signal History')
 Dim $Text_AutoSortEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', 'Auto Sort Every')
 Dim $Text_Seconds = IniRead($DefaultLanguagePath, 'GuiText', 'Seconds', 'Seconds')
@@ -1082,6 +1086,11 @@ Dim $Text_ButtonActiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonAc
 Dim $Text_ButtonInactiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', 'Button Inactive Color')
 Dim $Text_Text = IniRead($DefaultLanguagePath, 'GuiText', 'Text', 'Text')
 Dim $Text_GUITextSize = IniRead($DefaultLanguagePath, 'GuiText', 'GUITextSize', 'GUI Text Size')
+Dim $Text_GPSLogging = IniRead($DefaultLanguagePath, 'GuiText', 'GPSLogging', 'GPS Logging')
+Dim $Text_SaveNMEAData = IniRead($DefaultLanguagePath, 'GuiText', 'SaveNMEAData', 'Save NMEA Data to log file')
+Dim $Text_DeleteNMEAlog = IniRead($DefaultLanguagePath, 'GuiText', 'DeleteNMEAlog', 'Delete NMEA Data log file on exit')
+Dim $Text_LogFileLocation = IniRead($DefaultLanguagePath, 'GuiText', 'LogFileLocation', 'Log file location')
+Dim $Text_NMEALogError = IniRead($DefaultLanguagePath, 'GuiText', 'NMEALogError', 'Error opening NMEA log file')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -3072,6 +3081,7 @@ Func _ClearAllAp()
 	$APID = 0
 	$CamID = 0
 	$GPS_ID = 0
+	$GPS_ID = 0
 	$HISTID = 0
 	;Clear DB
 	$query = "DELETE * FROM AP"
@@ -3387,6 +3397,7 @@ Func _Exit($SaveSettings = 1)
 		ProcessClose($PID)
 		If TimerDiff($CloseTimer) >= 10000 Then ExitLoop
 	WEnd
+	If $GpsLogDeleteOnExit = 1 And FileExists($GpsLogLocation) Then FileDelete($GpsLogLocation)
 	FileDelete($GoogleEarth_ActiveFile)
 	FileDelete($GoogleEarth_DeadFile)
 	FileDelete($GoogleEarth_GpsFile)
@@ -4027,7 +4038,8 @@ Func _GetGPS() ; Recieves data from gps device
 	While 1 ;Loop to extract gps data untill location is found or timout time is reached
 		If $UseGPS = 0 Then ExitLoop
 		If $GpsType = 0 Then ;Use CommMG
-			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8) ;Read data line from GPS
+			$dataline = StringStripWS(_CommGetLine(@CR, 768, $maxtime), 8) ;Read data line from GPS
+			If $GpsLogEnabled = 1 Then _LogGpsToFile($dataline)
 			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline) ;Show data line in "GPS Details" GUI if it is open
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 				$FoundData = 1
@@ -4049,6 +4061,7 @@ Func _GetGPS() ; Recieves data from gps device
 						$gps = StringSplit($inputdata, @CR) ;Split data string by CR and put data into the $gps array
 						For $readloop = 1 To $gps[0] ;go through array
 							$gpsline = StringStripWS($gps[$readloop], 3)
+							If $GpsLogEnabled = 1 Then _LogGpsToFile($gpsline)
 							If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline) ;Show data line in "GPS Details" GUI if it is open
 							If StringInStr($gpsline, '$') And StringInStr($gpsline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 								If StringInStr($gpsline, "$GPGGA") Then
@@ -4064,13 +4077,14 @@ Func _GetGPS() ; Recieves data from gps device
 				EndIf
 			EndIf
 		ElseIf $GpsType = 2 Then ;Use Kernel32
-			$gstring = StringStripWS(_rxwait($OpenedPort, '500', $maxtime), 8) ;Read data line from GPS
+			$gstring = StringStripWS(_rxwait($OpenedPort, '768', $maxtime), 8) ;Read data line from GPS
 			$dataline = $gstring ; & $LastGpsString
 			$LastGpsString = $gstring
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
 				$FoundData = 1
 				$dlsplit = StringSplit($dataline, '$')
 				For $gda = 1 To $dlsplit[0]
+					If $GpsLogEnabled = 1 Then _LogGpsToFile($dlsplit[$gda])
 					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]) ;Show data line in "GPS Details" GUI if it is open
 					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 						If StringInStr($dlsplit[$gda], "GPGGA") Then
@@ -4334,6 +4348,17 @@ Func _GpsFormat($gps) ;Converts ddmm.mmmm to the users set gps format
 	If $GPSformat = 3 Then $return = $gps
 	Return ($return)
 EndFunc   ;==>_GpsFormat
+
+Func _LogGpsToFile($data)
+	Local $hFileOpen = FileOpen($GpsLogLocation, $FO_APPEND)
+	If $hFileOpen = -1 Then
+		GUICtrlSetData($msgdisplay, $Text_NMEALogError)
+	Else
+		FileWriteLine($hFileOpen, $data & @CRLF)
+		FileClose($hFileOpen)
+	EndIf
+
+EndFunc   ;==>_LogGpsToFile
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS COMPASS GUI FUNCTIONS
@@ -7747,6 +7772,9 @@ Func _WriteINI()
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
 	IniWrite($settings, 'GpsSettings', 'GpsDisconnect', $GpsDisconnect)
 	IniWrite($settings, 'GpsSettings', 'GpsReset', $GpsReset)
+	IniWrite($settings, 'GpsSettings', 'GpsLogLocation', $GpsLogLocation)
+	IniWrite($settings, 'GpsSettings', 'GpsLogEnabled', $GpsLogEnabled)
+	IniWrite($settings, 'GpsSettings', 'GpsLogDeleteOnExit', $GpsLogDeleteOnExit)
 
 	IniWrite($settings, "AutoSort", "AutoSortTime", $SortTime)
 	IniWrite($settings, "AutoSort", "AutoSort", $AutoSort)
@@ -8327,6 +8355,11 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', $Text_ButtonInactiveColor)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Text', $Text_Text)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'GUITextSize', $Text_GUITextSize)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GPSLogging', $Text_GPSLogging)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SaveNMEAData', $Text_SaveNMEAData)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteNMEAlog', $Text_DeleteNMEAlog)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LogFileLocation', $Text_LogFileLocation)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NMEALogError', $Text_NMEALogError)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -10536,14 +10569,14 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		;GPS Tab
 		$Tab_Gps = GUICtrlCreateTabItem($Text_Gps)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		$GroupComInt = GUICtrlCreateGroup($Text_ComInterface, 24, 48, 633, 105)
+		$GroupComInt = GUICtrlCreateGroup($Text_ComInterface, 24, 35, 633, 100)
 		GUICtrlSetColor(-1, $TextColor)
 
-		$Rad_UseKernel32 = GUICtrlCreateRadio($Text_UseKernel32, 40, 70, 361, 20)
+		$Rad_UseKernel32 = GUICtrlCreateRadio($Text_UseKernel32, 40, 55, 580, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseNetcomm = GUICtrlCreateRadio($Text_UseNetcomm, 40, 95, 361, 20)
+		$Rad_UseNetcomm = GUICtrlCreateRadio($Text_UseNetcomm, 40, 80, 580, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 120, 361, 20)
+		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 105, 580, 20)
 		GUICtrlSetColor(-1, $TextColor)
 
 		If $GpsType = 0 Then
@@ -10553,19 +10586,19 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		ElseIf $GpsType = 2 Then
 			GUICtrlSetState($Rad_UseKernel32, $GUI_CHECKED)
 		EndIf
-		$GroupComSet = GUICtrlCreateGroup($Text_ComSettings, 24, 160, 633, 185)
+		$GroupComSet = GUICtrlCreateGroup($Text_ComSettings, 24, 140, 633, 100)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_Com, 44, 180, 275, 15)
+		GUICtrlCreateLabel($Text_Com, 40, 160, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Comport = GUICtrlCreateCombo("1", 44, 195, 275, 25)
+		$GUI_Comport = GUICtrlCreateCombo("1", 115, 160, 150, 20)
 		GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20", $ComPort)
-		GUICtrlCreateLabel($Text_Baud, 44, 235, 275, 15)
+		GUICtrlCreateLabel($Text_Baud, 40, 185, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Baud = GUICtrlCreateCombo("4800", 44, 250, 275, 25)
+		$GUI_Baud = GUICtrlCreateCombo("4800", 115, 185, 150, 20)
 		GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
-		GUICtrlCreateLabel($Text_StopBit, 44, 290, 275, 15)
+		GUICtrlCreateLabel($Text_StopBit, 40, 210, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_StopBit = GUICtrlCreateCombo("1", 44, 305, 275, 25)
+		$GUI_StopBit = GUICtrlCreateCombo("1", 115, 210, 150, 20)
 		GUICtrlSetData(-1, "1.5|2", $STOPBIT)
 
 		If $PARITY = 'E' Then
@@ -10579,12 +10612,26 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		Else
 			$l_PARITY = $Text_None
 		EndIf
-		GUICtrlCreateLabel($Text_Parity, 364, 180, 275, 15)
-		$GUI_Parity = GUICtrlCreateCombo($Text_None, 364, 195, 275, 25)
+		GUICtrlCreateLabel($Text_Parity, 360, 160, 75, 20)
+		$GUI_Parity = GUICtrlCreateCombo($Text_None, 435, 160, 150, 20)
 		GUICtrlSetData(-1, $Text_Even & '|' & $Text_Mark & '|' & $Text_Odd & '|' & $Text_Space, $l_PARITY)
-		GUICtrlCreateLabel($Text_DataBit, 364, 235, 275, 15)
-		$GUI_DataBit = GUICtrlCreateCombo("4", 364, 250, 275, 25)
+		GUICtrlCreateLabel($Text_DataBit, 360, 185, 75, 20)
+		$GUI_DataBit = GUICtrlCreateCombo("4", 435, 185, 150, 20)
 		GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
+
+		$GroupGpsLogging = GUICtrlCreateGroup($Text_GPSLogging, 24, 245, 633, 100)
+		$GUI_GpsLogEnabled = GUICtrlCreateCheckbox($Text_SaveNMEAData, 40, 265, 400, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		If $GpsLogEnabled = 1 Then GUICtrlSetState($GUI_GpsLogEnabled, $GUI_CHECKED)
+		$GUI_GpsLogDeleteOnExit = GUICtrlCreateCheckbox($Text_DeleteNMEAlog, 40, 285, 400, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		If $GpsLogDeleteOnExit = 1 Then GUICtrlSetState($GUI_GpsLogDeleteOnExit, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_LogFileLocation, 40, 315, 110, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_GpsLogFileLocation = GUICtrlCreateInput($GpsLogLocation, 150, 315, 400, 20)
+		$glbrowse1 = GUICtrlCreateButton($Text_Browse, 556, 315, 97, 20, 0)
+
+
 		$GroupGpsOptions = GUICtrlCreateGroup($Text_GpsSettings, 24, 360, 633, 100)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateLabel($Text_GPSFormat, 44, 380, 100, 15)
@@ -11134,6 +11181,8 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 
 		GUICtrlSetOnEvent($csbrowse1, '_CamScriptBrowse')
 
+		GUICtrlSetOnEvent($glbrowse1, '_GpsLogBrowse')
+
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseSettingsGUI')
 		GUICtrlSetOnEvent($GUI_Set_Can, '_CloseSettingsGUI')
 		GUICtrlSetOnEvent($GUI_Set_Apply, '_ApplySettingsGUI')
@@ -11180,6 +11229,13 @@ Func _CamScriptBrowse()
 		GUICtrlSetData($GUI_CamTriggerScript, $camscriptfile)
 	EndIf
 EndFunc   ;==>_CamScriptBrowse
+
+Func _GpsLogBrowse()
+	$gpslogfile = FileSaveDialog("Select gps log save location", GUICtrlRead($GUI_Set_SaveDir), "Text files (*.txt)|All (*.*)", BitOR($FD_PROMPTOVERWRITE, $FD_PATHMUSTEXIST))
+	If Not @error Then
+		GUICtrlSetData($GUI_GpsLogFileLocation, $gpslogfile)
+	EndIf
+EndFunc   ;==>_GpsLogBrowse
 
 Func _ColorBrowse1()
 	$color = _ChooseColor(2, $BackgroundColor, 2, $SetMisc)
@@ -11398,6 +11454,19 @@ Func _ApplySettingsGUI() ;Applys settings
 		Else ;GUICtrlRead($GUI_Parity) = 'None' Then
 			$PARITY = 'N'
 		EndIf
+
+		If GUICtrlRead($GUI_GpsLogEnabled) = 1 Then
+			$GpsLogEnabled = 1
+		Else
+			$GpsLogEnabled = 0
+		EndIf
+		If GUICtrlRead($GUI_GpsLogDeleteOnExit) = 1 Then
+			$GpsLogDeleteOnExit = 1
+		Else
+			$GpsLogDeleteOnExit = 0
+		EndIf
+		$GpsLogLocation = GUICtrlRead($GUI_GpsLogFileLocation)
+
 		If GUICtrlRead($GUI_Format) = "dd.dddd" Then $GPSformat = 1
 		If GUICtrlRead($GUI_Format) = "dd mm ss" Then $GPSformat = 2
 		If GUICtrlRead($GUI_Format) = "ddmm.mmmm" Then $GPSformat = 3
@@ -11546,8 +11615,8 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_NoSignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', 'No signal history found, check to make sure your netsh search words are correct')
 		$Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected', 'You did not select an access point')
 		$Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Kernel32')
-		$Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX')
-		$Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (less stable)')
+		$Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX (Needs http://www.hardandsoftware.net/NETCommOCX.htm)')
+		$Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (included, but will crash if gps is disconnected improperly)')
 		$Text_SignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'SignalHistory', 'Signal History')
 		$Text_AutoSortEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', 'Auto Sort Every')
 		$Text_Seconds = IniRead($DefaultLanguagePath, 'GuiText', 'Seconds', 'Seconds')
@@ -11812,6 +11881,11 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_ButtonInactiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', 'Button Inactive Color')
 		$Text_Text = IniRead($DefaultLanguagePath, 'GuiText', 'Text', 'Text')
 		$Text_GUITextSize = IniRead($DefaultLanguagePath, 'GuiText', 'GUITextSize', 'GUI Text Size (Restart Required)')
+		$Text_GPSLogging = IniRead($DefaultLanguagePath, 'GuiText', 'GPSLogging', 'GPS Logging')
+		$Text_SaveNMEAData = IniRead($DefaultLanguagePath, 'GuiText', 'SaveNMEAData', 'Save NMEA Data to log file')
+		$Text_DeleteNMEAlog = IniRead($DefaultLanguagePath, 'GuiText', 'DeleteNMEAlog', 'Delete NMEA Data log file on exit')
+		$Text_LogFileLocation = IniRead($DefaultLanguagePath, 'GuiText', 'LogFileLocation', 'Log file location')
+		$Text_NMEALogError = IniRead($DefaultLanguagePath, 'GuiText', 'NMEALogError', 'Error opening NMEA log file')
 
 		$RestartVistumbler = 1
 	EndIf
