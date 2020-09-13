@@ -20,7 +20,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7 Beta 9'
+$version = 'v10.7 Beta 10'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2020/09/12'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -4043,7 +4043,7 @@ Func _GetGPS() ; Recieves data from gps device
 			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline) ;Show data line in "GPS Details" GUI if it is open
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 				$FoundData = 1
-				If StringInStr($dataline, "$GPGGA") Then
+				If StringInStr($dataline, "$GPGGA") Or StringInStr($dataline, "$GNGGA") Then
 					_GPGGA($dataline) ;Split GPGGA data from data string
 					$disconnected_time = -1
 				ElseIf StringInStr($dataline, "$GPRMC") Then
@@ -4064,7 +4064,7 @@ Func _GetGPS() ; Recieves data from gps device
 							If $GpsLogEnabled = 1 Then _LogGpsToFile($gpsline)
 							If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline) ;Show data line in "GPS Details" GUI if it is open
 							If StringInStr($gpsline, '$') And StringInStr($gpsline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-								If StringInStr($gpsline, "$GPGGA") Then
+								If StringInStr($gpsline, "$GPGGA") Or StringInStr($gpsline, "$GNGGA") Then
 									_GPGGA($gpsline) ;Split GPGGA data from data string
 								ElseIf StringInStr($gpsline, "$GPRMC") Then
 									_GPRMC($gpsline) ;Split GPRMC data from data string
@@ -4087,7 +4087,7 @@ Func _GetGPS() ; Recieves data from gps device
 					If $GpsLogEnabled = 1 Then _LogGpsToFile($dlsplit[$gda])
 					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]) ;Show data line in "GPS Details" GUI if it is open
 					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-						If StringInStr($dlsplit[$gda], "GPGGA") Then
+						If StringInStr($dlsplit[$gda], "GPGGA") Or StringInStr($dlsplit[$gda], "GNGGA") Then
 							_GPGGA($dlsplit[$gda]) ;Split GPGGA data from data string
 							$disconnected_time = -1
 						ElseIf StringInStr($dlsplit[$gda], "GPRMC") Then
