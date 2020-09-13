@@ -20,9 +20,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7 Beta 10'
+$version = 'v10.7 Beta 11'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2020/09/12'
+$last_modified = '2020/09/13'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -476,7 +476,7 @@ Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'AutoRefreshTime', 1000)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 0)
 Dim $DebugCom = IniRead($settings, 'Vistumbler', 'DebugCom', 0)
 Dim $UseRssiInGraphs = IniRead($settings, 'Vistumbler', 'UseRssiInGraphs', 1)
-Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
+Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 1)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
@@ -1559,7 +1559,21 @@ GUICtrlSetColor(-1, $TextColor)
 $timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 485, 30, 300, 20)
 GUICtrlSetColor(-1, $TextColor)
 
-$msgdisplay = GUICtrlCreateLabel('', 7, 50, 478, 20)
+
+$line_graph_Image = GUICtrlCreatePic($ImageDir & "line_graph.jpg", 7, 50, 20, 20)
+If $MinimalGuiMode = 1 Then GUICtrlSetState($line_graph_Image, $GUI_HIDE)
+$line_graph_Image_disabled = GUICtrlCreatePic($ImageDir & "line_graph_disabled.jpg", 7, 50, 20, 20)
+If $MinimalGuiMode <> 1 Then GUICtrlSetState($line_graph_Image_disabled, $GUI_HIDE)
+$line_graph_Image_alt = GUICtrlCreatePic($ImageDir & "list-view.jpg", 7, 50, 20, 20)
+GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
+$bar_graph_Image = GUICtrlCreatePic($ImageDir & "bar_graph.jpg", 29, 50, 20, 20)
+If $MinimalGuiMode = 1 Then GUICtrlSetState($bar_graph_Image, $GUI_HIDE)
+$bar_graph_Image_disabled = GUICtrlCreatePic($ImageDir & "bar_graph_disabled.jpg", 29, 50, 20, 20)
+If $MinimalGuiMode <> 1 Then GUICtrlSetState($bar_graph_Image_disabled, $GUI_HIDE)
+$bar_graph_Image_alt = GUICtrlCreatePic($ImageDir & "list-view.jpg", 29, 50, 20, 20)
+GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
+
+$msgdisplay = GUICtrlCreateLabel('', 51, 50, 434, 20)
 GUICtrlSetColor(-1, $TextColor)
 $debugdisplay = GUICtrlCreateLabel('', 485, 50, 300, 20)
 GUICtrlSetColor(-1, $TextColor)
@@ -1676,6 +1690,11 @@ GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
 GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
 GUICtrlSetOnEvent($VistumblerStore, '_OpenVistumblerStore')
+;Images
+GUICtrlSetOnEvent($line_graph_Image, '_GraphToggle')
+GUICtrlSetOnEvent($line_graph_Image_alt, '_GraphToggle')
+GUICtrlSetOnEvent($bar_graph_Image, '_GraphToggle2')
+GUICtrlSetOnEvent($bar_graph_Image_alt, '_GraphToggle2')
 
 ;Set Listview Widths
 _SetListviewWidths()
@@ -2871,27 +2890,49 @@ Func _UpdateListview($Batch = 0)
 			Else
 				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $ImpHighGpsHistID
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ImpGID = $HistMatchArray[1][1]
-				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ImpGID
-				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$FoundGpsMatch = UBound($GpsMatchArray) - 1
-				$ImpLat = $GpsMatchArray[1][1]
-				$ImpLon = $GpsMatchArray[1][2]
+				If IsArray($HistMatchArray) Then
+					$ImpGID = $HistMatchArray[1][1]
+					$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ImpGID
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					If IsArray($GpsMatchArray) Then
+						$FoundGpsMatch = UBound($GpsMatchArray) - 1
+						$ImpLat = $GpsMatchArray[1][1]
+						$ImpLon = $GpsMatchArray[1][2]
+					Else
+						GUICtrlSetData($msgdisplay, 'Error getting lat lon')
+						ExitLoop
+					EndIf
+				Else
+					GUICtrlSetData($msgdisplay, 'Error getting gps id')
+					ExitLoop
+				EndIf
 			EndIf
 			;Get First Time
 			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $ImpFirstHistID
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ImpDate = $HistMatchArray[1][1]
-			$ImpTime = $HistMatchArray[1][2]
-			$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
+			If IsArray($HistMatchArray) Then
+				$ImpDate = $HistMatchArray[1][1]
+				$ImpTime = $HistMatchArray[1][2]
+				$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
+			Else
+				GUICtrlSetData($msgdisplay, 'Error getting first time')
+				ExitLoop
+			EndIf
 			;Get Last Time
 			$query = "SELECT Date1, Time1, Signal, RSSI FROM Hist WHERE HistID=" & $ImpLastHistID
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ImpDate = $HistMatchArray[1][1]
-			$ImpTime = $HistMatchArray[1][2]
-			$ImpSig = $HistMatchArray[1][3]
-			$ImpRSSI = $HistMatchArray[1][4]
-			$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
+			If IsArray($HistMatchArray) Then
+				$ImpDate = $HistMatchArray[1][1]
+				$ImpTime = $HistMatchArray[1][2]
+				$ImpSig = $HistMatchArray[1][3]
+				$ImpRSSI = $HistMatchArray[1][4]
+				$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
+			Else
+				GUICtrlSetData($msgdisplay, 'Error getting last time')
+				ExitLoop
+			EndIf
+
+
 			;If AP is not active, mark as dead and set signal to 0
 			If $ImpActive <> 0 And $ImpSig <> 0 Then
 				$LActive = $Text_Active
@@ -3561,10 +3602,16 @@ Func _GraphToggle() ; Graph1 Button
 	If $Graph = 1 Then
 		$Graph = 0
 		GUICtrlSetState($ShowGraph1, $GUI_UNCHECKED)
+		GUICtrlSetState($line_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
 	Else
 		$Graph = 1
 		GUICtrlSetState($ShowGraph1, $GUI_CHECKED)
 		GUICtrlSetState($ShowGraph2, $GUI_UNCHECKED)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($line_graph_Image, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle
@@ -3574,10 +3621,16 @@ Func _GraphToggle2() ; Graph2 Button
 	If $Graph = 2 Then
 		$Graph = 0
 		GUICtrlSetState($ShowGraph2, $GUI_UNCHECKED)
+		GUICtrlSetState($bar_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
 	Else
 		$Graph = 2
 		GUICtrlSetState($ShowGraph2, $GUI_CHECKED)
 		GUICtrlSetState($ShowGraph1, $GUI_UNCHECKED)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_SHOW)
+		GUICtrlSetState($line_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image, $GUI_HIDE)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle2
@@ -3590,8 +3643,15 @@ Func _MinimalGuiModeToggle()
 		GUICtrlSetData($msgdisplay, "Restoring GUI")
 		_UpdateListview(1)
 		$a = WinGetPos($Vistumbler)
-		WinMove($title, "", $a[0], $a[1], $a[2], $MinimalGuiExitHeight) ;Resize window to Minimal GUI Height
+		WinMove($title, "", $a[0], $a[1], $a[2], $MinimalGuiExitHeight) ;Resize window to Full GUI Height
 		GUICtrlSetData($msgdisplay, "")
+		;re-enable graph buttons
+		GUICtrlSetState($line_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
+		GUICtrlSetState($line_graph_Image_disabled, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image_disabled, $GUI_HIDE)
 	Else
 		$MinimalGuiMode = 1
 		$ClearListAndTree = 1
@@ -3605,7 +3665,14 @@ Func _MinimalGuiModeToggle()
 		$MinimalGuiExitHeight = $a[3]
 		$b = _WinAPI_GetClientRect($Vistumbler)
 		$titlebar_height = $a[3] - (DllStructGetData($b, "Bottom") - DllStructGetData($b, "Top"))
-		WinMove($title, "", $a[0], $a[1], $a[2], $titlebar_height + 65) ;Resize window to Minimal GUI Height
+		WinMove($title, "", $a[0], $a[1], $a[2], $titlebar_height + 72) ;Resize window to Minimal GUI Height
+		;re-enable graph buttons
+		GUICtrlSetState($line_graph_Image, $GUI_HIDE)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
+		GUICtrlSetState($line_graph_Image_disabled, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image_disabled, $GUI_SHOW)
 	EndIf
 EndFunc   ;==>_MinimalGuiModeToggle
 
@@ -4879,7 +4946,7 @@ Func _SetControlSizes() ;Sets control positions in GUI based on the windows curr
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Or $MinimalGuiMode <> $MinimalGuiMode_old Then
 		$DataChild_Left = 2
 		$DataChild_Width = DllStructGetData($a, "Right")
-		$DataChild_Top = 70
+		$DataChild_Top = 72
 		$DataChild_Height = DllStructGetData($a, "Bottom") - $DataChild_Top
 		If $MinimalGuiMode = 1 Then
 			GUISetState(@SW_LOCK, $Vistumbler)
@@ -5237,13 +5304,11 @@ Func _GraphDraw()
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
 				;If $HistSize < $max_graph_points Then $max_graph_points = $HistSize ;Fix to prevent graph from drawing outside its region when the are 0% marks
-				Local $graph_point_center_y, $graph_point_center_x, $Found_dts, $gloop
+				Local $graph_point_center_y, $graph_point_center_x, $Found_dts, $gloop, $Exp_Datetime
 				Local $GraphWidthSpacing = $Graph_width / ($max_graph_points - 1)
 				ConsoleWrite($GraphWidthSpacing & @CRLF)
 				Local $GraphHeightSpacing = $Graph_height / 100
-				$Exp_Datetime = ""
 				For $gs = 1 To $HistSize
-
 					$ExpSig = $HistMatchArray[$gs][1] - 0
 					$ExpRSSI = $HistMatchArray[$gs][2]
 					$ExpApID = $HistMatchArray[$gs][3]
@@ -5254,7 +5319,7 @@ Func _GraphDraw()
 						$Cur_Datetime = StringTrimRight($datestamp & ' ' & $timestamp, 4)
 						$DateDiffInSecondsFromNow = _DateDiff('s', $Exp_Datetime, $Cur_Datetime)
 						ConsoleWrite("$DateDiffInSecondsFromNow:" & $DateDiffInSecondsFromNow & " - " & $Exp_Datetime & " - " & $Cur_Datetime & @CRLF)
-						If $DateDiffInSecondsFromNow >= $TimeBeforeMarkedDead And $GraphDeadTime = 1 Then
+						If $DateDiffInSecondsFromNow >= 1 And $GraphDeadTime = 1 Then
 							For $az = 1 To $DateDiffInSecondsFromNow
 								If $gloop = 0 Then
 									$graph_point_center_x = $Graph_leftborder + $Graph_width
@@ -5340,7 +5405,7 @@ Func _GraphDraw()
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
-				Local $Found_dts, $gloop
+				Local $Found_dts, $gloop, $Exp_Datetime
 				Local $GraphWidthSpacing = $Graph_width / $max_graph_points
 				Local $GraphHeightSpacing = $Graph_height / 100
 				For $gs = 1 To $HistSize
@@ -5349,12 +5414,21 @@ Func _GraphDraw()
 					$ExpSig = $HistMatchArray[$gs][1] - 0
 					$ExpRSSI = $HistMatchArray[$gs][2]
 					$ExpApID = $HistMatchArray[$gs][3]
-					$ExpDate = $HistMatchArray[$gs][4]
+					$Last_Datetime = $Exp_Datetime
+					$Exp_Datetime = StringTrimRight($HistMatchArray[$gs][4] & ' ' & $HistMatchArray[$gs][5], 4)
 
-					$Last_dts = $Found_dts
-					$ts = StringSplit($HistMatchArray[$gs][5], ":")
-					$ExpTime = ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4) ;In seconds
-					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
+					If $gs = 1 And $GraphDeadTime = 1 Then
+						$Cur_Datetime = StringTrimRight($datestamp & ' ' & $timestamp, 4)
+						$DateDiffInSecondsFromNow = _DateDiff('s', $Exp_Datetime, $Cur_Datetime)
+						ConsoleWrite("$DateDiffInSecondsFromNow:" & $DateDiffInSecondsFromNow & " - " & $Exp_Datetime & " - " & $Cur_Datetime & @CRLF)
+						If $DateDiffInSecondsFromNow >= $TimeBeforeMarkedDead Then
+							For $az = 1 To $DateDiffInSecondsFromNow
+								$gloop += 1
+								If $gloop > $max_graph_points Then ExitLoop
+							Next
+							If $gloop > $max_graph_points Then ExitLoop
+						EndIf
+					EndIf
 
 					;Draw line for signal strength
 					If $UseRssiInGraphs = 1 Then
@@ -5368,21 +5442,16 @@ Func _GraphDraw()
 					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_line_top_x, $graph_line_top_y, $graph_line_bottom_x, $graph_line_bottom_y, $Pen_Red)
 
 					;increment $gloop for any gaps that may exist (AP at 0%)
-					If $gs <> 1 Then
-						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
-							If $GraphDeadTime = 1 Then
-								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
-								For $wz = 1 To $numofzeros
-									$gloop += 1
-									If $gloop > $max_graph_points Then ExitLoop
-								Next
-							Else
+					If $gs <> 1 And $GraphDeadTime = 1 Then
+						$DateDiffInSeconds = _DateDiff('s', $Exp_Datetime, $Last_Datetime)
+						If $DateDiffInSeconds >= $TimeBeforeMarkedDead Then
+							For $az = 1 To $DateDiffInSeconds
 								$gloop += 1
 								If $gloop > $max_graph_points Then ExitLoop
-							EndIf
+							Next
+							If $gloop = $max_graph_points Then ExitLoop
 						EndIf
 					EndIf
-
 				Next
 			EndIf
 		EndIf
@@ -10591,7 +10660,7 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		GUICtrlCreateLabel($Text_Com, 40, 160, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_Comport = GUICtrlCreateCombo("1", 115, 160, 150, 20)
-		GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20", $ComPort)
+		GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25", $ComPort)
 		GUICtrlCreateLabel($Text_Baud, 40, 185, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
 		$GUI_Baud = GUICtrlCreateCombo("4800", 115, 185, 150, 20)
