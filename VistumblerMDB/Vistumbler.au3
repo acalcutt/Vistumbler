@@ -4151,7 +4151,7 @@ Func _GetGPS() ; Recieves data from gps device
 				$FoundData = 1
 				$dlsplit = StringSplit($dataline, '$')
 				For $gda = 1 To $dlsplit[0]
-					If $GpsLogEnabled = 1 Then _LogGpsToFile($dlsplit[$gda])
+					If $GpsLogEnabled = 1 Then _LogGpsToFile('$' & $dlsplit[$gda])
 					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]) ;Show data line in "GPS Details" GUI if it is open
 					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 						If StringInStr($dlsplit[$gda], "GPGGA") Or StringInStr($dlsplit[$gda], "GNGGA") Then
