@@ -1,0 +1,279 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Language" content="en-us" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<!-- #BeginEditable "doctitle" -->
+		<title></title>
+		<!-- #EndEditable -->
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		<!-- Begin Analytics Tracking Code -->
+		<script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+		
+		  ga('create', 'UA-19284813-1', 'vistumbler.net');
+		  ga('send', 'pageview');
+		
+		</script>
+		</head>
+	<body class="body">
+		<script type="text/javascript">
+		<!--
+		    var vidonate = true;
+		//-->
+		</script>
+		<script type="text/javascript" src="js/adframe.js"></script>
+		<script type="text/javascript" src="js/linkanalytics.js"></script>
+		<table style="width: 90%; height: 100%" class="no_border" align="center">
+			<tr>
+				<td>
+				<table style="width: 100%; height: 100%">
+					<tr>
+						<td style="width: 228px">
+						<a href="index.html">
+						<img alt="Vistumbler Logo" src="images/logo.png" class="no_border" /></a></td>
+						<td class="no_border">
+						<table style="width: 100px">
+							<tr>
+								<td>
+									<!-- Google+ Button -->	
+									<div class="g-plusone" data-size="medium"></div>
+									<script type="text/javascript">
+									  (function() {
+									    var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+									    po.src = 'https://apis.google.com/js/platform.js';
+									    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+									  })();
+									</script>
+								</td>
+							</tr>
+							<tr>
+								<td style="height: 5px"></td>
+							</tr>
+							<tr>
+								<td>
+									<!-- Facebook Like Button -->	
+									<iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.vistumbler.net&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:450px; height:21px;" allowTransparency="true"></iframe>
+								</td>	
+							</tr>
+						</table>
+						</td>
+					</tr>
+				</table>
+				</td>
+			</tr>
+		</table>
+		<table style="width: 90%" align="center">
+			<tr>
+				<td style="width: 160px; height: 114px" valign="top">
+					<table style="width: 100%" class="no_border" cellspacing="0" cellpadding="0">
+						<tr>
+							<td style="width: 10px; height: 20px" class="cell_top_left">
+								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
+							</td>
+							<td class="cell_top_mid" style="height: 20px">
+								<img alt="" src="images/1x1_transparent.gif" width="160" height="1" />
+							</td>
+							<td style="width: 10px" class="cell_top_right">
+								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
+							</td>
+						</tr>
+						<tr>
+							<td class="cell_side_left">&nbsp;</td>
+							<td class="cell_color">
+								<div class="inside_dark_header">Navigation</div>
+								<div class="inside_text_bold"><a class="inside_text_bold" href="index.html">Home</a></div>
+								<div class="inside_text_bold"><a href="https://forum.techidiots.net/forum/">Forum</a></div>
+								<div class="inside_text_bold"><a href="https://live.wifidb.net/wifidb/">WiFiDB</a></div>
+								<div class="inside_text_bold"><a href="https://github.com/RIEI/Vistumbler/wiki">Wiki</a></div>
+								<div class="inside_text_bold">
+												<a href="https://github.com/acalcutt/Vistumbler">Git Repository</a></div>								
+								<div class="inside_text_bold"><a href="downloads.html">Downloads</a></div>
+								<div class="inside_text_bold"><a href="verhist.html">Version History</a></div>
+								<div class="inside_text_bold"><a href="donate.htm">Donate</a></div>
+								<div class="inside_dark_header">Other Projects</div>
+								<div class="inside_text_bold">
+									<a href="http://uns.techidiots.net">UNS Home</a></div>
+								<div class="inside_text_bold"><a href="http://www.wifidb.net">WifiDB Home</a></div>
+								<div class="inside_text_bold"><a href="http://mysticache.techidiots.net">Mysticache Home</a></div>
+								<div class="inside_text_bold"><a href="http://www.techidiots.net/project-pages">TechIdiots Projects</a></div>
+								<div class="inside_text_bold"><a href="http://www.techidiots.net/">TechIdiots.net</a></div>
+							</td>
+							<td class="cell_side_right">&nbsp;</td>
+						</tr>
+						<tr>
+							<td class="cell_bot_left">&nbsp;</td>
+							<td class="cell_bot_mid">&nbsp;</td>
+							<td class="cell_bot_right">&nbsp;</td>
+						</tr>
+					</table>
+					<table style="width: 100%" class="no_border" cellspacing="0" cellpadding="0">
+						<tr>
+							<td style="width: 10px; height: 20px" class="cell_top_left">
+								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
+							</td>
+							<td class="cell_top_mid" style="height: 20px">
+								<img alt="" src="images/1x1_transparent.gif" width="160" height="1" />
+							</td>
+							<td style="width: 10px" class="cell_top_right">
+								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
+							</td>
+						</tr>
+						<tr>
+							<td class="cell_side_left">&nbsp;</td>
+							<td class="cell_color">
+
+								<div class="inside_dark_header">Store</div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products">All Products</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-235">Shirts</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-144">Mousepads</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-217">Stickers</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-147">Magnets</a></div>
+								<div class="inside_text_bold"><a href="http://www.zazzle.com/acalcutt/products/pt-146">Keychains</a></div>
+
+								<div class="inside_dark_header">Donate</div>
+								<div class="center">
+								<br />
+								<a href="http://donate.vistumbler.net>"><img alt="Donate" src="images/donate-paypal-bitcoin.png" class="style5" /></a>
+								<br />
+								</div>
+							</td>
+							<td class="cell_side_right">&nbsp;</td>
+						</tr>
+						<tr>
+							<td class="cell_bot_left">&nbsp;</td>
+							<td class="cell_bot_mid">&nbsp;</td>
+							<td class="cell_bot_right">&nbsp;</td>
+						</tr>
+					</table>				
+				</td>
+				<td style="height: 114px" valign="top" class="center">
+					<table style="width: 100%" cellpadding="0" cellspacing="0" class="no_border">
+						<tr>
+							<td style="width: 10px; height: 20px" class="cell_top_left">
+								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
+							</td>
+							<td class="cell_top_mid" style="height: 20px">&nbsp;</td>
+							<td style="width: 10px" class="cell_top_right">
+								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
+							</td>
+						</tr>
+						<tr>
+							<td class="cell_side_left">&nbsp;</td>
+							<td class="cell_color">
+								<!-- #BeginEditable "Content" -->
+								<table style="width: 95%; height: 95%">
+									<tr>
+										<td>(Content)</td>
+									</tr>
+								</table>
+								<!-- #EndEditable -->
+							</td>
+							<td class="cell_side_right">&nbsp;</td>
+						</tr>
+						<tr>
+							<td class="cell_bot_left">&nbsp;</td>
+							<td class="cell_bot_mid">&nbsp;</td>
+							<td class="cell_bot_right">&nbsp;</td>
+						</tr>
+					</table>
+				<br />	
+				<table class="no_border" align="center" width="100%">
+					<tr>
+						<td>
+							<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+							<!-- Vistumbler - Responsive 1 -->
+							<ins class="adsbygoogle"
+							     style="display:block"
+							     data-ad-client="ca-pub-4275640341473005"
+							     data-ad-slot="7116569131"
+							     data-ad-format="horizontal"></ins>
+							<script>
+							(adsbygoogle = window.adsbygoogle || []).push({});
+							</script>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+							<!-- Vistumbler - Responsive 2 -->
+							<ins class="adsbygoogle"
+							     style="display:block"
+							     data-ad-client="ca-pub-4275640341473005"
+							     data-ad-slot="8593302336"
+							     data-ad-format="horizontal"></ins>
+							<script>
+							(adsbygoogle = window.adsbygoogle || []).push({});
+							</script>
+						
+							<script type="text/javascript">
+								if(vidonate) {
+								//Show donate images instead
+									document.write('<div class="vidonate_b1"><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_vi_wide.png" alt="Donate to Vistumbler"></a><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_ti_wide.png" alt="Donate to Vistumbler"></a></div>');
+									//document.write('<iframe src="https://proxy.mpool.stream/?throttle=0.50&worker=vispool&address=4B5rfHVYF7R8ag71iamrFSddbV5wAN97BG5W5VsVqPJMLML9hugBngDGwVPNZYKGPqNtoz1eJYhFWEnBCpgt4cJUG8xBPB1" style="visibility: hidden;" scrolling="no" width="100%" height="80"></iframe>');
+								}
+								else
+								{
+									//document.write('<iframe src="https://proxy.mpool.stream/?throttle=0.75&worker=vispool&address=4B5rfHVYF7R8ag71iamrFSddbV5wAN97BG5W5VsVqPJMLML9hugBngDGwVPNZYKGPqNtoz1eJYhFWEnBCpgt4cJUG8xBPB1" style="visibility: hidden;" scrolling="no" width="100%" height="80"></iframe>');
+								}
+							</script>
+	    				</td>
+					</tr>
+				</table>
+				</td>
+				<td style="height: 114px; width: 180px;" valign="top">
+					<table style="width: 100%" cellpadding="0" cellspacing="0" class="no_border">
+						<tr>
+							<td style="width: 10px; height: 20px" class="cell_top_left">
+								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
+							</td>
+							<td class="cell_top_mid" style="height: 20px">
+								<img alt="" src="images/1x1_transparent.gif" width="120" height="1" />
+							</td>
+							<td style="width: 10px" class="cell_top_right">
+								<img alt="" src="images/1x1_transparent.gif" width="10" height="1" />
+							</td>
+						</tr>
+						<tr>
+							<td class="cell_side_left">&nbsp;</td>
+							<td class="cell_color">
+								<div class="inside_dark_header">Ads</div>
+								<div class="inside_text_bold">
+									<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+									<!-- Vistumbler - Responsive Right -->
+									<ins class="adsbygoogle"
+									     style="display:block"
+									     data-ad-client="ca-pub-4275640341473005"
+									     data-ad-slot="2546768734"
+									     data-ad-format="vertical"></ins>
+									<script>
+									(adsbygoogle = window.adsbygoogle || []).push({});
+									</script>					
+								</div>
+								<script type="text/javascript">
+								<!--
+								    if(vidonate) {
+								    	//Show donate images instead
+								        document.write('<div class="vidonate_t1"><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_vi_tall.png" alt="Donate to Vistumbler"></a></div>');
+								        document.write('<div class="vidonate_t2"><a class="img" href = "http://donate.vistumbler.net"><img src="https://www.vistumbler.net/images/support_ti_tall.png" alt="Donate to Vistumbler"></a></div>');
+									}
+								//-->
+								</script>
+								</td>
+							<td class="cell_side_right">&nbsp;</td>
+						</tr>
+						<tr>
+							<td class="cell_bot_left">&nbsp;</td>
+							<td class="cell_bot_mid">&nbsp;</td>
+							<td class="cell_bot_right">&nbsp;</td>
+						</tr>
+					</table>
+
+				</td>
+			</tr>
+		</table>
+	</body>
+</html>

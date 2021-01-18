@@ -19,3 +19,6 @@ Disallow:
 User-Agent: Googlebot
 Disallow: /*sendto_form$
 Disallow: /*folder_factories$
+
+User-agent: Mediapartners-Google
+Disallow: /
