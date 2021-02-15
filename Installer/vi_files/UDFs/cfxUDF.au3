@@ -8,6 +8,10 @@
 	Andrew Calcutt 05/16/2009 - Started converting to UDF
 	V2.1
 	Mikko Keski-Heroja 02/23/2011 - UDF is now compatible with Opt("MustDeclareVars",1) and Date.au3. Global variable $dll is renamed to $commDll.
+	V2.2
+	Andrew Calcutt - Fixed COM10 + Support
+	V2.3
+	Andrew Calcutt - Merged Changes by Dmitri Ranfft 07/10/2013 - Added _rxwaitarray() function that returns the result as an array rather than string, allowing easier handling of 0x00 bytes.
 #ce
 
 Global $commDll
@@ -52,16 +56,12 @@ Func _OpenComm($CommPort, $CommBaud = '4800', $CommBits = '8', $CommParity = '0'
 	local const $GENERIC_READ_WRITE=0xC0000000
 	local const $OPEN_EXISTING=3
 	local const $FILE_ATTRIBUTE_NORMAL =0x80
-	local const $NOPARITY=0
-	local const $ONESTOPBIT=0
 
 	$dcb_Struct=DllStructCreate($dcbs)
 	if @error Then errpr()
-
 	$commtimeout_Struct=DllStructCreate($commtimeouts)
 	if @error Then errpr()
-
-	$hSerialPort = DllCall($commDll, "hwnd", "CreateFile", "str", "COM" & $CommPort, _
+	$hSerialPort = DllCall($commDll, "hwnd", "CreateFile", "str", "\\.\COM" & $CommPort, _
 									"int", $GENERIC_READ_WRITE, _
 									"int", 0, _
 									"ptr", 0, _
@@ -101,6 +101,7 @@ Func _OpenComm($CommPort, $CommBaud = '4800', $CommBits = '8', $CommParity = '0'
 	DllStructSetData( $commtimeout_Struct,"ReadIntervalTimeout",-1)
 	$commtimeout=dllcall($commDll,"long","SetCommTimeouts","hwnd",$hSerialPort[0],"ptr",DllStructGetPtr($commtimeout_Struct))
 	if @error Then errpr()
+	_setrts(4)
 	return number($hSerialPort[0])
 EndFunc
 
@@ -169,6 +170,44 @@ Func _rxwait($CommSerialPort, $MinBufferSize, $MaxWaitTime, $DEBUG = 0)
 	Return($rxbuf)
 EndFunc
 
+ ;====================================================================================
+; Function Name:   _rxwaitarray($CommSerialPort, $MinBufferSize, $MaxWaitTime, $DEBUG = 0)
+; Description:    Recieves data
+; Parameters:     $CommSerialPort - value returned by _OpenComm
+;				  $MinBufferSize - Buffer size to wait for
+;				  $MaxWaitTime - Maximum time to wait before failing
+;				  $DEBUG - Show debug messages
+; Returns:  on success, returns 1
+;           on failure returns -1 and sets @error to 1
+; Note:    Modified _rxwait() to return an array instead of a string for easier handling of 0x00 bytes.
+;====================================================================================
+ Func _rxwaitarray($CommSerialPort, $MinBufferSize, $MaxWaitTime, $DEBUG = 0)
+	if $DEBUG=1 then ConsoleWrite("Wait " & $MinBufferSize & " " & $MaxWaitTime & @CRLF)
+	Local $rxbuf[$MinBufferSize]
+	local $jetza=TimerInit()
+	local $lptr0=dllstructcreate("long_ptr")
+
+	local $rxr, $rxl, $to, $i=0; $i added
+	Do
+		$rxr=dllcall($commDll,"int","ReadFile","hwnd",$CommSerialPort, _
+							"str"," ", _
+							"int",1, _
+							"long_ptr", DllStructGetPtr($lptr0), _
+							"ptr", 0)
+		if @error Then errpr()
+		$rxl=DllStructGetData($lptr0,1)
+		if $DEBUG=1 then ConsoleWrite("R0:" & $rxr[0] & " |R1:" & $rxr[1] & " |R2:" & $rxr[2] & " |rxl:" & $rxl & " |R4:" & $rxr[4] & @CRLF)
+		if $rxl>=1 then
+			;$rxbuf&=$rxr[2] ;replaced
+			$rxbuf[$i]=$rxr[2] ;added
+			$i += 1 ;added
+		EndIf
+		$to=TimerDiff($jetza)
+    ;Until stringlen($rxbuf) >= $MinBufferSize OR $to > $MaxWaitTime ;replaced
+    Until $i >= $MinBufferSize OR $to > $MaxWaitTime ;added
+	Return($rxbuf)
+EndFunc
+
 Func _rx($rxbuf, $n=0, $DEBUG = 0)
 	local $r
 	if StringLen($rxbuf)<$n then
@@ -208,4 +247,12 @@ EndFunc
 
 func errpr()
 	consolewrite ("Error " & @error & @CRLF)
+ EndFunc
+
+Func _setrts($x)
+	$escr=dllcall($commDll,"long","EscapeCommFunction","hwnd",($hSerialPort[0]),"int",$x)
+	if @error Then
+		errpr()
+		Exit
+	EndIf
 EndFunc

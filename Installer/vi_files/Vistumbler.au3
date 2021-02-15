@@ -1,7 +1,8 @@
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+#AutoIt3Wrapper_Version=Beta
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
-#AutoIt3Wrapper_Res_Fileversion=10.6.5.4
+#AutoIt3Wrapper_Res_Fileversion=10.7.0.0
 #AutoIt3Wrapper_Res_ProductName=Vistumbler
 #AutoIt3Wrapper_Res_CompanyName=Vistumbler.net
 #AutoIt3Wrapper_Res_Language=1033
@@ -9,19 +10,19 @@
 #AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2019 Andrew Calcutt
+;Copyright (C) 2020 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.15.1
+;AutoIt Version: v3.3.15.3
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.6.5'
+$version = 'v10.7'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2019/06/28'
+$last_modified = '2021/02/15'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -289,6 +290,7 @@ Dim $AutoKmlDeadProcess
 Dim $AutoKmlTrackProcess
 Dim $NsCancel
 Dim $DefaultApapterID
+Dim $DefaultApapterDesc
 Dim $OpenedPort
 Dim $LastGpsString
 Dim $WifiDbSessionID
@@ -325,7 +327,7 @@ Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GP
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
 Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
-Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD
+Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD, $RadWigle
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
 
@@ -338,10 +340,11 @@ Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioTyp
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
 Dim $LabAuth, $LabDate, $LabWinCode, $LabDesc, $GUI_Set_SaveDir, $GUI_Set_SaveDirAuto, $GUI_Set_SaveDirAutoRecovery, $GUI_Set_SaveDirKml, $GUI_BKColor, $GUI_CBKColor, $GUI_TextColor, $GUI_CBAColor, $GUI_CBIColor, $GUI_TextSize, $GUI_dBmMaxSignal, $GUI_dBmDisassociationSignal, $GUI_TimeBeforeMarkingDead, $GUI_RefreshLoop, $GUI_AutoCheckForUpdates, $GUI_CheckForBetaUpdates, $GUI_CamTriggerScript
+Dim $GUI_GpsLogFileLocation, $GUI_GpsLogEnabled, $GUI_GpsLogDeleteOnExit
 Dim $Gui_Csv, $GUI_Manu_List, $GUI_Lab_List, $GUI_Cam_List, $ImpLanFile
 Dim $EditMacGUIForm, $GUI_Manu_NewManu, $GUI_Manu_NewMac, $EditMac_Mac, $EditMac_GUI, $EditLine, $GUI_Lab_NewMac, $GUI_Lab_NewLabel, $EditCamGUIForm, $GUI_Cam_NewID, $GUI_Cam_NewLOC, $GUI_Edit_CamID, $GUI_Edit_CamLOC, $Gui_CamTrigger, $GUI_CamTriggerTime, $GUI_ImgGroupName, $GUI_ImgGroupName, $GUI_ImpImgSkewTime, $GUI_ImpImgDir
 Dim $AutoSaveAndClearBox, $AutoSaveAndClearRadioAP, $AutoSaveAndClearRadioTime, $AutoSaveAndClearAPsGUI, $AutoSaveAndClearTimeGUI, $AutoRecoveryBox, $AutoRecoveryDelBox, $AutoSaveAndClearPlaySoundGUI, $AutoRecoveryTimeGUI, $GUI_SortDirection, $GUI_RefreshNetworks, $GUI_RefreshTime, $GUI_WifidbLocate, $GUI_WiFiDbLocateRefreshTime, $GUI_SortBy, $GUI_SortTime, $GUI_AutoSort, $GUI_SortTime, $GUI_WifiDB_User, $GUI_WifiDB_ApiKey, $GUI_WifiDbGraphURL, $GUI_WifiDbWdbURL, $GUI_WifiDbApiURL, $GUI_WifidbUploadAps, $GUI_AutoUpApsToWifiDBTime
-Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvFiltered
+Dim $Gui_CsvFile, $Gui_CsvRadSummary, $Gui_CsvRadDetailed, $Gui_CsvRadWigle, $Gui_CsvFiltered
 Dim $GUI_ModifyFilters, $FilterLV, $AddEditFilt_GUI, $Filter_ID_GUI, $Filter_Name_GUI, $Filter_Desc_GUI
 Dim $MacAdd_GUI, $MacAdd_GUI_BSSID, $MacAdd_GUI_MANU, $LabelAdd_GUI, $LabelAdd_GUI_BSSID, $LabelAdd_GUI_LABEL
 
@@ -473,7 +476,7 @@ Dim $RefreshTime = IniRead($settings, 'Vistumbler', 'AutoRefreshTime', 1000)
 Dim $Debug = IniRead($settings, 'Vistumbler', 'Debug', 0)
 Dim $DebugCom = IniRead($settings, 'Vistumbler', 'DebugCom', 0)
 Dim $UseRssiInGraphs = IniRead($settings, 'Vistumbler', 'UseRssiInGraphs', 1)
-Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 0)
+Dim $GraphDeadTime = IniRead($settings, 'Vistumbler', 'GraphDeadTime', 1)
 Dim $SaveGpsWithNoAps = IniRead($settings, 'Vistumbler', 'SaveGpsWithNoAps', 1)
 Dim $TimeBeforeMarkedDead = IniRead($settings, 'Vistumbler', 'TimeBeforeMarkedDead', 2)
 Dim $AutoSelect = IniRead($settings, 'Vistumbler', 'AutoSelect', 0)
@@ -504,6 +507,9 @@ Dim $GPSformat = IniRead($settings, 'GpsSettings', 'GPSformat', 3)
 Dim $GpsTimeout = IniRead($settings, 'GpsSettings', 'GpsTimeout', 30000)
 Dim $GpsDisconnect = IniRead($settings, 'GpsSettings', 'GpsDisconnect', 1)
 Dim $GpsReset = IniRead($settings, 'GpsSettings', 'GpsReset', 1)
+Dim $GpsLogLocation = IniRead($settings, 'AutoKML', 'GpsLogLocation', $SaveDir & "gps_nmea_log.txt")
+Dim $GpsLogEnabled = IniRead($settings, 'GpsSettings', 'GpsLogEnabled', 0)
+Dim $GpsLogDeleteOnExit = IniRead($settings, 'GpsSettings', 'GpsLogDeleteOnExit', 1)
 
 Dim $SortTime = IniRead($settings, 'AutoSort', 'AutoSortTime', 60)
 Dim $AutoSort = IniRead($settings, 'AutoSort', 'AutoSort', 0)
@@ -811,8 +817,9 @@ Dim $Text_RestartMsg = IniRead($DefaultLanguagePath, 'GuiText', 'RestartMsg', 'P
 Dim $Text_Error = IniRead($DefaultLanguagePath, 'GuiText', 'Error', 'Error')
 Dim $Text_NoSignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', 'No signal history found, check to make sure your netsh search words are correct')
 Dim $Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected', 'You did not select an access point')
-Dim $Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Use Netcomm OCX (more stable) - x32')
-Dim $Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'Use CommMG (less stable) - x32 - x64')
+Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Kernel32')
+Dim $Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX (Needs http://www.hardandsoftware.net/NETCommOCX.htm)')
+Dim $Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (included, but will crash if gps is disconnected improperly)')
 Dim $Text_SignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'SignalHistory', 'Signal History')
 Dim $Text_AutoSortEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', 'Auto Sort Every')
 Dim $Text_Seconds = IniRead($DefaultLanguagePath, 'GuiText', 'Seconds', 'Seconds')
@@ -820,6 +827,7 @@ Dim $Text_Ascending = IniRead($DefaultLanguagePath, 'GuiText', 'Ascending', 'Asc
 Dim $Text_Decending = IniRead($DefaultLanguagePath, 'GuiText', 'Decending', 'Decending')
 Dim $Text_AutoRecoveryVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'AutoRecoveryVS1', 'Auto Recovery VS1')
 Dim $Text_AutoSaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClear', 'Auto Save And Clear')
+Dim $Text_SaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAndClear', 'Sav&e && Clear')
 Dim $Text_AutoSaveEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', 'Auto Save Every')
 Dim $Text_DelAutoSaveOnExit = IniRead($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', 'Delete Auto Save file on exit')
 Dim $Text_OpenSaveFolder = IniRead($DefaultLanguagePath, 'GuiText', 'OpenSaveFolder', 'Open Save Folder')
@@ -971,7 +979,6 @@ Dim $Text_VistumblerNeedsToRestart = IniRead($DefaultLanguagePath, 'GuiText', 'V
 Dim $Text_AddingApsIntoList = IniRead($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', 'Adding new APs into list')
 Dim $Text_GoogleEarthDoesNotExist = IniRead($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', 'Google earth file does not exist or is set wrong in the AutoKML settings')
 Dim $Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
-Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
 Dim $Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
 Dim $Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 Dim $Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
@@ -999,8 +1006,9 @@ Dim $Text_FilterNameRequired = IniRead($DefaultLanguagePath, "GuiText", "FilterN
 Dim $Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "UpdateManufacturers", "Update Manufacturers")
 Dim $Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
 Dim $Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler file')
-Dim $Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed Comma Delimited file')
-Dim $Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Summary Comma Delimited file')
+Dim $Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Vistumbler Detailed CSV')
+Dim $Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Vistumbler Summary CSV')
+Dim $Text_WigleCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'WigleCsvFile', 'WigleWifi 1.4 Compatible CSV')
 Dim $Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler wi-scan file')
 Dim $Text_WardriveDb3File = IniRead($DefaultLanguagePath, "GuiText", "WardriveDb3File", "Wardrive-android file")
 Dim $Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
@@ -1078,6 +1086,11 @@ Dim $Text_ButtonActiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonAc
 Dim $Text_ButtonInactiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', 'Button Inactive Color')
 Dim $Text_Text = IniRead($DefaultLanguagePath, 'GuiText', 'Text', 'Text')
 Dim $Text_GUITextSize = IniRead($DefaultLanguagePath, 'GuiText', 'GUITextSize', 'GUI Text Size')
+Dim $Text_GPSLogging = IniRead($DefaultLanguagePath, 'GuiText', 'GPSLogging', 'GPS Logging')
+Dim $Text_SaveNMEAData = IniRead($DefaultLanguagePath, 'GuiText', 'SaveNMEAData', 'Save NMEA Data to log file')
+Dim $Text_DeleteNMEAlog = IniRead($DefaultLanguagePath, 'GuiText', 'DeleteNMEAlog', 'Delete NMEA Data log file on exit')
+Dim $Text_LogFileLocation = IniRead($DefaultLanguagePath, 'GuiText', 'LogFileLocation', 'Log file location')
+Dim $Text_NMEALogError = IniRead($DefaultLanguagePath, 'GuiText', 'NMEALogError', 'Error opening NMEA log file')
 
 If $AutoCheckForUpdates = 1 Then
 	If _CheckForUpdates() = 1 Then
@@ -1291,7 +1304,7 @@ $FontFamily_Arial = _GDIPlus_FontFamilyCreate("Arial")
 ;                                                       GUI
 ;-------------------------------------------------------------------------------------------------------------------------------
 Dim $title = $Script_Name & ' ' & $version & ' - By ' & $Script_Author & ' - ' & _DateLocalFormat($last_modified) & ' - (' & $VistumblerDbName & ')'
-$Vistumbler = GUICreate($title, 980, 692, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
+$Vistumbler = GUICreate($title, 700, 600, -1, -1, BitOR($WS_OVERLAPPEDWINDOW, $WS_CLIPSIBLINGS))
 GUISetBkColor($BackgroundColor)
 GUISetFont($TextSize)
 
@@ -1416,6 +1429,11 @@ _CreateFilterQuerys()
 
 ;View Menu
 $GraphViewOptions = GUICtrlCreateMenu($Text_Graph, $ViewMenu)
+$ShowGraph1 = GUICtrlCreateMenuItem($Text_Graph1, $GraphViewOptions)
+$ShowGraph2 = GUICtrlCreateMenuItem($Text_Graph2, $GraphViewOptions)
+If $MinimalGuiMode = 1 Then
+	GUICtrlSetState($GraphViewOptions, $GUI_DISABLE)
+EndIf
 $UseRssiInGraphsGUI = GUICtrlCreateMenuItem($Text_UseRssiInGraphs, $GraphViewOptions)
 If $UseRssiInGraphs = 1 Then GUICtrlSetState(-1, $GUI_CHECKED)
 $GraphDeadTimeGUI = GUICtrlCreateMenuItem($Text_GraphDeadTime, $GraphViewOptions)
@@ -1499,7 +1517,7 @@ $Graph_bitmap = _GDIPlus_BitmapCreateFromGraphics(900, 400, $Graphic)
 $Graph_backbuffer = _GDIPlus_ImageGetGraphicsContext($Graph_bitmap)
 GUISwitch($Vistumbler)
 
-$ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 65, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
+$ListviewAPs = _GUICtrlListView_Create($Vistumbler, $headers, 260, 67, 725, 585, BitOR($LVS_REPORT, $LVS_SINGLESEL))
 _GUICtrlListView_SetExtendedListViewStyle($ListviewAPs, BitOR($LVS_EX_HEADERDRAGDROP, $LVS_EX_GRIDLINES, $LVS_EX_FULLROWSELECT, $LVS_EX_DOUBLEBUFFER))
 _GUICtrlListView_SetBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
 _GUICtrlListView_SetTextBkColor($ListviewAPs, RGB2BGR($ControlBackgroundColor))
@@ -1520,38 +1538,44 @@ _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-light-green.ico")
 _GUIImageList_AddIcon($hImage, $IconDir & "Signal\sec-green.ico")
 _GUICtrlListView_SetImageList($ListviewAPs, $hImage, 1)
 
-$TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5, 65, 150, 585)
+$TreeviewAPs = _GUICtrlTreeView_Create($Vistumbler, 5735, 67, 150, 585)
 _GUICtrlTreeView_SetBkColor($TreeviewAPs, $ControlBackgroundColor)
 WinSetState($TreeviewAPs, "", @SW_HIDE)
 
-$ScanButton = GUICtrlCreateButton($Text_ScanAPs, 10, 8, 70, 22)
+$ScanButton = GUICtrlCreateButton($Text_ScanAPs, 5, 5, 90, 45)
 GUICtrlSetBkColor($ScanButton, $ButtonInactiveColor)
 If $AutoScan = 1 Then ScanToggle()
-$GpsButton = GUICtrlCreateButton($Text_UseGPS, 80, 8, 70, 22)
+$GpsButton = GUICtrlCreateButton($Text_UseGPS, 95, 5, 90, 45)
 GUICtrlSetBkColor($GpsButton, $ButtonInactiveColor)
-$GraphButton1 = GUICtrlCreateButton($Text_Graph1, 10, 35, 70, 22)
-GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
-$GraphButton2 = GUICtrlCreateButton($Text_Graph2, 80, 35, 70, 22)
-GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
-$SaveAndClearButton = GUICtrlCreateButton($Text_AutoSaveAndClear, 10, 35, 140, 22)
-If $MinimalGuiMode = 1 Then
-	GUICtrlSetState($GraphButton1, $GUI_HIDE)
-	GUICtrlSetState($GraphButton2, $GUI_HIDE)
-Else
-	GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
-EndIf
+$SaveAndClearButton = GUICtrlCreateButton($Text_SaveAndClear, 185, 5, 90, 45, BitOR($BS_MULTILINE, $BS_VCENTER))
 
-$ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 155, 10, 300, 15)
+$GuiLat = GUICtrlCreateLabel($Text_Latitude & ': ' & _GpsFormat($Latitude), 285, 10, 200, 20)
 GUICtrlSetColor(-1, $TextColor)
-$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 155, 25, 300, 15)
+$GuiLon = GUICtrlCreateLabel($Text_Longitude & ': ' & _GpsFormat($Longitude), 285, 30, 200, 20)
 GUICtrlSetColor(-1, $TextColor)
-$GuiLat = GUICtrlCreateLabel($Text_Latitude & ': ' & _GpsFormat($Latitude), 460, 10, 300, 15)
+
+$ActiveAPs = GUICtrlCreateLabel($Text_ActiveAPs & ': ' & '0 / 0', 485, 10, 300, 20)
 GUICtrlSetColor(-1, $TextColor)
-$GuiLon = GUICtrlCreateLabel($Text_Longitude & ': ' & _GpsFormat($Longitude), 460, 25, 300, 15)
+$timediff = GUICtrlCreateLabel($Text_ActualLoopTime & ': 0 ms', 485, 30, 300, 20)
 GUICtrlSetColor(-1, $TextColor)
-$debugdisplay = GUICtrlCreateLabel('', 765, 10, 200, 15)
+
+
+$line_graph_Image = GUICtrlCreatePic($ImageDir & "line_graph.jpg", 7, 50, 20, 20)
+If $MinimalGuiMode = 1 Then GUICtrlSetState($line_graph_Image, $GUI_HIDE)
+$line_graph_Image_disabled = GUICtrlCreatePic($ImageDir & "line_graph_disabled.jpg", 7, 50, 20, 20)
+If $MinimalGuiMode <> 1 Then GUICtrlSetState($line_graph_Image_disabled, $GUI_HIDE)
+$line_graph_Image_alt = GUICtrlCreatePic($ImageDir & "list-view.jpg", 7, 50, 20, 20)
+GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
+$bar_graph_Image = GUICtrlCreatePic($ImageDir & "bar_graph.jpg", 29, 50, 20, 20)
+If $MinimalGuiMode = 1 Then GUICtrlSetState($bar_graph_Image, $GUI_HIDE)
+$bar_graph_Image_disabled = GUICtrlCreatePic($ImageDir & "bar_graph_disabled.jpg", 29, 50, 20, 20)
+If $MinimalGuiMode <> 1 Then GUICtrlSetState($bar_graph_Image_disabled, $GUI_HIDE)
+$bar_graph_Image_alt = GUICtrlCreatePic($ImageDir & "list-view.jpg", 29, 50, 20, 20)
+GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
+
+$msgdisplay = GUICtrlCreateLabel('', 51, 50, 434, 20)
 GUICtrlSetColor(-1, $TextColor)
-$msgdisplay = GUICtrlCreateLabel('', 155, 40, 610, 15)
+$debugdisplay = GUICtrlCreateLabel('', 485, 50, 300, 20)
 GUICtrlSetColor(-1, $TextColor)
 
 GUISwitch($Vistumbler)
@@ -1569,8 +1593,6 @@ GUISetOnEvent($GUI_EVENT_MAXIMIZE, '_ResetSizes')
 ;Buttons
 GUICtrlSetOnEvent($ScanButton, 'ScanToggle')
 GUICtrlSetOnEvent($GpsButton, '_GpsToggle')
-GUICtrlSetOnEvent($GraphButton1, '_GraphToggle')
-GUICtrlSetOnEvent($GraphButton2, '_GraphToggle2')
 GUICtrlSetOnEvent($SaveAndClearButton, '_AutoSaveAndClear')
 ;File Menu
 GUICtrlSetOnEvent($NewSession, '_NewSession')
@@ -1614,6 +1636,8 @@ GUICtrlSetOnEvent($GUI_DownloadImages, '_DownloadImagesToggle')
 GUICtrlSetOnEvent($GUI_CamTriggerMenu, '_CamTriggerToggle')
 GUICtrlSetOnEvent($GUI_PortableMode, '_PortableModeToggle')
 ;View Menu
+GUICtrlSetOnEvent($ShowGraph1, '_GraphToggle')
+GUICtrlSetOnEvent($ShowGraph2, '_GraphToggle2')
 GUICtrlSetOnEvent($AddRemoveFilters, '_ModifyFilters')
 GUICtrlSetOnEvent($AutoSortGUI, '_AutoSortToggle')
 GUICtrlSetOnEvent($AutoSelectMenuButton, '_AutoConnectToggle')
@@ -1666,6 +1690,11 @@ GUICtrlSetOnEvent($UpdateVistumbler, '_MenuUpdate')
 ;Support Vistumbler
 GUICtrlSetOnEvent($VistumblerDonate, '_OpenVistumblerDonate')
 GUICtrlSetOnEvent($VistumblerStore, '_OpenVistumblerStore')
+;Images
+GUICtrlSetOnEvent($line_graph_Image, '_GraphToggle')
+GUICtrlSetOnEvent($line_graph_Image_alt, '_GraphToggle')
+GUICtrlSetOnEvent($bar_graph_Image, '_GraphToggle2')
+GUICtrlSetOnEvent($bar_graph_Image_alt, '_GraphToggle2')
 
 ;Set Listview Widths
 _SetListviewWidths()
@@ -1974,7 +2003,8 @@ Func _ScanAccessPoints()
 			$Encryption = $aplist[$add][8]
 			$RadioType = "802.11" & $aplist[$add][12]
 			$Signal = $aplist[$add][5]
-			If $Signal <> 0 Then
+			$UDFFlag = $aplist[$add][13]
+			If $Signal <> 0 And $UDFFlag = "" Then
 				$FoundAPs += 1
 				;Add new GPS ID
 				If $FoundAPs = 1 Then
@@ -2860,27 +2890,49 @@ Func _UpdateListview($Batch = 0)
 			Else
 				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $ImpHighGpsHistID
 				$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$ImpGID = $HistMatchArray[1][1]
-				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ImpGID
-				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-				$FoundGpsMatch = UBound($GpsMatchArray) - 1
-				$ImpLat = $GpsMatchArray[1][1]
-				$ImpLon = $GpsMatchArray[1][2]
+				If IsArray($HistMatchArray) Then
+					$ImpGID = $HistMatchArray[1][1]
+					$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ImpGID
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					If IsArray($GpsMatchArray) Then
+						$FoundGpsMatch = UBound($GpsMatchArray) - 1
+						$ImpLat = $GpsMatchArray[1][1]
+						$ImpLon = $GpsMatchArray[1][2]
+					Else
+						GUICtrlSetData($msgdisplay, 'Error getting lat lon')
+						ExitLoop
+					EndIf
+				Else
+					GUICtrlSetData($msgdisplay, 'Error getting gps id')
+					ExitLoop
+				EndIf
 			EndIf
 			;Get First Time
 			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $ImpFirstHistID
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ImpDate = $HistMatchArray[1][1]
-			$ImpTime = $HistMatchArray[1][2]
-			$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
+			If IsArray($HistMatchArray) Then
+				$ImpDate = $HistMatchArray[1][1]
+				$ImpTime = $HistMatchArray[1][2]
+				$ImpFirstDateTime = $ImpDate & ' ' & $ImpTime
+			Else
+				GUICtrlSetData($msgdisplay, 'Error getting first time')
+				ExitLoop
+			EndIf
 			;Get Last Time
 			$query = "SELECT Date1, Time1, Signal, RSSI FROM Hist WHERE HistID=" & $ImpLastHistID
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-			$ImpDate = $HistMatchArray[1][1]
-			$ImpTime = $HistMatchArray[1][2]
-			$ImpSig = $HistMatchArray[1][3]
-			$ImpRSSI = $HistMatchArray[1][4]
-			$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
+			If IsArray($HistMatchArray) Then
+				$ImpDate = $HistMatchArray[1][1]
+				$ImpTime = $HistMatchArray[1][2]
+				$ImpSig = $HistMatchArray[1][3]
+				$ImpRSSI = $HistMatchArray[1][4]
+				$ImpLastDateTime = $ImpDate & ' ' & $ImpTime
+			Else
+				GUICtrlSetData($msgdisplay, 'Error getting last time')
+				ExitLoop
+			EndIf
+
+
 			;If AP is not active, mark as dead and set signal to 0
 			If $ImpActive <> 0 And $ImpSig <> 0 Then
 				$LActive = $Text_Active
@@ -3069,6 +3121,7 @@ Func _ClearAllAp()
 	;Reset Variables
 	$APID = 0
 	$CamID = 0
+	$GPS_ID = 0
 	$GPS_ID = 0
 	$HISTID = 0
 	;Clear DB
@@ -3385,6 +3438,7 @@ Func _Exit($SaveSettings = 1)
 		ProcessClose($PID)
 		If TimerDiff($CloseTimer) >= 10000 Then ExitLoop
 	WEnd
+	If $GpsLogDeleteOnExit = 1 And FileExists($GpsLogLocation) Then FileDelete($GpsLogLocation)
 	FileDelete($GoogleEarth_ActiveFile)
 	FileDelete($GoogleEarth_DeadFile)
 	FileDelete($GoogleEarth_GpsFile)
@@ -3547,19 +3601,17 @@ Func _GraphToggle() ; Graph1 Button
 	GUISetState(@SW_LOCK, $Vistumbler) ;lock gui - will be unlocked by _SetControlSizes
 	If $Graph = 1 Then
 		$Graph = 0
-		GUICtrlSetData($GraphButton1, $Text_Graph1)
-		GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
-	ElseIf $Graph = 2 Then
+		GUICtrlSetState($ShowGraph1, $GUI_UNCHECKED)
+		GUICtrlSetState($line_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
+	Else
 		$Graph = 1
-		GUISwitch($Vistumbler)
-		GUICtrlSetData($GraphButton1, $Text_NoGraph)
-		GUICtrlSetBkColor($GraphButton1, $ButtonActiveColor)
-		GUICtrlSetData($GraphButton2, $Text_Graph2)
-		GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
-	ElseIf $Graph = 0 Then
-		$Graph = 1
-		GUICtrlSetData($GraphButton1, $Text_NoGraph)
-		GUICtrlSetBkColor($GraphButton1, $ButtonActiveColor)
+		GUICtrlSetState($ShowGraph1, $GUI_CHECKED)
+		GUICtrlSetState($ShowGraph2, $GUI_UNCHECKED)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($line_graph_Image, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle
@@ -3568,18 +3620,17 @@ Func _GraphToggle2() ; Graph2 Button
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_GraphToggle2()') ;#Debug Display
 	If $Graph = 2 Then
 		$Graph = 0
-		GUICtrlSetData($GraphButton2, $Text_Graph2)
-		GUICtrlSetBkColor($GraphButton2, $ButtonInactiveColor)
-	ElseIf $Graph = 1 Then
+		GUICtrlSetState($ShowGraph2, $GUI_UNCHECKED)
+		GUICtrlSetState($bar_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
+	Else
 		$Graph = 2
-		GUICtrlSetData($GraphButton2, $Text_NoGraph)
-		GUICtrlSetBkColor($GraphButton2, $ButtonActiveColor)
-		GUICtrlSetData($GraphButton1, $Text_Graph1)
-		GUICtrlSetBkColor($GraphButton1, $ButtonInactiveColor)
-	ElseIf $Graph = 0 Then
-		$Graph = 2
-		GUICtrlSetData($GraphButton2, $Text_NoGraph)
-		GUICtrlSetBkColor($GraphButton2, $ButtonActiveColor)
+		GUICtrlSetState($ShowGraph2, $GUI_CHECKED)
+		GUICtrlSetState($ShowGraph1, $GUI_UNCHECKED)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_SHOW)
+		GUICtrlSetState($line_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image, $GUI_HIDE)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
 	EndIf
 	_SetControlSizes()
 EndFunc   ;==>_GraphToggle2
@@ -3588,15 +3639,24 @@ Func _MinimalGuiModeToggle()
 	If $MinimalGuiMode = 1 Then
 		$MinimalGuiMode = 0
 		GUICtrlSetState($GuiMinimalGuiMode, $GUI_UNCHECKED)
+		GUICtrlSetState($GraphViewOptions, $GUI_ENABLE)
 		GUICtrlSetData($msgdisplay, "Restoring GUI")
 		_UpdateListview(1)
 		$a = WinGetPos($Vistumbler)
-		WinMove($title, "", $a[0], $a[1], $a[2], $MinimalGuiExitHeight) ;Resize window to Minimal GUI Height
+		WinMove($title, "", $a[0], $a[1], $a[2], $MinimalGuiExitHeight) ;Resize window to Full GUI Height
 		GUICtrlSetData($msgdisplay, "")
+		;re-enable graph buttons
+		GUICtrlSetState($line_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
+		GUICtrlSetState($line_graph_Image_disabled, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image_disabled, $GUI_HIDE)
 	Else
 		$MinimalGuiMode = 1
 		$ClearListAndTree = 1
 		GUICtrlSetState($GuiMinimalGuiMode, $GUI_CHECKED)
+		GUICtrlSetState($GraphViewOptions, $GUI_DISABLE)
 		If $VistumblerState = "Maximized" Then
 			WinSetState($title, "", @SW_RESTORE)
 			$VistumblerState = "Window"
@@ -3605,7 +3665,14 @@ Func _MinimalGuiModeToggle()
 		$MinimalGuiExitHeight = $a[3]
 		$b = _WinAPI_GetClientRect($Vistumbler)
 		$titlebar_height = $a[3] - (DllStructGetData($b, "Bottom") - DllStructGetData($b, "Top"))
-		WinMove($title, "", $a[0], $a[1], $a[2], $titlebar_height + 65) ;Resize window to Minimal GUI Height
+		WinMove($title, "", $a[0], $a[1], $a[2], $titlebar_height + 72) ;Resize window to Minimal GUI Height
+		;re-enable graph buttons
+		GUICtrlSetState($line_graph_Image, $GUI_HIDE)
+		GUICtrlSetState($line_graph_Image_alt, $GUI_HIDE)
+		GUICtrlSetState($line_graph_Image_disabled, $GUI_SHOW)
+		GUICtrlSetState($bar_graph_Image, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image_alt, $GUI_HIDE)
+		GUICtrlSetState($bar_graph_Image_disabled, $GUI_SHOW)
 	EndIf
 EndFunc   ;==>_MinimalGuiModeToggle
 
@@ -4038,11 +4105,12 @@ Func _GetGPS() ; Recieves data from gps device
 	While 1 ;Loop to extract gps data untill location is found or timout time is reached
 		If $UseGPS = 0 Then ExitLoop
 		If $GpsType = 0 Then ;Use CommMG
-			$dataline = StringStripWS(_CommGetLine(@CR, 500, $maxtime), 8) ;Read data line from GPS
+			$dataline = StringStripWS(_CommGetLine(@CR, 768, $maxtime), 8) ;Read data line from GPS
+			If $GpsLogEnabled = 1 Then _LogGpsToFile($dataline)
 			If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dataline) ;Show data line in "GPS Details" GUI if it is open
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
 				$FoundData = 1
-				If StringInStr($dataline, "$GPGGA") Then
+				If StringInStr($dataline, "$GPGGA") Or StringInStr($dataline, "$GNGGA") Then
 					_GPGGA($dataline) ;Split GPGGA data from data string
 					$disconnected_time = -1
 				ElseIf StringInStr($dataline, "$GPRMC") Then
@@ -4060,9 +4128,10 @@ Func _GetGPS() ; Recieves data from gps device
 						$gps = StringSplit($inputdata, @CR) ;Split data string by CR and put data into the $gps array
 						For $readloop = 1 To $gps[0] ;go through array
 							$gpsline = StringStripWS($gps[$readloop], 3)
+							If $GpsLogEnabled = 1 Then _LogGpsToFile($gpsline)
 							If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $gpsline) ;Show data line in "GPS Details" GUI if it is open
 							If StringInStr($gpsline, '$') And StringInStr($gpsline, '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-								If StringInStr($gpsline, "$GPGGA") Then
+								If StringInStr($gpsline, "$GPGGA") Or StringInStr($gpsline, "$GNGGA") Then
 									_GPGGA($gpsline) ;Split GPGGA data from data string
 								ElseIf StringInStr($gpsline, "$GPRMC") Then
 									_GPRMC($gpsline) ;Split GPRMC data from data string
@@ -4075,16 +4144,17 @@ Func _GetGPS() ; Recieves data from gps device
 				EndIf
 			EndIf
 		ElseIf $GpsType = 2 Then ;Use Kernel32
-			$gstring = StringStripWS(_rxwait($OpenedPort, '500', $maxtime), 8) ;Read data line from GPS
+			$gstring = StringStripWS(_rxwait($OpenedPort, '768', $maxtime), 8) ;Read data line from GPS
 			$dataline = $gstring ; & $LastGpsString
 			$LastGpsString = $gstring
 			If StringInStr($dataline, '$') And StringInStr($dataline, '*') Then
 				$FoundData = 1
 				$dlsplit = StringSplit($dataline, '$')
 				For $gda = 1 To $dlsplit[0]
+					If $GpsLogEnabled = 1 Then _LogGpsToFile('$' & $dlsplit[$gda])
 					If $GpsDetailsOpen = 1 Then GUICtrlSetData($GpsCurrentDataGUI, $dlsplit[$gda]) ;Show data line in "GPS Details" GUI if it is open
 					If StringInStr($dlsplit[$gda], '*') Then ;Check if string containts start character ($) and checsum character (*). If it does not have them, ignore the data
-						If StringInStr($dlsplit[$gda], "GPGGA") Then
+						If StringInStr($dlsplit[$gda], "GPGGA") Or StringInStr($dlsplit[$gda], "GNGGA") Then
 							_GPGGA($dlsplit[$gda]) ;Split GPGGA data from data string
 							$disconnected_time = -1
 						ElseIf StringInStr($dlsplit[$gda], "GPRMC") Then
@@ -4345,6 +4415,17 @@ Func _GpsFormat($gps) ;Converts ddmm.mmmm to the users set gps format
 	If $GPSformat = 3 Then $return = $gps
 	Return ($return)
 EndFunc   ;==>_GpsFormat
+
+Func _LogGpsToFile($data)
+	Local $hFileOpen = FileOpen($GpsLogLocation, $FO_APPEND)
+	If $hFileOpen = -1 Then
+		GUICtrlSetData($msgdisplay, $Text_NMEALogError)
+	Else
+		FileWriteLine($hFileOpen, $data & @CRLF)
+		FileClose($hFileOpen)
+	EndIf
+
+EndFunc   ;==>_LogGpsToFile
 
 ;-------------------------------------------------------------------------------------------------------------------------------
 ;                                                       GPS COMPASS GUI FUNCTIONS
@@ -4865,16 +4946,13 @@ Func _SetControlSizes() ;Sets control positions in GUI based on the windows curr
 	If $sizes <> $sizes_old Or $Graph <> $Graph_old Or $MinimalGuiMode <> $MinimalGuiMode_old Then
 		$DataChild_Left = 2
 		$DataChild_Width = DllStructGetData($a, "Right")
-		$DataChild_Top = 65
+		$DataChild_Top = 72
 		$DataChild_Height = DllStructGetData($a, "Bottom") - $DataChild_Top
 		If $MinimalGuiMode = 1 Then
 			GUISetState(@SW_LOCK, $Vistumbler)
 			WinSetState($TreeviewAPs, "", @SW_HIDE)
 			WinSetState($ListviewAPs, "", @SW_HIDE)
 			GUISetState(@SW_HIDE, $GraphicGUI)
-			GUICtrlSetState($GraphButton1, $GUI_HIDE)
-			GUICtrlSetState($GraphButton2, $GUI_HIDE)
-			GUICtrlSetState($SaveAndClearButton, $GUI_SHOW)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 		ElseIf $Graph <> 0 Then
 			$Graphic_left = $DataChild_Left
@@ -4896,9 +4974,6 @@ Func _SetControlSizes() ;Sets control positions in GUI based on the windows curr
 			WinSetState($TreeviewAPs, "", @SW_HIDE)
 			WinSetState($ListviewAPs, "", @SW_SHOW)
 			GUISetState(@SW_SHOW, $GraphicGUI)
-			GUICtrlSetState($GraphButton1, $GUI_SHOW)
-			GUICtrlSetState($GraphButton2, $GUI_SHOW)
-			GUICtrlSetState($SaveAndClearButton, $GUI_HIDE)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 
 			$Graphic = _GDIPlus_GraphicsCreateFromHWND($GraphicGUI)
@@ -4921,8 +4996,6 @@ Func _SetControlSizes() ;Sets control positions in GUI based on the windows curr
 			WinSetState($TreeviewAPs, "", @SW_SHOW)
 			WinSetState($ListviewAPs, "", @SW_SHOW)
 			GUISetState(@SW_HIDE, $GraphicGUI)
-			GUICtrlSetState($GraphButton1, $GUI_SHOW)
-			GUICtrlSetState($GraphButton2, $GUI_SHOW)
 			GUISetState(@SW_UNLOCK, $Vistumbler)
 		EndIf
 		$sizes_old = $sizes
@@ -5225,87 +5298,104 @@ Func _GraphDraw()
 		$ListRowMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$GraphApID = $ListRowMatchArray[1][1]
 		If $Graph = 1 Then
-			$max_graph_points = '125'
+			$max_graph_points = '50'
 			$query = "SELECT TOP " & $max_graph_points & " Signal, RSSI, ApID, Date1, Time1 FROM Hist WHERE ApID=" & $GraphApID & " And Signal<>0 ORDER BY Date1, Time1 Desc"
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
-				If $HistSize < $max_graph_points Then $max_graph_points = $HistSize ;Fix to prevent graph from drawing outside its region when the are 0% marks
-				Local $graph_point_center_y, $graph_point_center_x, $Found_dts, $gloop
-				Local $GraphWidthSpacing = $Graph_width / ($HistSize - 1)
+				;If $HistSize < $max_graph_points Then $max_graph_points = $HistSize ;Fix to prevent graph from drawing outside its region when the are 0% marks
+				Local $graph_point_center_y, $graph_point_center_x, $Found_dts, $gloop, $Exp_Datetime
+				Local $GraphWidthSpacing = $Graph_width / ($max_graph_points - 1)
+				ConsoleWrite($GraphWidthSpacing & @CRLF)
 				Local $GraphHeightSpacing = $Graph_height / 100
 				For $gs = 1 To $HistSize
-					$gloop += 1
-					If $gloop > $max_graph_points Then ExitLoop
 					$ExpSig = $HistMatchArray[$gs][1] - 0
 					$ExpRSSI = $HistMatchArray[$gs][2]
 					$ExpApID = $HistMatchArray[$gs][3]
-					$ExpDate = $HistMatchArray[$gs][4]
+					$Last_Datetime = $Exp_Datetime
+					$Exp_Datetime = StringTrimRight($HistMatchArray[$gs][4] & ' ' & $HistMatchArray[$gs][5], 4)
 
-					$Last_dts = $Found_dts
-					$ts = StringSplit($HistMatchArray[$gs][5], ":")
-					$ExpTime = ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4) ;In seconds
-					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
-
-
-					$old_graph_point_center_x = $graph_point_center_x
-					$old_graph_point_center_y = $graph_point_center_y
-					$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gloop - 1))
-					If $UseRssiInGraphs = 1 Then
-						$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
-						;ConsoleWrite($graph_point_center_y & @CRLF)
-					Else
-						$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
-					EndIf
-
-					;Draw Point
-					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
-					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
-					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
-
-					;Draw Connecting line
-					If $gs <> 1 Then
-						;Draw Connecting line
-						_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
-						;Draw any gaps that may exist (AP at 0%)
-						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
-							If $GraphDeadTime = 1 Then
-								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
-								For $wz = 1 To $numofzeros
-									$gloop += 1
-									If $gloop > $max_graph_points Then ExitLoop
-
-									$old_graph_point_center_x = $graph_point_center_x
-									$old_graph_point_center_y = $graph_point_center_y
-									$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gloop - 1))
+					If $gs = 1 Then
+						$Cur_Datetime = StringTrimRight($datestamp & ' ' & $timestamp, 4)
+						$DateDiffInSecondsFromNow = _DateDiff('s', $Exp_Datetime, $Cur_Datetime)
+						ConsoleWrite("$DateDiffInSecondsFromNow:" & $DateDiffInSecondsFromNow & " - " & $Exp_Datetime & " - " & $Cur_Datetime & @CRLF)
+						If $DateDiffInSecondsFromNow >= 1 And $GraphDeadTime = 1 Then
+							For $az = 1 To $DateDiffInSecondsFromNow
+								If $gloop = 0 Then
+									$graph_point_center_x = $Graph_leftborder + $Graph_width
 									$graph_point_center_y = $Graph_topborder + $Graph_height
-
 									;Draw Point
 									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
 									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
 									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
-
+								Else
+									$old_graph_point_center_x = $graph_point_center_x
+									$old_graph_point_center_y = $graph_point_center_y
+									$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * $gloop)
+									$graph_point_center_y = $Graph_topborder + $Graph_height
+									;Draw Point
+									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
+									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
+									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
 									;Draw Line
 									_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
-								Next
-							Else
+								EndIf
 								$gloop += 1
-								If $gloop > $max_graph_points Then ExitLoop
-
+								If $gloop = $max_graph_points Then ExitLoop
+							Next
+							If $gloop = $max_graph_points Then ExitLoop
+						Else
+							$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * $gloop)
+							If $UseRssiInGraphs = 1 Then
+								$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
+							Else
+								$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
+							EndIf
+							;Draw Point
+							_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
+							_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
+							_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
+							$gloop += 1
+							If $gloop = $max_graph_points Then ExitLoop
+						EndIf
+					Else
+						$DateDiffInSeconds = _DateDiff('s', $Exp_Datetime, $Last_Datetime)
+						;Add in blank values for dead time, if the option is selected
+						If $DateDiffInSeconds >= $TimeBeforeMarkedDead And $GraphDeadTime = 1 Then
+							For $az = 1 To $DateDiffInSeconds
 								$old_graph_point_center_x = $graph_point_center_x
 								$old_graph_point_center_y = $graph_point_center_y
-								$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * ($gloop - 1))
+								$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * $gloop)
 								$graph_point_center_y = $Graph_topborder + $Graph_height
-
 								;Draw Point
 								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
 								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
 								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
-
 								;Draw Line
 								_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
-							EndIf
+								$gloop += 1
+								If $gloop = $max_graph_points Then ExitLoop
+							Next
+							If $gloop = $max_graph_points Then ExitLoop
 						EndIf
+
+						$old_graph_point_center_x = $graph_point_center_x
+						$old_graph_point_center_y = $graph_point_center_y
+						$graph_point_center_x = ($Graph_leftborder + $Graph_width) - ($GraphWidthSpacing * $gloop)
+						If $UseRssiInGraphs = 1 Then
+							$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * (100 + $ExpRSSI)))
+						Else
+							$graph_point_center_y = $Graph_topborder + ($Graph_height - ($GraphHeightSpacing * $ExpSig))
+						EndIf
+						;Draw Point
+						_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y - 1, $graph_point_center_x + 1, $graph_point_center_y - 1, $Pen_Red)
+						_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y, $graph_point_center_x + 1, $graph_point_center_y, $Pen_Red)
+						_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_point_center_x - 1, $graph_point_center_y + 1, $graph_point_center_x + 1, $graph_point_center_y + 1, $Pen_Red)
+						;Draw Line
+						_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $old_graph_point_center_x, $old_graph_point_center_y, $graph_point_center_x, $graph_point_center_y, $Pen_Red)
+
+						$gloop += 1
+						If $gloop = $max_graph_points Then ExitLoop
 					EndIf
 				Next
 			EndIf
@@ -5315,7 +5405,7 @@ Func _GraphDraw()
 			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 			$HistSize = UBound($HistMatchArray) - 1
 			If $HistSize <> 0 Then
-				Local $Found_dts, $gloop
+				Local $Found_dts, $gloop, $Exp_Datetime
 				Local $GraphWidthSpacing = $Graph_width / $max_graph_points
 				Local $GraphHeightSpacing = $Graph_height / 100
 				For $gs = 1 To $HistSize
@@ -5324,12 +5414,21 @@ Func _GraphDraw()
 					$ExpSig = $HistMatchArray[$gs][1] - 0
 					$ExpRSSI = $HistMatchArray[$gs][2]
 					$ExpApID = $HistMatchArray[$gs][3]
-					$ExpDate = $HistMatchArray[$gs][4]
+					$Last_Datetime = $Exp_Datetime
+					$Exp_Datetime = StringTrimRight($HistMatchArray[$gs][4] & ' ' & $HistMatchArray[$gs][5], 4)
 
-					$Last_dts = $Found_dts
-					$ts = StringSplit($HistMatchArray[$gs][5], ":")
-					$ExpTime = ($ts[1] * 3600) + ($ts[2] * 60) + StringTrimRight($ts[3], 4) ;In seconds
-					$Found_dts = StringReplace($ExpDate & $ExpTime, '-', '')
+					If $gs = 1 And $GraphDeadTime = 1 Then
+						$Cur_Datetime = StringTrimRight($datestamp & ' ' & $timestamp, 4)
+						$DateDiffInSecondsFromNow = _DateDiff('s', $Exp_Datetime, $Cur_Datetime)
+						ConsoleWrite("$DateDiffInSecondsFromNow:" & $DateDiffInSecondsFromNow & " - " & $Exp_Datetime & " - " & $Cur_Datetime & @CRLF)
+						If $DateDiffInSecondsFromNow >= $TimeBeforeMarkedDead Then
+							For $az = 1 To $DateDiffInSecondsFromNow
+								$gloop += 1
+								If $gloop > $max_graph_points Then ExitLoop
+							Next
+							If $gloop > $max_graph_points Then ExitLoop
+						EndIf
+					EndIf
 
 					;Draw line for signal strength
 					If $UseRssiInGraphs = 1 Then
@@ -5343,21 +5442,16 @@ Func _GraphDraw()
 					_GDIPlus_GraphicsDrawLine($Graph_backbuffer, $graph_line_top_x, $graph_line_top_y, $graph_line_bottom_x, $graph_line_bottom_y, $Pen_Red)
 
 					;increment $gloop for any gaps that may exist (AP at 0%)
-					If $gs <> 1 Then
-						If ($Last_dts - $Found_dts) > $TimeBeforeMarkedDead Then
-							If $GraphDeadTime = 1 Then
-								$numofzeros = ($Last_dts - $Found_dts) - $TimeBeforeMarkedDead
-								For $wz = 1 To $numofzeros
-									$gloop += 1
-									If $gloop > $max_graph_points Then ExitLoop
-								Next
-							Else
+					If $gs <> 1 And $GraphDeadTime = 1 Then
+						$DateDiffInSeconds = _DateDiff('s', $Exp_Datetime, $Last_Datetime)
+						If $DateDiffInSeconds >= $TimeBeforeMarkedDead Then
+							For $az = 1 To $DateDiffInSeconds
 								$gloop += 1
 								If $gloop > $max_graph_points Then ExitLoop
-							EndIf
+							Next
+							If $gloop = $max_graph_points Then ExitLoop
 						EndIf
 					EndIf
-
 				Next
 			EndIf
 		EndIf
@@ -6972,6 +7066,7 @@ Func _AutoSaveAndClear() ;Autosaves data to a file name based on current time
 	If $expvs1 = 1 Then
 		GUICtrlSetData($msgdisplay, "File Exported Successfully. Clearing List")
 		_ClearAll()
+		$newdata = 0
 	Else
 		GUICtrlSetData($msgdisplay, "Error Saving File. List will not be cleared.")
 	EndIf
@@ -7137,17 +7232,18 @@ EndFunc   ;==>_ExportCsvFilteredData
 
 Func _ExportCsvDataGui($Gui_CsvFilter = 0) ;Saves data to a selected file
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui()') ;#Debug Display
-	$Gui_Csv = GUICreate($Text_ExportToCSV, 543, 132)
+	$Gui_Csv = GUICreate($Text_ExportToCSV, 543, 150)
 	GUISetBkColor($BackgroundColor)
 	$Gui_CsvFile = GUICtrlCreateInput($SaveDir & $ldatetimestamp & '.csv', 20, 20, 409, 21)
 	$GUI_CsvSaveAs = GUICtrlCreateButton($Text_Browse, 440, 20, 81, 22, $WS_GROUP)
 	$Gui_CsvRadDetailed = GUICtrlCreateRadio($Text_DetailedCsvFile, 20, 50, 250, 20)
 	GUICtrlSetState($Gui_CsvRadDetailed, $GUI_CHECKED)
 	$Gui_CsvRadSummary = GUICtrlCreateRadio($Text_SummaryCsvFile, 20, 70, 250, 20)
+	$Gui_CsvRadWigle = GUICtrlCreateRadio($Text_WigleCsvFile, 20, 90, 250, 20)
 	$Gui_CsvFiltered = GUICtrlCreateCheckbox($Text_Filtered, 300, 50, 250, 20)
 	If $Gui_CsvFilter = 1 Then GUICtrlSetState($Gui_CsvFiltered, $GUI_CHECKED)
-	$Gui_CsvOk = GUICtrlCreateButton($Text_Ok, 128, 95, 97, 25, $WS_GROUP)
-	$Gui_CsvCancel = GUICtrlCreateButton($Text_Cancel, 290, 95, 97, 25, $WS_GROUP)
+	$Gui_CsvOk = GUICtrlCreateButton($Text_Ok, 128, 115, 97, 25, $WS_GROUP)
+	$Gui_CsvCancel = GUICtrlCreateButton($Text_Cancel, 290, 115, 97, 25, $WS_GROUP)
 	GUISetState(@SW_SHOW)
 	GUICtrlSetOnEvent($GUI_CsvSaveAs, "_ExportCsvDataGui_SaveAs")
 	GUICtrlSetOnEvent($Gui_CsvOk, "_ExportCsvDataGui_Ok")
@@ -7158,20 +7254,33 @@ EndFunc   ;==>_ExportCsvDataGui
 Func _ExportCsvDataGui_Ok()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui_Ok()') ;#Debug Display
 	$filename = GUICtrlRead($Gui_CsvFile)
-	If GUICtrlRead($Gui_CsvRadSummary) = 1 Then
-		$CsvDetailed = 0
+	$CsvWigleWifi = 0
+	$CsvDetailed = 0
+	$CsvFiltered = 0
+	If GUICtrlRead($Gui_CsvRadWigle) = 1 Then
+		$CsvWigleWifi = 1
 	Else
+		$CsvWigleWifi = 0
+	EndIf
+	If GUICtrlRead($Gui_CsvRadDetailed) = 1 Then
 		$CsvDetailed = 1
+	Else
+		$CsvDetailed = 0
 	EndIf
 	If GUICtrlRead($Gui_CsvFiltered) = 1 Then
 		$CsvFiltered = 1
 	Else
 		$CsvFiltered = 0
 	EndIf
+
 	_ExportCsvDataGui_Close()
 
 	If StringInStr($filename, '.csv') = 0 Then $filename = $filename & '.csv'
-	$saved = _ExportToCSV($filename, $CsvFiltered, $CsvDetailed)
+	If $CsvWigleWifi = 1 Then
+		$saved = _ExportToWigleCSV($filename, $CsvFiltered)
+	Else
+		$saved = _ExportToCSV($filename, $CsvFiltered, $CsvDetailed)
+	EndIf
 	If $saved = 1 Then
 		MsgBox(0, $Text_Done, $Text_SavedAs & ': "' & $filename & '"')
 	Else
@@ -7297,6 +7406,114 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0) ;writes vistumbler data
 		Return (0)
 	EndIf
 EndFunc   ;==>_ExportToCSV
+
+Func _ExportToWigleCSV($savefile, $Filter = 0) ;writes vistumbler data to a csv file
+	ConsoleWrite("$Filter:" & $Filter & @CRLF)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportToCSV()') ;#Debug Display
+	If $Filter = 1 Then
+		$query = $AddQuery
+	Else
+		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	EndIf
+
+	$dev_model = ""
+	$dev_brand = ""
+	$dev_version = ""
+	$wbemFlagReturnImmediately = 0x10
+	$wbemFlagForwardOnly = 0x20
+	$objWMIService = ObjGet("winmgmts:\\.\root\CIMV2")
+	$colItems = $objWMIService.ExecQuery("SELECT * FROM Win32_ComputerSystemProduct", "WQL", $wbemFlagReturnImmediately + $wbemFlagForwardOnly)
+	If IsObj($colItems) Then
+		For $objItem In $colItems
+			$dev_model = $objItem.Name
+			$dev_brand = $objItem.Vendor
+			$dev_version = $objItem.Version
+		Next
+	EndIf
+
+	$file = "WigleWifi-1.4,appRelease=" & StringReplace($Script_Name, ",", "") & " " & StringReplace($version, ",", "") & ",model=" & StringReplace($DefaultApapterDesc, ",", "") & ",release=" & StringReplace($dev_version, ",", "") & ",device=" & StringReplace($dev_model, ",", "") & ",display=,board=,brand=" & StringReplace($dev_brand, ",", "") & @LF
+	$file &= "MAC,SSID,AuthMode,FirstSeen,Channel,RSSI,CurrentLatitude,CurrentLongitude,AltitudeMeters,AccuracyMeters,Type" & @LF
+	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	$FoundApMatch = UBound($ApMatchArray) - 1
+	If $FoundApMatch > 0 Then
+		For $exp = 1 To $FoundApMatch
+			GUICtrlSetData($msgdisplay, $Text_SavingLine & ' ' & $exp & ' / ' & $FoundApMatch)
+			$ExpApID = $ApMatchArray[$exp][1]
+			$ExpSSID = $ApMatchArray[$exp][2]
+			$ExpBSSID = StringLower($ApMatchArray[$exp][3])
+			$ExpNET = $ApMatchArray[$exp][4]
+			$ExpRAD = $ApMatchArray[$exp][5]
+			$ExpCHAN = $ApMatchArray[$exp][6]
+			$ExpAUTH = $ApMatchArray[$exp][7]
+			$ExpENCR = $ApMatchArray[$exp][8]
+			$ExpSECTYPE = $ApMatchArray[$exp][9]
+			$ExpBTX = $ApMatchArray[$exp][10]
+			$ExpOTX = $ApMatchArray[$exp][11]
+			$ExpHighSig = $ApMatchArray[$exp][12]
+			$ExpHighRSSI = $ApMatchArray[$exp][13]
+			$ExpMANU = $ApMatchArray[$exp][14]
+			$ExpLAB = $ApMatchArray[$exp][15]
+			$ExpHighGpsID = $ApMatchArray[$exp][16]
+			$ExpFirstID = $ApMatchArray[$exp][17]
+			$ExpLastID = $ApMatchArray[$exp][18]
+
+			;Get All Signals and GpsIDs for current ApID
+			$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID & " And Signal<>0 ORDER BY Date1, Time1"
+			$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+			$FoundHistMatch = UBound($HistMatchArray) - 1
+			For $exph = 1 To $FoundHistMatch
+				$ExpGID = $HistMatchArray[$exph][1]
+				$ExpSig = $HistMatchArray[$exph][2]
+				$ExpRSSI = $HistMatchArray[$exph][3]
+				;Get GPS Data Based on GpsID
+				$query = "SELECT Latitude, Longitude, HorDilPitch, Alt, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID=" & $ExpGID
+				$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
+				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][2]), 'W', '-'), 'E', ''), ' ', '')
+				$ExpHDOP = $GpsMatchArray[1][3]
+				$ExpAlt = $GpsMatchArray[1][4]
+				$ExpTrack = $GpsMatchArray[1][5]
+				$ExpDate = $GpsMatchArray[1][6]
+				$ExpTime = StringTrimRight($GpsMatchArray[1][7], 4)
+				$Exp_Accuracy = $ExpHDOP * 5
+
+				$ExpFlags = ""
+				If $ExpAUTH = "WPA2-Enterprise" And $ExpENCR = "CCMP" Then
+					$ExpFlags &= "[WPA2-EAP-CCMP]"
+				ElseIf $ExpAUTH = "WPA-Enterprise" And $ExpENCR = "CCMP" Then
+					$ExpFlags &= "[WPA-EAP-CCMP]"
+				ElseIf $ExpAUTH = "WPA2-Personal" And $ExpENCR = "CCMP" Then
+					$ExpFlags &= "[WPA2-PSK-CCMP]"
+				ElseIf $ExpAUTH = "WPA-Personal" And $ExpENCR = "CCMP" Then
+					$ExpFlags &= "[WPA-PSK-CCMP]"
+				ElseIf $ExpAUTH = "WPA2-Enterprise" And $ExpENCR = "TKIP" Then
+					$ExpFlags &= "[WPA2-EAP-TKIP]"
+				ElseIf $ExpAUTH = "WPA-Enterprise" And $ExpENCR = "TKIP" Then
+					$ExpFlags &= "[WPA-EAP-TKIP]"
+				ElseIf $ExpAUTH = "WPA2-Personal" And $ExpENCR = "TKIP" Then
+					$ExpFlags &= "[WPA2-PSK-TKIP]"
+				ElseIf $ExpAUTH = "WPA-Personal" And $ExpENCR = "TKIP" Then
+					$ExpFlags &= "[WPA-PSK-TKIP]"
+				ElseIf $ExpAUTH = "Open" And $ExpENCR = "WEP" Then
+					$ExpFlags &= "[WEP]"
+				EndIf
+
+				If $ExpNET = $SearchWord_Adhoc Or $ExpNET = "Ad Hoc" Then
+					$ExpFlags += "[IBSS]"
+				EndIf
+				;Write wigle wifi csv line
+				$file &= $ExpBSSID & "," & StringReplace($ExpSSID, ",", "") & "," & $ExpFlags & "," & $ExpDate & " " & $ExpTime & "," & $ExpCHAN & "," & $ExpRSSI & "," & $ExpLat & "," & $ExpLon & "," & $ExpAlt & "," & $Exp_Accuracy & ",WIFI" & @LF
+
+			Next
+		Next
+		$savefile = FileOpen($savefile, 128 + 2) ;Open in UTF-8 write mode
+		FileWrite($savefile, $file)
+		FileClose($savefile)
+		Return (1)
+	Else
+		Return (0)
+	EndIf
+EndFunc   ;==>_ExportToWigleCSV
 
 Func _SaveToGPX()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SaveToGPX()') ;#Debug Display
@@ -7630,6 +7847,9 @@ Func _WriteINI()
 	IniWrite($settings, 'GpsSettings', 'GpsTimeout', $GpsTimeout)
 	IniWrite($settings, 'GpsSettings', 'GpsDisconnect', $GpsDisconnect)
 	IniWrite($settings, 'GpsSettings', 'GpsReset', $GpsReset)
+	IniWrite($settings, 'GpsSettings', 'GpsLogLocation', $GpsLogLocation)
+	IniWrite($settings, 'GpsSettings', 'GpsLogEnabled', $GpsLogEnabled)
+	IniWrite($settings, 'GpsSettings', 'GpsLogDeleteOnExit', $GpsLogDeleteOnExit)
 
 	IniWrite($settings, "AutoSort", "AutoSortTime", $SortTime)
 	IniWrite($settings, "AutoSort", "AutoSort", $AutoSort)
@@ -7945,6 +8165,7 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Error', $Text_Error)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', $Text_NoSignalHistory)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'NoApSelected', $Text_NoApSelected)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseNetcomm', $Text_UseNetcomm)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UseCommMG', $Text_UseCommMG)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SignalHistory', $Text_SignalHistory)
@@ -7953,6 +8174,8 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Ascending', $Text_Ascending)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Decending', $Text_Decending)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoRecoveryVS1', $Text_AutoRecoveryVS1)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClear', $Text_AutoSaveAndClear)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SaveAndClear', $Text_SaveAndClear)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', $Text_AutoSaveEvery)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', $Text_DelAutoSaveOnExit)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'OpenSaveFolder', $Text_OpenSaveFolder)
@@ -8101,7 +8324,6 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', $Text_AddingApsIntoList)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', $Text_GoogleEarthDoesNotExist)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', $Text_AutoKmlIsNotStarted)
-	IniWrite($DefaultLanguagePath, 'GuiText', 'UseKernel32', $Text_UseKernel32)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', $Text_UnableToGuessSearchwords)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'SelectedAP', $Text_SelectedAP)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'AllAPs', $Text_AllAPs)
@@ -8208,6 +8430,11 @@ Func _WriteINI()
 	IniWrite($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', $Text_ButtonInactiveColor)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'Text', $Text_Text)
 	IniWrite($DefaultLanguagePath, 'GuiText', 'GUITextSize', $Text_GUITextSize)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'GPSLogging', $Text_GPSLogging)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'SaveNMEAData', $Text_SaveNMEAData)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'DeleteNMEAlog', $Text_DeleteNMEAlog)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'LogFileLocation', $Text_LogFileLocation)
+	IniWrite($DefaultLanguagePath, 'GuiText', 'NMEALogError', $Text_NMEALogError)
 EndFunc   ;==>_WriteINI
 
 ;-------------------------------------------------------------------------------------------------------------------------------
@@ -8275,8 +8502,9 @@ Func _LoadListGUI($imfile1 = "")
 	$RadCsv = GUICtrlCreateRadio($Text_DetailedCsvFile & ' (CSV)', 10, 60, 240, 20)
 	$RadNs = GUICtrlCreateRadio($Text_NetstumblerTxtFile & ' (TXT, NS1)', 255, 40, 240, 20)
 	$RadWD = GUICtrlCreateRadio($Text_WardriveDb3File & ' (DB3)', 255, 60, 240, 20)
-	$NsOk = GUICtrlCreateButton($Text_Ok, 95, 95, 150, 25, $WS_GROUP)
-	$NsCancel = GUICtrlCreateButton($Text_Close, 255, 95, 150, 25, $WS_GROUP)
+	$RadWigle = GUICtrlCreateRadio($Text_WigleCsvFile & ' (CSV)', 255, 80, 240, 20)
+	$NsOk = GUICtrlCreateButton($Text_Ok, 95, 105, 150, 25, $WS_GROUP)
+	$NsCancel = GUICtrlCreateButton($Text_Close, 255, 105, 150, 25, $WS_GROUP)
 	$progressbar = GUICtrlCreateProgress(10, 135, 480, 20)
 	$percentlabel = GUICtrlCreateLabel($Text_Progress & ': ' & $Text_Ready, 10, 165, 230, 20)
 	$linetotal = GUICtrlCreateLabel($Text_LineTotal & ':', 10, 190, 250, 20)
@@ -8306,7 +8534,10 @@ Func _ImportFileBrowse()
 		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_NetstumblerTxtFile & ' (*.txt;*.ns1)', 1)
 		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 	ElseIf GUICtrlRead($RadWD) = 1 Then
-		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, "Wardrive-android file" & ' (*.db3)', 1)
+		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_WardriveDb3File & ' (*.db3)', 1)
+		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
+	ElseIf GUICtrlRead($RadWigle) = 1 Then
+		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_WigleCsvFile & ' (*.csv)', 1)
 		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 	EndIf
 EndFunc   ;==>_ImportFileBrowse
@@ -8347,6 +8578,8 @@ Func _ImportOk()
 			_ImportNS1($loadfile)
 		ElseIf GUICtrlRead($RadWD) = 1 Then
 			_ImportWardriveDb3($loadfile)
+		ElseIf GUICtrlRead($RadWigle) = 1 Then
+			_ImportWigleCSV($loadfile)
 		EndIf
 		$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
 		GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
@@ -8875,6 +9108,138 @@ Func _ImportCSV($CSVfile)
 	EndIf
 EndFunc   ;==>_ImportCSV
 
+Func _ImportWigleCSV($CSVfile)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportWigleCSV()') ;#Debug Display
+	$vistumblerfile = FileOpen($CSVfile, 0)
+	If $vistumblerfile <> -1 Then
+		$begintime = TimerInit()
+		$currentline = 1
+		$AddAP = 0
+		$AddGID = 0
+		;Start Importing File
+		$CSVArray = _ParseCSV($CSVfile, ',|', '"')
+		$iSize = UBound($CSVArray) - 1
+		$iCol = UBound($CSVArray, 2)
+		ConsoleWrite($iCol)
+		If $iCol = 11 Then ;Import Wigle Wifi Line
+			For $lc = 2 To $iSize
+				$currentline = $lc
+				$ImpBSSID = StringUpper($CSVArray[$lc][0])
+				$ImpSSID = $CSVArray[$lc][1]
+				If StringLeft($ImpSSID, 1) = '"' And StringRight($ImpSSID, 1) = '"' Then $ImpSSID = StringTrimLeft(StringTrimRight($ImpSSID, 1), 1)
+				$ImpAuthMode = $CSVArray[$lc][2]
+				$ImpDateTime = $CSVArray[$lc][3]
+				$ImpCHAN = $CSVArray[$lc][4]
+				$ImpRSSI = $CSVArray[$lc][5]
+				$ImpSig = _DbToSignalPercent($ImpRSSI)
+				$ImpLat = _Format_GPS_DDD_to_DMM($CSVArray[$lc][6], "N", "S")
+				$ImpLon = _Format_GPS_DDD_to_DMM($CSVArray[$lc][7], "E", "W")
+				$ImpAlt = $CSVArray[$lc][8]
+				$ImpAccuracy = $CSVArray[$lc][9]
+				$ImpHDOP = $ImpAccuracy / 5
+				$ImpType = $CSVArray[$lc][10]
+
+				If $ImpType = "WIFI" And StringLeft($ImpDateTime, 4) <> "1969" Then
+					If StringInStr($ImpAuthMode, "WPA2") And StringInStr($ImpAuthMode, "CCMP") And StringInStr($ImpAuthMode, "EAP") Then
+						$ImpAUTH = "WPA2-Enterprise"
+						$ImpENCR = "CCMP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA") And StringInStr($ImpAuthMode, "CCMP") And StringInStr($ImpAuthMode, "EAP") Then
+						$ImpAUTH = "WPA-Enterprise"
+						$ImpENCR = "CCMP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA2") And StringInStr($ImpAuthMode, "CCMP") Then
+						$ImpAUTH = "WPA2-Personal"
+						$ImpENCR = "CCMP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA") And StringInStr($ImpAuthMode, "CCMP") Then
+						$ImpAUTH = "WPA-Personal"
+						$ImpENCR = "CCMP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA2") And StringInStr($ImpAuthMode, "TKIP") And StringInStr($ImpAuthMode, "EAP") Then
+						$ImpAUTH = "WPA2-Enterprise"
+						$ImpENCR = "TKIP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA") And StringInStr($ImpAuthMode, "TKIP") And StringInStr($ImpAuthMode, "EAP") Then
+						$ImpAUTH = "WPA-Enterprise"
+						$ImpENCR = "TKIP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA2") And StringInStr($ImpAuthMode, "TKIP") Then
+						$ImpAUTH = "WPA2-Personal"
+						$ImpENCR = "TKIP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WPA") And StringInStr($ImpAuthMode, "TKIP") Then
+						$ImpAUTH = "WPA-Personal"
+						$ImpENCR = "TKIP"
+						$Found_SecType = 3
+					ElseIf StringInStr($ImpAuthMode, "WEP") Then
+						$ImpAUTH = "Open"
+						$ImpENCR = "WEP"
+						$Found_SecType = 2
+					Else
+						$ImpAUTH = "Open"
+						$ImpENCR = "None"
+						$Found_SecType = 1
+					EndIf
+
+					If StringInStr($ImpAuthMode, "IBSS") Then
+						$ImpNET = "Ad Hoc" ;
+					Else
+						$ImpNET = "Infrastructure" ;
+					EndIf
+
+					If $ImpCHAN >= 1 And $ImpCHAN <= 14 Then
+						$ImpRAD = "802.11g"
+					ElseIf $ImpCHAN > 14 Then
+						$ImpRAD = "802.11n"
+					Else
+						$ImpRAD = "802.11"
+					EndIf
+
+					$tsplit = StringSplit($ImpDateTime, ' ')
+					$LoadFirstActive_Date = $tsplit[1]
+					$LoadFirstActive_Time = $tsplit[2]
+
+					;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
+					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
+					$GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					$FoundGpsMatch = UBound($GpsMatchArray) - 1
+					If $FoundGpsMatch = 0 Then
+						$AddGID += 1
+						$GPS_ID += 1
+						_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $ImpLat & '|' & $ImpLon & '|0|' & $ImpHDOP & '|' & $ImpAlt & '|0|0|0|0|' & $LoadFirstActive_Date & '|' & $LoadFirstActive_Time)
+						$LoadGID = $GPS_ID
+					Else
+						$LoadGID = $GpsMatchArray[1][1]
+					EndIf
+					;Add First AP Info to DB, Listview, and Treeview
+					$NewApAdded = _AddApData(0, $LoadGID, $ImpBSSID, $ImpSSID, $ImpCHAN, $ImpAUTH, $ImpENCR, $ImpNET, $ImpRAD, "", "", $ImpSig, $ImpRSSI)
+					If $NewApAdded <> 0 Then $AddAP += 1
+				EndIf
+
+				If TimerDiff($UpdateTimer) > 600 Or ($currentline = $iSize) Then
+					$min = (TimerDiff($begintime) / 60000) ;convert from miniseconds to minutes
+					$percent = ($currentline / $iSize) * 100
+					GUICtrlSetData($progressbar, $percent)
+					GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+					GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($currentline / $min, 1))
+					GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+					GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+					GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $currentline + 1 & "/" & $iSize + 1)
+					GUICtrlSetData($estimatedtime, $Text_EstimatedTimeRemaining & ': ' & Round(($iSize / Round($currentline / $min, 1)) - $min, 1) & "/" & Round($iSize / Round($currentline / $min, 1), 1))
+					$UpdateTimer = TimerInit()
+				EndIf
+				If TimerDiff($MemReleaseTimer) > 10000 Then
+					_ReduceMemory()
+					$MemReleaseTimer = TimerInit()
+				EndIf
+				$closebtn = _GUICtrlButton_GetState($NsCancel)
+				If BitAND($closebtn, $BST_PUSHED) = $BST_PUSHED Then ExitLoop
+			Next
+		EndIf
+	EndIf
+EndFunc   ;==>_ImportWigleCSV
+
 Func _ImportNS1($NS1file)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportNS1()') ;#Debug Display
 	$netstumblerfile = FileOpen($NS1file, 0)
@@ -8996,7 +9361,7 @@ Func _ImportWardriveDb3($DB3file)
 	_SQLite_Exec($WardriveImpDB, "pragma integrity_check") ;Speed vs Data security. Speed Wins for now.
 	Local $NetworkMatchArray, $iRows, $iColumns, $iRval
 	$query = "SELECT bssid, ssid, capabilities, level, frequency, lat, lon, alt, timestamp FROM networks"
-	$iRval = _SQLite_GetTable2d($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
+	$iRval = _SQLite_GetTable2D($WardriveImpDB, $query, $NetworkMatchArray, $iRows, $iColumns)
 	$WardriveAPs = $iRows
 
 	$UpdateTimer = TimerInit()
@@ -9060,7 +9425,7 @@ Func _ImportWardriveDb3($DB3file)
 
 		;Get Network Type from capabilities
 		If StringInStr($Found_Capabilities, "[IBSS]") Then
-			$Found_NETTYPE = "Adhoc"
+			$Found_NETTYPE = "Ad Hoc"
 		Else
 			$Found_NETTYPE = "Infrastructure"
 		EndIf
@@ -10047,7 +10412,7 @@ Func _ExportNS1() ;Saves netstumbler data to a netstumbler summary .ns1
 					If $Found_CHAN = 34 Then $CHAN = '80000000'
 
 					$Flags = 0
-					If $Found_NETTYPE = $SearchWord_Adhoc Then
+					If $Found_NETTYPE = $SearchWord_Adhoc Or $Found_NETTYPE = "Ad Hoc" Then
 						$Flags += 2 ;Set IBSS (Ad hoc) flag
 						$BSS = 'ad-hoc'
 					Else
@@ -10279,14 +10644,16 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		;GPS Tab
 		$Tab_Gps = GUICtrlCreateTabItem($Text_Gps)
 		_GUICtrlTab_SetBkColor($SetMisc, $Settings_Tab, $BackgroundColor)
-		$GroupComInt = GUICtrlCreateGroup($Text_ComInterface, 24, 48, 633, 105)
+		$GroupComInt = GUICtrlCreateGroup($Text_ComInterface, 24, 35, 633, 100)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseNetcomm = GUICtrlCreateRadio($Text_UseNetcomm, 40, 70, 361, 20)
+
+		$Rad_UseKernel32 = GUICtrlCreateRadio($Text_UseKernel32, 40, 55, 580, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 95, 361, 20)
+		$Rad_UseNetcomm = GUICtrlCreateRadio($Text_UseNetcomm, 40, 80, 580, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$Rad_UseKernel32 = GUICtrlCreateRadio($Text_UseKernel32, 40, 120, 361, 20)
+		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 105, 580, 20)
 		GUICtrlSetColor(-1, $TextColor)
+
 		If $GpsType = 0 Then
 			GUICtrlSetState($Rad_UseCommMG, $GUI_CHECKED)
 		ElseIf $GpsType = 1 Then
@@ -10294,19 +10661,19 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		ElseIf $GpsType = 2 Then
 			GUICtrlSetState($Rad_UseKernel32, $GUI_CHECKED)
 		EndIf
-		$GroupComSet = GUICtrlCreateGroup($Text_ComSettings, 24, 160, 633, 185)
+		$GroupComSet = GUICtrlCreateGroup($Text_ComSettings, 24, 140, 633, 100)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_Com, 44, 180, 275, 15)
+		GUICtrlCreateLabel($Text_Com, 40, 160, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Comport = GUICtrlCreateCombo("1", 44, 195, 275, 25)
-		GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20", $ComPort)
-		GUICtrlCreateLabel($Text_Baud, 44, 235, 275, 15)
+		$GUI_Comport = GUICtrlCreateCombo("1", 115, 160, 150, 20)
+		GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25", $ComPort)
+		GUICtrlCreateLabel($Text_Baud, 40, 185, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Baud = GUICtrlCreateCombo("4800", 44, 250, 275, 25)
+		$GUI_Baud = GUICtrlCreateCombo("4800", 115, 185, 150, 20)
 		GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
-		GUICtrlCreateLabel($Text_StopBit, 44, 290, 275, 15)
+		GUICtrlCreateLabel($Text_StopBit, 40, 210, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_StopBit = GUICtrlCreateCombo("1", 44, 305, 275, 25)
+		$GUI_StopBit = GUICtrlCreateCombo("1", 115, 210, 150, 20)
 		GUICtrlSetData(-1, "1.5|2", $STOPBIT)
 
 		If $PARITY = 'E' Then
@@ -10320,12 +10687,26 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		Else
 			$l_PARITY = $Text_None
 		EndIf
-		GUICtrlCreateLabel($Text_Parity, 364, 180, 275, 15)
-		$GUI_Parity = GUICtrlCreateCombo($Text_None, 364, 195, 275, 25)
+		GUICtrlCreateLabel($Text_Parity, 360, 160, 75, 20)
+		$GUI_Parity = GUICtrlCreateCombo($Text_None, 435, 160, 150, 20)
 		GUICtrlSetData(-1, $Text_Even & '|' & $Text_Mark & '|' & $Text_Odd & '|' & $Text_Space, $l_PARITY)
-		GUICtrlCreateLabel($Text_DataBit, 364, 235, 275, 15)
-		$GUI_DataBit = GUICtrlCreateCombo("4", 364, 250, 275, 25)
+		GUICtrlCreateLabel($Text_DataBit, 360, 185, 75, 20)
+		$GUI_DataBit = GUICtrlCreateCombo("4", 435, 185, 150, 20)
 		GUICtrlSetData(-1, "5|6|7|8", $DATABIT)
+
+		$GroupGpsLogging = GUICtrlCreateGroup($Text_GPSLogging, 24, 245, 633, 100)
+		$GUI_GpsLogEnabled = GUICtrlCreateCheckbox($Text_SaveNMEAData, 40, 265, 400, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		If $GpsLogEnabled = 1 Then GUICtrlSetState($GUI_GpsLogEnabled, $GUI_CHECKED)
+		$GUI_GpsLogDeleteOnExit = GUICtrlCreateCheckbox($Text_DeleteNMEAlog, 40, 285, 400, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		If $GpsLogDeleteOnExit = 1 Then GUICtrlSetState($GUI_GpsLogDeleteOnExit, $GUI_CHECKED)
+		GUICtrlCreateLabel($Text_LogFileLocation, 40, 315, 110, 20)
+		GUICtrlSetColor(-1, $TextColor)
+		$GUI_GpsLogFileLocation = GUICtrlCreateInput($GpsLogLocation, 150, 315, 400, 20)
+		$glbrowse1 = GUICtrlCreateButton($Text_Browse, 556, 315, 97, 20, 0)
+
+
 		$GroupGpsOptions = GUICtrlCreateGroup($Text_GpsSettings, 24, 360, 633, 100)
 		GUICtrlSetColor(-1, $TextColor)
 		GUICtrlCreateLabel($Text_GPSFormat, 44, 380, 100, 15)
@@ -10875,6 +11256,8 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 
 		GUICtrlSetOnEvent($csbrowse1, '_CamScriptBrowse')
 
+		GUICtrlSetOnEvent($glbrowse1, '_GpsLogBrowse')
+
 		GUISetOnEvent($GUI_EVENT_CLOSE, '_CloseSettingsGUI')
 		GUICtrlSetOnEvent($GUI_Set_Can, '_CloseSettingsGUI')
 		GUICtrlSetOnEvent($GUI_Set_Apply, '_ApplySettingsGUI')
@@ -10921,6 +11304,13 @@ Func _CamScriptBrowse()
 		GUICtrlSetData($GUI_CamTriggerScript, $camscriptfile)
 	EndIf
 EndFunc   ;==>_CamScriptBrowse
+
+Func _GpsLogBrowse()
+	$gpslogfile = FileSaveDialog("Select gps log save location", GUICtrlRead($GUI_Set_SaveDir), "Text files (*.txt)|All (*.*)", BitOR($FD_PROMPTOVERWRITE, $FD_PATHMUSTEXIST))
+	If Not @error Then
+		GUICtrlSetData($GUI_GpsLogFileLocation, $gpslogfile)
+	EndIf
+EndFunc   ;==>_GpsLogBrowse
 
 Func _ColorBrowse1()
 	$color = _ChooseColor(2, $BackgroundColor, 2, $SetMisc)
@@ -11139,6 +11529,19 @@ Func _ApplySettingsGUI() ;Applys settings
 		Else ;GUICtrlRead($GUI_Parity) = 'None' Then
 			$PARITY = 'N'
 		EndIf
+
+		If GUICtrlRead($GUI_GpsLogEnabled) = 1 Then
+			$GpsLogEnabled = 1
+		Else
+			$GpsLogEnabled = 0
+		EndIf
+		If GUICtrlRead($GUI_GpsLogDeleteOnExit) = 1 Then
+			$GpsLogDeleteOnExit = 1
+		Else
+			$GpsLogDeleteOnExit = 0
+		EndIf
+		$GpsLogLocation = GUICtrlRead($GUI_GpsLogFileLocation)
+
 		If GUICtrlRead($GUI_Format) = "dd.dddd" Then $GPSformat = 1
 		If GUICtrlRead($GUI_Format) = "dd mm ss" Then $GPSformat = 2
 		If GUICtrlRead($GUI_Format) = "ddmm.mmmm" Then $GPSformat = 3
@@ -11286,13 +11689,17 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_Error = IniRead($DefaultLanguagePath, 'GuiText', 'Error', 'Error')
 		$Text_NoSignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'NoSignalHistory', 'No signal history found, check to make sure your netsh search words are correct')
 		$Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected', 'You did not select an access point')
-		$Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Use Netcomm OCX (more stable) - x32')
-		$Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'Use CommMG (less stable) - x32 - x64')
+		$Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Kernel32')
+		$Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX (Needs http://www.hardandsoftware.net/NETCommOCX.htm)')
+		$Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (included, but will crash if gps is disconnected improperly)')
 		$Text_SignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'SignalHistory', 'Signal History')
 		$Text_AutoSortEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', 'Auto Sort Every')
 		$Text_Seconds = IniRead($DefaultLanguagePath, 'GuiText', 'Seconds', 'Seconds')
 		$Text_Ascending = IniRead($DefaultLanguagePath, 'GuiText', 'Ascending', 'Ascending')
 		$Text_Decending = IniRead($DefaultLanguagePath, 'GuiText', 'Decending', 'Decending')
+		$Text_AutoRecoveryVS1 = IniRead($DefaultLanguagePath, 'GuiText', 'AutoRecoveryVS1', 'Auto Recovery VS1')
+		$Text_AutoSaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveAndClear', 'Auto Save And Clear')
+		$Text_SaveAndClear = IniRead($DefaultLanguagePath, 'GuiText', 'SaveAndClear', 'Sav&e && Clear')
 		$Text_AutoSave = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSave', 'AutoSave')
 		$Text_AutoSaveEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSaveEvery', 'AutoSave Every')
 		$Text_DelAutoSaveOnExit = IniRead($DefaultLanguagePath, 'GuiText', 'DelAutoSaveOnExit', 'Delete Autosave file on exit')
@@ -11442,7 +11849,6 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_AddingApsIntoList = IniRead($DefaultLanguagePath, 'GuiText', 'AddingApsIntoList', 'Adding new APs into list')
 		$Text_GoogleEarthDoesNotExist = IniRead($DefaultLanguagePath, 'GuiText', 'GoogleEarthDoesNotExist', 'Google earth file does not exist or is set wrong in the AutoKML settings')
 		$Text_AutoKmlIsNotStarted = IniRead($DefaultLanguagePath, 'GuiText', 'AutoKmlIsNotStarted', 'AutoKML is not yet started. Would you like to turn it on now?')
-		$Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Use Kernel32 - x32 - x64')
 		$Text_UnableToGuessSearchwords = IniRead($DefaultLanguagePath, 'GuiText', 'UnableToGuessSearchwords', 'Vistumbler was unable to guess searchwords')
 		$Text_SelectedAP = IniRead($DefaultLanguagePath, 'GuiText', 'SelectedAP', 'Selected AP')
 		$Text_AllAPs = IniRead($DefaultLanguagePath, 'GuiText', 'AllAPs', 'All APs')
@@ -11470,8 +11876,9 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_UpdateManufacturers = IniRead($DefaultLanguagePath, "GuiText", "UpdateManufacturers", "Update Manufacturers")
 		$Text_FixHistSignals = IniRead($DefaultLanguagePath, "GuiText", "FixHistSignals", "Fixing Missing Hist Table Signal(s)")
 		$Text_VistumblerFile = IniRead($DefaultLanguagePath, 'GuiText', 'VistumblerFile', 'Vistumbler file')
-		$Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Detailed Comma Delimited file')
-		$Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Summary Comma Delimited file')
+		$Text_DetailedCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'DetailedFile', 'Vistumbler Detailed CSV')
+		$Text_SummaryCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'SummaryFile', 'Vistumbler Summary CSV')
+		$Text_WigleCsvFile = IniRead($DefaultLanguagePath, 'GuiText', 'WigleCsvFile', 'WigleWifi 1.4 Compatible CSV')
 		$Text_NetstumblerTxtFile = IniRead($DefaultLanguagePath, 'GuiText', 'NetstumblerTxtFile', 'Netstumbler wi-scan file')
 		$Text_WardriveDb3File = IniRead($DefaultLanguagePath, 'GuiText', 'WardriveDb3File', 'Wardrive-android file')
 		$Text_AutoScanApsOnLaunch = IniRead($DefaultLanguagePath, "GuiText", "AutoScanApsOnLaunch", "Auto Scan APs on launch")
@@ -11549,6 +11956,11 @@ Func _ApplySettingsGUI() ;Applys settings
 		$Text_ButtonInactiveColor = IniRead($DefaultLanguagePath, 'GuiText', 'ButtonInactiveColor', 'Button Inactive Color')
 		$Text_Text = IniRead($DefaultLanguagePath, 'GuiText', 'Text', 'Text')
 		$Text_GUITextSize = IniRead($DefaultLanguagePath, 'GuiText', 'GUITextSize', 'GUI Text Size (Restart Required)')
+		$Text_GPSLogging = IniRead($DefaultLanguagePath, 'GuiText', 'GPSLogging', 'GPS Logging')
+		$Text_SaveNMEAData = IniRead($DefaultLanguagePath, 'GuiText', 'SaveNMEAData', 'Save NMEA Data to log file')
+		$Text_DeleteNMEAlog = IniRead($DefaultLanguagePath, 'GuiText', 'DeleteNMEAlog', 'Delete NMEA Data log file on exit')
+		$Text_LogFileLocation = IniRead($DefaultLanguagePath, 'GuiText', 'LogFileLocation', 'Log file location')
+		$Text_NMEALogError = IniRead($DefaultLanguagePath, 'GuiText', 'NMEALogError', 'Error opening NMEA log file')
 
 		$RestartVistumbler = 1
 	EndIf
@@ -12908,6 +13320,7 @@ Func _AddInterfaces()
 			If $DefaultApapter = $adaptername Then
 				$found_adapter = 1
 				$DefaultApapterID = $adapterid
+				$DefaultApapterDesc = $adapterdesc
 				_Wlan_SelectInterface($DefaultApapterID)
 				GUICtrlSetState($menuid, $GUI_CHECKED)
 			EndIf
@@ -12915,6 +13328,7 @@ Func _AddInterfaces()
 		If $menuid <> 0 And $found_adapter = 0 Then
 			$DefaultApapter = $adaptername
 			$DefaultApapterID = $adapterid
+			$DefaultApapterDesc = $adapterdesc
 			_Wlan_SelectInterface($DefaultApapterID)
 			GUICtrlSetState($menuid, $GUI_CHECKED)
 		EndIf
@@ -12922,7 +13336,6 @@ Func _AddInterfaces()
 		$NetworkAdapters[0] = UBound($NetworkAdapters) - 1
 	Else
 		;Get network interfaces and add the to the interface menu
-		Local $DefaultApapterDesc
 		$objWMIService = ObjGet("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
 		$colNIC = $objWMIService.ExecQuery("Select * from Win32_NetworkAdapter WHERE AdapterTypeID = 0 And NetConnectionID <> NULL")
 		For $object In $colNIC
