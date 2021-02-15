@@ -20,9 +20,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7 Beta 11'
+$version = 'v10.7'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2020/09/13'
+$last_modified = '2021/02/15'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -7254,12 +7254,18 @@ EndFunc   ;==>_ExportCsvDataGui
 Func _ExportCsvDataGui_Ok()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportCsvDataGui_Ok()') ;#Debug Display
 	$filename = GUICtrlRead($Gui_CsvFile)
+	$CsvWigleWifi = 0
+	$CsvDetailed = 0
+	$CsvFiltered = 0
 	If GUICtrlRead($Gui_CsvRadWigle) = 1 Then
 		$CsvWigleWifi = 1
-	ElseIf GUICtrlRead($Gui_CsvRadSummary) = 1 Then
-		$CsvDetailed = 0
 	Else
+		$CsvWigleWifi = 0
+	EndIf
+	If GUICtrlRead($Gui_CsvRadDetailed) = 1 Then
 		$CsvDetailed = 1
+	Else
+		$CsvDetailed = 0
 	EndIf
 	If GUICtrlRead($Gui_CsvFiltered) = 1 Then
 		$CsvFiltered = 1
