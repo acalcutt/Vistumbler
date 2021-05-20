@@ -20,9 +20,9 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.7'
+$version = 'v10.7.1 Beta'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2021/02/15'
+$last_modified = '2021/05/19'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
@@ -13093,7 +13093,7 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 		$filter_enecount = @extended ; Number of escaped not equals in filter
 		$FilterValues = StringReplace(StringReplace(StringReplace($FilterValues, "\%", "%"), "\-", "-"), "\,", ",")
 
-		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
+		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Or $q_field = "Active" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
 			If (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then ;If there are 3 dashes, treat this as a range of RSSI values
 				$RRS = StringSplit($FilterValues, "-")
 				If $RRS[0] = 4 Then
@@ -13134,9 +13134,9 @@ Func _AddFilerString($q_query, $q_field, $FilterValues)
 					$q_query &= "(" & $q_field & " <> " & StringReplace($FilterValues, '<>', '') & ")"
 				Else
 					If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
-						$q_query &= "(" & $q_field & " like '" & $FilterValues & "')"
+						$q_query &= "(" & $q_field & " like " & $FilterValues & ")"
 					Else
-						$q_query &= "(" & $q_field & " = '" & $FilterValues & "')"
+						$q_query &= "(" & $q_field & " = " & $FilterValues & ")"
 					EndIf
 				EndIf
 			EndIf
@@ -13208,7 +13208,7 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 		$filter_eccount = @extended ; Number of escaped commas signs in filter
 		$FilterValues = StringReplace(StringReplace(StringReplace($FilterValues, "\%", "%"), "\-", "-"), "\,", ",")
 		;Create query
-		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
+		If $q_field = "Signal" Or $q_field = "HighSignal" Or $q_field = "RSSI" Or $q_field = "HighRSSI" Or $q_field = "CHAN" Or $q_field = "Active" Then ;These are integer fields and need to be treated differently (no quotes or the query fails)
 			If (UBound(StringSplit($FilterValues, "-")) - 2) = 3 Then ;If there are 3 dashes, treat this as a range of RSSI values
 				$RRS = StringSplit($FilterValues, "-")
 				If $RRS[0] = 4 Then
@@ -13249,9 +13249,9 @@ Func _RemoveFilterString($q_query, $q_field, $FilterValues)
 					$q_query &= "(" & $q_field & " = " & StringReplace($FilterValues, '<>', '') & ")"
 				Else
 					If StringInStr($FilterValues, '%') And ($filter_pcount > $filter_epcount) Then ;If has "%" and there are more "%"s then "\%"s, treat as a like statement
-						$q_query &= "(" & $q_field & " not like '" & $FilterValues & "')"
+						$q_query &= "(" & $q_field & " not like " & $FilterValues & ")"
 					Else
-						$q_query &= "(" & $q_field & " <> '" & $FilterValues & "')"
+						$q_query &= "(" & $q_field & " <> " & $FilterValues & ")"
 					EndIf
 				EndIf
 			EndIf
