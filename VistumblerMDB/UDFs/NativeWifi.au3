@@ -3721,7 +3721,7 @@ EndFunc
 ;                  |$asNetworks[$iIndex][11] - Information on the radio types listed
 ;                  |$asNetworks[$iIndex][12] - The radio types of network
 ;                  |$asNetworks[$iIndex][13] - UDF Flags
-;                  number - The associated profile entry can be found at this index
+;                  number - The associated profile entry can be \n[^found at this index
 ;                  C - There is a authentication and/or encryption conflict between the profile and what was detected from the network.
 ;                  M - The authentication and/or encryption fields of the entry have been modified to coincide with the detected network.
 ;                  Failure - False
