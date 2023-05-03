@@ -10,7 +10,7 @@
 Name "Vistumbler"
 
 ; The file to write
-OutFile "Vistumbler_v10.7.exe"
+OutFile "Vistumbler_v10.8.exe"
 
 ; The default installation directory
 InstallDir $PROGRAMFILES\Vistumbler
@@ -51,7 +51,7 @@ Section "Vistumbler (required)"
   
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler" "DisplayName" "Vistumbler"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler" "DisplayVersion" "10.7"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler" "DisplayVersion" "10.8"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler" "Publisher" "Vistumbler.net"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler" "UninstallString" '"$INSTDIR\uninstall.exe"'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Vistumbler" "DisplayIcon" '"$INSTDIR\uninstall.exe"'
