@@ -3625,54 +3625,254 @@ Func _Wlan_GetNetworkInfo($sSSID = "", $iBSSType = $DOT11_BSS_TYPE_INFRASTRUCTUR
 				$asBSSList[$i][8] = 13
 			Case 2484000
 				$asBSSList[$i][8] = 14
+			Case 5160000
+				$asBSSList[$i][8] = 32
+			Case 5170000
+				$asBSSList[$i][8] = 34
 			Case 5180000
 				$asBSSList[$i][8] = 36
+			Case 5190000
+				$asBSSList[$i][8] = 38
 			Case 5200000
 				$asBSSList[$i][8] = 40
+			Case 5210000
+				$asBSSList[$i][8] = 42
 			Case 5220000
 				$asBSSList[$i][8] = 44
+			Case 5230000
+				$asBSSList[$i][8] = 46
 			Case 5240000
 				$asBSSList[$i][8] = 48
+			Case 5250000
+				$asBSSList[$i][8] = 50
 			Case 5260000
 				$asBSSList[$i][8] = 52
+			Case 5270000
+				$asBSSList[$i][8] = 54
 			Case 5280000
 				$asBSSList[$i][8] = 56
+			Case 5290000
+				$asBSSList[$i][8] = 58
 			Case 5300000
 				$asBSSList[$i][8] = 60
+			Case 5310000
+				$asBSSList[$i][8] = 62
 			Case 5320000
 				$asBSSList[$i][8] = 64
+			Case 5340000
+				$asBSSList[$i][8] = 68
+			Case 5480000
+				$asBSSList[$i][8] = 96
 			Case 5500000
 				$asBSSList[$i][8] = 100
+			Case 5510000
+				$asBSSList[$i][8] = 102
 			Case 5520000
 				$asBSSList[$i][8] = 104
+			Case 5530000
+				$asBSSList[$i][8] = 106
 			Case 5540000
 				$asBSSList[$i][8] = 108
+			Case 5550000
+				$asBSSList[$i][8] = 110
 			Case 5560000
 				$asBSSList[$i][8] = 112
+			Case 5570000
+				$asBSSList[$i][8] = 114
 			Case 5580000
 				$asBSSList[$i][8] = 116
+			Case 5590000
+				$asBSSList[$i][8] = 118
 			Case 5600000
 				$asBSSList[$i][8] = 120
+			Case 5610000
+				$asBSSList[$i][8] = 122
 			Case 5620000
 				$asBSSList[$i][8] = 124
+			Case 5630000
+				$asBSSList[$i][8] = 126
 			Case 5640000
 				$asBSSList[$i][8] = 128
 			Case 5660000
 				$asBSSList[$i][8] = 132
+			Case 5670000
+				$asBSSList[$i][8] = 134
 			Case 5680000
 				$asBSSList[$i][8] = 136
+			Case 5690000
+				$asBSSList[$i][8] = 138
 			Case 5700000
 				$asBSSList[$i][8] = 140
+			Case 5710000
+				$asBSSList[$i][8] = 142
+			Case 5720000
+				$asBSSList[$i][8] = 144
 			Case 5745000
 				$asBSSList[$i][8] = 149
+			Case 5755000
+				$asBSSList[$i][8] = 151
 			Case 5765000
 				$asBSSList[$i][8] = 153
+			Case 5775000
+				$asBSSList[$i][8] = 155
 			Case 5785000
 				$asBSSList[$i][8] = 157
+			Case 5795000
+				$asBSSList[$i][8] = 159
 			Case 5805000
 				$asBSSList[$i][8] = 161
+			Case 5815000
+				$asBSSList[$i][8] = 163
 			Case 5825000
 				$asBSSList[$i][8] = 165
+			Case 5835000
+				$asBSSList[$i][8] = 167
+			Case 5845000
+				$asBSSList[$i][8] = 169
+			Case 5855000
+				$asBSSList[$i][8] = 171
+			Case 5865000
+				$asBSSList[$i][8] = 173
+			Case 5875000
+				$asBSSList[$i][8] = 175
+			Case 5885000
+				$asBSSList[$i][8] = 177
+			Case 5900000
+				$asBSSList[$i][8] = 180
+			Case 5910000
+				$asBSSList[$i][8] = 182
+			Case 5915000
+				$asBSSList[$i][8] = 183
+			Case 5920000
+				$asBSSList[$i][8] = 184
+			Case 5935000
+				$asBSSList[$i][8] = 187
+			Case 5940000
+				$asBSSList[$i][8] = 188
+			Case 5945000
+				$asBSSList[$i][8] = 189
+			Case 5960000
+				$asBSSList[$i][8] = 192
+			Case 5980000
+				$asBSSList[$i][8] = 196
+			Case 5955000
+				$asBSSList[$i][8] = 1
+			Case 5975000
+				$asBSSList[$i][8] = 5
+			Case 5995000
+				$asBSSList[$i][8] = 9
+			Case 6015000
+				$asBSSList[$i][8] = 13
+			Case 6035000
+				$asBSSList[$i][8] = 17
+			Case 6055000
+				$asBSSList[$i][8] = 21
+			Case 6075000
+				$asBSSList[$i][8] = 25
+			Case 6095000
+				$asBSSList[$i][8] = 29
+			Case 6115000
+				$asBSSList[$i][8] = 33
+			Case 6135000
+				$asBSSList[$i][8] = 37
+			Case 6155000
+				$asBSSList[$i][8] = 41
+			Case 6175000
+				$asBSSList[$i][8] = 45
+			Case 6195000
+				$asBSSList[$i][8] = 49
+			Case 6215000
+				$asBSSList[$i][8] = 53
+			Case 6235000
+				$asBSSList[$i][8] = 57
+			Case 6255000
+				$asBSSList[$i][8] = 61
+			Case 6275000
+				$asBSSList[$i][8] = 65
+			Case 6295000
+				$asBSSList[$i][8] = 69
+			Case 6315000
+				$asBSSList[$i][8] = 73
+			Case 6335000
+				$asBSSList[$i][8] = 77
+			Case 6355000
+				$asBSSList[$i][8] = 81
+			Case 6375000
+				$asBSSList[$i][8] = 85
+			Case 6395000
+				$asBSSList[$i][8] = 89
+			Case 6415000
+				$asBSSList[$i][8] = 93
+			Case 6435000
+				$asBSSList[$i][8] = 97
+			Case 6455000
+				$asBSSList[$i][8] = 101
+			Case 6475000
+				$asBSSList[$i][8] = 105
+			Case 6495000
+				$asBSSList[$i][8] = 109
+			Case 6515000
+				$asBSSList[$i][8] = 113
+			Case 6535000
+				$asBSSList[$i][8] = 117
+			Case 6555000
+				$asBSSList[$i][8] = 121
+			Case 6575000
+				$asBSSList[$i][8] = 125
+			Case 6595000
+				$asBSSList[$i][8] = 129
+			Case 6615000
+				$asBSSList[$i][8] = 133
+			Case 6635000
+				$asBSSList[$i][8] = 137
+			Case 6655000
+				$asBSSList[$i][8] = 141
+			Case 6675000
+				$asBSSList[$i][8] = 145
+			Case 6695000
+				$asBSSList[$i][8] = 149
+			Case 6715000
+				$asBSSList[$i][8] = 153
+			Case 6735000
+				$asBSSList[$i][8] = 157
+			Case 6755000
+				$asBSSList[$i][8] = 161
+			Case 6775000
+				$asBSSList[$i][8] = 165
+			Case 6795000
+				$asBSSList[$i][8] = 169
+			Case 6815000
+				$asBSSList[$i][8] = 173
+			Case 6835000
+				$asBSSList[$i][8] = 177
+			Case 6855000
+				$asBSSList[$i][8] = 181
+			Case 6875000
+				$asBSSList[$i][8] = 185
+			Case 6895000
+				$asBSSList[$i][8] = 189
+			Case 6915000
+				$asBSSList[$i][8] = 193
+			Case 6935000
+				$asBSSList[$i][8] = 197
+			Case 6955000
+				$asBSSList[$i][8] = 201
+			Case 6975000
+				$asBSSList[$i][8] = 205
+			Case 6995000
+				$asBSSList[$i][8] = 209
+			Case 7015000
+				$asBSSList[$i][8] = 213
+			Case 7035000
+				$asBSSList[$i][8] = 217
+			Case 7055000
+				$asBSSList[$i][8] = 221
+			Case 7075000
+				$asBSSList[$i][8] = 225
+			Case 7095000
+				$asBSSList[$i][8] = 229
+			Case 7115000
+				$asBSSList[$i][8] = 233
 		EndSwitch
 
 		$asBSSList[$i][10] = DllStructGetData($tBSSEntry, "BeaconPeriod")
