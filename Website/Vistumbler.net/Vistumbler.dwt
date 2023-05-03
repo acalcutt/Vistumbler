@@ -34,10 +34,6 @@
 			<div class="lefthead">
 				<a href="/"><img alt="Vistumbler Logo" src="images/logo.png"></a>
 			</div>
-			<div class="righthead">
-							<!-- Facebook Like Button -->	
-							<iframe src="//www.facebook.com/plugins/like.php?href=http%3A%2F%2Fwww.vistumbler.net&amp;send=false&amp;layout=button_count&amp;width=450&amp;show_faces=true&amp;action=like&amp;colorscheme=light&amp;font&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:100px; height:21px;" allowTransparency="true"></iframe>			</div>
-		</div>
 		<div class='bodywrap'>
 			<div>
 				<nav id="sidebar">
