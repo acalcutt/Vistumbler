@@ -20,7 +20,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.8 Beta'
+$version = 'v10.8 Beta 2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2023/05/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -5636,7 +5636,7 @@ EndFunc   ;==>_Draw2400ChanGraph
 
 Func _Draw2400ChanLine($frequency, $Channel)
 	$hposition = $2400leftborder + ($2400freqwidth * ($frequency - 2400))
-	_GDIPlus_GraphicsDrawString($2400backbuffer, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5)
+	_GDIPlus_GraphicsDrawString($2400backbuffer, $Channel, $hposition - 5, ($2400graphheight + $2400topborder) + 5, "Arial", 8, 0x0002)
 	_GDIPlus_GraphicsDrawLine($2400backbuffer, $hposition, $2400topborder, $hposition, $2400graphheight + $2400topborder, $Pen_GraphGrid)
 EndFunc   ;==>_Draw2400ChanLine
 
@@ -5966,7 +5966,7 @@ EndFunc   ;==>_Draw5000ChanGraph
 
 Func _Draw5000ChanLine($frequency, $Channel)
 	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
-	_GDIPlus_GraphicsDrawString($5000backbuffer, $Channel, $hposition - 7, ($5000graphheight + $5000topborder) + 5, "Arial", 10, 0x0002)
+	_GDIPlus_GraphicsDrawString($5000backbuffer, $Channel, $hposition - 7, ($5000graphheight + $5000topborder) + 5, "Arial", 8, 0x0002)
 	_GDIPlus_GraphicsDrawLine($5000backbuffer, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
 EndFunc   ;==>_Draw5000ChanLine
 
