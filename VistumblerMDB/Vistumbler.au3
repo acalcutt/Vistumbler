@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.8'
+$version = 'v10.8.1 Beta 1'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2023/05/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
