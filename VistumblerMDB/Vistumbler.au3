@@ -5682,7 +5682,7 @@ Func _Set5000ChanGraphSizes()
 	;Set Sizes
 	$5000graphheight = $5000height - ($5000topborder + $5000bottomborder)
 	$5000graphwidth = $5000width - ($5000leftborder + $5000rightborder)
-	$5000freqwidth = $5000graphwidth / 700 ; Freq Range 5150 - 5850 (700points)
+	$5000freqwidth = $5000graphwidth / 840 ; Freq Range 5150 - 5990 (840points)
 	$5000percheight = $5000graphheight / 100
 
 	$5000graphics = _GDIPlus_GraphicsCreateFromHWND($5000chanGUI)
@@ -5711,30 +5711,71 @@ Func _Draw5000ChanGraph()
 		Next
 	EndIf
 	;Draw Channel labels and lines
+	_Draw5000ChanLine(5160, 32)
+	_Draw5000ChanLine(5170, 34)
 	_Draw5000ChanLine(5180, 36)
+	_Draw5000ChanLine(5190, 38)
 	_Draw5000ChanLine(5200, 40)
+	_Draw5000ChanLine(5210, 42)
 	_Draw5000ChanLine(5220, 44)
+	_Draw5000ChanLine(5230, 46)
 	_Draw5000ChanLine(5240, 48)
+	_Draw5000ChanLine(5250, 50)
 	_Draw5000ChanLine(5260, 52)
+	_Draw5000ChanLine(5270, 54)
 	_Draw5000ChanLine(5280, 56)
+	_Draw5000ChanLine(5290, 58)
 	_Draw5000ChanLine(5300, 60)
+	_Draw5000ChanLine(5310, 62)
 	_Draw5000ChanLine(5320, 64)
+	_Draw5000ChanLine(5340, 68)
+	_Draw5000ChanLine(5480, 96)
 	_Draw5000ChanLine(5500, 100)
+	_Draw5000ChanLine(5510, 102)
 	_Draw5000ChanLine(5520, 104)
+	_Draw5000ChanLine(5530, 106)
 	_Draw5000ChanLine(5540, 108)
+	_Draw5000ChanLine(5550, 110)
 	_Draw5000ChanLine(5560, 112)
+	_Draw5000ChanLine(5570, 114)
 	_Draw5000ChanLine(5580, 116)
+	_Draw5000ChanLine(5590, 118)
 	_Draw5000ChanLine(5600, 120)
+	_Draw5000ChanLine(5610, 122)
 	_Draw5000ChanLine(5620, 124)
+	_Draw5000ChanLine(5630, 126)
 	_Draw5000ChanLine(5640, 128)
 	_Draw5000ChanLine(5660, 132)
+	_Draw5000ChanLine(5670, 134)
 	_Draw5000ChanLine(5680, 136)
+	_Draw5000ChanLine(5690, 138)
 	_Draw5000ChanLine(5700, 140)
+	_Draw5000ChanLine(5710, 142)
+	_Draw5000ChanLine(5720, 144)
 	_Draw5000ChanLine(5745, 149)
+	_Draw5000ChanLine(5755, 151)
 	_Draw5000ChanLine(5765, 153)
+	_Draw5000ChanLine(5775, 155)
 	_Draw5000ChanLine(5785, 157)
+	_Draw5000ChanLine(5795, 159)
 	_Draw5000ChanLine(5805, 161)
+	_Draw5000ChanLine(5815, 163)
 	_Draw5000ChanLine(5825, 165)
+	_Draw5000ChanLine(5835, 167)
+	_Draw5000ChanLine(5845, 169)
+	_Draw5000ChanLine(5855, 171)
+	_Draw5000ChanLine(5865, 173)
+	_Draw5000ChanLine(5875, 175)
+	_Draw5000ChanLine(5885, 177)
+	_Draw5000ChanLine(5900, 180)
+	_Draw5000ChanLine(5910, 182)
+	_Draw5000ChanLine(5915, "") ;183
+	_Draw5000ChanLine(5920, 184)
+	_Draw5000ChanLine(5935, 187)
+	_Draw5000ChanLine(5940, "") ;188
+	_Draw5000ChanLine(5945, 189)
+	_Draw5000ChanLine(5960, 192)
+	_Draw5000ChanLine(5980, 196)
 
 	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active=1 And ListRow<>-1"
 	$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
@@ -5744,54 +5785,136 @@ Func _Draw5000ChanGraph()
 		$Found_CHAN = $ApMatchArray[$dc][2]
 		$Found_Signal = $ApMatchArray[$dc][3] - 0
 		$Found_RSSI = $ApMatchArray[$dc][4]
-		If $Found_CHAN = 36 Then
+		If $Found_CHAN = 32 Then
+			$Found_Freq = 5160
+		ElseIf $Found_CHAN = 34 Then
+			$Found_Freq = 5170
+		ElseIf $Found_CHAN = 36 Then
 			$Found_Freq = 5180
+		ElseIf $Found_CHAN = 38 Then
+			$Found_Freq = 5190
 		ElseIf $Found_CHAN = 40 Then
 			$Found_Freq = 5200
+		ElseIf $Found_CHAN = 42 Then
+			$Found_Freq = 5210
 		ElseIf $Found_CHAN = 44 Then
 			$Found_Freq = 5220
+		ElseIf $Found_CHAN = 46 Then
+			$Found_Freq = 5230
 		ElseIf $Found_CHAN = 48 Then
 			$Found_Freq = 5240
+		ElseIf $Found_CHAN = 50 Then
+			$Found_Freq = 5250
 		ElseIf $Found_CHAN = 52 Then
 			$Found_Freq = 5260
+		ElseIf $Found_CHAN = 54 Then
+			$Found_Freq = 5270
 		ElseIf $Found_CHAN = 56 Then
 			$Found_Freq = 5280
+		ElseIf $Found_CHAN = 58 Then
+			$Found_Freq = 5290
 		ElseIf $Found_CHAN = 60 Then
 			$Found_Freq = 5300
+		ElseIf $Found_CHAN = 62 Then
+			$Found_Freq = 5310
 		ElseIf $Found_CHAN = 64 Then
 			$Found_Freq = 5320
+		ElseIf $Found_CHAN = 68 Then
+			$Found_Freq = 5340
+		ElseIf $Found_CHAN = 96 Then
+			$Found_Freq = 5480
 		ElseIf $Found_CHAN = 100 Then
 			$Found_Freq = 5500
+		ElseIf $Found_CHAN = 102 Then
+			$Found_Freq = 5510
 		ElseIf $Found_CHAN = 104 Then
 			$Found_Freq = 5520
+		ElseIf $Found_CHAN = 106 Then
+			$Found_Freq = 5530
 		ElseIf $Found_CHAN = 108 Then
 			$Found_Freq = 5540
+		ElseIf $Found_CHAN = 110 Then
+			$Found_Freq = 5550
 		ElseIf $Found_CHAN = 112 Then
 			$Found_Freq = 5560
+		ElseIf $Found_CHAN = 114 Then
+			$Found_Freq = 5570
 		ElseIf $Found_CHAN = 116 Then
 			$Found_Freq = 5580
+		ElseIf $Found_CHAN = 118 Then
+			$Found_Freq = 5590
 		ElseIf $Found_CHAN = 120 Then
 			$Found_Freq = 5600
+		ElseIf $Found_CHAN = 122 Then
+			$Found_Freq = 5610
 		ElseIf $Found_CHAN = 124 Then
 			$Found_Freq = 5620
+		ElseIf $Found_CHAN = 126 Then
+			$Found_Freq = 5630
 		ElseIf $Found_CHAN = 128 Then
 			$Found_Freq = 5640
 		ElseIf $Found_CHAN = 132 Then
 			$Found_Freq = 5660
+		ElseIf $Found_CHAN = 134 Then
+			$Found_Freq = 5670
 		ElseIf $Found_CHAN = 136 Then
 			$Found_Freq = 5680
+		ElseIf $Found_CHAN = 138 Then
+			$Found_Freq = 5690
 		ElseIf $Found_CHAN = 140 Then
 			$Found_Freq = 5700
+		ElseIf $Found_CHAN = 142 Then
+			$Found_Freq = 5710
+		ElseIf $Found_CHAN = 144 Then
+			$Found_Freq = 5720
 		ElseIf $Found_CHAN = 149 Then
 			$Found_Freq = 5745
+		ElseIf $Found_CHAN = 151 Then
+			$Found_Freq = 5755
 		ElseIf $Found_CHAN = 153 Then
 			$Found_Freq = 5765
+		ElseIf $Found_CHAN = 155 Then
+			$Found_Freq = 5775
 		ElseIf $Found_CHAN = 157 Then
 			$Found_Freq = 5785
+		ElseIf $Found_CHAN = 159 Then
+			$Found_Freq = 5795
 		ElseIf $Found_CHAN = 161 Then
 			$Found_Freq = 5805
+		ElseIf $Found_CHAN = 163 Then
+			$Found_Freq = 5815
 		ElseIf $Found_CHAN = 165 Then
 			$Found_Freq = 5825
+		ElseIf $Found_CHAN = 167 Then
+			$Found_Freq = 5835
+		ElseIf $Found_CHAN = 169 Then
+			$Found_Freq = 5845
+		ElseIf $Found_CHAN = 171 Then
+			$Found_Freq = 5855
+		ElseIf $Found_CHAN = 173 Then
+			$Found_Freq = 5865
+		ElseIf $Found_CHAN = 175 Then
+			$Found_Freq = 5875
+		ElseIf $Found_CHAN = 177 Then
+			$Found_Freq = 5885
+		ElseIf $Found_CHAN = 180 Then
+			$Found_Freq = 5900
+		ElseIf $Found_CHAN = 182 Then
+			$Found_Freq = 5910
+		ElseIf $Found_CHAN = 183 Then
+			$Found_Freq = 5915
+		ElseIf $Found_CHAN = 184 Then
+			$Found_Freq = 5920
+		ElseIf $Found_CHAN = 187 Then
+			$Found_Freq = 5935
+		ElseIf $Found_CHAN = 188 Then
+			$Found_Freq = 5940
+		ElseIf $Found_CHAN = 189 Then
+			$Found_Freq = 5945
+		ElseIf $Found_CHAN = 192 Then
+			$Found_Freq = 5960
+		ElseIf $Found_CHAN = 196 Then
+			$Found_Freq = 5980
 		Else
 			$Found_Freq = 0
 		EndIf
@@ -5843,7 +5966,7 @@ EndFunc   ;==>_Draw5000ChanGraph
 
 Func _Draw5000ChanLine($frequency, $Channel)
 	$hposition = $5000leftborder + ($5000freqwidth * ($frequency - 5150))
-	_GDIPlus_GraphicsDrawString($5000backbuffer, $Channel, $hposition - 5, ($5000graphheight + $5000topborder) + 5)
+	_GDIPlus_GraphicsDrawString($5000backbuffer, $Channel, $hposition - 7, ($5000graphheight + $5000topborder) + 5, "Arial", 10, 0x0002)
 	_GDIPlus_GraphicsDrawLine($5000backbuffer, $hposition, $5000topborder, $hposition, $5000graphheight + $5000topborder, $Pen_GraphGrid)
 EndFunc   ;==>_Draw5000ChanLine
 
