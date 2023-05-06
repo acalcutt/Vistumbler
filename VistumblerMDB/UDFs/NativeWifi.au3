@@ -3124,6 +3124,14 @@ Func _Wlan_GenerateXMLProfile($oProfile)
 		.Auth = StringReplace(StringUpper(.Auth), "-", "")
 		If .Auth = "OPEN" Then .Auth = "open"
 		If .Auth = "SHARED KEY" Then .Auth  = "shared"
+		If .Auth = "WPAENTERPRISE" Then .Auth  = "WPA"
+		If .Auth = "WPAPERSONAL" Then .Auth  = "WPAPSK"
+		If .Auth = "WPA2ENTERPRISE" Then .Auth  = "WPA2"
+		If .Auth = "WPA2PERSONAL" Then .Auth  = "WPA2PSK"
+		If .Auth = "WPA3ENTERPRISE192" Then .Auth  = "WPA3ENT192"
+		If .Auth = "WPA3ENTERPRISE" Then .Auth  = "WPA3ENT"
+		If .Auth = "WPA3PERSONAL" Then .Auth  = "WPA3SAE"
+		If .Auth = "OWE" Then .Auth  = "OWE"
 		.Encr = StringUpper(.Encr)
 		If .Encr = "UNENCRYPTED" Then .Encr = "none"
 		If .Key.Protected == True Then .Key.Protected = "true"
@@ -5392,7 +5400,7 @@ EndFunc
 ;                  |.Name - Name of the profile (String) (Req)
 ;                  |.SSID - A list of SSIDs to connect to (List of strings) (Req)
 ;                  |.Type - The network type ("Infrastructure" or "Ad Hoc") (Req)
-;                  |.Auth - Authentication method ("Open", "Shared Key", "WEP", "WPA-Personal", "WPA2-Personal", "WPA-Enterprise" or "WPA2-Enterprise") (Req)
+;                  |.Auth - Authentication method ("Open", "Shared Key", "WEP", "WPA-Personal", "WPA2-Personal", "WPA-Enterprise", "WPA2-Enterprise", "WPA3-Enterprise-192", "WPA3-Enterprise", "WPA3-Personal" or "OWE") (Req)
 ;                  |.Encr - Encryption method ("AES" or "TKIP") (Req)
 ;                  Key: ($oProfile.Key)
 ;                  |.Protected - Specifies if the Material property is encrypted (Boolean) (Req if using a Shared Key)
