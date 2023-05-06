@@ -1,5 +1,5 @@
 #CS
-Native Wifi Functions - Version 4.1.4 - 2023-05-03
+Native Wifi Functions - Version 4.1.5 - 2023-05-03
 by MattyD(mattduncan87)
 http://sourceforge.net/projects/nativewifi/
 Artistic License 2.0
@@ -8,13 +8,15 @@ Edited 2012-08-26 by acalcutt1 - Added International 2.4Ghz channels and 5Ghz ch
 Edited 2012-11-11 by acalcutt1 - Modified _Wlan_EnumToString DOT11_AUTH_ALGORITHM and DOT11_CIPHER_ALGORITHM to match netsh output names.
 Edited 2014-07-15 by acalcutt - Merge branch 'patch-1' of https://github.com/EionRobb/Vistumbler into beta. Fix to allow 802.11ac support.
 Edited 2023-05-03 by acalcutt - add support for 802.11ad/ax/be
+Edited 2023-05-03 by acalcutt - add support for wpa3/owe DOT11_AUTH_ALGORITHM
 
 #CE
 ;--------------Enumerations-------------
 
 ;DOT11_AUTH_ALGORITHM
 Global Enum $DOT11_AUTH_ALGO_80211_OPEN = 1, $DOT11_AUTH_ALGO_80211_SHARED_KEY, $DOT11_AUTH_ALGO_WPA, $DOT11_AUTH_ALGO_WPA_PSK, _
-		$DOT11_AUTH_ALGO_WPA_NONE, $DOT11_AUTH_ALGO_RSNA, $DOT11_AUTH_ALGO_RSNA_PSK, $DOT11_AUTH_ALGO_IHV_START = 2147483648, $DOT11_AUTH_ALGO_IHV_END = 4294967295
+		$DOT11_AUTH_ALGO_WPA_NONE, $DOT11_AUTH_ALGO_RSNA, $DOT11_AUTH_ALGO_RSNA_PSK, $DOT11_AUTH_ALGO_WPA3, $DOT11_AUTH_ALGO_WPA3_ENT_192 = $DOT11_AUTH_ALGO_WPA3, _
+		$DOT11_AUTH_ALGO_OWE, $DOT11_AUTH_ALGO_WPA3_ENT, $DOT11_AUTH_ALGO_WPA3_SAE, $DOT11_AUTH_ALGO_IHV_START = 2147483648, $DOT11_AUTH_ALGO_IHV_END = 4294967295
 
 ;DOT11_BSS_TYPE
 Global Enum $DOT11_BSS_TYPE_INFRASTRUCTURE = 1, $DOT11_BSS_TYPE_INDEPENDENT, $DOT11_BSS_TYPE_ANY
@@ -206,6 +208,14 @@ Func _Wlan_EnumToString($sCategory, $iEnumeration)
 					Return "WPA2-Enterprise"
 				Case $DOT11_AUTH_ALGO_RSNA_PSK
 					Return "WPA2-Personal"
+				Case $DOT11_AUTH_ALGO_WPA3_ENT_192
+					Return "WPA3-Enterprise-192"
+				Case $DOT11_AUTH_ALGO_WPA3_SAE
+					Return "WPA3-Personal"
+				Case $DOT11_AUTH_ALGO_OWE
+					Return "OWE"
+				Case $DOT11_AUTH_ALGO_WPA3_ENT
+					Return "WPA3-Enterprise"
 				Case $DOT11_AUTH_ALGO_IHV_START To $DOT11_AUTH_ALGO_IHV_END
 					Return "IHV Auth (0x" & Hex($iEnumeration) & ")"
 				Case Else
@@ -5823,4 +5833,3 @@ Func _Wlan_WaitForNotification($iSource, $iNotification, $fInterfaceFilter = Tru
 		If $iTimeout <> -1 And TimerDiff($iTimer) > $iTimeout * 1000 Then Return SetError(5, 0, False)
 	WEnd
 EndFunc
-

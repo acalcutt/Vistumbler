@@ -1,7 +1,7 @@
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
-#AutoIt3Wrapper_Res_Fileversion=10.7.0.0
+#AutoIt3Wrapper_Res_Fileversion=10.8.2.0
 #AutoIt3Wrapper_Res_ProductName=Vistumbler
 #AutoIt3Wrapper_Res_CompanyName=Vistumbler.net
 #AutoIt3Wrapper_Res_Language=1033
@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.8'
+$version = 'v10.8.2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2023/05/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)

@@ -211,7 +211,7 @@ Func _Wlan_EnumToString($sCategory, $iEnumeration)
 				Case $DOT11_AUTH_ALGO_WPA3_ENT_192
 					Return "WPA3-Enterprise-192"
 				Case $DOT11_AUTH_ALGO_WPA3_SAE
-					Return "WPA3-SAE"
+					Return "WPA3-Personal"
 				Case $DOT11_AUTH_ALGO_OWE
 					Return "OWE"
 				Case $DOT11_AUTH_ALGO_WPA3_ENT
