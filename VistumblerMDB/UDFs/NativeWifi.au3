@@ -2872,8 +2872,15 @@ Func _Wlan_GenerateProfileObject($sProfile)
 		If .Type = "IBSS" Then .Type = "Ad Hoc"
 		If .Auth = "open" Then .Auth = "Open"
 		If .Auth = "shared" Then .Auth  = "Shared Key"
+		If .Auth = "WPA" Then .Auth = "WPA-Enterprise"
 		If .Auth = "WPAPSK" Then .Auth = "WPA-Personal"
+		If .Auth = "WPA2" Then .Auth = "WPA2-Enterprise"
 		If .Auth = "WPA2PSK" Then .Auth = "WPA2-Personal"
+		If .Auth = "WPA3" Then .Auth = "WPA3-Enterprise-192"
+		If .Auth = "WPA3ENT192" Then .Auth = "WPA3-Enterprise-192"
+		If .Auth = "WPA3ENT" Then .Auth = "WPA3-Enterprise"
+		If .Auth = "WPA3SAE" Then .Auth = "WPA3-Personal"
+		If .Auth = "OWE" Then .Auth = "OWE"
 		If .Encr = "none" Then .Encr = "Unencrypted"
 		If .Key.Protected == "true" Then .Key.Protected = True
 		If .Key.Protected == "false" Then .Key.Protected = False
