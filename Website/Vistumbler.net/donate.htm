@@ -61,8 +61,8 @@
 							<!-- Vistumbler - Responsive Right -->
 							<ins class="adsbygoogle"
 							     style="display:block"
-							     data-ad-client="ca-pub-4275640341473005"
-							     data-ad-slot="2546768734"
+							     data-ad-client="ca-pub-2350008141216245"
+							     data-ad-slot="3072782592"
 							     data-ad-format="auto"
 							     data-full-width-responsive="true"></ins>
 							<script>
@@ -97,24 +97,62 @@
 				</div>
 			</div>
 			<!-- #BeginEditable "Content" -->
-								<table style="width: 95%; height: 95%">
-									<tr>
-										<td>
-										<h2>Donate to Vistumbler/TechIdiots</h2>
-										<h3>Donate with Paypal</h3>
-										<div>
-											<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JZRGSY2S4J6MC">
-											<img alt="Donate" src="images/donate_paypal.png" class="style5" /></a>										
-										</div>
-										<h3>Donate with Bitcoin</h3>
-										<div>										
-											<img alt="BTC: 1EZryjBEPXAPS3UYbfh176HoBQ29yW4ZVZ" height="200" src="images/Bitcoin_QR_code.png" width="200" />
-											<br />
-											BTC: 1EZryjBEPXAPS3UYbfh176HoBQ29yW4ZVZ
-											</div>
-										</td>	
-									</tr>
-								</table>
+				<div class="donate-page">
+				  Help support TechIdiots, Vistumbler, and WifiDB projects and development. Any contributions are appreciated. -Andrew Calcutt
+
+				  <h3>Donate with Paypal</h3>
+				  <br />
+				  <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=JZRGSY2S4J6MC">
+					 <img src="https://techidiots.net/donate/donate_paypal.png" alt="Donate with Paypal">
+				  </a>
+
+				  <h3>Donate with Cryptocurrency</h3>
+					<br />
+					<br />
+					<div class="donate-item">
+						<br />
+						<br />
+						<div class="image-container">
+							 <img class="qr-code" src="https://techidiots.net/donate/bitcoin.png" alt="QR Code for BTC"/>
+						</div>
+						<div class="address-with-box">
+						   <div class="address-container">
+								<h3>BTC Address</h3>
+								<div class="address-box">
+									<input type="text" class="address-input btc-address-input" value="bc1qrggspyz0v9ex9fys85u0vethkjcluklrtj3fzd" readonly>
+									<button class="copy-button" onclick="copyText('btc-address-input')">Copy</button>
+									<div class="copy-message" id="btc-copy-message"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+					   <br />
+					   <br />
+					   <div class="donate-item">
+						  <div class="image-container">
+							 <img class="qr-code" src="https://techidiots.net/donate/eth.png" alt="QR Code for ETH"/>
+						</div>
+					  <div class="address-with-box">
+						 <div class="address-container">
+							<h3>ETH Address</h3>
+							 <div class="address-box">
+								<input type="text" class="address-input eth-address-input" value="0x8253AA00C46f6f2b171BB3FA7512Da31dCdE0A21" readonly>
+								<button class="copy-button" onclick="copyText('eth-address-input')">Copy</button>
+								 <div class="copy-message" id="eth-copy-message"></div>
+							 </div>
+						 </div>
+						</div>
+					</div>
+					<script>
+						function copyText(inputClass) {
+							const addressInput = document.querySelector("." + inputClass);
+							const addressValue = addressInput.value;
+							 navigator.clipboard.writeText(addressValue)
+							  const messageDiv = addressInput.parentElement.querySelector(".copy-message");
+							messageDiv.innerText = 'Address Copied!';
+						   setTimeout(function() { messageDiv.innerText = ''; }, 1500);
+						}
+					</script>
 			<!-- #EndEditable -->
 			</div>
 			<div class="foot">
@@ -123,8 +161,8 @@
 					<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
 					<ins class="adsbygoogle"
 						style="display:block"
-						data-ad-client="ca-pub-4275640341473005"
-						data-ad-slot="7116569131"
+						data-ad-client="ca-pub-2350008141216245"
+						data-ad-slot="4095054379"
 						data-ad-format="auto"
 						data-full-width-responsive="true"></ins>
 					<script>

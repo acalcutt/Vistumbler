@@ -509,6 +509,93 @@ justify-content: flex-end;
 	}
 }
 
+.donate-page {
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.donate-page>* {
+	margin-bottom: 10px;
+}
+.donate-page img{
+	max-width: 300px;
+	height: auto;
+}
+.donate-item {
+	display: flex;
+	flex-direction: row;
+	/* Default: side-by-side */
+	align-items: center;
+	margin-bottom: 20px;
+}
+.image-container {
+	padding-right: 20px;
+}
+.qr-code {
+	max-width: 150px;
+	height: auto;
+}
+.address-with-box {
+	width: 400px;
+	/* Make container wider to allow for more horizontal space */
+}
+.address-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 10px;
+	width: 100%;
+}
+.address-container h3 {
+	text-align: center;
+}
+.address-box {
+	border: 1px solid #ccc;
+	padding: 20px;
+	margin-bottom: 15px;
+	background-color: #f9f9f9;
+	text-align: center;
+	border-radius: 5px;
+}
+.address-input {
+	padding: 10px;
+	border: 1px solid #ccc;
+	width: calc(100% - 160px);
+	font-size: 1.1rem;
+}
+.copy-button {
+	background-color: #4CAF50;
+	color: white;
+	padding: 10px 14px;
+	border: none;
+	cursor: pointer;
+	border-radius: 3px;
+	font-size: 1rem;
+	margin-left: 5px;
+}
+.copy-message {
+	margin-top: 10px;
+	font-size: 0.9rem;
+	color: #27a561;
+}
+/* Media Query for small screens */
+@media (max-width: 768px) {
+	.donate-item {
+		flex-direction: column;
+		/* Stack on small screens */
+		align-items: center;
+	}
+	.image-container {
+		padding-right: 0;
+		padding-bottom: 10px;
+	}
+	.address-with-box{
+		width: auto;
+		/* remove fixed width*/
+	}
+}
+
 @media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and ( -o-min-device-pixel-ratio: 2/1), only screen and ( min-device-pixel-ratio: 2), only screen and ( min-resolution: 192dpi), only screen and ( min-resolution: 2dppx) {
 	body {
 		font-size: 130%;
