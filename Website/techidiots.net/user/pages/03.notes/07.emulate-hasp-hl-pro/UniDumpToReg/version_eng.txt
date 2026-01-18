@@ -1,0 +1,28 @@
+Universal HASP Dump->To->Reg converter by sataron!
+
+Thank very much to "tch2000", "Chingachguk", "Denger2k" for the assistance in setting up and consultation. 
+Thank to "asteri" for hard testing.
+
+ver. 1.1b0 GUI.
+
+Support Dump size (in byte): 204, 220, 332, 693, 716, 719, 732.
+Support Dump from HaspHL keys: 719 ("hasp.dmp")+4048,+128,+112 ("hhl_mem.dmp"). Files "hasp.dmp" and "hhl_mem.dmp" should be in the same directory.
+Support change in the number of network users. 
+Support for the user name (only for info in *.reg file). 
+Support for the time and date. 
+Support long EDS (for Glasha, HarmEr emulator).
+
+Support emulator:
+	Chingachguk & Denger2k,
+	Glasha or HarmEr(0.8b),
+	HarmEr(0.9b)(test support),
+	TORO Hasp4 (test support),
+	Chingachguk based Hasp HL (table).
+
+Added a few bugs! :)
+
+
+ver. 1.1b1 GUI.
+Added support for SafeKey Hasp4 emulator (25k) - in testing.
+Added some help info.
+Added commandline support.

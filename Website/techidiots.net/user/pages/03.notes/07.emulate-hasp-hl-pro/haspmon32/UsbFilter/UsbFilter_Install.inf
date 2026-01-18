@@ -1,0 +1,38 @@
+;  CLASS FILTER SAMPLE
+
+[Version]
+Signature	= "$WINDOWS NT$"
+Provider	= Microsoft
+
+[DefaultInstall.NT]
+CopyFiles 	= ClassFilterInstall.CopyFiles
+Addreg 		= Classfilter.AddReg
+
+[ClassFilterInstall.CopyFiles]
+AladdinUsbFilter.sys,,,0x00000004
+
+[Classfilter.AddReg]
+HKLM, System\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}, UpperFilters, 0x00010008, AladdinUsbFilter
+
+[DefaultInstall.NT.Services]
+AddService 	= AladdinUsbFilter,,AladdinUsbFilterService
+
+[AladdinUsbFilterService]
+DisplayName	= AladdinUsbFilterService
+ServiceType	= 1
+StartType	= 0
+ErrorControl	= 1
+ServiceBinary 	= %12%\AladdinUsbFilter.sys
+LoadOrderGroup 	= PNP Filter
+
+[DestinationDirs]
+DefaultDestDir   = 12
+
+[SourceDisksNames]
+1=%Disk1%,,
+
+[SourceDisksFiles]
+AladdinUsbFilter.sys		= 1
+
+[Strings]
+Disk1 			= "The First Disk"

@@ -1,0 +1,15 @@
+GUI Admin PW = 3157919
+
+Go to admin menu and chose reset to factory defaults.
+Wait until reboots, then go to admin again.
+FIRST OF ALL check network settings on NetworkSetup page.
+There is a field Network device name that must be set to eth0.2
+And be sure to set Obtain DNS addresses automatically on.
+Reboot your phone, than set it up using page VoipSetup
+Basicaly uncheck everything exept Include direction send receive in SDP and set No Of SIP Routes to "0"
+Then fill out first 4 fields with your parameters.
+This should work.
+
+For video settings go to SystemConfig, turn off Enable video privacy
+Video bitrate = 512000
+Transmitted video image size = VGA

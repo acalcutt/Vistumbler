@@ -1,0 +1,66 @@
+; Copyright (c) 2004-2008 Chingachguk & Denger2k. All rights reserved
+;
+; INF file for installing virtual USB multikey 32bit driver
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System
+ClassGuid={4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider=%MSFT%
+DriverVer=05/16/2009, 0.18.1.0
+CatalogFile=multikey.cat
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames]
+1 = %DiskId1%,,,""
+
+[SourceDisksFiles]
+multikey.sys  = 1;
+
+;*****************************************
+; Virtual USB MultiKey Install Section
+;*****************************************
+
+[Manufacturer]
+%StdMfg%=Standard
+
+[Standard]
+; These are the virtual USB bus pnp ids
+
+%MultiKey.DeviceDesc%=MultiKey_Device, root\multikey
+;%MultiKey.DeviceDesc%=MultiKey_Device, c:\windows\system32\drivers\multikey
+
+[MultiKey_Device]
+CopyFiles=Drivers_Dir
+
+[MultiKey_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+multikey.sys
+
+; --- Service installation
+[MultiKey_Device.NT.Services]
+AddService = multikey,%SPSVCINST_ASSOCSERVICE%, mkey_Service_Inst
+[MultiKey_Device.Services]
+AddService = multikey,%SPSVCINST_ASSOCSERVICE%, mkey_Service_Inst
+
+; --- vUSB driver install sections
+[mkey_Service_Inst]
+DisplayName    = %mkey.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+;StartType     = 3               ; SERVICE_DEMAND_START
+StartType      = 2               ; SERVICE_AUTO_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\multikey.sys
+LoadOrderGroup = Extended Base
+
+[Strings]
+SPSVCINST_ASSOCSERVICE = 0x00000002
+MSFT = "Chingachguk & Denger2k (Elite & SP edition)"
+StdMfg = "(Standard system devices)"
+DiskId1 = "Virtual USB MultiKey Installation Disk #1"
+MultiKey.DeviceDesc = "Virtual USB MultiKey"
+mkey.SVCDESC = "Virtual USB MultiKey"

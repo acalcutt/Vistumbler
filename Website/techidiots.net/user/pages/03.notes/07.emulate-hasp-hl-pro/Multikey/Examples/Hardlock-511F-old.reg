@@ -1,0 +1,21 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\MultiKey\Dumps\0000511F]
+"Name"="HARDLOCK (old) dump"
+"Copyright"="None"
+"Created"="1 Jul 2008"
+"DongleType"=dword:00000002
+"ID"=dword:87654321
+"withMemory"=dword:00000001
+"Seed1"=dword:00001B5A
+"Seed2"=dword:0000254F
+"Seed3"=dword:0000627C
+"HlkMemory"=hex:\
+	04,00,00,00,FF,FF,00,00,6E,6E,00,00,00,00,06,00,\
+	00,00,00,00,00,00,75,07,DD,68,2A,8A,D6,F0,D8,0D,\
+	06,00,D8,0D,28,00,00,00,00,00,0B,0A,38,43,46,0D,\
+	01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,\
+	01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,\
+	01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,\
+	01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,\
+	01,00,FF,FF,01,00,FF,FF,01,00,FF,FF,01,00,FF,FF

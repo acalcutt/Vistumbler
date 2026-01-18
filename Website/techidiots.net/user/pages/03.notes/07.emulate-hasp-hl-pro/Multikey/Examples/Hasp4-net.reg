@@ -1,0 +1,45 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\MultiKey\Dumps\12345678]
+"Name"="HASP-4 Network dump"
+"Copyright"="None"
+"Created"="1 Jul 2008"
+"DongleType"=dword:00000001
+"SN"=dword:3a4354f0
+"Type"=dword:0000000A
+"Memory"=dword:00000004
+"SecTable"=hex:2d,2d,03,03,ed,ed,c3,c3
+"NetMemory"=hex:03,00,f0,01,04,ff,ff,ff,ff,ff,fe,ff
+"Option"=hex:01,01,02,4a,1f,00,00,00,00,00,00,00,00
+"Data"=hex:\
+	9A,2E,bc,c5,0f,ab,00,00,00,00,69,69,90,01,06,00,\
+	90,01,00,00,90,01,02,00,90,01,06,0a,90,01,00,00,\
+	00,00,00,00,42,56,11,43,d9,5a,99,3b,05,0a,90,01,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,\
+	ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff,ff,00,ff,ff

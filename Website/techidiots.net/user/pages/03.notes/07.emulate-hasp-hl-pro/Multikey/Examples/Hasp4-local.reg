@@ -1,0 +1,22 @@
+REGEDIT4
+
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\MultiKey\Dumps\12345678]
+"Name"="HASP-4 Local dump"
+"Copyright"="None"
+"Created"="1 Jul 2008"
+"DongleType"=dword:00000001
+"SN"=dword:7d95db3f
+"Type"=dword:0000000A
+"Memory"=dword:00000001
+"Option"=hex:01,01,02,4A,1F,00,00,00,00,00,00,00
+"SecTable"=hex:9A,21,2C,25,DE,65,6C,65
+"NetMemory"=hex:03,00,80,00,04,ff,00,00,ff,ff,ff,ff
+"Data"=hex:\
+	01,00,00,00,00,00,00,38,02,6a,db,fe,1e,6b,e4,1b,\
+	db,b0,0d,6e,4c,d8,b6,ce,39,ec,cd,03,55,d1,d1,39,\
+	19,de,dd,a6,5b,8f,67,ea,84,29,ec,b4,bc,69,a6,96,\
+	b3,8c,0e,09,37,fd,4e,6e,b6,4c,1d,3e,b6,3f,64,a8,\
+	f8,c9,29,9f,0a,c8,ca,65,04,2a,94,61,75,78,3f,39,\
+	21,ae,bf,4e,ba,4b,26,18,20,bf,60,e7,36,57,e0,e6,\
+	24,4e,b1,81,6e,3e,36,e4,a6,11,5e,13,07,0d,52,50,\
+	52,50,52,50,52,50,52,50,52,50,52,50,52,50,52,50

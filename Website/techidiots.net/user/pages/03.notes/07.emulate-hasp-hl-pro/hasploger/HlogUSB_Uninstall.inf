@@ -1,0 +1,38 @@
+;  CLASS FILTER SAMPLE
+
+[Version]
+Signature	= "$WINDOWS NT$"
+Provider	= Microsoft
+
+[DefaultInstall.NT]
+DelFiles 	= ClassFilterInstall.DelFiles
+Delreg 		= Classfilter.DelReg
+
+[ClassFilterInstall.DelFiles]
+GiA_HlogUSB.sys
+
+[Classfilter.DelReg]
+HKLM, System\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}, UpperFilters
+
+[DefaultInstall.NT.Services]
+DelService 	= GiA_HloggerUSB
+
+[GiA_HloggerUSBService]
+DisplayName	= GiA_HloggerUSBService
+ServiceType	= 1
+StartType	= 0
+ErrorControl	= 1
+ServiceBinary 	= %12%\GiA_HlogUSB.sys
+LoadOrderGroup 	= PNP Filter
+
+[DestinationDirs]
+DefaultDestDir   = 12
+
+[SourceDisksNames]
+1=%Disk1%,,
+
+[SourceDisksFiles]
+GiA_HlogUSB.sys		= 1
+
+[Strings]
+Disk1 			= "The First Disk"
