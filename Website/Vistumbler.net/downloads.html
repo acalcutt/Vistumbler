@@ -1,15 +1,26 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html>
+
 	<!-- #BeginTemplate "Vistumbler.dwt" -->
+
 <head>
-	<meta http-equiv="Content-Language" content="en-us" />
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#145285">
 	<!-- #BeginEditable "doctitle" -->
 	<title>Vistumbler - Downloads</title>
 	<!-- #EndEditable -->
 	<link rel="stylesheet" type="text/css" href="style.css" />
 </head>
 <body>
+		<!-- Expression Web notes:
+				 - To keep correct relative paths for subfolders, open this DWT in Expression Web
+					 and drag the stylesheet from the Folder List into the <head>. Expression Web
+					 will convert the path to a project-relative form when updating pages.
+				 - If you want the sidebar to highlight the current page, add
+					 data-enable-current="true" on <body> or on <nav id="sidebar">. By default
+					 highlighting is disabled to avoid accidental edits.
+		-->
 	<script type="text/javascript">
 	<!--
 	    var vidonate = true;
@@ -17,18 +28,9 @@
 	</script>
 	<script type="text/javascript" src="js/adframe.js"></script>
 
-	<!-- Start Collapsible Menu Scripts-->
+	<!-- Start Collapsible Menu Scripts: jQuery + main (deferred) -->
 	<script src="js/jquery-3.4.1.slim.js" integrity="sha256-BTlTdQO9/fascB1drekrDVkaKd9PkwBymMlHOiG+qLI=" crossorigin="anonymous"></script>
-    <script type="text/javascript">
-        $(document).ready(function () {
-            $('.bt-menu-trigger').on('click', function () {
-                $('#sidebar').toggleClass('active');
-				$('.main').toggleClass('active');
-				$('.foot').toggleClass('active');
-                $(this).toggleClass('bt-menu-alt');
-            });
-        });
-    </script>
+	<script src="js/main.js" defer></script>
 	<!-- End Collapsible Menu Scripts -->
 	<div class="wrap">
 		<div class="head">
@@ -37,7 +39,7 @@
 			</div>
 		<div class='bodywrap'>
 			<div>
-				<nav id="sidebar">
+				<nav id="sidebar" aria-label="Main Navigation">
 					<ul class="list-unstyled components">
 						<li class="inside_dark_header">Navigation</li>
 						<li><a href="/">Home</a></li>
@@ -68,11 +70,14 @@
 							<script>
 							     (adsbygoogle = window.adsbygoogle || []).push({});
 							</script>
+							<div id="donate-fallback-right" style="display:none;">
+								<a class="img" href="donate.htm"><img src="images/support_vi_tall.png" alt="Donate to Vistumbler"></a>
+							</div>
 							<script type="text/javascript">
-							    if(vidonate) {
-							    //Show donate images instead
-							    	document.write('<a class="img" href = "donate.htm"><img src="images/support_vi_tall.png" alt="Donate to Vistumbler"></a>');
-							    }
+								if (typeof vidonate !== 'undefined' && vidonate) {
+									var el = document.getElementById('donate-fallback-right');
+									if (el) el.style.display = 'block';
+								}
 							</script>
 						</div>
 					</div>
@@ -80,7 +85,7 @@
 			</div>
 			<div class="main">
 			<div>
-				<div class="bt-menu-trigger">
+				<div class="bt-menu-trigger" role="button" aria-controls="sidebar" aria-expanded="false" tabindex="0">
 					<span></span>
 				</div>
 				<div class="righttm">
@@ -147,14 +152,41 @@
 					<script>
 					(adsbygoogle = window.adsbygoogle || []).push({});
 					</script>					
+					<div id="donate-fallback-wide" style="display:none; text-align:center;">
+						<a class="img" href="donate.htm"><img src="images/support_vi_wide.png" alt="Donate to Vistumbler"></a>
+						<a class="img" href="donate.htm"><img src="images/support_ti_wide.png" alt="Donate to Vistumbler"></a>
+					</div>
 					<script type="text/javascript">
-					    if(vidonate) {
-					    //Show donate images instead
-					    	document.write('<a class="img" href = "donate.htm"><img src="images/support_vi_wide.png" alt="Donate to Vistumbler"></a><a class="img" href = "donate.htm"><img src="images/support_ti_wide.png" alt="Donate to Vistumbler"></a>');
-					    }
+						if (typeof vidonate !== 'undefined' && vidonate) {
+							var el2 = document.getElementById('donate-fallback-wide');
+							if (el2) el2.style.display = 'block';
+						}
 					</script>
 					<!-- End: Show donate images if adblock is enabled -->
 				</div>
+					<!-- Copyright: dynamically show current year -->
+					<p class="inside_text" id="vi-copyright" style="margin-top:8px;">
+						© <span id="vi-copyright-start">2007</span><span id="vi-copyright-sep">–</span><span id="vi-copyright-year"></span> TechIdiots LLC. All rights reserved.
+					</p>
+					<script>
+						(function(){
+							try{
+								var start = 2007;
+								var now = new Date().getFullYear();
+								var startEl = document.getElementById('vi-copyright-start');
+								var sepEl = document.getElementById('vi-copyright-sep');
+								var yearEl = document.getElementById('vi-copyright-year');
+								if (startEl) startEl.textContent = start;
+								if (now === start) {
+									var p = document.getElementById('vi-copyright');
+									if (p) p.textContent = '© ' + start + ' TechIdiots LLC. All rights reserved.';
+								} else {
+									if (sepEl) sepEl.textContent = '–';
+									if (yearEl) yearEl.textContent = now;
+								}
+							}catch(e){}
+						})();
+					</script>
 			</div>
 		</div>
 	</div>
