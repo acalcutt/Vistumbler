@@ -1,0 +1,260 @@
+name: Compile AutoIt scripts
+
+on:
+  push:
+    paths:
+      - 'VistumblerMDB/**'
+  workflow_dispatch:
+
+jobs:
+  compile:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install AutoIt via Chocolatey
+        shell: pwsh
+        run: |
+          choco install autoit -y
+          refreshenv || true
+
+      - name: Run AutoIt compiler script (force x86)
+        shell: pwsh
+        run: |
+          pwsh -File .\scripts\compile-autoit.ps1 -SourceDir 'VistumblerMDB' -OutDir 'artifacts/vistumblermdb-exes' -ForceX86
+
+      - name: Upload compiled EXEs
+        uses: actions/upload-artifact@v4
+        with:
+          name: vistumblermdb-exes
+          path: artifacts/vistumblermdb-exes/**
+
+  sign:
+    needs: compile
+    runs-on: windows-latest
+    environment: signing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download compiled EXEs
+        uses: actions/download-artifact@v4
+        with:
+          name: vistumblermdb-exes
+          path: artifacts/vistumblermdb-exes
+
+      - name: Decode PFX and import certificate (temporary)
+        shell: pwsh
+        env:
+          SIG_PFX_B64: ${{ secrets.SIG_PFX_B64 }}
+          SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
+        run: |
+          $pfxPath = Join-Path $PWD 'temp_sign_cert.pfx'
+          [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:SIG_PFX_B64))
+          $pw = ConvertTo-SecureString $env:SIG_PFX_PASS -AsPlainText -Force
+          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2
+          $cert.Import($pfxPath, $env:SIG_PFX_PASS, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::MachineKeySet -bor [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
+          $thumb = $cert.Thumbprint
+          Write-Host "Imported cert thumb: $thumb"
+          "CERT_THUMB=$thumb" | Out-File -FilePath cert_info.txt -Encoding ascii
+
+      - name: Sign EXEs with signtool
+        shell: pwsh
+        run: |
+          $info = Get-Content cert_info.txt | ConvertFrom-StringData
+          $thumb = $info.CERT_THUMB
+          $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $signtool) { Write-Error 'signtool.exe not found on runner'; exit 2 }
+          $signtoolPath = $signtool.Path
+          $files = Get-ChildItem -Path artifacts/vistumblermdb-exes -Recurse -Filter *.exe
+          foreach ($f in $files) {
+            Write-Host "Signing $($f.FullName)"
+            & $signtoolPath sign /sha1 $thumb /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
+          }
+
+      - name: Remove certificate and cleanup
+        shell: pwsh
+        run: |
+          $info = Get-Content cert_info.txt | ConvertFrom-StringData
+          $thumb = $info.CERT_THUMB
+          $store = New-Object System.Security.Cryptography.X509Certificates.X509Store([System.Security.Cryptography.X509Certificates.StoreName]::My, 'LocalMachine')
+          $store.Open('ReadWrite')
+          $certs = $store.Certificates.Find('FindByThumbprint', $thumb, $false)
+          foreach ($c in $certs) { $store.Remove($c) }
+          $store.Close()
+          Remove-Item -Path temp_sign_cert.pfx -Force -ErrorAction SilentlyContinue
+          Remove-Item cert_info.txt -Force -ErrorAction SilentlyContinue
+
+  package:
+    needs: sign
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download compiled EXEs
+        uses: actions/download-artifact@v4
+        with:
+          name: vistumblermdb-exes
+          path: artifacts/vistumblermdb-exes
+
+      - name: Copy compiled EXEs back into repository structure
+        shell: pwsh
+        run: |
+          $artifactBase = Join-Path $PWD 'artifacts\vistumblermdb-exes'
+          $repoRoot = $PWD
+          $sourceDir = 'VistumblerMDB'
+          if (-not (Test-Path $artifactBase)) { Write-Error "Artifacts not found at $artifactBase"; exit 2 }
+          $files = Get-ChildItem -Path $artifactBase -Recurse -File -Filter *.exe
+          foreach ($f in $files) {
+            $rel = $f.FullName.Substring($artifactBase.Length).TrimStart('\')
+            $dest = Join-Path $repoRoot $sourceDir $rel
+            $destDir = Split-Path $dest -Parent
+            if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
+            Copy-Item -Path $f.FullName -Destination $dest -Force
+            Write-Host "Copied $($f.FullName) -> $dest"
+          }
+
+      - name: Determine version and patch NSI
+        shell: pwsh
+        run: |
+          $au3 = Join-Path $PWD 'VistumblerMDB\Vistumbler.au3'
+          if (-not (Test-Path $au3)) { Write-Error "Vistumbler.au3 not found"; exit 2 }
+          $content = Get-Content $au3 -Raw
+          $ver = ''
+          if ($content -match "\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'") { $ver = $matches[1] }
+          if (-not $ver) {
+            if ($content -match '#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)') { $ver = $matches[1] }
+          }
+          if (-not $ver) { Write-Error "Could not determine version"; exit 2 }
+          Write-Host "Detected version: $ver"
+
+          # prepare NSI
+          $nsiTemplate = Join-Path $PWD 'Installer\Vistumbler.nsi.template'
+          $nsiTarget = Join-Path $PWD 'Installer\Vistumbler.nsi'
+          Copy-Item -Path $nsiTemplate -Destination $nsiTarget -Force
+          (Get-Content $nsiTarget) -replace 'OutFile\s+"[^"]+"', "OutFile \"Vistumbler_v$($ver -replace '\\.','-').exe\"" `
+                                -replace 'WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler" "DisplayVersion" "[^"]+"', "WriteRegStr HKLM \"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler\" \"DisplayVersion\" \"$ver\"" | Set-Content $nsiTarget
+          Write-Host "Patched NSI -> $nsiTarget"
+
+      - name: Create ZIP of `VistumblerMDB` (versioned)
+        shell: pwsh
+        run: |
+          $nsiTarget = Join-Path $PWD 'Installer\Vistumbler.nsi'
+          if (-not (Test-Path $nsiTarget)) { Write-Error "Patched NSI not found"; exit 2 }
+          $nsiText = Get-Content $nsiTarget -Raw
+          if ($nsiText -match 'OutFile\s+"Vistumbler_v([0-9\-]+)\.exe"') { $ver = ($matches[1] -replace '-', '.') } else { $ver = 'unknown' }
+          $zipOut = "builds\Vistumbler_v$ver.zip"
+          $zipPortable = "builds\Vistumbler_v$ver_Portable.zip"
+          if (-not (Test-Path builds)) { New-Item -ItemType Directory -Path builds | Out-Null }
+          Write-Host "Creating zip $zipOut from VistumblerMDB"
+          Compress-Archive -Path 'VistumblerMDB\*' -DestinationPath $zipOut -Force
+          Write-Host "ZIP created: $zipOut"
+
+          # Create portable zip: copy tree, set PortableMode=1 in Settings\vistumbler_settings.ini, then zip
+          $portableTemp = Join-Path $PWD 'temp_portable'
+          if (Test-Path $portableTemp) { Remove-Item -Recurse -Force $portableTemp }
+          Copy-Item -Path 'VistumblerMDB' -Destination $portableTemp -Recurse
+          $settingsPath = Join-Path $portableTemp 'VistumblerMDB\Settings\vistumbler_settings.ini'
+          if (Test-Path $settingsPath) {
+            $ini = Get-Content $settingsPath -Raw
+            if ($ini -match '(?ms)^(\[Vistumbler\].*?)(?=\r?\n\[[^\]]+\]|$)') {
+              $section = $matches[1]
+              if ($section -match '(?m)^\s*PortableMode\s*=') {
+                $newSection = ($section -replace '(?m)^\s*PortableMode\s*=.*$', 'PortableMode=1')
+              } else {
+                $newSection = $section + "`r`nPortableMode=1"
+              }
+              $ini = $ini -replace '(?ms)^(\[Vistumbler\].*?)(?=\r?\n\[[^\]]+\]|$)', $newSection
+            } else {
+              $ini = "[Vistumbler]`r`nPortableMode=1`r`n" + $ini
+            }
+            Set-Content -Path $settingsPath -Value $ini -Encoding UTF8
+          } else {
+            New-Item -ItemType Directory -Path (Split-Path $settingsPath -Parent) -Force | Out-Null
+            "[Vistumbler]`r`nPortableMode=1" | Out-File -FilePath $settingsPath -Encoding utf8
+          }
+          Write-Host "Creating portable zip $zipPortable from modified copy"
+          Compress-Archive -Path (Join-Path $portableTemp 'VistumblerMDB\*') -DestinationPath $zipPortable -Force
+          Write-Host "Portable ZIP created: $zipPortable"
+          Remove-Item -Recurse -Force $portableTemp
+
+      
+      - name: Install NSIS (use repo installer if present)
+        shell: pwsh
+        run: |
+          $localInst = Join-Path $PWD 'Installer\nsis-3.04-setup.exe'
+          if (Test-Path $localInst) {
+            Write-Host "Found local NSIS installer: $localInst. Installing silently..."
+            Start-Process -FilePath $localInst -ArgumentList '/S' -Wait -NoNewWindow
+          } else {
+            Write-Host "Local NSIS installer not found; installing via Chocolatey"
+            choco install nsis -y
+          }
+
+      - name: Build NSIS installer
+        shell: pwsh
+        run: |
+          $makensis = Get-Command makensis.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $makensis) { Write-Error 'makensis.exe not found'; exit 2 }
+          $nsi = 'Installer\Vistumbler.nsi'
+          if (-not (Test-Path $nsi)) { Write-Error "NSI script $nsi not found"; exit 2 }
+          Write-Host "Running makensis on $nsi"
+          & $makensis.Path /V2 $nsi
+          Write-Host "NSIS finished"
+
+      - name: Find built installer and prepare release assets
+        shell: pwsh
+        id: find_assets
+        run: |
+          $out = @{ installer=''; zip=''; zip_portable='' }
+          # look for installer in common places (current dir and subdirs)
+          $inst = Get-ChildItem -Path $PWD -Recurse -Filter *.exe -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'Vistumbler' } | Select-Object -First 1
+          if ($inst) { $out.installer = $inst.FullName }
+          $zip = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter 'Vistumbler_v*.zip' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch '_Portable' } | Select-Object -First 1
+          if ($zip) { $out.zip = $zip.FullName }
+          $zipp = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter '*_Portable.zip' -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zipp) { $out.zip_portable = $zipp.FullName }
+          Write-Host "Installer: $($out.installer)"
+          Write-Host "Zip: $($out.zip)"
+          Write-Host "Portable Zip: $($out.zip_portable)"
+          # set outputs
+          "installer=$($out.installer)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "zip=$($out.zip)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "zip_portable=$($out.zip_portable)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          tag_name: ${{ github.ref_name || format('v{0}', github.run_number) }}
+          release_name: Vistumbler release ${{ github.run_number }}
+          draft: true
+          prerelease: false
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.find_assets.outputs.installer }}
+          asset_name: "Vistumbler-installer.exe"
+          asset_content_type: application/octet-stream
+
+      - name: Upload zip asset
+        if: steps.find_assets.outputs.zip != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.find_assets.outputs.zip }}
+          asset_name: "Vistumbler.zip"
+          asset_content_type: application/zip
+
+      - name: Upload portable zip asset
+        if: steps.find_assets.outputs.zip_portable != ''
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.find_assets.outputs.zip_portable }}
+          asset_name: "Vistumbler_Portable.zip"
+          asset_content_type: application/zip
