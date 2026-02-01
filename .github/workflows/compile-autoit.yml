@@ -109,15 +109,24 @@ jobs:
             'C:\Program Files (x86)\Windows Kits\8.0\bin'
           )
           $found = $null
+          # Collect candidates under the known kits paths
+          $allCandidates = @()
           foreach ($p in $paths) {
             if (Test-Path $p) {
-              $candidate = Get-ChildItem -Path $p -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-              if ($candidate) { $found = $candidate; break }
+              $allCandidates += Get-ChildItem -Path $p -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue
             }
+          }
+          if ($allCandidates.Count -gt 0) {
+            # Prefer x64, then x86, then any non-arm64, then fallback to first
+            $best = $allCandidates | Where-Object { $_.DirectoryName -match "\\\\x64\\\\" } | Select-Object -First 1
+            if (-not $best) { $best = $allCandidates | Where-Object { $_.DirectoryName -match "\\\\x86\\\\" } | Select-Object -First 1 }
+            if (-not $best) { $best = $allCandidates | Where-Object { $_.DirectoryName -notmatch 'arm64' } | Select-Object -First 1 }
+            if (-not $best) { $best = $allCandidates | Select-Object -First 1 }
+            if ($best) { $found = $best }
           }
           if ($found) {
             $dir = $found.DirectoryName
-            Write-Host "Found signtool at $($found.FullName). Adding to GITHUB_PATH for subsequent steps"
+            Write-Host "Found signtool at $($found.FullName). Adding to GITHUB_PATH for subsequent steps (preferred x64/x86 over arm64)"
             Add-Content -Path $env:GITHUB_PATH -Value $dir
             # also update PATH for this step
             $env:PATH = "$env:PATH;$dir"
