@@ -1,9 +1,6 @@
 name: Compile AutoIt scripts
 
 on:
-  push:
-    paths:
-      - 'VistumblerMDB/**'
   workflow_dispatch:
 
 concurrency:
@@ -93,7 +90,9 @@ jobs:
           $pfxPath = Join-Path $PWD 'temp_sign_cert.pfx'
           [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:SIG_PFX_B64))
           # Use the X509Certificate2 constructor (works on PowerShell Core / .NET Core)
-          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($pfxPath, $env:SIG_PFX_PASS, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::MachineKeySet -bor [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet)
+          $flags = [int][System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::MachineKeySet -bor [int][System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet
+          $flags = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]$flags
+          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($pfxPath, $env:SIG_PFX_PASS, $flags)
           $thumb = $cert.Thumbprint
           Write-Host "Imported cert thumb: $thumb"
           "CERT_THUMB=$thumb" | Out-File -FilePath cert_info.txt -Encoding ascii
