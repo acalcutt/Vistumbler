@@ -9,3 +9,14 @@ C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\m
 C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.csproj.CoreCompileInputs.cache
 C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.exe
 C:\Users\andrew.EIRI\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.pdb
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\bin\Release\macmanuf.exe.config
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\bin\Release\macmanuf.exe
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\bin\Release\macmanuf.pdb
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.csproj.AssemblyReference.cache
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.exe.config
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\Interop.ADODB.dll
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\Interop.ADOX.dll
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.csproj.ResolveComReference.cache
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.csproj.CoreCompileInputs.cache
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.exe
+C:\Users\Andrew\Documents\GitHub\Vistumbler\macmanuf\macmanuf\obj\Release\macmanuf.pdb

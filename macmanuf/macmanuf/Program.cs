@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Data.OleDb;
+using System.Threading;
 
 namespace macmanuf
 {
@@ -17,7 +19,7 @@ namespace macmanuf
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine("Script Name: Update Manufacturers");
             Console.WriteLine("By: Andrew Calcutt and Phil Ferland");
-            Console.WriteLine("2023/05/03");
+            Console.WriteLine("2026/02/01");
             Console.ForegroundColor = ConsoleColor.White;
             var cd = Directory.GetCurrentDirectory();
             var MDB = cd + "\\Manufacturers.mdb";
@@ -37,7 +39,10 @@ namespace macmanuf
 
         public static void WaitForDownloadToFinish()
         {
-            while(FinishedDownloadFlag == 0){}
+            while (FinishedDownloadFlag == 0)
+            {
+                Thread.Sleep(100);
+            }
         }
 
         public static void CreateAccessDatabase(string file)
@@ -102,22 +107,54 @@ namespace macmanuf
 
         public static void GetManufacturers(string file, string url)
         {
-            var client = new WebClient();
-            
-            using (var reader = new StreamReader("oui.txt"))
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.Contains("(base 16)"))
-                    {
-                        string[] parts = line.Split(new string[] { "(base 16)" }, StringSplitOptions.None);
-                        string bssidval = parts[0].Trim();
-                        string manuval = parts[1].Trim();
+            // Open a single connection and use a transaction + prepared command
+            string connectionString = string.Format("Provider={0}; Data Source={1}; Jet OLEDB:Engine Type={2}",
+                "Microsoft.Jet.OLEDB.4.0",
+                file,
+                5);
 
-                        AddManu(file, bssidval, manuval);
-                        Console.WriteLine(bssidval + " " + manuval);
+            using (var con = new OleDbConnection(connectionString))
+            {
+                con.Open();
+                using (var transaction = con.BeginTransaction())
+                using (var command = con.CreateCommand())
+                {
+                    command.Transaction = transaction;
+                    command.CommandText = "INSERT INTO Manufacturers ([BSSID],[Manufacturer]) VALUES (@BSSID,@Manufacturer);";
+                    var pBssid = command.CreateParameter();
+                    pBssid.ParameterName = "@BSSID";
+                    command.Parameters.Add(pBssid);
+                    var pManu = command.CreateParameter();
+                    pManu.ParameterName = "@Manufacturer";
+                    command.Parameters.Add(pManu);
+
+                    int count = 0;
+                    using (var reader = new StreamReader("oui.txt"))
+                    {
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            if (line.Contains("(base 16)"))
+                            {
+                                string[] parts = line.Split(new string[] { "(base 16)" }, StringSplitOptions.None);
+                                string bssidval = parts[0].Trim();
+                                string manuval = parts[1].Trim();
+
+                                pBssid.Value = bssidval;
+                                pManu.Value = manuval;
+                                command.ExecuteNonQuery();
+
+                                count++;
+                                if ((count % 100) == 0)
+                                {
+                                    Console.WriteLine("Inserted {0} rows...", count);
+                                }
+                            }
+                        }
                     }
+
+                    transaction.Commit();
+                    Console.WriteLine("Inserted {0} total rows.", count);
                 }
             }
         }
