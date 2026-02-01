@@ -71,6 +71,7 @@ jobs:
 
   sign:
     needs: compile
+    if: github.ref == 'refs/heads/main'
     runs-on: windows-latest
     environment: signing
     steps:
