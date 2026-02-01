@@ -117,8 +117,11 @@ jobs:
           }
           if ($found) {
             $dir = $found.DirectoryName
-            Write-Host "Found signtool at $($found.FullName). Adding to PATH"
+            Write-Host "Found signtool at $($found.FullName). Adding to GITHUB_PATH for subsequent steps"
+            Add-Content -Path $env:GITHUB_PATH -Value $dir
+            # also update PATH for this step
             $env:PATH = "$env:PATH;$dir"
+            Write-Host "Updated GITHUB_PATH with: $dir"
             Write-Host (Get-Command signtool.exe -ErrorAction SilentlyContinue).Path
             exit 0
           }
