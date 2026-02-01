@@ -25,7 +25,6 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const core = require('@actions/core');
             const content = fs.readFileSync('VistumblerMDB/Vistumbler.au3','utf8');
             let verMatch = content.match(/\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'/);
             let ver = verMatch ? verMatch[1] : null;
