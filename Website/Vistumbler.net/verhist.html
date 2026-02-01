@@ -11,6 +11,22 @@
 	<title></title>
 	<!-- #EndEditable -->
 	<link rel="stylesheet" type="text/css" href="style.css" />
+
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-64WLRVW3WC"></script>
+	<script>
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+
+	  // Default consent: deny ad and analytics storage until user grants consent via cookie banner
+	  gtag('consent', 'default', {
+	    'ad_storage': 'denied',
+	    'analytics_storage': 'denied'
+	  });
+
+	  gtag('config', 'G-64WLRVW3WC');
+	</script>
 </head>
 <body>
 		<!-- Expression Web notes:
@@ -31,6 +47,8 @@
 	<!-- Start Collapsible Menu Scripts: jQuery + main (deferred) -->
 	<script src="js/jquery-3.4.1.slim.js" integrity="sha256-BTlTdQO9/fascB1drekrDVkaKd9PkwBymMlHOiG+qLI=" crossorigin="anonymous"></script>
 	<script src="js/main.js" defer></script>
+	<!-- Cookie consent & consent-mode helper (loads before ad scripts in body) -->
+	<script src="js/cookie-consent.js"></script>
 	<!-- End Collapsible Menu Scripts -->
 	<div class="wrap">
 		<div class="head">
@@ -54,22 +72,20 @@
 						<li><a href="http://uns.techidiots.net/">UNS Home</a></li>
 						<li><a href="http://mysticache.techidiots.net">Mysticache Home</a></li>
 						<li><a href="http://www.techidiots.net/project-pages">TechIdiots Projects</a></li>
-						<li><a href="http://www.techidiots.net/">TechIdiots.net</a></li>
+						<li><a href="http://www.techidiots.net/">TechIdiots</a> 
+						LLC</li>
 						<li class="inside_dark_header">Ads</li>
 					</ul>
 					<div>
-						<div class="inside_text_center">
-							<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-							<!-- Vistumbler - Responsive Right -->
+						    <div class="inside_text_center">
+							    <!-- Vistumbler - Responsive Right -->
 							<ins class="adsbygoogle"
 							     style="display:block"
 							     data-ad-client="ca-pub-2350008141216245"
 							     data-ad-slot="3072782592"
 							     data-ad-format="auto"
 							     data-full-width-responsive="true"></ins>
-							<script>
-							     (adsbygoogle = window.adsbygoogle || []).push({});
-							</script>
+							    <!-- Ad script is loaded dynamically by js/cookie-consent.js when consent allows -->
 							<div id="donate-fallback-right" style="display:none;">
 								<a class="img" href="donate.htm"><img src="images/support_vi_tall.png" alt="Donate to Vistumbler"></a>
 							</div>
@@ -135,18 +151,15 @@
 			<!-- #EndEditable -->
 			</div>
 			<div class="foot">
-				<div class="inside_text_center">
-					<br />
-					<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-					<ins class="adsbygoogle"
-						style="display:block"
-						data-ad-client="ca-pub-2350008141216245"
-						data-ad-slot="4095054379"
-						data-ad-format="auto"
-						data-full-width-responsive="true"></ins>
-					<script>
-					(adsbygoogle = window.adsbygoogle || []).push({});
-					</script>					
+                    <div class="inside_text_center">
+                    	<br />
+                    	<ins class="adsbygoogle"
+                    		style="display:block"
+                    		data-ad-client="ca-pub-2350008141216245"
+                    		data-ad-slot="4095054379"
+                    		data-ad-format="auto"
+                    		data-full-width-responsive="true"></ins>
+                    	<!-- Ad script is loaded dynamically by js/cookie-consent.js when consent allows -->
 					<div id="donate-fallback-wide" style="display:none; text-align:center;">
 						<a class="img" href="donate.htm"><img src="images/support_vi_wide.png" alt="Donate to Vistumbler"></a>
 						<a class="img" href="donate.htm"><img src="images/support_ti_wide.png" alt="Donate to Vistumbler"></a>
@@ -161,7 +174,8 @@
 				</div>
 					<!-- Copyright: dynamically show current year -->
 					<p class="inside_text" id="vi-copyright" style="margin-top:8px;">
-						© <span id="vi-copyright-start">2007</span><span id="vi-copyright-sep">–</span><span id="vi-copyright-year"></span> TechIdiots LLC. All rights reserved.
+						© <span id="vi-copyright-start">2007</span><span id="vi-copyright-sep">–</span><span id="vi-copyright-year"></span> TechIdiots LLC. All rights reserved. |
+						<a href="privacy.html">Privacy Policy</a>
 					</p>
 					<script>
 						(function(){
