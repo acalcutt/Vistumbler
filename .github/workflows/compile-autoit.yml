@@ -97,6 +97,39 @@ jobs:
           Write-Host "Imported cert thumb: $thumb"
           "CERT_THUMB=$thumb" | Out-File -FilePath cert_info.txt -Encoding ascii
 
+      - name: Ensure signtool.exe is available (locate or install)
+        shell: pwsh
+        run: |
+          $sig = Get-Command signtool.exe -ErrorAction SilentlyContinue
+          if ($sig) { Write-Host "signtool found at $($sig.Path)"; exit 0 }
+          # Search common Windows Kits locations
+          $paths = @(
+            'C:\Program Files (x86)\Windows Kits\10\bin',
+            'C:\Program Files (x86)\Windows Kits\8.1\bin',
+            'C:\Program Files (x86)\Windows Kits\8.0\bin'
+          )
+          $found = $null
+          foreach ($p in $paths) {
+            if (Test-Path $p) {
+              $candidate = Get-ChildItem -Path $p -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+              if ($candidate) { $found = $candidate; break }
+            }
+          }
+          if ($found) {
+            $dir = $found.DirectoryName
+            Write-Host "Found signtool at $($found.FullName). Adding to PATH"
+            $env:PATH = "$env:PATH;$dir"
+            Write-Host (Get-Command signtool.exe -ErrorAction SilentlyContinue).Path
+            exit 0
+          }
+          Write-Host "signtool.exe not found; attempting to install Windows SDK via Chocolatey"
+          choco install windows-sdk-10.0 -y --no-progress
+          refreshenv || true
+          if (-not (Get-Command signtool.exe -ErrorAction SilentlyContinue)) {
+            Write-Error 'signtool.exe still not found after attempted install'
+            exit 2
+          }
+
       - name: Sign EXEs with signtool
         shell: pwsh
         run: |
