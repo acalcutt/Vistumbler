@@ -37,8 +37,8 @@ Write-Host "Source: $($srcInfo.FullName)"
 Write-Host "Output: $outResolved"
 
 $files = Get-ChildItem -Path $SourceDir -Recurse -Include *.au3 -File | Where-Object {
-    # Exclude include/UDFs folders since those are include files, not standalone scripts
-    ($_ .FullName -notlike '*\UDFs\*') -and ($_ .FullName -notlike '*/UDFs/*')
+    # Exclude include/UDF(s) folders since those are include files, not standalone scripts
+    $_.FullName -notmatch '\\UDFs?\\'
 }
 if (-not $files) { Write-Host "No .au3 files found under $SourceDir"; exit 0 }
 
