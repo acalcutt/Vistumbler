@@ -6,8 +6,48 @@ on:
       - 'VistumblerMDB/**'
   workflow_dispatch:
 
+concurrency:
+  group: compile-autoit-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  check_release:
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for existing release
+        id: check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const core = require('@actions/core');
+            const content = fs.readFileSync('VistumblerMDB/Vistumbler.au3','utf8');
+            let verMatch = content.match(/\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'/);
+            let ver = verMatch ? verMatch[1] : null;
+            if (!ver) {
+              const m2 = content.match(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)/);
+              ver = m2 ? m2[1] : null;
+            }
+            if (!ver) { core.setOutput('proceed','true'); return; }
+            const tags = [`v${ver}`, `v${ver.replace(/\./g,'-')}`];
+            for (const tag of tags) {
+              try {
+                const res = await github.rest.repos.getReleaseByTag({ owner: context.repo.owner, repo: context.repo.repo, tag });
+                if (res && res.data && res.data.draft === false) { core.setOutput('proceed','false'); return; }
+              } catch (e) {
+                if (e.status === 404) { continue; } else { throw e; }
+              }
+            }
+            core.setOutput('proceed','true');
+
   compile:
+    needs: check_release
+    if: needs.check_release.outputs.proceed == 'true'
     runs-on: windows-latest
     steps:
       - name: Checkout
