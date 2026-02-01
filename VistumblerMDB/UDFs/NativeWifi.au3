@@ -9,6 +9,7 @@ Edited 2012-11-11 by acalcutt1 - Modified _Wlan_EnumToString DOT11_AUTH_ALGORITH
 Edited 2014-07-15 by acalcutt - Merge branch 'patch-1' of https://github.com/EionRobb/Vistumbler into beta. Fix to allow 802.11ac support.
 Edited 2023-05-03 by acalcutt - add support for 802.11ad/ax/be
 Edited 2023-05-03 by acalcutt - add support for wpa3/owe DOT11_AUTH_ALGORITHM
+Edited 2025-02-23 by acalcutt - update DOT11_CIPHER_ALGORITHM values
 
 #CE
 ;--------------Enumerations-------------
@@ -22,9 +23,11 @@ Global Enum $DOT11_AUTH_ALGO_80211_OPEN = 1, $DOT11_AUTH_ALGO_80211_SHARED_KEY, 
 Global Enum $DOT11_BSS_TYPE_INFRASTRUCTURE = 1, $DOT11_BSS_TYPE_INDEPENDENT, $DOT11_BSS_TYPE_ANY
 
 ;DOT11_CIPHER_ALGORITHM
-Global Enum $DOT11_CIPHER_ALGO_NONE, $DOT11_CIPHER_ALGO_WEP40, $DOT11_CIPHER_ALGO_TKIP, $DOT11_CIPHER_ALGO_CCMP = 0x04, $DOT11_CIPHER_ALGO_WEP104, _
-		$DOT11_CIPHER_ALGO_WPA_USE_GROUP = 0x100, $DOT11_CIPHER_ALGO_RSN_USE_GROUP = 0x100, $DOT11_CIPHER_ALGO_WEP, $DOT11_CIPHER_ALGO_IHV_START = 2147483648, _
-		$DOT11_CIPHER_ALGO_IHV_END = 4294967295
+Global Enum $DOT11_CIPHER_ALGO_NONE = 0x00, $DOT11_CIPHER_ALGO_WEP40, $DOT11_CIPHER_ALGO_TKIP, $DOT11_CIPHER_ALGO_CCMP = 0x04, $DOT11_CIPHER_ALGO_WEP104, _
+		$DOT11_CIPHER_ALGO_BIP = 0x06, $DOT11_CIPHER_ALGO_GCMP = 0x08, $DOT11_CIPHER_ALGO_GCMP_256 = 0x09, $DOT11_CIPHER_ALGO_CCMP_256 = 0x0a, _
+		$DOT11_CIPHER_ALGO_BIP_GMAC_128 = 0x0b, $DOT11_CIPHER_ALGO_BIP_GMAC_256 = 0x0c, $DOT11_CIPHER_ALGO_BIP_CMAC_256 = 0x0d, _
+		$DOT11_CIPHER_ALGO_WPA_USE_GROUP = 0x100, $DOT11_CIPHER_ALGO_RSN_USE_GROUP = 0x100, $DOT11_CIPHER_ALGO_WEP = 0x101, _
+		$DOT11_CIPHER_ALGO_IHV_START = 2147483648, $DOT11_CIPHER_ALGO_IHV_END = 4294967295
 
 ;DOT11_PHY_TYPE
 Global Enum $DOT11_PHY_TYPE_UNKNOWN, $DOT11_PHY_TYPE_ANY = 0, $DOT11_PHY_TYPE_FHSS, $DOT11_PHY_TYPE_DSSS, $DOT11_PHY_TYPE_IRBASEBAND, $DOT11_PHY_TYPE_OFDM, _
@@ -244,6 +247,20 @@ Func _Wlan_EnumToString($sCategory, $iEnumeration)
 					Return "CCMP"
 				Case $DOT11_CIPHER_ALGO_WEP104
 					Return "WEP-104"
+				Case $DOT11_CIPHER_ALGO_BIP
+					Return "BIP"
+				Case $DOT11_CIPHER_ALGO_GCMP
+					Return "GCMP"
+				Case $DOT11_CIPHER_ALGO_GCMP_256
+					Return "GCMP-256"
+				Case $DOT11_CIPHER_ALGO_CCMP_256
+					Return "CCMP-256"
+				Case $DOT11_CIPHER_ALGO_BIP_GMAC_128
+					Return "BIP-GMAC-128"
+				Case $DOT11_CIPHER_ALGO_BIP_GMAC_256
+					Return "BIP-GMAC-256"
+				Case $DOT11_CIPHER_ALGO_BIP_CMAC_256
+					Return "BIP-CMAC-256"
 				Case $DOT11_CIPHER_ALGO_WPA_USE_GROUP
 					Return "WPA Use Group"
 				Case $DOT11_CIPHER_ALGO_RSN_USE_GROUP
@@ -2872,8 +2889,15 @@ Func _Wlan_GenerateProfileObject($sProfile)
 		If .Type = "IBSS" Then .Type = "Ad Hoc"
 		If .Auth = "open" Then .Auth = "Open"
 		If .Auth = "shared" Then .Auth  = "Shared Key"
+		If .Auth = "WPA" Then .Auth = "WPA-Enterprise"
 		If .Auth = "WPAPSK" Then .Auth = "WPA-Personal"
+		If .Auth = "WPA2" Then .Auth = "WPA2-Enterprise"
 		If .Auth = "WPA2PSK" Then .Auth = "WPA2-Personal"
+		If .Auth = "WPA3" Then .Auth = "WPA3-Enterprise-192"
+		If .Auth = "WPA3ENT192" Then .Auth = "WPA3-Enterprise-192"
+		If .Auth = "WPA3ENT" Then .Auth = "WPA3-Enterprise"
+		If .Auth = "WPA3SAE" Then .Auth = "WPA3-Personal"
+		If .Auth = "OWE" Then .Auth = "OWE"
 		If .Encr = "none" Then .Encr = "Unencrypted"
 		If .Key.Protected == "true" Then .Key.Protected = True
 		If .Key.Protected == "false" Then .Key.Protected = False
@@ -3117,6 +3141,14 @@ Func _Wlan_GenerateXMLProfile($oProfile)
 		.Auth = StringReplace(StringUpper(.Auth), "-", "")
 		If .Auth = "OPEN" Then .Auth = "open"
 		If .Auth = "SHARED KEY" Then .Auth  = "shared"
+		If .Auth = "WPAENTERPRISE" Then .Auth  = "WPA"
+		If .Auth = "WPAPERSONAL" Then .Auth  = "WPAPSK"
+		If .Auth = "WPA2ENTERPRISE" Then .Auth  = "WPA2"
+		If .Auth = "WPA2PERSONAL" Then .Auth  = "WPA2PSK"
+		If .Auth = "WPA3ENTERPRISE192" Then .Auth  = "WPA3ENT192"
+		If .Auth = "WPA3ENTERPRISE" Then .Auth  = "WPA3ENT"
+		If .Auth = "WPA3PERSONAL" Then .Auth  = "WPA3SAE"
+		If .Auth = "OWE" Then .Auth  = "OWE"
 		.Encr = StringUpper(.Encr)
 		If .Encr = "UNENCRYPTED" Then .Encr = "none"
 		If .Key.Protected == True Then .Key.Protected = "true"
@@ -5385,7 +5417,7 @@ EndFunc
 ;                  |.Name - Name of the profile (String) (Req)
 ;                  |.SSID - A list of SSIDs to connect to (List of strings) (Req)
 ;                  |.Type - The network type ("Infrastructure" or "Ad Hoc") (Req)
-;                  |.Auth - Authentication method ("Open", "Shared Key", "WEP", "WPA-Personal", "WPA2-Personal", "WPA-Enterprise" or "WPA2-Enterprise") (Req)
+;                  |.Auth - Authentication method ("Open", "Shared Key", "WEP", "WPA-Personal", "WPA2-Personal", "WPA-Enterprise", "WPA2-Enterprise", "WPA3-Enterprise-192", "WPA3-Enterprise", "WPA3-Personal" or "OWE") (Req)
 ;                  |.Encr - Encryption method ("AES" or "TKIP") (Req)
 ;                  Key: ($oProfile.Key)
 ;                  |.Protected - Specifies if the Material property is encrypted (Boolean) (Req if using a Shared Key)
