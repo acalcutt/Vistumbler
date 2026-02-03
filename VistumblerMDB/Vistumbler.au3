@@ -9,7 +9,7 @@
 #AutoIt3Wrapper_Run_Tidy=n
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2025 Andrew Calcutt
+;Copyright (C) 2026 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; If not, see <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -18,10 +18,10 @@
 $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
-$Script_Function = 'A wireless network scanner for Windows 10, Windows 8, Windows 7, and Vista.'
-$version = 'v10.9.0'
+$Script_Function = 'A wireless network scanner for Windows 11 and Windows 10.'
+$version = 'v10.9.1'
 $Script_Start_Date = '2007/07/10'
-$last_modified = '2026/02/01'
+$last_modified = '2026/02/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
 ;Includes------------------------------------------------
 #include <File.au3>
