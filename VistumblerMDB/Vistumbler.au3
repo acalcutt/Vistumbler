@@ -19,7 +19,7 @@ $Script_Author = 'Andrew Calcutt'
 $Script_Name = 'Vistumbler'
 $Script_Website = 'http://www.Vistumbler.net'
 $Script_Function = 'A wireless network scanner for Windows 11 and Windows 10.'
-$version = 'v10.9.1'
+$version = 'v10.9.2'
 $Script_Start_Date = '2007/07/10'
 $last_modified = '2026/02/03'
 HttpSetUserAgent($Script_Name & ' ' & $version)
@@ -587,7 +587,7 @@ Dim $WifiDb_OtherUsers = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_OtherUser
 Dim $WifiDb_UploadType = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_UploadType', 'VSZ')
 Dim $WifiDb_UploadFiltered = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_UploadFiltered', 0)
 Dim $WifiDbGraphURL = IniRead($settings, 'WifiDbWifiTools', 'WifiDb_GRAPH_URL', 'https://api.wifidb.net/wifi/')
-Dim $WifiDbWdbURL = IniRead($settings, 'WifiDbWifiTools', 'WiFiDB_URL', 'https://live.wifidb.net/wifidb/')
+Dim $WifiDbWdbURL = IniRead($settings, 'WifiDbWifiTools', 'WiFiDB_URL', 'https://wifidb.net/')
 Dim $WifiDbApiURL = IniRead($settings, 'WifiDbWifiTools', 'WifiDB_API_URL', 'https://api.wifidb.net/')
 Dim $UseWiFiDbGpsLocate = IniRead($settings, 'WifiDbWifiTools', 'UseWiFiDbGpsLocate', 0)
 Dim $EnableAutoUpApsToWifiDB = IniRead($settings, 'WifiDbWifiTools', 'AutoUpApsToWifiDB', 0)
