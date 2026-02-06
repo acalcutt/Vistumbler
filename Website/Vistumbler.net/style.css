@@ -680,38 +680,7 @@ ins.adsbygoogle {
 	}
 }
 
-@media only screen and (-webkit-min-device-pixel-ratio: 2), only screen and (min--moz-device-pixel-ratio: 2), only screen and ( -o-min-device-pixel-ratio: 2/1), only screen and ( min-device-pixel-ratio: 2), only screen and ( min-resolution: 192dpi), only screen and ( min-resolution: 2dppx) {
-	body {
-		font-size: 130%;
-	}
-	
-	button {
-		font-size: 130%;
-	}
-	
-	textarea {
-		font-size: 130%;
-	}
-	
-	input[type=file] {
-		font-size: 130%;
-	}
-	
-	input[type=text] {
-		font-size: 130%;
-	}
-	
-	input[type=submit] {
-		font-size: 130%;
-	}
-	
-	select {
-		font-size: 130%;
-	}
-	
-	input[type=password] {
-		font-size: 130%;
-	}	
+@media only screen and (max-width: 1000px) and (-webkit-min-device-pixel-ratio: 2), only screen and (max-width: 1000px) and (min--moz-device-pixel-ratio: 2), only screen and (max-width: 1000px) and ( -o-min-device-pixel-ratio: 2/1), only screen and (max-width: 1000px) and ( min-device-pixel-ratio: 2), only screen and (max-width: 1000px) and ( min-resolution: 192dpi), only screen and (max-width: 1000px) and ( min-resolution: 2dppx) {
 	input[type=radio] {
 		width: 20px;
 		height: 20px;
