@@ -195,6 +195,7 @@ jobs:
 
       - name: Determine version and patch NSI
         shell: pwsh
+        id: determine_version
         run: |
           $au3 = Join-Path $PWD 'VistumblerMDB\Vistumbler.au3'
           if (-not (Test-Path $au3)) { Write-Error "Vistumbler.au3 not found"; exit 2 }
@@ -207,6 +208,7 @@ jobs:
           }
           if (-not $ver) { Write-Error "Could not determine version"; exit 2 }
           Write-Host "Detected version: $ver"
+          "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
           # prepare NSI
           $nsiTemplate = Join-Path $PWD 'Installer\Vistumbler.nsi.template'
@@ -313,24 +315,53 @@ jobs:
       - name: Find built installer and prepare release assets
         shell: pwsh
         id: find_assets
+        env:
+          VERSION: ${{ steps.determine_version.outputs.version }}
         run: |
-          $out = @{ installer=''; zip=''; zip_portable=''; version=''; version_dash='' }
-          # look for installer in common places (current dir and subdirs)
-          $inst = Get-ChildItem -Path $PWD -Recurse -Filter *.exe -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'Vistumbler' } | Select-Object -First 1
-          if ($inst) { $out.installer = $inst.FullName }
-          $zip = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter 'Vistumbler_v*.zip' -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch '_Portable' } | Select-Object -First 1
-          if ($zip) { $out.zip = $zip.FullName }
-          $zipp = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter '*_Portable.zip' -ErrorAction SilentlyContinue | Select-Object -First 1
-          if ($zipp) { $out.zip_portable = $zipp.FullName }
-          # Extract version from installer filename
-          if ($inst -and $inst.Name -match 'Vistumbler_v([0-9\-]+)\.exe') {
-            $out.version_dash = $matches[1]
-            $out.version = $matches[1] -replace '-', '.'
+          $ver = $env:VERSION
+          if (-not $ver) { Write-Error "Version not found in environment variables"; exit 2 }
+          $verDash = $ver -replace '\.', '-'
+          Write-Host "Looking for assets for version: $ver (dash: $verDash)"
+
+          $out = @{ installer=''; zip=''; zip_portable=''; version=$ver; version_dash=$verDash }
+          
+          # Look for the versioned installer (Vistumbler_v*.exe) specifically
+          $inst = Get-ChildItem -Path $PWD -include "Vistumbler_v$verDash.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($inst) { 
+             $out.installer = $inst.FullName 
+             Write-Host "Found installer: $($inst.FullName)"
+          } else {
+             # Fallback to wildcard search if specific version search fails but regex safety check later will catch mismatch
+             $inst = Get-ChildItem -Path $PWD -include 'Vistumbler_v*.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+             if ($inst) {
+                $out.installer = $inst.FullName
+                Write-Host "Found installer (wildcard): $($inst.FullName)"
+             } else {
+                Write-Host "No versioned installer found!"
+             }
           }
+
+          $zip = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter "Vistumbler_v$ver.zip" -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch '_Portable' } | Select-Object -First 1
+          if ($zip) { $out.zip = $zip.FullName }
+          
+          $zipp = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter "Vistumbler_v${ver}_Portable.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zipp) { $out.zip_portable = $zipp.FullName }
+
+          # Verify found assets match expected version
+          if ($out.installer -and ($out.installer -notmatch "Vistumbler_v$verDash.exe")) {
+             Write-Warning "Found installer name $($out.installer) does not match expected version $verDash"
+          }
+
           Write-Host "Installer: $($out.installer)"
           Write-Host "Zip: $($out.zip)"
           Write-Host "Portable Zip: $($out.zip_portable)"
           Write-Host "Version: $($out.version) (dash: $($out.version_dash))"
+          
+          if (-not $out.installer -and -not $out.zip) {
+            Write-Error "Could not find expected assets for version $ver! Release will fail."
+            exit 1
+          }
+
           # set outputs
           "installer=$($out.installer)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "zip=$($out.zip)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
