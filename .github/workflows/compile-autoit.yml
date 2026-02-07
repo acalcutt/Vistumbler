@@ -200,7 +200,8 @@ jobs:
           if (-not (Test-Path $au3)) { Write-Error "Vistumbler.au3 not found"; exit 2 }
           $content = Get-Content $au3 -Raw
           $ver = ''
-          if ($content -match "\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'") { $ver = $matches[1] }
+          # Use single quotes to prevent PowerShell variable interpolation of $version
+          if ($content -match '\$version\s*=\s*''v?([0-9]+(?:\.[0-9]+)*)''') { $ver = $matches[1] }
           if (-not $ver) {
             if ($content -match '#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)') { $ver = $matches[1] }
           }
@@ -313,7 +314,7 @@ jobs:
         shell: pwsh
         id: find_assets
         run: |
-          $out = @{ installer=''; zip=''; zip_portable='' }
+          $out = @{ installer=''; zip=''; zip_portable=''; version=''; version_dash='' }
           # look for installer in common places (current dir and subdirs)
           $inst = Get-ChildItem -Path $PWD -Recurse -Filter *.exe -ErrorAction SilentlyContinue | Where-Object { $_.Name -match 'Vistumbler' } | Select-Object -First 1
           if ($inst) { $out.installer = $inst.FullName }
@@ -321,13 +322,21 @@ jobs:
           if ($zip) { $out.zip = $zip.FullName }
           $zipp = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter '*_Portable.zip' -ErrorAction SilentlyContinue | Select-Object -First 1
           if ($zipp) { $out.zip_portable = $zipp.FullName }
+          # Extract version from installer filename
+          if ($inst -and $inst.Name -match 'Vistumbler_v([0-9\-]+)\.exe') {
+            $out.version_dash = $matches[1]
+            $out.version = $matches[1] -replace '-', '.'
+          }
           Write-Host "Installer: $($out.installer)"
           Write-Host "Zip: $($out.zip)"
           Write-Host "Portable Zip: $($out.zip_portable)"
+          Write-Host "Version: $($out.version) (dash: $($out.version_dash))"
           # set outputs
           "installer=$($out.installer)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "zip=$($out.zip)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "zip_portable=$($out.zip_portable)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "version=$($out.version)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "version_dash=$($out.version_dash)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -335,8 +344,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref_name || format('v{0}', github.run_number) }}
-          release_name: Vistumbler release ${{ github.run_number }}
+          tag_name: v${{ steps.find_assets.outputs.version }}
+          release_name: Vistumbler v${{ steps.find_assets.outputs.version }}
           draft: true
           prerelease: false
 
@@ -347,7 +356,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.find_assets.outputs.installer }}
-          asset_name: "Vistumbler-installer.exe"
+          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}.exe"
           asset_content_type: application/octet-stream
 
       - name: Upload zip asset
@@ -358,7 +367,7 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.find_assets.outputs.zip }}
-          asset_name: "Vistumbler.zip"
+          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}.zip"
           asset_content_type: application/zip
 
       - name: Upload portable zip asset
@@ -369,5 +378,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.find_assets.outputs.zip_portable }}
-          asset_name: "Vistumbler_Portable.zip"
+          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}_Portable.zip"
           asset_content_type: application/zip
