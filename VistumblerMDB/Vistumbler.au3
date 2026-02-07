@@ -53,6 +53,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\FileInUse.au3"
 #include "UDFs\UnixTime.au3"
 #include "UDFs\CompareFileTimeEx.au3"
+#include "UDFs\WindowsLocation.au3"
 ;Set setting folder--------------------------------------
 Dim $Default_TmpDir = @ScriptDir & '\temp\'
 Dim $Default_SaveDir = @ScriptDir & '\Save\'
@@ -334,7 +335,7 @@ Dim $WifiDbUploadGUI, $WifiDb_User_GUI, $WifiDb_OtherUsers_GUI, $WifiDb_ApiKey_G
 Dim $UpdateTimer, $MemReleaseTimer, $begintime, $closebtn
 
 Dim $Apply_Misc = 1, $Apply_Save = 1, $Apply_GPS = 1, $Apply_Language = 0, $Apply_Manu = 0, $Apply_Lab = 0, $Apply_Column = 1, $Apply_Searchword = 1, $Apply_Auto = 1, $Apply_Sound = 1, $Apply_WifiDB = 1, $Apply_Cam = 0
-Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $GUI_GpsDisconnect, $GUI_GpsReset, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
+Dim $SetMisc, $GUI_Comport, $GUI_Baud, $GUI_Parity, $GUI_StopBit, $GUI_DataBit, $GUI_Format, $GUI_GpsDisconnect, $GUI_GpsReset, $Rad_UseNetcomm, $Rad_UseCommMG, $Rad_UseKernel32, $Rad_UseWindowsLocation, $LanguageBox, $SearchWord_SSID_GUI, $SearchWord_BSSID_GUI, $SearchWord_NetType_GUI
 Dim $SearchWord_Authentication_GUI, $SearchWord_Signal_GUI, $SearchWord_RadioType_GUI, $SearchWord_Channel_GUI, $SearchWord_BasicRates_GUI, $SearchWord_OtherRates_GUI, $SearchWord_Encryption_GUI, $SearchWord_Open_GUI
 Dim $SearchWord_None_GUI, $SearchWord_Wep_GUI, $SearchWord_Infrastructure_GUI, $SearchWord_Adhoc_GUI
 
@@ -819,6 +820,7 @@ Dim $Text_NoApSelected = IniRead($DefaultLanguagePath, 'GuiText', 'NoApSelected'
 Dim $Text_UseKernel32 = IniRead($DefaultLanguagePath, 'GuiText', 'UseKernel32', 'Kernel32')
 Dim $Text_UseNetcomm = IniRead($DefaultLanguagePath, 'GuiText', 'UseNetcomm', 'Netcomm OCX (Needs http://www.hardandsoftware.net/NETCommOCX.htm)')
 Dim $Text_UseCommMG = IniRead($DefaultLanguagePath, 'GuiText', 'UseCommMG', 'CommMG (included, but will crash if gps is disconnected improperly)')
+Dim $Text_UseWindowsLocation = IniRead($DefaultLanguagePath, 'GuiText', 'UseWindowsLocation', 'Windows Location Platform (Uses system location sensors - WiFi, GPS, etc.)')
 Dim $Text_SignalHistory = IniRead($DefaultLanguagePath, 'GuiText', 'SignalHistory', 'Signal History')
 Dim $Text_AutoSortEvery = IniRead($DefaultLanguagePath, 'GuiText', 'AutoSortEvery', 'Auto Sort Every')
 Dim $Text_Seconds = IniRead($DefaultLanguagePath, 'GuiText', 'Seconds', 'Seconds')
@@ -4071,6 +4073,13 @@ Func _OpenComPort($CommPort = '8', $sBAUD = '4800', $sPARITY = 'N', $sDataBit = 
 		Else
 			Return (1)
 		EndIf
+	ElseIf $GpsType = 3 Then ; Use Windows Location Platform
+		If _WinLocation_Startup() = 1 Then
+			Return (1)
+		Else
+			MsgBox(0, $Text_Error, "Failed to initialize Windows Location. Error: " & @error & @CRLF & _WinLocation_GetStatusString())
+			Return (0)
+		EndIf
 	EndIf
 EndFunc   ;==>_OpenComPort
 
@@ -4086,6 +4095,8 @@ Func _CloseComPort($CommPort = '8') ;Closes specified COM port
 		EndWith
 	ElseIf $GpsType = 2 Then
 		_CloseComm($OpenedPort)
+	ElseIf $GpsType = 3 Then
+		_WinLocation_Shutdown()
 	EndIf
 EndFunc   ;==>_CloseComPort
 
@@ -4162,6 +4173,32 @@ Func _GetGPS() ; Recieves data from gps device
 						EndIf
 					EndIf
 				Next
+			EndIf
+		ElseIf $GpsType = 3 Then ; Use Windows Location Platform
+			Local $aPosition = _WinLocation_GetPosition()
+			If Not @error Then
+				$FoundData = 1
+				; Convert decimal degrees to NMEA format
+				$Temp_Lat = _WinLocation_ConvertToNMEAFormat($aPosition[0], True)
+				$Temp_Lon = _WinLocation_ConvertToNMEAFormat($aPosition[1], False)
+				$Temp_Lat2 = $Temp_Lat
+				$Temp_Lon2 = $Temp_Lon
+				$Temp_Quality = 1 ; Indicate we have a fix
+				$Temp_Status = "A" ; Active
+				$Temp_NumberOfSatalites = "00" ; Not available from Windows Location API
+				$Temp_HorDilPitch = StringFormat('%0.2f', $aPosition[2]) ; Error radius in meters
+				$Temp_Alt = StringFormat('%0.2f', $aPosition[3] * 3.2808399) ; Convert meters to feet
+				$Temp_AltS = 'M'
+				$Temp_Geo = '0'
+				$Temp_GeoS = 'M'
+				$Temp_SpeedInKnots = '0' ; Not available from basic Windows Location API
+				$Temp_SpeedInMPH = '0'
+				$Temp_SpeedInKmH = '0'
+				$Temp_TrackAngle = '0'
+				$Temp_FixTime = @HOUR & ":" & @MIN & ":" & @SEC
+				$Temp_FixTime2 = $Temp_FixTime
+				$Temp_FixDate = @MON & "/" & @MDAY & "/" & @YEAR
+				$disconnected_time = -1
 			EndIf
 		EndIf
 		If BitOR($Temp_Quality = 1, $Temp_Quality = 2) = 1 And BitOR($Temp_Status = "A", $GpsDetailsOpen <> 1) Then ExitLoop ;If $Temp_Quality = 1 (GPS has a fix) And, If the details window is open, $Temp_Status = "A" (Active data, not Void)
@@ -10775,6 +10812,8 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		GUICtrlSetColor(-1, $TextColor)
 		$Rad_UseCommMG = GUICtrlCreateRadio($Text_UseCommMG, 40, 105, 580, 20)
 		GUICtrlSetColor(-1, $TextColor)
+		$Rad_UseWindowsLocation = GUICtrlCreateRadio($Text_UseWindowsLocation, 40, 130, 580, 20)
+		GUICtrlSetColor(-1, $TextColor)
 
 		If $GpsType = 0 Then
 			GUICtrlSetState($Rad_UseCommMG, $GUI_CHECKED)
@@ -10782,20 +10821,22 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 			GUICtrlSetState($Rad_UseNetcomm, $GUI_CHECKED)
 		ElseIf $GpsType = 2 Then
 			GUICtrlSetState($Rad_UseKernel32, $GUI_CHECKED)
+		ElseIf $GpsType = 3 Then
+			GUICtrlSetState($Rad_UseWindowsLocation, $GUI_CHECKED)
 		EndIf
-		$GroupComSet = GUICtrlCreateGroup($Text_ComSettings, 24, 140, 633, 100)
+		$GroupComSet = GUICtrlCreateGroup($Text_ComSettings, 24, 165, 633, 100)
 		GUICtrlSetColor(-1, $TextColor)
-		GUICtrlCreateLabel($Text_Com, 40, 160, 75, 20)
+		GUICtrlCreateLabel($Text_Com, 40, 185, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Comport = GUICtrlCreateCombo("1", 115, 160, 150, 20)
+		$GUI_Comport = GUICtrlCreateCombo("1", 115, 185, 150, 20)
 		GUICtrlSetData(-1, "2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|23|24|25", $ComPort)
-		GUICtrlCreateLabel($Text_Baud, 40, 185, 75, 20)
+		GUICtrlCreateLabel($Text_Baud, 40, 210, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_Baud = GUICtrlCreateCombo("4800", 115, 185, 150, 20)
+		$GUI_Baud = GUICtrlCreateCombo("4800", 115, 210, 150, 20)
 		GUICtrlSetData(-1, "9600|14400|19200|38400|57600|115200", $BAUD)
-		GUICtrlCreateLabel($Text_StopBit, 40, 210, 75, 20)
+		GUICtrlCreateLabel($Text_StopBit, 40, 235, 75, 20)
 		GUICtrlSetColor(-1, $TextColor)
-		$GUI_StopBit = GUICtrlCreateCombo("1", 115, 210, 150, 20)
+		$GUI_StopBit = GUICtrlCreateCombo("1", 115, 235, 150, 20)
 		GUICtrlSetData(-1, "1.5|2", $STOPBIT)
 
 		If $PARITY = 'E' Then
@@ -11636,6 +11677,7 @@ Func _ApplySettingsGUI() ;Applys settings
 		If GUICtrlRead($Rad_UseCommMG) = 1 Then $GpsType = 0 ;Set CommMG as default comm interface
 		If GUICtrlRead($Rad_UseNetcomm) = 1 Then $GpsType = 1 ;Set Netcomm as default comm interface
 		If GUICtrlRead($Rad_UseKernel32) = 1 Then $GpsType = 2 ;Set Kernel32 as default comm interface
+		If GUICtrlRead($Rad_UseWindowsLocation) = 1 Then $GpsType = 3 ;Set Windows Location as comm interface
 		$ComPort = GUICtrlRead($GUI_Comport)
 		$BAUD = GUICtrlRead($GUI_Baud)
 		$STOPBIT = GUICtrlRead($GUI_StopBit)
