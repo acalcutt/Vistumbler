@@ -153,7 +153,7 @@ jobs:
           $files = Get-ChildItem -Path artifacts/vistumblermdb-exes -Recurse -Filter *.exe
           foreach ($f in $files) {
             Write-Host "Signing $($f.FullName)"
-            & $signtoolPath sign /sha1 $thumb /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
+            & $signtoolPath sign /sm /sha1 $thumb /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
           }
 
       - name: Remove certificate and cleanup
