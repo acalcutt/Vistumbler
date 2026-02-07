@@ -157,6 +157,12 @@ jobs:
           Remove-Item -Path temp_sign_cert.pfx -Force -ErrorAction SilentlyContinue
           Write-Host "Cleanup complete"
 
+      - name: Upload signed EXEs
+        uses: actions/upload-artifact@v4
+        with:
+          name: vistumblermdb-exes-signed
+          path: artifacts/vistumblermdb-exes/**
+
   package:
     needs: sign
     runs-on: windows-latest
@@ -164,10 +170,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download compiled EXEs
+      - name: Download signed EXEs
         uses: actions/download-artifact@v4
         with:
-          name: vistumblermdb-exes
+          name: vistumblermdb-exes-signed
           path: artifacts/vistumblermdb-exes
 
       - name: Copy compiled EXEs back into repository structure
@@ -205,7 +211,8 @@ jobs:
           $nsiTemplate = Join-Path $PWD 'Installer\Vistumbler.nsi.template'
           $nsiTarget = Join-Path $PWD 'Installer\Vistumbler.nsi'
           Copy-Item -Path $nsiTemplate -Destination $nsiTarget -Force
-          (Get-Content $nsiTarget) -replace 'OutFile\s+"[^"]+"', "OutFile \"Vistumbler_v$($ver -replace '\\.','-').exe\"" `
+          $verDash = $ver -replace '\.','-'
+          (Get-Content $nsiTarget) -replace 'OutFile\s+"[^"]+"', "OutFile \"Vistumbler_v$verDash.exe\"" `
                                 -replace 'WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler" "DisplayVersion" "[^"]+"', "WriteRegStr HKLM \"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler\" \"DisplayVersion\" \"$ver\"" | Set-Content $nsiTarget
           Write-Host "Patched NSI -> $nsiTarget"
 
