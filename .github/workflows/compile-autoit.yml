@@ -81,21 +81,15 @@ jobs:
           name: vistumblermdb-exes
           path: artifacts/vistumblermdb-exes
 
-      - name: Decode PFX and import certificate (temporary)
+      - name: Decode PFX certificate file
         shell: pwsh
         env:
           SIG_PFX_B64: ${{ secrets.SIG_PFX_B64 }}
-          SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
         run: |
           $pfxPath = Join-Path $PWD 'temp_sign_cert.pfx'
           [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:SIG_PFX_B64))
-          # Use the X509Certificate2 constructor (works on PowerShell Core / .NET Core)
-          $flags = [int][System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::MachineKeySet -bor [int][System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::PersistKeySet
-          $flags = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]$flags
-          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($pfxPath, $env:SIG_PFX_PASS, $flags)
-          $thumb = $cert.Thumbprint
-          Write-Host "Imported cert thumb: $thumb"
-          "CERT_THUMB=$thumb" | Out-File -FilePath cert_info.txt -Encoding ascii
+          Write-Host "PFX file written to: $pfxPath"
+          "PFX_PATH=$pfxPath" | Out-File -FilePath cert_info.txt -Encoding ascii
 
       - name: Ensure signtool.exe is available (locate or install)
         shell: pwsh
@@ -144,30 +138,27 @@ jobs:
 
       - name: Sign EXEs with signtool
         shell: pwsh
+        env:
+          SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
         run: |
           $info = Get-Content cert_info.txt | ConvertFrom-StringData
-          $thumb = $info.CERT_THUMB
+          $pfxPath = $info.PFX_PATH
+          if (-not (Test-Path $pfxPath)) { Write-Error "PFX file not found at $pfxPath"; exit 2 }
           $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $signtool) { Write-Error 'signtool.exe not found on runner'; exit 2 }
           $signtoolPath = $signtool.Path
           $files = Get-ChildItem -Path artifacts/vistumblermdb-exes -Recurse -Filter *.exe
           foreach ($f in $files) {
             Write-Host "Signing $($f.FullName)"
-            & $signtoolPath sign /sm /sha1 $thumb /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
+            & $signtoolPath sign /f $pfxPath /p $env:SIG_PFX_PASS /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
           }
 
-      - name: Remove certificate and cleanup
+      - name: Cleanup PFX file
         shell: pwsh
         run: |
-          $info = Get-Content cert_info.txt | ConvertFrom-StringData
-          $thumb = $info.CERT_THUMB
-          $store = New-Object System.Security.Cryptography.X509Certificates.X509Store([System.Security.Cryptography.X509Certificates.StoreName]::My, 'LocalMachine')
-          $store.Open('ReadWrite')
-          $certs = $store.Certificates.Find('FindByThumbprint', $thumb, $false)
-          foreach ($c in $certs) { $store.Remove($c) }
-          $store.Close()
           Remove-Item -Path temp_sign_cert.pfx -Force -ErrorAction SilentlyContinue
-          Remove-Item cert_info.txt -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path cert_info.txt -Force -ErrorAction SilentlyContinue
+          Write-Host "Cleanup complete"
 
   package:
     needs: sign
