@@ -377,7 +377,7 @@ jobs:
         with:
           tag_name: v${{ steps.find_assets.outputs.version }}
           release_name: Vistumbler v${{ steps.find_assets.outputs.version }}
-          draft: true
+          draft: false
           prerelease: false
 
       - name: Upload release assets
