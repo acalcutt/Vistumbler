@@ -228,7 +228,7 @@ jobs:
           $nsiText = Get-Content $nsiTarget -Raw
           if ($nsiText -match 'OutFile\s+"Vistumbler_v([0-9\-]+)\.exe"') { $ver = ($matches[1] -replace '-', '.') } else { $ver = 'unknown' }
           $zipOut = "builds\Vistumbler_v$ver.zip"
-          $zipPortable = "builds\Vistumbler_v$ver_Portable.zip"
+          $zipPortable = "builds\Vistumbler_v${ver}_Portable.zip"
           if (-not (Test-Path builds)) { New-Item -ItemType Directory -Path builds | Out-Null }
           Write-Host "Creating zip $zipOut from VistumblerMDB"
           Compress-Archive -Path 'VistumblerMDB\*' -DestinationPath $zipOut -Force
@@ -274,11 +274,34 @@ jobs:
             Write-Host "Local NSIS installer not found; installing via Chocolatey"
             choco install nsis -y
           }
+          # Add NSIS to PATH for subsequent steps
+          $nsisPath = 'C:\Program Files (x86)\NSIS'
+          if (Test-Path $nsisPath) {
+            Write-Host "Adding NSIS to GITHUB_PATH: $nsisPath"
+            Add-Content -Path $env:GITHUB_PATH -Value $nsisPath
+            # Also update PATH for this session
+            $env:PATH = "$env:PATH;$nsisPath"
+          }
 
       - name: Build NSIS installer
         shell: pwsh
         run: |
+          # Try to find makensis.exe
           $makensis = Get-Command makensis.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $makensis) {
+            # Search common NSIS installation paths
+            $nsisLocations = @(
+              'C:\Program Files (x86)\NSIS\makensis.exe',
+              'C:\Program Files\NSIS\makensis.exe'
+            )
+            foreach ($loc in $nsisLocations) {
+              if (Test-Path $loc) {
+                $makensis = Get-Item $loc
+                Write-Host "Found makensis at: $loc"
+                break
+              }
+            }
+          }
           if (-not $makensis) { Write-Error 'makensis.exe not found'; exit 2 }
           $nsi = 'Installer\Vistumbler.nsi'
           if (-not (Test-Path $nsi)) { Write-Error "NSI script $nsi not found"; exit 2 }
