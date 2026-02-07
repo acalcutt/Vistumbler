@@ -332,6 +332,8 @@ jobs:
       - name: Create GitHub Release
         uses: actions/create-release@v1
         id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name || format('v{0}', github.run_number) }}
           release_name: Vistumbler release ${{ github.run_number }}
@@ -340,6 +342,8 @@ jobs:
 
       - name: Upload release assets
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.find_assets.outputs.installer }}
@@ -349,6 +353,8 @@ jobs:
       - name: Upload zip asset
         if: steps.find_assets.outputs.zip != ''
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.find_assets.outputs.zip }}
@@ -358,6 +364,8 @@ jobs:
       - name: Upload portable zip asset
         if: steps.find_assets.outputs.zip_portable != ''
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.find_assets.outputs.zip_portable }}
