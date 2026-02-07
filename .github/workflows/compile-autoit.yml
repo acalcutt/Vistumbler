@@ -89,7 +89,6 @@ jobs:
           $pfxPath = Join-Path $PWD 'temp_sign_cert.pfx'
           [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:SIG_PFX_B64))
           Write-Host "PFX file written to: $pfxPath"
-          "PFX_PATH=$pfxPath" | Out-File -FilePath cert_info.txt -Encoding ascii
 
       - name: Ensure signtool.exe is available (locate or install)
         shell: pwsh
@@ -141,8 +140,7 @@ jobs:
         env:
           SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
         run: |
-          $info = Get-Content cert_info.txt | ConvertFrom-StringData
-          $pfxPath = $info.PFX_PATH
+          $pfxPath = Join-Path $PWD 'temp_sign_cert.pfx'
           if (-not (Test-Path $pfxPath)) { Write-Error "PFX file not found at $pfxPath"; exit 2 }
           $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue | Select-Object -First 1
           if (-not $signtool) { Write-Error 'signtool.exe not found on runner'; exit 2 }
@@ -157,7 +155,6 @@ jobs:
         shell: pwsh
         run: |
           Remove-Item -Path temp_sign_cert.pfx -Force -ErrorAction SilentlyContinue
-          Remove-Item -Path cert_info.txt -Force -ErrorAction SilentlyContinue
           Write-Host "Cleanup complete"
 
   package:
