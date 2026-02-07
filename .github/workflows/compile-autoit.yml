@@ -212,8 +212,12 @@ jobs:
           $nsiTarget = Join-Path $PWD 'Installer\Vistumbler.nsi'
           Copy-Item -Path $nsiTemplate -Destination $nsiTarget -Force
           $verDash = $ver -replace '\.','-'
-          (Get-Content $nsiTarget) -replace 'OutFile\s+"[^"]+"', "OutFile \"Vistumbler_v$verDash.exe\"" `
-                                -replace 'WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler" "DisplayVersion" "[^"]+"', "WriteRegStr HKLM \"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler\" \"DisplayVersion\" \"$ver\"" | Set-Content $nsiTarget
+          $outFileName = "OutFile `"Vistumbler_v$verDash.exe`""
+          $displayVer = "WriteRegStr HKLM `"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler`" `"DisplayVersion`" `"$ver`""
+          $content = Get-Content $nsiTarget
+          $content = $content -replace 'OutFile\s+"[^"]+"', $outFileName
+          $content = $content -replace 'WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler" "DisplayVersion" "[^"]+"', $displayVer
+          $content | Set-Content $nsiTarget
           Write-Host "Patched NSI -> $nsiTarget"
 
       - name: Create ZIP of `VistumblerMDB` (versioned)
