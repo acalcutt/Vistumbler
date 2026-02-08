@@ -167,12 +167,33 @@ When exporting from Vistumbler to NS1, the following mappings are used:
 | Channel | LastChannel | Primary channel |
 | Signal (from Hist) | APDATA.Signal | Per-sample signal |
 | GPS data | GPSDATA | Converted to decimal degrees |
+| Auth/Encryption | ApFlags | See AP Flags Bitmask below |
+
+### AP Flags Bitmask (Vistumbler Customization)
+
+The `ApFlags` field (Version 12) is used by NetStumbler as a generic "miscellaneous flags" field. Vistumbler repurposes this 32-bit integer to store extended authentication and encryption types that do not fit in the standard `Flags` field.
+
+| Bit | Hex Value | Meaning |
+|-----|-----------|---------|
+| 1 | 0x0001 | WPA-Personal |
+| 2 | 0x0002 | WPA-Enterprise |
+| 3 | 0x0004 | WPA2-Personal |
+| 4 | 0x0008 | WPA2-Enterprise |
+| 5 | 0x0010 | WPA3 (SAE/Personal/Enterprise) |
+| 6 | 0x0020 | OWE (Opportunistic Wireless Encryption) |
+| 7 | 0x0040 | TKIP |
+| 8 | 0x0080 | CCMP/AES |
+| 9 | 0x0100 | GCMP |
+| 10 | 0x0200 | GCMP-256 |
+| 11 | 0x0400 | CCMP-256 |
+| 12 | 0x0800 | BIP (Management Frame Protection) |
+
+These flags allow Vistumbler to preserve modern security details (WPA3, OWE) across Import/Export cycles using the binary format.
 
 ### Limitations
 
 - **Information Elements**: Vistumbler does not currently store 802.11 IEs, so IELength is always 0
 - **IP Information**: IP address, subnet, and mask fields are set to 0
-- **AP Flags**: Currently set to 0
 - **Noise Data**: Set to 0 if not available in Vistumbler database
 - **Data Rate**: Set to 0 if not available
 

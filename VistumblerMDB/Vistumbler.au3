@@ -14180,10 +14180,15 @@ Func _ExportNS1Binary($Filter = 0)
 		If StringInStr($sAuth, "WPA2-Personal") Then $iApFlags = BitOR($iApFlags, 0x0004)
 		If StringInStr($sAuth, "WPA2-Enterprise") Then $iApFlags = BitOR($iApFlags, 0x0008)
 		If StringInStr($sAuth, "WPA3") Then $iApFlags = BitOR($iApFlags, 0x0010)
+		If StringInStr($sAuth, "OWE") Then $iApFlags = BitOR($iApFlags, 0x0020)
 		
 		If StringInStr($sEncr, "TKIP") Then $iApFlags = BitOR($iApFlags, 0x0040)
 		If StringInStr($sEncr, "CCMP") Then $iApFlags = BitOR($iApFlags, 0x0080)
 		If StringInStr($sEncr, "AES") Then $iApFlags = BitOR($iApFlags, 0x0080)
+		If StringInStr($sEncr, "GCMP") Then $iApFlags = BitOR($iApFlags, 0x0100)
+		If StringInStr($sEncr, "GCMP-256") Then $iApFlags = BitOR($iApFlags, 0x0200)
+		If StringInStr($sEncr, "CCMP-256") Then $iApFlags = BitOR($iApFlags, 0x0400)
+		If StringInStr($sEncr, "BIP") Then $iApFlags = BitOR($iApFlags, 0x0800)
 		
 		$aAP[5] = $iFlags
 		$aAP[21] = $iApFlags
@@ -14446,16 +14451,35 @@ Func _ImportNS1Binary($NS1file)
 			If BitAND($iApFlags, 0x0004) Then $sAuth = "WPA2-Personal"
 			If BitAND($iApFlags, 0x0008) Then $sAuth = "WPA2-Enterprise"
 			If BitAND($iApFlags, 0x0010) Then $sAuth = "WPA3"
+			If BitAND($iApFlags, 0x0020) Then $sAuth = "OWE"
 			
 			; Encryption
 			Local $sE = ""
 			If BitAND($iApFlags, 0x0040) Then $sE = "TKIP"
+			
 			If BitAND($iApFlags, 0x0080) Then 
-				If $sE <> "" Then 
-					$sE &= "+CCMP"
-				Else
-					$sE = "CCMP"
-				EndIf
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "CCMP"
+			EndIf
+			
+			If BitAND($iApFlags, 0x0100) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "GCMP"
+			EndIf
+			
+			If BitAND($iApFlags, 0x0200) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "GCMP-256"
+			EndIf
+			
+			If BitAND($iApFlags, 0x0400) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "CCMP-256"
+			EndIf
+			
+			If BitAND($iApFlags, 0x0800) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "BIP"
 			EndIf
 			
 			If $sE <> "" Then $sEncr = $sE
