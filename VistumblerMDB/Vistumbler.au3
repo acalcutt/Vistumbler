@@ -51,6 +51,7 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\MD5.au3"
 #include "UDFs\NativeWifi.au3"
 #include "UDFs\ParseCSV.au3"
+#include "UDFs\NS1.au3"
 #include "UDFs\ZIP.au3"
 #include "UDFs\FileInUse.au3"
 #include "UDFs\UnixTime.au3"
@@ -328,7 +329,7 @@ Dim $GpsCurrentDataGUI, $GPGGA_Time, $GPGGA_Lat, $GPGGA_Lon, $GPGGA_Quality, $GP
 Dim $GUI_AutoSaveKml, $GUI_GoogleEXE, $GUI_AutoKmlActiveTime, $GUI_AutoKmlDeadTime, $GUI_AutoKmlGpsTime, $GUI_AutoKmlTrackTime, $GUI_KmlFlyTo, $AutoKmlActiveHeader, $GUI_OpenKmlNetLink, $GUI_AutoKml_Alt, $GUI_AutoKml_AltMode, $GUI_AutoKml_Heading, $GUI_AutoKml_Range, $GUI_AutoKml_Tilt
 Dim $GUI_NewApSound, $GUI_ASperloop, $GUI_ASperap, $GUI_ASperapwsound, $GUI_SpeakSignal, $GUI_PlayMidiSounds, $GUI_SpeakSoundsVis, $GUI_SpeakSoundsSapi, $GUI_SpeakPercent, $GUI_SpeakSigTime, $GUI_SpeakSoundsMidi, $GUI_Midi_Instument, $GUI_Midi_PlayTime
 
-Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadWD, $RadWigle
+Dim $GUI_Import, $vistumblerfileinput, $progressbar, $percentlabel, $linemin, $newlines, $minutes, $linetotal, $estimatedtime, $RadVis, $RadCsv, $RadNs, $RadNsBinary, $RadWD, $RadWigle
 Dim $ExportKMLGUI, $GUI_TrackColor
 Dim $GUI_ImportImageFiles
 
@@ -1344,7 +1345,10 @@ $CreateApSignalMap = GUICtrlCreateMenuItem($Text_SelectedAP, $ExportKmlMenu)
 $ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
 $ExportToGPX = GUICtrlCreateMenuItem($Text_AllAPs, $ExportGpxMenu)
 $ExportNS1Menu = GUICtrlCreateMenu($Text_ExportToNS1, $Export)
-$ExportToNS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportNS1Menu)
+$ExportToNS1 = GUICtrlCreateMenuItem("All APs (wi-scan)", $ExportNS1Menu)
+$ExportToFilNS1 = GUICtrlCreateMenuItem("Filtered APs (wi-scan)", $ExportNS1Menu)
+$ExportToNS1Binary = GUICtrlCreateMenuItem("All APs (binary)", $ExportNS1Menu)
+$ExportToFilNS1Binary = GUICtrlCreateMenuItem("Filtered APs (binary)", $ExportNS1Menu)
 Global $ExportKismetDbMenu = GUICtrlCreateMenu("Export to KismetDB", $Export)
 Global $ExportToKismetDB = GUICtrlCreateMenuItem($Text_AllAPs, $ExportKismetDbMenu)
 Global $ExportToFilKismetDB = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportKismetDbMenu)
@@ -1615,7 +1619,10 @@ GUICtrlSetOnEvent($ExportToKML, 'SaveToKML')
 GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
 GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
 GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
-GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
+GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1Unfiltered')
+GUICtrlSetOnEvent($ExportToFilNS1, '_ExportNS1Filtered')
+GUICtrlSetOnEvent($ExportToNS1Binary, '_ExportNS1BinaryUnfiltered')
+GUICtrlSetOnEvent($ExportToFilNS1Binary, '_ExportNS1BinaryFiltered')
 GUICtrlSetOnEvent($ExportToKismetDB, "_ExportKismetDB")
 GUICtrlSetOnEvent($ExportToFilKismetDB, "_ExportFilKismetDB")
 GUICtrlSetOnEvent($ExportToNetXML, "_ExportNetXML")
@@ -4412,9 +4419,10 @@ Func _Format_GPS_DDD_to_DMM($gps, $PosChr, $NegChr) ;converts dd.ddddddd, to ddm
 	$gps = StringReplace(StringReplace(StringReplace(StringReplace(StringReplace($gps, " ", ""), "-", ""), "+", ""), $PosChr, ""), $NegChr, "")
 	$splitlatlon1 = StringSplit($gps, ".")
 	If $splitlatlon1[0] = 2 Then
-		$DD = $splitlatlon1[1] * 100
-		$MM = ('.' & $splitlatlon1[2]) * 60 ;multiply remaining decimal by 60 to get mm.mmmm
-		$return = $gDir & ' ' & StringFormat('%0.4f', $DD + $MM) ;Format data properly (ex. N ddmm.mmmm)
+		$iDeg = Number($splitlatlon1[1]) ; Whole degrees
+		$fMin = Number('0.' & $splitlatlon1[2]) * 60 ; Fractional degrees * 60 = minutes
+		$iDegPart = $iDeg * 100 ; Shift degrees left (35 -> 3500)
+		$return = $gDir & ' ' & StringFormat('%0.4f', $iDegPart + $fMin) ; Format as DDMM.MMMM
 	EndIf
 	Return ($return)
 EndFunc   ;==>_Format_GPS_DDD_to_DMM
@@ -8634,7 +8642,7 @@ Func _LoadListGUI($imfile1 = "")
 	$RadVis = GUICtrlCreateRadio($Text_VistumblerFile & ' (VS1, VSZ)', 10, 40, 240, 20)
 	GUICtrlSetState($RadVis, $GUI_CHECKED)
 	$RadCsv = GUICtrlCreateRadio($Text_DetailedCsvFile & ' (CSV)', 10, 60, 240, 20)
-	$RadNs = GUICtrlCreateRadio($Text_NetstumblerTxtFile & ' (TXT, NS1)', 255, 40, 240, 20)
+	$RadNs = GUICtrlCreateRadio('NetStumbler Files (TXT, NS1)', 10, 80, 240, 20)
 	$RadWD = GUICtrlCreateRadio($Text_WardriveDb3File & ' (DB3)', 255, 60, 240, 20)
 	$RadWigle = GUICtrlCreateRadio($Text_WigleCsvFile & ' (CSV)', 255, 80, 240, 20)
 	$NsOk = GUICtrlCreateButton($Text_Ok, 95, 105, 150, 25, $WS_GROUP)
@@ -8665,7 +8673,7 @@ Func _ImportFileBrowse()
 		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_DetailedCsvFile & ' (*.csv)', 1)
 		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 	ElseIf GUICtrlRead($RadNs) = 1 Then
-		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_NetstumblerTxtFile & ' (*.txt;*.ns1)', 1)
+		$file = FileOpenDialog('NetStumbler Files', $SaveDir, 'NetStumbler Files (*.txt;*.ns1)', 1)
 		If Not @error Then GUICtrlSetData($vistumblerfileinput, $file)
 	ElseIf GUICtrlRead($RadWD) = 1 Then
 		$file = FileOpenDialog($Text_VistumblerFile, $SaveDir, $Text_WardriveDb3File & ' (*.db3)', 1)
@@ -8709,7 +8717,7 @@ Func _ImportOk()
 		ElseIf GUICtrlRead($RadCsv) = 1 Then
 			_ImportCSV($loadfile)
 		ElseIf GUICtrlRead($RadNs) = 1 Then
-			_ImportNS1($loadfile)
+			_ImportNS1Auto($loadfile)
 		ElseIf GUICtrlRead($RadWD) = 1 Then
 			_ImportWardriveDb3($loadfile)
 		ElseIf GUICtrlRead($RadWigle) = 1 Then
@@ -9374,6 +9382,22 @@ Func _ImportWigleCSV($CSVfile)
 	EndIf
 EndFunc   ;==>_ImportWigleCSV
 
+Func _ImportNS1Auto($NS1file)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportNS1Auto()') ;#Debug Display
+	;Auto-detect if file is binary or text format
+	Local $hFile = FileOpen($NS1file, 0) ;Open in text mode
+	Local $sFirstLine = FileReadLine($hFile)
+	FileClose($hFile)
+	
+	;Text NS1 files start with "# $Creator:" or "# $Format:"
+	;Binary NS1 files start with binary version bytes
+	If StringLeft($sFirstLine, 1) = "#" Then ;Starts with '#' - text format
+		_ImportNS1($NS1file)
+	Else ;Binary format
+		_ImportNS1Binary($NS1file)
+	EndIf
+EndFunc   ;==>_ImportNS1Auto
+
 Func _ImportNS1($NS1file)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportNS1()') ;#Debug Display
 	$netstumblerfile = FileOpen($NS1file, 0)
@@ -9422,13 +9446,8 @@ Func _ImportNS1($NS1file)
 							EndIf
 						Else
 							$LoadSecType = 1
-							If $UseNativeWifi = 1 Then
-								$Encryption = 'Unencrypted'
-								$Authentication = 'Open'
-							Else
-								$Encryption = $SearchWord_None
-								$Authentication = $SearchWord_Open
-							EndIf
+							$Encryption = $SearchWord_None
+							$Authentication = $SearchWord_Open
 						EndIf
 						;Set other information
 						$snrarray1 = StringSplit($array[7], " ")
@@ -10453,7 +10472,153 @@ EndFunc   ;==>_AutoKmlGpsFile
 ;                                                       NETSTUMBLER SAVE/OPEN FUNCTIONS
 ;-------------------------------------------------------------------------------------------------------------------------------
 
-Func _ExportNS1() ;Saves netstumbler data to a netstumbler summary .ns1
+Func _GetChannelbits($iChannel)
+	; Converts channel number to Channelbits hex string
+	; Formula for 2.4GHz channels 1-14: Channelbits = 2^Channel
+	; 5GHz channels use custom bit position mapping
+	
+	Local $iBitPos = -1
+	
+	; 2.4GHz channels (1-14) use formula: bit position = channel number
+	If $iChannel >= 1 And $iChannel <= 14 Then
+		$iBitPos = $iChannel
+	Else
+		; 5GHz channel mapping to bit positions (limited to 32-bit for text format)
+		Switch $iChannel
+			Case 34
+				$iBitPos = 31
+			Case 36
+				$iBitPos = 15
+			Case 38
+				$iBitPos = 27
+			Case 40
+				$iBitPos = 16
+			Case 44
+				$iBitPos = 17
+			Case 46
+				$iBitPos = 28
+			Case 48
+				$iBitPos = 18
+			Case 52
+				$iBitPos = 19
+			Case 54
+				$iBitPos = 29
+			Case 56
+				$iBitPos = 20
+			Case 60
+				$iBitPos = 21
+			Case 62
+				$iBitPos = 30
+			Case 64
+				$iBitPos = 22
+			Case 149
+				$iBitPos = 23
+			Case 153
+				$iBitPos = 24
+			Case 157
+				$iBitPos = 25
+			Case 161
+				$iBitPos = 26
+		EndSwitch
+	EndIf
+	
+	; Return hex value or 00000000 if unknown channel (max 31 for 8-char hex)
+	If $iBitPos >= 0 And $iBitPos <= 31 Then
+		; Calculate 2^bitpos and format as 8-character hex string
+		Local $iValue = 2 ^ $iBitPos
+		Return StringUpper(Hex($iValue, 8))
+	Else
+		Return '00000000'
+	EndIf
+EndFunc   ;==>_GetChannelbits
+
+Func _GetChannelbits64($iChannel)
+	; Converts channel number to 64-bit Channelbits value for NS1 binary format
+	; Returns the bit position (0-63), caller must calculate 2^bitpos for uint64
+	
+	Local $iBitPos = -1
+	
+	; 2.4GHz channels (1-14) use formula: bit position = channel number
+	If $iChannel >= 1 And $iChannel <= 14 Then
+		$iBitPos = $iChannel
+	Else
+		; 5GHz channel mapping to bit positions (full 64-bit range)
+		Switch $iChannel
+			Case 34
+				$iBitPos = 31
+			Case 36
+				$iBitPos = 15
+			Case 38
+				$iBitPos = 27
+			Case 40
+				$iBitPos = 16
+			Case 42
+				$iBitPos = 32
+			Case 44
+				$iBitPos = 17
+			Case 46
+				$iBitPos = 28
+			Case 48
+				$iBitPos = 18
+			Case 52
+				$iBitPos = 19
+			Case 54
+				$iBitPos = 29
+			Case 56
+				$iBitPos = 20
+			Case 60
+				$iBitPos = 21
+			Case 62
+				$iBitPos = 30
+			Case 64
+				$iBitPos = 22
+			Case 149
+				$iBitPos = 23
+			Case 153
+				$iBitPos = 24
+			Case 157
+				$iBitPos = 25
+			Case 161
+				$iBitPos = 26
+		EndSwitch
+	EndIf
+	
+	; Return bit position or -1 if unknown
+	Return $iBitPos
+EndFunc   ;==>_GetChannelbits64
+
+Func _BitPosToUInt64($iBitPos)
+	; Converts a bit position (0-63) to uint64 value (2^bitpos)
+	; AutoIt can handle up to 2^53 accurately, beyond that use hex conversion
+	If $iBitPos < 0 Or $iBitPos > 63 Then Return 0
+	
+	If $iBitPos <= 53 Then
+		; AutoIt's Number type can accurately represent up to 2^53
+		Return 2 ^ $iBitPos
+	Else
+		; For bit positions 54-63, construct from hex string
+		; Create hex with bit set at position iBitPos
+		Local $iBytePos = Int($iBitPos / 8)  ; Which byte (0-7)
+		Local $iBitInByte = Mod($iBitPos, 8) ; Which bit in that byte
+		
+		; Build 16-char hex string (8 bytes, little-endian)
+		Local $aBytes[8]
+		For $i = 0 To 7
+			$aBytes[$i] = "00"
+		Next
+		$aBytes[$iBytePos] = Hex(2 ^ $iBitInByte, 2)
+		
+		; Combine in little-endian order (byte 0 is rightmost in hex string)
+		Local $sHex = ""
+		For $i = 7 To 0 Step -1
+			$sHex &= $aBytes[$i]
+		Next
+		
+		Return Dec($sHex)
+	EndIf
+EndFunc   ;==>_BitPosToUInt64
+
+Func _ExportNS1($Filter = 0) ;Saves netstumbler data to a netstumbler summary .ns1
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportNS1()') ;#Debug Display
 	DirCreate($SaveDir)
 	$filename = FileSaveDialog($Text_SaveAsTXT, $SaveDir, $Text_NetstumblerTxtFile & ' (*.NS1)', '', $ldatetimestamp & '.NS1')
@@ -10463,10 +10628,17 @@ Func _ExportNS1() ;Saves netstumbler data to a netstumbler summary .ns1
 		$Date1 = ''
 
 		$file = "# $Creator: " & $Script_Name & " " & $version & @CRLF & _
-				"# $Format: wi-scan summary with extensions" & @CRLF & _
+				"# $Format: wi-scan with extensions" & @CRLF & _
 				"# Latitude	Longitude	( SSID )	Type	( BSSID )	Time (GMT)	[ SNR Sig Noise ]	# ( Name )	Flags	Channelbits	BcnIntvl	DataRate	LastChannel" & @CRLF
 
-		$query = "SELECT ApID, GpsID, Signal, Date1, Time1 FROM Hist ORDER BY Date1, Time1"
+		Local $query
+		If $Filter = 1 Then
+			; Build filtered query - get Hist entries for filtered APs only
+			Local $FilterCondition = StringReplace($AddQuery, "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal, HighRSSI, ListRow FROM AP", "")
+			$query = "SELECT ApID, GpsID, Signal, RSSI, Date1, Time1 FROM Hist WHERE ApID IN (SELECT ApID FROM AP" & $FilterCondition & ") ORDER BY Date1, Time1"
+		Else
+			$query = "SELECT ApID, GpsID, Signal, RSSI, Date1, Time1 FROM Hist ORDER BY Date1, Time1"
+		EndIf
 		$HistMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		$FoundHistMatch = UBound($HistMatchArray) - 1
 		If $FoundHistMatch > 0 Then
@@ -10476,12 +10648,13 @@ Func _ExportNS1() ;Saves netstumbler data to a netstumbler summary .ns1
 				If $Found_APID <> $APID1 Then
 					$Found_GpsID = $HistMatchArray[$exns1][2]
 					$Found_Sig = $HistMatchArray[$exns1][3]
-					$Found_Date = $HistMatchArray[$exns1][4]
-					$Found_Time = StringTrimRight($HistMatchArray[$exns1][5], 4)
+					$Found_RSSI = $HistMatchArray[$exns1][4]
+					$Found_Date = $HistMatchArray[$exns1][5]
+					$Found_Time = $HistMatchArray[$exns1][6]
 					$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $Found_GpsID
 					$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-					$Found_Lat = _Format_GPS_DMM_to_DDD($ApMatchArray[1][1])
-					$Found_Lon = _Format_GPS_DMM_to_DDD($ApMatchArray[1][2])
+					$Found_Lat = $ApMatchArray[1][1]
+					$Found_Lon = $ApMatchArray[1][2]
 					$query = "SELECT SSID, BSSID, SecType, NETTYPE, CHAN, BTX, OTX, LABEL, MANU FROM AP WHERE ApID=" & $Found_APID
 					$ApMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 					$Found_SSID = $ApMatchArray[1][1]
@@ -10512,38 +10685,7 @@ Func _ExportNS1() ;Saves netstumbler data to a netstumbler summary .ns1
 					EndIf
 
 					;Channel Info - http://www.netstumbler.org/f4/channelbits-8849/
-					$CHAN = '00000000'
-					If $Found_CHAN = 1 Then $CHAN = '00000002'
-					If $Found_CHAN = 2 Then $CHAN = '00000004'
-					If $Found_CHAN = 3 Then $CHAN = '00000008'
-					If $Found_CHAN = 4 Then $CHAN = '00000010'
-					If $Found_CHAN = 5 Then $CHAN = '00000020'
-					If $Found_CHAN = 6 Then $CHAN = '00000040'
-					If $Found_CHAN = 7 Then $CHAN = '00000080'
-					If $Found_CHAN = 8 Then $CHAN = '00000100'
-					If $Found_CHAN = 9 Then $CHAN = '00000200'
-					If $Found_CHAN = 10 Then $CHAN = '00000400'
-					If $Found_CHAN = 11 Then $CHAN = '00000800'
-					If $Found_CHAN = 12 Then $CHAN = '00001000'
-					If $Found_CHAN = 13 Then $CHAN = '00002000'
-					If $Found_CHAN = 14 Then $CHAN = '00004000'
-					If $Found_CHAN = 36 Then $CHAN = '00008000'
-					If $Found_CHAN = 40 Then $CHAN = '00010000'
-					If $Found_CHAN = 44 Then $CHAN = '00020000'
-					If $Found_CHAN = 48 Then $CHAN = '00040000'
-					If $Found_CHAN = 52 Then $CHAN = '00080000'
-					If $Found_CHAN = 56 Then $CHAN = '00100000'
-					If $Found_CHAN = 60 Then $CHAN = '00200000'
-					If $Found_CHAN = 64 Then $CHAN = '00400000'
-					If $Found_CHAN = 149 Then $CHAN = '00800000'
-					If $Found_CHAN = 153 Then $CHAN = '01000000'
-					If $Found_CHAN = 157 Then $CHAN = '02000000'
-					If $Found_CHAN = 161 Then $CHAN = '04000000'
-					If $Found_CHAN = 38 Then $CHAN = '08000000'
-					If $Found_CHAN = 46 Then $CHAN = '10000000'
-					If $Found_CHAN = 54 Then $CHAN = '20000000'
-					If $Found_CHAN = 62 Then $CHAN = '40000000'
-					If $Found_CHAN = 34 Then $CHAN = '80000000'
+					$CHAN = _GetChannelbits($Found_CHAN)
 
 					$Flags = 0
 					If $Found_NETTYPE = $SearchWord_Adhoc Or $Found_NETTYPE = "Ad Hoc" Then
@@ -10555,12 +10697,30 @@ Func _ExportNS1() ;Saves netstumbler data to a netstumbler summary .ns1
 					EndIf
 
 					If $Found_SecType <> '1' Then
-						$Flags += 10 ;Set Privacy (WEP) flag
+						$Flags += 16 ;Set Privacy flag (bit 4 = 2^4 = 16)
 					EndIf
 
 					$Flags = StringFormat("%04i", $Flags)
 				EndIf
-				$file &= $Found_Lat & "	" & $Found_Lon & "	( " & $Found_SSID & " )	" & $BSS & "	( " & $Found_BSSID & " )	" & $Found_Time & " (GMT)	[ " & $Found_Sig & " " & $Found_Sig + 50 & " 50 ]	# ( " & $Found_LAB & ' - ' & $Found_MANU & " )	" & $Flags & "	" & $CHAN & "	1000	" & $radio & "	" & $Found_CHAN & @CRLF
+				;Convert GPS from DMM to DDD format for NetStumbler compatibility
+				$GPS_Lat_DDD = _Format_GPS_DMM_to_DDD($Found_Lat)
+				$GPS_Lon_DDD = _Format_GPS_DMM_to_DDD($Found_Lon)
+				;Convert BSSID to lowercase for NetStumbler compatibility
+				$Found_BSSID_Lower = StringLower($Found_BSSID)
+				;Remove milliseconds from timestamp for NetStumbler compatibility (HH:MM:SS instead of HH:MM:SS.mmm)
+				$Found_Time_NoMs = StringLeft($Found_Time, 8)
+				
+				;Calculate signal strength in dBm for NetStumbler
+				;Vistumbler Signal field is percentage (0-100), RSSI is dBm
+				Local $iSigdBm = $Found_RSSI
+				If $iSigdBm = 0 And $Found_Sig > 0 Then
+					; Convert percentage to dBm if RSSI not available
+					$iSigdBm = ($Found_Sig / 2) - 100
+				EndIf
+				Local $iSignalDisplay = $iSigdBm + 50  ; NetStumbler display scale (dBm + 50)
+				Local $iSNR = $iSignalDisplay - 50     ; SNR = Signal - Noise
+				
+				$file &= $GPS_Lat_DDD & "	" & $GPS_Lon_DDD & "	( " & $Found_SSID & " )	" & $BSS & "	( " & $Found_BSSID_Lower & " )	" & $Found_Time_NoMs & " (GMT)	[ " & $iSNR & " " & $iSignalDisplay & " 50 ]	# ( Unknown )	" & $Flags & "	" & $CHAN & "	1000	" & $radio & "	" & $Found_CHAN & @CRLF
 			Next
 			$savefile = FileOpen($filename, 128 + 2) ;Open in UTF-8 write mode
 			FileWrite($savefile, $file)
@@ -14099,4 +14259,434 @@ Func _ExportNetXML_Common($iFilter)
     
     _NetXML_Save($sFile)
     MsgBox(0, "Export Complete", "Exported " & $iCount & " APs to NetXML.")
+EndFunc
+
+Func _ExportNS1Binary($Filter = 0)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportNS1Binary()')
+	DirCreate($SaveDir)
+	Local $filename = FileSaveDialog("Export NS1 Binary", $SaveDir, "NetStumbler Binary (*.ns1)", 18, $ldatetimestamp & ".ns1")
+	If @error Then Return
+
+	If StringRight($filename, 4) <> ".ns1" Then $filename &= ".ns1"
+
+	; Get APs (All or Filtered)
+	Local $query
+	If $Filter = 1 Then
+		; Use filtered query with same column order as unfiltered
+		Local $FilterCondition = StringReplace($AddQuery, "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active, HighSignal, HighRSSI, ListRow FROM AP", "")
+		$query = "SELECT ApID, SSID, BSSID, Chan, AUTH, ENCR, NETTYPE, LABEL, HighGpsHistID FROM AP" & $FilterCondition
+	Else
+		$query = "SELECT ApID, SSID, BSSID, Chan, AUTH, ENCR, NETTYPE, LABEL, HighGpsHistID FROM AP"
+	EndIf
+	Local $aAPsDB = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+	
+	Local $iApCount = 0
+	If IsArray($aAPsDB) Then $iApCount = UBound($aAPsDB) - 1
+	If $iApCount < 1 Then 
+		MsgBox(48, "Warning", "No APs found to export.")
+		Return
+	EndIf
+
+	Local $aNS1Data[2]
+	$aNS1Data[0] = 12
+	Local $aAPs[$iApCount]
+	
+	For $i = 1 To $iApCount
+		GUICtrlSetData($msgdisplay, "Preparing AP (NS1) " & $i & " / " & $iApCount)
+		Local $ApID = $aAPsDB[$i][1] ; ID is first col
+		
+		Local $aAP[23]
+		$aAP[0] = $aAPsDB[$i][2] ; SSID
+		
+		Local $sBSSID = StringReplace($aAPsDB[$i][3], ":", "")
+		$aAP[1] = Binary("0x" & $sBSSID) ; BSSID
+		
+		; Default Metrics
+		$aAP[2] = -100 ; MaxSignal
+		$aAP[16] = 0   ; MinSignal
+		$aAP[3] = -150 ; MinNoise (Default low)
+		$aAP[17] = -100; MaxNoise
+		$aAP[4] = 0    ; MaxSNR
+		$aAP[7] = 0    ; FirstSeen
+		$aAP[8] = 0    ; LastSeen
+		
+		; Channels
+		$aAP[14] = Int($aAPsDB[$i][4]) ; LastChannel (Chan col)
+		Local $iBitPos = _GetChannelbits64(Int($aAPsDB[$i][4]))
+		$aAP[13] = ($iBitPos >= 0) ? _BitPosToUInt64($iBitPos) : 0 ; Channels bitfield (uint64)
+		
+		; Flags & ApFlags (Custom Vistumbler Mapping)
+		Local $sAuth = $aAPsDB[$i][5]
+		Local $sEncr = $aAPsDB[$i][6]
+		Local $sNetType = $aAPsDB[$i][7]
+		Local $sLabel = $aAPsDB[$i][8]
+		Local $iHighGpsHistID = Int($aAPsDB[$i][9]) ; HighGPS Hist Pointer
+		
+		Local $iFlags = 0
+		If $sNetType = "Infrastructure" Then $iFlags = BitOR($iFlags, 0x0001)
+		If $sNetType = "Ad-Hoc" Then $iFlags = BitOR($iFlags, 0x0002)
+		
+		; Set Privacy Bit (0x0010) for ANY Encryption (Not just WEP)
+		If $sEncr <> "None" And $sEncr <> "Open" And $sEncr <> "" Then 
+			$iFlags = BitOR($iFlags, 0x0010)
+		EndIf
+		
+		Local $iApFlags = 0
+		If StringInStr($sAuth, "WPA-Personal") Then $iApFlags = BitOR($iApFlags, 0x0001)
+		If StringInStr($sAuth, "WPA-Enterprise") Then $iApFlags = BitOR($iApFlags, 0x0002)
+		If StringInStr($sAuth, "WPA2-Personal") Then $iApFlags = BitOR($iApFlags, 0x0004)
+		If StringInStr($sAuth, "WPA2-Enterprise") Then $iApFlags = BitOR($iApFlags, 0x0008)
+		If StringInStr($sAuth, "WPA3") Then $iApFlags = BitOR($iApFlags, 0x0010)
+		If StringInStr($sAuth, "OWE") Then $iApFlags = BitOR($iApFlags, 0x0020)
+		
+		If StringInStr($sEncr, "TKIP") Then $iApFlags = BitOR($iApFlags, 0x0040)
+		If StringInStr($sEncr, "CCMP") Then $iApFlags = BitOR($iApFlags, 0x0080)
+		If StringInStr($sEncr, "AES") Then $iApFlags = BitOR($iApFlags, 0x0080)
+		If StringInStr($sEncr, "GCMP") Then $iApFlags = BitOR($iApFlags, 0x0100)
+		If StringInStr($sEncr, "GCMP-256") Then $iApFlags = BitOR($iApFlags, 0x0200)
+		If StringInStr($sEncr, "CCMP-256") Then $iApFlags = BitOR($iApFlags, 0x0400)
+		If StringInStr($sEncr, "BIP") Then $iApFlags = BitOR($iApFlags, 0x0800)
+		
+		$aAP[5] = $iFlags
+		$aAP[21] = $iApFlags
+
+		$aAP[6] = 100 ; BeaconInterval
+		$aAP[12] = $sLabel ; Label
+		$aAP[15] = 0 ; IPAddress
+		$aAP[18] = 0 ; DataRate
+		$aAP[19] = 0 ; IPSubnet
+		$aAP[20] = 0 ; IPMask
+		$aAP[22] = Binary("") ; IEs
+
+		; Get History for data points
+		$query = "SELECT Signal, RSSI, Date1, Time1, GpsID, HistID FROM Hist WHERE ApID=" & $ApID & " ORDER BY Date1, Time1"
+		Local $aHistDB = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		
+		Local $iHistCount = 0
+		If IsArray($aHistDB) Then $iHistCount = UBound($aHistDB) - 1
+		
+		Local $aDataPoints[1]
+		If $iHistCount > 0 Then
+			ReDim $aDataPoints[$iHistCount]
+			Local $iMinSignal = 200, $iMaxSignal = -200
+			
+			; Initialize Fallback Lat/Lat
+			$aAP[9] = 0
+			$aAP[10] = 0
+			Local $iMaxSignalGPS = -200
+			Local $fFallbackLat = 0
+			Local $fFallbackLon = 0
+			
+			For $j = 1 To $iHistCount
+				Local $sDate = $aHistDB[$j][3]
+				Local $sTime = $aHistDB[$j][4]
+				Local $iSig = Int($aHistDB[$j][2]) ; Using RSSI (dBm) for Signal
+				If $iSig = 0 And Int($aHistDB[$j][1]) > 0 Then $iSig = (Int($aHistDB[$j][1]) / 2) - 100 ; Estimate dBm from % if RSSI missing
+				
+				Local $iCurrentHistID = Int($aHistDB[$j][6])
+				
+				Local $iNoise = -100 ; Default noise
+				
+				; Update Max/Min
+				If $iSig > $iMaxSignal Then $iMaxSignal = $iSig
+				If $iSig < $iMinSignal Then $iMinSignal = $iSig
+				
+				Local $iFT = _NS1_DateToFILETIME($sDate, $sTime)
+				If $j = 1 Then $aAP[7] = $iFT ; FirstSeen
+				If $j = $iHistCount Then $aAP[8] = $iFT ; LastSeen
+				
+				Local $aDP[5]
+				$aDP[0] = $iFT
+				$aDP[1] = $iSig
+				$aDP[2] = $iNoise
+				
+				; Location
+				Local $GpsID = Int($aHistDB[$j][5])
+				
+				If $GpsID > 0 Then
+					$aDP[3] = 1 ; GPS
+					$query = "SELECT Latitude, Longitude, Alt, SpeedInMPH, TrackAngle FROM GPS WHERE GpsID=" & $GpsID
+					Local $aGPSDB = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+					
+					If IsArray($aGPSDB) And UBound($aGPSDB) >= 2 Then
+						; Robust GPS Parsing (DMM to DDD)
+						Local $aGPS[8]
+						Local $dLat = 0, $dLon = 0
+						
+						; Parse Latitude
+						Local $sRawLat = $aGPSDB[1][1]
+						Local $iLatSign = 1
+						If StringInStr($sRawLat, "S") Then $iLatSign = -1
+						Local $sCleanLat = StringRegExpReplace($sRawLat, "[^0-9.]", "")
+						If StringIsFloat($sCleanLat) Or StringIsInt($sCleanLat) Then
+							Local $fRaw = Number($sCleanLat)
+							Local $fDeg = Floor($fRaw / 100)
+							Local $fMin = $fRaw - ($fDeg * 100)
+							$dLat = ($fDeg + ($fMin / 60)) * $iLatSign
+						EndIf
+						
+						; Parse Longitude
+						Local $sRawLon = $aGPSDB[1][2]
+						Local $iLonSign = 1
+						If StringInStr($sRawLon, "W") Then $iLonSign = -1
+						Local $sCleanLon = StringRegExpReplace($sRawLon, "[^0-9.]", "")
+						If StringIsFloat($sCleanLon) Or StringIsInt($sCleanLon) Then
+							Local $fRaw = Number($sCleanLon)
+							Local $fDeg = Floor($fRaw / 100)
+							Local $fMin = $fRaw - ($fDeg * 100)
+							$dLon = ($fDeg + ($fMin / 60)) * $iLonSign
+						EndIf
+
+						$aGPS[0] = $dLat
+						$aGPS[1] = $dLon
+						
+						$aGPS[2] = Number($aGPSDB[1][3]) ; Alt
+						$aGPS[3] = 0 ; Sats
+						$aGPS[4] = Number($aGPSDB[1][4]) ; Speed
+						$aGPS[5] = Number($aGPSDB[1][5]) ; Track
+						$aGPS[6] = 0 ; MagVar
+						$aGPS[7] = 0 ; Hdop
+						$aDP[4] = $aGPS
+						
+						; Strategy 1: Use HighGpsHistID from AP Table
+						If $iHighGpsHistID > 0 And $iCurrentHistID = $iHighGpsHistID Then
+							$aAP[9] = $dLat
+							$aAP[10] = $dLon
+						EndIf
+						
+						; Strategy 2: Candidate for fallback (Max Signal with Valid GPS)
+						If $dLat <> 0 And $dLon <> 0 Then
+							If $iSig >= $iMaxSignalGPS Then
+								$fFallbackLat = $dLat
+								$fFallbackLon = $dLon
+								$iMaxSignalGPS = $iSig
+							EndIf
+						EndIf
+					Else
+						$aDP[3] = 0
+					EndIf
+				Else
+					$aDP[3] = 0
+				EndIf
+				$aDataPoints[$j-1] = $aDP
+			Next
+			
+			; Apply Fallback if Strategy 1 found nothing
+			If $aAP[9] = 0 And $aAP[10] = 0 Then
+				$aAP[9] = $fFallbackLat
+				$aAP[10] = $fFallbackLon
+			EndIf
+			
+			$aAP[2] = $iMaxSignal
+			$aAP[16] = $iMinSignal
+			$aAP[3] = -100
+			$aAP[17] = -100
+			$aAP[4] = $iMaxSignal + 100 ; Simple SNR
+		Else
+			ReDim $aDataPoints[0]
+			$aAP[9] = 0
+			$aAP[10] = 0
+		EndIf
+		
+		$aAP[11] = $aDataPoints
+		$aAPs[$i-1] = $aAP
+	Next
+	
+	$aNS1Data[1] = $aAPs
+	_NS1_WriteFile($filename, $aNS1Data)
+	If @error Then
+		MsgBox(16, "Error", "Failed to write NS1 file. Error: " & @error)
+	Else
+		MsgBox(0, "Success", "Export complete.")
+	EndIf
+EndFunc
+
+Func _DateToNs1FileTime($sDate, $sTime)
+	If $sDate = "" Or $sTime = "" Then Return 0
+	Local $iDiff = _DateDiff('s', "1601/01/01 00:00:00", $sDate & " " & $sTime)
+	Return $iDiff * 10000000
+EndFunc
+
+Func _ImportNS1Binary($NS1file)
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportNS1Binary()')
+	
+	Local $aNS1 = _NS1_ReadFile($NS1file)
+	If @error Then
+		MsgBox(16, "Error", "Error reading NS1 Binary file: " & @error)
+		Return
+	EndIf
+	
+	Local $iVer = $aNS1[0]
+	Local $aAPs = $aNS1[1]
+	Local $iCount = UBound($aAPs)
+	
+	If $iCount = 0 Then
+		MsgBox(64, "Info", "No Access Points found in file.")
+		Return
+	EndIf
+	
+	Local $AddAP = 0
+	Local $AddGID = 0
+	Local $begintime = TimerInit()
+	Local $UpdateTimer = TimerInit()
+	Local $MemReleaseTimer = TimerInit()
+	
+	For $i = 0 To $iCount - 1
+		Local $aAP = $aAPs[$i]
+		
+		Local $sSSID = $aAP[0]
+		Local $bBSSID = $aAP[1]
+		Local $iMaxSig = $aAP[2]
+		
+		Local $MainBSSID = _NS1_BinaryToMac($bBSSID)
+		
+		Local $fLat = $aAP[9]
+		Local $fLon = $aAP[10]
+		
+		Local $sFirstSeen = _NS1_FileTimeToDate($aAP[7])
+		Local $sDate = StringLeft($sFirstSeen, 10)
+		Local $sTime = StringMid($sFirstSeen, 12, 8)
+		
+		If $sDate = "" Then $sDate = "2000/01/01"
+		If $sTime = "" Then $sTime = "00:00:00"
+		
+		Local $iSignalPercent = 0
+		Local $iRSSI = -100
+		If $iMaxSig < 0 Then
+			$iRSSI = $iMaxSig
+			$iSignalPercent = _DbToSignalPercent($iRSSI)
+		Else
+			$iSignalPercent = $iMaxSig
+			$iRSSI = _SignalPercentToDb($iSignalPercent)
+		EndIf
+		
+		Local $sLatDMM = _Format_GPS_DDD_to_DMM($fLat, "N", "S")
+		Local $sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
+		
+		Local $LoadGID = 0
+		Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "' And Date1 = '" & $sDate & "' And Time1 = '" & $sTime & "'"
+		Local $GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+		Local $FoundGpsMatch = UBound($GpsMatchArray) - 1
+		
+		If $FoundGpsMatch = 0 Then
+			$AddGID += 1
+			$GPS_ID += 1
+			_AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $sLatDMM & '|' & $sLonDMM & '|00|0|0|0|0|0|0|' & $sDate & '|' & $sTime)
+			$LoadGID = $GPS_ID
+		Else
+			$LoadGID = $GpsMatchArray[1][1]
+		EndIf
+		
+		Local $iChan = 0
+		If $iVer = 6 Then 
+			$iChan = $aAP[13]
+		Else
+			$iChan = $aAP[14]
+		EndIf
+		
+		Local $iFlags = $aAP[5]
+		Local $iApFlags = 0
+		If $iVer >= 12 Then $iApFlags = $aAP[21]
+
+		Local $sType = $SearchWord_Infrastructure
+		If BitAND($iFlags, 0x0002) Then $sType = $SearchWord_Adhoc
+		
+		Local $sEncr = $SearchWord_None
+		Local $sAuth = $SearchWord_Open
+		
+		; Basic WEP Check
+		If BitAND($iFlags, 0x0010) Then 
+			 $sEncr = $SearchWord_Wep
+			 $sAuth = $SearchWord_Open
+		EndIf
+		
+		; Custom Flags Override (V12) for WPA/WPA2/WPA3
+		If $iApFlags > 0 Then
+			; Auth
+			If BitAND($iApFlags, 0x0001) Then $sAuth = "WPA-Personal"
+			If BitAND($iApFlags, 0x0002) Then $sAuth = "WPA-Enterprise"
+			If BitAND($iApFlags, 0x0004) Then $sAuth = "WPA2-Personal"
+			If BitAND($iApFlags, 0x0008) Then $sAuth = "WPA2-Enterprise"
+			If BitAND($iApFlags, 0x0010) Then $sAuth = "WPA3"
+			If BitAND($iApFlags, 0x0020) Then $sAuth = "OWE"
+			
+			; Encryption
+			Local $sE = ""
+			If BitAND($iApFlags, 0x0040) Then $sE = "TKIP"
+			
+			If BitAND($iApFlags, 0x0080) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "CCMP"
+			EndIf
+			
+			If BitAND($iApFlags, 0x0100) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "GCMP"
+			EndIf
+			
+			If BitAND($iApFlags, 0x0200) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "GCMP-256"
+			EndIf
+			
+			If BitAND($iApFlags, 0x0400) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "CCMP-256"
+			EndIf
+			
+			If BitAND($iApFlags, 0x0800) Then 
+				If $sE <> "" Then $sE &= "+"
+				$sE &= "BIP"
+			EndIf
+			
+			If $sE <> "" Then $sEncr = $sE
+		EndIf
+		
+		Local $NewApAdded = _AddApData(0, $LoadGID, $MainBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sType, $Text_Unknown, $Text_Unknown, $Text_Unknown, $iSignalPercent, $iRSSI)
+		If $NewApAdded <> 0 Then $AddAP += 1
+		
+		If TimerDiff($UpdateTimer) > 600 Or ($i = $iCount - 1) Then
+			Local $min = (TimerDiff($begintime) / 60000)
+			Local $percent = (($i + 1) / $iCount) * 100
+			GUICtrlSetData($progressbar, $percent)
+			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+			GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round(($i+1) / $min, 1))
+			GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+			GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & ($i+1) & "/" & $iCount)
+			$UpdateTimer = TimerInit()
+		EndIf
+		
+		If TimerDiff($MemReleaseTimer) > 10000 Then
+			_ReduceMemory()
+			$MemReleaseTimer = TimerInit()
+		EndIf
+	Next
+	
+	MsgBox(0, "Import Complete", "Imported " & $AddAP & " APs.")
+EndFunc
+
+Func _ExportNS1Unfiltered()
+	_ExportNS1(0)
+EndFunc
+
+Func _ExportNS1Filtered()
+	_ExportNS1(1)
+EndFunc
+
+Func _ExportNS1BinaryUnfiltered()
+	_ExportNS1Binary(0)
+EndFunc
+
+Func _ExportNS1BinaryFiltered()
+	_ExportNS1Binary(1)
+EndFunc
+
+Func _NS1_BinaryToMac($bData)
+	Local $sHex = StringTrimLeft($bData, 2)
+	Local $sRet = ""
+	For $i = 1 To 11 Step 2
+		$sRet &= StringMid($sHex, $i, 2) & ":"
+	Next
+	Return StringTrimRight($sRet, 1)
 EndFunc
