@@ -24,21 +24,21 @@ Func _KismetDB_Create($sFilePath)
     _SQLite_Exec($hDB, "BEGIN TRANSACTION;")
 
     ; KISMET table
-    _SQLite_Exec($hDB, "CREATE TABLE KISMET (db_version INTEGER, starttime INTEGER, server_name TEXT);")
-    _SQLite_Exec($hDB, "INSERT INTO KISMET (db_version, starttime, server_name) VALUES (10, " & _DateDiff('s', "1970/01/01 00:00:00", _NowCalc()) & ", 'Vistumbler Export');")
+    _SQLite_Exec($hDB, "CREATE TABLE KISMET (kismet_version TEXT, db_version INTEGER, db_module TEXT);")
+    _SQLite_Exec($hDB, "INSERT INTO KISMET (kismet_version, db_version, db_module) VALUES ('2023-07', 10, 'kismetlog');")
 
     ; ALERTS table
-    _SQLite_Exec($hDB, "CREATE TABLE alerts (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, devmac TEXT, lat REAL, lon REAL, header TEXT, json TEXT);")
+    _SQLite_Exec($hDB, "CREATE TABLE alerts (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, devmac TEXT, lat REAL, lon REAL, header TEXT, json BLOB);")
 
     ; DATA table
-    _SQLite_Exec($hDB, "CREATE TABLE data (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, devmac TEXT, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, datasource TEXT, type TEXT, json TEXT, signal INTEGER);")
+    _SQLite_Exec($hDB, "CREATE TABLE data (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, devmac TEXT, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, datasource TEXT, type TEXT, json BLOB, signal INTEGER);")
 
     ; DATASOURCE table
-    _SQLite_Exec($hDB, "CREATE TABLE datasource (uuid TEXT, typestring TEXT, definition TEXT, name TEXT, interface TEXT, json TEXT);")
-    _SQLite_Exec($hDB, "INSERT INTO datasource (uuid, typestring, definition, name, interface, json) VALUES ('00000000-0000-0000-0000-000000000000', 'vistumbler', 'vistumbler', 'vistumbler', 'vistumbler', '{}');")
+    _SQLite_Exec($hDB, "CREATE TABLE datasources (uuid TEXT, typestring TEXT, definition TEXT, name TEXT, interface TEXT, json BLOB, UNIQUE(uuid) ON CONFLICT REPLACE);")
+    _SQLite_Exec($hDB, "INSERT INTO datasources (uuid, typestring, definition, name, interface, json) VALUES ('00000000-0000-0000-0000-000000000000', 'vistumbler', 'vistumbler', 'vistumbler', 'vistumbler', '{}');")
 
     ; DEVICES table
-    _SQLite_Exec($hDB, "CREATE TABLE devices (first_time INTEGER, last_time INTEGER, devkey TEXT, phyname TEXT, devmac TEXT, strongest_signal INTEGER, min_lat REAL, min_lon REAL, max_lat REAL, max_lon REAL, avg_lat REAL, avg_lon REAL, bytes_data INTEGER, type TEXT, device TEXT);")
+    _SQLite_Exec($hDB, "CREATE TABLE devices (first_time INTEGER, last_time INTEGER, devkey TEXT, phyname TEXT, devmac TEXT, strongest_signal INTEGER, min_lat REAL, min_lon REAL, max_lat REAL, max_lon REAL, avg_lat REAL, avg_lon REAL, bytes_data INTEGER, type TEXT, device BLOB, UNIQUE(phyname, devmac) ON CONFLICT REPLACE);")
     _SQLite_Exec($hDB, "CREATE INDEX idx_devices_devkey ON devices(devkey);")
     _SQLite_Exec($hDB, "CREATE INDEX idx_devices_devmac ON devices(devmac);")
 
@@ -46,7 +46,7 @@ Func _KismetDB_Create($sFilePath)
     _SQLite_Exec($hDB, "CREATE TABLE messages (ts_sec INTEGER, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, msgtype TEXT, message TEXT);")
 
     ; PACKETS table (Version 10)
-    _SQLite_Exec($hDB, "CREATE TABLE packets (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, sourcemac TEXT, destmac TEXT, transmac TEXT, frequency REAL, lat REAL, lon REAL, packet_len INTEGER, packet_full_len INTEGER, signal INTEGER, datasource TEXT, dlt INTEGER, packet BLOB, error INTEGER, tags TEXT, datarate REAL, hash INTEGER, packetid INTEGER);")
+    _SQLite_Exec($hDB, "CREATE TABLE packets (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, sourcemac TEXT, destmac TEXT, transmac TEXT, frequency REAL, devkey TEXT, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, packet_len INTEGER, signal INTEGER, datasource TEXT, dlt INTEGER, packet BLOB, error INTEGER, tags TEXT, datarate REAL, hash INTEGER, packetid INTEGER, packet_full_len INTEGER);")
     _SQLite_Exec($hDB, "CREATE INDEX idx_packets_sourcemac ON packets(sourcemac);")
 
     ; SNAPSHOTS table
@@ -87,9 +87,18 @@ EndFunc
 ; Function Name:    _KismetDB_AddPacket
 ; Description:      Adds a packet to the KismetDB
 ; ===============================================================================================================================
-Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac, $transmac, $frequency, $lat, $lon, $signal, $datasource, $dlt, $error, $packetid)
-    ; Assuming simple packet insertion for signal history
-    Local $sQuery = "INSERT INTO packets (ts_sec, ts_usec, phyname, sourcemac, destmac, transmac, frequency, lat, lon, packet_len, packet_full_len, signal, datasource, dlt, packet, error, tags, datarate, hash, packetid) VALUES (" & _
+; ===============================================================================================================================
+; Function Name:    _KismetDB_AddPacket
+; Description:      Adds a packet to the KismetDB
+; ===============================================================================================================================
+Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac, $transmac, $frequency, $lat, $lon, $signal, $datasource, $dlt, $error, $packetid, $packet_data, $packet_len)
+    ; $packet_data should be a hex string like "0A0B0C..."
+    Local $sBlob = "X''"
+    If $packet_data <> "" Then
+        $sBlob = "X'" & $packet_data & "'"
+    EndIf
+
+    Local $sQuery = "INSERT INTO packets (ts_sec, ts_usec, phyname, sourcemac, destmac, transmac, frequency, devkey, lat, lon, alt, speed, heading, packet_len, signal, datasource, dlt, packet, error, tags, datarate, hash, packetid, packet_full_len) VALUES (" & _
         $ts_sec & ", " & _
         0 & ", " & _
         _SQLite_Escape($phyname) & ", " & _
@@ -97,22 +106,215 @@ Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac
         _SQLite_Escape($destmac) & ", " & _
         _SQLite_Escape($transmac) & ", " & _
         $frequency & ", " & _
+        "''" & ", " & _ ; devkey
         $lat & ", " & _
         $lon & ", " & _
-        0 & ", " & _ ; packet_len
-        0 & ", " & _ ; packet_full_len
+        0 & ", " & _ ; alt
+        0 & ", " & _ ; speed
+        0 & ", " & _ ; heading
+        $packet_len & ", " & _ ; packet_len
         $signal & ", " & _
         _SQLite_Escape($datasource) & ", " & _
         $dlt & ", " & _
-        "X''" & ", " & _ ; Empty BLOB
+        $sBlob & ", " & _ ; Packet BLOB
         $error & ", " & _
         "''" & ", " & _ ; tags
         0 & ", " & _ ; datarate
         0 & ", " & _ ; hash
-        $packetid & ");"
+        $packetid & ", " & _ 
+        $packet_len & ");" ; packet_full_len
     
     _SQLite_Exec($hDB, $sQuery)
     Return
+EndFunc
+
+; ===============================================================================================================================
+; Function Name:    _KismetDB_GenerateRadiotapBeacon
+; Description:      Generates a Hex String of a Radiotap Header + 802.11 Beacon Frame
+; ===============================================================================================================================
+Func _KismetDB_GenerateRadiotapBeacon($sBSSID, $sSSID, $iChannel, $iFreq, $iSignal, $sRatesHex, $iPrivacy = 0)
+    Local $sHex = ""
+    
+    ; --- Radiotap Header ---
+    ; Ver(1) + Pad(1) + Len(2) + Present(4)
+    ; Channel(4) + Signal(1)
+    ; Total Header Length = 8 + 4 + 1 = 13 bytes. Pad to 13?
+    ; Radiotap fields:
+    ; Channel (Bit 3) = 2 bytes freq + 2 bytes flags
+    ; Signal (Bit 5) = 1 byte dBm
+    
+    Local $iHeaderLen = 13
+    
+    ; Header: Ver=0, Pad=0, Len=13, Present=0x28 (Chan+Sig) -> Little Endian 28 00 00 00
+    $sHex &= "0000" & _KismetDB_HexSwap(Hex($iHeaderLen, 4)) & "28000000"
+    
+    ; Field: Channel (Freq 2 bytes, Flags 2 bytes)
+    ; Flags: 0x0140 (2GHz + OFDM) or 0x00A0 (5GHz + OFDM) ?. Let's use 0x0000 for generic.
+    ; 0x00A0 = Turbo? 0x0100 = 2GHz?
+    ; Let's just put Freq and 0 flags.
+    $sHex &= _KismetDB_HexSwap(Hex($iFreq, 4)) & "0000"
+    
+    ; Field: Signal (1 byte signed). Hex() handles negatives as 2s compliment 8 chars, we need 2 chars.
+    Local $hSig = Hex($iSignal, 2)
+    $sHex &= $hSig
+    
+    ; --- 802.11 Beacon Frame ---
+    
+    ; Frame Control: 0x8000 (Beacon, Ver 0, No flags) -> LE: 80 00? No, 0x80 is type 8 (Beacon).
+    ; Type 0 (Mgmt), Subtype 8 (Beacon). 
+    ; Bits: Protocol(2) Type(2) Subtype(4) ...
+    ; 00 00 1000 ... 
+    ; Byte 0: ..Subtype..Type..Ver -> 1000 00 00 -> 0x80
+    ; Byte 1: Flags -> 0x00
+    $sHex &= "8000"
+    
+    ; Duration: 0
+    $sHex &= "0000"
+    
+    ; Addr1 (Dest): Broadcast
+    $sHex &= "FFFFFFFFFFFF"
+    
+    ; Addr2 (Src): BSSID
+    Local $sMacRaw = StringReplace($sBSSID, ":", "")
+    If StringLen($sMacRaw) <> 12 Then $sMacRaw = "000000000000"
+    $sHex &= $sMacRaw
+    
+    ; Addr3 (BSSID): BSSID
+    $sHex &= $sMacRaw
+    
+    ; Seq Ctrl: 0
+    $sHex &= "0000"
+    
+    ; Frame Body
+    
+    ; Timestamp (8 bytes). Just 0.
+    $sHex &= "0000000000000000"
+    
+    ; Beacon Interval (2 bytes). 100 TU (0x0064) -> LE: 64 00
+    $sHex &= "6400"
+    
+    ; Capabilities (2 bytes). 
+    ; ESS (0x0001) + Short Preamble (0x0020) = 0x0021
+    ; If Privacy (Bit 4, 0x0010), then 0x0031
+    Local $iCap = 0x0021
+    If $iPrivacy Then $iCap = 0x0031
+    $sHex &= _KismetDB_HexSwap(Hex($iCap, 4))
+    
+    ; SSID Parameter (Tag 0)
+    ; Tag(1) + Len(1) + SSID
+    Local $sSSIDHex = _KismetDB_StringToHex($sSSID)
+    Local $iSSIDLen = StringLen($sSSIDHex) / 2
+    $sHex &= "00" & Hex($iSSIDLen, 2) & $sSSIDHex
+
+    ; Retrieve Rates Tags
+    Local $aRates = _KismetDB_GenerateRatesTags($sRatesHex) ; Passing the combined string to helper which splits it? No, refactor helper.
+    
+    ; Supported Rates (Tag 1)
+    $sHex &= $aRates[0]
+    
+    ; Current Channel (Tag 3) - Only for 2.4GHz (1-14)
+    If $iChannel <= 14 Then
+        $sHex &= "0301" & Hex($iChannel, 2)
+    EndIf
+    
+    ; Extended Supported Rates (Tag 50)
+    $sHex &= $aRates[1]
+    
+    Return $sHex
+EndFunc
+
+; Helper to Generate Rates Hex Strings (Tag 1 and Tag 50)
+; Returns an Array [Tag1HexHeader+Body, Tag50HexHeader+Body]
+Func _KismetDB_GenerateRatesTags($sBasicRates, $sOtherRates = "")
+    Local $sTag1 = ""
+    Local $sTag50 = ""
+    Local $iTag1Len = 0
+    Local $iTag50Len = 0
+    
+    ; Support legacy call where single string is passed? No, caller changed.
+    ; If sOtherRates is empty, split sBasicRates?
+    If $sOtherRates = "" And StringInStr($sBasicRates, "|") Then
+        Local $aSplit = StringSplit($sBasicRates, "|")
+        $sBasicRates = $aSplit[1]
+        $sOtherRates = $aSplit[2]
+    EndIf
+    
+    ; Clean input
+    $sBasicRates = StringReplace($sBasicRates, " ", "")
+    $sOtherRates = StringReplace($sOtherRates, " ", "")
+    
+    Local $aBasic = StringSplit($sBasicRates, ",")
+    Local $aOther = StringSplit($sOtherRates, ",")
+    
+    ; Process Basic Rates (Tag 1 - Supported Rates) -> Max 8 bytes
+    For $i = 1 To $aBasic[0]
+        If $aBasic[$i] == "" Then ContinueLoop
+        Local $iRate = Number($aBasic[$i]) * 2
+        ; Set Basic Rate Bit (0x80)
+        $iRate = BitOR($iRate, 128)
+        
+        If $iTag1Len < 8 Then
+            $sTag1 &= Hex($iRate, 2)
+            $iTag1Len += 1
+        Else
+            $sTag50 &= Hex($iRate, 2)
+            $iTag50Len += 1
+        EndIf
+    Next
+    
+    ; Process Other Rates (Tag 50 - Extended Supported Rates)
+    For $i = 1 To $aOther[0]
+        If $aOther[$i] == "" Then ContinueLoop
+        Local $iRate = Number($aOther[$i]) * 2
+        
+        If $iTag1Len < 8 Then
+             ; If we haven't filled Tag 1, put it there (Bit 7 cleared)
+            $sTag1 &= Hex($iRate, 2)
+            $iTag1Len += 1
+        Else
+            $sTag50 &= Hex($iRate, 2)
+            $iTag50Len += 1
+        EndIf
+    Next
+    
+    Local $sRetTag1 = ""
+    Local $sRetTag50 = ""
+
+    ; If no rates found, use default
+    If $iTag1Len = 0 Then
+         $sRetTag1 = "010882848b960c121824" ; Default: 1(B), 2(B), 5.5(B), 11(B), 6, 9, 12, 18
+    Else
+         $sRetTag1 = "01" & Hex($iTag1Len, 2) & $sTag1
+    EndIf
+    
+    If $iTag50Len > 0 Then
+        $sRetTag50 = "32" & Hex($iTag50Len, 2) & $sTag50
+    EndIf
+    
+    Local $aRet[2]
+    $aRet[0] = $sRetTag1
+    $aRet[1] = $sRetTag50
+    
+    Return $aRet
+EndFunc
+
+; Helper to Swap Endianness (2 chars per byte)
+Func _KismetDB_HexSwap($sHex)
+    Local $sRet = ""
+    Local $iLen = StringLen($sHex)
+    For $i = $iLen - 1 To 1 Step -2
+        $sRet &= StringMid($sHex, $i, 2)
+    Next
+    Return $sRet
+EndFunc
+
+; Helper string to hex
+Func _KismetDB_StringToHex($sString)
+    Local $sHex = ""
+    For $i = 1 To StringLen($sString)
+        $sHex &= Hex(Asc(StringMid($sString, $i, 1)), 2)
+    Next
+    Return $sHex
 EndFunc
 
 ; ===============================================================================================================================
@@ -123,21 +325,93 @@ Func _KismetDB_Close($hDB)
     _SQLite_Close($hDB)
 EndFunc
 
+; Function Name:    _KismetDB_GetCryptBitfield
+; Description:      Converts encryption string to Kismet Bitfield
+; ===============================================================================================================================
+Func _KismetDB_GetCryptBitfield($sAuth, $sEncr)
+    ; Bit definitions from Kismet packet_ieee80211.h
+    Local $dot11_crypt_general_wep          = 1 
+    Local $dot11_crypt_general_wpa          = 2
+    Local $dot11_crypt_general_wpa1         = 4
+    Local $dot11_crypt_general_wpa2         = 8
+    
+    Local $dot11_crypt_group_wep104         = 256
+    Local $dot11_crypt_group_tkip           = 512
+    Local $dot11_crypt_group_ccmp128        = 1024
+    
+    Local $dot11_crypt_pairwise_wep104      = 16777216
+    Local $dot11_crypt_pairwise_tkip        = 33554432
+    Local $dot11_crypt_pairwise_ccmp128     = 67108864
+    
+    Local $dot11_crypt_akm_1x               = 137438953472
+    Local $dot11_crypt_akm_psk              = 274877906944
+    
+    Local $iBitfield = 0
+    
+    If StringInStr($sEncr, "WEP") Then
+        $iBitfield = BitOR($iBitfield, $dot11_crypt_general_wep, $dot11_crypt_group_wep104, $dot11_crypt_pairwise_wep104)
+    EndIf
+    
+    If StringInStr($sEncr, "CCMP") Or StringInStr($sEncr, "AES") Then
+        $iBitfield = BitOR($iBitfield, $dot11_crypt_group_ccmp128, $dot11_crypt_pairwise_ccmp128)
+    EndIf
+    
+    If StringInStr($sEncr, "TKIP") Then
+        $iBitfield = BitOR($iBitfield, $dot11_crypt_group_tkip, $dot11_crypt_pairwise_tkip)
+    EndIf
+    
+    If StringInStr($sAuth, "WPA2") Or StringInStr($sEncr, "WPA2") Then
+        $iBitfield = BitOR($iBitfield, $dot11_crypt_general_wpa, $dot11_crypt_general_wpa2)
+        If StringInStr($sAuth, "PSK") Or StringInStr($sAuth, "Personal") Then
+            $iBitfield = BitOR($iBitfield, $dot11_crypt_akm_psk)
+        Else
+            $iBitfield = BitOR($iBitfield, $dot11_crypt_akm_1x)
+        EndIf
+    ElseIf StringInStr($sAuth, "WPA") Or StringInStr($sEncr, "WPA") Then
+         $iBitfield = BitOR($iBitfield, $dot11_crypt_general_wpa, $dot11_crypt_general_wpa1)
+         If StringInStr($sAuth, "PSK") Or StringInStr($sAuth, "Personal") Then
+            $iBitfield = BitOR($iBitfield, $dot11_crypt_akm_psk)
+        Else
+            $iBitfield = BitOR($iBitfield, $dot11_crypt_akm_1x)
+        EndIf
+    EndIf
+    
+    Return $iBitfield
+EndFunc
+
 ; ===============================================================================================================================
 ; Function Name:    _KismetDB_GenerateDeviceJSON
-; Description:      Generates a basic Device JSON structure
+; Description:      Generates a basic Device JSON structure with Dot11 extensions
 ; ===============================================================================================================================
-Func _KismetDB_GenerateDeviceJSON($devkey, $devmac, $type, $phyname, $ssid, $channel, $manuf, $encryption)
-    Local $oDev = _JSONObject()
-    $oDev.Item("kismet.device.base.key") = $devkey
-    $oDev.Item("kismet.device.base.mac") = $devmac
-    $oDev.Item("kismet.device.base.name") = $ssid
-    $oDev.Item("kismet.device.base.phyname") = $phyname
-    $oDev.Item("kismet.device.base.manuf") = $manuf
-    $oDev.Item("kismet.device.base.channel") = $channel
-    $oDev.Item("kismet.device.base.encryption") = $encryption
-    $oDev.Item("kismet.device.base.type") = $type
-    $oDev.Item("kismet.device.base.commonname") = $ssid
+Func _KismetDB_GenerateDeviceJSON($devkey, $devmac, $type, $phyname, $ssid, $channel, $manuf, $encryption, $iCryptSet)
+    ; Create the Advertised SSID Record
+    Local $oSSIDRecord = _JSONObject( _
+        "dot11.advertisedssid.ssid", $ssid, _
+        "dot11.advertisedssid.length", StringLen($ssid), _
+        "dot11.advertisedssid.crypt_bitfield", $iCryptSet, _
+        "dot11.advertisedssid.beacon_info", "" _
+    )
+
+    ; Create the Dot11 Device Object
+    Local $oDot11 = _JSONObject( _
+        "dot11.device.last_beaconed_ssid", $ssid, _
+        "dot11.device.last_beaconed_ssid_record", $oSSIDRecord, _
+        "dot11.device.num_advertised_ssids", 1 _
+    )
+    
+    ; Create the Base Device Object and nest the Dot11 Object
+    Local $oDev = _JSONObject( _
+        "kismet.device.base.key", $devkey, _
+        "kismet.device.base.mac", $devmac, _
+        "kismet.device.base.name", $ssid, _
+        "kismet.device.base.phyname", $phyname, _
+        "kismet.device.base.manuf", $manuf, _
+        "kismet.device.base.channel", $channel, _
+        "kismet.device.base.encryption", $encryption, _
+        "kismet.device.base.type", $type, _
+        "kismet.device.base.commonname", $ssid, _
+        "dot11.device", $oDot11 _
+    )
     
     Return _JSONEncode($oDev)
 EndFunc
