@@ -240,22 +240,45 @@ jobs:
           # Create portable zip: copy tree, set PortableMode=1 in Settings\vistumbler_settings.ini, then zip
           $portableTemp = Join-Path $PWD 'temp_portable'
           if (Test-Path $portableTemp) { Remove-Item -Recurse -Force $portableTemp }
+          New-Item -ItemType Directory -Path $portableTemp -Force | Out-Null
           Copy-Item -Path 'VistumblerMDB' -Destination $portableTemp -Recurse
           $settingsPath = Join-Path $portableTemp 'VistumblerMDB\Settings\vistumbler_settings.ini'
           if (Test-Path $settingsPath) {
-            $ini = Get-Content $settingsPath -Raw
-            if ($ini -match '(?ms)^(\[Vistumbler\].*?)(?=\r?\n\[[^\]]+\]|$)') {
-              $section = $matches[1]
-              if ($section -match '(?m)^\s*PortableMode\s*=') {
-                $newSection = ($section -replace '(?m)^\s*PortableMode\s*=.*$', 'PortableMode=1')
-              } else {
-                $newSection = $section + "`r`nPortableMode=1"
+            $lines = @(Get-Content $settingsPath)
+            $newLines = @()
+            $inVistumbler = $false
+            $found = $false
+            $vistumblerFound = $false
+            foreach ($line in $lines) {
+              if ($line -match '^\s*\[Vistumbler\]') {
+                $inVistumbler = $true
+                $vistumblerFound = $true
+                $newLines += $line
+                continue
               }
-              $ini = $ini -replace '(?ms)^(\[Vistumbler\].*?)(?=\r?\n\[[^\]]+\]|$)', $newSection
-            } else {
-              $ini = "[Vistumbler]`r`nPortableMode=1`r`n" + $ini
+              if ($line -match '^\s*\[') { $inVistumbler = $false }
+              if ($inVistumbler -and $line -match '^\s*PortableMode\s*=') {
+                $newLines += 'PortableMode=1'
+                $found = $true
+              } else {
+                $newLines += $line
+              }
             }
-            Set-Content -Path $settingsPath -Value $ini -Encoding UTF8
+            if (-not $found) {
+              if ($vistumblerFound) {
+                 $final = @()
+                 foreach ($l in $newLines) {
+                   $final += $l
+                   if ($l -match '^\s*\[Vistumbler\]') { $final += 'PortableMode=1' }
+                 }
+                 $newLines = $final
+              } else {
+                 $newLines += ''
+                 $newLines += '[Vistumbler]'
+                 $newLines += 'PortableMode=1'
+              }
+            }
+            $newLines | Set-Content -Path $settingsPath -Encoding UTF8
           } else {
             New-Item -ItemType Directory -Path (Split-Path $settingsPath -Parent) -Force | Out-Null
             "[Vistumbler]`r`nPortableMode=1" | Out-File -FilePath $settingsPath -Encoding utf8
