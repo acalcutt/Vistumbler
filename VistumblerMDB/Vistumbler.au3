@@ -46,6 +46,8 @@ HttpSetUserAgent($Script_Name & ' ' & $version)
 #include "UDFs\cfxUDF.au3"
 #include "UDFs\HTTP.au3"
 #include "UDFs\JSON.au3"
+#include "UDFs\KismetDB.au3"
+#include "UDFs\NetXML.au3"
 #include "UDFs\MD5.au3"
 #include "UDFs\NativeWifi.au3"
 #include "UDFs\ParseCSV.au3"
@@ -1343,6 +1345,12 @@ $ExportGpxMenu = GUICtrlCreateMenu($Text_ExportToGPX, $Export)
 $ExportToGPX = GUICtrlCreateMenuItem($Text_AllAPs, $ExportGpxMenu)
 $ExportNS1Menu = GUICtrlCreateMenu($Text_ExportToNS1, $Export)
 $ExportToNS1 = GUICtrlCreateMenuItem($Text_AllAPs, $ExportNS1Menu)
+Global $ExportKismetDbMenu = GUICtrlCreateMenu("Export to KismetDB", $Export)
+Global $ExportToKismetDB = GUICtrlCreateMenuItem($Text_AllAPs, $ExportKismetDbMenu)
+Global $ExportToFilKismetDB = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportKismetDbMenu)
+Global $ExportNetXmlMenu = GUICtrlCreateMenu("Export to NetXML", $Export)
+Global $ExportToNetXML = GUICtrlCreateMenuItem($Text_AllAPs, $ExportNetXmlMenu)
+Global $ExportToFilNetXML = GUICtrlCreateMenuItem($Text_FilteredAPs, $ExportNetXmlMenu)
 ;$ExportCamFile = GUICtrlCreateMenuItem("Export cam file", $Export)
 $ExitSaveDB = GUICtrlCreateMenuItem($Text_ExitSaveDb, $file)
 $ExitVistumbler = GUICtrlCreateMenuItem($Text_Exit, $file)
@@ -1608,6 +1616,10 @@ GUICtrlSetOnEvent($ExportToFilKML, '_ExportFilteredKML')
 GUICtrlSetOnEvent($CreateApSignalMap, '_KmlSignalMapSelectedAP')
 GUICtrlSetOnEvent($ExportToGPX, '_SaveToGPX')
 GUICtrlSetOnEvent($ExportToNS1, '_ExportNS1')
+GUICtrlSetOnEvent($ExportToKismetDB, "_ExportKismetDB")
+GUICtrlSetOnEvent($ExportToFilKismetDB, "_ExportFilKismetDB")
+GUICtrlSetOnEvent($ExportToNetXML, "_ExportNetXML")
+GUICtrlSetOnEvent($ExportToFilNetXML, "_ExportFilNetXML")
 ;GUICtrlSetOnEvent($ExportCamFile, '_ExportCamFile')
 GUICtrlSetOnEvent($ExitSaveDB, '_ExitSaveDB')
 GUICtrlSetOnEvent($ExitVistumbler, '_CloseToggle')
@@ -13943,3 +13955,148 @@ Func _ImportSettings()
 		EndIf
 	EndIf
 EndFunc   ;==>_ImportSettings
+
+; ===============================================================================================================================
+; Export KismetDB and NetXML
+; ===============================================================================================================================
+
+Func _ExportKismetDB()
+    _ExportKismetDB_Common(0)
+EndFunc
+
+Func _ExportFilKismetDB()
+    _ExportKismetDB_Common(1)
+EndFunc
+
+Func _ExportKismetDB_Common($iFilter)
+    Local $sFile = FileSaveDialog("Export to KismetDB", $SaveDir, "KismetDB (*.kismet)", 18, $ldatetimestamp & ".kismet")
+    If @error Then Return
+
+    If StringRight($sFile, 7) <> ".kismet" Then $sFile &= ".kismet"
+    
+    Local $hDB = _KismetDB_Create($sFile)
+    If $hDB = 0 Then
+        MsgBox(16, "Error", "Failed to create KismetDB file.")
+        Return
+    EndIf
+    
+    Local $sQuery
+    If $iFilter = 1 Then
+        $sQuery = $AddQuery
+    Else
+        $sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+    EndIf
+    
+    Local $aAPs = _RecordSearch($VistumblerDB, $sQuery, $DB_OBJ)
+    Local $iCount = UBound($aAPs) - 1
+    
+    For $i = 1 To $iCount
+        GUICtrlSetData($msgdisplay, "Exporting KismetDB " & $i & " / " & $iCount)
+        
+        Local $sBSSID = $aAPs[$i][3]
+        Local $sSSID = $aAPs[$i][2]
+        Local $sManuf = $aAPs[$i][14]
+        Local $iChannel = $aAPs[$i][6]
+        Local $sAuth = $aAPs[$i][7]
+        Local $sEncr = $aAPs[$i][8]
+        Local $sType = "Wi-Fi"
+        If $aAPs[$i][4] = "Infrastructure" Then
+             $sType = "Wi-Fi AP"
+        Else
+             $sType = "Wi-Fi Ad-Hoc"
+        EndIf
+        
+        ; Get High Signal GPS
+        Local $iHighGpsID = $aAPs[$i][16]
+        Local $fLat = 0, $fLon = 0, $fAlt = 0
+        
+        If $iHighGpsID <> 0 Then
+            Local $sGpsQuery = "SELECT Latitude, Longitude, Alt FROM GPS WHERE GpsID=" & $iHighGpsID
+            Local $aGps = _RecordSearch($VistumblerDB, $sGpsQuery, $DB_OBJ)
+            if UBound($aGps) > 1 Then
+                $fLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
+                $fLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
+                $fAlt = $aGps[1][3]
+            EndIf
+        EndIf
+        
+        ; Sanitize Lat/Lon string to float
+        $fLat = Number(StringReplace(StringReplace(StringReplace($fLat, "N", ""), "S", "-"), " ", ""))
+        $fLon = Number(StringReplace(StringReplace(StringReplace($fLon, "E", ""), "W", "-"), " ", ""))
+        
+        Local $sDevJson = _KismetDB_GenerateDeviceJSON($sBSSID, $sBSSID, $sType, "IEEE802.11", $sSSID, $iChannel, $sManuf, $sAuth & "/" & $sEncr)
+        
+        _KismetDB_AddDevice($hDB, 0, 0, $sBSSID, "IEEE802.11", $sBSSID, $aAPs[$i][12], $fLat, $fLon, $fLat, $fLon, $fLat, $fLon, 0, $sType, $sDevJson)
+    Next
+    
+    _KismetDB_Close($hDB)
+    MsgBox(0, "Export Complete", "Exported " & $iCount & " APs to KismetDB.")
+EndFunc
+
+Func _ExportNetXML()
+    _ExportNetXML_Common(0)
+EndFunc
+
+Func _ExportFilNetXML()
+    _ExportNetXML_Common(1)
+EndFunc
+
+Func _ExportNetXML_Common($iFilter)
+    Local $sFile = FileSaveDialog("Export to NetXML", $SaveDir, "NetXML (*.netxml)", 18, $ldatetimestamp & ".netxml")
+    If @error Then Return
+
+    If StringRight($sFile, 7) <> ".netxml" Then $sFile &= ".netxml"
+    
+    _NetXML_Create()
+    
+    Local $sQuery
+    If $iFilter = 1 Then
+        $sQuery = $AddQuery
+    Else
+        $sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+    EndIf
+    
+    Local $aAPs = _RecordSearch($VistumblerDB, $sQuery, $DB_OBJ)
+    Local $iCount = UBound($aAPs) - 1
+    
+    For $i = 1 To $iCount
+        GUICtrlSetData($msgdisplay, "Exporting NetXML " & $i & " / " & $iCount)
+        
+        Local $sBSSID = $aAPs[$i][3]
+        Local $sSSID = $aAPs[$i][2]
+        Local $sManuf = $aAPs[$i][14]
+        Local $iChannel = $aAPs[$i][6]
+        Local $sAuth = $aAPs[$i][7]
+        Local $sEncr = $aAPs[$i][8]
+        Local $sType = "infrastructure"
+        If $aAPs[$i][4] <> "Infrastructure" Then $sType = "ad-hoc"
+        
+        Local $iHighSig = $aAPs[$i][12]
+        
+        ; Get High Signal GPS
+        Local $iHighGpsID = $aAPs[$i][16]
+        Local $fLat = 0, $fLon = 0, $fAlt = 0, $fSpeed = 0
+        Local $sFirstTime = "", $sLastTime = ""
+        
+        If $iHighGpsID <> 0 Then
+            Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, SpeedInMPH, Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID
+            Local $aGps = _RecordSearch($VistumblerDB, $sGpsQuery, $DB_OBJ)
+            if UBound($aGps) > 1 Then
+                $fLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
+                $fLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
+                $fAlt = $aGps[1][3]
+                $fSpeed = $aGps[1][4]
+                $sLastTime = $aGps[1][5] & " " & $aGps[1][6]
+            EndIf
+        EndIf
+        
+         ; Sanitize Lat/Lon string to float
+        $fLat = Number(StringReplace(StringReplace(StringReplace($fLat, "N", ""), "S", "-"), " ", ""))
+        $fLon = Number(StringReplace(StringReplace(StringReplace($fLon, "E", ""), "W", "-"), " ", ""))
+        
+        _NetXML_AddNetwork($sBSSID, $sSSID, $sManuf, $iChannel, 0, $sType, $sAuth & "-" & $sEncr, "false", $sLastTime, $sLastTime, 54, $iHighSig, $iHighSig, 0, $fLat, $fLon, $fAlt, $fSpeed)
+    Next
+    
+    _NetXML_Save($sFile)
+    MsgBox(0, "Export Complete", "Exported " & $iCount & " APs to NetXML.")
+EndFunc
