@@ -131,14 +131,15 @@ EndFunc
 ; ===============================================================================================================================
 ; Function Name:    _KismetDB_GenerateRadiotapBeacon
 ; Description:      Generates a Hex String of a Radiotap Header + 802.11 Beacon Frame
+;                   with proper IE tags for SSID, Channel, Encryption (RSN/WPA)
 ; ===============================================================================================================================
-Func _KismetDB_GenerateRadiotapBeacon($sBSSID, $sSSID, $iChannel, $iFreq, $iSignal, $sRatesHex, $iPrivacy = 0)
+Func _KismetDB_GenerateRadiotapBeacon($sBSSID, $sSSID, $iChannel, $iFreq, $iSignal, $sRatesHex, $iPrivacy = 0, $sAuth = "", $sEncr = "")
     Local $sHex = ""
     
     ; --- Radiotap Header ---
     ; Ver(1) + Pad(1) + Len(2) + Present(4)
     ; Channel(4) + Signal(1)
-    ; Total Header Length = 8 + 4 + 1 = 13 bytes. Pad to 13?
+    ; Total Header Length = 8 + 4 + 1 = 13 bytes
     ; Radiotap fields:
     ; Channel (Bit 3) = 2 bytes freq + 2 bytes flags
     ; Signal (Bit 5) = 1 byte dBm
@@ -148,24 +149,23 @@ Func _KismetDB_GenerateRadiotapBeacon($sBSSID, $sSSID, $iChannel, $iFreq, $iSign
     ; Header: Ver=0, Pad=0, Len=13, Present=0x28 (Chan+Sig) -> Little Endian 28 00 00 00
     $sHex &= "0000" & _KismetDB_HexSwap(Hex($iHeaderLen, 4)) & "28000000"
     
-    ; Field: Channel (Freq 2 bytes, Flags 2 bytes)
-    ; Flags: 0x0140 (2GHz + OFDM) or 0x00A0 (5GHz + OFDM) ?. Let's use 0x0000 for generic.
-    ; 0x00A0 = Turbo? 0x0100 = 2GHz?
-    ; Let's just put Freq and 0 flags.
-    $sHex &= _KismetDB_HexSwap(Hex($iFreq, 4)) & "0000"
+    ; Field: Channel (Freq 2 bytes LE, Flags 2 bytes LE)
+    ; Channel flags: 0x00A0 = 5GHz+OFDM, 0x00B0 = 2GHz+CCK, 0x00C0 = 2GHz+OFDM
+    Local $iChanFlags = 0x0000
+    If $iChannel <= 14 Then
+        $iChanFlags = 0x00B0 ; 2GHz + CCK
+    Else
+        $iChanFlags = 0x0140 ; 5GHz + OFDM
+    EndIf
+    $sHex &= _KismetDB_HexSwap(Hex(Int($iFreq), 4)) & _KismetDB_HexSwap(Hex(Int($iChanFlags), 4))
     
-    ; Field: Signal (1 byte signed). Hex() handles negatives as 2s compliment 8 chars, we need 2 chars.
+    ; Field: Signal (1 byte signed dBm)
     Local $hSig = Hex($iSignal, 2)
     $sHex &= $hSig
     
     ; --- 802.11 Beacon Frame ---
     
-    ; Frame Control: 0x8000 (Beacon, Ver 0, No flags) -> LE: 80 00? No, 0x80 is type 8 (Beacon).
-    ; Type 0 (Mgmt), Subtype 8 (Beacon). 
-    ; Bits: Protocol(2) Type(2) Subtype(4) ...
-    ; 00 00 1000 ... 
-    ; Byte 0: ..Subtype..Type..Ver -> 1000 00 00 -> 0x80
-    ; Byte 1: Flags -> 0x00
+    ; Frame Control: Type 0 (Mgmt), Subtype 8 (Beacon) = 0x80, Flags 0x00
     $sHex &= "8000"
     
     ; Duration: 0
@@ -185,42 +185,175 @@ Func _KismetDB_GenerateRadiotapBeacon($sBSSID, $sSSID, $iChannel, $iFreq, $iSign
     ; Seq Ctrl: 0
     $sHex &= "0000"
     
-    ; Frame Body
+    ; --- Frame Body ---
     
-    ; Timestamp (8 bytes). Just 0.
+    ; Timestamp (8 bytes)
     $sHex &= "0000000000000000"
     
-    ; Beacon Interval (2 bytes). 100 TU (0x0064) -> LE: 64 00
+    ; Beacon Interval (2 bytes LE). 100 TU (0x0064)
     $sHex &= "6400"
     
-    ; Capabilities (2 bytes). 
+    ; Capabilities (2 bytes LE).
     ; ESS (0x0001) + Short Preamble (0x0020) = 0x0021
     ; If Privacy (Bit 4, 0x0010), then 0x0031
     Local $iCap = 0x0021
     If $iPrivacy Then $iCap = 0x0031
     $sHex &= _KismetDB_HexSwap(Hex($iCap, 4))
     
-    ; SSID Parameter (Tag 0)
-    ; Tag(1) + Len(1) + SSID
+    ; --- Information Elements ---
+    
+    ; IE 0: SSID Parameter Set
     Local $sSSIDHex = _KismetDB_StringToHex($sSSID)
-    Local $iSSIDLen = StringLen($sSSIDHex) / 2
+    Local $iSSIDLen = Int(StringLen($sSSIDHex) / 2)
     $sHex &= "00" & Hex($iSSIDLen, 2) & $sSSIDHex
 
     ; Retrieve Rates Tags
-    Local $aRates = _KismetDB_GenerateRatesTags($sRatesHex) ; Passing the combined string to helper which splits it? No, refactor helper.
+    Local $aRates = _KismetDB_GenerateRatesTags($sRatesHex)
     
-    ; Supported Rates (Tag 1)
+    ; IE 1: Supported Rates
     $sHex &= $aRates[0]
     
-    ; Current Channel (Tag 3) - Only for 2.4GHz (1-14)
-    If $iChannel <= 14 Then
-        $sHex &= "0301" & Hex($iChannel, 2)
+    ; IE 3: DS Parameter Set (Channel) - Added for ALL channels
+    ; Kismet reads channel from this IE tag; for 5GHz channels > 255, use modulo
+    $sHex &= "0301" & Hex(BitAND($iChannel, 0xFF), 2)
+    
+    ; IE 50: Extended Supported Rates
+    If $aRates[1] <> "" Then
+        $sHex &= $aRates[1]
     EndIf
     
-    ; Extended Supported Rates (Tag 50)
-    $sHex &= $aRates[1]
+    ; IE 48: RSN Information Element (for WPA2/WPA3)
+    If StringInStr($sAuth, "WPA2") Or StringInStr($sEncr, "WPA2") Or StringInStr($sAuth, "WPA3") Or StringInStr($sEncr, "WPA3") Then
+        $sHex &= _KismetDB_GenerateRSN_IE($sAuth, $sEncr)
+    EndIf
+    
+    ; IE 221: Vendor Specific - WPA (for WPA1)
+    If (StringInStr($sAuth, "WPA") And Not StringInStr($sAuth, "WPA2") And Not StringInStr($sAuth, "WPA3")) Or _
+       (StringInStr($sEncr, "WPA") And Not StringInStr($sEncr, "WPA2") And Not StringInStr($sEncr, "WPA3")) Then
+        $sHex &= _KismetDB_GenerateWPA_VendorIE($sAuth, $sEncr)
+    EndIf
+    
+    ; Handle mixed WPA/WPA2 - if Auth contains both "WPA2" and "WPA", add both
+    If StringInStr($sAuth, "WPA2") And StringInStr($sAuth, "WPA") And StringInStr($sAuth, "/") Then
+        ; WPA2 RSN IE already added above, add WPA1 vendor IE too
+        If Not (StringInStr($sAuth, "WPA") And Not StringInStr($sAuth, "WPA2")) Then
+            $sHex &= _KismetDB_GenerateWPA_VendorIE($sAuth, $sEncr)
+        EndIf
+    EndIf
     
     Return $sHex
+EndFunc
+
+; ===============================================================================================================================
+; Function Name:    _KismetDB_GenerateRSN_IE
+; Description:      Generates IE Tag 48 (RSN Information Element) for WPA2
+;                   Binary format: Version(2) + GroupCipher(4) + PairwiseCount(2) + PairwiseCiphers(4*N)
+;                                  + AKMCount(2) + AKMSuites(4*M) + RSNCapabilities(2)
+;                   OUI for RSN: 00:0F:AC
+;                   Cipher types: 2=TKIP, 4=CCMP
+;                   AKM types: 1=802.1X, 2=PSK
+; ===============================================================================================================================
+Func _KismetDB_GenerateRSN_IE($sAuth, $sEncr)
+    Local $sBody = ""
+    Local $sRsnOUI = "000FAC"
+    
+    ; RSN Version: 1 (LE)
+    $sBody &= "0100"
+    
+    ; Group Cipher Suite: OUI + Type
+    If StringInStr($sEncr, "CCMP") Or StringInStr($sEncr, "AES") Then
+        $sBody &= $sRsnOUI & "04" ; CCMP-128
+    ElseIf StringInStr($sEncr, "TKIP") Then
+        $sBody &= $sRsnOUI & "02" ; TKIP
+    Else
+        $sBody &= $sRsnOUI & "04" ; Default to CCMP
+    EndIf
+    
+    ; Pairwise Cipher Suite Count: 1 (LE)
+    $sBody &= "0100"
+    
+    ; Pairwise Cipher Suite: OUI + Type
+    If StringInStr($sEncr, "CCMP") Or StringInStr($sEncr, "AES") Then
+        $sBody &= $sRsnOUI & "04" ; CCMP-128
+    ElseIf StringInStr($sEncr, "TKIP") Then
+        $sBody &= $sRsnOUI & "02" ; TKIP
+    Else
+        $sBody &= $sRsnOUI & "04" ; Default to CCMP
+    EndIf
+    
+    ; AKM Suite Count: 1 (LE)
+    $sBody &= "0100"
+    
+    ; AKM Suite: OUI + Type
+    If StringInStr($sAuth, "WPA3") And (StringInStr($sAuth, "PSK") Or StringInStr($sAuth, "Personal")) Then
+        $sBody &= $sRsnOUI & "08" ; SAE (WPA3-Personal)
+    ElseIf StringInStr($sAuth, "PSK") Or StringInStr($sAuth, "Personal") Then
+        $sBody &= $sRsnOUI & "02" ; PSK
+    Else
+        $sBody &= $sRsnOUI & "01" ; 802.1X (Enterprise)
+    EndIf
+    
+    ; RSN Capabilities: 0x0000
+    $sBody &= "0000"
+    
+    ; Tag header: Tag=48 (0x30), Length
+    Local $iBodyLen = Int(StringLen($sBody) / 2)
+    Return "30" & Hex($iBodyLen, 2) & $sBody
+EndFunc
+
+; ===============================================================================================================================
+; Function Name:    _KismetDB_GenerateWPA_VendorIE
+; Description:      Generates IE Tag 221 (Vendor Specific) for WPA1
+;                   OUI: 00:50:F2, Type: 01
+;                   Binary: OUI(3) + OUIType(1) + Version(2) + MulticastCipher(4)
+;                           + UnicastCount(2) + UnicastCiphers(4*N) + AKMCount(2) + AKMSuites(4*M)
+;                   Cipher types: 2=TKIP, 4=CCMP
+;                   AKM types: 1=802.1X, 2=PSK
+; ===============================================================================================================================
+Func _KismetDB_GenerateWPA_VendorIE($sAuth, $sEncr)
+    Local $sBody = ""
+    Local $sWpaOUI = "0050F2"
+    
+    ; OUI + OUI Type (WPA)
+    $sBody &= $sWpaOUI & "01"
+    
+    ; WPA Version: 1 (LE)
+    $sBody &= "0100"
+    
+    ; Multicast Cipher Suite: OUI + Type
+    If StringInStr($sEncr, "TKIP") Then
+        $sBody &= $sWpaOUI & "02" ; TKIP
+    ElseIf StringInStr($sEncr, "CCMP") Or StringInStr($sEncr, "AES") Then
+        $sBody &= $sWpaOUI & "04" ; CCMP
+    Else
+        $sBody &= $sWpaOUI & "02" ; Default to TKIP for WPA1
+    EndIf
+    
+    ; Unicast Cipher Suite Count: 1 (LE)
+    $sBody &= "0100"
+    
+    ; Unicast Cipher Suite: OUI + Type
+    If StringInStr($sEncr, "TKIP") Then
+        $sBody &= $sWpaOUI & "02" ; TKIP
+    ElseIf StringInStr($sEncr, "CCMP") Or StringInStr($sEncr, "AES") Then
+        $sBody &= $sWpaOUI & "04" ; CCMP
+    Else
+        $sBody &= $sWpaOUI & "02" ; Default to TKIP
+    EndIf
+    
+    ; AKM Suite Count: 1 (LE)
+    $sBody &= "0100"
+    
+    ; AKM Suite: OUI + Type
+    If StringInStr($sAuth, "PSK") Or StringInStr($sAuth, "Personal") Then
+        $sBody &= $sWpaOUI & "02" ; PSK
+    Else
+        $sBody &= $sWpaOUI & "01" ; 802.1X
+    EndIf
+    
+    ; Tag header: Tag=221 (0xDD), Length
+    Local $iBodyLen = Int(StringLen($sBody) / 2)
+    Return "DD" & Hex($iBodyLen, 2) & $sBody
 EndFunc
 
 ; Helper to Generate Rates Hex Strings (Tag 1 and Tag 50)
@@ -249,7 +382,7 @@ Func _KismetDB_GenerateRatesTags($sBasicRates, $sOtherRates = "")
     ; Process Basic Rates (Tag 1 - Supported Rates) -> Max 8 bytes
     For $i = 1 To $aBasic[0]
         If $aBasic[$i] == "" Then ContinueLoop
-        Local $iRate = Number($aBasic[$i]) * 2
+        Local $iRate = Int(Number($aBasic[$i]) * 2)
         ; Set Basic Rate Bit (0x80)
         $iRate = BitOR($iRate, 128)
         
@@ -265,7 +398,7 @@ Func _KismetDB_GenerateRatesTags($sBasicRates, $sOtherRates = "")
     ; Process Other Rates (Tag 50 - Extended Supported Rates)
     For $i = 1 To $aOther[0]
         If $aOther[$i] == "" Then ContinueLoop
-        Local $iRate = Number($aOther[$i]) * 2
+        Local $iRate = Int(Number($aOther[$i]) * 2)
         
         If $iTag1Len < 8 Then
              ; If we haven't filled Tag 1, put it there (Bit 7 cleared)
@@ -383,35 +516,63 @@ EndFunc
 ; Function Name:    _KismetDB_GenerateDeviceJSON
 ; Description:      Generates a basic Device JSON structure with Dot11 extensions
 ; ===============================================================================================================================
-Func _KismetDB_GenerateDeviceJSON($devkey, $devmac, $type, $phyname, $ssid, $channel, $manuf, $encryption, $iCryptSet)
+Func _KismetDB_GenerateDeviceJSON($devkey, $devmac, $type, $phyname, $ssid, $channel, $manuf, $encryption, $iCryptSet, $iFreqKhz = 0)
+    ; Compute SSID checksum for the advertised_ssid_map key
+    ; Kismet uses xxHash of ssid+length but for compatibility we use a simple hash
+    Local $iSSIDCsum = 0
+    For $c = 1 To StringLen($ssid)
+        $iSSIDCsum = BitXOR($iSSIDCsum * 31, Asc(StringMid($ssid, $c, 1)))
+    Next
+    If $iSSIDCsum < 0 Then $iSSIDCsum = $iSSIDCsum * -1
+    Local $sSSIDCsumKey = String($iSSIDCsum)
+
     ; Create the Advertised SSID Record
     Local $oSSIDRecord = _JSONObject( _
         "dot11.advertisedssid.ssid", $ssid, _
+        "dot11.advertisedssid.ssidlen", StringLen($ssid), _
+        "dot11.advertisedssid.ssid_len", StringLen($ssid), _
         "dot11.advertisedssid.length", StringLen($ssid), _
+        "dot11.advertisedssid.crypt_set", $iCryptSet, _
         "dot11.advertisedssid.crypt_bitfield", $iCryptSet, _
-        "dot11.advertisedssid.beacon_info", "" _
+        "dot11.advertisedssid.channel", String($channel), _
+        "dot11.advertisedssid.beacon_info", "", _
+        "dot11.advertisedssid.first_time", 0, _
+        "dot11.advertisedssid.last_time", 0 _
     )
+
+    ; Create the Advertised SSID Map (keyed by ssid checksum)
+    Local $oSSIDMap = _JSONObject($sSSIDCsumKey, $oSSIDRecord)
 
     ; Create the Dot11 Device Object
     Local $oDot11 = _JSONObject( _
         "dot11.device.last_beaconed_ssid", $ssid, _
         "dot11.device.last_beaconed_ssid_record", $oSSIDRecord, _
-        "dot11.device.num_advertised_ssids", 1 _
+        "dot11.device.last_beaconed_ssid_checksum", $iSSIDCsum, _
+        "dot11.device.num_advertised_ssids", 1, _
+        "dot11.device.advertised_ssid_map", $oSSIDMap _
     )
-    
+
+    ; Channel as string (Kismet stores channel as string)
+    Local $sChannel = String($channel)
+
+    ; Frequency info
+    Local $oFreqMap = _JSONObject(String($iFreqKhz), 1)
+
     ; Create the Base Device Object and nest the Dot11 Object
     Local $oDev = _JSONObject( _
         "kismet.device.base.key", $devkey, _
-        "kismet.device.base.mac", $devmac, _
+        "kismet.device.base.macaddr", $devmac, _
         "kismet.device.base.name", $ssid, _
         "kismet.device.base.phyname", $phyname, _
         "kismet.device.base.manuf", $manuf, _
-        "kismet.device.base.channel", $channel, _
-        "kismet.device.base.encryption", $encryption, _
+        "kismet.device.base.channel", $sChannel, _
+        "kismet.device.base.frequency", $iFreqKhz, _
+        "kismet.device.base.freq_khz_map", $oFreqMap, _
+        "kismet.device.base.crypt_string", $encryption, _
         "kismet.device.base.type", $type, _
         "kismet.device.base.commonname", $ssid, _
         "dot11.device", $oDot11 _
     )
-    
+
     Return _JSONEncode($oDev)
 EndFunc

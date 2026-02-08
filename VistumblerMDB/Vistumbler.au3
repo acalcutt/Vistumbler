@@ -14181,8 +14181,8 @@ Func _ExportKismetDB_Common($iFilter)
 		Local $iChannel = Number($aAPs[$i][6])
 		Local $sAuth = $aAPs[$i][7]
 		Local $sEncr = $aAPs[$i][8]
-		Local $sBasicRates = $aAPs[$i][9]
-		Local $sOtherRates = $aAPs[$i][10]
+		Local $sBasicRates = $aAPs[$i][10] ; BTX is at index 10
+		Local $sOtherRates = $aAPs[$i][11] ; OTX is at index 11
 		Local $sType = "Wi-Fi"
 		If $aAPs[$i][4] = "Infrastructure" Then
 			$sType = "Wi-Fi AP"
@@ -14225,7 +14225,7 @@ Func _ExportKismetDB_Common($iFilter)
 		Local $iCryptSet = _KismetDB_GetCryptBitfield($sAuth, $sEncr)
 		Local $iPrivacy = 1
 		If StringInStr($sEncr, "None") Or StringInStr($sEncr, "Open") Then $iPrivacy = 0
-		Local $sDevJson = _KismetDB_GenerateDeviceJSON($sBSSID, $sBSSID, $sType, "IEEE802.11", $sSSID, $iChannel, $sManuf, $sAuth & "/" & $sEncr, $iCryptSet)
+		Local $sDevJson = _KismetDB_GenerateDeviceJSON($sBSSID, $sBSSID, $sType, "IEEE802.11", $sSSID, $iChannel, $sManuf, $sAuth & "/" & $sEncr, $iCryptSet, $fFreq)
 		; Not generating Rates Hex here anymore. Passed raw args to Generator.
 
 		; Export History as Packets
@@ -14256,7 +14256,7 @@ Func _ExportKismetDB_Common($iFilter)
 				Local $iSig = $hRSSI
 				If $iSig = 0 And $hSignal > 0 Then $iSig = ($hSignal / 2) - 100 ; Rough conversion if RSSI missing
 
-				Local $sPacketBlob = _KismetDB_GenerateRadiotapBeacon($sBSSID, $sSSID, $iChannel, $fFreq / 1000, $iSig, $sBasicRates & "|" & $sOtherRates, $iPrivacy)
+				Local $sPacketBlob = _KismetDB_GenerateRadiotapBeacon($sBSSID, $sSSID, $iChannel, $fFreq / 1000, $iSig, $sBasicRates & "|" & $sOtherRates, $iPrivacy, $sAuth, $sEncr)
 				Local $iPacketLen = StringLen($sPacketBlob) / 2
 
 				_KismetDB_AddPacket($hDB, $hTs, 0, "IEEE802.11", $sBSSID, "FF:FF:FF:FF:FF:FF", $sBSSID, $fFreq, $hLat, $hLon, $iSig, $sDatasourceUUID, 127, 0, $iPacketID, $sPacketBlob, $iPacketLen)
