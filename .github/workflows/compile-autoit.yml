@@ -240,6 +240,7 @@ jobs:
           # Create portable zip: copy tree, set PortableMode=1 in Settings\vistumbler_settings.ini, then zip
           $portableTemp = Join-Path $PWD 'temp_portable'
           if (Test-Path $portableTemp) { Remove-Item -Recurse -Force $portableTemp }
+          New-Item -ItemType Directory -Path $portableTemp -Force | Out-Null
           Copy-Item -Path 'VistumblerMDB' -Destination $portableTemp -Recurse
           $settingsPath = Join-Path $portableTemp 'VistumblerMDB\Settings\vistumbler_settings.ini'
           if (Test-Path $settingsPath) {
