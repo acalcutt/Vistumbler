@@ -1,4 +1,5 @@
 #include-once
+#include <Date.au3>
 
 ; #INDEX# =======================================================================================================================
 ; Title .........: NetXML Library
@@ -16,7 +17,7 @@ Global $__sNetXML_Content = ""
 Func _NetXML_Create($sVersion = "0.1")
     $__sNetXML_Content = '<?xml version="1.0" encoding="ISO-8859-1"?>' & @CRLF
     $__sNetXML_Content &= '<!DOCTYPE detection-run SYSTEM "http://kismetwireless.net/kismet-3.1.0.dtd">' & @CRLF
-    $__sNetXML_Content &= '<detection-run kismet-version="Vistumbler" start-time="' & _NowCalc() & '">' & @CRLF
+    $__sNetXML_Content &= '<detection-run kismet-version="Vistumbler" start-time="' & _NetXML_FormatDate(_NowCalc()) & '">' & @CRLF
     $__sNetXML_Content &= '<card-source uuid="00000000-0000-0000-0000-000000000000">vistumbler</card-source>' & @CRLF
 EndFunc
 
@@ -24,9 +25,13 @@ EndFunc
 ; Function Name:    _NetXML_AddNetwork
 ; Description:      Adds a wireless-network entry
 ; ===============================================================================================================================
-Func _NetXML_AddNetwork($bssid, $ssid, $manuf, $channel, $freq, $type, $encrypt, $essid_cloaked, $first_time, $last_time, $max_rate, $max_signal, $min_signal, $datasize, $gps_lat, $gps_lon, $gps_alt, $gps_speed)
+Func _NetXML_AddNetwork($bssid, $ssid, $manuf, $channel, $freq, $type, $encrypt, $essid_cloaked, $first_time, $last_time, $max_rate, $max_signal, $min_signal, $max_signal_history, $datasize, $gps_lat, $gps_lon, $gps_alt, $gps_speed)
     ; Calculate frequency if missing
     If Number($freq) <= 0 Then $freq = _NetXML_GetFreqFromChannel($channel)
+    
+    ; Formatting dates to Kismet format (Day Mon DD HH:MM:SS YYYY)
+    $first_time = _NetXML_FormatDate($first_time)
+    $last_time = _NetXML_FormatDate($last_time)
 
     Local $sNet = '<wireless-network number="0" type="' & $type & '" first-time="' & $first_time & '" last-time="' & $last_time & '">' & @CRLF
     $sNet &= '  <SSID first-time="' & $first_time & '" last-time="' & $last_time & '">' & @CRLF
@@ -51,9 +56,9 @@ Func _NetXML_AddNetwork($bssid, $ssid, $manuf, $channel, $freq, $type, $encrypt,
     $sNet &= '    <min_noise_dbm>0</min_noise_dbm>' & @CRLF
     $sNet &= '    <min_signal_rssi>' & $min_signal & '</min_signal_rssi>' & @CRLF
     $sNet &= '    <min_noise_rssi>0</min_noise_rssi>' & @CRLF
-    $sNet &= '    <max_signal_dbm>' & $max_signal & '</max_signal_dbm>' & @CRLF
+    $sNet &= '    <max_signal_dbm>' & $max_signal_history & '</max_signal_dbm>' & @CRLF
     $sNet &= '    <max_noise_dbm>0</max_noise_dbm>' & @CRLF
-    $sNet &= '    <max_signal_rssi>' & $max_signal & '</max_signal_rssi>' & @CRLF
+    $sNet &= '    <max_signal_rssi>' & $max_signal_history & '</max_signal_rssi>' & @CRLF
     $sNet &= '    <max_noise_rssi>0</max_noise_rssi>' & @CRLF
     $sNet &= '  </snr-info>' & @CRLF
     
@@ -145,4 +150,47 @@ Func _NetXML_GetFreqFromChannel($iChannel)
     EndIf
     
     Return 0
+EndFunc
+
+; ===============================================================================================================================
+; Function Name:    _NetXML_FormatDate
+; Description:      Formats date string to Kismet format: Mon Dec 12 13:17:58 2016
+; Parameter(s):     $sDT - Date Time string in YYYY/MM/DD HH:MM:SS format
+; ===============================================================================================================================
+Func _NetXML_FormatDate($sDT)
+    ; Check if already processed or invalid
+    If StringLen($sDT) < 10 Then Return $sDT
+    
+    ; Expected Input: YYYY/MM/DD HH:MM:SS (standard Vistumbler/AutoIt format)
+    $sDT = StringReplace($sDT, "-", "/")
+    Local $aSplit = StringSplit($sDT, " ")
+    
+    If $aSplit[0] < 2 Then Return $sDT
+    
+    Local $sDatePart = $aSplit[1]
+    Local $sTimePart = $aSplit[2]
+
+    ; Remove milliseconds if present (HH:MM:SS.mss)
+    If StringInStr($sTimePart, ".") Then
+        $sTimePart = StringLeft($sTimePart, StringInStr($sTimePart, ".") - 1)
+    EndIf
+    
+    Local $aD = StringSplit($sDatePart, "/")
+    If $aD[0] < 3 Then Return $sDT
+    
+    Local $sY = $aD[1]
+    Local $sM = $aD[2]
+    Local $sD = $aD[3]
+    
+    ; Day of Week (1=Sun)
+    Local $iDoW = _DateToDayOfWeek($sY, $sM, $sD) 
+    Local $aDays = StringSplit("Sun,Mon,Tue,Wed,Thu,Fri,Sat", ",")
+    Local $sDayName = $aDays[$iDoW]
+    
+    ; Month Name
+    Local $aMons = StringSplit("Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec", ",")
+    Local $sMonName = $aMons[Number($sM)]
+    
+    ; Output: Mon Dec 12 13:17:58 2016
+    Return $sDayName & " " & $sMonName & " " & $sD & " " & $sTimePart & " " & $sY
 EndFunc

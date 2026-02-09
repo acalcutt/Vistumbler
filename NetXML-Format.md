@@ -129,4 +129,26 @@ Aggregate GPS statistics for the device.
     <datasize>0</datasize>
   </wireless-network>
 </detection-run>
-```
+
+## Implementation Notes
+
+### Timestamp Formatting
+Vistumbler strictly adheres to the legacy Kismet timestamp format:
+- **Format**: `Day Mon DD HH:MM:SS YYYY` (e.g., `Fri Feb 09 13:45:00 2024`)
+- **Milliseconds**: Milliseconds are stripped from timestamps in the XML attributes to ensure compatibility with key-based lookups and older parsers.
+
+### Signal Statistics Calculation
+When exporting to NetXML, Vistumbler calculates signal statistics from its internal `Hist` (history) table:
+- **`max_signal_dbm`**: Derived from the highest recorded signal strength in the history for that AP.
+- **`min_signal_dbm`**: Derived from the lowest recorded signal strength.
+- **`last_signal_dbm`**: The most recently recorded signal strength.
+
+### Import Processing Logic
+1.  **Date Parsing**: The importer supports both standard SQL timestamps (`YYYY-MM-DD HH:MM:SS`) and Kismet-style verbose dates.
+2.  **GPS Deduplication**: 
+    - GPS records are identified purely by `Latitude`, `Longitude`, `Date`, and `Time`.
+    - Importer ensures `Time` includes milliseconds (defaulting to `.000`) to match internal VS1 format standards.
+    - If a GPS point matches existing data exactly, the existing `GPSID` is reused.
+3.  **History Reconstruction**:
+    - The `first-time` and `last-time` attributes are used to generate corresponding History entries.
+    - This ensures that "First Active" and "Last Active" columns populate correctly in Vistumbler, even if the intermediate history points are missing from the XML.

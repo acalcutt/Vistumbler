@@ -14378,28 +14378,70 @@ Func _ExportNetXML_Common($iFilter)
         
         Local $iHighSig = $aAPs[$i][12]
         
-        ; Get High Signal GPS
-        Local $iHighGpsID = $aAPs[$i][16]
+        ; Get High Signal GPS and Times (First/Last)
+        Local $iHighGpsHistID = $aAPs[$i][16]
+        Local $iFirstHistID = $aAPs[$i][17]
+        Local $iLastHistID = $aAPs[$i][18]
+        
         Local $fLat = 0, $fLon = 0, $fAlt = 0, $fSpeed = 0
         Local $sFirstTime = "", $sLastTime = ""
         
-        If $iHighGpsID <> 0 Then
-            Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, SpeedInMPH, Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID
-            Local $aGps = _RecordSearch($VistumblerDB, $sGpsQuery, $DB_OBJ)
-            if UBound($aGps) > 1 Then
-                $fLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
-                $fLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
-                $fAlt = $aGps[1][3]
-                $fSpeed = $aGps[1][4]
-                $sLastTime = $aGps[1][5] & " " & $aGps[1][6]
-            EndIf
+        ; Resolve First Time
+        If $iFirstHistID <> 0 Then
+            Local $aHistF = _RecordSearch($VistumblerDB, "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $iFirstHistID, $DB_OBJ)
+            If UBound($aHistF) > 1 Then $sFirstTime = $aHistF[1][1] & " " & $aHistF[1][2]
+        EndIf
+        
+        ; Resolve Last Time
+        If $iLastHistID <> 0 Then
+            Local $aHistL = _RecordSearch($VistumblerDB, "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $iLastHistID, $DB_OBJ)
+            If UBound($aHistL) > 1 Then $sLastTime = $aHistL[1][1] & " " & $aHistL[1][2]
+        EndIf
+        
+        ; Fallback if missing
+        If $sFirstTime = "" Then $sFirstTime = $sLastTime
+        If $sLastTime = "" Then $sLastTime = $sFirstTime
+        
+        ; Resolve Peak Signal GPS (HighGpsHistID -> Hist -> GpsID -> GPS)
+        If $iHighGpsHistID <> 0 Then
+            Local $aHistGPS = _RecordSearch($VistumblerDB, "SELECT GpsID FROM Hist WHERE HistID=" & $iHighGpsHistID, $DB_OBJ)
+            If UBound($aHistGPS) > 1 Then
+                Local $iGpsID = $aHistGPS[1][1]
+                If $iGpsID <> 0 Then
+                    Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, SpeedInMPH FROM GPS WHERE GpsID=" & $iGpsID
+                    Local $aGps = _RecordSearch($VistumblerDB, $sGpsQuery, $DB_OBJ)
+                    if UBound($aGps) > 1 Then
+                        $fLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
+                        $fLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
+                        $fAlt = $aGps[1][3]
+                        $fSpeed = $aGps[1][4]
+                    EndIf
+                 EndIf
+             EndIf
+        EndIf
+
+        Local $iApID = $aAPs[$i][1]
+        Local $iMinSig = $iHighSig
+        Local $iLastSig = $iHighSig
+        
+        If $iApID <> 0 Then
+             Local $aSigStats = _RecordSearch($VistumblerDB, "SELECT Min(Signal), Max(Signal) FROM Hist WHERE ApID=" & $iApID, $DB_OBJ)
+             If UBound($aSigStats) > 1 Then
+                 $iMinSig = Number($aSigStats[1][1])
+                 $iHighSig = Number($aSigStats[1][2])
+             EndIf
+             ; Get Last Signal from LastHistID
+             If $iLastHistID <> 0 Then
+                  Local $aLastSig = _RecordSearch($VistumblerDB, "SELECT Signal FROM Hist WHERE HistID=" & $iLastHistID, $DB_OBJ)
+                  If UBound($aLastSig) > 1 Then $iLastSig = Number($aLastSig[1][1])
+             EndIf
         EndIf
         
          ; Sanitize Lat/Lon string to float
         $fLat = Number(StringReplace(StringReplace(StringReplace($fLat, "N", ""), "S", "-"), " ", ""))
         $fLon = Number(StringReplace(StringReplace(StringReplace($fLon, "E", ""), "W", "-"), " ", ""))
         
-        _NetXML_AddNetwork($sBSSID, $sSSID, $sManuf, $iChannel, 0, $sType, $sAuth & "-" & $sEncr, "false", $sLastTime, $sLastTime, 54, $iHighSig, $iHighSig, 0, $fLat, $fLon, $fAlt, $fSpeed)
+        _NetXML_AddNetwork($sBSSID, $sSSID, $sManuf, $iChannel, 0, $sType, $sAuth & "-" & $sEncr, "false", $sFirstTime, $sLastTime, 54, $iLastSig, $iMinSig, $iHighSig, 0, $fLat, $fLon, $fAlt, $fSpeed)
     Next
     
     _NetXML_Save($sFile)
@@ -15402,6 +15444,17 @@ Func _ImportNetXML($sFile)
     Local $begintime = TimerInit()
     Local $UpdateTimer = TimerInit()
     
+    ; Refresh ID counters from DB to prevent collisions
+    Local $qRes
+    $qRes = _RecordSearch($VistumblerDB, "SELECT Max(ApID) FROM AP", $DB_OBJ)
+    If IsArray($qRes) Then $APID = Number($qRes[1][1])
+    
+    $qRes = _RecordSearch($VistumblerDB, "SELECT Max(GPSID) FROM GPS", $DB_OBJ)
+    If IsArray($qRes) Then $GPS_ID = Number($qRes[1][1])
+    
+    $qRes = _RecordSearch($VistumblerDB, "SELECT Max(HistID) FROM Hist", $DB_OBJ)
+    If IsArray($qRes) Then $HISTID = Number($qRes[1][1])
+
     For $i = 0 To $iCount - 1
         Local $sNet = $aNetworks[$i]
         Local $sBSSID = _GetTagValue($sNet, "BSSID")
@@ -15442,29 +15495,6 @@ Func _ImportNetXML($sFile)
             $sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
         EndIf
 
-        ; Parse Last Time if available (NetXML: last-time="YYYY/MM/DD HH:MM:SS" or similar)
-        Local $sLastTimeRaw = _GetAttributeValue($sNet, "wireless-network", "last-time")
-        If $sLastTimeRaw <> "" Then
-             Local $aDT = StringSplit($sLastTimeRaw, " ")
-             If $aDT[0] >= 2 Then
-                 $sDate = $aDT[1]
-                 $sTime = $aDT[2]
-             EndIf
-        EndIf
-            
-        $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
-        Local $GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
-        Local $FoundGpsMatch = UBound($GpsMatchArray) - 1
-        
-        If $FoundGpsMatch = 0 Then
-            $AddGID += 1
-            $GPS_ID += 1
-            _AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $sLatDMM & '|' & $sLonDMM & '|00|0|0|0|0|0|0|' & $sDate & '|' & $sTime)
-            $LoadGID = $GPS_ID
-        Else
-            $LoadGID = $GpsMatchArray[1][1]
-        EndIf
-        
         ; Auth/Encr
         Local $sAuth = "Open"
         Local $sEncr = "None"
@@ -15472,9 +15502,16 @@ Func _ImportNetXML($sFile)
         ; Try to parse Vistumbler Export format (Auth-Encr)
         If StringInStr($sEncryption, "-") Then
              Local $aEncParts = StringSplit($sEncryption, "-")
-             If $aEncParts[0] >= 2 Then
+             If $aEncParts[0] = 2 Then
                  $sAuth = $aEncParts[1]
                  $sEncr = $aEncParts[2]
+             ElseIf $aEncParts[0] > 2 Then
+                 $sEncr = $aEncParts[$aEncParts[0]]
+                 $sAuth = ""
+                 For $k = 1 To $aEncParts[0] - 1
+                     If $k > 1 Then $sAuth &= "-"
+                     $sAuth &= $aEncParts[$k]
+                 Next
              EndIf
         Else
             ; Fallback to standard detection
@@ -15490,8 +15527,91 @@ Func _ImportNetXML($sFile)
         Local $sVType = $SearchWord_Infrastructure
         If StringInStr($sType, "ad-hoc") Then $sVType = $SearchWord_Adhoc
 
-        Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sVType, $Text_Unknown, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
-        If $NewApAdded <> 0 Then $AddAP += 1
+        ; Parse Last Time AND First Time if available
+        Local $sFirstTimeRaw = _GetAttributeValue($sNet, "wireless-network", "first-time")
+        Local $sLastTimeRaw = _GetAttributeValue($sNet, "wireless-network", "last-time")
+        
+        If $sFirstTimeRaw = $sLastTimeRaw Then $sFirstTimeRaw = ""
+        
+        Local $aProcessTimes[2]
+        $aProcessTimes[0] = $sFirstTimeRaw
+        $aProcessTimes[1] = $sLastTimeRaw
+        
+        For $pT = 0 To 1
+            Local $sRawT = $aProcessTimes[$pT]
+            If $sRawT = "" Then ContinueLoop
+
+            Local $sDate = "2000/01/01"
+            Local $sTime = "00:00:00"
+
+             Local $aDT = StringSplit($sRawT, " ")
+             If $aDT[0] = 2 Then
+                 $sDate = $aDT[1]
+                 $sTime = $aDT[2]
+             ElseIf $aDT[0] >= 5 Then
+                 ; Kismet Format: Fri Feb 09 10:00:00 2024
+                 Local $sMon = $aDT[2]
+                 Local $sMonNum = "01"
+                 Switch $sMon
+                     Case "Jan"
+                         $sMonNum = "01"
+                     Case "Feb"
+                         $sMonNum = "02"
+                     Case "Mar"
+                         $sMonNum = "03"
+                     Case "Apr"
+                         $sMonNum = "04"
+                     Case "May"
+                         $sMonNum = "05"
+                     Case "Jun"
+                         $sMonNum = "06"
+                     Case "Jul"
+                         $sMonNum = "07"
+                     Case "Aug"
+                         $sMonNum = "08"
+                     Case "Sep"
+                         $sMonNum = "09"
+                     Case "Oct"
+                         $sMonNum = "10"
+                     Case "Nov"
+                         $sMonNum = "11"
+                     Case "Dec"
+                         $sMonNum = "12"
+                 EndSwitch
+                 $sDate = $aDT[5] & "-" & $sMonNum & "-" & $aDT[3]
+                 $sTime = $aDT[4]
+                 ; Ensure ms present for consistency (VS1 format)
+                 If StringInStr($sTime, ".") = 0 Then $sTime &= ".000"
+             EndIf
+            
+        ; Deduplication Logic: Check for exact match on Lat/Lon/Date/Time
+        ; Start broad (Lat/Lon) to avoid SQL Date format issues
+            $query = "SELECT GPSID, Date1, Time1 FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
+            Local $GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+            Local $FoundGpsMatch = 0
+            $LoadGID = 0
+            
+            If UBound($GpsMatchArray) > 1 Then
+                ; Check results for matching Date/Time
+                For $g = 1 To UBound($GpsMatchArray) - 1
+                    If $GpsMatchArray[$g][1] = $sDate And $GpsMatchArray[$g][2] = $sTime Then
+                        $LoadGID = $GpsMatchArray[$g][1]
+                        $FoundGpsMatch = 1
+                        ExitLoop
+                    EndIf
+                Next
+            EndIf
+            
+            If $FoundGpsMatch = 0 Then
+                $AddGID += 1
+                $GPS_ID += 1
+                _AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $sLatDMM & '|' & $sLonDMM & '|00|0|0|0|0|0|0|' & $sDate & '|' & $sTime)
+                $LoadGID = $GPS_ID
+            EndIf
+
+            Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sVType, $Text_Unknown, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
+            If $NewApAdded <> 0 Then $AddAP += 1
+        Next
         
         If TimerDiff($UpdateTimer) > 600 Or ($i = $iCount - 1) Then
              _UpdateProgress($i + 1, $iCount, $AddAP, $AddGID, $begintime)
