@@ -516,7 +516,7 @@ EndFunc
 ; Function Name:    _KismetDB_GenerateDeviceJSON
 ; Description:      Generates a basic Device JSON structure with Dot11 extensions
 ; ===============================================================================================================================
-Func _KismetDB_GenerateDeviceJSON($devkey, $devmac, $type, $phyname, $ssid, $channel, $manuf, $encryption, $iCryptSet, $iFreqKhz = 0)
+Func _KismetDB_GenerateDeviceJSON($devkey, $devmac, $type, $phyname, $ssid, $channel, $manuf, $encryption, $iCryptSet, $iFreqKhz = 0, $sRadioType = "")
     ; Compute SSID checksum for the advertised_ssid_map key
     ; Kismet uses xxHash of ssid+length but for compatibility we use a simple hash
     Local $iSSIDCsum = 0
@@ -559,6 +559,8 @@ Func _KismetDB_GenerateDeviceJSON($devkey, $devmac, $type, $phyname, $ssid, $cha
     Local $oFreqMap = _JSONObject(String($iFreqKhz), 1)
 
     ; Create the Base Device Object and nest the Dot11 Object
+    ; Include Vistumbler-specific radio type (custom extension, ignored by Kismet)
+    ; Build device JSON (include Vistumbler radio type even if empty to avoid duplicated branches)
     Local $oDev = _JSONObject( _
         "kismet.device.base.key", $devkey, _
         "kismet.device.base.macaddr", $devmac, _
@@ -571,6 +573,134 @@ Func _KismetDB_GenerateDeviceJSON($devkey, $devmac, $type, $phyname, $ssid, $cha
         "kismet.device.base.crypt_string", $encryption, _
         "kismet.device.base.type", $type, _
         "kismet.device.base.commonname", $ssid, _
+        "vistumbler.device.radio_type", $sRadioType, _
+        "dot11.device", $oDot11 _
+    )
+
+    Return _JSONEncode($oDev)
+EndFunc
+
+; ===============================================================================================================================
+; Function Name:    _KismetDB_GenerateDeviceJSON_Multi
+; Description:      Generates a device JSON blob supporting multiple SSID/auth entries per BSSID.
+;                   Each entry in the arrays represents a unique Vistumbler AP (same BSSID, different SSID/auth/encr/chan).
+; Parameters:       $devkey      - Device key (typically BSSID)
+;                   $devmac      - Device MAC address
+;                   $type        - Device type ("Wi-Fi AP", "Wi-Fi Ad-Hoc")
+;                   $phyname     - PHY name ("IEEE802.11")
+;                   $manuf       - Manufacturer string
+;                   $sRadioType  - Radio type string (Vistumbler custom field)
+;                   $aSSIDs      - Array of SSID strings
+;                   $aChannels   - Array of channel numbers
+;                   $aEncryptions - Array of "Auth/Encr" strings
+;                   $aCryptSets  - Array of crypt_set bitfield values
+;                   $aFreqsKhz  - Array of frequency values in KHz
+; Returns:          JSON string
+; ===============================================================================================================================
+Func _KismetDB_GenerateDeviceJSON_Multi($devkey, $devmac, $type, $phyname, $manuf, $sRadioType, $aSSIDs, $aChannels, $aEncryptions, $aCryptSets, $aFreqsKhz)
+    Local $iEntryCount = UBound($aSSIDs)
+
+    ; Build the advertised_ssid_map with one entry per AP variant
+    ; Start with an empty JSON object for the map
+    Local $oSSIDMap[1][2] = [[$_JSONNull, 'JSONObject']]
+    Local $oFirstSSIDRecord = 0
+    Local $sFirstSSID = ""
+    Local $iFirstCsum = 0
+
+    For $e = 0 To $iEntryCount - 1
+        Local $sEntrySSID = $aSSIDs[$e]
+        Local $iEntryChan = $aChannels[$e]
+        Local $sEntryEncr = $aEncryptions[$e]
+        Local $iEntryCrypt = $aCryptSets[$e]
+
+        ; Compute a unique checksum key that includes SSID + channel + encryption
+        ; so same-SSID entries with different auth/channel get unique keys
+        Local $sHashInput = $sEntrySSID & "|" & $iEntryChan & "|" & $sEntryEncr
+        Local $iCsum = 0
+        For $c = 1 To StringLen($sHashInput)
+            $iCsum = BitXOR($iCsum * 31, Asc(StringMid($sHashInput, $c, 1)))
+        Next
+        If $iCsum < 0 Then $iCsum = $iCsum * -1
+        Local $sCsumKey = String($iCsum)
+
+        ; Create the SSID record for this entry (includes crypt_string for reimport)
+        Local $oSSIDRec = _JSONObject( _
+            "dot11.advertisedssid.ssid", $sEntrySSID, _
+            "dot11.advertisedssid.ssidlen", StringLen($sEntrySSID), _
+            "dot11.advertisedssid.ssid_len", StringLen($sEntrySSID), _
+            "dot11.advertisedssid.length", StringLen($sEntrySSID), _
+            "dot11.advertisedssid.crypt_set", $iEntryCrypt, _
+            "dot11.advertisedssid.crypt_bitfield", $iEntryCrypt, _
+            "dot11.advertisedssid.channel", String($iEntryChan), _
+            "dot11.advertisedssid.crypt_string", $sEntryEncr, _
+            "dot11.advertisedssid.beacon_info", "", _
+            "dot11.advertisedssid.first_time", 0, _
+            "dot11.advertisedssid.last_time", 0 _
+        )
+
+        ; Add this entry to the SSID map
+        Local $iMapSize = UBound($oSSIDMap)
+        ReDim $oSSIDMap[$iMapSize + 1][2]
+        $oSSIDMap[$iMapSize][0] = $sCsumKey
+        $oSSIDMap[$iMapSize][1] = $oSSIDRec
+
+        ; Track the first entry for last_beaconed_ssid
+        If $e = 0 Then
+            $oFirstSSIDRecord = $oSSIDRec
+            $sFirstSSID = $sEntrySSID
+            $iFirstCsum = $iCsum
+        EndIf
+    Next
+
+    ; Create the Dot11 Device Object
+    Local $oDot11 = _JSONObject( _
+        "dot11.device.last_beaconed_ssid", $sFirstSSID, _
+        "dot11.device.last_beaconed_ssid_record", $oFirstSSIDRecord, _
+        "dot11.device.last_beaconed_ssid_checksum", $iFirstCsum, _
+        "dot11.device.num_advertised_ssids", $iEntryCount, _
+        "dot11.device.advertised_ssid_map", $oSSIDMap _
+    )
+
+    ; Use first entry's channel and frequency for the base device
+    Local $sChannel = String($aChannels[0])
+    Local $iFreqKhz = $aFreqsKhz[0]
+    Local $oFreqMap[1][2] = [[$_JSONNull, 'JSONObject']]
+    ; Add all unique frequencies to the freq map
+    For $e = 0 To $iEntryCount - 1
+        Local $sFreqKey = String($aFreqsKhz[$e])
+        ; Check if already in map
+        Local $bFreqFound = False
+        For $f = 1 To UBound($oFreqMap) - 1
+            If $oFreqMap[$f][0] == $sFreqKey Then
+                $bFreqFound = True
+                ExitLoop
+            EndIf
+        Next
+        If Not $bFreqFound Then
+            Local $iFmSize = UBound($oFreqMap)
+            ReDim $oFreqMap[$iFmSize + 1][2]
+            $oFreqMap[$iFmSize][0] = $sFreqKey
+            $oFreqMap[$iFmSize][1] = 1
+        EndIf
+    Next
+
+    ; Combined crypt_string (use first entry's; on reimport each SSID map entry has its own)
+    Local $sCombinedCrypt = $aEncryptions[0]
+
+    ; Build the base device object
+    Local $oDev = _JSONObject( _
+        "kismet.device.base.key", $devkey, _
+        "kismet.device.base.macaddr", $devmac, _
+        "kismet.device.base.name", $sFirstSSID, _
+        "kismet.device.base.phyname", $phyname, _
+        "kismet.device.base.manuf", $manuf, _
+        "kismet.device.base.channel", $sChannel, _
+        "kismet.device.base.frequency", $iFreqKhz, _
+        "kismet.device.base.freq_khz_map", $oFreqMap, _
+        "kismet.device.base.crypt_string", $sCombinedCrypt, _
+        "kismet.device.base.type", $type, _
+        "kismet.device.base.commonname", $sFirstSSID, _
+        "vistumbler.device.radio_type", $sRadioType, _
         "dot11.device", $oDot11 _
     )
 

@@ -1290,9 +1290,12 @@ If @error Then
 Else
 	For $a = 0 To ($var[0][0] - 1)
 		For $b = 1 To $var[0][0]
-			If $a = $var[$b][1] Then $headers &= IniRead($DefaultLanguagePath, 'Column_Names', $var[$b][0], IniRead($settings, 'Column_Names', $var[$b][0], ''))
-			If $a = $var[$b][1] And $b <> $var[0][0] Then $headers &= '|'
+			If $a = $var[$b][1] Then
+				$headers &= IniRead($DefaultLanguagePath, 'Column_Names', $var[$b][0], IniRead($settings, 'Column_Names', $var[$b][0], ''))
+				ExitLoop
+			EndIf
 		Next
+		If $a < ($var[0][0] - 1) Then $headers &= '|'
 	Next
 EndIf
 
@@ -8137,7 +8140,7 @@ Func _WriteINI()
 		IniWrite($settings, "Columns", "Column_LatitudeDMM", $save_column_LatitudeDMM)
 		IniWrite($settings, "Columns", "Column_LongitudeDMM", $save_column_LongitudeDMM)
 		IniWrite($settings, "Columns", "Column_BasicTransferRates", $save_column_BasicTransferRates)
-		IniWrite($settings, "Columns", "Column_OtherTransferRates", $column_OtherTransferRates)
+		IniWrite($settings, "Columns", "Column_OtherTransferRates", $save_column_OtherTransferRates)
 		IniWrite($settings, "Columns", "Column_FirstActive", $save_column_FirstActive)
 		IniWrite($settings, "Columns", "Column_LastActive", $save_column_LastActive)
 
@@ -14159,120 +14162,180 @@ Func _ExportKismetDB_Common($iFilter)
 
 	_SQLite_Exec($hDB, "BEGIN TRANSACTION;")
 
+	; Use a consistent column order: ApID(1), SSID(2), BSSID(3), NETTYPE(4), RADTYPE(5), CHAN(6), AUTH(7), ENCR(8), SecType(9), BTX(10), OTX(11), HighSignal(12), HighRSSI(13), MANU(14), LABEL(15), HighGpsHistID(16), FirstHistID(17), LastHistID(18), LastGpsID(19), Active(20)
+	; ORDER BY BSSID so same-MAC APs are adjacent for grouping
 	Local $sQuery
 	If $iFilter = 1 Then
-		$sQuery = $AddQuery
+		; Rebuild the filtered query with consistent column order and BSSID ordering
+		; $AddQuery has different column order, so we construct our own from the AP table with the active filter
+		$sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP WHERE ApID IN (SELECT ApID FROM (" & $AddQuery & ")) ORDER BY BSSID, ApID"
 	Else
-		$sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+		$sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP ORDER BY BSSID, ApID"
 	EndIf
 
 	Local $aAPs = _RecordSearch($VistumblerDB, $sQuery, $DB_OBJ)
 	Local $iCount = UBound($aAPs) - 1
 	Local $iPacketID = 1
 	Local $sDatasourceUUID = "00000000-0000-0000-0000-000000000000"
+	Local $iDeviceCount = 0
 
-	For $i = 1 To $iCount
-		GUICtrlSetData($msgdisplay, "Exporting KismetDB " & $i & " / " & $iCount)
+	; Process APs grouped by BSSID
+	Local $iGroupStart = 1
+	While $iGroupStart <= $iCount
+		; Find all APs with the same BSSID (they're adjacent due to ORDER BY)
+		Local $sGroupBSSID = $aAPs[$iGroupStart][3]
+		Local $iGroupEnd = $iGroupStart
+		While $iGroupEnd < $iCount And $aAPs[$iGroupEnd + 1][3] = $sGroupBSSID
+			$iGroupEnd += 1
+		WEnd
+		Local $iGroupSize = $iGroupEnd - $iGroupStart + 1
 
-		Local $iApID = $aAPs[$i][1]
-		Local $sBSSID = $aAPs[$i][3]
-		Local $sSSID = $aAPs[$i][2]
-		Local $sManuf = $aAPs[$i][14]
-		Local $iChannel = Number($aAPs[$i][6])
-		Local $sAuth = $aAPs[$i][7]
-		Local $sEncr = $aAPs[$i][8]
-		Local $sBasicRates = $aAPs[$i][10] ; BTX is at index 10
-		Local $sOtherRates = $aAPs[$i][11] ; OTX is at index 11
+		GUICtrlSetData($msgdisplay, "Exporting KismetDB " & $iGroupEnd & " / " & $iCount)
+
+		; Collect data for all APs in this BSSID group
+		Local $aGrpSSIDs[$iGroupSize]
+		Local $aGrpChannels[$iGroupSize]
+		Local $aGrpEncryptions[$iGroupSize]
+		Local $aGrpCryptSets[$iGroupSize]
+		Local $aGrpFreqs[$iGroupSize]
+		Local $aGrpApIDs[$iGroupSize]
+		Local $aGrpPrivacy[$iGroupSize]
+		Local $aGrpAuth[$iGroupSize]
+		Local $aGrpEncr[$iGroupSize]
+		Local $aGrpBasicRates[$iGroupSize]
+		Local $aGrpOtherRates[$iGroupSize]
+
+		; Use first AP's data for device-level fields
+		Local $sManuf = $aAPs[$iGroupStart][14]
+		Local $sRadioType = $aAPs[$iGroupStart][5]
 		Local $sType = "Wi-Fi"
-		If $aAPs[$i][4] = "Infrastructure" Then
+		If $aAPs[$iGroupStart][4] = "Infrastructure" Then
 			$sType = "Wi-Fi AP"
 		Else
 			$sType = "Wi-Fi Ad-Hoc"
 		EndIf
 
-		; Calculate approximate frequency (KHz)
-		Local $fFreq = 0
-		If $iChannel <= 14 Then
-			$fFreq = 2407 + ($iChannel * 5)
-			If $iChannel = 14 Then $fFreq = 2484
+		; Best GPS across the group (use strongest signal's GPS)
+		Local $fBestLat = 0, $fBestLon = 0
+		Local $iGroupFirstTime = 0
+		Local $iGroupLastTime = 0
+		Local $iBestSignal = -999
+
+		For $g = 0 To $iGroupSize - 1
+			Local $gi = $iGroupStart + $g
+			$aGrpSSIDs[$g] = $aAPs[$gi][2]
+			$aGrpChannels[$g] = Number($aAPs[$gi][6])
+			$aGrpAuth[$g] = $aAPs[$gi][7]
+			$aGrpEncr[$g] = $aAPs[$gi][8]
+			$aGrpEncryptions[$g] = $aAPs[$gi][7] & "/" & $aAPs[$gi][8]
+			$aGrpCryptSets[$g] = _KismetDB_GetCryptBitfield($aAPs[$gi][7], $aAPs[$gi][8])
+			$aGrpBasicRates[$g] = $aAPs[$gi][10]
+			$aGrpOtherRates[$g] = $aAPs[$gi][11]
+			$aGrpApIDs[$g] = $aAPs[$gi][1]
+
+			; Calculate frequency
+			Local $iCh = $aGrpChannels[$g]
+			Local $fFreq = 0
+			If $iCh <= 14 Then
+				$fFreq = 2407 + ($iCh * 5)
+				If $iCh = 14 Then $fFreq = 2484
+			Else
+				$fFreq = 5000 + ($iCh * 5)
+			EndIf
+			$aGrpFreqs[$g] = $fFreq * 1000
+
+			Local $iPriv = 1
+			If StringInStr($aAPs[$gi][8], "None") Or StringInStr($aAPs[$gi][8], "Open") Then $iPriv = 0
+			$aGrpPrivacy[$g] = $iPriv
+
+			; Get GPS from HighGpsHistID
+			Local $iHighGpsID = $aAPs[$gi][16]
+			If $iHighGpsID <> 0 Then
+				Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID
+				Local $aGps = _RecordSearch($VistumblerDB, $sGpsQuery, $DB_OBJ)
+				If UBound($aGps) > 1 Then
+					Local $fThisLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
+					Local $fThisLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
+					$fThisLat = Number(StringReplace(StringReplace(StringReplace($fThisLat, "N", ""), "S", "-"), " ", ""))
+					$fThisLon = Number(StringReplace(StringReplace(StringReplace($fThisLon, "E", ""), "W", "-"), " ", ""))
+					If Number($aAPs[$gi][12]) > $iBestSignal Then
+						$iBestSignal = Number($aAPs[$gi][12])
+						$fBestLat = $fThisLat
+						$fBestLon = $fThisLon
+					EndIf
+				EndIf
+			EndIf
+
+			; Export History as Packets for this AP
+			Local $sHistQuery = "SELECT Hist.GpsID, Hist.Signal, Hist.RSSI, Hist.Date1, Hist.Time1, GPS.Latitude, GPS.Longitude, GPS.Alt FROM Hist LEFT JOIN GPS ON Hist.GpsID = GPS.GpsID WHERE Hist.ApID=" & $aGrpApIDs[$g]
+			Local $aHist = _RecordSearch($VistumblerDB, $sHistQuery, $DB_OBJ)
+
+			If IsArray($aHist) Then
+				Local $iHistCount = UBound($aHist) - 1
+				For $j = 1 To $iHistCount
+					Local $hGpsID = $aHist[$j][1]
+					Local $hSignal = $aHist[$j][2]
+					Local $hRSSI = $aHist[$j][3]
+					Local $hDate = StringReplace($aHist[$j][4], "-", "/")
+					Local $hTime = StringRegExpReplace($aHist[$j][5], "\.\d+$", "")
+					Local $hLat = 0, $hLon = 0, $hAlt = 0
+
+					If $hGpsID > 0 Then
+						$hLat = Number(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($aHist[$j][6]), "N", ""), "S", "-"), " ", ""))
+						$hLon = Number(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($aHist[$j][7]), "E", ""), "W", "-"), " ", ""))
+						$hAlt = Number($aHist[$j][8])
+					EndIf
+
+					Local $hTs = _DateDiff('s', "1970/01/01 00:00:00", $hDate & " " & $hTime)
+					If $iGroupFirstTime = 0 Or $hTs < $iGroupFirstTime Then $iGroupFirstTime = $hTs
+					If $hTs > $iGroupLastTime Then $iGroupLastTime = $hTs
+
+					Local $iSig = $hRSSI
+					If $iSig = 0 And $hSignal > 0 Then $iSig = ($hSignal / 2) - 100
+
+					Local $sPacketBlob = _KismetDB_GenerateRadiotapBeacon($sGroupBSSID, $aGrpSSIDs[$g], $aGrpChannels[$g], $aGrpFreqs[$g] / 1000, $iSig, $aGrpBasicRates[$g] & "|" & $aGrpOtherRates[$g], $aGrpPrivacy[$g], $aGrpAuth[$g], $aGrpEncr[$g])
+					Local $iPacketLen = StringLen($sPacketBlob) / 2
+
+					_KismetDB_AddPacket($hDB, $hTs, 0, "IEEE802.11", $sGroupBSSID, "FF:FF:FF:FF:FF:FF", $sGroupBSSID, $aGrpFreqs[$g], $hLat, $hLon, $iSig, $sDatasourceUUID, 127, 0, $iPacketID, $sPacketBlob, $iPacketLen)
+					$iPacketID += 1
+				Next
+			EndIf
+		Next
+
+		; Generate device JSON with all SSID/auth variants
+		Local $sDevJson
+		If $iGroupSize = 1 Then
+			; Single AP — use the original function for backward compatibility
+			$sDevJson = _KismetDB_GenerateDeviceJSON($sGroupBSSID, $sGroupBSSID, $sType, "IEEE802.11", $aGrpSSIDs[0], $aGrpChannels[0], $sManuf, $aGrpEncryptions[0], $aGrpCryptSets[0], $aGrpFreqs[0], $sRadioType)
 		Else
-			$fFreq = 5000 + ($iChannel * 5)
+			; Multiple APs sharing same BSSID — use multi-entry function
+			$sDevJson = _KismetDB_GenerateDeviceJSON_Multi($sGroupBSSID, $sGroupBSSID, $sType, "IEEE802.11", $sManuf, $sRadioType, $aGrpSSIDs, $aGrpChannels, $aGrpEncryptions, $aGrpCryptSets, $aGrpFreqs)
 		EndIf
-		$fFreq = $fFreq * 1000
 
-		; Get High Signal GPS
-		Local $iHighGpsID = $aAPs[$i][16]
-		Local $fLat = 0, $fLon = 0, $fAlt = 0
-		Local $iTime = 0
-		Local $iFirstTime = 0
-		Local $iLastTime = 0
-
-		If $iHighGpsID <> 0 Then
-			Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID
-			Local $aGps = _RecordSearch($VistumblerDB, $sGpsQuery, $DB_OBJ)
-			If UBound($aGps) > 1 Then
-				$fLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
-				$fLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
-				$fAlt = $aGps[1][3]
-				$iTime = _DateDiff('s', "1970/01/01 00:00:00", $aGps[1][4] & " " & $aGps[1][5])
+		; Fallback timestamps from GPS if no packets
+		If $iGroupFirstTime = 0 Then
+			Local $iHighGpsID0 = $aAPs[$iGroupStart][16]
+			If $iHighGpsID0 <> 0 Then
+				Local $sGQ = "SELECT Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID0
+				Local $aGT = _RecordSearch($VistumblerDB, $sGQ, $DB_OBJ)
+				If UBound($aGT) > 1 Then
+					Local $sGD = StringReplace($aGT[1][1], "-", "/")
+					Local $sGTm = StringRegExpReplace($aGT[1][2], "\.\d+$", "")
+					$iGroupFirstTime = _DateDiff('s', "1970/01/01 00:00:00", $sGD & " " & $sGTm)
+				EndIf
 			EndIf
 		EndIf
+		If $iGroupLastTime = 0 Then $iGroupLastTime = $iGroupFirstTime
 
-		; Sanitize Lat/Lon string to float
-		$fLat = Number(StringReplace(StringReplace(StringReplace($fLat, "N", ""), "S", "-"), " ", ""))
-		$fLon = Number(StringReplace(StringReplace(StringReplace($fLon, "E", ""), "W", "-"), " ", ""))
+		_KismetDB_AddDevice($hDB, $iGroupFirstTime, $iGroupLastTime, $sGroupBSSID, "IEEE802.11", $sGroupBSSID, $aAPs[$iGroupStart][13], $fBestLat, $fBestLon, $fBestLat, $fBestLon, $fBestLat, $fBestLon, 0, $sType, $sDevJson)
+		$iDeviceCount += 1
 
-		Local $iCryptSet = _KismetDB_GetCryptBitfield($sAuth, $sEncr)
-		Local $iPrivacy = 1
-		If StringInStr($sEncr, "None") Or StringInStr($sEncr, "Open") Then $iPrivacy = 0
-		Local $sDevJson = _KismetDB_GenerateDeviceJSON($sBSSID, $sBSSID, $sType, "IEEE802.11", $sSSID, $iChannel, $sManuf, $sAuth & "/" & $sEncr, $iCryptSet, $fFreq)
-		; Not generating Rates Hex here anymore. Passed raw args to Generator.
-
-		; Export History as Packets
-		Local $sHistQuery = "SELECT Hist.GpsID, Hist.Signal, Hist.RSSI, Hist.Date1, Hist.Time1, GPS.Latitude, GPS.Longitude, GPS.Alt FROM Hist LEFT JOIN GPS ON Hist.GpsID = GPS.GpsID WHERE Hist.ApID=" & $iApID
-		Local $aHist = _RecordSearch($VistumblerDB, $sHistQuery, $DB_OBJ)
-		
-		If IsArray($aHist) Then
-			Local $iHistCount = UBound($aHist) - 1
-			For $j = 1 To $iHistCount
-				Local $hGpsID = $aHist[$j][1]
-				Local $hSignal = $aHist[$j][2]
-				Local $hRSSI = $aHist[$j][3]
-				Local $hDate = $aHist[$j][4]
-				Local $hTime = $aHist[$j][5]
-				Local $hLat = 0, $hLon = 0, $hAlt = 0
-
-				If $hGpsID > 0 Then
-					$hLat = Number(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($aHist[$j][6]), "N", ""), "S", "-"), " ", ""))
-					$hLon = Number(StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($aHist[$j][7]), "E", ""), "W", "-"), " ", ""))
-					$hAlt = Number($aHist[$j][8])
-				EndIf
-
-				Local $hTs = _DateDiff('s', "1970/01/01 00:00:00", $hDate & " " & $hTime)
-				If $iFirstTime = 0 Or $hTs < $iFirstTime Then $iFirstTime = $hTs
-				If $hTs > $iLastTime Then $iLastTime = $hTs
-
-				; Use RSSI (-100 to 0) directly. If 0, assume invalid or check Signal (0-100).
-				Local $iSig = $hRSSI
-				If $iSig = 0 And $hSignal > 0 Then $iSig = ($hSignal / 2) - 100 ; Rough conversion if RSSI missing
-
-				Local $sPacketBlob = _KismetDB_GenerateRadiotapBeacon($sBSSID, $sSSID, $iChannel, $fFreq / 1000, $iSig, $sBasicRates & "|" & $sOtherRates, $iPrivacy, $sAuth, $sEncr)
-				Local $iPacketLen = StringLen($sPacketBlob) / 2
-
-				_KismetDB_AddPacket($hDB, $hTs, 0, "IEEE802.11", $sBSSID, "FF:FF:FF:FF:FF:FF", $sBSSID, $fFreq, $hLat, $hLon, $iSig, $sDatasourceUUID, 127, 0, $iPacketID, $sPacketBlob, $iPacketLen)
-				$iPacketID += 1
-			Next
-		EndIf
-
-		If $iFirstTime = 0 Then $iFirstTime = $iTime
-		If $iLastTime = 0 Then $iLastTime = $iTime
-
-		_KismetDB_AddDevice($hDB, $iFirstTime, $iLastTime, $sBSSID, "IEEE802.11", $sBSSID, $aAPs[$i][13], $fLat, $fLon, $fLat, $fLon, $fLat, $fLon, 0, $sType, $sDevJson)
-	Next
+		$iGroupStart = $iGroupEnd + 1
+	WEnd
 
 	_SQLite_Exec($hDB, "COMMIT;")
 	_KismetDB_Close($hDB)
-	MsgBox(0, "Export Complete", "Exported " & $iCount & " APs to KismetDB.")
+	MsgBox(0, "Export Complete", "Exported " & $iCount & " APs (" & $iDeviceCount & " devices) to KismetDB.")
 EndFunc
 
 Func _ExportNetXML()
@@ -14796,7 +14859,16 @@ Func _ImportKismetDB($sFile)
         Return
     EndIf
     
-    Local $sQuery = "SELECT devmac, type, strongest_signal, avg_lat, avg_lon, device FROM devices WHERE type='Wi-Fi AP' OR type='Wi-Fi Ad-Hoc' OR type='Wi-Fi' OR type='infrastructure' OR type='ad-hoc'"
+    ; Detect DB version for compatibility
+    Local $iDBVersion = 0
+    Local $aVer, $iVerRows, $iVerCols
+    _SQLite_GetTable2d($hDB, "SELECT db_version FROM KISMET LIMIT 1", $aVer, $iVerRows, $iVerCols)
+    If $iVerRows > 0 Then $iDBVersion = Number($aVer[1][0])
+    
+    ; Query devices table - accept all Wi-Fi type variations
+    Local $sQuery = "SELECT first_time, last_time, devmac, strongest_signal, avg_lat, avg_lon, min_lat, min_lon, max_lat, max_lon, type, device FROM devices WHERE " & _
+        "type='Wi-Fi AP' OR type='Wi-Fi Ad-Hoc' OR type='Wi-Fi' OR type='Wi-Fi Device' OR type='Wi-Fi Client' OR " & _
+        "type='infrastructure' OR type='ad-hoc' OR type LIKE '%Wi-Fi%'"
     Local $aRows, $iRows, $iCols
     _SQLite_GetTable2d($hDB, $sQuery, $aRows, $iRows, $iCols)
     
@@ -14804,59 +14876,88 @@ Func _ImportKismetDB($sFile)
     Local $AddGID = 0
     Local $begintime = TimerInit()
     Local $UpdateTimer = TimerInit()
-    Local $MemReleaseTimer = TimerInit()
     
     For $i = 1 To $iRows
-        Local $sBSSID = $aRows[$i][0]
-        Local $sType = $aRows[$i][1]
-        Local $iSignal = $aRows[$i][2]
-        Local $fLat = $aRows[$i][3]
-        Local $fLon = $aRows[$i][4]
-        Local $sJson = $aRows[$i][5]
+        Local $iFirstTime = Number($aRows[$i][0])
+        Local $iLastTime = Number($aRows[$i][1])
+        Local $sBSSID = $aRows[$i][2]
+        Local $iSignal = Number($aRows[$i][3])
+        Local $fAvgLat = Number($aRows[$i][4])
+        Local $fAvgLon = Number($aRows[$i][5])
+        Local $sType = $aRows[$i][10]
+        Local $sJson = $aRows[$i][11]
         
         Local $oJson = _JSONDecode($sJson)
-        Local $sSSID = ""
-        Local $iChan = 0
         Local $sManuf = ""
-        Local $sCrypt = ""
+        Local $fLat = 0
+        Local $fLon = 0
         
+        ; --- Extract device-level fields (shared across all AP entries for this BSSID) ---
         If _JSONIsObject($oJson) Then
-            ; Try to extract from standard Kismet JSON structure
-             $sSSID = _JSONGet($oJson, "kismet.device.base.name")
-             $iChan = Number(_JSONGet($oJson, "kismet.device.base.channel"))
-             $sManuf = _JSONGet($oJson, "kismet.device.base.manuf")
-             $sCrypt = _JSONGet($oJson, "kismet.device.base.encryption")
+            $sManuf = _JSONGet($oJson, "kismet.device.base.manuf")
+            
+            ; --- GPS from device JSON location object (real Kismet format) ---
+            Local $oLocation = _JSONGet($oJson, "kismet.device.base.location")
+            If _JSONIsObject($oLocation) Then
+                Local $oAvgLoc = _JSONGet($oLocation, "kismet.common.location.avg_loc")
+                If _JSONIsObject($oAvgLoc) Then
+                    Local $oGeopoint = _JSONGet($oAvgLoc, "kismet.common.location.geopoint")
+                    If _JSONIsArray($oGeopoint) Then
+                        If UBound($oGeopoint) >= 3 Then
+                            $fLon = Number($oGeopoint[1])
+                            $fLat = Number($oGeopoint[2])
+                        EndIf
+                    EndIf
+                EndIf
+                If $fLat = 0 And $fLon = 0 Then
+                    Local $oLastLoc = _JSONGet($oLocation, "kismet.common.location.last")
+                    If _JSONIsObject($oLastLoc) Then
+                        Local $oGeopoint2 = _JSONGet($oLastLoc, "kismet.common.location.geopoint")
+                        If _JSONIsArray($oGeopoint2) Then
+                            If UBound($oGeopoint2) >= 3 Then
+                                $fLon = Number($oGeopoint2[1])
+                                $fLat = Number($oGeopoint2[2])
+                            EndIf
+                        EndIf
+                    EndIf
+                EndIf
+            EndIf
+            If $fLat = 0 And $fLon = 0 Then
+                $fLat = $fAvgLat
+                $fLon = $fAvgLon
+            EndIf
         EndIf
         
-        If $sSSID = "" Then $sSSID = "Unknown"
+        ; --- Timestamp conversion (UTC) ---
+        Local $sDate = "2000-01-01"
+        Local $sTime = "00:00:00.000"
+        If $iFirstTime > 0 Then
+            $sDate = _StringFormatTimeUTC("%Y", $iFirstTime) & "-" & _StringFormatTimeUTC("%m", $iFirstTime) & "-" & _StringFormatTimeUTC("%d", $iFirstTime)
+            $sTime = _StringFormatTimeUTC("%X", $iFirstTime) & ".000"
+        EndIf
         
-        ; Signal conversion (Kismet is usually dBm)
+        ; --- Signal conversion ---
         Local $iSignalPercent = 0
         Local $iRSSI = -100
         If $iSignal < 0 Then
             $iRSSI = $iSignal
             $iSignalPercent = _DbToSignalPercent($iRSSI)
-        Else
+        ElseIf $iSignal > 0 Then
             $iSignalPercent = $iSignal
             $iRSSI = _SignalPercentToDb($iSignalPercent)
         EndIf
         
-        ; GPS
+        ; --- GPS record ---
         Local $LoadGID = 0
         Local $sLatDMM = 'N 0000.0000'
         Local $sLonDMM = 'E 0000.0000'
-        Local $sDate = "2000/01/01" ; Default
-        Local $sTime = "00:00:00" ; Default
-
         If $fLat <> 0 Or $fLon <> 0 Then
             $sLatDMM = _Format_GPS_DDD_to_DMM($fLat, "N", "S")
             $sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
         EndIf
-            
         $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
         Local $GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
         Local $FoundGpsMatch = UBound($GpsMatchArray) - 1
-        
         If $FoundGpsMatch = 0 Then
             $AddGID += 1
             $GPS_ID += 1
@@ -14866,42 +14967,237 @@ Func _ImportKismetDB($sFile)
             $LoadGID = $GpsMatchArray[1][1]
         EndIf
         
-        ; Auth/Encr parsing from string
-        Local $sAuth = $SearchWord_Open
-        Local $sEncr = $SearchWord_None
-        
-        If StringInStr($sCrypt, "/") Then
-            ; Handle Vistumbler Export format for KismetDB (Auth/Encr)
-            Local $aEncParts = StringSplit($sCrypt, "/")
-            If $aEncParts[0] >= 2 Then
-                $sAuth = $aEncParts[1]
-                $sEncr = $aEncParts[2]
-            EndIf
-        Else
-            ; Fallback to standard detection
-             If StringInStr($sCrypt, "WPA") Then $sAuth = "WPA"
-             If StringInStr($sCrypt, "WPA2") Then $sAuth = "WPA2"
-             If StringInStr($sCrypt, "WEP") Then 
-                 $sAuth = "Open"
-                 $sEncr = "WEP"
-             EndIf
-             
-             ; Attempt to detect encryption if still None
-             If $sEncr = $SearchWord_None Or $sEncr = "None" Then
-                 If StringInStr($sCrypt, "AES") Or StringInStr($sCrypt, "CCM") Then 
-                     $sEncr = "CCMP"
-                 ElseIf StringInStr($sCrypt, "TKIP") Then
-                     $sEncr = "TKIP"
-                 EndIf
-             EndIf
+        ; --- Network type ---
+        Local $sVType = $SearchWord_Infrastructure
+        If StringInStr($sType, "Ad-Hoc") Or StringInStr($sType, "ad-hoc") Or StringInStr($sType, "IBSS") Then
+            $sVType = $SearchWord_Adhoc
         EndIf
         
-        ; Vistumbler Type
-        Local $sVType = $SearchWord_Infrastructure
-        If StringInStr($sType, "Ad-Hoc") Or StringInStr($sType, "ad-hoc") Then $sVType = $SearchWord_Adhoc
+        ; --- Radio type ---
+        Local $sRadioType = ""
+        If _JSONIsObject($oJson) Then $sRadioType = _JSONGet($oJson, "vistumbler.device.radio_type")
+        If $sRadioType = "" Or $sRadioType = $Text_Unknown Then
+            Local $iFreqKhz = 0
+            If _JSONIsObject($oJson) Then $iFreqKhz = Number(_JSONGet($oJson, "kismet.device.base.frequency"))
+            Local $iFreqMhz = $iFreqKhz / 1000
+            If $iFreqMhz >= 5925 Then
+                $sRadioType = "802.11ax"
+            ElseIf $iFreqMhz >= 4900 And $iFreqMhz <= 5900 Then
+                $sRadioType = "802.11ac"
+            ElseIf $iFreqMhz >= 2400 And $iFreqMhz <= 2500 Then
+                $sRadioType = "802.11n"
+            Else
+                $sRadioType = $Text_Unknown
+            EndIf
+        EndIf
         
-        Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sVType, $Text_Unknown, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
-        If $NewApAdded <> 0 Then $AddAP += 1
+        ; --- Build list of AP entries from advertised_ssid_map ---
+        ; Each entry in the map represents a unique Vistumbler AP (same BSSID, different SSID/auth/chan)
+        Local $iApEntryCount = 0
+        Local $aApSSIDs[1], $aApChans[1], $aApAuths[1], $aApEncrs[1]
+        
+        If _JSONIsObject($oJson) Then
+            Local $oDot11 = _JSONGet($oJson, "dot11.device")
+            If _JSONIsObject($oDot11) Then
+                Local $oSSIDMap = _JSONGet($oDot11, "dot11.device.advertised_ssid_map")
+                If _JSONIsObject($oSSIDMap) Then
+                    Local $iMapEntries = UBound($oSSIDMap) - 1 ; -1 for JSONObject header row
+                    If $iMapEntries > 0 Then
+                        ReDim $aApSSIDs[$iMapEntries]
+                        ReDim $aApChans[$iMapEntries]
+                        ReDim $aApAuths[$iMapEntries]
+                        ReDim $aApEncrs[$iMapEntries]
+                        
+                        For $m = 1 To $iMapEntries
+                            Local $oMapEntry = $oSSIDMap[$m][1]
+                            If _JSONIsObject($oMapEntry) Then
+                                $aApSSIDs[$iApEntryCount] = _JSONGet($oMapEntry, "dot11.advertisedssid.ssid")
+                                
+                                ; Channel from this SSID map entry
+                                Local $sEntryChan = _JSONGet($oMapEntry, "dot11.advertisedssid.channel")
+                                If $sEntryChan <> "" Then
+                                    $aApChans[$iApEntryCount] = Number($sEntryChan)
+                                Else
+                                    $aApChans[$iApEntryCount] = 0
+                                EndIf
+                                
+                                ; Encryption from this SSID map entry (Vistumbler format: "Auth/Encr")
+                                Local $sEntryCrypt = _JSONGet($oMapEntry, "dot11.advertisedssid.crypt_string")
+                                If $sEntryCrypt <> "" And StringInStr($sEntryCrypt, "/") Then
+                                    Local $aEP = StringSplit($sEntryCrypt, "/")
+                                    If $aEP[0] >= 2 Then
+                                        $aApAuths[$iApEntryCount] = $aEP[1]
+                                        $aApEncrs[$iApEntryCount] = $aEP[2]
+                                    Else
+                                        $aApAuths[$iApEntryCount] = ""
+                                        $aApEncrs[$iApEntryCount] = ""
+                                    EndIf
+                                Else
+                                    ; No per-entry crypt_string — will use device-level fallback
+                                    $aApAuths[$iApEntryCount] = ""
+                                    $aApEncrs[$iApEntryCount] = ""
+                                EndIf
+                                
+                                $iApEntryCount += 1
+                            EndIf
+                        Next
+                    EndIf
+                EndIf
+            EndIf
+        EndIf
+        
+        ; If exactly 1 entry with valid per-entry auth, use it directly but treat as single AP
+        If $iApEntryCount = 1 And $aApAuths[0] <> "" And $aApEncrs[0] <> "" Then
+            Local $iEntryChan1 = $aApChans[0]
+            If $iEntryChan1 = 0 And _JSONIsObject($oJson) Then
+                $iEntryChan1 = Number(_JSONGet($oJson, "kismet.device.base.channel"))
+            EndIf
+            Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $aApSSIDs[0], $iEntryChan1, $aApAuths[0], $aApEncrs[0], $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
+            If $NewApAdded <> 0 Then
+                $AddAP += 1
+                _ImportKismetPackets($hDB, $sBSSID, $NewApAdded, $AddGID)
+            EndIf
+        ElseIf $iApEntryCount <= 1 Then
+            ; Single AP mode — extract SSID, channel, and encryption using traditional multi-path fallback
+            Local $sSSID = ""
+            Local $iChan = 0
+            Local $sCrypt = ""
+            
+            If _JSONIsObject($oJson) Then
+                Local $oDot11F = _JSONGet($oJson, "dot11.device")
+                If _JSONIsObject($oDot11F) Then
+                    $sSSID = _JSONGet($oDot11F, "dot11.device.last_beaconed_ssid")
+                    If $sSSID = "" Then
+                        Local $oSSIDRec = _JSONGet($oDot11F, "dot11.device.last_beaconed_ssid_record")
+                        If _JSONIsObject($oSSIDRec) Then
+                            $sSSID = _JSONGet($oSSIDRec, "dot11.advertisedssid.ssid")
+                            Local $sSSIDChan = _JSONGet($oSSIDRec, "dot11.advertisedssid.channel")
+                            If $sSSIDChan <> "" Then $iChan = Number($sSSIDChan)
+                            Local $sSSIDCrypt = _JSONGet($oSSIDRec, "dot11.advertisedssid.crypt_string")
+                            If $sSSIDCrypt <> "" Then $sCrypt = $sSSIDCrypt
+                        EndIf
+                    EndIf
+                    If $sSSID = "" Then
+                        Local $oSSIDMapF = _JSONGet($oDot11F, "dot11.device.advertised_ssid_map")
+                        If _JSONIsObject($oSSIDMapF) And UBound($oSSIDMapF) > 1 Then
+                            Local $oFirstEntry = $oSSIDMapF[1][1]
+                            If _JSONIsObject($oFirstEntry) Then
+                                $sSSID = _JSONGet($oFirstEntry, "dot11.advertisedssid.ssid")
+                                Local $sMC = _JSONGet($oFirstEntry, "dot11.advertisedssid.channel")
+                                If $sMC <> "" And $iChan = 0 Then $iChan = Number($sMC)
+                                Local $sMCr = _JSONGet($oFirstEntry, "dot11.advertisedssid.crypt_string")
+                                If $sMCr <> "" And $sCrypt = "" Then $sCrypt = $sMCr
+                            EndIf
+                        EndIf
+                    EndIf
+                EndIf
+                
+                If $sSSID = "" Then
+                    Local $sBaseName = _JSONGet($oJson, "kismet.device.base.name")
+                    If $sBaseName <> "" And $sBaseName <> $sBSSID Then $sSSID = $sBaseName
+                EndIf
+                If $sSSID = "" Then
+                    Local $sCommonName = _JSONGet($oJson, "kismet.device.base.commonname")
+                    If $sCommonName <> "" And $sCommonName <> $sBSSID Then $sSSID = $sCommonName
+                EndIf
+                
+                If $iChan = 0 Then $iChan = Number(_JSONGet($oJson, "kismet.device.base.channel"))
+                If $sCrypt = "" Then $sCrypt = _JSONGet($oJson, "kismet.device.base.crypt_string")
+                If $sCrypt = "" Then $sCrypt = _JSONGet($oJson, "kismet.device.base.encryption")
+            EndIf
+            
+            ; Parse Auth/Encr from crypt string
+            Local $sAuth = $SearchWord_Open
+            Local $sEncr = $SearchWord_None
+            If StringInStr($sCrypt, "/") Then
+                Local $aEncParts = StringSplit($sCrypt, "/")
+                If $aEncParts[0] >= 2 Then
+                    $sAuth = $aEncParts[1]
+                    $sEncr = $aEncParts[2]
+                EndIf
+            Else
+                _ParseKismetCrypt($sCrypt, $sAuth, $sEncr)
+            EndIf
+            
+            ; Add single AP
+            Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
+            If $NewApAdded <> 0 Then
+                $AddAP += 1
+                _ImportKismetPackets($hDB, $sBSSID, $NewApAdded, $AddGID)
+            EndIf
+        Else
+            ; Multi-AP mode — create one AP per advertised_ssid_map entry
+            ; All APs share the same packets (imported once, duplicated to each)
+            Local $aNewApIDs[$iApEntryCount]
+            Local $iCreatedAPs = 0
+            
+            For $e = 0 To $iApEntryCount - 1
+                Local $sEntrySSID = $aApSSIDs[$e]
+                Local $iEntryChan = $aApChans[$e]
+                Local $sEntryAuth = $aApAuths[$e]
+                Local $sEntryEncr = $aApEncrs[$e]
+                
+                ; If channel not in entry, use device-level
+                If $iEntryChan = 0 And _JSONIsObject($oJson) Then
+                    $iEntryChan = Number(_JSONGet($oJson, "kismet.device.base.channel"))
+                EndIf
+                
+                ; If auth/encr not in entry, parse device-level crypt_string
+                If $sEntryAuth = "" Or $sEntryEncr = "" Then
+                    Local $sDevCrypt = ""
+                    If _JSONIsObject($oJson) Then $sDevCrypt = _JSONGet($oJson, "kismet.device.base.crypt_string")
+                    If $sDevCrypt = "" And _JSONIsObject($oJson) Then $sDevCrypt = _JSONGet($oJson, "kismet.device.base.encryption")
+                    $sEntryAuth = $SearchWord_Open
+                    $sEntryEncr = $SearchWord_None
+                    If StringInStr($sDevCrypt, "/") Then
+                        Local $aDP = StringSplit($sDevCrypt, "/")
+                        If $aDP[0] >= 2 Then
+                            $sEntryAuth = $aDP[1]
+                            $sEntryEncr = $aDP[2]
+                        EndIf
+                    Else
+                        _ParseKismetCrypt($sDevCrypt, $sEntryAuth, $sEntryEncr)
+                    EndIf
+                EndIf
+                
+                Local $NewEntryAP = _AddApData(0, $LoadGID, $sBSSID, $sEntrySSID, $iEntryChan, $sEntryAuth, $sEntryEncr, $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
+                If $NewEntryAP <> 0 Then
+                    $aNewApIDs[$iCreatedAPs] = $NewEntryAP
+                    $iCreatedAPs += 1
+                    $AddAP += 1
+                EndIf
+            Next
+            
+            ; Import packets once and share across all created APs
+            If $iCreatedAPs > 0 Then
+                ; Import packets for the first AP, then duplicate HIST to others
+                _ImportKismetPackets($hDB, $sBSSID, $aNewApIDs[0], $AddGID)
+                
+                ; For additional APs, duplicate the same HIST entries
+                If $iCreatedAPs > 1 Then
+                    ; Query the HIST records we just created for the first AP
+                    Local $sHistDupQuery = "SELECT GpsID, Signal, RSSI, Date1, Time1 FROM HIST WHERE ApID=" & $aNewApIDs[0] & " ORDER BY HistID ASC"
+                    Local $aHistDup = _RecordSearch($VistumblerDB, $sHistDupQuery, $DB_OBJ)
+                    If IsArray($aHistDup) Then
+                        Local $iHistDupCount = UBound($aHistDup) - 1
+                        For $ea = 1 To $iCreatedAPs - 1
+                            Local $iDupFirstHist = 0
+                            Local $iDupLastHist = 0
+                            For $dh = 1 To $iHistDupCount
+                                $HISTID += 1
+                                _AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & "|" & $aNewApIDs[$ea] & "|" & $aHistDup[$dh][1] & "|" & $aHistDup[$dh][2] & "|" & $aHistDup[$dh][3] & "|" & $aHistDup[$dh][4] & "|" & $aHistDup[$dh][5])
+                                If $iDupFirstHist = 0 Then $iDupFirstHist = $HISTID
+                                $iDupLastHist = $HISTID
+                            Next
+                            If $iDupFirstHist <> 0 Then
+                                $query = "UPDATE AP SET FirstHistId=" & $iDupFirstHist & ", LastHistId=" & $iDupLastHist & " WHERE ApId=" & $aNewApIDs[$ea]
+                                _ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+                            EndIf
+                        Next
+                    EndIf
+                EndIf
+            EndIf
+        EndIf
         
         If TimerDiff($UpdateTimer) > 600 Or ($i = $iRows) Then
             _UpdateProgress($i, $iRows, $AddAP, $AddGID, $begintime)
@@ -14910,7 +15206,131 @@ Func _ImportKismetDB($sFile)
     Next
     
     _SQLite_Close($hDB)
-    MsgBox(0, "Import Complete", "Imported " & $AddAP & " APs from KismetDB.")
+    MsgBox(0, "Import Complete", "Imported " & $AddAP & " APs from KismetDB (v" & $iDBVersion & ").")
+EndFunc
+
+; Helper: Parse Kismet-style space-separated crypt string into Auth and Encr
+Func _ParseKismetCrypt($sCrypt, ByRef $sAuth, ByRef $sEncr)
+    $sAuth = $SearchWord_Open
+    $sEncr = $SearchWord_None
+    
+    If StringInStr($sCrypt, "WPA3") Then
+        If StringInStr($sCrypt, "SAE") Or StringInStr($sCrypt, "Personal") Then
+            $sAuth = "WPA3-Personal"
+        ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
+            $sAuth = "WPA3-Enterprise"
+        Else
+            $sAuth = "WPA3-Personal"
+        EndIf
+    ElseIf StringInStr($sCrypt, "WPA2") Then
+        If StringInStr($sCrypt, "PSK") Or StringInStr($sCrypt, "Personal") Then
+            $sAuth = "WPA2-Personal"
+        ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
+            $sAuth = "WPA2-Enterprise"
+        Else
+            $sAuth = "WPA2-Personal"
+        EndIf
+    ElseIf StringInStr($sCrypt, "WPA") Then
+        If StringInStr($sCrypt, "PSK") Or StringInStr($sCrypt, "Personal") Then
+            $sAuth = "WPA-Personal"
+        ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
+            $sAuth = "WPA-Enterprise"
+        Else
+            $sAuth = "WPA-Personal"
+        EndIf
+    ElseIf StringInStr($sCrypt, "WEP") Then
+        $sAuth = $SearchWord_Open
+        $sEncr = "WEP"
+    ElseIf StringInStr($sCrypt, "Open") Or $sCrypt = "" Then
+        $sAuth = $SearchWord_Open
+        $sEncr = $SearchWord_None
+    EndIf
+    
+    If $sEncr = $SearchWord_None And Not StringInStr($sCrypt, "WEP") Then
+        If StringInStr($sCrypt, "CCMP") Or StringInStr($sCrypt, "AES") Then
+            $sEncr = "CCMP"
+        ElseIf StringInStr($sCrypt, "TKIP") Then
+            $sEncr = "TKIP"
+        ElseIf StringInStr($sCrypt, "GCMP") Then
+            $sEncr = "GCMP"
+        ElseIf StringInStr($sCrypt, "WPA") Then
+            $sEncr = "CCMP"
+        EndIf
+    EndIf
+EndFunc
+
+; Helper: Import packets from KismetDB for a given BSSID and associate with an AP
+Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
+    Local $sPktQuery = "SELECT ts_sec, signal, lat, lon FROM packets WHERE sourcemac='" & $sBSSID & "' ORDER BY ts_sec ASC"
+    Local $aPkts, $iPktRows, $iPktCols
+    _SQLite_GetTable2d($hDB, $sPktQuery, $aPkts, $iPktRows, $iPktCols)
+    
+    Local $iFirstPktHistID = 0
+    Local $iLastPktHistID = 0
+    
+    For $p = 1 To $iPktRows
+        Local $iPktTs = Number($aPkts[$p][0])
+        Local $iPktSig = Number($aPkts[$p][1])
+        Local $fPktLat = Number($aPkts[$p][2])
+        Local $fPktLon = Number($aPkts[$p][3])
+        
+        ; Convert signal
+        Local $iPktSigPercent = 0
+        Local $iPktRSSI = -100
+        If $iPktSig < 0 Then
+            $iPktRSSI = $iPktSig
+            $iPktSigPercent = _DbToSignalPercent($iPktRSSI)
+        ElseIf $iPktSig > 0 Then
+            $iPktSigPercent = $iPktSig
+            $iPktRSSI = _SignalPercentToDb($iPktSigPercent)
+        Else
+            ContinueLoop
+        EndIf
+        
+        ; Convert timestamp (UTC)
+        Local $sPktDate = "2000-01-01"
+        Local $sPktTime = "00:00:00.000"
+        If $iPktTs > 0 Then
+            $sPktDate = _StringFormatTimeUTC("%Y", $iPktTs) & "-" & _StringFormatTimeUTC("%m", $iPktTs) & "-" & _StringFormatTimeUTC("%d", $iPktTs)
+            $sPktTime = _StringFormatTimeUTC("%X", $iPktTs) & ".000"
+        EndIf
+        
+        ; GPS for this packet
+        Local $sPktLatDMM = 'N 0000.0000'
+        Local $sPktLonDMM = 'E 0000.0000'
+        Local $iPktGID = 0
+        
+        If $fPktLat <> 0 Or $fPktLon <> 0 Then
+            $sPktLatDMM = _Format_GPS_DDD_to_DMM($fPktLat, "N", "S")
+            $sPktLonDMM = _Format_GPS_DDD_to_DMM($fPktLon, "E", "W")
+        EndIf
+        
+        Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sPktLatDMM & "' And Longitude = '" & $sPktLonDMM & "'"
+        Local $aPktGpsMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+        Local $iPktGpsFound = UBound($aPktGpsMatch) - 1
+        
+        If $iPktGpsFound = 0 Then
+            $AddGID += 1
+            $GPS_ID += 1
+            _AddRecord($VistumblerDB, "GPS", $DB_OBJ, $GPS_ID & '|' & $sPktLatDMM & '|' & $sPktLonDMM & '|00|0|0|0|0|0|0|' & $sPktDate & '|' & $sPktTime)
+            $iPktGID = $GPS_ID
+        Else
+            $iPktGID = $aPktGpsMatch[1][1]
+        EndIf
+        
+        ; Add history entry
+        $HISTID += 1
+        _AddRecord($VistumblerDB, "HIST", $DB_OBJ, $HISTID & "|" & $iApID & "|" & $iPktGID & "|" & $iPktSigPercent & "|" & $iPktRSSI & "|" & $sPktDate & "|" & $sPktTime)
+        
+        If $iFirstPktHistID = 0 Then $iFirstPktHistID = $HISTID
+        $iLastPktHistID = $HISTID
+    Next
+    
+    ; Update AP's FirstHistID and LastHistID
+    If $iFirstPktHistID <> 0 Then
+        Local $query = "UPDATE AP SET FirstHistId=" & $iFirstPktHistID & ", LastHistId=" & $iLastPktHistID & " WHERE ApId=" & $iApID
+        _ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
+    EndIf
 EndFunc
 
 Func _ImportNetXML($sFile)
@@ -15058,4 +15478,21 @@ Func _JSONGet($o, $key)
         If $o[$i][0] == $key Then Return $o[$i][1]
     Next
     Return ""
+EndFunc
+
+; Add or update a key-value pair in a JSON object (2D array)
+Func _JSONPut(ByRef $o, $key, $value)
+    If Not _JSONIsObject($o) Then Return
+    ; Check if key already exists
+    For $i = 1 To UBound($o) - 1
+        If $o[$i][0] == $key Then
+            $o[$i][1] = $value
+            Return
+        EndIf
+    Next
+    ; Key not found — add new entry
+    Local $iSize = UBound($o)
+    ReDim $o[$iSize + 1][2]
+    $o[$iSize][0] = $key
+    $o[$iSize][1] = $value
 EndFunc
