@@ -19,14 +19,26 @@ $Script_Start_Date = '07/19/2008'
 $Script_Name = 'SayText'
 $Script_Website = 'http://www.vistumbler.net'
 $Script_Function = 'Uses Sound files, Microsoft SAPI, or MIDI sounds to say a number from 0 - 100'
-$version = 'v4.0.0'
+$version = 'v5.2'
 $last_modified = '2026/02/09'
 ;--------------------------------------------------------
 #include <String.au3>
-#include "UDFs\Midiudf.au3"
+#include "UDFs\MIDIFunctions.au3"
+#include "UDFs\MIDIConstants.au3"
+
+Dim $Default_settings = @ScriptDir & '\Settings\vistumbler_settings.ini'
+Dim $Profile_settings = @AppDataDir & '\Vistumbler\vistumbler_settings.ini'
+Dim $PortableMode = IniRead($Default_settings, 'Vistumbler', 'PortableMode', 0)
+If $PortableMode = 1 Then
+	$settings = $Default_settings
+Else
+	$settings = $Profile_settings
+	If FileExists($Default_settings) And FileExists($settings) = 0 Then FileCopy($Default_settings, $settings, 1)
+EndIf
 
 Dim $SoundDir = @ScriptDir & '\Sounds\'
-Dim $say = ''
+Dim $new_AP_sound = IniRead($settings, 'Sound', 'NewAP_Sound', 'new_ap.wav')
+Dim $say = 'test'
 Dim $midistring = ''
 Dim $type = 2
 Dim $SayPercent = 0
@@ -71,6 +83,7 @@ If $say <> '' Or $midistring <> '' Then
 		If StringIsInt($say) = 1 And StringLen($say) <= 3 Then _SpeakSignal($say)
 	ElseIf $type = 2 Then
 		If $SayPercent = 1 Then $say &= '%'
+		ConsoleWrite($say & @CRLF)
 		_TalkOBJ($say)
 	ElseIf $type = 3 Then
 		_PlayMidi($Instrument, $say, $MidiWaitTime)
@@ -79,6 +92,8 @@ If $say <> '' Or $midistring <> '' Then
 		For $l = 1 To $midistringarray[0]
 			_PlayMidi($Instrument, $midistringarray[$l], $MidiWaitTime)
 		Next
+	ElseIf $type = 5 Then
+		_SigBasedSound($say)
 	EndIf
 EndIf
 Exit
@@ -167,280 +182,210 @@ Func _SpeakSignal($SpeakNum) ;Says then signal given
 EndFunc   ;==>_SpeakSignal
 
 Func _PlayMidi($Instrument = 0, $Signal = 0, $Sleeptime = 500)
-	$PitchOn = ''
-	$PitchOff = ''
+	$Pitch = ''
 	;Pick Start/Stop Varialbles based on signal
 	If $Signal > 0 And $Signal < 10 Then
-		$PitchOn = $A0_ON
-		$PitchOff = $A0_OFF
+		$Pitch = $NOTE_A0
 	ElseIf $Signal >= 10 And $Signal < 15 Then
-		$PitchOn = $A0SHARP_ON
-		$PitchOff = $A0SHARP_OFF
+		$Pitch = $NOTE_A0SHARP
 	ElseIf $Signal = 15 Then
-		$PitchOn = $B0_ON
-		$PitchOff = $B0_OFF
+		$Pitch = $NOTE_B0
 	ElseIf $Signal = 16 Then
-		$PitchOn = $C1_ON
-		$PitchOff = $C1_OFF
+		$Pitch = $NOTE_C1
 	ElseIf $Signal = 17 Then
-		$PitchOn = $C1SHARP_ON
-		$PitchOff = $C1SHARP_OFF
+		$Pitch = $NOTE_C1SHARP
 	ElseIf $Signal = 18 Then
-		$PitchOn = $D1_ON
-		$PitchOff = $D1_OFF
+		$Pitch = $NOTE_D1
 	ElseIf $Signal = 19 Then
-		$PitchOn = $D1SHARP_ON
-		$PitchOff = $D1SHARP_OFF
+		$Pitch = $NOTE_D1SHARP
 	ElseIf $Signal = 20 Then
-		$PitchOn = $E1_ON
-		$PitchOff = $E1_OFF
+		$Pitch = $NOTE_E1
 	ElseIf $Signal = 21 Then
-		$PitchOn = $F1_ON
-		$PitchOff = $F1_OFF
+		$Pitch = $NOTE_F1
 	ElseIf $Signal = 22 Then
-		$PitchOn = $F1SHARP_ON
-		$PitchOff = $F1SHARP_OFF
+		$Pitch = $NOTE_F1SHARP
 	ElseIf $Signal = 23 Then
-		$PitchOn = $G1_ON
-		$PitchOff = $G1_OFF
+		$Pitch = $NOTE_G1
 	ElseIf $Signal = 24 Then
-		$PitchOn = $G1SHARP_ON
-		$PitchOff = $G1SHARP_OFF
+		$Pitch = $NOTE_G1SHARP
 	ElseIf $Signal = 25 Then
-		$PitchOn = $A1_ON
-		$PitchOff = $A1_OFF
+		$Pitch = $NOTE_A1
 	ElseIf $Signal = 26 Then
-		$PitchOn = $A1SHARP_ON
-		$PitchOff = $A1SHARP_OFF
+		$Pitch = $NOTE_A1SHARP
 	ElseIf $Signal = 27 Then
-		$PitchOn = $B1_ON
-		$PitchOff = $B1_OFF
+		$Pitch = $NOTE_B1
 	ElseIf $Signal = 28 Then
-		$PitchOn = $C2_ON
-		$PitchOff = $C2_OFF
+		$Pitch = $NOTE_C2
 	ElseIf $Signal = 29 Then
-		$PitchOn = $C2SHARP_ON
-		$PitchOff = $C2SHARP_OFF
+		$Pitch = $NOTE_C2SHARP
 	ElseIf $Signal = 30 Then
-		$PitchOn = $D2_ON
-		$PitchOff = $D2_OFF
+		$Pitch = $NOTE_D2
 	ElseIf $Signal = 31 Then
-		$PitchOn = $D2SHARP_ON
-		$PitchOff = $D2SHARP_OFF
+		$Pitch = $NOTE_D2SHARP
 	ElseIf $Signal = 32 Then
-		$PitchOn = $E2_ON
-		$PitchOff = $E2_OFF
+		$Pitch = $NOTE_E2
 	ElseIf $Signal = 33 Then
-		$PitchOn = $F2_ON
-		$PitchOff = $F2_OFF
+		$Pitch = $NOTE_F2
 	ElseIf $Signal = 34 Then
-		$PitchOn = $F2SHARP_ON
-		$PitchOff = $F2SHARP_OFF
+		$Pitch = $NOTE_F2SHARP
 	ElseIf $Signal = 35 Then
-		$PitchOn = $G2_ON
-		$PitchOff = $G2_OFF
+		$Pitch = $NOTE_G2
 	ElseIf $Signal = 36 Then
-		$PitchOn = $G2SHARP_ON
-		$PitchOff = $G2SHARP_OFF
+		$Pitch = $NOTE_G2SHARP
 	ElseIf $Signal = 37 Then
-		$PitchOn = $A2_ON
-		$PitchOff = $A2_OFF
+		$Pitch = $NOTE_A2
 	ElseIf $Signal = 38 Then
-		$PitchOn = $A2SHARP_ON
-		$PitchOff = $A2SHARP_OFF
+		$Pitch = $NOTE_A2SHARP
 	ElseIf $Signal = 39 Then
-		$PitchOn = $B2_ON
-		$PitchOff = $B2_OFF
+		$Pitch = $NOTE_B2
 	ElseIf $Signal = 40 Then
-		$PitchOn = $C3_ON
-		$PitchOff = $C3_OFF
+		$Pitch = $NOTE_C3
 	ElseIf $Signal = 41 Then
-		$PitchOn = $C3SHARP_ON
-		$PitchOff = $C3SHARP_OFF
+		$Pitch = $NOTE_C3SHARP
 	ElseIf $Signal = 42 Then
-		$PitchOn = $D3_ON
-		$PitchOff = $D3_OFF
+		$Pitch = $NOTE_D3
 	ElseIf $Signal = 43 Then
-		$PitchOn = $D3SHARP_ON
-		$PitchOff = $D3SHARP_OFF
+		$Pitch = $NOTE_D3SHARP
 	ElseIf $Signal = 44 Then
-		$PitchOn = $E3_ON
-		$PitchOff = $E3_OFF
+		$Pitch = $NOTE_E3
 	ElseIf $Signal = 45 Then
-		$PitchOn = $F3_ON
-		$PitchOff = $F3_OFF
+		$Pitch = $NOTE_F3
 	ElseIf $Signal = 46 Then
-		$PitchOn = $F3SHARP_ON
-		$PitchOff = $F3SHARP_OFF
+		$Pitch = $NOTE_F3SHARP
 	ElseIf $Signal = 47 Then
-		$PitchOn = $G3_ON
-		$PitchOff = $G3_OFF
+		$Pitch = $NOTE_G3
 	ElseIf $Signal = 48 Then
-		$PitchOn = $G3SHARP_ON
-		$PitchOff = $G3SHARP_OFF
+		$Pitch = $NOTE_G3SHARP
 	ElseIf $Signal = 49 Then
-		$PitchOn = $A3_ON
-		$PitchOff = $A3_OFF
+		$Pitch = $NOTE_A3
 	ElseIf $Signal = 50 Then
-		$PitchOn = $A3SHARP_ON
-		$PitchOff = $A3SHARP_OFF
+		$Pitch = $NOTE_A3SHARP
 	ElseIf $Signal = 51 Then
-		$PitchOn = $B3_ON
-		$PitchOff = $B3_OFF
+		$Pitch = $NOTE_B3
 	ElseIf $Signal = 52 Then
-		$PitchOn = $C4_ON
-		$PitchOff = $C4_OFF
+		$Pitch = $NOTE_C4
 	ElseIf $Signal = 53 Then
-		$PitchOn = $C4SHARP_ON
-		$PitchOff = $C4SHARP_OFF
+		$Pitch = $NOTE_C4SHARP
 	ElseIf $Signal = 54 Then
-		$PitchOn = $D4_ON
-		$PitchOff = $D4_OFF
+		$Pitch = $NOTE_D4
 	ElseIf $Signal = 55 Then
-		$PitchOn = $D4SHARP_ON
-		$PitchOff = $D4SHARP_OFF
+		$Pitch = $NOTE_D4SHARP
 	ElseIf $Signal = 56 Then
-		$PitchOn = $E4_ON
-		$PitchOff = $E4_OFF
+		$Pitch = $NOTE_E4
 	ElseIf $Signal = 57 Then
-		$PitchOn = $F4_ON
-		$PitchOff = $F4_OFF
+		$Pitch = $NOTE_F4
 	ElseIf $Signal = 58 Then
-		$PitchOn = $F4SHARP_ON
-		$PitchOff = $F4SHARP_OFF
+		$Pitch = $NOTE_F4SHARP
 	ElseIf $Signal = 59 Then
-		$PitchOn = $G4_ON
-		$PitchOff = $G4_OFF
+		$Pitch = $NOTE_G4
 	ElseIf $Signal = 60 Then
-		$PitchOn = $G4SHARP_ON
-		$PitchOff = $G4SHARP_OFF
+		$Pitch = $NOTE_G4SHARP
 	ElseIf $Signal = 61 Then
-		$PitchOn = $A4_ON
-		$PitchOff = $A4_OFF
+		$Pitch = $NOTE_A4
 	ElseIf $Signal = 62 Then
-		$PitchOn = $A4SHARP_ON
-		$PitchOff = $A4SHARP_OFF
+		$Pitch = $NOTE_A4SHARP
 	ElseIf $Signal = 63 Then
-		$PitchOn = $B4_ON
-		$PitchOff = $B4_OFF
+		$Pitch = $NOTE_B4
 	ElseIf $Signal = 64 Then
-		$PitchOn = $C5_ON
-		$PitchOff = $C5_OFF
+		$Pitch = $NOTE_C5
 	ElseIf $Signal = 65 Then
-		$PitchOn = $C5SHARP_ON
-		$PitchOff = $C5SHARP_OFF
+		$Pitch = $NOTE_C5SHARP
 	ElseIf $Signal = 66 Then
-		$PitchOn = $D5_ON
-		$PitchOff = $D5_OFF
+		$Pitch = $NOTE_D5
 	ElseIf $Signal = 67 Then
-		$PitchOn = $D5SHARP_ON
-		$PitchOff = $D5SHARP_OFF
+		$Pitch = $NOTE_D5SHARP
 	ElseIf $Signal = 68 Then
-		$PitchOn = $E5_ON
-		$PitchOff = $E5_OFF
+		$Pitch = $NOTE_E5
 	ElseIf $Signal = 69 Then
-		$PitchOn = $F5_ON
-		$PitchOff = $F5_OFF
+		$Pitch = $NOTE_F5
 	ElseIf $Signal = 70 Then
-		$PitchOn = $F5SHARP_ON
-		$PitchOff = $F5SHARP_OFF
+		$Pitch = $NOTE_F5SHARP
 	ElseIf $Signal = 71 Then
-		$PitchOn = $G5_ON
-		$PitchOff = $G5_OFF
+		$Pitch = $NOTE_G5
 	ElseIf $Signal = 72 Then
-		$PitchOn = $G5SHARP_ON
-		$PitchOff = $G5SHARP_OFF
+		$Pitch = $NOTE_G5SHARP
 	ElseIf $Signal = 73 Then
-		$PitchOn = $A5_ON
-		$PitchOff = $A5_OFF
+		$Pitch = $NOTE_A5
 	ElseIf $Signal = 74 Then
-		$PitchOn = $A5SHARP_ON
-		$PitchOff = $A5SHARP_OFF
+		$Pitch = $NOTE_A5SHARP
 	ElseIf $Signal = 75 Then
-		$PitchOn = $B5_ON
-		$PitchOff = $B5_OFF
+		$Pitch = $NOTE_B5
 	ElseIf $Signal = 76 Then
-		$PitchOn = $C6_ON
-		$PitchOff = $C6_OFF
+		$Pitch = $NOTE_C6
 	ElseIf $Signal = 77 Then
-		$PitchOn = $C6SHARP_ON
-		$PitchOff = $C6SHARP_OFF
+		$Pitch = $NOTE_C6SHARP
 	ElseIf $Signal = 78 Then
-		$PitchOn = $D6_ON
-		$PitchOff = $D6_OFF
+		$Pitch = $NOTE_D6
 	ElseIf $Signal = 79 Then
-		$PitchOn = $D6SHARP_ON
-		$PitchOff = $D6SHARP_OFF
+		$Pitch = $NOTE_D6SHARP
 	ElseIf $Signal = 80 Then
-		$PitchOn = $E6_ON
-		$PitchOff = $E6_OFF
+		$Pitch = $NOTE_E6
 	ElseIf $Signal = 81 Then
-		$PitchOn = $F6_ON
-		$PitchOff = $F6_OFF
+		$Pitch = $NOTE_F6
 	ElseIf $Signal = 82 Then
-		$PitchOn = $F6SHARP_ON
-		$PitchOff = $F6SHARP_OFF
+		$Pitch = $NOTE_F6SHARP
 	ElseIf $Signal = 83 Then
-		$PitchOn = $G6_ON
-		$PitchOff = $G6_OFF
+		$Pitch = $NOTE_G6
 	ElseIf $Signal = 84 Then
-		$PitchOn = $G6SHARP_ON
-		$PitchOff = $G6SHARP_OFF
+		$Pitch = $NOTE_G6SHARP
 	ElseIf $Signal = 85 Then
-		$PitchOn = $A6_ON
-		$PitchOff = $A6_OFF
+		$Pitch = $NOTE_A6
 	ElseIf $Signal = 86 Then
-		$PitchOn = $A6SHARP_ON
-		$PitchOff = $A6SHARP_OFF
+		$Pitch = $NOTE_A6SHARP
 	ElseIf $Signal = 87 Then
-		$PitchOn = $B6_ON
-		$PitchOff = $B6_OFF
+		$Pitch = $NOTE_B6
 	ElseIf $Signal = 88 Then
-		$PitchOn = $C7_ON
-		$PitchOff = $C7_OFF
+		$Pitch = $NOTE_C7
 	ElseIf $Signal = 89 Then
-		$PitchOn = $C7SHARP_ON
-		$PitchOff = $C7SHARP_OFF
+		$Pitch = $NOTE_C7SHARP
 	ElseIf $Signal = 90 Then
-		$PitchOn = $D7_ON
-		$PitchOff = $D7_OFF
+		$Pitch = $NOTE_D7
 	ElseIf $Signal = 91 Then
-		$PitchOn = $D7SHARP_ON
-		$PitchOff = $D7SHARP_OFF
+		$Pitch = $NOTE_D7SHARP
 	ElseIf $Signal = 92 Then
-		$PitchOn = $E7_ON
-		$PitchOff = $E7_OFF
+		$Pitch = $NOTE_E7
 	ElseIf $Signal = 93 Then
-		$PitchOn = $F7_ON
-		$PitchOff = $F7_OFF
+		$Pitch = $NOTE_F7
 	ElseIf $Signal = 94 Then
-		$PitchOn = $F7SHARP_ON
-		$PitchOff = $F7SHARP_OFF
+		$Pitch = $NOTE_F7SHARP
 	ElseIf $Signal = 95 Then
-		$PitchOn = $G7_ON
-		$PitchOff = $G7_OFF
+		$Pitch = $NOTE_G7
 	ElseIf $Signal = 96 Then
-		$PitchOn = $G7SHARP_ON
-		$PitchOff = $G7SHARP_OFF
+		$Pitch = $NOTE_G7SHARP
 	ElseIf $Signal = 97 Then
-		$PitchOn = $A7_ON
-		$PitchOff = $A7_OFF
+		$Pitch = $NOTE_A7
 	ElseIf $Signal = 98 Then
-		$PitchOn = $A7SHARP_ON
-		$PitchOff = $A7SHARP_OFF
+		$Pitch = $NOTE_A7SHARP
 	ElseIf $Signal = 99 Then
-		$PitchOn = $B7_ON
-		$PitchOff = $B7_OFF
+		$Pitch = $NOTE_B7
 	ElseIf $Signal = 100 Then
-		$PitchOn = $C8_ON
-		$PitchOff = $C8_OFF
+		$Pitch = $NOTE_C8
 	EndIf
-	If $PitchOn <> '' And $PitchOff <> '' Then
-		$open = _MidiOutOpen()
-		_MidiOutShortMsg($open, 256 * $Instrument + 192)  ;Select Instrument
-		_MidiOutShortMsg($open, $PitchOn) ;Start playing Instrument
+	If $Pitch <> '' Then
+		$open = _midiOutOpen()
+		MidiSetInstrument($open, $Instrument) ;Select Instrument
+		NoteOn($open, $Pitch, 1, $MIDI_MAX_VALUE)    ;Start playing Instrument
 		Sleep($Sleeptime)
-		_MidiOutShortMsg($open, $PitchOff) ;Stop playing Instrument
+		NoteOff($open, $Pitch, 1, $MIDI_MAX_VALUE) ;Stop playing Instrument
 		_MidiOutClose($open)
 	EndIf
 EndFunc   ;==>_PlayMidi
+
+Func _SigBasedSound($volume)
+	If $volume >= 1 And $volume <= 20 Then
+		SoundSetWaveVolume(20)
+		SoundPlay($SoundDir & $new_AP_sound, 1)
+	ElseIf $volume >= 21 And $volume <= 40 Then
+		SoundSetWaveVolume(40)
+		SoundPlay($SoundDir & $new_AP_sound, 1)
+	ElseIf $volume >= 41 And $volume <= 60 Then
+		SoundSetWaveVolume(60)
+		SoundPlay($SoundDir & $new_AP_sound, 1)
+	ElseIf $volume >= 61 And $volume <= 80 Then
+		SoundSetWaveVolume(80)
+		SoundPlay($SoundDir & $new_AP_sound, 1)
+	ElseIf $volume >= 81 And $volume <= 100 Then
+		SoundSetWaveVolume(100)
+		SoundPlay($SoundDir & $new_AP_sound, 1)
+	EndIf
+EndFunc   ;==>_SigBasedSound
