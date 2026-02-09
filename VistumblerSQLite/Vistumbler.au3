@@ -3426,8 +3426,12 @@ Func _SetUpDbTables($dbfile)
 	EndIf
 	
 	Local $result
-	$result = _SQLite_Exec($DBhndl, "pragma synchronous=0")
-	ConsoleWrite("pragma synchronous result: " & $result & @CRLF)
+	; Enable WAL mode for better multi-process concurrency
+	$result = _SQLite_Exec($DBhndl, "PRAGMA journal_mode=WAL")
+	ConsoleWrite("PRAGMA journal_mode=WAL result: " & $result & @CRLF)
+	; Use NORMAL sync for balance of speed and safety
+	$result = _SQLite_Exec($DBhndl, "PRAGMA synchronous=NORMAL")
+	ConsoleWrite("PRAGMA synchronous=NORMAL result: " & $result & @CRLF)
 	
 	$result = _SQLite_Exec($DBhndl, "CREATE TABLE GPS (GPSID INTEGER,Latitude TEXT(20),Longitude TEXT(20),NumOfSats TEXT(2),HorDilPitch TEXT(255),Alt TEXT(255),Geo TEXT(255),SpeedInMPH TEXT(255),SpeedInKmH TEXT(255),TrackAngle TEXT(255),Date1 TEXT(50),Time1 TEXT(50))")
 	ConsoleWrite("CREATE TABLE GPS result: " & $result & " - " & _SQLite_ErrMsg($DBhndl) & @CRLF)

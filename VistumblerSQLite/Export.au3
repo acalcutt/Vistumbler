@@ -86,8 +86,9 @@ For $loop = 1 To $CmdLine[0]
 Next
 
 If $filename <> '' Then
-	$DBhndl = _SQLite_Open($VistumblerDB, $SQLITE_OPEN_READONLY, $SQLITE_ENCODING_UTF16)
-	_SQLite_Exec($DBhndl, "pragma synchronous=0");Speed vs Data security. Speed Wins for now.
+	_SQLite_Startup()
+	$DBhndl = _SQLite_Open($VistumblerDB, $SQLITE_OPEN_READONLY)
+	; Read-only connections don't need pragma settings
 	If $filetype = 'd' Then
 		_ExportDetailedTXT($filename)
 	ElseIf $filetype = 'z' Then
