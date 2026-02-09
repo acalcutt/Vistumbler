@@ -1,12 +1,12 @@
 ﻿#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Icons\icon.ico
 #AutoIt3Wrapper_Outfile=Vistumbler.exe
-#AutoIt3Wrapper_Res_Fileversion=10.9.0.0
+#AutoIt3Wrapper_Res_Fileversion=10.9.2.0
 #AutoIt3Wrapper_Res_ProductName=Vistumbler
-#AutoIt3Wrapper_Res_CompanyName=Vistumbler.net
+#AutoIt3Wrapper_Res_CompanyName=TechIdiots LLC
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
-#AutoIt3Wrapper_Run_Tidy=n
+#AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
 ;Copyright (C) 2026 Andrew Calcutt
@@ -1278,7 +1278,7 @@ If FileExists($FiltDB) Then
 	$FiltDBhndl = _SQLite_Open($FiltDB)
 	$query = "SELECT COUNT(*) FROM Filters"
 	Local $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns, $FiltMatchArray_iRval
-	$FiltMatchArray_iRval = _SQLite_GetTable2d($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
+	$FiltMatchArray_iRval = _SQLite_GetTable2D($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
 	If $FiltMatchArray_iRows > 0 Then
 		$FiltID = $FiltMatchArray[1][0]
 	Else
@@ -1426,7 +1426,7 @@ Dim $FoundFilter = 0
 $AddRemoveFilters = GUICtrlCreateMenuItem($Text_AddRemFilters, $FilterMenu)
 $query = "SELECT FiltID, FiltName FROM Filters"
 Local $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns, $FiltMatchArray_iRval
-	$FiltMatchArray_iRval = _SQLite_GetTable2d($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
+$FiltMatchArray_iRval = _SQLite_GetTable2D($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
 $FoundFiltMatch = $FiltMatchArray_iRows
 If $FoundFiltMatch <> 0 Then
 	For $ffm = 1 To $FoundFiltMatch
@@ -2054,7 +2054,7 @@ Func _ScanAccessPoints()
 							$fquery = $AddQuery & " WHERE ApID = " & $NewFound
 						EndIf
 						Local $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns, $LoadApMatchArray_iRval
-	$LoadApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $fquery, $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns)
+						$LoadApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $fquery, $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns)
 						$FoundLoadApMatch = $LoadApMatchArray_iRows
 						;If AP Matches filter, increment $FilterMatches
 						If $FoundLoadApMatch = 1 Then $FilterMatches += 1
@@ -2128,7 +2128,7 @@ Func _ScanAccessPoints()
 									$fquery = $AddQuery & " WHERE ApID = " & $NewFound
 								EndIf
 								Local $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns, $LoadApMatchArray_iRval
-	$LoadApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $fquery, $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns)
+								$LoadApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $fquery, $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns)
 								$FoundLoadApMatch = $LoadApMatchArray_iRows
 								;If AP Matches filter, increment $FilterMatches
 								If $FoundLoadApMatch = 1 Then $FilterMatches += 1
@@ -2222,7 +2222,7 @@ Func _ScanAccessPoints()
 									$fquery = $AddQuery & " WHERE ApID = " & $NewFound
 								EndIf
 								Local $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns, $LoadApMatchArray_iRval
-	$LoadApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $fquery, $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns)
+								$LoadApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $fquery, $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns)
 								$FoundLoadApMatch = $LoadApMatchArray_iRows
 								;If AP Matches filter, increment $FilterMatches
 								If $FoundLoadApMatch = 1 Then $FilterMatches += 1
@@ -2273,8 +2273,8 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 	;Get Current GPS/Date/Time Information
 	$query = "SELECT Latitude, Longitude, NumOfSats, Date1, Time1 FROM GPS WHERE GpsID = " & $NewGpsId
 	Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
-	
+	$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+
 	Local $New_Lat, $New_Lon, $New_NumSat, $New_Date, $New_Time, $New_DateTime
 	If IsArray($GpsMatchArray) And UBound($GpsMatchArray) > 1 Then
 		$New_Lat = $GpsMatchArray[1][0]
@@ -2297,7 +2297,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 		;Query AP table for New AP
 		$query = "SELECT ApID, ListRow, HighGpsHistId, LastGpsID, FirstHistID, LastHistID, Active, SecType, HighSignal, HighRSSI FROM AP WHERE BSSID = '" & $BSSID & "' And SSID ='" & StringReplace($SSID, "'", "''") & "' And CHAN = " & $CHAN & " And AUTH = '" & $AUTH & "' And ENCR = '" & $ENCR & "' And RADTYPE = '" & $RADTYPE & "'"
 		Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+		$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 		$FoundApMatch = $ApMatchArray_iRows
 		;ConsoleWrite($query & @CRLF)
 		If $FoundApMatch = 0 Then ;If AP is not found then add it
@@ -2381,7 +2381,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 			Else ;If this is not a new check if this information is newer or older
 				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_LastHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				If _CompareDate($HistMatchArray[1][0] & ' ' & $HistMatchArray[1][1], $New_Date & ' ' & $New_Time) = 1 Then
 					$ExpLastHistID = $Found_LastHistID
 					$ExpGpsID = $Found_LastGpsID
@@ -2393,7 +2393,7 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 				EndIf
 				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_FirstHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				If _CompareDate($HistMatchArray[1][0] & ' ' & $HistMatchArray[1][1], $New_Date & ' ' & $New_Time) = 2 Then
 					$ExpFirstDateTime = -1
 					$ExpFirstHistID = -1
@@ -2412,13 +2412,13 @@ Func _AddApData($New, $NewGpsId, $BSSID, $SSID, $CHAN, $AUTH, $ENCR, $NETTYPE, $
 					;Get Old GpsID and Signal
 					$query = "SELECT GpsID, RSSI FROM HIST WHERE HistID=" & $Found_HighGpsHistId
 					Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+					$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 					$Found_GpsID = $HistMatchArray[1][0]
 					$Found_RSSI = $HistMatchArray[1][1]
 					;Get Old Latititude, Logitude and Number of Satalites from Old GPS ID
 					$query = "SELECT Latitude, Longitude, NumOfSats FROM GPS WHERE GpsID=" & $Found_GpsID
 					Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+					$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 					$Found_Lat = $GpsMatchArray[1][0]
 					$Found_Lon = $GpsMatchArray[1][1]
 					$Found_NumSat = $GpsMatchArray[1][2]
@@ -2587,7 +2587,7 @@ Func _MarkDeadAPs()
 	;Set APs Dead in Listview
 	$query = "SELECT ApID, ListRow, LastGpsID, SecType FROM AP WHERE Active=1"
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	For $resetdead = 1 To $FoundApMatch
 		$Found_APID = $ApMatchArray[$resetdead][0]
@@ -2597,7 +2597,7 @@ Func _MarkDeadAPs()
 		;Get Last Time
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID=" & $Found_LastGpsID
 		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+		$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 		$Found_Date = $GpsMatchArray[1][0]
 		$Found_Time = _TimeToSeconds($GpsMatchArray[1][1])
 		$Current_Time = _TimeToSeconds($timestamp)
@@ -2617,7 +2617,7 @@ Func _MarkDeadAPs()
 	;Fix APs that are marked dead but still have a signal
 	$query = "SELECT ApID, ListRow, SecType FROM AP WHERE Active=0 And Signal<>0"
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	For $resetdead = 1 To $FoundApMatch
 		$Found_APID = $ApMatchArray[$resetdead][0]
@@ -2631,7 +2631,7 @@ Func _MarkDeadAPs()
 	;Update active/total ap label
 	$query = "Select COUNT(ApID) FROM AP WHERE Active=1"
 	Local $ActiveCountArray, $ActiveCountArray_iRows, $ActiveCountArray_iColumns, $ActiveCountArray_iRval
-	$ActiveCountArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ActiveCountArray, $ActiveCountArray_iRows, $ActiveCountArray_iColumns)
+	$ActiveCountArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ActiveCountArray, $ActiveCountArray_iRows, $ActiveCountArray_iColumns)
 	If $ActiveCountArray_iRows > 0 Then
 		$ActiveCount = $ActiveCountArray[1][0]
 	Else
@@ -2642,7 +2642,7 @@ Func _MarkDeadAPs()
 	Else
 		;$query = "Select COUNT(ApID) FROM AP WHERE ListRow<>-1"
 		Local $FilteredCountArray, $FilteredCountArray_iRows, $FilteredCountArray_iColumns, $FilteredCountArray_iRval
-	$FilteredCountArray_iRval = _SQLite_GetTable2d($DBhndl, $CountQuery, $FilteredCountArray, $FilteredCountArray_iRows, $FilteredCountArray_iColumns)
+		$FilteredCountArray_iRval = _SQLite_GetTable2D($DBhndl, $CountQuery, $FilteredCountArray, $FilteredCountArray_iRows, $FilteredCountArray_iColumns)
 		If $FilteredCountArray_iRows > 0 Then
 			$FilteredCount = $FilteredCountArray[1][0]
 		Else
@@ -2657,7 +2657,7 @@ Func _MarkDeadAPs()
 		EndIf
 		;$query = "Select COUNT(ApID) FROM AP WHERE Active=1 And ListRow<>-1"
 		Local $ActiveFilteredCountArray, $ActiveFilteredCountArray_iRows, $ActiveFilteredCountArray_iColumns, $ActiveFilteredCountArray_iRval
-	$ActiveFilteredCountArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ActiveFilteredCountArray, $ActiveFilteredCountArray_iRows, $ActiveFilteredCountArray_iColumns)
+		$ActiveFilteredCountArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ActiveFilteredCountArray, $ActiveFilteredCountArray_iRows, $ActiveFilteredCountArray_iColumns)
 		If $ActiveFilteredCountArray_iRows > 0 Then
 			$ActiveFilteredCount = $ActiveFilteredCountArray[1][0]
 		Else
@@ -2797,7 +2797,7 @@ Func _AddTreeviewItem($RootTree, $Treeview, $tree, $SubTreeName, $ImpApID, $ImpS
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_AddTreeviewItem()') ;#Debug Display
 	$query = "SELECT SubTreePos FROM TreeviewPos WHERE RootTree='" & $RootTree & "' And SubTreeName='" & StringReplace($SubTreeName, "'", "''") & "'"
 	Local $TreeMatchArray, $TreeMatchArray_iRows, $TreeMatchArray_iColumns, $TreeMatchArray_iRval
-	$TreeMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $TreeMatchArray, $TreeMatchArray_iRows, $TreeMatchArray_iColumns)
+	$TreeMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $TreeMatchArray, $TreeMatchArray_iRows, $TreeMatchArray_iColumns)
 	$FoundTreeMatch = $TreeMatchArray_iRows
 	If $FoundTreeMatch = 0 Then
 		$treeviewposition = _GUICtrlTreeView_InsertItem($Treeview, $SubTreeName, $tree)
@@ -2851,14 +2851,14 @@ Func _RemoveTreeviewItem($Treeview, $RootTree, $ImpApID)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_RemoveTreeviewItem()') ;#Debug Display
 	$query = "SELECT SubTreePos, InfoSubPos FROM TreeviewPos WHERE ApID=" & $ImpApID & " And RootTree='" & $RootTree & "'"
 	Local $TreeMatchArray, $TreeMatchArray_iRows, $TreeMatchArray_iColumns, $TreeMatchArray_iRval
-	$TreeMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $TreeMatchArray, $TreeMatchArray_iRows, $TreeMatchArray_iColumns)
+	$TreeMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $TreeMatchArray, $TreeMatchArray_iRows, $TreeMatchArray_iColumns)
 	$FoundTreeMatch = $TreeMatchArray_iRows
 	If $FoundTreeMatch = 1 Then
 		$STP = $TreeMatchArray[1][0]
 		$ISP = $TreeMatchArray[1][1]
 		$query = "SELECT SubTreePos FROM TreeviewPos WHERE ApID<>" & $ImpApID & " And SubTreePos=" & $STP & " And RootTree='" & $RootTree & "'"
 		Local $TreeMatchArray2, $TreeMatchArray2_iRows, $TreeMatchArray2_iColumns, $TreeMatchArray2_iRval
-	$TreeMatchArray2_iRval = _SQLite_GetTable2d($DBhndl, $query, $TreeMatchArray2, $TreeMatchArray2_iRows, $TreeMatchArray2_iColumns)
+		$TreeMatchArray2_iRval = _SQLite_GetTable2D($DBhndl, $query, $TreeMatchArray2, $TreeMatchArray2_iRows, $TreeMatchArray2_iColumns)
 		$FoundTreeMatch2 = UBound($TreeMatchArray2) - 1
 		If $FoundTreeMatch2 = 0 Then _GUICtrlTreeView_Delete($Treeview, $STP)
 	EndIf
@@ -2875,7 +2875,7 @@ Func _FilterRemoveNonMatchingInList($Batch = 0)
 	If StringInStr($RemoveQuery, 'WHERE') Then
 		$query = $RemoveQuery & " And (Listrow<>-1)"
 		Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+		$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 		If $ApMatchArray[0][0] <> 0 Then
 			For $frnm = 1 To $ApMatchArray[0][0]
 				$fApID = $ApMatchArray[$frnm][0]
@@ -2883,7 +2883,7 @@ Func _FilterRemoveNonMatchingInList($Batch = 0)
 				$query = "Select ListRow FROM AP WHERE ApID=" & $fApID
 				;ConsoleWrite($query & @CRLF)
 				Local $ListRowArray, $ListRowArray_iRows, $ListRowArray_iColumns, $ListRowArray_iRval
-	$ListRowArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ListRowArray, $ListRowArray_iRows, $ListRowArray_iColumns)
+				$ListRowArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ListRowArray, $ListRowArray_iRows, $ListRowArray_iColumns)
 				$fListRow = $ListRowArray[1][0]
 				_TreeViewRemove($fApID)
 				;Delete AP Row
@@ -2894,7 +2894,7 @@ Func _FilterRemoveNonMatchingInList($Batch = 0)
 				;Subtract 1 from all listsrows higher that the one being deleted
 				$query = "Select ApID, ListRow FROM AP WHERE ListRow<>-1"
 				Local $ListRowArray, $ListRowArray_iRows, $ListRowArray_iColumns, $ListRowArray_iRval
-	$ListRowArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ListRowArray, $ListRowArray_iRows, $ListRowArray_iColumns)
+				$ListRowArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ListRowArray, $ListRowArray_iRows, $ListRowArray_iColumns)
 				$ListRowMatch = UBound($ListRowArray) - 1
 				If $ListRowMatch <> 0 Then
 					For $lrnu = 1 To $ListRowMatch
@@ -2931,7 +2931,7 @@ Func _UpdateListview($Batch = 0)
 		$fquery = $AddQuery & " WHERE ListRow=-1"
 	EndIf
 	Local $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns, $LoadApMatchArray_iRval
-	$LoadApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $fquery, $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns)
+	$LoadApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $fquery, $LoadApMatchArray, $LoadApMatchArray_iRows, $LoadApMatchArray_iColumns)
 	$FoundLoadApMatch = $LoadApMatchArray_iRows
 
 	If $AutoSort = 0 Then
@@ -2963,12 +2963,12 @@ Func _UpdateListview($Batch = 0)
 			Else
 				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $ImpHighGpsHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				If IsArray($HistMatchArray) Then
 					$ImpGID = $HistMatchArray[1][0]
 					$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ImpGID
 					Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+					$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 					If IsArray($GpsMatchArray) Then
 						$FoundGpsMatch = $GpsMatchArray_iRows
 						$ImpLat = $GpsMatchArray[1][0]
@@ -2985,7 +2985,7 @@ Func _UpdateListview($Batch = 0)
 			;Get First Time
 			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $ImpFirstHistID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			If IsArray($HistMatchArray) Then
 				$ImpDate = $HistMatchArray[1][0]
 				$ImpTime = $HistMatchArray[1][1]
@@ -2997,7 +2997,7 @@ Func _UpdateListview($Batch = 0)
 			;Get Last Time
 			$query = "SELECT Date1, Time1, Signal, RSSI FROM Hist WHERE HistID=" & $ImpLastHistID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			If IsArray($HistMatchArray) Then
 				$ImpDate = $HistMatchArray[1][0]
 				$ImpTime = $HistMatchArray[1][1]
@@ -3098,7 +3098,7 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 	If $MinimalGuiMode = 0 Then
 		$ListCurrentRowCount = _GUICtrlListView_GetItemCount($ListviewAPs)
 		Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+		$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 		$FoundApMatch = $ApMatchArray_iRows
 		For $wlv = 1 To $FoundApMatch
 			$listpos += 1
@@ -3130,7 +3130,7 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 				;Get First Time
 				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_FirstHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$Found_FirstDate = $HistMatchArray[1][0]
 				$Found_FirstTime = $HistMatchArray[1][1]
 				$Found_FirstDateTime = $Found_FirstDate & ' ' & $Found_FirstTime
@@ -3138,7 +3138,7 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 				;Get Last Time
 				$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_LastHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$Found_LastDate = $HistMatchArray[1][0]
 				$Found_LastTime = $HistMatchArray[1][1]
 				$Found_LastDateTime = $Found_LastDate & ' ' & $Found_LastTime
@@ -3150,11 +3150,11 @@ Func __UpdateListviewDbQueryToList($query, $listpos)
 				Else
 					$query = "SELECT GpsID FROM Hist WHERE HistID=" & $Found_HighGpsHistId
 					Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+					$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 					$Found_GpsID = $HistMatchArray[1][0]
 					$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID=" & $Found_GpsID
 					Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+					$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 					$Found_Lat = $GpsMatchArray[1][0]
 					$Found_Lon = $GpsMatchArray[1][1]
 				EndIf
@@ -3345,7 +3345,7 @@ Func _FixListIcons()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_FixListIcons()') ;#Debug Display
 	$query = "SELECT ListRow, SecType, Signal FROM AP WHERE ListRow<>-1"
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	;Update in Listview
 	For $resetdead = 1 To $FoundApMatch
@@ -3362,7 +3362,7 @@ Func _RecoverMDB()
 	;Get total APIDs
 	$query = "Select COUNT(ApID) FROM AP"
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	If $ApMatchArray_iRows > 0 Then
 		$APID = $ApMatchArray[1][0]
 	Else
@@ -3373,7 +3373,7 @@ Func _RecoverMDB()
 	;Get  total HistIDs
 	$query = "Select COUNT(HistID) FROM Hist"
 	Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+	$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 	If $HistMatchArray_iRows > 0 Then
 		$HISTID = $HistMatchArray[1][0]
 	Else
@@ -3383,7 +3383,7 @@ Func _RecoverMDB()
 	;Get total GPSIDs
 	$query = "Select COUNT(GpsID) FROM GPS"
 	Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+	$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 	If $GpsMatchArray_iRows > 0 Then
 		$GPS_ID = $GpsMatchArray[1][0]
 	Else
@@ -3393,7 +3393,7 @@ Func _RecoverMDB()
 	;Get total CamIDs
 	$query = "Select COUNT(CamID) FROM Cam"
 	Local $CamIDCountArray, $CamIDCountArray_iRows, $CamIDCountArray_iColumns, $CamIDCountArray_iRval
-	$CamIDCountArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $CamIDCountArray, $CamIDCountArray_iRows, $CamIDCountArray_iColumns)
+	$CamIDCountArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $CamIDCountArray, $CamIDCountArray_iRows, $CamIDCountArray_iColumns)
 	If $CamIDCountArray_iRows > 0 Then
 		$CamID = $CamIDCountArray[1][0]
 	Else
@@ -3424,7 +3424,7 @@ Func _SetUpDbTables($dbfile)
 		ConsoleWrite("ERROR: Failed to open database! " & _SQLite_ErrMsg() & @CRLF)
 		Return
 	EndIf
-	
+
 	Local $result
 	; Enable WAL mode for better multi-process concurrency
 	$result = _SQLite_Exec($DBhndl, "PRAGMA journal_mode=WAL")
@@ -3432,25 +3432,25 @@ Func _SetUpDbTables($dbfile)
 	; Use NORMAL sync for balance of speed and safety
 	$result = _SQLite_Exec($DBhndl, "PRAGMA synchronous=NORMAL")
 	ConsoleWrite("PRAGMA synchronous=NORMAL result: " & $result & @CRLF)
-	
+
 	$result = _SQLite_Exec($DBhndl, "CREATE TABLE GPS (GPSID INTEGER,Latitude TEXT(20),Longitude TEXT(20),NumOfSats TEXT(2),HorDilPitch TEXT(255),Alt TEXT(255),Geo TEXT(255),SpeedInMPH TEXT(255),SpeedInKmH TEXT(255),TrackAngle TEXT(255),Date1 TEXT(50),Time1 TEXT(50))")
 	ConsoleWrite("CREATE TABLE GPS result: " & $result & " - " & _SQLite_ErrMsg($DBhndl) & @CRLF)
-	
+
 	$result = _SQLite_Exec($DBhndl, "CREATE TABLE AP (ApID INTEGER,ListRow INTEGER,Active INTEGER,BSSID TEXT(20),SSID TEXT(255),CHAN INTEGER,AUTH TEXT(20),ENCR TEXT(20),SECTYPE INTEGER,NETTYPE TEXT(20),RADTYPE TEXT(20),BTX TEXT(100),OTX TEXT(100),HighGpsHistId INTEGER,LastGpsID INTEGER,FirstHistID INTEGER,LastHistID INTEGER,MANU TEXT(100),LABEL TEXT(100),Signal INTEGER,HighSignal INTEGER,RSSI INTEGER,HighRSSI INTEGER,CountryCode TEXT(100),CountryName TEXT(100),AdminCode TEXT(100),AdminName TEXT(100),Admin2Name TEXT(100),AreaName TEXT(100),GNAmiles FLOAT,GNAkm FLOAT)")
 	ConsoleWrite("CREATE TABLE AP result: " & $result & " - " & _SQLite_ErrMsg($DBhndl) & @CRLF)
-	
+
 	$result = _SQLite_Exec($DBhndl, "CREATE TABLE Hist (HistID INTEGER,ApID INTEGER,GpsID INTEGER,Signal INTEGER,RSSI INTEGER,Date1 TEXT(50),Time1 TEXT(50))")
 	ConsoleWrite("CREATE TABLE Hist result: " & $result & @CRLF)
-	
+
 	$result = _SQLite_Exec($DBhndl, "CREATE TABLE TreeviewPos (ApID INTEGER,RootTree TEXT(255),SubTreeName TEXT(255),SubTreePos INTEGER,InfoSubPos INTEGER,SsidPos INTEGER,BssidPos INTEGER,ChanPos INTEGER,NetPos INTEGER,EncrPos INTEGER,RadPos INTEGER,AuthPos INTEGER,BtxPos INTEGER,OtxPos INTEGER,ManuPos INTEGER,LabPos INTEGER)")
 	ConsoleWrite("CREATE TABLE TreeviewPos result: " & $result & @CRLF)
-	
+
 	$result = _SQLite_Exec($DBhndl, "CREATE TABLE LoadedFiles (File TEXT(255),MD5 TEXT(255))")
 	ConsoleWrite("CREATE TABLE LoadedFiles result: " & $result & @CRLF)
-	
+
 	$result = _SQLite_Exec($DBhndl, "CREATE TABLE CAM (CamID INTEGER,CamGroup TEXT(255),GpsID INTEGER,CamName TEXT(255),CamFile TEXT(255),ImgMD5 TEXT(255),Date1 TEXT(255),Time1 TEXT(255))")
 	ConsoleWrite("CREATE TABLE CAM result: " & $result & @CRLF)
-	
+
 	ConsoleWrite("_SetUpDbTables: Complete" & @CRLF)
 EndFunc   ;==>_SetUpDbTables
 
@@ -3464,7 +3464,7 @@ Func _FindManufacturer($findmac) ;Returns Manufacturer for given Mac Address
 	If StringLen($findmac) <> 6 Then $findmac = StringTrimRight($findmac, StringLen($findmac) - 6)
 	$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID = '" & $findmac & "'"
 	Local $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns, $ManuMatchArray_iRval
-	$ManuMatchArray_iRval = _SQLite_GetTable2d($ManuDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
+	$ManuMatchArray_iRval = _SQLite_GetTable2D($ManuDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
 	$FoundManuMatch = $ManuMatchArray_iRows
 	If $FoundManuMatch = 0 Then
 		Return ($Text_Unknown)
@@ -3479,7 +3479,7 @@ Func _SetLabels($findmac) ;Returns Label for given Mac Address
 	$findmac = StringReplace($findmac, ':', '')
 	$query = "SELECT Label FROM Labels WHERE BSSID = '" & $findmac & "'"
 	Local $LabMatchArray, $LabMatchArray_iRows, $LabMatchArray_iColumns, $LabMatchArray_iRval
-	$LabMatchArray_iRval = _SQLite_GetTable2d($LabDBhndl, $query, $LabMatchArray, $LabMatchArray_iRows, $LabMatchArray_iColumns)
+	$LabMatchArray_iRval = _SQLite_GetTable2D($LabDBhndl, $query, $LabMatchArray, $LabMatchArray_iRows, $LabMatchArray_iColumns)
 	$FoundLabMatch = $LabMatchArray_iRows
 	If $FoundLabMatch = 0 Then
 		Return ($Text_Unknown)
@@ -3494,7 +3494,7 @@ Func _UpdateListMacLabels()
 	GUICtrlSetData($msgdisplay, "Updating manufacturers")
 	$query = "SELECT BSSID, MANU, LABEL, ListRow, ApID FROM AP"
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	For $up = 1 To $FoundApMatch
 		$Found_BSSID = $ApMatchArray[$up][0]
@@ -4101,7 +4101,7 @@ Func _SelectConnectedAp()
 			$query = "SELECT ListRow FROM AP WHERE BSSID='" & $IntBSSID & "' And SSID='" & StringReplace($IntSSID, "'", "''") & "' And CHAN=" & $IntChan & " And AUTH='" & $IntAuth & "'"
 		EndIf
 		Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+		$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 		$FoundApMatch = $ApMatchArray_iRows
 		If $FoundApMatch > 0 Then
 			$return = 1
@@ -4120,7 +4120,7 @@ Func _SelectHighSignalAp()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_SelectHighSignalAp()') ;#Debug Display
 	$query = "SELECT ListRow FROM AP WHERE ListRow<>-1  LIMIT 1"
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	If $FoundApMatch <> 0 Then
 		$Found_ListRow = $ApMatchArray[1][0]
@@ -4906,7 +4906,7 @@ Func _SortDbQueryToList($query, $listpos)
 	_GUICtrlListView_BeginUpdate($ListviewAPs)
 	GUISetState(@SW_LOCK, $Vistumbler)
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	For $wlv = 1 To $FoundApMatch
 		$listpos += 1
@@ -4938,7 +4938,7 @@ Func _SortDbQueryToList($query, $listpos)
 			;Get First Time
 			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_FirstHistID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$Found_FirstDate = $HistMatchArray[1][0]
 			$Found_FirstTime = $HistMatchArray[1][1]
 			$Found_FirstDateTime = $Found_FirstDate & ' ' & $Found_FirstTime
@@ -4946,7 +4946,7 @@ Func _SortDbQueryToList($query, $listpos)
 			;Get Last Time
 			$query = "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $Found_LastHistID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$Found_LastDate = $HistMatchArray[1][0]
 			$Found_LastTime = $HistMatchArray[1][1]
 			$Found_LastDateTime = $Found_LastDate & ' ' & $Found_LastTime
@@ -4958,11 +4958,11 @@ Func _SortDbQueryToList($query, $listpos)
 			Else
 				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $Found_HighGpsHistId
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$Found_GpsID = $HistMatchArray[1][0]
 				$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID=" & $Found_GpsID
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$Found_Lat = $GpsMatchArray[1][0]
 				$Found_Lon = $GpsMatchArray[1][1]
 			EndIf
@@ -5275,7 +5275,7 @@ Func _RClick_AddManu() ;Adds new manucaturer to settings gui manufacturer list
 		;Get Mac Address
 		$query = "SELECT BSSID FROM AP WHERE ListRow=" & $Selected
 		Local $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns, $ListRowMatchArray_iRval
-	$ListRowMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
+		$ListRowMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
 		$Found_BSSID = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace($ListRowMatchArray[1][0], ':', ''), '-', ''), '"', ''), ' ', ''))
 		$Found_BSSID = StringTrimRight($Found_BSSID, StringLen($Found_BSSID) - 6)
 
@@ -5283,7 +5283,7 @@ Func _RClick_AddManu() ;Adds new manucaturer to settings gui manufacturer list
 		Local $Found_MMANU
 		$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID='" & $Found_BSSID & "'"
 		Local $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns, $ManuMatchArray_iRval
-	$ManuMatchArray_iRval = _SQLite_GetTable2d($ManuDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
+		$ManuMatchArray_iRval = _SQLite_GetTable2D($ManuDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
 		$FoundManuMatch = $ManuMatchArray_iRows
 		If $FoundManuMatch = 1 Then
 			$Found_MMANU = $ManuMatchArray[1][0]
@@ -5315,7 +5315,7 @@ Func _MacAdd_Ok()
 	;Check if mac already exists
 	$query = "SELECT Manufacturer FROM Manufacturers WHERE BSSID='" & $MacAdd_BSSID & "'"
 	Local $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns, $ManuMatchArray_iRval
-	$ManuMatchArray_iRval = _SQLite_GetTable2d($ManuDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
+	$ManuMatchArray_iRval = _SQLite_GetTable2D($ManuDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
 	$FoundManuMatch = $ManuMatchArray_iRows
 	If $FoundManuMatch = 1 Then ; Mac Exists, ask to update it
 		$overwrite_entry = MsgBox(4, $Text_Overwrite & '?', $Text_MacExistsOverwriteIt)
@@ -5346,13 +5346,13 @@ Func _RClick_AddLabel() ;Adds new manucaturer to settings gui manufacturer list
 		;Get Mac Address
 		$query = "SELECT BSSID FROM AP WHERE ListRow=" & $Selected
 		Local $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns, $ListRowMatchArray_iRval
-	$ListRowMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
+		$ListRowMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
 		$Found_BSSID = StringUpper(StringReplace(StringReplace(StringReplace(StringReplace($ListRowMatchArray[1][0], ':', ''), '-', ''), '"', ''), ' ', ''))
 		;Get existing mac address information if it exists
 		Local $Found_MLABEL
 		$query = "SELECT Label FROM Labels WHERE BSSID='" & $Found_BSSID & "'"
 		Local $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns, $ManuMatchArray_iRval
-	$ManuMatchArray_iRval = _SQLite_GetTable2d($LabDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
+		$ManuMatchArray_iRval = _SQLite_GetTable2D($LabDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
 		$FoundManuMatch = $ManuMatchArray_iRows
 		If $FoundManuMatch = 1 Then
 			$Found_MLABEL = $ManuMatchArray[1][0]
@@ -5382,7 +5382,7 @@ Func _LabelAdd_Ok()
 	;Check if mac already exists
 	$query = "SELECT Label FROM Labels WHERE BSSID='" & $LabelAdd_BSSID & "'"
 	Local $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns, $ManuMatchArray_iRval
-	$ManuMatchArray_iRval = _SQLite_GetTable2d($LabDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
+	$ManuMatchArray_iRval = _SQLite_GetTable2D($LabDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
 	$FoundManuMatch = $ManuMatchArray_iRows
 	If $FoundManuMatch = 1 Then ; Mac Exists, ask to update it
 		$overwrite_entry = MsgBox(4, $Text_Overwrite & '?', $Text_MacExistsOverwriteIt)
@@ -5437,13 +5437,13 @@ Func _GraphDraw()
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 		$query = "SELECT ApID FROM AP WHERE ListRow=" & $Selected
 		Local $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns, $ListRowMatchArray_iRval
-	$ListRowMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
+		$ListRowMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
 		$GraphApID = $ListRowMatchArray[1][0]
 		If $Graph = 1 Then
 			$max_graph_points = '50'
 			$query = "SELECT TOP " & $max_graph_points & " Signal, RSSI, ApID, Date1, Time1 FROM Hist WHERE ApID=" & $GraphApID & " And Signal<>0  LIMIT 1"
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$HistSize = $HistMatchArray_iRows
 			If $HistSize <> 0 Then
 				;If $HistSize < $max_graph_points Then $max_graph_points = $HistSize ;Fix to prevent graph from drawing outside its region when the are 0% marks
@@ -5546,7 +5546,7 @@ Func _GraphDraw()
 			$max_graph_points = $Graph_width
 			$query = "SELECT TOP " & $max_graph_points & " Signal, RSSI, ApID, Date1, Time1 FROM Hist WHERE ApID=" & $GraphApID & " And Signal<>0  LIMIT 1"
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$HistSize = $HistMatchArray_iRows
 			If $HistSize <> 0 Then
 				Local $Found_dts, $gloop, $Exp_Datetime
@@ -5695,7 +5695,7 @@ Func _Draw2400ChanGraph()
 	;Draw graph lines
 	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active=1 And ListRow<>-1"
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	For $dc = 1 To $FoundApMatch
 		$Found_SSID = $ApMatchArray[$dc][0]
@@ -5924,7 +5924,7 @@ Func _Draw5000ChanGraph()
 
 	$query = "SELECT SSID, CHAN, Signal, RSSI FROM AP WHERE Active=1 And ListRow<>-1"
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	For $dc = 1 To $FoundApMatch
 		$Found_SSID = $ApMatchArray[$dc][0]
@@ -6130,7 +6130,7 @@ Func _ViewInWifiDbGraph_Open($Selected) ;Sends data to WifiDb php graphing scrip
 	If $Selected <> -1 Then ;If a access point is selected in the listview, map its data
 		$query = "SELECT ApID, SSID, BSSID, AUTH, ENCR, RADTYPE, NETTYPE, CHAN, BTX, OTX, MANU, LABEL, HighGpsHistID FROM AP WHERE ListRow=" & $Selected
 		Local $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns, $ListRowMatchArray_iRval
-	$ListRowMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
+		$ListRowMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
 		$FoundListRowMatch = $ListRowMatchArray_iRows
 		If $FoundListRowMatch <> 0 Then
 			$Found_APID = $ListRowMatchArray[1][0]
@@ -6153,12 +6153,12 @@ Func _ViewInWifiDbGraph_Open($Selected) ;Sends data to WifiDb php graphing scrip
 			Else
 				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $Found_HighGpsHistId
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$FoundHistMatch = $HistMatchArray_iRows
 				$Found_HighGpsID = $HistMatchArray[1][0]
 				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $Found_HighGpsID
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$Found_Lat = $GpsMatchArray[1][0]
 				$Found_Lon = $GpsMatchArray[1][1]
 			EndIf
@@ -6168,7 +6168,7 @@ Func _ViewInWifiDbGraph_Open($Selected) ;Sends data to WifiDb php graphing scrip
 			$max_graph_points = 1000
 			$query = "SELECT TOP " & $max_graph_points & " Signal, Date1, Time1 FROM Hist WHERE ApID=" & $Found_APID & " And Signal<>0  LIMIT 1"
 			Local $SignalMatchArray, $SignalMatchArray_iRows, $SignalMatchArray_iColumns, $SignalMatchArray_iRval
-	$SignalMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $SignalMatchArray, $SignalMatchArray_iRows, $SignalMatchArray_iColumns)
+			$SignalMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $SignalMatchArray, $SignalMatchArray_iRows, $SignalMatchArray_iColumns)
 			$FoundSignalMatch = $SignalMatchArray_iRows
 			If $FoundSignalMatch <> 0 Then
 				Local $Found_dts, $gloop, $pgsigdata, $Found_FirstSeen, $Found_LastSeen
@@ -6419,7 +6419,7 @@ Func _LocateGpsInWifidb($ShowPrompts = 0) ;Finds GPS based on active acess point
 	Local $return = 0
 	$query = "SELECT BSSID, Signal FROM AP WHERE Active=1 And ListRow<>-1 And BSSID<>''  LIMIT 1"
 	Local $BssidMatchArray, $BssidMatchArray_iRows, $BssidMatchArray_iColumns, $BssidMatchArray_iRval
-	$BssidMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $BssidMatchArray, $BssidMatchArray_iRows, $BssidMatchArray_iColumns)
+	$BssidMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $BssidMatchArray, $BssidMatchArray_iRows, $BssidMatchArray_iColumns)
 	$FoundBssidMatch = $BssidMatchArray_iRows
 	If $FoundBssidMatch <> 0 Then
 		For $exb = 1 To $FoundBssidMatch
@@ -6593,7 +6593,7 @@ Func _GeonamesInfo($SelectedRow)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopyAP_GUI() ') ;#Debug Display
 	$query = "SELECT CountryCode, CountryName, AdminCode, AdminName, Admin2Name, AreaName, GNAmiles, GNAkm FROM AP WHERE ListRow=" & $SelectedRow
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	If $SelectedRow <> -1 And $FoundApMatch <> 0 Then ;If a access point is selected in the listview, map its data
 		Local $GN_CountryCode = "Not Available", $GN_CountryName = "Not Available", $GN_AdminCode = "Not Available", $GN_AdminName = "Not Available", $GN_Admin2Name = "Not Available", $GN_AreaName = "Not Available", $GN_GNAmiles = "Not Available", $GN_GNAkm = "Not Available"
@@ -6628,7 +6628,7 @@ Func _LocateAPInWifidb($Selected, $ShowPrompts = 0) ;Finds AP in WifiDB
 		$query = "SELECT SSID, BSSID, RADTYPE, CHAN, AUTH, ENCR FROM AP WHERE ListRow=" & $Selected
 		ConsoleWrite("$query:" & $query & @CRLF)
 		Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+		$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 		$FoundApMatch = $ApMatchArray_iRows
 		If $FoundApMatch <> 0 Then
 			Local $ExpSSID, $ExpBSSID, $ExpRAD, $ExpCHAN, $ExpAUTH, $ExpENCR
@@ -6746,7 +6746,7 @@ Func _GeoLocateAllAps()
 		$query = "SELECT ApID, HighGpsHistId FROM AP WHERE HighGpsHistId<>0 And CountryCode='' And CountryName='' And AdminCode='' And AdminName='' And Admin2Name='' And AreaName=''"
 	EndIf
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$ApMatch = $ApMatchArray_iRows
 	For $ugn = 1 To $ApMatch
 		GUICtrlSetData($msgdisplay, 'Updating Geoname information for AP ' & $ugn & "/" & $ApMatch)
@@ -6757,14 +6757,14 @@ Func _GeoLocateAllAps()
 		;ConsoleWrite("HighGpsHist:" & $Ap_HighGpsHist & @CRLF)
 		$query = "SELECT GpsID FROM Hist WHERE HistID=" & $Ap_HighGpsHist
 		Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+		$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 		$HistMatch = $ApMatchArray_iRows
 		If $HistMatch <> 0 Then
 			$Ap_GpsID = $HistMatchArray[1][0]
 			;ConsoleWrite("GpsID:" & $Ap_GpsID & @CRLF)
 			$query = "SELECT Latitude, Longitude FROM GPS WHERE GPSID=" & $Ap_GpsID
 			Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+			$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 			$GpsMatch = $ApMatchArray_iRows
 			If $GpsMatch <> 0 Then
 				$Ap_Lat = $GpsMatchArray[1][0]
@@ -6997,7 +6997,7 @@ Func _CopyAP_GUI($SelectedRow)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopyAP_GUI() ') ;#Debug Display
 	$query = "SELECT ApID FROM AP WHERE ListRow=" & $SelectedRow
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	If $SelectedRow <> -1 And $FoundApMatch <> 0 Then ;If a access point is selected in the listview, map its data
 		$CopyAPID = $ApMatchArray[1][0]
@@ -7105,7 +7105,7 @@ Func _CopySetClipboard()
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_CopySetClipboard() ') ;#Debug Display
 	$query = "SELECT ApID, BSSID, SSID, CHAN, AUTH, ENCR, NETTYPE, RADTYPE, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, BTX, OTX, FirstHistID, LastHistID FROM AP WHERE ApID=" & $CopyAPID
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	If $FoundApMatch <> 0 Then
 		$CopyText = ''
@@ -7165,7 +7165,7 @@ Func _CopySetClipboard()
 			$LastHistID = $ApMatchArray[1][16] - 0
 			$query = "SELECT Signal FROM Hist Where HistID=" & $LastHistID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$ExpSig = $HistMatchArray[1][0]
 			If $CopyText = '' Then
 				$CopyText = $ExpSig
@@ -7184,7 +7184,7 @@ Func _CopySetClipboard()
 			$LastHistID = $ApMatchArray[1][16] - 0
 			$query = "SELECT RSSI FROM Hist Where HistID=" & $LastHistID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$ExpRSSI = $HistMatchArray[1][0]
 			If $CopyText = '' Then
 				$CopyText = $ExpRSSI
@@ -7221,11 +7221,11 @@ Func _CopySetClipboard()
 			Else
 				$query = "SELECT GpsId FROM Hist Where HistID=" & $HighGpsHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$ExpGID = $HistMatchArray[1][0]
 				$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsId=" & $ExpGID
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$CopyLat = $GpsMatchArray[1][0]
 				$CopyLon = $GpsMatchArray[1][1]
 			EndIf
@@ -7290,11 +7290,11 @@ Func _CopySetClipboard()
 			$FirstHistID = $ApMatchArray[1][15]
 			$query = "SELECT GpsID FROM Hist Where HistID=" & $FirstHistID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$ExpGID = $HistMatchArray[1][0]
 			$query = "SELECT Date1, Time1 FROM Gps Where GpsID=" & $ExpGID
 			Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+			$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 			$ExpDate = $GpsMatchArray[1][0]
 			$ExpTime = $GpsMatchArray[1][1]
 			If $CopyText = '' Then
@@ -7307,11 +7307,11 @@ Func _CopySetClipboard()
 			$LastHistID = $ApMatchArray[1][16]
 			$query = "SELECT GpsID FROM Hist Where HistID=" & $LastHistID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$ExpGID = $HistMatchArray[1][0]
 			$query = "SELECT Date1, Time1 FROM Gps Where GpsID=" & $ExpGID
 			Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+			$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 			$ExpDate = $GpsMatchArray[1][0]
 			$ExpTime = $GpsMatchArray[1][1]
 			If $CopyText = '' Then
@@ -7399,7 +7399,7 @@ Func _ExportVS1($savefile, $Filter = 0) ;writes vistumbler detailed data to a tx
 	;Export GPS IDs
 	$query = "SELECT GpsID, Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS  LIMIT 1"
 	Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+	$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 	$FoundGpsMatch = $GpsMatchArray_iRows
 	For $exp = 1 To $FoundGpsMatch
 		GUICtrlSetData($msgdisplay, $Text_SavingGID & ' ' & $exp & ' / ' & $FoundGpsMatch)
@@ -7428,7 +7428,7 @@ Func _ExportVS1($savefile, $Filter = 0) ;writes vistumbler detailed data to a tx
 		$query = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID FROM AP"
 	EndIf
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	If $FoundApMatch > 0 Then
 		For $exp = 1 To $FoundApMatch
@@ -7456,7 +7456,7 @@ Func _ExportVS1($savefile, $Filter = 0) ;writes vistumbler detailed data to a tx
 			$ExpGidSid = ''
 			$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$FoundHistMatch = $HistMatchArray_iRows
 			For $epgs = 1 To $FoundHistMatch
 				$ExpGID = $HistMatchArray[$epgs][0]
@@ -7607,7 +7607,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0) ;writes vistumbler data
 		$file = "SSID,BSSID,MANUFACTURER,SIGNAL,High Signal,RSSI,High RSSI,AUTHENTICATION,ENCRYPTION,RADIO TYPE,CHANNEL,BTX,OTX,NETWORK TYPE,LABEL,LATITUDE,LONGITUDE,SATELLITES,HDOP,ALTITUDE,HEIGHT OF GEOID,SPEED(km/h),SPEED(MPH),TRACK ANGLE,DATE(UTC),TIME(UTC)" & @CRLF
 	EndIf
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	If $FoundApMatch > 0 Then
 		For $exp = 1 To $FoundApMatch
@@ -7640,32 +7640,32 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0) ;writes vistumbler data
 				Else
 					$query = "SELECT Signal, GpsID FROM Hist WHERE HistID=" & $ExpHighGpsID
 					Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+					$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 					$ExpHighGpsSig = $HistMatchArray[1][0]
 					$ExpHighGpsID = $HistMatchArray[1][1]
 					$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $ExpHighGpsID
 					Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+					$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 					$ExpHighGpsLat = $GpsMatchArray[1][0]
 					$ExpHighGpsLon = $GpsMatchArray[1][1]
 				EndIf
 				;Get First Found Time From FirstHistID
 				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $ExpFirstID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$ExpFirstGpsId = $HistMatchArray[1][0]
 				$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID=" & $ExpFirstGpsId
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$FirstDateTime = $GpsMatchArray[1][0] & ' ' & $GpsMatchArray[1][1]
 				;Get Last Found Time From LastHistID
 				$query = "SELECT GpsID FROM Hist WHERE HistID=" & $ExpLastID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$ExpLastGpsID = $HistMatchArray[1][0]
 				$query = "SELECT Date1, Time1 FROM GPS WHERE GpsID=" & $ExpLastGpsID
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$LastDateTime = $GpsMatchArray[1][0] & ' ' & $GpsMatchArray[1][1]
 				;Write summary csv line
 				$file &= '"' & $ExpSSID & '",' & $ExpBSSID & ',"' & $ExpMANU & '",' & $ExpHighGpsSig & ',' & $ExpAUTH & ',' & $ExpENCR & ',' & $ExpRAD & ',' & $ExpCHAN & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLat), 'S', '-'), 'N', ''), ' ', '') & ',' & StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($ExpHighGpsLon), 'W', '-'), 'E', ''), ' ', '') & ',"' & $ExpBTX & '","' & $ExpOTX & '",' & $FirstDateTime & ',' & $LastDateTime & ',' & $ExpNET & ',"' & $ExpLAB & '",' & $ExpHighSig & ',' & $ExpHighRSSI & @CRLF
@@ -7673,7 +7673,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0) ;writes vistumbler data
 				;Get All Signals and GpsIDs for current ApID
 				$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID & " And Signal<>0  LIMIT 1"
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$FoundHistMatch = $HistMatchArray_iRows
 				For $exph = 1 To $FoundHistMatch
 					$ExpGID = $HistMatchArray[$exph][0]
@@ -7682,7 +7682,7 @@ Func _ExportToCSV($savefile, $Filter = 0, $Detailed = 0) ;writes vistumbler data
 					;Get GPS Data Based on GpsID
 					$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID=" & $ExpGID
 					Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+					$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 					$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][0]), 'S', '-'), 'N', ''), ' ', '')
 					$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'W', '-'), 'E', ''), ' ', '')
 					$ExpSat = $GpsMatchArray[1][2]
@@ -7735,7 +7735,7 @@ Func _ExportToWigleCSV($savefile, $Filter = 0) ;writes vistumbler data to a csv 
 	$file = "WigleWifi-1.4,appRelease=" & StringReplace($Script_Name, ",", "") & " " & StringReplace($version, ",", "") & ",model=" & StringReplace($DefaultApapterDesc, ",", "") & ",release=" & StringReplace($dev_version, ",", "") & ",device=" & StringReplace($dev_model, ",", "") & ",display=,board=,brand=" & StringReplace($dev_brand, ",", "") & @LF
 	$file &= "MAC,SSID,AuthMode,FirstSeen,Channel,RSSI,CurrentLatitude,CurrentLongitude,AltitudeMeters,AccuracyMeters,Type" & @LF
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$FoundApMatch = $ApMatchArray_iRows
 	If $FoundApMatch > 0 Then
 		For $exp = 1 To $FoundApMatch
@@ -7762,7 +7762,7 @@ Func _ExportToWigleCSV($savefile, $Filter = 0) ;writes vistumbler data to a csv 
 			;Get All Signals and GpsIDs for current ApID
 			$query = "SELECT GpsID, Signal, RSSI FROM Hist WHERE ApID=" & $ExpApID & " And Signal<>0  LIMIT 1"
 			Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+			$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 			$FoundHistMatch = $HistMatchArray_iRows
 			For $exph = 1 To $FoundHistMatch
 				$ExpGID = $HistMatchArray[$exph][0]
@@ -7771,7 +7771,7 @@ Func _ExportToWigleCSV($savefile, $Filter = 0) ;writes vistumbler data to a csv 
 				;Get GPS Data Based on GpsID
 				$query = "SELECT Latitude, Longitude, HorDilPitch, Alt, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID=" & $ExpGID
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][0]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'W', '-'), 'E', ''), ' ', '')
 				$ExpHDOP = $GpsMatchArray[1][2]
@@ -7893,7 +7893,7 @@ Func _SaveGarminGPX($savefile, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, 
 	If $MapOpenAPs = 1 Then
 		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE=1 And HighGpsHistId<>0"
 		Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+		$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 		$FoundApMatch = $ApMatchArray_iRows
 		If $FoundApMatch <> 0 Then
 			$FoundApWithGps = 1
@@ -7906,12 +7906,12 @@ Func _SaveGarminGPX($savefile, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, 
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID=" & $ExpHighGpsHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$ExpGID = $HistMatchArray[1][0]
 				;Get Latitude and Longitude
 				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId=" & $ExpGID
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][0]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'W', '-'), 'E', ''), ' ', '')
 				$ExpAlt = _MetersToFeet($GpsMatchArray[1][2])
@@ -7942,7 +7942,7 @@ Func _SaveGarminGPX($savefile, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, 
 	If $MapWepAps = 1 Then
 		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE=2 And HighGpsHistId<>0"
 		Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+		$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 		$FoundApMatch = $ApMatchArray_iRows
 		If $FoundApMatch <> 0 Then
 			$FoundApWithGps = 1
@@ -7956,12 +7956,12 @@ Func _SaveGarminGPX($savefile, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, 
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID=" & $ExpHighGpsHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$ExpGID = $HistMatchArray[1][0]
 				;Get Latitude and Longitude
 				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId=" & $ExpGID
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][0]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'W', '-'), 'E', ''), ' ', '')
 				$ExpAlt = _MetersToFeet($GpsMatchArray[1][2])
@@ -7992,7 +7992,7 @@ Func _SaveGarminGPX($savefile, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, 
 	If $MapSecAps = 1 Then
 		$query = "SELECT SSID, BSSID, HighGpsHistId FROM AP WHERE SECTYPE=3 And HighGpsHistId<>0"
 		Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+		$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 		$FoundApMatch = $ApMatchArray_iRows
 		If $FoundApMatch <> 0 Then
 			$FoundApWithGps = 1
@@ -8006,12 +8006,12 @@ Func _SaveGarminGPX($savefile, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, 
 				;Get Gps ID of HighGpsHistId
 				$query = "SELECT GpsID FROM Hist Where HistID=" & $ExpHighGpsHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$ExpGID = $HistMatchArray[1][0]
 				;Get Latitude and Longitude
 				$query = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsId=" & $ExpGID
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][0]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'W', '-'), 'E', ''), ' ', '')
 				$ExpAlt = _MetersToFeet($GpsMatchArray[1][2])
@@ -8043,7 +8043,7 @@ Func _SaveGarminGPX($savefile, $MapOpenAPs = 1, $MapWepAps = 1, $MapSecAps = 1, 
 	If $GpsTrack = 1 Then
 		$query = "SELECT Latitude, Longitude, Alt, Date1, Time1, SpeedInKmH FROM GPS WHERE Latitude <> 'N 0000.0000' And Longitude <> 'E 0000.0000'  LIMIT 1"
 		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+		$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 		$FoundGpsMatch = $GpsMatchArray_iRows
 		If $FoundGpsMatch <> 0 Then
 			$file &= '<trk>' & @CRLF _
@@ -8876,7 +8876,7 @@ Func _ImportOk()
 
 	$query = "SELECT MD5 FROM LoadedFiles WHERE MD5='" & $loadfileMD5 & "'"
 	Local $MD5MatchArray, $MD5MatchArray_iRows, $MD5MatchArray_iColumns, $MD5MatchArray_iRval
-	$MD5MatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $MD5MatchArray, $MD5MatchArray_iRows, $MD5MatchArray_iColumns)
+	$MD5MatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $MD5MatchArray, $MD5MatchArray_iRows, $MD5MatchArray_iColumns)
 	$FoundMD5Match = $MD5MatchArray_iRows
 
 	If $FoundMD5Match <> 0 Then
@@ -8980,12 +8980,12 @@ Func _ImportVS1($VS1file)
 
 					$query = "SELECT OldGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $LoadGID
 					Local $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns, $TempGidMatchArray_iRval
-	$TempGidMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns)
+					$TempGidMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns)
 					$FoundTempGidMatch = $TempGidMatchArray_iRows
 					If $FoundTempGidMatch = 0 Then
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
 						Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+						$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 						$FoundGpsMatch = $GpsMatchArray_iRows
 						If $FoundGpsMatch = 0 Then
 							$AddGID += 1
@@ -8999,7 +8999,7 @@ Func _ImportVS1($VS1file)
 					ElseIf $FoundTempGidMatch = 1 Then
 						$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLat & "' And Longitude = '" & $LoadLon & "' And NumOfSats = '" & $LoadSat & "' And Date1 = '" & $LoadDate & "' And Time1 = '" & $LoadTime & "'"
 						Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+						$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 						$FoundGpsMatch = $GpsMatchArray_iRows
 						If $FoundGpsMatch = 0 Then
 							$AddGID += 1
@@ -9037,7 +9037,7 @@ Func _ImportVS1($VS1file)
 							$ImpRSSI = _SignalPercentToDb($ImpSig)
 							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $ImpGID
 							Local $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns, $TempGidMatchArray_iRval
-	$TempGidMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns)
+							$TempGidMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns)
 							$TempGidMatchArrayMatch = $TempGidMatchArray_iRows
 							If $TempGidMatchArrayMatch <> 0 Then
 								$NewGID = $TempGidMatchArray[1][0]
@@ -9078,7 +9078,7 @@ Func _ImportVS1($VS1file)
 							$ImpRSSI = $GidSigSplit[3]
 							$query = "SELECT NewGpsID FROM TempGpsIDMatchTabel WHERE OldGpsID=" & $ImpGID
 							Local $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns, $TempGidMatchArray_iRval
-	$TempGidMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns)
+							$TempGidMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $TempGidMatchArray, $TempGidMatchArray_iRows, $TempGidMatchArray_iColumns)
 							$TempGidMatchArrayMatch = $TempGidMatchArray_iRows
 							If $TempGidMatchArrayMatch <> 0 Then
 								$NewGID = $TempGidMatchArray[1][0]
@@ -9125,7 +9125,7 @@ Func _ImportVS1($VS1file)
 					;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 					$query = "SELECT  TOP 1 GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
 					Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+					$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 					$FoundGpsMatch = $GpsMatchArray_iRows
 					If $FoundGpsMatch = 0 Then
 						$AddGID += 1
@@ -9141,7 +9141,7 @@ Func _ImportVS1($VS1file)
 					;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 					$query = "SELECT  TOP 1 GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
 					Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+					$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 					$FoundGpsMatch = $GpsMatchArray_iRows
 					If $FoundGpsMatch = 0 Then
 						$AddGID += 1
@@ -9236,7 +9236,7 @@ Func _ImportCSV($CSVfile)
 
 				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And NumOfSats = '" & $ImpSat & "' And Date1 = '" & $ImpDate & "' And Time1 = '" & $ImpTime & "'"
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$FoundGpsMatch = $GpsMatchArray_iRows
 				If $FoundGpsMatch = 0 Then
 					$AddGID += 1
@@ -9310,7 +9310,7 @@ Func _ImportCSV($CSVfile)
 
 				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And NumOfSats = '" & $ImpSat & "' And Date1 = '" & $ImpDate & "' And Time1 = '" & $ImpTime & "'"
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$FoundGpsMatch = $GpsMatchArray_iRows
 				If $FoundGpsMatch = 0 Then
 					$AddGID += 1
@@ -9386,7 +9386,7 @@ Func _ImportCSV($CSVfile)
 				;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$FoundGpsMatch = $GpsMatchArray_iRows
 				If $FoundGpsMatch = 0 Then
 					$AddGID += 1
@@ -9402,7 +9402,7 @@ Func _ImportCSV($CSVfile)
 				;Check If Last GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 				$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadLastActive_Date & "' And Time1 = '" & $LoadLastActive_Time & "'"
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$FoundGpsMatch = $GpsMatchArray_iRows
 				If $FoundGpsMatch = 0 Then
 					$AddGID += 1
@@ -9535,7 +9535,7 @@ Func _ImportWigleCSV($CSVfile)
 					;Check If First GPS Information is Already in DB, If it is get the GpsID, If not add it and get its GpsID
 					$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $ImpLat & "' And Longitude = '" & $ImpLon & "' And Date1 = '" & $LoadFirstActive_Date & "' And Time1 = '" & $LoadFirstActive_Time & "'"
 					Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+					$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 					$FoundGpsMatch = $GpsMatchArray_iRows
 					If $FoundGpsMatch = 0 Then
 						$AddGID += 1
@@ -9579,7 +9579,7 @@ Func _ImportNS1Auto($NS1file)
 	Local $hFile = FileOpen($NS1file, 0) ;Open in text mode
 	Local $sFirstLine = FileReadLine($hFile)
 	FileClose($hFile)
-	
+
 	;Text NS1 files start with "# $Creator:" or "# $Format:"
 	;Binary NS1 files start with binary version bytes
 	If StringLeft($sFirstLine, 1) = "#" Then ;Starts with '#' - text format
@@ -9656,7 +9656,7 @@ Func _ImportNS1($NS1file)
 
 							$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $LoadLatitude & "' And Longitude = '" & $LoadLongitude & "' And Date1 = '" & $Date & "' And Time1 = '" & $time & "'"
 							Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+							$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 							$FoundGpsMatch = $GpsMatchArray_iRows
 							If $FoundGpsMatch = 0 Then
 								$AddGID += 1
@@ -9812,7 +9812,7 @@ Func _ImportWardriveDb3($DB3file)
 		;Add GPS data in Vistumbler DB
 		$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $Found_Lat & "' And Longitude = '" & $Found_Lon & "' And Date1 = '" & $Found_Date & "' And Time1 = '" & $Found_Time & "'"
 		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+		$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 		$FoundGpsMatch = $GpsMatchArray_iRows
 		If $FoundGpsMatch = 0 Then
 			$AddGID += 1
@@ -10095,7 +10095,7 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 				$query = "SELECT ApID FROM AP WHERE SECTYPE=1 And HighGpsHistId<>0  LIMIT 1"
 			EndIf
 			Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+			$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 			$FoundApMatch = $ApMatchArray_iRows
 			If $FoundApMatch <> 0 Then
 				$FoundApWithGps = 1
@@ -10128,7 +10128,7 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 				$query = "SELECT ApID FROM AP WHERE SECTYPE=2 And HighGpsHistId<>0  LIMIT 1"
 			EndIf
 			Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+			$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 			$FoundApMatch = $ApMatchArray_iRows
 			If $FoundApMatch <> 0 Then
 				$FoundApWithGps = 1
@@ -10161,7 +10161,7 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 				$query = "SELECT ApID FROM AP WHERE SECTYPE=3 And HighGpsHistId<>0  LIMIT 1"
 			EndIf
 			Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+			$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 			$FoundApMatch = $ApMatchArray_iRows
 			If $FoundApMatch <> 0 Then
 				$FoundApWithGps = 1
@@ -10192,7 +10192,7 @@ Func SaveKML($savefile, $KmlUseLocalImages = 1, $GpsPosMap = 0, $GpsTrack = 0, $
 	If $GpsTrack = 1 Then
 		$query = "SELECT Latitude, Longitude, Date1, Time1 FROM GPS WHERE Latitude <> 'N 0000.0000' And Longitude <> 'E 0000.0000'  LIMIT 1"
 		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+		$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 		$FoundGpsMatch = $GpsMatchArray_iRows
 		If $FoundGpsMatch <> 0 Then
 
@@ -10263,7 +10263,7 @@ Func _KmlSignalMapSelectedAP()
 	Else
 		$query = "SELECT ApID, SSID FROM AP WHERE ListRow=" & $Selected
 		Local $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns, $ListRowMatchArray_iRval
-	$ListRowMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
+		$ListRowMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ListRowMatchArray, $ListRowMatchArray_iRows, $ListRowMatchArray_iColumns)
 		$ExpApID = $ListRowMatchArray[1][0]
 		SaveToKmlGUI(0, $ExpApID)
 	EndIf
@@ -10273,7 +10273,7 @@ Func _KmlPosMapAPID($APID)
 	Local $file_data
 	$query = "SELECT SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, BTX, OTX, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, SecType FROM AP WHERE ApID=" & $APID
 	Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+	$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 	$ExpSSID = StringReplace(StringReplace(StringReplace($ApMatchArray[1][0], '&', ''), '>', ''), '<', '')
 	$ExpBSSID = $ApMatchArray[1][1]
 	$ExpNET = $ApMatchArray[1][2]
@@ -10293,32 +10293,32 @@ Func _KmlPosMapAPID($APID)
 	;Get Gps ID of HighGpsHistId
 	$query = "SELECT GpsID FROM Hist Where HistID=" & $ExpHighGpsHistID
 	Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+	$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 	$ExpGID = $HistMatchArray[1][0]
 	;Get Latitude and Longitude
 	$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsId=" & $ExpGID
 	Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+	$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 	$ExpLat = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][0])
 	$ExpLon = _Format_GPS_DMM_to_DDD($GpsMatchArray[1][1])
 	If $ExpLat <> 'N 0.0000000' And $ExpLon <> 'E 0.0000000' Then
 		;Get First Seen
 		$query = "SELECT GpsId FROM Hist Where HistID=" & $ExpFirstID
 		Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+		$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 		$ExpGID = $HistMatchArray[1][0]
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId=" & $ExpGID
 		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+		$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 		$ExpFirstDateTime = $GpsMatchArray[1][0] & ' ' & $GpsMatchArray[1][1]
 		;Get Last Seen
 		$query = "SELECT GpsId FROM Hist Where HistID=" & $ExpLastID
 		Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+		$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 		$ExpGID = $HistMatchArray[1][0]
 		$query = "SELECT Date1, Time1 FROM GPS WHERE GpsId=" & $ExpGID
 		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+		$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 		$ExpLastDateTime = $GpsMatchArray[1][0] & ' ' & $GpsMatchArray[1][1]
 
 		$file_data &= '			<Placemark>' & @CRLF _
@@ -10347,12 +10347,12 @@ Func _KmlSignalMapAPID($APID, $UseRSSI = 1)
 	Local $NewTimeString
 	$query = "SELECT SSID, BSSID FROM AP WHERE ApID=" & $APID
 	Local $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns, $ApIDMatch_iRval
-	$ApIDMatch_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns)
+	$ApIDMatch_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns)
 	$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatch[1][1], '&', ''), '>', ''), '<', '')
 	$ExpBSSID = $ApIDMatch[1][2]
 	$query = "SELECT GpsID, Signal, RSSI, Date1, Time1 FROM Hist Where ApID=" & $APID & " And Signal<>0  LIMIT 1"
 	Local $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns, $GpsIDArray_iRval
-	$GpsIDArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns)
+	$GpsIDArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns)
 	$GpsIDMatch = UBound($GpsIDArray) - 1
 	If $GpsIDMatch <> 0 Then
 		For $e = 1 To $GpsIDMatch
@@ -10369,7 +10369,7 @@ Func _KmlSignalMapAPID($APID, $UseRSSI = 1)
 			;Get Latidude and logitude
 			$query = "SELECT Longitude, Latitude, Alt FROM GPS Where GpsID=" & $ExpGID
 			Local $GpsArray, $GpsArray_iRows, $GpsArray_iColumns, $GpsArray_iRval
-	$GpsArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsArray, $GpsArray_iRows, $GpsArray_iColumns)
+			$GpsArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsArray, $GpsArray_iRows, $GpsArray_iColumns)
 			$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsArray[1][0]), 'W', '-'), 'E', ''), ' ', '')
 			$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsArray[1][1]), 'S', '-'), 'N', ''), ' ', '')
 			$ExpAlt = $GpsArray[1][2]
@@ -10442,20 +10442,20 @@ Func _KmlCircleSignalMapAPID($APID, $UseRSSI = 1)
 	Local $file
 	$query = "SELECT SSID, BSSID, HighGpsHistID FROM AP WHERE ApID=" & $APID
 	Local $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns, $ApIDMatch_iRval
-	$ApIDMatch_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns)
+	$ApIDMatch_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns)
 	$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatch[1][1], '&', ''), '>', ''), '<', '')
 	$ExpBSSID = $ApIDMatch[1][2]
 	$ExpHighGpsHistID = $ApIDMatch[1][3]
 	If $ExpHighGpsHistID <> '0' Then
 		$query = "SELECT Signal, RSSI, GpsID FROM Hist WHERE HistID=" & $ExpHighGpsHistID
 		Local $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns, $HistIDArray_iRval
-	$HistIDArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns)
+		$HistIDArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns)
 		$ExpSig = $HistIDArray[1][0]
 		$ExpRSSI = $HistIDArray[1][1]
 		$ExpHighGpsID = $HistIDArray[1][2]
 		$query = "SELECT Longitude, Latitude FROM GPS Where GpsID=" & $ExpHighGpsID
 		Local $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns, $GpsIDArray_iRval
-	$GpsIDArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns)
+		$GpsIDArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns)
 		$ExpLon = $GpsIDArray[1][0]
 		$ExpLat = $GpsIDArray[1][1]
 		$file &= '	<Folder>' & @CRLF _
@@ -10476,32 +10476,32 @@ Func _KmlCircleDistanceMapAPID($APID)
 	Local $ExpDist = 10
 	$query = "SELECT SSID, BSSID, HighGpsHistID FROM AP WHERE ApID=" & $APID
 	Local $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns, $ApIDMatch_iRval
-	$ApIDMatch_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns)
+	$ApIDMatch_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApIDMatch, $ApIDMatch_iRows, $ApIDMatch_iColumns)
 	$ExpSSID = StringReplace(StringReplace(StringReplace($ApIDMatch[1][1], '&', ''), '>', ''), '<', '')
 	$ExpBSSID = $ApIDMatch[1][2]
 	$ExpHighGpsHistID = $ApIDMatch[1][3]
 	If $ExpHighGpsHistID <> '0' Then
 		$query = "SELECT Signal, GpsID FROM Hist WHERE HistID=" & $ExpHighGpsHistID
 		Local $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns, $HistIDArray_iRval
-	$HistIDArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns)
+		$HistIDArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns)
 		$ExpSig = $HistIDArray[1][0]
 		$ExpHighGpsID = $HistIDArray[1][1]
 		$query = "SELECT Longitude, Latitude FROM GPS Where GpsID=" & $ExpHighGpsID
 		Local $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns, $GpsIDArray_iRval
-	$GpsIDArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns)
+		$GpsIDArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns)
 		$ExpLon = $GpsIDArray[1][0]
 		$ExpLat = $GpsIDArray[1][1]
 		;Find Outside Gps Point
 		$query = "SELECT GpsID FROM Hist WHERE ApID=" & $APID
 		Local $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns, $HistIDArray_iRval
-	$HistIDArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns)
+		$HistIDArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistIDArray, $HistIDArray_iRows, $HistIDArray_iColumns)
 		$HistIDMatch = UBound($HistIDArray) - 1
 		If $HistIDMatch <> 0 Then
 			For $gid = 1 To $HistIDMatch
 				$ExpGpsID = $HistIDArray[$gid][0]
 				$query = "SELECT Longitude, Latitude FROM GPS Where GpsID=" & $ExpGpsID
 				Local $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns, $GpsIDArray_iRval
-	$GpsIDArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns)
+				$GpsIDArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsIDArray, $GpsIDArray_iRows, $GpsIDArray_iColumns)
 				$ExpLon2 = $GpsIDArray[1][0]
 				$ExpLat2 = $GpsIDArray[1][1]
 				If $ExpLat2 <> 'N 0.0000' And $ExpLon2 <> 'E 0.0000' Then
@@ -10692,9 +10692,9 @@ Func _GetChannelbits($iChannel)
 	; Converts channel number to Channelbits hex string
 	; Formula for 2.4GHz channels 1-14: Channelbits = 2^Channel
 	; 5GHz channels use custom bit position mapping
-	
+
 	Local $iBitPos = -1
-	
+
 	; 2.4GHz channels (1-14) use formula: bit position = channel number
 	If $iChannel >= 1 And $iChannel <= 14 Then
 		$iBitPos = $iChannel
@@ -10737,7 +10737,7 @@ Func _GetChannelbits($iChannel)
 				$iBitPos = 26
 		EndSwitch
 	EndIf
-	
+
 	; Return hex value or 00000000 if unknown channel (max 31 for 8-char hex)
 	If $iBitPos >= 0 And $iBitPos <= 31 Then
 		; Calculate 2^bitpos and format as 8-character hex string
@@ -10751,9 +10751,9 @@ EndFunc   ;==>_GetChannelbits
 Func _GetChannelbits64($iChannel)
 	; Converts channel number to 64-bit Channelbits value for NS1 binary format
 	; Returns the bit position (0-63), caller must calculate 2^bitpos for uint64
-	
+
 	Local $iBitPos = -1
-	
+
 	; 2.4GHz channels (1-14) use formula: bit position = channel number
 	If $iChannel >= 1 And $iChannel <= 14 Then
 		$iBitPos = $iChannel
@@ -10798,7 +10798,7 @@ Func _GetChannelbits64($iChannel)
 				$iBitPos = 26
 		EndSwitch
 	EndIf
-	
+
 	; Return bit position or -1 if unknown
 	Return $iBitPos
 EndFunc   ;==>_GetChannelbits64
@@ -10807,7 +10807,7 @@ Func _BitPosToUInt64($iBitPos)
 	; Converts a bit position (0-63) to uint64 value (2^bitpos)
 	; AutoIt can handle up to 2^53 accurately, beyond that use hex conversion
 	If $iBitPos < 0 Or $iBitPos > 63 Then Return 0
-	
+
 	If $iBitPos <= 53 Then
 		; AutoIt's Number type can accurately represent up to 2^53
 		Return 2 ^ $iBitPos
@@ -10816,20 +10816,20 @@ Func _BitPosToUInt64($iBitPos)
 		; Create hex with bit set at position iBitPos
 		Local $iBytePos = Int($iBitPos / 8)  ; Which byte (0-7)
 		Local $iBitInByte = Mod($iBitPos, 8) ; Which bit in that byte
-		
+
 		; Build 16-char hex string (8 bytes, little-endian)
 		Local $aBytes[8]
 		For $i = 0 To 7
 			$aBytes[$i] = "00"
 		Next
 		$aBytes[$iBytePos] = Hex(2 ^ $iBitInByte, 2)
-		
+
 		; Combine in little-endian order (byte 0 is rightmost in hex string)
 		Local $sHex = ""
 		For $i = 7 To 0 Step -1
 			$sHex &= $aBytes[$i]
 		Next
-		
+
 		Return Dec($sHex)
 	EndIf
 EndFunc   ;==>_BitPosToUInt64
@@ -10856,7 +10856,7 @@ Func _ExportNS1($Filter = 0) ;Saves netstumbler data to a netstumbler summary .n
 			$query = "SELECT ApID, GpsID, Signal, RSSI, Date1, Time1 FROM Hist  LIMIT 1"
 		EndIf
 		Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+		$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 		$FoundHistMatch = $HistMatchArray_iRows
 		If $FoundHistMatch > 0 Then
 			For $exns1 = 1 To $FoundHistMatch
@@ -10870,12 +10870,12 @@ Func _ExportNS1($Filter = 0) ;Saves netstumbler data to a netstumbler summary .n
 					$Found_Time = $HistMatchArray[$exns1][5]
 					$query = "SELECT Latitude, Longitude FROM GPS WHERE GpsID=" & $Found_GpsID
 					Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+					$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 					$Found_Lat = $ApMatchArray[1][0]
 					$Found_Lon = $ApMatchArray[1][1]
 					$query = "SELECT SSID, BSSID, SecType, NETTYPE, CHAN, BTX, OTX, LABEL, MANU FROM AP WHERE ApID=" & $Found_APID
 					Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+					$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 					$Found_SSID = $ApMatchArray[1][0]
 					$Found_BSSID = $ApMatchArray[1][1]
 					$Found_SecType = $ApMatchArray[1][2]
@@ -10928,7 +10928,7 @@ Func _ExportNS1($Filter = 0) ;Saves netstumbler data to a netstumbler summary .n
 				$Found_BSSID_Lower = StringLower($Found_BSSID)
 				;Remove milliseconds from timestamp for NetStumbler compatibility (HH:MM:SS instead of HH:MM:SS.mmm)
 				$Found_Time_NoMs = StringLeft($Found_Time, 8)
-				
+
 				;Calculate signal strength in dBm for NetStumbler
 				;Vistumbler Signal field is percentage (0-100), RSSI is dBm
 				Local $iSigdBm = $Found_RSSI
@@ -10938,7 +10938,7 @@ Func _ExportNS1($Filter = 0) ;Saves netstumbler data to a netstumbler summary .n
 				EndIf
 				Local $iSignalDisplay = $iSigdBm + 50  ; NetStumbler display scale (dBm + 50)
 				Local $iSNR = $iSignalDisplay - 50     ; SNR = Signal - Noise
-				
+
 				$file &= $GPS_Lat_DDD & "	" & $GPS_Lon_DDD & "	( " & $Found_SSID & " )	" & $BSS & "	( " & $Found_BSSID_Lower & " )	" & $Found_Time_NoMs & " (GMT)	[ " & $iSNR & " " & $iSignalDisplay & " 50 ]	# ( Unknown )	" & $Flags & "	" & $CHAN & "	1000	" & $radio & "	" & $Found_CHAN & @CRLF
 			Next
 			$savefile = FileOpen($filename, 128 + 2) ;Open in UTF-8 write mode
@@ -11296,7 +11296,7 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		;Add Manufacturers to list
 		$query = "SELECT BSSID, Manufacturer FROM Manufacturers"
 		Local $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns, $ManuMatchArray_iRval
-	$ManuMatchArray_iRval = _SQLite_GetTable2d($ManuDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
+		$ManuMatchArray_iRval = _SQLite_GetTable2D($ManuDBhndl, $query, $ManuMatchArray, $ManuMatchArray_iRows, $ManuMatchArray_iColumns)
 		$FoundManuMatch = $ManuMatchArray_iRows
 		GUICtrlSetData($msgdisplay, $Text_VistumblerSettings & ' - Loading ' & $FoundManuMatch & ' Manufacturer(s)')
 		For $m = 1 To $FoundManuMatch
@@ -11326,7 +11326,7 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		;Add Labels to list
 		$query = "SELECT BSSID, Label FROM Labels"
 		Local $LabMatchArray, $LabMatchArray_iRows, $LabMatchArray_iColumns, $LabMatchArray_iRval
-	$LabMatchArray_iRval = _SQLite_GetTable2d($LabDBhndl, $query, $LabMatchArray, $LabMatchArray_iRows, $LabMatchArray_iColumns)
+		$LabMatchArray_iRval = _SQLite_GetTable2D($LabDBhndl, $query, $LabMatchArray, $LabMatchArray_iRows, $LabMatchArray_iColumns)
 		$FoundLabMatch = $LabMatchArray_iRows
 		GUICtrlSetData($msgdisplay, $Text_VistumblerSettings & ' - Loading ' & $FoundLabMatch & ' Label(s)')
 		For $l = 1 To $FoundLabMatch
@@ -11632,7 +11632,7 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		$GUI_Midi_Instument = GUICtrlCreateCombo('', 30, 365, 310, 20)
 		$query = "SELECT INSTNUM, INSTTEXT FROM Instruments"
 		Local $InstMatchArray, $InstMatchArray_iRows, $InstMatchArray_iColumns, $InstMatchArray_iRval
-		$InstMatchArray_iRval = _SQLite_GetTable2d($InstDBhndl, $query, $InstMatchArray, $InstMatchArray_iRows, $InstMatchArray_iColumns)
+		$InstMatchArray_iRval = _SQLite_GetTable2D($InstDBhndl, $query, $InstMatchArray, $InstMatchArray_iRows, $InstMatchArray_iColumns)
 		$FoundInstMatch = $InstMatchArray_iRows
 		GUICtrlSetData($msgdisplay, $Text_VistumblerSettings & ' - Loading ' & $FoundInstMatch & ' Instrument(s)')
 		For $m = 1 To $FoundInstMatch
@@ -11708,7 +11708,7 @@ Func _SettingsGUI($StartTab) ;Opens Settings GUI to specified tab
 		;Add cameras to list
 		$query = "SELECT CamName, CamUrl FROM Cameras"
 		Local $CamMatchArray, $CamMatchArray_iRows, $CamMatchArray_iColumns, $CamMatchArray_iRval
-		$CamMatchArray_iRval = _SQLite_GetTable2d($CamDBhndl, $query, $CamMatchArray, $CamMatchArray_iRows, $CamMatchArray_iColumns)
+		$CamMatchArray_iRval = _SQLite_GetTable2D($CamDBhndl, $query, $CamMatchArray, $CamMatchArray_iRows, $CamMatchArray_iColumns)
 		$FoundCamMatch = $CamMatchArray_iRows
 		GUICtrlSetData($msgdisplay, $Text_VistumblerSettings & ' - Loading ' & $FoundCamMatch & ' ' & $Text_Cameras)
 		For $c = 1 To $FoundCamMatch
@@ -13095,7 +13095,7 @@ Func _SpeakSelectedSignal() ;Finds the slected access point and speaks its signa
 		If $Selected <> -1 Then ;If a access point is selected in the listview, play its signal strenth
 			$query = "SELECT LastHistID, Active, SSID FROM AP WHERE ListRow=" & $Selected
 			Local $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns, $ApMatchArray_iRval
-	$ApMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
+			$ApMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ApMatchArray, $ApMatchArray_iRows, $ApMatchArray_iColumns)
 			$FoundApMatch = $ApMatchArray_iRows
 			If $FoundApMatch <> 0 Then
 				$PlayHistID = $ApMatchArray[1][0]
@@ -13103,7 +13103,7 @@ Func _SpeakSelectedSignal() ;Finds the slected access point and speaks its signa
 				$ApSSID = $ApMatchArray[1][2]
 				$query = "SELECT Signal FROM Hist WHERE HistID=" & $PlayHistID
 				Local $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns, $HistMatchArray_iRval
-	$HistMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
+				$HistMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $HistMatchArray, $HistMatchArray_iRows, $HistMatchArray_iColumns)
 				$FoundHistMatch = $HistMatchArray_iRows
 				If $FoundHistMatch <> 0 Then
 					If $ApIsActive = 1 Then
@@ -13147,7 +13147,7 @@ Func _PlayMidiForActiveAPs()
 	If $Midi_PlayForActiveAps = 1 And ProcessExists($MidiProcess) = 0 Then
 		$query = "SELECT Signal FROM Hist WHERE GpsID=" & $GPS_ID
 		Local $TempHistArray, $TempHistArray_iRows, $TempHistArray_iColumns, $TempHistArray_iRval
-	$TempHistArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $TempHistArray, $TempHistArray_iRows, $TempHistArray_iColumns)
+		$TempHistArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $TempHistArray, $TempHistArray_iRows, $TempHistArray_iColumns)
 		$FoundTempHist = UBound($TempHistArray) - 1
 		If $FoundTempHist <> 0 Then
 			$PlaySignals = ''
@@ -13228,7 +13228,7 @@ Func _ModifyFilters()
 	_GUICtrlListView_SetColumnWidth($FilterLV, 2, 400)
 	$query = "SELECT FiltID, FiltName, FiltDesc FROM Filters"
 	Local $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns, $FiltMatchArray_iRval
-	$FiltMatchArray_iRval = _SQLite_GetTable2d($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
+	$FiltMatchArray_iRval = _SQLite_GetTable2D($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
 	$FoundFiltMatch = $FiltMatchArray_iRows
 	If $FoundFiltMatch <> 0 Then
 		For $ffm = 1 To $FoundFiltMatch
@@ -13319,7 +13319,7 @@ Func _AddEditFilter($Filter_ID = '-1')
 	If $Filter_ID <> '-1' Then
 		$query = "SELECT FiltName, FiltDesc, SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, HighSig, RSSI, HighRSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $Filter_ID & "'"
 		Local $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns, $FiltMatchArray_iRval
-	$FiltMatchArray_iRval = _SQLite_GetTable2d($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
+		$FiltMatchArray_iRval = _SQLite_GetTable2D($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
 		$Filter_Name = $FiltMatchArray[1][0]
 		$Filter_Desc = $FiltMatchArray[1][1]
 		$Filter_SSID = $FiltMatchArray[1][2]
@@ -13530,7 +13530,7 @@ Func _CreateFilterQuerys()
 	If $DefFiltID <> '-1' Then
 		$query = "SELECT SSID, BSSID, CHAN, AUTH, ENCR, RADTYPE, NETTYPE, Signal, HighSig, RSSI, HighRSSI, BTX, OTX, ApID, Active FROM Filters WHERE FiltID='" & $DefFiltID & "'"
 		Local $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns, $FiltMatchArray_iRval
-	$FiltMatchArray_iRval = _SQLite_GetTable2d($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
+		$FiltMatchArray_iRval = _SQLite_GetTable2D($FiltDBhndl, $query, $FiltMatchArray, $FiltMatchArray_iRows, $FiltMatchArray_iColumns)
 		$Filter_SSID = $FiltMatchArray[1][0]
 		$Filter_BSSID = $FiltMatchArray[1][1]
 		$Filter_CHAN = $FiltMatchArray[1][2]
@@ -13950,7 +13950,7 @@ EndFunc   ;==>_RefreshInterfaces
 Func _ImageDownloader()
 	$query = "SELECT CamName, CamUrl FROM Cameras"
 	Local $CamMatchArray2, $CamMatchArray2_iRows, $CamMatchArray2_iColumns, $CamMatchArray2_iRval
-	$CamMatchArray2_iRval = _SQLite_GetTable2d($CamDBhndl, $query, $CamMatchArray2, $CamMatchArray2_iRows, $CamMatchArray2_iColumns)
+	$CamMatchArray2_iRval = _SQLite_GetTable2D($CamDBhndl, $query, $CamMatchArray2, $CamMatchArray2_iRows, $CamMatchArray2_iColumns)
 	$FoundCamMatch = $CamMatchArray2_iRows
 	If $FoundCamMatch > 0 Then
 		$dtfilebase = StringFormat("%04i", @YEAR) & '-' & StringFormat("%02i", @MON) & '-' & StringFormat("%02i", @MDAY) & ' ' & @HOUR & '-' & @MIN & '-' & @SEC
@@ -13969,7 +13969,7 @@ Func _ImageDownloader()
 				$query = "SELECT CamID FROM Cam WHERE ImgMD5='" & $imgmd5 & "'"
 				;ConsoleWrite($query & @CRLF)
 				Local $ImgMatchArray, $ImgMatchArray_iRows, $ImgMatchArray_iColumns, $ImgMatchArray_iRval
-	$ImgMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ImgMatchArray, $ImgMatchArray_iRows, $ImgMatchArray_iColumns)
+				$ImgMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ImgMatchArray, $ImgMatchArray_iRows, $ImgMatchArray_iColumns)
 				$FoundImgMatch = $ImgMatchArray_iRows
 				If $FoundImgMatch = 0 Then ;If Img is not found, add it
 					$CamID += 1
@@ -13988,7 +13988,7 @@ Func _ExportCamFile()
 	$filename = FileSaveDialog('Save Camera File', $SaveDir, 'Vistumbler Camera File (*.VSCZ)', '', $ldatetimestamp & '.VSCZ')
 	$query = "SELECT CamID, CamGroup, GpsID, CamName, CamFile, Date1, Time1 FROM CAM"
 	Local $CamMatchArray, $CamMatchArray_iRows, $CamMatchArray_iColumns, $CamMatchArray_iRval
-	$CamMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $CamMatchArray, $CamMatchArray_iRows, $CamMatchArray_iColumns)
+	$CamMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $CamMatchArray, $CamMatchArray_iRows, $CamMatchArray_iColumns)
 	$FoundCamMatch = $CamMatchArray_iRows
 	If $FoundCamMatch > 0 Then
 		$datafiletmp = $TmpDir & 'Data.csv'
@@ -14009,7 +14009,7 @@ Func _ExportCamFile()
 				$query = "SELECT Latitude, Longitude, NumOfSats, HorDilPitch, Alt, Geo, SpeedInMPH, SpeedInKmH, TrackAngle, Date1, Time1 FROM GPS WHERE GpsID=" & $ExpGpsID
 				;ConsoleWrite($query & @CRLF)
 				Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+				$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 				$ExpLat = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][0]), 'S', '-'), 'N', ''), ' ', '')
 				$ExpLon = StringReplace(StringReplace(StringReplace(_Format_GPS_DMM_to_DDD($GpsMatchArray[1][1]), 'W', '-'), 'E', ''), ' ', '')
 				$ExpSat = $GpsMatchArray[1][2]
@@ -14082,7 +14082,7 @@ Func _ImportImageFiles()
 		If Not @error Then
 			$query = "Select COUNT(CamID) FROM Cam WHERE CamName = '" & $ImgGroupName & "'"
 			Local $CamCountArray, $CamCountArray_iRows, $CamCountArray_iColumns, $CamCountArray_iRval
-	$CamCountArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $CamCountArray, $CamCountArray_iRows, $CamCountArray_iColumns)
+			$CamCountArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $CamCountArray, $CamCountArray_iRows, $CamCountArray_iColumns)
 			$CamCount = $CamCountArray[1][0]
 			;ConsoleWrite($CamCount & @CRLF)
 			For $ii = 1 To $ImgArray[0]
@@ -14092,7 +14092,7 @@ Func _ImportImageFiles()
 				$query = "SELECT CamID FROM Cam WHERE ImgMD5='" & $imgmd5 & "'"
 				;ConsoleWrite($query & @CRLF)
 				Local $ImgMatchArray, $ImgMatchArray_iRows, $ImgMatchArray_iColumns, $ImgMatchArray_iRval
-	$ImgMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $ImgMatchArray, $ImgMatchArray_iRows, $ImgMatchArray_iColumns)
+				$ImgMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $ImgMatchArray, $ImgMatchArray_iRows, $ImgMatchArray_iColumns)
 				$FoundImgMatch = $ImgMatchArray_iRows
 				If $FoundImgMatch = 0 Then ;If Img is not found, add it
 					$imgtimearr = FileGetTime($imgpath, 0)
@@ -14114,7 +14114,7 @@ Func _ImportImageFiles()
 						$query = "SELECT GPSID FROM GPS WHERE Date1 = '" & $ImgDateUTC & "' And Time1 like '" & $ImgTimeUTC & "%'"
 						;ConsoleWrite($query & @CRLF)
 						Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+						$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 						$FoundGpsMatch = $GpsMatchArray_iRows
 						If $FoundGpsMatch <> 0 Then ;If a gps id match was found, import the image
 							$ImgGpsId = $GpsMatchArray[1][0]
@@ -14146,7 +14146,7 @@ Func _RemoveNonMatchingImages()
 	$query = "SELECT CamName FROM Cam"
 	;ConsoleWrite($query & @CRLF)
 	Local $CamNameArray, $CamNameArray_iRows, $CamNameArray_iColumns, $CamNameArray_iRval
-	$CamNameArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $CamNameArray, $CamNameArray_iRows, $CamNameArray_iColumns)
+	$CamNameArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $CamNameArray, $CamNameArray_iRows, $CamNameArray_iColumns)
 	$CamNameMatch = UBound($CamNameArray) - 1
 	If $CamNameMatch = 0 Then ;If Img is not found, add it
 	EndIf
@@ -14295,7 +14295,7 @@ EndFunc   ;==>RGB2BGR
 ; SQLite-compatible _AddRecord function
 ; Replaces AccessCom.au3's _AddRecord for pipe-delimited INSERT operations
 ;-------------------------------------------------------------------------------------------------------------------------------
-Func _AddRecord($s_dbname, $s_Tablename, $s_unused,  $ar_array)
+Func _AddRecord($s_dbname, $s_Tablename, $s_unused, $ar_array)
 	; Parse pipe-delimited string into array if needed
 	If Not IsArray($ar_array) And StringInStr($ar_array, "|") > 0 Then
 		Local $ar_arraylocal = StringSplit($ar_array, "|", 2) ; Flag 2 = no count element
@@ -14304,25 +14304,25 @@ Func _AddRecord($s_dbname, $s_Tablename, $s_unused,  $ar_array)
 		Local $ar_arraylocal[1]
 		$ar_arraylocal[0] = $ar_array
 		$ar_array = $ar_arraylocal
-	EndIf	
-	
+	EndIf
+
 	; Handle old MDB convention where element [0] contains field count
 	; If [0] is numeric and less than array size, treat it as count
 	Local $startIndex = 0
 	Local $numFields = UBound($ar_array)
-	
+
 	If IsNumber($ar_array[0]) And $ar_array[0] > 0 And $ar_array[0] < $numFields Then
 		; Old MDB format: [0] = count, data starts at [1]
 		$startIndex = 1
 		$numFields = $ar_array[0]
 	EndIf
-	
+
 	; Use the handle that was passed in as the third parameter
 	Local $hDB = $s_unused
-	
+
 	; Debug output
 	If $Debug = 1 Then ConsoleWrite("_AddRecord: DB=" & $s_dbname & " Table=" & $s_Tablename & " Fields=" & $numFields & " StartIdx=" & $startIndex & " Handle=" & $hDB & @CRLF)
-	
+
 	; Execute INSERT using _SQLite_Exec
 	; Escape single quotes for SQL safety
 	Local $values = ""
@@ -14332,7 +14332,7 @@ Func _AddRecord($s_dbname, $s_Tablename, $s_unused,  $ar_array)
 		Local $val = StringReplace($ar_array[$i], "'", "''")
 		$values &= "'" & $val & "'"
 	Next
-	
+
 	Local $query = "INSERT INTO " & $s_Tablename & " VALUES (" & $values & ")"
 	Local $result = _SQLite_Exec($hDB, $query)
 	If $result <> 0 Then ; SQLITE_OK is 0
@@ -14410,12 +14410,12 @@ EndFunc   ;==>_ImportSettings
 ; ===============================================================================================================================
 
 Func _ExportKismetDB()
-    _ExportKismetDB_Common(0)
-EndFunc
+	_ExportKismetDB_Common(0)
+EndFunc   ;==>_ExportKismetDB
 
 Func _ExportFilKismetDB()
-    _ExportKismetDB_Common(1)
-EndFunc
+	_ExportKismetDB_Common(1)
+EndFunc   ;==>_ExportFilKismetDB
 
 Func _ExportKismetDB_Common($iFilter)
 	Local $sFile = FileSaveDialog("Export to KismetDB", $SaveDir, "KismetDB (*.kismet)", 18, $ldatetimestamp & ".kismet")
@@ -14443,7 +14443,7 @@ Func _ExportKismetDB_Common($iFilter)
 	EndIf
 
 	Local $aAPs, $aAPs_iRows, $aAPs_iColumns, $aAPs_iRval
-	$aAPs_iRval = _SQLite_GetTable2d($DBhndl, $sQuery, $aAPs, $aAPs_iRows, $aAPs_iColumns)
+	$aAPs_iRval = _SQLite_GetTable2D($DBhndl, $sQuery, $aAPs, $aAPs_iRows, $aAPs_iColumns)
 	Local $iCount = UBound($aAPs) - 1
 	Local $iPacketID = 1
 	Local $sDatasourceUUID = "00000000-0000-0000-0000-000000000000"
@@ -14523,7 +14523,7 @@ Func _ExportKismetDB_Common($iFilter)
 			If $iHighGpsID <> 0 Then
 				Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID
 				Local $aGps, $aGps_iRows, $aGps_iColumns, $aGps_iRval
-	$aGps_iRval = _SQLite_GetTable2d($DBhndl, $sGpsQuery, $aGps, $aGps_iRows, $aGps_iColumns)
+				$aGps_iRval = _SQLite_GetTable2D($DBhndl, $sGpsQuery, $aGps, $aGps_iRows, $aGps_iColumns)
 				If UBound($aGps) > 1 Then
 					Local $fThisLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
 					Local $fThisLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
@@ -14540,7 +14540,7 @@ Func _ExportKismetDB_Common($iFilter)
 			; Export History as Packets for this AP
 			Local $sHistQuery = "SELECT Hist.GpsID, Hist.Signal, Hist.RSSI, Hist.Date1, Hist.Time1, GPS.Latitude, GPS.Longitude, GPS.Alt FROM Hist LEFT JOIN GPS ON Hist.GpsID = GPS.GpsID WHERE Hist.ApID=" & $aGrpApIDs[$g]
 			Local $aHist, $aHist_iRows, $aHist_iColumns, $aHist_iRval
-	$aHist_iRval = _SQLite_GetTable2d($DBhndl, $sHistQuery, $aHist, $aHist_iRows, $aHist_iColumns)
+			$aHist_iRval = _SQLite_GetTable2D($DBhndl, $sHistQuery, $aHist, $aHist_iRows, $aHist_iColumns)
 
 			If IsArray($aHist) Then
 				Local $iHistCount = UBound($aHist) - 1
@@ -14590,7 +14590,7 @@ Func _ExportKismetDB_Common($iFilter)
 			If $iHighGpsID0 <> 0 Then
 				Local $sGQ = "SELECT Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID0
 				Local $aGT, $aGT_iRows, $aGT_iColumns, $aGT_iRval
-	$aGT_iRval = _SQLite_GetTable2d($DBhndl, $sGQ, $aGT, $aGT_iRows, $aGT_iColumns)
+				$aGT_iRval = _SQLite_GetTable2D($DBhndl, $sGQ, $aGT, $aGT_iRows, $aGT_iColumns)
 				If UBound($aGT) > 1 Then
 					Local $sGD = StringReplace($aGT[1][1], "-", "/")
 					Local $sGTm = StringRegExpReplace($aGT[1][2], "\.\d+$", "")
@@ -14609,124 +14609,124 @@ Func _ExportKismetDB_Common($iFilter)
 	_SQLite_Exec($hDB, "COMMIT;")
 	_KismetDB_Close($hDB)
 	MsgBox(0, "Export Complete", "Exported " & $iCount & " APs (" & $iDeviceCount & " devices) to KismetDB.")
-EndFunc
+EndFunc   ;==>_ExportKismetDB_Common
 
 Func _ExportNetXML()
-    _ExportNetXML_Common(0)
-EndFunc
+	_ExportNetXML_Common(0)
+EndFunc   ;==>_ExportNetXML
 
 Func _ExportFilNetXML()
-    _ExportNetXML_Common(1)
-EndFunc
+	_ExportNetXML_Common(1)
+EndFunc   ;==>_ExportFilNetXML
 
 Func _ExportNetXML_Common($iFilter)
-    Local $sFile = FileSaveDialog("Export to NetXML", $SaveDir, "NetXML (*.netxml)", 18, $ldatetimestamp & ".netxml")
-    If @error Then Return
+	Local $sFile = FileSaveDialog("Export to NetXML", $SaveDir, "NetXML (*.netxml)", 18, $ldatetimestamp & ".netxml")
+	If @error Then Return
 
-    If StringRight($sFile, 7) <> ".netxml" Then $sFile &= ".netxml"
-    
-    _NetXML_Create()
-    
-    Local $sQuery
-    If $iFilter = 1 Then
-        $sQuery = $AddQuery
-    Else
-        $sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
-    EndIf
-    
-	    Local $aAPs, $aAPs_iRows, $aAPs_iColumns, $aAPs_iRval
-	$aAPs_iRval = _SQLite_GetTable2d($DBhndl, $sQuery, $aAPs, $aAPs_iRows, $aAPs_iColumns)
-    Local $iCount = UBound($aAPs) - 1
-    
-    For $i = 1 To $iCount
-        GUICtrlSetData($msgdisplay, "Exporting NetXML " & $i & " / " & $iCount)
-        
-        Local $sBSSID = $aAPs[$i][3]
-        Local $sSSID = $aAPs[$i][2]
-        Local $sManuf = $aAPs[$i][14]
-        Local $iChannel = $aAPs[$i][6]
-        Local $sAuth = $aAPs[$i][7]
-        Local $sEncr = $aAPs[$i][8]
-        Local $sType = "infrastructure"
-        If $aAPs[$i][4] <> "Infrastructure" Then $sType = "ad-hoc"
-        
-        Local $iHighSig = $aAPs[$i][12]
-        
-        ; Get High Signal GPS and Times (First/Last)
-        Local $iHighGpsHistID = $aAPs[$i][16]
-        Local $iFirstHistID = $aAPs[$i][17]
-        Local $iLastHistID = $aAPs[$i][18]
-        
-        Local $fLat = 0, $fLon = 0, $fAlt = 0, $fSpeed = 0
-        Local $sFirstTime = "", $sLastTime = ""
-        
-        ; Resolve First Time
-        If $iFirstHistID <> 0 Then
-            Local $aHistF, $aHistF_iRows, $aHistF_iColumns, $aHistF_iRval
-            $aHistF_iRval = _SQLite_GetTable2d($DBhndl, "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $iFirstHistID, $aHistF, $aHistF_iRows, $aHistF_iColumns)
-            If $aHistF_iRows > 0 Then $sFirstTime = $aHistF[1][0] & " " & $aHistF[1][1]
-        EndIf
-        
-        ; Resolve Last Time
-        If $iLastHistID <> 0 Then
-            Local $aHistL, $aHistL_iRows, $aHistL_iColumns, $aHistL_iRval
-            $aHistL_iRval = _SQLite_GetTable2d($DBhndl, "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $iLastHistID, $aHistL, $aHistL_iRows, $aHistL_iColumns)
-            If $aHistL_iRows > 0 Then $sLastTime = $aHistL[1][0] & " " & $aHistL[1][1]
-        EndIf
-        
-        ; Fallback if missing
-        If $sFirstTime = "" Then $sFirstTime = $sLastTime
-        If $sLastTime = "" Then $sLastTime = $sFirstTime
-        
-        ; Resolve Peak Signal GPS (HighGpsHistID -> Hist -> GpsID -> GPS)
-        If $iHighGpsHistID <> 0 Then
-            Local $aHistGPS, $aHistGPS_iRows, $aHistGPS_iColumns, $aHistGPS_iRval
-            $aHistGPS_iRval = _SQLite_GetTable2d($DBhndl, "SELECT GpsID FROM Hist WHERE HistID=" & $iHighGpsHistID, $aHistGPS, $aHistGPS_iRows, $aHistGPS_iColumns)
-            If $aHistGPS_iRows > 0 Then
-                Local $iGpsID = $aHistGPS[1][0]
-                If $iGpsID <> 0 Then
-                    Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, SpeedInMPH FROM GPS WHERE GpsID=" & $iGpsID
+	If StringRight($sFile, 7) <> ".netxml" Then $sFile &= ".netxml"
+
+	_NetXML_Create()
+
+	Local $sQuery
+	If $iFilter = 1 Then
+		$sQuery = $AddQuery
+	Else
+		$sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+	EndIf
+
+	Local $aAPs, $aAPs_iRows, $aAPs_iColumns, $aAPs_iRval
+	$aAPs_iRval = _SQLite_GetTable2D($DBhndl, $sQuery, $aAPs, $aAPs_iRows, $aAPs_iColumns)
+	Local $iCount = UBound($aAPs) - 1
+
+	For $i = 1 To $iCount
+		GUICtrlSetData($msgdisplay, "Exporting NetXML " & $i & " / " & $iCount)
+
+		Local $sBSSID = $aAPs[$i][3]
+		Local $sSSID = $aAPs[$i][2]
+		Local $sManuf = $aAPs[$i][14]
+		Local $iChannel = $aAPs[$i][6]
+		Local $sAuth = $aAPs[$i][7]
+		Local $sEncr = $aAPs[$i][8]
+		Local $sType = "infrastructure"
+		If $aAPs[$i][4] <> "Infrastructure" Then $sType = "ad-hoc"
+
+		Local $iHighSig = $aAPs[$i][12]
+
+		; Get High Signal GPS and Times (First/Last)
+		Local $iHighGpsHistID = $aAPs[$i][16]
+		Local $iFirstHistID = $aAPs[$i][17]
+		Local $iLastHistID = $aAPs[$i][18]
+
+		Local $fLat = 0, $fLon = 0, $fAlt = 0, $fSpeed = 0
+		Local $sFirstTime = "", $sLastTime = ""
+
+		; Resolve First Time
+		If $iFirstHistID <> 0 Then
+			Local $aHistF, $aHistF_iRows, $aHistF_iColumns, $aHistF_iRval
+			$aHistF_iRval = _SQLite_GetTable2D($DBhndl, "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $iFirstHistID, $aHistF, $aHistF_iRows, $aHistF_iColumns)
+			If $aHistF_iRows > 0 Then $sFirstTime = $aHistF[1][0] & " " & $aHistF[1][1]
+		EndIf
+
+		; Resolve Last Time
+		If $iLastHistID <> 0 Then
+			Local $aHistL, $aHistL_iRows, $aHistL_iColumns, $aHistL_iRval
+			$aHistL_iRval = _SQLite_GetTable2D($DBhndl, "SELECT Date1, Time1 FROM Hist WHERE HistID=" & $iLastHistID, $aHistL, $aHistL_iRows, $aHistL_iColumns)
+			If $aHistL_iRows > 0 Then $sLastTime = $aHistL[1][0] & " " & $aHistL[1][1]
+		EndIf
+
+		; Fallback if missing
+		If $sFirstTime = "" Then $sFirstTime = $sLastTime
+		If $sLastTime = "" Then $sLastTime = $sFirstTime
+
+		; Resolve Peak Signal GPS (HighGpsHistID -> Hist -> GpsID -> GPS)
+		If $iHighGpsHistID <> 0 Then
+			Local $aHistGPS, $aHistGPS_iRows, $aHistGPS_iColumns, $aHistGPS_iRval
+			$aHistGPS_iRval = _SQLite_GetTable2D($DBhndl, "SELECT GpsID FROM Hist WHERE HistID=" & $iHighGpsHistID, $aHistGPS, $aHistGPS_iRows, $aHistGPS_iColumns)
+			If $aHistGPS_iRows > 0 Then
+				Local $iGpsID = $aHistGPS[1][0]
+				If $iGpsID <> 0 Then
+					Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, SpeedInMPH FROM GPS WHERE GpsID=" & $iGpsID
 					Local $aGps, $aGps_iRows, $aGps_iColumns, $aGps_iRval
-	$aGps_iRval = _SQLite_GetTable2d($DBhndl, $sGpsQuery, $aGps, $aGps_iRows, $aGps_iColumns)
-                    if UBound($aGps) > 1 Then
-                        $fLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
-                        $fLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
-                        $fAlt = $aGps[1][3]
-                        $fSpeed = $aGps[1][4]
-                    EndIf
-                 EndIf
-             EndIf
-        EndIf
+					$aGps_iRval = _SQLite_GetTable2D($DBhndl, $sGpsQuery, $aGps, $aGps_iRows, $aGps_iColumns)
+					If UBound($aGps) > 1 Then
+						$fLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
+						$fLon = _Format_GPS_DMM_to_DDD($aGps[1][2])
+						$fAlt = $aGps[1][3]
+						$fSpeed = $aGps[1][4]
+					EndIf
+				EndIf
+			EndIf
+		EndIf
 
-        Local $iApID = $aAPs[$i][1]
-        Local $iMinSig = $iHighSig
-        Local $iLastSig = $iHighSig
-        
-        If $iApID <> 0 Then
-             Local $aSigStats, $aSigStats_iRows, $aSigStats_iColumns, $aSigStats_iRval
-             $aSigStats_iRval = _SQLite_GetTable2d($DBhndl, "SELECT Min(Signal), Max(Signal) FROM Hist WHERE ApID=" & $iApID, $aSigStats, $aSigStats_iRows, $aSigStats_iColumns)
-             If $aSigStats_iRows > 0 Then
-                 $iMinSig = Number($aSigStats[1][0])
-                 $iHighSig = Number($aSigStats[1][1])
-             EndIf
-             ; Get Last Signal from LastHistID
-             If $iLastHistID <> 0 Then
-                  Local $aLastSig, $aLastSig_iRows, $aLastSig_iColumns, $aLastSig_iRval
-                  $aLastSig_iRval = _SQLite_GetTable2d($DBhndl, "SELECT Signal FROM Hist WHERE HistID=" & $iLastHistID, $aLastSig, $aLastSig_iRows, $aLastSig_iColumns)
-                  If $aLastSig_iRows > 0 Then $iLastSig = Number($aLastSig[1][0])
-             EndIf
-        EndIf
-        
-         ; Sanitize Lat/Lon string to float
-        $fLat = Number(StringReplace(StringReplace(StringReplace($fLat, "N", ""), "S", "-"), " ", ""))
-        $fLon = Number(StringReplace(StringReplace(StringReplace($fLon, "E", ""), "W", "-"), " ", ""))
-        
-        _NetXML_AddNetwork($sBSSID, $sSSID, $sManuf, $iChannel, 0, $sType, $sAuth & "-" & $sEncr, "false", $sFirstTime, $sLastTime, 54, $iLastSig, $iMinSig, $iHighSig, 0, $fLat, $fLon, $fAlt, $fSpeed)
-    Next
-    
-    _NetXML_Save($sFile)
-    MsgBox(0, "Export Complete", "Exported " & $iCount & " APs to NetXML.")
-EndFunc
+		Local $iApID = $aAPs[$i][1]
+		Local $iMinSig = $iHighSig
+		Local $iLastSig = $iHighSig
+
+		If $iApID <> 0 Then
+			Local $aSigStats, $aSigStats_iRows, $aSigStats_iColumns, $aSigStats_iRval
+			$aSigStats_iRval = _SQLite_GetTable2D($DBhndl, "SELECT Min(Signal), Max(Signal) FROM Hist WHERE ApID=" & $iApID, $aSigStats, $aSigStats_iRows, $aSigStats_iColumns)
+			If $aSigStats_iRows > 0 Then
+				$iMinSig = Number($aSigStats[1][0])
+				$iHighSig = Number($aSigStats[1][1])
+			EndIf
+			; Get Last Signal from LastHistID
+			If $iLastHistID <> 0 Then
+				Local $aLastSig, $aLastSig_iRows, $aLastSig_iColumns, $aLastSig_iRval
+				$aLastSig_iRval = _SQLite_GetTable2D($DBhndl, "SELECT Signal FROM Hist WHERE HistID=" & $iLastHistID, $aLastSig, $aLastSig_iRows, $aLastSig_iColumns)
+				If $aLastSig_iRows > 0 Then $iLastSig = Number($aLastSig[1][0])
+			EndIf
+		EndIf
+
+		; Sanitize Lat/Lon string to float
+		$fLat = Number(StringReplace(StringReplace(StringReplace($fLat, "N", ""), "S", "-"), " ", ""))
+		$fLon = Number(StringReplace(StringReplace(StringReplace($fLon, "E", ""), "W", "-"), " ", ""))
+
+		_NetXML_AddNetwork($sBSSID, $sSSID, $sManuf, $iChannel, 0, $sType, $sAuth & "-" & $sEncr, "false", $sFirstTime, $sLastTime, 54, $iLastSig, $iMinSig, $iHighSig, 0, $fLat, $fLon, $fAlt, $fSpeed)
+	Next
+
+	_NetXML_Save($sFile)
+	MsgBox(0, "Export Complete", "Exported " & $iCount & " APs to NetXML.")
+EndFunc   ;==>_ExportNetXML_Common
 
 Func _ExportNS1Binary($Filter = 0)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ExportNS1Binary()')
@@ -14746,11 +14746,11 @@ Func _ExportNS1Binary($Filter = 0)
 		$query = "SELECT ApID, SSID, BSSID, Chan, AUTH, ENCR, NETTYPE, LABEL, HighGpsHistID FROM AP"
 	EndIf
 	Local $aAPsDB, $aAPsDB_iRows, $aAPsDB_iColumns, $aAPsDB_iRval
-	$aAPsDB_iRval = _SQLite_GetTable2d($DBhndl, $query, $aAPsDB, $aAPsDB_iRows, $aAPsDB_iColumns)
-	
+	$aAPsDB_iRval = _SQLite_GetTable2D($DBhndl, $query, $aAPsDB, $aAPsDB_iRows, $aAPsDB_iColumns)
+
 	Local $iApCount = 0
 	If IsArray($aAPsDB) Then $iApCount = UBound($aAPsDB) - 1
-	If $iApCount < 1 Then 
+	If $iApCount < 1 Then
 		MsgBox(48, "Warning", "No APs found to export.")
 		Return
 	EndIf
@@ -14758,47 +14758,47 @@ Func _ExportNS1Binary($Filter = 0)
 	Local $aNS1Data[2]
 	$aNS1Data[0] = 12
 	Local $aAPs[$iApCount]
-	
+
 	For $i = 1 To $iApCount
 		GUICtrlSetData($msgdisplay, "Preparing AP (NS1) " & $i & " / " & $iApCount)
-		Local $ApID = $aAPsDB[$i][1] ; ID is first col
-		
+		Local $APID = $aAPsDB[$i][1] ; ID is first col
+
 		Local $aAP[23]
 		$aAP[0] = $aAPsDB[$i][2] ; SSID
-		
+
 		Local $sBSSID = StringReplace($aAPsDB[$i][3], ":", "")
 		$aAP[1] = Binary("0x" & $sBSSID) ; BSSID
-		
+
 		; Default Metrics
 		$aAP[2] = -100 ; MaxSignal
 		$aAP[16] = 0   ; MinSignal
 		$aAP[3] = -150 ; MinNoise (Default low)
-		$aAP[17] = -100; MaxNoise
+		$aAP[17] = -100 ; MaxNoise
 		$aAP[4] = 0    ; MaxSNR
 		$aAP[7] = 0    ; FirstSeen
 		$aAP[8] = 0    ; LastSeen
-		
+
 		; Channels
 		$aAP[14] = Int($aAPsDB[$i][4]) ; LastChannel (Chan col)
 		Local $iBitPos = _GetChannelbits64(Int($aAPsDB[$i][4]))
 		$aAP[13] = ($iBitPos >= 0) ? _BitPosToUInt64($iBitPos) : 0 ; Channels bitfield (uint64)
-		
+
 		; Flags & ApFlags (Custom Vistumbler Mapping)
 		Local $sAuth = $aAPsDB[$i][5]
 		Local $sEncr = $aAPsDB[$i][6]
 		Local $sNetType = $aAPsDB[$i][7]
 		Local $sLabel = $aAPsDB[$i][8]
 		Local $iHighGpsHistID = Int($aAPsDB[$i][9]) ; HighGPS Hist Pointer
-		
+
 		Local $iFlags = 0
 		If $sNetType = "Infrastructure" Then $iFlags = BitOR($iFlags, 0x0001)
 		If $sNetType = "Ad-Hoc" Then $iFlags = BitOR($iFlags, 0x0002)
-		
+
 		; Set Privacy Bit (0x0010) for ANY Encryption (Not just WEP)
-		If $sEncr <> "None" And $sEncr <> "Open" And $sEncr <> "" Then 
+		If $sEncr <> "None" And $sEncr <> "Open" And $sEncr <> "" Then
 			$iFlags = BitOR($iFlags, 0x0010)
 		EndIf
-		
+
 		Local $iApFlags = 0
 		If StringInStr($sAuth, "WPA-Personal") Then $iApFlags = BitOR($iApFlags, 0x0001)
 		If StringInStr($sAuth, "WPA-Enterprise") Then $iApFlags = BitOR($iApFlags, 0x0002)
@@ -14806,7 +14806,7 @@ Func _ExportNS1Binary($Filter = 0)
 		If StringInStr($sAuth, "WPA2-Enterprise") Then $iApFlags = BitOR($iApFlags, 0x0008)
 		If StringInStr($sAuth, "WPA3") Then $iApFlags = BitOR($iApFlags, 0x0010)
 		If StringInStr($sAuth, "OWE") Then $iApFlags = BitOR($iApFlags, 0x0020)
-		
+
 		If StringInStr($sEncr, "TKIP") Then $iApFlags = BitOR($iApFlags, 0x0040)
 		If StringInStr($sEncr, "CCMP") Then $iApFlags = BitOR($iApFlags, 0x0080)
 		If StringInStr($sEncr, "AES") Then $iApFlags = BitOR($iApFlags, 0x0080)
@@ -14814,7 +14814,7 @@ Func _ExportNS1Binary($Filter = 0)
 		If StringInStr($sEncr, "GCMP-256") Then $iApFlags = BitOR($iApFlags, 0x0200)
 		If StringInStr($sEncr, "CCMP-256") Then $iApFlags = BitOR($iApFlags, 0x0400)
 		If StringInStr($sEncr, "BIP") Then $iApFlags = BitOR($iApFlags, 0x0800)
-		
+
 		$aAP[5] = $iFlags
 		$aAP[21] = $iApFlags
 
@@ -14827,62 +14827,62 @@ Func _ExportNS1Binary($Filter = 0)
 		$aAP[22] = Binary("") ; IEs
 
 		; Get History for data points
-		$query = "SELECT Signal, RSSI, Date1, Time1, GpsID, HistID FROM Hist WHERE ApID=" & $ApID & "  LIMIT 1"
+		$query = "SELECT Signal, RSSI, Date1, Time1, GpsID, HistID FROM Hist WHERE ApID=" & $APID & "  LIMIT 1"
 		Local $aHistDB, $aHistDB_iRows, $aHistDB_iColumns, $aHistDB_iRval
-	$aHistDB_iRval = _SQLite_GetTable2d($DBhndl, $query, $aHistDB, $aHistDB_iRows, $aHistDB_iColumns)
-		
+		$aHistDB_iRval = _SQLite_GetTable2D($DBhndl, $query, $aHistDB, $aHistDB_iRows, $aHistDB_iColumns)
+
 		Local $iHistCount = 0
 		If IsArray($aHistDB) Then $iHistCount = UBound($aHistDB) - 1
-		
+
 		Local $aDataPoints[1]
 		If $iHistCount > 0 Then
 			ReDim $aDataPoints[$iHistCount]
 			Local $iMinSignal = 200, $iMaxSignal = -200
-			
+
 			; Initialize Fallback Lat/Lat
 			$aAP[9] = 0
 			$aAP[10] = 0
 			Local $iMaxSignalGPS = -200
 			Local $fFallbackLat = 0
 			Local $fFallbackLon = 0
-			
+
 			For $j = 1 To $iHistCount
 				Local $sDate = $aHistDB[$j][3]
 				Local $sTime = $aHistDB[$j][4]
 				Local $iSig = Int($aHistDB[$j][2]) ; Using RSSI (dBm) for Signal
 				If $iSig = 0 And Int($aHistDB[$j][1]) > 0 Then $iSig = (Int($aHistDB[$j][1]) / 2) - 100 ; Estimate dBm from % if RSSI missing
-				
+
 				Local $iCurrentHistID = Int($aHistDB[$j][6])
-				
+
 				Local $iNoise = -100 ; Default noise
-				
+
 				; Update Max/Min
 				If $iSig > $iMaxSignal Then $iMaxSignal = $iSig
 				If $iSig < $iMinSignal Then $iMinSignal = $iSig
-				
+
 				Local $iFT = _NS1_DateToFILETIME($sDate, $sTime)
 				If $j = 1 Then $aAP[7] = $iFT ; FirstSeen
 				If $j = $iHistCount Then $aAP[8] = $iFT ; LastSeen
-				
+
 				Local $aDP[5]
 				$aDP[0] = $iFT
 				$aDP[1] = $iSig
 				$aDP[2] = $iNoise
-				
+
 				; Location
 				Local $GpsID = Int($aHistDB[$j][5])
-				
+
 				If $GpsID > 0 Then
 					$aDP[3] = 1 ; GPS
 					$query = "SELECT Latitude, Longitude, Alt, SpeedInMPH, TrackAngle FROM GPS WHERE GpsID=" & $GpsID
 					Local $aGPSDB, $aGPSDB_iRows, $aGPSDB_iColumns, $aGPSDB_iRval
-	$aGPSDB_iRval = _SQLite_GetTable2d($DBhndl, $query, $aGPSDB, $aGPSDB_iRows, $aGPSDB_iColumns)
-					
+					$aGPSDB_iRval = _SQLite_GetTable2D($DBhndl, $query, $aGPSDB, $aGPSDB_iRows, $aGPSDB_iColumns)
+
 					If IsArray($aGPSDB) And UBound($aGPSDB) >= 2 Then
 						; Robust GPS Parsing (DMM to DDD)
-						Local $aGPS[8]
+						Local $aGps[8]
 						Local $dLat = 0, $dLon = 0
-						
+
 						; Parse Latitude
 						Local $sRawLat = $aGPSDB[1][1]
 						Local $iLatSign = 1
@@ -14894,7 +14894,7 @@ Func _ExportNS1Binary($Filter = 0)
 							Local $fMin = $fRaw - ($fDeg * 100)
 							$dLat = ($fDeg + ($fMin / 60)) * $iLatSign
 						EndIf
-						
+
 						; Parse Longitude
 						Local $sRawLon = $aGPSDB[1][2]
 						Local $iLonSign = 1
@@ -14907,23 +14907,23 @@ Func _ExportNS1Binary($Filter = 0)
 							$dLon = ($fDeg + ($fMin / 60)) * $iLonSign
 						EndIf
 
-						$aGPS[0] = $dLat
-						$aGPS[1] = $dLon
-						
-						$aGPS[2] = Number($aGPSDB[1][3]) ; Alt
-						$aGPS[3] = 0 ; Sats
-						$aGPS[4] = Number($aGPSDB[1][4]) ; Speed
-						$aGPS[5] = Number($aGPSDB[1][5]) ; Track
-						$aGPS[6] = 0 ; MagVar
-						$aGPS[7] = 0 ; Hdop
-						$aDP[4] = $aGPS
-						
+						$aGps[0] = $dLat
+						$aGps[1] = $dLon
+
+						$aGps[2] = Number($aGPSDB[1][3]) ; Alt
+						$aGps[3] = 0 ; Sats
+						$aGps[4] = Number($aGPSDB[1][4]) ; Speed
+						$aGps[5] = Number($aGPSDB[1][5]) ; Track
+						$aGps[6] = 0 ; MagVar
+						$aGps[7] = 0 ; Hdop
+						$aDP[4] = $aGps
+
 						; Strategy 1: Use HighGpsHistID from AP Table
 						If $iHighGpsHistID > 0 And $iCurrentHistID = $iHighGpsHistID Then
 							$aAP[9] = $dLat
 							$aAP[10] = $dLon
 						EndIf
-						
+
 						; Strategy 2: Candidate for fallback (Max Signal with Valid GPS)
 						If $dLat <> 0 And $dLon <> 0 Then
 							If $iSig >= $iMaxSignalGPS Then
@@ -14938,15 +14938,15 @@ Func _ExportNS1Binary($Filter = 0)
 				Else
 					$aDP[3] = 0
 				EndIf
-				$aDataPoints[$j-1] = $aDP
+				$aDataPoints[$j - 1] = $aDP
 			Next
-			
+
 			; Apply Fallback if Strategy 1 found nothing
 			If $aAP[9] = 0 And $aAP[10] = 0 Then
 				$aAP[9] = $fFallbackLat
 				$aAP[10] = $fFallbackLon
 			EndIf
-			
+
 			$aAP[2] = $iMaxSignal
 			$aAP[16] = $iMinSignal
 			$aAP[3] = -100
@@ -14957,11 +14957,11 @@ Func _ExportNS1Binary($Filter = 0)
 			$aAP[9] = 0
 			$aAP[10] = 0
 		EndIf
-		
+
 		$aAP[11] = $aDataPoints
-		$aAPs[$i-1] = $aAP
+		$aAPs[$i - 1] = $aAP
 	Next
-	
+
 	$aNS1Data[1] = $aAPs
 	_NS1_WriteFile($filename, $aNS1Data)
 	If @error Then
@@ -14969,57 +14969,57 @@ Func _ExportNS1Binary($Filter = 0)
 	Else
 		MsgBox(0, "Success", "Export complete.")
 	EndIf
-EndFunc
+EndFunc   ;==>_ExportNS1Binary
 
 Func _DateToNs1FileTime($sDate, $sTime)
 	If $sDate = "" Or $sTime = "" Then Return 0
 	Local $iDiff = _DateDiff('s', "1601/01/01 00:00:00", $sDate & " " & $sTime)
 	Return $iDiff * 10000000
-EndFunc
+EndFunc   ;==>_DateToNs1FileTime
 
 Func _ImportNS1Binary($NS1file)
 	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportNS1Binary()')
-	
+
 	Local $aNS1 = _NS1_ReadFile($NS1file)
 	If @error Then
 		MsgBox(16, "Error", "Error reading NS1 Binary file: " & @error)
 		Return
 	EndIf
-	
+
 	Local $iVer = $aNS1[0]
 	Local $aAPs = $aNS1[1]
 	Local $iCount = UBound($aAPs)
-	
+
 	If $iCount = 0 Then
 		MsgBox(64, "Info", "No Access Points found in file.")
 		Return
 	EndIf
-	
+
 	Local $AddAP = 0
 	Local $AddGID = 0
 	Local $begintime = TimerInit()
 	Local $UpdateTimer = TimerInit()
 	Local $MemReleaseTimer = TimerInit()
-	
+
 	For $i = 0 To $iCount - 1
 		Local $aAP = $aAPs[$i]
-		
+
 		Local $sSSID = $aAP[0]
 		Local $bBSSID = $aAP[1]
 		Local $iMaxSig = $aAP[2]
-		
+
 		Local $MainBSSID = _NS1_BinaryToMac($bBSSID)
-		
+
 		Local $fLat = $aAP[9]
 		Local $fLon = $aAP[10]
-		
+
 		Local $sFirstSeen = _NS1_FileTimeToDate($aAP[7])
 		Local $sDate = StringLeft($sFirstSeen, 10)
 		Local $sTime = StringMid($sFirstSeen, 12, 8)
-		
+
 		If $sDate = "" Then $sDate = "2000/01/01"
 		If $sTime = "" Then $sTime = "00:00:00"
-		
+
 		Local $iSignalPercent = 0
 		Local $iRSSI = -100
 		If $iMaxSig < 0 Then
@@ -15029,16 +15029,16 @@ Func _ImportNS1Binary($NS1file)
 			$iSignalPercent = $iMaxSig
 			$iRSSI = _SignalPercentToDb($iSignalPercent)
 		EndIf
-		
+
 		Local $sLatDMM = _Format_GPS_DDD_to_DMM($fLat, "N", "S")
 		Local $sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
-		
+
 		Local $LoadGID = 0
 		Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "' And Date1 = '" & $sDate & "' And Time1 = '" & $sTime & "'"
 		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+		$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 		Local $FoundGpsMatch = $GpsMatchArray_iRows
-		
+
 		If $FoundGpsMatch = 0 Then
 			$AddGID += 1
 			$GPS_ID += 1
@@ -15047,30 +15047,30 @@ Func _ImportNS1Binary($NS1file)
 		Else
 			$LoadGID = $GpsMatchArray[1][0]
 		EndIf
-		
+
 		Local $iChan = 0
-		If $iVer = 6 Then 
+		If $iVer = 6 Then
 			$iChan = $aAP[13]
 		Else
 			$iChan = $aAP[14]
 		EndIf
-		
+
 		Local $iFlags = $aAP[5]
 		Local $iApFlags = 0
 		If $iVer >= 12 Then $iApFlags = $aAP[21]
 
 		Local $sType = $SearchWord_Infrastructure
 		If BitAND($iFlags, 0x0002) Then $sType = $SearchWord_Adhoc
-		
+
 		Local $sEncr = $SearchWord_None
 		Local $sAuth = $SearchWord_Open
-		
+
 		; Basic WEP Check
-		If BitAND($iFlags, 0x0010) Then 
-			 $sEncr = $SearchWord_Wep
-			 $sAuth = $SearchWord_Open
+		If BitAND($iFlags, 0x0010) Then
+			$sEncr = $SearchWord_Wep
+			$sAuth = $SearchWord_Open
 		EndIf
-		
+
 		; Custom Flags Override (V12) for WPA/WPA2/WPA3
 		If $iApFlags > 0 Then
 			; Auth
@@ -15080,78 +15080,78 @@ Func _ImportNS1Binary($NS1file)
 			If BitAND($iApFlags, 0x0008) Then $sAuth = "WPA2-Enterprise"
 			If BitAND($iApFlags, 0x0010) Then $sAuth = "WPA3"
 			If BitAND($iApFlags, 0x0020) Then $sAuth = "OWE"
-			
+
 			; Encryption
 			Local $sE = ""
 			If BitAND($iApFlags, 0x0040) Then $sE = "TKIP"
-			
-			If BitAND($iApFlags, 0x0080) Then 
+
+			If BitAND($iApFlags, 0x0080) Then
 				If $sE <> "" Then $sE &= "+"
 				$sE &= "CCMP"
 			EndIf
-			
-			If BitAND($iApFlags, 0x0100) Then 
+
+			If BitAND($iApFlags, 0x0100) Then
 				If $sE <> "" Then $sE &= "+"
 				$sE &= "GCMP"
 			EndIf
-			
-			If BitAND($iApFlags, 0x0200) Then 
+
+			If BitAND($iApFlags, 0x0200) Then
 				If $sE <> "" Then $sE &= "+"
 				$sE &= "GCMP-256"
 			EndIf
-			
-			If BitAND($iApFlags, 0x0400) Then 
+
+			If BitAND($iApFlags, 0x0400) Then
 				If $sE <> "" Then $sE &= "+"
 				$sE &= "CCMP-256"
 			EndIf
-			
-			If BitAND($iApFlags, 0x0800) Then 
+
+			If BitAND($iApFlags, 0x0800) Then
 				If $sE <> "" Then $sE &= "+"
 				$sE &= "BIP"
 			EndIf
-			
+
 			If $sE <> "" Then $sEncr = $sE
 		EndIf
-		
+
 		Local $NewApAdded = _AddApData(0, $LoadGID, $MainBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sType, $Text_Unknown, $Text_Unknown, $Text_Unknown, $iSignalPercent, $iRSSI)
 		If $NewApAdded <> 0 Then $AddAP += 1
-		
+
 		If TimerDiff($UpdateTimer) > 600 Or ($i = $iCount - 1) Then
 			Local $min = (TimerDiff($begintime) / 60000)
 			Local $percent = (($i + 1) / $iCount) * 100
 			GUICtrlSetData($progressbar, $percent)
 			GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
-			GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round(($i+1) / $min, 1))
+			GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round(($i + 1) / $min, 1))
 			GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
 			GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & ($i+1) & "/" & $iCount)
+			GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & ($i + 1) & "/" & $iCount)
 			$UpdateTimer = TimerInit()
 		EndIf
-		
+
 		If TimerDiff($MemReleaseTimer) > 10000 Then
 			_ReduceMemory()
 			$MemReleaseTimer = TimerInit()
 		EndIf
 	Next
-	
+
 	MsgBox(0, "Import Complete", "Imported " & $AddAP & " APs.")
-EndFunc
+EndFunc   ;==>_ImportNS1Binary
 
 Func _ExportNS1Unfiltered()
 	_ExportNS1(0)
-EndFunc
+EndFunc   ;==>_ExportNS1Unfiltered
 
 Func _ExportNS1Filtered()
 	_ExportNS1(1)
-EndFunc
+EndFunc   ;==>_ExportNS1Filtered
 
 Func _ExportNS1BinaryUnfiltered()
 	_ExportNS1Binary(0)
-EndFunc
+EndFunc   ;==>_ExportNS1BinaryUnfiltered
 
 Func _ExportNS1BinaryFiltered()
 	_ExportNS1Binary(1)
-EndFunc
+EndFunc   ;==>_ExportNS1BinaryFiltered
 
 Func _NS1_BinaryToMac($bData)
 	Local $sHex = StringTrimLeft($bData, 2)
@@ -15160,806 +15160,806 @@ Func _NS1_BinaryToMac($bData)
 		$sRet &= StringMid($sHex, $i, 2) & ":"
 	Next
 	Return StringTrimRight($sRet, 1)
-EndFunc
+EndFunc   ;==>_NS1_BinaryToMac
 ; ===============================================================================================================================
 ; Import KismetDB and NetXML
 ; ===============================================================================================================================
 
 Func _ImportKismetAuto($sFile)
-    If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportKismetAuto()')
-    
-    If StringInStr($sFile, ".kismet") Then
-        _ImportKismetDB($sFile)
-    ElseIf StringInStr($sFile, ".netxml") Then
-        _ImportNetXML($sFile)
-    Else
-        MsgBox(16, "Error", "Unknown file type.")
-    EndIf
-EndFunc
+	If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportKismetAuto()')
+
+	If StringInStr($sFile, ".kismet") Then
+		_ImportKismetDB($sFile)
+	ElseIf StringInStr($sFile, ".netxml") Then
+		_ImportNetXML($sFile)
+	Else
+		MsgBox(16, "Error", "Unknown file type.")
+	EndIf
+EndFunc   ;==>_ImportKismetAuto
 
 Func _ImportKismetDB($sFile)
-    _SQLite_Startup()
-    Local $hDB = _SQLite_Open($sFile)
-    If @error Then
-        MsgBox(16, "Error", "Failed to open KismetDB file.")
-        Return
-    EndIf
-    
-    ; Detect DB version for compatibility
-    Local $iDBVersion = 0
-    Local $aVer, $iVerRows, $iVerCols
-    _SQLite_GetTable2d($hDB, "SELECT db_version FROM KISMET LIMIT 1", $aVer, $iVerRows, $iVerCols)
-    If $iVerRows > 0 Then $iDBVersion = Number($aVer[1][0])
-    
-    ; Query devices table - accept all Wi-Fi type variations
-    Local $sQuery = "SELECT first_time, last_time, devmac, strongest_signal, avg_lat, avg_lon, min_lat, min_lon, max_lat, max_lon, type, device FROM devices WHERE " & _
-        "type='Wi-Fi AP' OR type='Wi-Fi Ad-Hoc' OR type='Wi-Fi' OR type='Wi-Fi Device' OR type='Wi-Fi Client' OR " & _
-        "type='infrastructure' OR type='ad-hoc' OR type LIKE '%Wi-Fi%'"
-    Local $aRows, $iRows, $iCols
-    _SQLite_GetTable2d($hDB, $sQuery, $aRows, $iRows, $iCols)
-    
-    Local $AddAP = 0
-    Local $AddGID = 0
-    Local $begintime = TimerInit()
-    Local $UpdateTimer = TimerInit()
-    
-    For $i = 1 To $iRows
-        Local $iFirstTime = Number($aRows[$i][0])
-        Local $iLastTime = Number($aRows[$i][1])
-        Local $sBSSID = $aRows[$i][2]
-        Local $iSignal = Number($aRows[$i][3])
-        Local $fAvgLat = Number($aRows[$i][4])
-        Local $fAvgLon = Number($aRows[$i][5])
-        Local $sType = $aRows[$i][10]
-        Local $sJson = $aRows[$i][11]
-        
-        Local $oJson = _JSONDecode($sJson)
-        Local $sManuf = ""
-        Local $fLat = 0
-        Local $fLon = 0
-        
-        ; --- Extract device-level fields (shared across all AP entries for this BSSID) ---
-        If _JSONIsObject($oJson) Then
-            $sManuf = _JSONGet($oJson, "kismet.device.base.manuf")
-            
-            ; --- GPS from device JSON location object (real Kismet format) ---
-            Local $oLocation = _JSONGet($oJson, "kismet.device.base.location")
-            If _JSONIsObject($oLocation) Then
-                Local $oAvgLoc = _JSONGet($oLocation, "kismet.common.location.avg_loc")
-                If _JSONIsObject($oAvgLoc) Then
-                    Local $oGeopoint = _JSONGet($oAvgLoc, "kismet.common.location.geopoint")
-                    If _JSONIsArray($oGeopoint) Then
-                        If UBound($oGeopoint) >= 3 Then
-                            $fLon = Number($oGeopoint[1])
-                            $fLat = Number($oGeopoint[2])
-                        EndIf
-                    EndIf
-                EndIf
-                If $fLat = 0 And $fLon = 0 Then
-                    Local $oLastLoc = _JSONGet($oLocation, "kismet.common.location.last")
-                    If _JSONIsObject($oLastLoc) Then
-                        Local $oGeopoint2 = _JSONGet($oLastLoc, "kismet.common.location.geopoint")
-                        If _JSONIsArray($oGeopoint2) Then
-                            If UBound($oGeopoint2) >= 3 Then
-                                $fLon = Number($oGeopoint2[1])
-                                $fLat = Number($oGeopoint2[2])
-                            EndIf
-                        EndIf
-                    EndIf
-                EndIf
-            EndIf
-            If $fLat = 0 And $fLon = 0 Then
-                $fLat = $fAvgLat
-                $fLon = $fAvgLon
-            EndIf
-        EndIf
-        
-        ; --- Timestamp conversion (UTC) ---
-        Local $sDate = "2000-01-01"
-        Local $sTime = "00:00:00.000"
-        If $iFirstTime > 0 Then
-            $sDate = _StringFormatTimeUTC("%Y", $iFirstTime) & "-" & _StringFormatTimeUTC("%m", $iFirstTime) & "-" & _StringFormatTimeUTC("%d", $iFirstTime)
-            $sTime = _StringFormatTimeUTC("%X", $iFirstTime) & ".000"
-        EndIf
-        
-        ; --- Signal conversion ---
-        Local $iSignalPercent = 0
-        Local $iRSSI = -100
-        If $iSignal < 0 Then
-            $iRSSI = $iSignal
-            $iSignalPercent = _DbToSignalPercent($iRSSI)
-        ElseIf $iSignal > 0 Then
-            $iSignalPercent = $iSignal
-            $iRSSI = _SignalPercentToDb($iSignalPercent)
-        EndIf
-        
-        ; --- GPS record ---
-        Local $LoadGID = 0
-        Local $sLatDMM = 'N 0000.0000'
-        Local $sLonDMM = 'E 0000.0000'
-        If $fLat <> 0 Or $fLon <> 0 Then
-            $sLatDMM = _Format_GPS_DDD_to_DMM($fLat, "N", "S")
-            $sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
-        EndIf
-        $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
-	        Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
-        Local $FoundGpsMatch = $GpsMatchArray_iRows
-        If $FoundGpsMatch = 0 Then
-            $AddGID += 1
-            $GPS_ID += 1
-            _AddRecord($VistumblerDB, "GPS", $DBhndl, $GPS_ID & '|' & $sLatDMM & '|' & $sLonDMM & '|00|0|0|0|0|0|0|' & $sDate & '|' & $sTime)
-            $LoadGID = $GPS_ID
-        Else
-            $LoadGID = $GpsMatchArray[1][0]
-        EndIf
-        
-        ; --- Network type ---
-        Local $sVType = $SearchWord_Infrastructure
-        If StringInStr($sType, "Ad-Hoc") Or StringInStr($sType, "ad-hoc") Or StringInStr($sType, "IBSS") Then
-            $sVType = $SearchWord_Adhoc
-        EndIf
-        
-        ; --- Radio type ---
-        Local $sRadioType = ""
-        If _JSONIsObject($oJson) Then $sRadioType = _JSONGet($oJson, "vistumbler.device.radio_type")
-        If $sRadioType = "" Or $sRadioType = $Text_Unknown Then
-            Local $iFreqKhz = 0
-            If _JSONIsObject($oJson) Then $iFreqKhz = Number(_JSONGet($oJson, "kismet.device.base.frequency"))
-            Local $iFreqMhz = $iFreqKhz / 1000
-            If $iFreqMhz >= 5925 Then
-                $sRadioType = "802.11ax"
-            ElseIf $iFreqMhz >= 4900 And $iFreqMhz <= 5900 Then
-                $sRadioType = "802.11ac"
-            ElseIf $iFreqMhz >= 2400 And $iFreqMhz <= 2500 Then
-                $sRadioType = "802.11n"
-            Else
-                $sRadioType = $Text_Unknown
-            EndIf
-        EndIf
-        
-        ; --- Build list of AP entries from advertised_ssid_map ---
-        ; Each entry in the map represents a unique Vistumbler AP (same BSSID, different SSID/auth/chan)
-        Local $iApEntryCount = 0
-        Local $aApSSIDs[1], $aApChans[1], $aApAuths[1], $aApEncrs[1]
-        
-        If _JSONIsObject($oJson) Then
-            Local $oDot11 = _JSONGet($oJson, "dot11.device")
-            If _JSONIsObject($oDot11) Then
-                Local $oSSIDMap = _JSONGet($oDot11, "dot11.device.advertised_ssid_map")
-                If _JSONIsObject($oSSIDMap) Then
-                    Local $iMapEntries = UBound($oSSIDMap) - 1 ; -1 for JSONObject header row
-                    If $iMapEntries > 0 Then
-                        ReDim $aApSSIDs[$iMapEntries]
-                        ReDim $aApChans[$iMapEntries]
-                        ReDim $aApAuths[$iMapEntries]
-                        ReDim $aApEncrs[$iMapEntries]
-                        
-                        For $m = 1 To $iMapEntries
-                            Local $oMapEntry = $oSSIDMap[$m][1]
-                            If _JSONIsObject($oMapEntry) Then
-                                $aApSSIDs[$iApEntryCount] = _JSONGet($oMapEntry, "dot11.advertisedssid.ssid")
-                                
-                                ; Channel from this SSID map entry
-                                Local $sEntryChan = _JSONGet($oMapEntry, "dot11.advertisedssid.channel")
-                                If $sEntryChan <> "" Then
-                                    $aApChans[$iApEntryCount] = Number($sEntryChan)
-                                Else
-                                    $aApChans[$iApEntryCount] = 0
-                                EndIf
-                                
-                                ; Encryption from this SSID map entry (Vistumbler format: "Auth/Encr")
-                                Local $sEntryCrypt = _JSONGet($oMapEntry, "dot11.advertisedssid.crypt_string")
-                                If $sEntryCrypt <> "" And StringInStr($sEntryCrypt, "/") Then
-                                    Local $aEP = StringSplit($sEntryCrypt, "/")
-                                    If $aEP[0] >= 2 Then
-                                        $aApAuths[$iApEntryCount] = $aEP[1]
-                                        $aApEncrs[$iApEntryCount] = $aEP[2]
-                                    Else
-                                        $aApAuths[$iApEntryCount] = ""
-                                        $aApEncrs[$iApEntryCount] = ""
-                                    EndIf
-                                Else
-                                    ; No per-entry crypt_string � will use device-level fallback
-                                    $aApAuths[$iApEntryCount] = ""
-                                    $aApEncrs[$iApEntryCount] = ""
-                                EndIf
-                                
-                                $iApEntryCount += 1
-                            EndIf
-                        Next
-                    EndIf
-                EndIf
-            EndIf
-        EndIf
-        
-        ; If exactly 1 entry with valid per-entry auth, use it directly but treat as single AP
-        If $iApEntryCount = 1 And $aApAuths[0] <> "" And $aApEncrs[0] <> "" Then
-            Local $iEntryChan1 = $aApChans[0]
-            If $iEntryChan1 = 0 And _JSONIsObject($oJson) Then
-                $iEntryChan1 = Number(_JSONGet($oJson, "kismet.device.base.channel"))
-            EndIf
-            Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $aApSSIDs[0], $iEntryChan1, $aApAuths[0], $aApEncrs[0], $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
-            If $NewApAdded <> 0 Then
-                $AddAP += 1
-                _ImportKismetPackets($hDB, $sBSSID, $NewApAdded, $AddGID)
-            EndIf
-        ElseIf $iApEntryCount <= 1 Then
-            ; Single AP mode � extract SSID, channel, and encryption using traditional multi-path fallback
-            Local $sSSID = ""
-            Local $iChan = 0
-            Local $sCrypt = ""
-            
-            If _JSONIsObject($oJson) Then
-                Local $oDot11F = _JSONGet($oJson, "dot11.device")
-                If _JSONIsObject($oDot11F) Then
-                    $sSSID = _JSONGet($oDot11F, "dot11.device.last_beaconed_ssid")
-                    If $sSSID = "" Then
-                        Local $oSSIDRec = _JSONGet($oDot11F, "dot11.device.last_beaconed_ssid_record")
-                        If _JSONIsObject($oSSIDRec) Then
-                            $sSSID = _JSONGet($oSSIDRec, "dot11.advertisedssid.ssid")
-                            Local $sSSIDChan = _JSONGet($oSSIDRec, "dot11.advertisedssid.channel")
-                            If $sSSIDChan <> "" Then $iChan = Number($sSSIDChan)
-                            Local $sSSIDCrypt = _JSONGet($oSSIDRec, "dot11.advertisedssid.crypt_string")
-                            If $sSSIDCrypt <> "" Then $sCrypt = $sSSIDCrypt
-                        EndIf
-                    EndIf
-                    If $sSSID = "" Then
-                        Local $oSSIDMapF = _JSONGet($oDot11F, "dot11.device.advertised_ssid_map")
-                        If _JSONIsObject($oSSIDMapF) And UBound($oSSIDMapF) > 1 Then
-                            Local $oFirstEntry = $oSSIDMapF[1][1]
-                            If _JSONIsObject($oFirstEntry) Then
-                                $sSSID = _JSONGet($oFirstEntry, "dot11.advertisedssid.ssid")
-                                Local $sMC = _JSONGet($oFirstEntry, "dot11.advertisedssid.channel")
-                                If $sMC <> "" And $iChan = 0 Then $iChan = Number($sMC)
-                                Local $sMCr = _JSONGet($oFirstEntry, "dot11.advertisedssid.crypt_string")
-                                If $sMCr <> "" And $sCrypt = "" Then $sCrypt = $sMCr
-                            EndIf
-                        EndIf
-                    EndIf
-                EndIf
-                
-                If $sSSID = "" Then
-                    Local $sBaseName = _JSONGet($oJson, "kismet.device.base.name")
-                    If $sBaseName <> "" And $sBaseName <> $sBSSID Then $sSSID = $sBaseName
-                EndIf
-                If $sSSID = "" Then
-                    Local $sCommonName = _JSONGet($oJson, "kismet.device.base.commonname")
-                    If $sCommonName <> "" And $sCommonName <> $sBSSID Then $sSSID = $sCommonName
-                EndIf
-                
-                If $iChan = 0 Then $iChan = Number(_JSONGet($oJson, "kismet.device.base.channel"))
-                If $sCrypt = "" Then $sCrypt = _JSONGet($oJson, "kismet.device.base.crypt_string")
-                If $sCrypt = "" Then $sCrypt = _JSONGet($oJson, "kismet.device.base.encryption")
-            EndIf
-            
-            ; Parse Auth/Encr from crypt string
-            Local $sAuth = $SearchWord_Open
-            Local $sEncr = $SearchWord_None
-            If StringInStr($sCrypt, "/") Then
-                Local $aEncParts = StringSplit($sCrypt, "/")
-                If $aEncParts[0] >= 2 Then
-                    $sAuth = $aEncParts[1]
-                    $sEncr = $aEncParts[2]
-                EndIf
-            Else
-                _ParseKismetCrypt($sCrypt, $sAuth, $sEncr)
-            EndIf
-            
-            ; Add single AP
-            Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
-            If $NewApAdded <> 0 Then
-                $AddAP += 1
-                _ImportKismetPackets($hDB, $sBSSID, $NewApAdded, $AddGID)
-            EndIf
-        Else
-            ; Multi-AP mode � create one AP per advertised_ssid_map entry
-            ; All APs share the same packets (imported once, duplicated to each)
-            Local $aNewApIDs[$iApEntryCount]
-            Local $iCreatedAPs = 0
-            
-            For $e = 0 To $iApEntryCount - 1
-                Local $sEntrySSID = $aApSSIDs[$e]
-                Local $iEntryChan = $aApChans[$e]
-                Local $sEntryAuth = $aApAuths[$e]
-                Local $sEntryEncr = $aApEncrs[$e]
-                
-                ; If channel not in entry, use device-level
-                If $iEntryChan = 0 And _JSONIsObject($oJson) Then
-                    $iEntryChan = Number(_JSONGet($oJson, "kismet.device.base.channel"))
-                EndIf
-                
-                ; If auth/encr not in entry, parse device-level crypt_string
-                If $sEntryAuth = "" Or $sEntryEncr = "" Then
-                    Local $sDevCrypt = ""
-                    If _JSONIsObject($oJson) Then $sDevCrypt = _JSONGet($oJson, "kismet.device.base.crypt_string")
-                    If $sDevCrypt = "" And _JSONIsObject($oJson) Then $sDevCrypt = _JSONGet($oJson, "kismet.device.base.encryption")
-                    $sEntryAuth = $SearchWord_Open
-                    $sEntryEncr = $SearchWord_None
-                    If StringInStr($sDevCrypt, "/") Then
-                        Local $aDP = StringSplit($sDevCrypt, "/")
-                        If $aDP[0] >= 2 Then
-                            $sEntryAuth = $aDP[1]
-                            $sEntryEncr = $aDP[2]
-                        EndIf
-                    Else
-                        _ParseKismetCrypt($sDevCrypt, $sEntryAuth, $sEntryEncr)
-                    EndIf
-                EndIf
-                
-                Local $NewEntryAP = _AddApData(0, $LoadGID, $sBSSID, $sEntrySSID, $iEntryChan, $sEntryAuth, $sEntryEncr, $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
-                If $NewEntryAP <> 0 Then
-                    $aNewApIDs[$iCreatedAPs] = $NewEntryAP
-                    $iCreatedAPs += 1
-                    $AddAP += 1
-                EndIf
-            Next
-            
-            ; Import packets once and share across all created APs
-            If $iCreatedAPs > 0 Then
-                ; Import packets for the first AP, then duplicate HIST to others
-                _ImportKismetPackets($hDB, $sBSSID, $aNewApIDs[0], $AddGID)
-                
-                ; For additional APs, duplicate the same HIST entries
-                If $iCreatedAPs > 1 Then
-                    ; Query the HIST records we just created for the first AP
-                    Local $sHistDupQuery = "SELECT GpsID, Signal, RSSI, Date1, Time1 FROM HIST WHERE ApID=" & $aNewApIDs[0] & "  LIMIT 1"
+	_SQLite_Startup()
+	Local $hDB = _SQLite_Open($sFile)
+	If @error Then
+		MsgBox(16, "Error", "Failed to open KismetDB file.")
+		Return
+	EndIf
+
+	; Detect DB version for compatibility
+	Local $iDBVersion = 0
+	Local $aVer, $iVerRows, $iVerCols
+	_SQLite_GetTable2D($hDB, "SELECT db_version FROM KISMET LIMIT 1", $aVer, $iVerRows, $iVerCols)
+	If $iVerRows > 0 Then $iDBVersion = Number($aVer[1][0])
+
+	; Query devices table - accept all Wi-Fi type variations
+	Local $sQuery = "SELECT first_time, last_time, devmac, strongest_signal, avg_lat, avg_lon, min_lat, min_lon, max_lat, max_lon, type, device FROM devices WHERE " & _
+			"type='Wi-Fi AP' OR type='Wi-Fi Ad-Hoc' OR type='Wi-Fi' OR type='Wi-Fi Device' OR type='Wi-Fi Client' OR " & _
+			"type='infrastructure' OR type='ad-hoc' OR type LIKE '%Wi-Fi%'"
+	Local $aRows, $iRows, $iCols
+	_SQLite_GetTable2D($hDB, $sQuery, $aRows, $iRows, $iCols)
+
+	Local $AddAP = 0
+	Local $AddGID = 0
+	Local $begintime = TimerInit()
+	Local $UpdateTimer = TimerInit()
+
+	For $i = 1 To $iRows
+		Local $iFirstTime = Number($aRows[$i][0])
+		Local $iLastTime = Number($aRows[$i][1])
+		Local $sBSSID = $aRows[$i][2]
+		Local $iSignal = Number($aRows[$i][3])
+		Local $fAvgLat = Number($aRows[$i][4])
+		Local $fAvgLon = Number($aRows[$i][5])
+		Local $sType = $aRows[$i][10]
+		Local $sJson = $aRows[$i][11]
+
+		Local $oJson = _JSONDecode($sJson)
+		Local $sManuf = ""
+		Local $fLat = 0
+		Local $fLon = 0
+
+		; --- Extract device-level fields (shared across all AP entries for this BSSID) ---
+		If _JSONIsObject($oJson) Then
+			$sManuf = _JSONGet($oJson, "kismet.device.base.manuf")
+
+			; --- GPS from device JSON location object (real Kismet format) ---
+			Local $oLocation = _JSONGet($oJson, "kismet.device.base.location")
+			If _JSONIsObject($oLocation) Then
+				Local $oAvgLoc = _JSONGet($oLocation, "kismet.common.location.avg_loc")
+				If _JSONIsObject($oAvgLoc) Then
+					Local $oGeopoint = _JSONGet($oAvgLoc, "kismet.common.location.geopoint")
+					If _JSONIsArray($oGeopoint) Then
+						If UBound($oGeopoint) >= 3 Then
+							$fLon = Number($oGeopoint[1])
+							$fLat = Number($oGeopoint[2])
+						EndIf
+					EndIf
+				EndIf
+				If $fLat = 0 And $fLon = 0 Then
+					Local $oLastLoc = _JSONGet($oLocation, "kismet.common.location.last")
+					If _JSONIsObject($oLastLoc) Then
+						Local $oGeopoint2 = _JSONGet($oLastLoc, "kismet.common.location.geopoint")
+						If _JSONIsArray($oGeopoint2) Then
+							If UBound($oGeopoint2) >= 3 Then
+								$fLon = Number($oGeopoint2[1])
+								$fLat = Number($oGeopoint2[2])
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+			EndIf
+			If $fLat = 0 And $fLon = 0 Then
+				$fLat = $fAvgLat
+				$fLon = $fAvgLon
+			EndIf
+		EndIf
+
+		; --- Timestamp conversion (UTC) ---
+		Local $sDate = "2000-01-01"
+		Local $sTime = "00:00:00.000"
+		If $iFirstTime > 0 Then
+			$sDate = _StringFormatTimeUTC("%Y", $iFirstTime) & "-" & _StringFormatTimeUTC("%m", $iFirstTime) & "-" & _StringFormatTimeUTC("%d", $iFirstTime)
+			$sTime = _StringFormatTimeUTC("%X", $iFirstTime) & ".000"
+		EndIf
+
+		; --- Signal conversion ---
+		Local $iSignalPercent = 0
+		Local $iRSSI = -100
+		If $iSignal < 0 Then
+			$iRSSI = $iSignal
+			$iSignalPercent = _DbToSignalPercent($iRSSI)
+		ElseIf $iSignal > 0 Then
+			$iSignalPercent = $iSignal
+			$iRSSI = _SignalPercentToDb($iSignalPercent)
+		EndIf
+
+		; --- GPS record ---
+		Local $LoadGID = 0
+		Local $sLatDMM = 'N 0000.0000'
+		Local $sLonDMM = 'E 0000.0000'
+		If $fLat <> 0 Or $fLon <> 0 Then
+			$sLatDMM = _Format_GPS_DDD_to_DMM($fLat, "N", "S")
+			$sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
+		EndIf
+		$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
+		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
+		$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+		Local $FoundGpsMatch = $GpsMatchArray_iRows
+		If $FoundGpsMatch = 0 Then
+			$AddGID += 1
+			$GPS_ID += 1
+			_AddRecord($VistumblerDB, "GPS", $DBhndl, $GPS_ID & '|' & $sLatDMM & '|' & $sLonDMM & '|00|0|0|0|0|0|0|' & $sDate & '|' & $sTime)
+			$LoadGID = $GPS_ID
+		Else
+			$LoadGID = $GpsMatchArray[1][0]
+		EndIf
+
+		; --- Network type ---
+		Local $sVType = $SearchWord_Infrastructure
+		If StringInStr($sType, "Ad-Hoc") Or StringInStr($sType, "ad-hoc") Or StringInStr($sType, "IBSS") Then
+			$sVType = $SearchWord_Adhoc
+		EndIf
+
+		; --- Radio type ---
+		Local $sRadioType = ""
+		If _JSONIsObject($oJson) Then $sRadioType = _JSONGet($oJson, "vistumbler.device.radio_type")
+		If $sRadioType = "" Or $sRadioType = $Text_Unknown Then
+			Local $iFreqKhz = 0
+			If _JSONIsObject($oJson) Then $iFreqKhz = Number(_JSONGet($oJson, "kismet.device.base.frequency"))
+			Local $iFreqMhz = $iFreqKhz / 1000
+			If $iFreqMhz >= 5925 Then
+				$sRadioType = "802.11ax"
+			ElseIf $iFreqMhz >= 4900 And $iFreqMhz <= 5900 Then
+				$sRadioType = "802.11ac"
+			ElseIf $iFreqMhz >= 2400 And $iFreqMhz <= 2500 Then
+				$sRadioType = "802.11n"
+			Else
+				$sRadioType = $Text_Unknown
+			EndIf
+		EndIf
+
+		; --- Build list of AP entries from advertised_ssid_map ---
+		; Each entry in the map represents a unique Vistumbler AP (same BSSID, different SSID/auth/chan)
+		Local $iApEntryCount = 0
+		Local $aApSSIDs[1], $aApChans[1], $aApAuths[1], $aApEncrs[1]
+
+		If _JSONIsObject($oJson) Then
+			Local $oDot11 = _JSONGet($oJson, "dot11.device")
+			If _JSONIsObject($oDot11) Then
+				Local $oSSIDMap = _JSONGet($oDot11, "dot11.device.advertised_ssid_map")
+				If _JSONIsObject($oSSIDMap) Then
+					Local $iMapEntries = UBound($oSSIDMap) - 1 ; -1 for JSONObject header row
+					If $iMapEntries > 0 Then
+						ReDim $aApSSIDs[$iMapEntries]
+						ReDim $aApChans[$iMapEntries]
+						ReDim $aApAuths[$iMapEntries]
+						ReDim $aApEncrs[$iMapEntries]
+
+						For $m = 1 To $iMapEntries
+							Local $oMapEntry = $oSSIDMap[$m][1]
+							If _JSONIsObject($oMapEntry) Then
+								$aApSSIDs[$iApEntryCount] = _JSONGet($oMapEntry, "dot11.advertisedssid.ssid")
+
+								; Channel from this SSID map entry
+								Local $sEntryChan = _JSONGet($oMapEntry, "dot11.advertisedssid.channel")
+								If $sEntryChan <> "" Then
+									$aApChans[$iApEntryCount] = Number($sEntryChan)
+								Else
+									$aApChans[$iApEntryCount] = 0
+								EndIf
+
+								; Encryption from this SSID map entry (Vistumbler format: "Auth/Encr")
+								Local $sEntryCrypt = _JSONGet($oMapEntry, "dot11.advertisedssid.crypt_string")
+								If $sEntryCrypt <> "" And StringInStr($sEntryCrypt, "/") Then
+									Local $aEP = StringSplit($sEntryCrypt, "/")
+									If $aEP[0] >= 2 Then
+										$aApAuths[$iApEntryCount] = $aEP[1]
+										$aApEncrs[$iApEntryCount] = $aEP[2]
+									Else
+										$aApAuths[$iApEntryCount] = ""
+										$aApEncrs[$iApEntryCount] = ""
+									EndIf
+								Else
+									; No per-entry crypt_string � will use device-level fallback
+									$aApAuths[$iApEntryCount] = ""
+									$aApEncrs[$iApEntryCount] = ""
+								EndIf
+
+								$iApEntryCount += 1
+							EndIf
+						Next
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+
+		; If exactly 1 entry with valid per-entry auth, use it directly but treat as single AP
+		If $iApEntryCount = 1 And $aApAuths[0] <> "" And $aApEncrs[0] <> "" Then
+			Local $iEntryChan1 = $aApChans[0]
+			If $iEntryChan1 = 0 And _JSONIsObject($oJson) Then
+				$iEntryChan1 = Number(_JSONGet($oJson, "kismet.device.base.channel"))
+			EndIf
+			Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $aApSSIDs[0], $iEntryChan1, $aApAuths[0], $aApEncrs[0], $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
+			If $NewApAdded <> 0 Then
+				$AddAP += 1
+				_ImportKismetPackets($hDB, $sBSSID, $NewApAdded, $AddGID)
+			EndIf
+		ElseIf $iApEntryCount <= 1 Then
+			; Single AP mode � extract SSID, channel, and encryption using traditional multi-path fallback
+			Local $sSSID = ""
+			Local $iChan = 0
+			Local $sCrypt = ""
+
+			If _JSONIsObject($oJson) Then
+				Local $oDot11F = _JSONGet($oJson, "dot11.device")
+				If _JSONIsObject($oDot11F) Then
+					$sSSID = _JSONGet($oDot11F, "dot11.device.last_beaconed_ssid")
+					If $sSSID = "" Then
+						Local $oSSIDRec = _JSONGet($oDot11F, "dot11.device.last_beaconed_ssid_record")
+						If _JSONIsObject($oSSIDRec) Then
+							$sSSID = _JSONGet($oSSIDRec, "dot11.advertisedssid.ssid")
+							Local $sSSIDChan = _JSONGet($oSSIDRec, "dot11.advertisedssid.channel")
+							If $sSSIDChan <> "" Then $iChan = Number($sSSIDChan)
+							Local $sSSIDCrypt = _JSONGet($oSSIDRec, "dot11.advertisedssid.crypt_string")
+							If $sSSIDCrypt <> "" Then $sCrypt = $sSSIDCrypt
+						EndIf
+					EndIf
+					If $sSSID = "" Then
+						Local $oSSIDMapF = _JSONGet($oDot11F, "dot11.device.advertised_ssid_map")
+						If _JSONIsObject($oSSIDMapF) And UBound($oSSIDMapF) > 1 Then
+							Local $oFirstEntry = $oSSIDMapF[1][1]
+							If _JSONIsObject($oFirstEntry) Then
+								$sSSID = _JSONGet($oFirstEntry, "dot11.advertisedssid.ssid")
+								Local $sMC = _JSONGet($oFirstEntry, "dot11.advertisedssid.channel")
+								If $sMC <> "" And $iChan = 0 Then $iChan = Number($sMC)
+								Local $sMCr = _JSONGet($oFirstEntry, "dot11.advertisedssid.crypt_string")
+								If $sMCr <> "" And $sCrypt = "" Then $sCrypt = $sMCr
+							EndIf
+						EndIf
+					EndIf
+				EndIf
+
+				If $sSSID = "" Then
+					Local $sBaseName = _JSONGet($oJson, "kismet.device.base.name")
+					If $sBaseName <> "" And $sBaseName <> $sBSSID Then $sSSID = $sBaseName
+				EndIf
+				If $sSSID = "" Then
+					Local $sCommonName = _JSONGet($oJson, "kismet.device.base.commonname")
+					If $sCommonName <> "" And $sCommonName <> $sBSSID Then $sSSID = $sCommonName
+				EndIf
+
+				If $iChan = 0 Then $iChan = Number(_JSONGet($oJson, "kismet.device.base.channel"))
+				If $sCrypt = "" Then $sCrypt = _JSONGet($oJson, "kismet.device.base.crypt_string")
+				If $sCrypt = "" Then $sCrypt = _JSONGet($oJson, "kismet.device.base.encryption")
+			EndIf
+
+			; Parse Auth/Encr from crypt string
+			Local $sAuth = $SearchWord_Open
+			Local $sEncr = $SearchWord_None
+			If StringInStr($sCrypt, "/") Then
+				Local $aEncParts = StringSplit($sCrypt, "/")
+				If $aEncParts[0] >= 2 Then
+					$sAuth = $aEncParts[1]
+					$sEncr = $aEncParts[2]
+				EndIf
+			Else
+				_ParseKismetCrypt($sCrypt, $sAuth, $sEncr)
+			EndIf
+
+			; Add single AP
+			Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
+			If $NewApAdded <> 0 Then
+				$AddAP += 1
+				_ImportKismetPackets($hDB, $sBSSID, $NewApAdded, $AddGID)
+			EndIf
+		Else
+			; Multi-AP mode � create one AP per advertised_ssid_map entry
+			; All APs share the same packets (imported once, duplicated to each)
+			Local $aNewApIDs[$iApEntryCount]
+			Local $iCreatedAPs = 0
+
+			For $e = 0 To $iApEntryCount - 1
+				Local $sEntrySSID = $aApSSIDs[$e]
+				Local $iEntryChan = $aApChans[$e]
+				Local $sEntryAuth = $aApAuths[$e]
+				Local $sEntryEncr = $aApEncrs[$e]
+
+				; If channel not in entry, use device-level
+				If $iEntryChan = 0 And _JSONIsObject($oJson) Then
+					$iEntryChan = Number(_JSONGet($oJson, "kismet.device.base.channel"))
+				EndIf
+
+				; If auth/encr not in entry, parse device-level crypt_string
+				If $sEntryAuth = "" Or $sEntryEncr = "" Then
+					Local $sDevCrypt = ""
+					If _JSONIsObject($oJson) Then $sDevCrypt = _JSONGet($oJson, "kismet.device.base.crypt_string")
+					If $sDevCrypt = "" And _JSONIsObject($oJson) Then $sDevCrypt = _JSONGet($oJson, "kismet.device.base.encryption")
+					$sEntryAuth = $SearchWord_Open
+					$sEntryEncr = $SearchWord_None
+					If StringInStr($sDevCrypt, "/") Then
+						Local $aDP = StringSplit($sDevCrypt, "/")
+						If $aDP[0] >= 2 Then
+							$sEntryAuth = $aDP[1]
+							$sEntryEncr = $aDP[2]
+						EndIf
+					Else
+						_ParseKismetCrypt($sDevCrypt, $sEntryAuth, $sEntryEncr)
+					EndIf
+				EndIf
+
+				Local $NewEntryAP = _AddApData(0, $LoadGID, $sBSSID, $sEntrySSID, $iEntryChan, $sEntryAuth, $sEntryEncr, $sVType, $sRadioType, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
+				If $NewEntryAP <> 0 Then
+					$aNewApIDs[$iCreatedAPs] = $NewEntryAP
+					$iCreatedAPs += 1
+					$AddAP += 1
+				EndIf
+			Next
+
+			; Import packets once and share across all created APs
+			If $iCreatedAPs > 0 Then
+				; Import packets for the first AP, then duplicate HIST to others
+				_ImportKismetPackets($hDB, $sBSSID, $aNewApIDs[0], $AddGID)
+
+				; For additional APs, duplicate the same HIST entries
+				If $iCreatedAPs > 1 Then
+					; Query the HIST records we just created for the first AP
+					Local $sHistDupQuery = "SELECT GpsID, Signal, RSSI, Date1, Time1 FROM HIST WHERE ApID=" & $aNewApIDs[0] & "  LIMIT 1"
 					Local $aHistDup, $aHistDup_iRows, $aHistDup_iColumns, $aHistDup_iRval
-	$aHistDup_iRval = _SQLite_GetTable2d($DBhndl, $sHistDupQuery, $aHistDup, $aHistDup_iRows, $aHistDup_iColumns)
-                    If IsArray($aHistDup) Then
-                        Local $iHistDupCount = UBound($aHistDup) - 1
-                        For $ea = 1 To $iCreatedAPs - 1
-                            Local $iDupFirstHist = 0
-                            Local $iDupLastHist = 0
-                            For $dh = 1 To $iHistDupCount
-                                $HISTID += 1
-                                _AddRecord($VistumblerDB, "HIST", $DBhndl, $HISTID & "|" & $aNewApIDs[$ea] & "|" & $aHistDup[$dh][1] & "|" & $aHistDup[$dh][2] & "|" & $aHistDup[$dh][3] & "|" & $aHistDup[$dh][4] & "|" & $aHistDup[$dh][5])
-                                If $iDupFirstHist = 0 Then $iDupFirstHist = $HISTID
-                                $iDupLastHist = $HISTID
-                            Next
-                            If $iDupFirstHist <> 0 Then
-                                ; Compute HighSignal, HighRSSI, HighGpsHistId from duplicated HIST records
-                                Local $sDupMaxQ = "SELECT MAX(Signal), MAX(RSSI) FROM HIST WHERE ApID=" & $aNewApIDs[$ea]
+					$aHistDup_iRval = _SQLite_GetTable2D($DBhndl, $sHistDupQuery, $aHistDup, $aHistDup_iRows, $aHistDup_iColumns)
+					If IsArray($aHistDup) Then
+						Local $iHistDupCount = UBound($aHistDup) - 1
+						For $ea = 1 To $iCreatedAPs - 1
+							Local $iDupFirstHist = 0
+							Local $iDupLastHist = 0
+							For $dh = 1 To $iHistDupCount
+								$HISTID += 1
+								_AddRecord($VistumblerDB, "HIST", $DBhndl, $HISTID & "|" & $aNewApIDs[$ea] & "|" & $aHistDup[$dh][1] & "|" & $aHistDup[$dh][2] & "|" & $aHistDup[$dh][3] & "|" & $aHistDup[$dh][4] & "|" & $aHistDup[$dh][5])
+								If $iDupFirstHist = 0 Then $iDupFirstHist = $HISTID
+								$iDupLastHist = $HISTID
+							Next
+							If $iDupFirstHist <> 0 Then
+								; Compute HighSignal, HighRSSI, HighGpsHistId from duplicated HIST records
+								Local $sDupMaxQ = "SELECT MAX(Signal), MAX(RSSI) FROM HIST WHERE ApID=" & $aNewApIDs[$ea]
 								Local $aDupMax, $aDupMax_iRows, $aDupMax_iColumns, $aDupMax_iRval
-	$aDupMax_iRval = _SQLite_GetTable2d($DBhndl, $sDupMaxQ, $aDupMax, $aDupMax_iRows, $aDupMax_iColumns)
-                                Local $iDupHighSig = 0
-                                Local $iDupHighRSSI = -100
-                                If IsArray($aDupMax) And (UBound($aDupMax) - 1) > 0 Then
-                                    $iDupHighSig = Round(Number($aDupMax[1][1]))
-                                    $iDupHighRSSI = Round(Number($aDupMax[1][2]))
-                                EndIf
-                                Local $iDupHighGps = 0
-                                Local $sDupGpsQ = "SELECT HIST.HistID FROM HIST INNER JOIN GPS ON HIST.GpsID = GPS.GPSID WHERE HIST.ApID=" & $aNewApIDs[$ea] & " AND GPS.Latitude <> 'N 0000.0000' AND GPS.Longitude <> 'E 0000.0000'  LIMIT 1"
+								$aDupMax_iRval = _SQLite_GetTable2D($DBhndl, $sDupMaxQ, $aDupMax, $aDupMax_iRows, $aDupMax_iColumns)
+								Local $iDupHighSig = 0
+								Local $iDupHighRSSI = -100
+								If IsArray($aDupMax) And (UBound($aDupMax) - 1) > 0 Then
+									$iDupHighSig = Round(Number($aDupMax[1][1]))
+									$iDupHighRSSI = Round(Number($aDupMax[1][2]))
+								EndIf
+								Local $iDupHighGps = 0
+								Local $sDupGpsQ = "SELECT HIST.HistID FROM HIST INNER JOIN GPS ON HIST.GpsID = GPS.GPSID WHERE HIST.ApID=" & $aNewApIDs[$ea] & " AND GPS.Latitude <> 'N 0000.0000' AND GPS.Longitude <> 'E 0000.0000'  LIMIT 1"
 								Local $aDupGps, $aDupGps_iRows, $aDupGps_iColumns, $aDupGps_iRval
-	$aDupGps_iRval = _SQLite_GetTable2d($DBhndl, $sDupGpsQ, $aDupGps, $aDupGps_iRows, $aDupGps_iColumns)
-                                If IsArray($aDupGps) And (UBound($aDupGps) - 1) > 0 Then $iDupHighGps = $aDupGps[1][1]
-                                
-                                $query = "UPDATE AP SET FirstHistId=" & $iDupFirstHist & ", LastHistId=" & $iDupLastHist & ", HighSignal=" & $iDupHighSig & ", HighRSSI=" & $iDupHighRSSI & ", HighGpsHistId=" & $iDupHighGps & " WHERE ApId=" & $aNewApIDs[$ea]
-                                _SQLite_Exec($DBhndl, $query)
-                            EndIf
-                        Next
-                    EndIf
-                EndIf
-            EndIf
-        EndIf
-        
-        If TimerDiff($UpdateTimer) > 600 Or ($i = $iRows) Then
-            _UpdateProgress($i, $iRows, $AddAP, $AddGID, $begintime)
-            $UpdateTimer = TimerInit()
-        EndIf
-    Next
-    
-    _SQLite_Close($hDB)
-    MsgBox(0, "Import Complete", "Imported " & $AddAP & " APs from KismetDB (v" & $iDBVersion & ").")
-EndFunc
+								$aDupGps_iRval = _SQLite_GetTable2D($DBhndl, $sDupGpsQ, $aDupGps, $aDupGps_iRows, $aDupGps_iColumns)
+								If IsArray($aDupGps) And (UBound($aDupGps) - 1) > 0 Then $iDupHighGps = $aDupGps[1][1]
+
+								$query = "UPDATE AP SET FirstHistId=" & $iDupFirstHist & ", LastHistId=" & $iDupLastHist & ", HighSignal=" & $iDupHighSig & ", HighRSSI=" & $iDupHighRSSI & ", HighGpsHistId=" & $iDupHighGps & " WHERE ApId=" & $aNewApIDs[$ea]
+								_SQLite_Exec($DBhndl, $query)
+							EndIf
+						Next
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+
+		If TimerDiff($UpdateTimer) > 600 Or ($i = $iRows) Then
+			_UpdateProgress($i, $iRows, $AddAP, $AddGID, $begintime)
+			$UpdateTimer = TimerInit()
+		EndIf
+	Next
+
+	_SQLite_Close($hDB)
+	MsgBox(0, "Import Complete", "Imported " & $AddAP & " APs from KismetDB (v" & $iDBVersion & ").")
+EndFunc   ;==>_ImportKismetDB
 
 ; Helper: Parse Kismet-style space-separated crypt string into Auth and Encr
 Func _ParseKismetCrypt($sCrypt, ByRef $sAuth, ByRef $sEncr)
-    $sAuth = $SearchWord_Open
-    $sEncr = $SearchWord_None
-    
-    If StringInStr($sCrypt, "WPA3") Then
-        If StringInStr($sCrypt, "SAE") Or StringInStr($sCrypt, "Personal") Then
-            $sAuth = "WPA3-Personal"
-        ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
-            $sAuth = "WPA3-Enterprise"
-        Else
-            $sAuth = "WPA3-Personal"
-        EndIf
-    ElseIf StringInStr($sCrypt, "WPA2") Then
-        If StringInStr($sCrypt, "PSK") Or StringInStr($sCrypt, "Personal") Then
-            $sAuth = "WPA2-Personal"
-        ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
-            $sAuth = "WPA2-Enterprise"
-        Else
-            $sAuth = "WPA2-Personal"
-        EndIf
-    ElseIf StringInStr($sCrypt, "WPA") Then
-        If StringInStr($sCrypt, "PSK") Or StringInStr($sCrypt, "Personal") Then
-            $sAuth = "WPA-Personal"
-        ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
-            $sAuth = "WPA-Enterprise"
-        Else
-            $sAuth = "WPA-Personal"
-        EndIf
-    ElseIf StringInStr($sCrypt, "WEP") Then
-        $sAuth = $SearchWord_Open
-        $sEncr = "WEP"
-    ElseIf StringInStr($sCrypt, "Open") Or $sCrypt = "" Then
-        $sAuth = $SearchWord_Open
-        $sEncr = $SearchWord_None
-    EndIf
-    
-    If $sEncr = $SearchWord_None And Not StringInStr($sCrypt, "WEP") Then
-        If StringInStr($sCrypt, "CCMP") Or StringInStr($sCrypt, "AES") Then
-            $sEncr = "CCMP"
-        ElseIf StringInStr($sCrypt, "TKIP") Then
-            $sEncr = "TKIP"
-        ElseIf StringInStr($sCrypt, "GCMP") Then
-            $sEncr = "GCMP"
-        ElseIf StringInStr($sCrypt, "WPA") Then
-            $sEncr = "CCMP"
-        EndIf
-    EndIf
-EndFunc
+	$sAuth = $SearchWord_Open
+	$sEncr = $SearchWord_None
+
+	If StringInStr($sCrypt, "WPA3") Then
+		If StringInStr($sCrypt, "SAE") Or StringInStr($sCrypt, "Personal") Then
+			$sAuth = "WPA3-Personal"
+		ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
+			$sAuth = "WPA3-Enterprise"
+		Else
+			$sAuth = "WPA3-Personal"
+		EndIf
+	ElseIf StringInStr($sCrypt, "WPA2") Then
+		If StringInStr($sCrypt, "PSK") Or StringInStr($sCrypt, "Personal") Then
+			$sAuth = "WPA2-Personal"
+		ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
+			$sAuth = "WPA2-Enterprise"
+		Else
+			$sAuth = "WPA2-Personal"
+		EndIf
+	ElseIf StringInStr($sCrypt, "WPA") Then
+		If StringInStr($sCrypt, "PSK") Or StringInStr($sCrypt, "Personal") Then
+			$sAuth = "WPA-Personal"
+		ElseIf StringInStr($sCrypt, "Enterprise") Or StringInStr($sCrypt, "1X") Then
+			$sAuth = "WPA-Enterprise"
+		Else
+			$sAuth = "WPA-Personal"
+		EndIf
+	ElseIf StringInStr($sCrypt, "WEP") Then
+		$sAuth = $SearchWord_Open
+		$sEncr = "WEP"
+	ElseIf StringInStr($sCrypt, "Open") Or $sCrypt = "" Then
+		$sAuth = $SearchWord_Open
+		$sEncr = $SearchWord_None
+	EndIf
+
+	If $sEncr = $SearchWord_None And Not StringInStr($sCrypt, "WEP") Then
+		If StringInStr($sCrypt, "CCMP") Or StringInStr($sCrypt, "AES") Then
+			$sEncr = "CCMP"
+		ElseIf StringInStr($sCrypt, "TKIP") Then
+			$sEncr = "TKIP"
+		ElseIf StringInStr($sCrypt, "GCMP") Then
+			$sEncr = "GCMP"
+		ElseIf StringInStr($sCrypt, "WPA") Then
+			$sEncr = "CCMP"
+		EndIf
+	EndIf
+EndFunc   ;==>_ParseKismetCrypt
 
 ; Helper: Import packets from KismetDB for a given BSSID and associate with an AP
 Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
-    Local $sPktQuery = "SELECT ts_sec, signal, lat, lon, tags FROM packets WHERE sourcemac='" & $sBSSID & "'  LIMIT 1"
-    Local $aPkts, $iPktRows, $iPktCols
-    _SQLite_GetTable2d($hDB, $sPktQuery, $aPkts, $iPktRows, $iPktCols)
-    
-    Local $iFirstPktHistID = 0
-    Local $iLastPktHistID = 0
-    
-    For $p = 1 To $iPktRows
-        Local $iPktTs = Number($aPkts[$p][0])
-        Local $iPktSig = Number($aPkts[$p][1])
-        Local $fPktLat = Number($aPkts[$p][2])
-        Local $fPktLon = Number($aPkts[$p][3])
-        Local $sPktTags = $aPkts[$p][4]
-        
-        ; Convert signal: use original signal% from tags if available, otherwise convert from RSSI
-        ; Kismet stores tags as space-separated labels; we look for VISTUMBLER_SIG=N
-        Local $iPktSigPercent = 0
-        Local $iPktRSSI = -100
-        Local $iTagSig = 0
-        
-        If $sPktTags <> "" Then
-            Local $aTagParts = StringSplit($sPktTags, " ")
-            For $t = 1 To $aTagParts[0]
-                If StringLeft($aTagParts[$t], 15) = "VISTUMBLER_SIG=" Then
-                    $iTagSig = Number(StringMid($aTagParts[$t], 16))
-                    ExitLoop
-                EndIf
-            Next
-        EndIf
-        
-        If $iTagSig > 0 Then
-            ; Tags contains original signal percentage from Vistumbler export (VISTUMBLER_SIG=N)
-            $iPktSigPercent = $iTagSig
-            If $iPktSig < 0 Then
-                $iPktRSSI = $iPktSig
-            Else
-                $iPktRSSI = _SignalPercentToDb($iPktSigPercent)
-            EndIf
-        ElseIf $iPktSig < 0 Then
-            $iPktRSSI = $iPktSig
-            $iPktSigPercent = _DbToSignalPercent($iPktRSSI)
-        ElseIf $iPktSig > 0 Then
-            $iPktSigPercent = $iPktSig
-            $iPktRSSI = _SignalPercentToDb($iPktSigPercent)
-        Else
-            ContinueLoop
-        EndIf
-        
-        ; Convert timestamp (UTC)
-        Local $sPktDate = "2000-01-01"
-        Local $sPktTime = "00:00:00.000"
-        If $iPktTs > 0 Then
-            $sPktDate = _StringFormatTimeUTC("%Y", $iPktTs) & "-" & _StringFormatTimeUTC("%m", $iPktTs) & "-" & _StringFormatTimeUTC("%d", $iPktTs)
-            $sPktTime = _StringFormatTimeUTC("%X", $iPktTs) & ".000"
-        EndIf
-        
-        ; GPS for this packet
-        Local $sPktLatDMM = 'N 0000.0000'
-        Local $sPktLonDMM = 'E 0000.0000'
-        Local $iPktGID = 0
-        
-        If $fPktLat <> 0 Or $fPktLon <> 0 Then
-            $sPktLatDMM = _Format_GPS_DDD_to_DMM($fPktLat, "N", "S")
-            $sPktLonDMM = _Format_GPS_DDD_to_DMM($fPktLon, "E", "W")
-        EndIf
-        
-        Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sPktLatDMM & "' And Longitude = '" & $sPktLonDMM & "'"
-	        Local $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns, $aPktGpsMatch_iRval
-	$aPktGpsMatch_iRval = _SQLite_GetTable2d($DBhndl, $query, $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns)
-        Local $iPktGpsFound = UBound($aPktGpsMatch) - 1
-        
-        If $iPktGpsFound = 0 Then
-            $AddGID += 1
-            $GPS_ID += 1
-            _AddRecord($VistumblerDB, "GPS", $DBhndl, $GPS_ID & '|' & $sPktLatDMM & '|' & $sPktLonDMM & '|00|0|0|0|0|0|0|' & $sPktDate & '|' & $sPktTime)
-            $iPktGID = $GPS_ID
-        Else
-            $iPktGID = $aPktGpsMatch[1][1]
-        EndIf
-        
-        ; Add history entry
-        $HISTID += 1
-        _AddRecord($VistumblerDB, "HIST", $DBhndl, $HISTID & "|" & $iApID & "|" & $iPktGID & "|" & $iPktSigPercent & "|" & $iPktRSSI & "|" & $sPktDate & "|" & $sPktTime)
-        
-        If $iFirstPktHistID = 0 Then $iFirstPktHistID = $HISTID
-        $iLastPktHistID = $HISTID
-    Next
-    
-    ; Update AP's FirstHistID, LastHistID, HighSignal, HighRSSI, and HighGpsHistId from HIST data
-    If $iFirstPktHistID <> 0 Then
-        ; Get the highest signal and RSSI from all HIST entries for this AP
-        Local $query = "SELECT MAX(Signal), MAX(RSSI) FROM HIST WHERE ApID=" & $iApID
-	        Local $aMaxSig, $aMaxSig_iRows, $aMaxSig_iColumns, $aMaxSig_iRval
-	$aMaxSig_iRval = _SQLite_GetTable2d($DBhndl, $query, $aMaxSig, $aMaxSig_iRows, $aMaxSig_iColumns)
-        Local $iHighSignal = 0
-        Local $iHighRSSI = -100
-        If IsArray($aMaxSig) And (UBound($aMaxSig) - 1) > 0 Then
-            $iHighSignal = Round(Number($aMaxSig[1][1]))
-            $iHighRSSI = Round(Number($aMaxSig[1][2]))
-        EndIf
-        
-        ; Find the HighGpsHistId � the HIST entry with the strongest RSSI that has valid GPS
-        Local $iHighGpsHistId = 0
-        $query = "SELECT HIST.HistID FROM HIST INNER JOIN GPS ON HIST.GpsID = GPS.GPSID WHERE HIST.ApID=" & $iApID & " AND GPS.Latitude <> 'N 0000.0000' AND GPS.Longitude <> 'E 0000.0000'  LIMIT 1"
-	        Local $aHighGps, $aHighGps_iRows, $aHighGps_iColumns, $aHighGps_iRval
-	$aHighGps_iRval = _SQLite_GetTable2d($DBhndl, $query, $aHighGps, $aHighGps_iRows, $aHighGps_iColumns)
-        If IsArray($aHighGps) And (UBound($aHighGps) - 1) > 0 Then
-            $iHighGpsHistId = $aHighGps[1][1]
-        EndIf
-        
-        $query = "UPDATE AP SET FirstHistId=" & $iFirstPktHistID & ", LastHistId=" & $iLastPktHistID & ", HighSignal=" & $iHighSignal & ", HighRSSI=" & $iHighRSSI & ", HighGpsHistId=" & $iHighGpsHistId & " WHERE ApId=" & $iApID
-        _SQLite_Exec($DBhndl, $query)
-    EndIf
-EndFunc
+	Local $sPktQuery = "SELECT ts_sec, signal, lat, lon, tags FROM packets WHERE sourcemac='" & $sBSSID & "'  LIMIT 1"
+	Local $aPkts, $iPktRows, $iPktCols
+	_SQLite_GetTable2D($hDB, $sPktQuery, $aPkts, $iPktRows, $iPktCols)
+
+	Local $iFirstPktHistID = 0
+	Local $iLastPktHistID = 0
+
+	For $p = 1 To $iPktRows
+		Local $iPktTs = Number($aPkts[$p][0])
+		Local $iPktSig = Number($aPkts[$p][1])
+		Local $fPktLat = Number($aPkts[$p][2])
+		Local $fPktLon = Number($aPkts[$p][3])
+		Local $sPktTags = $aPkts[$p][4]
+
+		; Convert signal: use original signal% from tags if available, otherwise convert from RSSI
+		; Kismet stores tags as space-separated labels; we look for VISTUMBLER_SIG=N
+		Local $iPktSigPercent = 0
+		Local $iPktRSSI = -100
+		Local $iTagSig = 0
+
+		If $sPktTags <> "" Then
+			Local $aTagParts = StringSplit($sPktTags, " ")
+			For $t = 1 To $aTagParts[0]
+				If StringLeft($aTagParts[$t], 15) = "VISTUMBLER_SIG=" Then
+					$iTagSig = Number(StringMid($aTagParts[$t], 16))
+					ExitLoop
+				EndIf
+			Next
+		EndIf
+
+		If $iTagSig > 0 Then
+			; Tags contains original signal percentage from Vistumbler export (VISTUMBLER_SIG=N)
+			$iPktSigPercent = $iTagSig
+			If $iPktSig < 0 Then
+				$iPktRSSI = $iPktSig
+			Else
+				$iPktRSSI = _SignalPercentToDb($iPktSigPercent)
+			EndIf
+		ElseIf $iPktSig < 0 Then
+			$iPktRSSI = $iPktSig
+			$iPktSigPercent = _DbToSignalPercent($iPktRSSI)
+		ElseIf $iPktSig > 0 Then
+			$iPktSigPercent = $iPktSig
+			$iPktRSSI = _SignalPercentToDb($iPktSigPercent)
+		Else
+			ContinueLoop
+		EndIf
+
+		; Convert timestamp (UTC)
+		Local $sPktDate = "2000-01-01"
+		Local $sPktTime = "00:00:00.000"
+		If $iPktTs > 0 Then
+			$sPktDate = _StringFormatTimeUTC("%Y", $iPktTs) & "-" & _StringFormatTimeUTC("%m", $iPktTs) & "-" & _StringFormatTimeUTC("%d", $iPktTs)
+			$sPktTime = _StringFormatTimeUTC("%X", $iPktTs) & ".000"
+		EndIf
+
+		; GPS for this packet
+		Local $sPktLatDMM = 'N 0000.0000'
+		Local $sPktLonDMM = 'E 0000.0000'
+		Local $iPktGID = 0
+
+		If $fPktLat <> 0 Or $fPktLon <> 0 Then
+			$sPktLatDMM = _Format_GPS_DDD_to_DMM($fPktLat, "N", "S")
+			$sPktLonDMM = _Format_GPS_DDD_to_DMM($fPktLon, "E", "W")
+		EndIf
+
+		Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sPktLatDMM & "' And Longitude = '" & $sPktLonDMM & "'"
+		Local $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns, $aPktGpsMatch_iRval
+		$aPktGpsMatch_iRval = _SQLite_GetTable2D($DBhndl, $query, $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns)
+		Local $iPktGpsFound = UBound($aPktGpsMatch) - 1
+
+		If $iPktGpsFound = 0 Then
+			$AddGID += 1
+			$GPS_ID += 1
+			_AddRecord($VistumblerDB, "GPS", $DBhndl, $GPS_ID & '|' & $sPktLatDMM & '|' & $sPktLonDMM & '|00|0|0|0|0|0|0|' & $sPktDate & '|' & $sPktTime)
+			$iPktGID = $GPS_ID
+		Else
+			$iPktGID = $aPktGpsMatch[1][1]
+		EndIf
+
+		; Add history entry
+		$HISTID += 1
+		_AddRecord($VistumblerDB, "HIST", $DBhndl, $HISTID & "|" & $iApID & "|" & $iPktGID & "|" & $iPktSigPercent & "|" & $iPktRSSI & "|" & $sPktDate & "|" & $sPktTime)
+
+		If $iFirstPktHistID = 0 Then $iFirstPktHistID = $HISTID
+		$iLastPktHistID = $HISTID
+	Next
+
+	; Update AP's FirstHistID, LastHistID, HighSignal, HighRSSI, and HighGpsHistId from HIST data
+	If $iFirstPktHistID <> 0 Then
+		; Get the highest signal and RSSI from all HIST entries for this AP
+		Local $query = "SELECT MAX(Signal), MAX(RSSI) FROM HIST WHERE ApID=" & $iApID
+		Local $aMaxSig, $aMaxSig_iRows, $aMaxSig_iColumns, $aMaxSig_iRval
+		$aMaxSig_iRval = _SQLite_GetTable2D($DBhndl, $query, $aMaxSig, $aMaxSig_iRows, $aMaxSig_iColumns)
+		Local $iHighSignal = 0
+		Local $iHighRSSI = -100
+		If IsArray($aMaxSig) And (UBound($aMaxSig) - 1) > 0 Then
+			$iHighSignal = Round(Number($aMaxSig[1][1]))
+			$iHighRSSI = Round(Number($aMaxSig[1][2]))
+		EndIf
+
+		; Find the HighGpsHistId � the HIST entry with the strongest RSSI that has valid GPS
+		Local $iHighGpsHistID = 0
+		$query = "SELECT HIST.HistID FROM HIST INNER JOIN GPS ON HIST.GpsID = GPS.GPSID WHERE HIST.ApID=" & $iApID & " AND GPS.Latitude <> 'N 0000.0000' AND GPS.Longitude <> 'E 0000.0000'  LIMIT 1"
+		Local $aHighGps, $aHighGps_iRows, $aHighGps_iColumns, $aHighGps_iRval
+		$aHighGps_iRval = _SQLite_GetTable2D($DBhndl, $query, $aHighGps, $aHighGps_iRows, $aHighGps_iColumns)
+		If IsArray($aHighGps) And (UBound($aHighGps) - 1) > 0 Then
+			$iHighGpsHistID = $aHighGps[1][1]
+		EndIf
+
+		$query = "UPDATE AP SET FirstHistId=" & $iFirstPktHistID & ", LastHistId=" & $iLastPktHistID & ", HighSignal=" & $iHighSignal & ", HighRSSI=" & $iHighRSSI & ", HighGpsHistId=" & $iHighGpsHistID & " WHERE ApId=" & $iApID
+		_SQLite_Exec($DBhndl, $query)
+	EndIf
+EndFunc   ;==>_ImportKismetPackets
 
 Func _ImportNetXML($sFile)
-    Local $sData = FileRead($sFile)
-    Local $aNetworks = StringRegExp($sData, '(?s)<wireless-network.*?</wireless-network>', 3)
-    
-    If @error Then 
-       MsgBox(0, "Info", "No networks found.")
-       Return
-    EndIf
-    
-    Local $iCount = UBound($aNetworks)
-    Local $AddAP = 0
-    Local $AddGID = 0
-    Local $begintime = TimerInit()
-    Local $UpdateTimer = TimerInit()
-    
-    ; Refresh ID counters from DB to prevent collisions
-    Local $qRes
-Local $qRes, $qRes_iRows, $qRes_iColumns, $qRes_iRval
-	$qRes_iRval = _SQLite_GetTable2d($DBhndl, "SELECT Max(ApID) FROM AP", $qRes, $qRes_iRows, $qRes_iColumns)
-    If $qRes_iRows > 0 Then $APID = Number($qRes[1][0])
-    
-    $qRes_iRval = _SQLite_GetTable2d($DBhndl, "SELECT Max(GPSID) FROM GPS", $qRes, $qRes_iRows, $qRes_iColumns)
-    If $qRes_iRows > 0 Then $GPS_ID = Number($qRes[1][0])
-    
-    $qRes_iRval = _SQLite_GetTable2d($DBhndl, "SELECT Max(HistID) FROM Hist", $qRes, $qRes_iRows, $qRes_iColumns)
-    If $qRes_iRows > 0 Then $HISTID = Number($qRes[1][0])
+	Local $sData = FileRead($sFile)
+	Local $aNetworks = StringRegExp($sData, '(?s)<wireless-network.*?</wireless-network>', 3)
 
-    For $i = 0 To $iCount - 1
-        Local $sNet = $aNetworks[$i]
-        Local $sBSSID = _GetTagValue($sNet, "BSSID")
-        Local $sSSID = _GetTagValue($sNet, "essid")
-        Local $sManuf = _GetTagValue($sNet, "manuf")
-        Local $iChan = Number(_GetTagValue($sNet, "channel"))
-        Local $sEncryption = _GetTagValue($sNet, "encryption")
-        Local $sType = _GetTagValue($sNet, "type")
-        
-        Local $iMaxSig = Number(_GetTagValue($sNet, "max_signal_dbm"))
-        If $iMaxSig = 0 Then $iMaxSig = Number(_GetTagValue($sNet, "last_signal_dbm"))
-        
-        Local $fLat = Number(_GetTagValue($sNet, "peak-lat"))
-        Local $fLon = Number(_GetTagValue($sNet, "peak-lon"))
-        If $fLat = 0 Then $fLat = Number(_GetTagValue($sNet, "avg-lat"))
-        If $fLon = 0 Then $fLon = Number(_GetTagValue($sNet, "avg-lon"))
-        
-         ; Signal conversion
-        Local $iSignalPercent = 0
-        Local $iRSSI = -100
-        If $iMaxSig < 0 Then
-            $iRSSI = $iMaxSig
-            $iSignalPercent = _DbToSignalPercent($iRSSI)
-        Else
-            $iSignalPercent = $iMaxSig
-            $iRSSI = _SignalPercentToDb($iSignalPercent)
-        EndIf
-        
-        ; GPS
-        Local $LoadGID = 0
-        Local $sLatDMM = 'N 0000.0000'
-        Local $sLonDMM = 'E 0000.0000'
-        Local $sDate = "2000/01/01"
-        Local $sTime = "00:00:00"
+	If @error Then
+		MsgBox(0, "Info", "No networks found.")
+		Return
+	EndIf
 
-        If $fLat <> 0 Or $fLon <> 0 Then
-            $sLatDMM = _Format_GPS_DDD_to_DMM($fLat, "N", "S")
-            $sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
-        EndIf
+	Local $iCount = UBound($aNetworks)
+	Local $AddAP = 0
+	Local $AddGID = 0
+	Local $begintime = TimerInit()
+	Local $UpdateTimer = TimerInit()
 
-        ; Auth/Encr
-        Local $sAuth = "Open"
-        Local $sEncr = "None"
-        
-        ; Try to parse Vistumbler Export format (Auth-Encr)
-        If StringInStr($sEncryption, "-") Then
-             Local $aEncParts = StringSplit($sEncryption, "-")
-             If $aEncParts[0] = 2 Then
-                 $sAuth = $aEncParts[1]
-                 $sEncr = $aEncParts[2]
-             ElseIf $aEncParts[0] > 2 Then
-                 $sEncr = $aEncParts[$aEncParts[0]]
-                 $sAuth = ""
-                 For $k = 1 To $aEncParts[0] - 1
-                     If $k > 1 Then $sAuth &= "-"
-                     $sAuth &= $aEncParts[$k]
-                 Next
-             EndIf
-        Else
-            ; Fallback to standard detection
-            if StringInStr($sEncryption, "WEP") Then 
-                $sEncr = "WEP"
-            ElseIf StringInStr($sEncryption, "WPA") Then
-                $sAuth = "WPA"
-                $sEncr = "TKIP"
-                if StringInStr($sEncryption, "AES") Or StringInStr($sEncryption, "CCM") Then $sEncr = "CCMP"
-            EndIf
-        EndIf
-        
-        Local $sVType = $SearchWord_Infrastructure
-        If StringInStr($sType, "ad-hoc") Then $sVType = $SearchWord_Adhoc
+	; Refresh ID counters from DB to prevent collisions
+	Local $qRes
+	Local $qRes, $qRes_iRows, $qRes_iColumns, $qRes_iRval
+	$qRes_iRval = _SQLite_GetTable2D($DBhndl, "SELECT Max(ApID) FROM AP", $qRes, $qRes_iRows, $qRes_iColumns)
+	If $qRes_iRows > 0 Then $APID = Number($qRes[1][0])
 
-        ; Parse Last Time AND First Time if available
-        Local $sFirstTimeRaw = _GetAttributeValue($sNet, "wireless-network", "first-time")
-        Local $sLastTimeRaw = _GetAttributeValue($sNet, "wireless-network", "last-time")
-        
-        If $sFirstTimeRaw = $sLastTimeRaw Then $sFirstTimeRaw = ""
-        
-        Local $aProcessTimes[2]
-        $aProcessTimes[0] = $sFirstTimeRaw
-        $aProcessTimes[1] = $sLastTimeRaw
-        
-        For $pT = 0 To 1
-            Local $sRawT = $aProcessTimes[$pT]
-            If $sRawT = "" Then ContinueLoop
+	$qRes_iRval = _SQLite_GetTable2D($DBhndl, "SELECT Max(GPSID) FROM GPS", $qRes, $qRes_iRows, $qRes_iColumns)
+	If $qRes_iRows > 0 Then $GPS_ID = Number($qRes[1][0])
 
-            Local $sDate = "2000/01/01"
-            Local $sTime = "00:00:00"
+	$qRes_iRval = _SQLite_GetTable2D($DBhndl, "SELECT Max(HistID) FROM Hist", $qRes, $qRes_iRows, $qRes_iColumns)
+	If $qRes_iRows > 0 Then $HISTID = Number($qRes[1][0])
 
-             Local $aDT = StringSplit($sRawT, " ")
-             If $aDT[0] = 2 Then
-                 $sDate = $aDT[1]
-                 $sTime = $aDT[2]
-             ElseIf $aDT[0] >= 5 Then
-                 ; Kismet Format: Fri Feb 09 10:00:00 2024
-                 Local $sMon = $aDT[2]
-                 Local $sMonNum = "01"
-                 Switch $sMon
-                     Case "Jan"
-                         $sMonNum = "01"
-                     Case "Feb"
-                         $sMonNum = "02"
-                     Case "Mar"
-                         $sMonNum = "03"
-                     Case "Apr"
-                         $sMonNum = "04"
-                     Case "May"
-                         $sMonNum = "05"
-                     Case "Jun"
-                         $sMonNum = "06"
-                     Case "Jul"
-                         $sMonNum = "07"
-                     Case "Aug"
-                         $sMonNum = "08"
-                     Case "Sep"
-                         $sMonNum = "09"
-                     Case "Oct"
-                         $sMonNum = "10"
-                     Case "Nov"
-                         $sMonNum = "11"
-                     Case "Dec"
-                         $sMonNum = "12"
-                 EndSwitch
-                 $sDate = $aDT[5] & "-" & $sMonNum & "-" & $aDT[3]
-                 $sTime = $aDT[4]
-                 ; Ensure ms present for consistency (VS1 format)
-                 If StringInStr($sTime, ".") = 0 Then $sTime &= ".000"
-             EndIf
-            
-        ; Deduplication Logic: Check for exact match on Lat/Lon/Date/Time
-        ; Start broad (Lat/Lon) to avoid SQL Date format issues
-            $query = "SELECT GPSID, Date1, Time1 FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
-	            Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
-	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
-            Local $FoundGpsMatch = 0
-            $LoadGID = 0
-            
-            If UBound($GpsMatchArray) > 1 Then
-                ; Check results for matching Date/Time
-                For $g = 1 To UBound($GpsMatchArray) - 1
-                    If $GpsMatchArray[$g][0] = $sDate And $GpsMatchArray[$g][1] = $sTime Then
-                        $LoadGID = $GpsMatchArray[$g][0]
-                        $FoundGpsMatch = 1
-                        ExitLoop
-                    EndIf
-                Next
-            EndIf
-            
-            If $FoundGpsMatch = 0 Then
-                $AddGID += 1
-                $GPS_ID += 1
-                _AddRecord($VistumblerDB, "GPS", $DBhndl, $GPS_ID & '|' & $sLatDMM & '|' & $sLonDMM & '|00|0|0|0|0|0|0|' & $sDate & '|' & $sTime)
-                $LoadGID = $GPS_ID
-            EndIf
+	For $i = 0 To $iCount - 1
+		Local $sNet = $aNetworks[$i]
+		Local $sBSSID = _GetTagValue($sNet, "BSSID")
+		Local $sSSID = _GetTagValue($sNet, "essid")
+		Local $sManuf = _GetTagValue($sNet, "manuf")
+		Local $iChan = Number(_GetTagValue($sNet, "channel"))
+		Local $sEncryption = _GetTagValue($sNet, "encryption")
+		Local $sType = _GetTagValue($sNet, "type")
 
-            Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sVType, $Text_Unknown, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
-            If $NewApAdded <> 0 Then $AddAP += 1
-        Next
-        
-        If TimerDiff($UpdateTimer) > 600 Or ($i = $iCount - 1) Then
-             _UpdateProgress($i + 1, $iCount, $AddAP, $AddGID, $begintime)
-            $UpdateTimer = TimerInit()
-        EndIf
-    Next
-    
-    MsgBox(0, "Import Complete", "Imported " & $AddAP & " APs from NetXML.")
-EndFunc
+		Local $iMaxSig = Number(_GetTagValue($sNet, "max_signal_dbm"))
+		If $iMaxSig = 0 Then $iMaxSig = Number(_GetTagValue($sNet, "last_signal_dbm"))
+
+		Local $fLat = Number(_GetTagValue($sNet, "peak-lat"))
+		Local $fLon = Number(_GetTagValue($sNet, "peak-lon"))
+		If $fLat = 0 Then $fLat = Number(_GetTagValue($sNet, "avg-lat"))
+		If $fLon = 0 Then $fLon = Number(_GetTagValue($sNet, "avg-lon"))
+
+		; Signal conversion
+		Local $iSignalPercent = 0
+		Local $iRSSI = -100
+		If $iMaxSig < 0 Then
+			$iRSSI = $iMaxSig
+			$iSignalPercent = _DbToSignalPercent($iRSSI)
+		Else
+			$iSignalPercent = $iMaxSig
+			$iRSSI = _SignalPercentToDb($iSignalPercent)
+		EndIf
+
+		; GPS
+		Local $LoadGID = 0
+		Local $sLatDMM = 'N 0000.0000'
+		Local $sLonDMM = 'E 0000.0000'
+		Local $sDate = "2000/01/01"
+		Local $sTime = "00:00:00"
+
+		If $fLat <> 0 Or $fLon <> 0 Then
+			$sLatDMM = _Format_GPS_DDD_to_DMM($fLat, "N", "S")
+			$sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
+		EndIf
+
+		; Auth/Encr
+		Local $sAuth = "Open"
+		Local $sEncr = "None"
+
+		; Try to parse Vistumbler Export format (Auth-Encr)
+		If StringInStr($sEncryption, "-") Then
+			Local $aEncParts = StringSplit($sEncryption, "-")
+			If $aEncParts[0] = 2 Then
+				$sAuth = $aEncParts[1]
+				$sEncr = $aEncParts[2]
+			ElseIf $aEncParts[0] > 2 Then
+				$sEncr = $aEncParts[$aEncParts[0]]
+				$sAuth = ""
+				For $k = 1 To $aEncParts[0] - 1
+					If $k > 1 Then $sAuth &= "-"
+					$sAuth &= $aEncParts[$k]
+				Next
+			EndIf
+		Else
+			; Fallback to standard detection
+			If StringInStr($sEncryption, "WEP") Then
+				$sEncr = "WEP"
+			ElseIf StringInStr($sEncryption, "WPA") Then
+				$sAuth = "WPA"
+				$sEncr = "TKIP"
+				If StringInStr($sEncryption, "AES") Or StringInStr($sEncryption, "CCM") Then $sEncr = "CCMP"
+			EndIf
+		EndIf
+
+		Local $sVType = $SearchWord_Infrastructure
+		If StringInStr($sType, "ad-hoc") Then $sVType = $SearchWord_Adhoc
+
+		; Parse Last Time AND First Time if available
+		Local $sFirstTimeRaw = _GetAttributeValue($sNet, "wireless-network", "first-time")
+		Local $sLastTimeRaw = _GetAttributeValue($sNet, "wireless-network", "last-time")
+
+		If $sFirstTimeRaw = $sLastTimeRaw Then $sFirstTimeRaw = ""
+
+		Local $aProcessTimes[2]
+		$aProcessTimes[0] = $sFirstTimeRaw
+		$aProcessTimes[1] = $sLastTimeRaw
+
+		For $pT = 0 To 1
+			Local $sRawT = $aProcessTimes[$pT]
+			If $sRawT = "" Then ContinueLoop
+
+			Local $sDate = "2000/01/01"
+			Local $sTime = "00:00:00"
+
+			Local $aDT = StringSplit($sRawT, " ")
+			If $aDT[0] = 2 Then
+				$sDate = $aDT[1]
+				$sTime = $aDT[2]
+			ElseIf $aDT[0] >= 5 Then
+				; Kismet Format: Fri Feb 09 10:00:00 2024
+				Local $sMon = $aDT[2]
+				Local $sMonNum = "01"
+				Switch $sMon
+					Case "Jan"
+						$sMonNum = "01"
+					Case "Feb"
+						$sMonNum = "02"
+					Case "Mar"
+						$sMonNum = "03"
+					Case "Apr"
+						$sMonNum = "04"
+					Case "May"
+						$sMonNum = "05"
+					Case "Jun"
+						$sMonNum = "06"
+					Case "Jul"
+						$sMonNum = "07"
+					Case "Aug"
+						$sMonNum = "08"
+					Case "Sep"
+						$sMonNum = "09"
+					Case "Oct"
+						$sMonNum = "10"
+					Case "Nov"
+						$sMonNum = "11"
+					Case "Dec"
+						$sMonNum = "12"
+				EndSwitch
+				$sDate = $aDT[5] & "-" & $sMonNum & "-" & $aDT[3]
+				$sTime = $aDT[4]
+				; Ensure ms present for consistency (VS1 format)
+				If StringInStr($sTime, ".") = 0 Then $sTime &= ".000"
+			EndIf
+
+			; Deduplication Logic: Check for exact match on Lat/Lon/Date/Time
+			; Start broad (Lat/Lon) to avoid SQL Date format issues
+			$query = "SELECT GPSID, Date1, Time1 FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
+			Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
+			$GpsMatchArray_iRval = _SQLite_GetTable2D($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
+			Local $FoundGpsMatch = 0
+			$LoadGID = 0
+
+			If UBound($GpsMatchArray) > 1 Then
+				; Check results for matching Date/Time
+				For $g = 1 To UBound($GpsMatchArray) - 1
+					If $GpsMatchArray[$g][0] = $sDate And $GpsMatchArray[$g][1] = $sTime Then
+						$LoadGID = $GpsMatchArray[$g][0]
+						$FoundGpsMatch = 1
+						ExitLoop
+					EndIf
+				Next
+			EndIf
+
+			If $FoundGpsMatch = 0 Then
+				$AddGID += 1
+				$GPS_ID += 1
+				_AddRecord($VistumblerDB, "GPS", $DBhndl, $GPS_ID & '|' & $sLatDMM & '|' & $sLonDMM & '|00|0|0|0|0|0|0|' & $sDate & '|' & $sTime)
+				$LoadGID = $GPS_ID
+			EndIf
+
+			Local $NewApAdded = _AddApData(0, $LoadGID, $sBSSID, $sSSID, $iChan, $sAuth, $sEncr, $sVType, $Text_Unknown, $sManuf, $Text_Unknown, $iSignalPercent, $iRSSI)
+			If $NewApAdded <> 0 Then $AddAP += 1
+		Next
+
+		If TimerDiff($UpdateTimer) > 600 Or ($i = $iCount - 1) Then
+			_UpdateProgress($i + 1, $iCount, $AddAP, $AddGID, $begintime)
+			$UpdateTimer = TimerInit()
+		EndIf
+	Next
+
+	MsgBox(0, "Import Complete", "Imported " & $AddAP & " APs from NetXML.")
+EndFunc   ;==>_ImportNetXML
 
 Func _GetTagValue($sXML, $sTag)
-    Local $aRet = StringRegExp($sXML, '<' & $sTag & '.*?>(.*?)</' & $sTag & '>', 3)
-    If Not @error And UBound($aRet) > 0 Then Return $aRet[0]
-    Return ""
-EndFunc
+	Local $aRet = StringRegExp($sXML, '<' & $sTag & '.*?>(.*?)</' & $sTag & '>', 3)
+	If Not @error And UBound($aRet) > 0 Then Return $aRet[0]
+	Return ""
+EndFunc   ;==>_GetTagValue
 
 Func _GetAttributeValue($sXML, $sTag, $sAttr)
-    Local $sPattern = '<' & $sTag & '\b[^>]*\b' & $sAttr & '="([^"]*)"'
-    Local $aRet = StringRegExp($sXML, $sPattern, 3)
-    If Not @error And UBound($aRet) > 0 Then Return $aRet[0]
-    Return ""
-EndFunc
+	Local $sPattern = '<' & $sTag & '\b[^>]*\b' & $sAttr & '="([^"]*)"'
+	Local $aRet = StringRegExp($sXML, $sPattern, 3)
+	If Not @error And UBound($aRet) > 0 Then Return $aRet[0]
+	Return ""
+EndFunc   ;==>_GetAttributeValue
 
 Func _UpdateProgress($current, $total, $AddAP, $AddGID, $begintime)
-    Local $min = (TimerDiff($begintime) / 60000)
-    Local $percent = ($current / $total) * 100
-    GUICtrlSetData($progressbar, $percent)
-    GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
-    GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($current / $min, 1))
-    GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
-    GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
-    GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $current & "/" & $total)
-EndFunc
+	Local $min = (TimerDiff($begintime) / 60000)
+	Local $percent = ($current / $total) * 100
+	GUICtrlSetData($progressbar, $percent)
+	GUICtrlSetData($percentlabel, $Text_Progress & ': ' & Round($percent, 1))
+	GUICtrlSetData($linemin, $Text_LinesMin & ': ' & Round($current / $min, 1))
+	GUICtrlSetData($newlines, $Text_NewAPs & ': ' & $AddAP & ' - ' & $Text_NewGIDs & ':' & $AddGID)
+	GUICtrlSetData($minutes, $Text_Minutes & ': ' & Round($min, 1))
+	GUICtrlSetData($linetotal, $Text_LineTotal & ': ' & $current & "/" & $total)
+EndFunc   ;==>_UpdateProgress
 
 Func _JSONGet($o, $key)
-    If Not _JSONIsObject($o) Then Return ""
-    For $i = 1 To UBound($o) - 1
-        If $o[$i][0] == $key Then Return $o[$i][1]
-    Next
-    Return ""
-EndFunc
+	If Not _JSONIsObject($o) Then Return ""
+	For $i = 1 To UBound($o) - 1
+		If $o[$i][0] == $key Then Return $o[$i][1]
+	Next
+	Return ""
+EndFunc   ;==>_JSONGet
 
 ; Add or update a key-value pair in a JSON object (2D array)
 Func _JSONPut(ByRef $o, $key, $value)
-    If Not _JSONIsObject($o) Then Return
-    ; Check if key already exists
-    For $i = 1 To UBound($o) - 1
-        If $o[$i][0] == $key Then
-            $o[$i][1] = $value
-            Return
-        EndIf
-    Next
-    ; Key not found � add new entry
-    Local $iSize = UBound($o)
-    ReDim $o[$iSize + 1][2]
-    $o[$iSize][0] = $key
-    $o[$iSize][1] = $value
-EndFunc
+	If Not _JSONIsObject($o) Then Return
+	; Check if key already exists
+	For $i = 1 To UBound($o) - 1
+		If $o[$i][0] == $key Then
+			$o[$i][1] = $value
+			Return
+		EndIf
+	Next
+	; Key not found � add new entry
+	Local $iSize = UBound($o)
+	ReDim $o[$iSize + 1][2]
+	$o[$iSize][0] = $key
+	$o[$iSize][1] = $value
+EndFunc   ;==>_JSONPut
