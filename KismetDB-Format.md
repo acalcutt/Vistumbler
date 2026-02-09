@@ -80,7 +80,7 @@ Stores individual captured packets with raw packet data as BLOBs.
 | dlt | INTEGER | Data link type (127 = IEEE 802.11 with Radiotap) |
 | packet | BLOB | Raw packet data (Radiotap + 802.11 frame) |
 | error | INTEGER | Error flag (0 = no error) |
-| tags | TEXT | Packet tags |
+| tags | TEXT | Space-separated packet tag labels (see [Packet Tags](#packet-tags-vistumbler-original-signal)) |
 | datarate | REAL | Data rate |
 | hash | INTEGER | Packet hash |
 | packetid | INTEGER | Unique packet identifier |
@@ -204,6 +204,7 @@ This field is a **Vistumbler-specific extension** — Kismet ignores unknown key
 | Value | Description |
 |-------|-------------|
 | `802.11be` | Wi-Fi 7 |
+
 | `802.11ax` | Wi-Fi 6/6E |
 | `802.11ac` | Wi-Fi 5 |
 | `802.11n` | Wi-Fi 4 |
@@ -219,6 +220,35 @@ This field is a **Vistumbler-specific extension** — Kismet ignores unknown key
 | 4900–5900 MHz (5 GHz band) | `802.11ac` |
 | 2400–2500 MHz (2.4 GHz band) | `802.11n` |
 | Other / unknown | `Unknown` |
+
+### Packet Tags: Vistumbler Original Signal (`VISTUMBLER_SIG`)
+
+Kismet's `packets.tags` column stores **space-separated string labels** (tag names). In the Kismet source code:
+
+- **Writing:** Kismet iterates the packet's in-memory `tag_map` (a `map<string, bool>` — presence-only keys) and joins all keys with spaces into a single TEXT string. For example, a packet with tags `WARDRIVE` and `INDOOR` would be stored as `"WARDRIVE INDOOR"`.
+- **Parsing:** Kismet tools (`kismetdb_to_pcap`, `kismetdb_statistics`) split the tags string on spaces and treat each word as a distinct tag name.
+- **Filtering:** Kismet's `--tag` CLI option and REST API use SQL `LIKE %tagname%` to match specific tags.
+
+Tags are label-only (no native key=value support), but since each tag is a freeform string, using `KEY=VALUE` as a tag name is fully compatible.
+
+**Vistumbler usage:** Vistumbler stores the original adapter-reported signal percentage in the `tags` column using a labeled tag:
+
+```
+VISTUMBLER_SIG=83
+```
+
+This preserves the original Windows adapter signal percentage (0–100%) through KismetDB round-trips. Without this, reimported signal values would only reflect the RSSI-to-percentage formula approximation (`_DbToSignalPercent()`), which differs from the original adapter-reported values.
+
+**Export:** Each packet written to the `packets` table includes the original signal percentage as a `VISTUMBLER_SIG=N` tag. If the AP had signal 83%, the tags column contains `"VISTUMBLER_SIG=83"`.
+
+**Import:** On reimport, the tags string is split on spaces and searched for a tag starting with `VISTUMBLER_SIG=`. If found, the number after `=` is used as the original signal percentage. If not found (real Kismet files, or files without this tag), the import falls back to the RSSI-to-percentage formula conversion.
+
+**Compatibility:**
+- Kismet sees `VISTUMBLER_SIG=83` as a valid tag label — it is completely harmless and ignored during normal Kismet processing.
+- `kismetdb_statistics --list-tags` will display `VISTUMBLER_SIG=83` in the tag list.
+- `kismetdb_to_pcap --tag VISTUMBLER_SIG=83` can filter by specific signal values.
+- If Kismet writes other tags to the same packet, they coexist as space-separated entries (e.g., `"WARDRIVE VISTUMBLER_SIG=83"`).
+- Real Kismet files have empty tags or non-matching tag names, so the fallback to RSSI conversion is triggered automatically.
 
 ### Encryption String (`crypt_string`)
 
@@ -819,6 +849,8 @@ Information Elements:
   - Fixed import: Multi-entry `advertised_ssid_map` devices are now split back into separate APs — one per unique SSID/channel/auth entry. Shared packet history is duplicated to each AP so all variants show proper signal history.
   - Added: `_ParseKismetCrypt()` helper function for parsing Kismet-style space-separated crypt strings (e.g., "WPA2 WPA2-PSK AES-CCMP") into Vistumbler Auth/Encr fields.
   - Added: `_ImportKismetPackets()` helper function to isolate packet import logic, enabling reuse for both single-AP and multi-AP import paths.
+  - Fixed import: HighSignal/HighRSSI/HighGpsHistId values now computed from HIST table data (`MAX(Signal)`, `MAX(RSSI)`) after packet import, instead of relying on a single `_AddApData` call that never updated these fields.
+  - Added: Original adapter-reported signal percentage now preserved through KismetDB round-trips via `VISTUMBLER_SIG=N` tag in the `packets.tags` column. On import, if this tag is present the original signal% is used directly; otherwise falls back to RSSI-to-percentage formula conversion. Uses Kismet's standard space-separated tag format for full compatibility.
 
 - **v1.0** — Initial implementation
   - KismetDB v10 schema support
