@@ -25,6 +25,9 @@ EndFunc
 ; Description:      Adds a wireless-network entry
 ; ===============================================================================================================================
 Func _NetXML_AddNetwork($bssid, $ssid, $manuf, $channel, $freq, $type, $encrypt, $essid_cloaked, $first_time, $last_time, $max_rate, $max_signal, $min_signal, $datasize, $gps_lat, $gps_lon, $gps_alt, $gps_speed)
+    ; Calculate frequency if missing
+    If Number($freq) <= 0 Then $freq = _NetXML_GetFreqFromChannel($channel)
+
     Local $sNet = '<wireless-network number="0" type="' & $type & '" first-time="' & $first_time & '" last-time="' & $last_time & '">' & @CRLF
     $sNet &= '  <SSID first-time="' & $first_time & '" last-time="' & $last_time & '">' & @CRLF
     $sNet &= '    <type>' & $type & '</type>' & @CRLF
@@ -103,4 +106,43 @@ Func _XMLEncode($sString)
     $sString = StringReplace($sString, '"', "&quot;")
     $sString = StringReplace($sString, "'", "&apos;")
     Return $sString
+EndFunc
+
+; ===============================================================================================================================
+; Function Name:    _NetXML_GetFreqFromChannel
+; Description:      Calculates Frequency (MHz) from Channel Number
+; ===============================================================================================================================
+Func _NetXML_GetFreqFromChannel($iChannel)
+    $iChannel = Int($iChannel)
+    
+    ; 2.4 GHz
+    If $iChannel >= 1 And $iChannel <= 13 Then
+        Return 2407 + ($iChannel * 5)
+    ElseIf $iChannel = 14 Then
+        Return 2484
+    EndIf
+    
+    ; 5 GHz (UNII-1, 2, 2e, 3) - 5000 + 5*n
+    If $iChannel >= 36 And $iChannel <= 177 Then
+        Return 5000 + ($iChannel * 5)
+    EndIf
+    
+    ; 6 GHz (HE/EHT)
+    If $iChannel >= 1 And $iChannel <= 233 Then
+         ; If it falls in 6GHz range ? 
+         ; Note: Channel 1 overlaps with 2.4GHz index if not careful. 
+         ; But Vistumbler typically inputs standard channel numbers. 
+         ; 6GHz starting Freq 5950 + 5*n
+         If $iChannel = 1 Or $iChannel = 5 Or $iChannel = 9 Then
+              ; This is ambiguous with 2.4GHz. 
+              ; Vistumbler usually tracks band. But here we only have channel.
+              ; Optimization: Assume it is 2.4GHz if < 14 unless explicitly indicated (which we can't tell).
+              ; So only return 6GHz if > 177 which is rare but possible? 
+              ; Actually standard 6GHz channels align with 5GHz numbering continuation conceptually or reuse low numbers.
+              ; 6GHz op class global operating classes.
+              ; For now, just handle 2.4 and 5 common.
+         EndIf
+    EndIf
+    
+    Return 0
 EndFunc
