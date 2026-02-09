@@ -1,21 +1,26 @@
 #NoTrayIcon
 #Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_icon=Icons\icon.ico
+#AutoIt3Wrapper_Res_ProductName=Vistumbler
+#AutoIt3Wrapper_Res_CompanyName=TechIdiots LLC
+#AutoIt3Wrapper_Res_Language=1033
+#AutoIt3Wrapper_Res_requestedExecutionLevel=asInvoker
+#AutoIt3Wrapper_Run_Tidy=y
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 ;License Information------------------------------------
-;Copyright (C) 2010 Andrew Calcutt
+;Copyright (C) 2026 Andrew Calcutt
 ;This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; Version 2 of the License.
 ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 ;You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 ;--------------------------------------------------------
-;AutoIt Version: v3.3.6.1
+;AutoIt Version: v3.3.18.0
 $Script_Author = 'Andrew Calcutt'
 $Script_Start_Date = '07/19/2008'
 $Script_Name = 'SayText'
-$Script_Website = 'http://www.Vistumbler.net'
+$Script_Website = 'http://www.vistumbler.net'
 $Script_Function = 'Uses Sound files, Microsoft SAPI, or MIDI sounds to say a number from 0 - 100'
-$version = 'v3'
-$last_modified = '2010/06/24'
+$version = 'v4.0.0'
+$last_modified = '2026/02/09'
 ;--------------------------------------------------------
 #include <String.au3>
 #include "UDFs\Midiudf.au3"
@@ -71,7 +76,7 @@ If $say <> '' Or $midistring <> '' Then
 		_PlayMidi($Instrument, $say, $MidiWaitTime)
 	ElseIf $type = 4 Then
 		$midistringarray = StringSplit($midistring, '-')
-		For $l = 1 to $midistringarray[0]
+		For $l = 1 To $midistringarray[0]
 			_PlayMidi($Instrument, $midistringarray[$l], $MidiWaitTime)
 		Next
 	EndIf
@@ -84,8 +89,8 @@ Func _TalkOBJ($s_text)
 	$o_speech = ""
 EndFunc   ;==>_TalkOBJ
 
-Func _SpeakSignal($SpeakNum);Says then signal given
-	$SpeakSplit = StringSplit(_StringReverse($SpeakNum), '')
+Func _SpeakSignal($SpeakNum) ;Says then signal given
+	$SpeakSplit = StringSplit(StringReverse($SpeakNum), '')
 	$OnesPlayed = 0
 	If $SpeakSplit[0] = 3 Then
 		If $SpeakSplit[3] = 1 Then SoundPlay($SoundDir & 'one.wav', 1)
@@ -168,7 +173,7 @@ Func _PlayMidi($Instrument = 0, $Signal = 0, $Sleeptime = 500)
 	If $Signal > 0 And $Signal < 10 Then
 		$PitchOn = $A0_ON
 		$PitchOff = $A0_OFF
-	ElseIf $Signal >= 10 And $Signal < 15  Then
+	ElseIf $Signal >= 10 And $Signal < 15 Then
 		$PitchOn = $A0SHARP_ON
 		$PitchOff = $A0SHARP_OFF
 	ElseIf $Signal = 15 Then
@@ -431,11 +436,11 @@ Func _PlayMidi($Instrument = 0, $Signal = 0, $Sleeptime = 500)
 		$PitchOff = $C8_OFF
 	EndIf
 	If $PitchOn <> '' And $PitchOff <> '' Then
-		$open = _MidiOutOpen ()
-		_MidiOutShortMsg ($open, 256 * $Instrument + 192) ;Select Instrument
-		_MidiOutShortMsg ($open, $PitchOn);Start playing Instrument
+		$open = _MidiOutOpen()
+		_MidiOutShortMsg($open, 256 * $Instrument + 192)  ;Select Instrument
+		_MidiOutShortMsg($open, $PitchOn) ;Start playing Instrument
 		Sleep($Sleeptime)
-		_MidiOutShortMsg ($open, $PitchOff);Stop playing Instrument
-		_MidiOutClose ($open)
+		_MidiOutShortMsg($open, $PitchOff) ;Stop playing Instrument
+		_MidiOutClose($open)
 	EndIf
-EndFunc
+EndFunc   ;==>_PlayMidi

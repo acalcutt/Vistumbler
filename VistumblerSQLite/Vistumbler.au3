@@ -9181,9 +9181,9 @@ Func _ImportVS1($VS1file)
 		Next
 	EndIf
 	FileClose($vistumblerfile)
-	$query = "DELETE * FROM TempGpsIDMatchTabel"
+	$query = "DELETE FROM TempGpsIDMatchTabel"
 	_SQLite_Exec($DBhndl, $query)
-	_DropTable($VistumblerDB, 'TempGpsIDMatchTabel', $DBhndl)
+	_SQLite_Exec($DBhndl, "DROP TABLE IF EXISTS TempGpsIDMatchTabel")
 EndFunc   ;==>_ImportVS1
 
 Func _ImportCSV($CSVfile)
@@ -14442,7 +14442,7 @@ Func _ExportKismetDB_Common($iFilter)
 		$sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP  LIMIT 1"
 	EndIf
 
-	Local Local $aAPs, $aAPs_iRows, $aAPs_iColumns, $aAPs_iRval
+	Local $aAPs, $aAPs_iRows, $aAPs_iColumns, $aAPs_iRval
 	$aAPs_iRval = _SQLite_GetTable2d($DBhndl, $sQuery, $aAPs, $aAPs_iRows, $aAPs_iColumns)
 	Local $iCount = UBound($aAPs) - 1
 	Local $iPacketID = 1
@@ -14522,7 +14522,7 @@ Func _ExportKismetDB_Common($iFilter)
 			Local $iHighGpsID = $aAPs[$gi][16]
 			If $iHighGpsID <> 0 Then
 				Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID
-				Local Local $aGps, $aGps_iRows, $aGps_iColumns, $aGps_iRval
+				Local $aGps, $aGps_iRows, $aGps_iColumns, $aGps_iRval
 	$aGps_iRval = _SQLite_GetTable2d($DBhndl, $sGpsQuery, $aGps, $aGps_iRows, $aGps_iColumns)
 				If UBound($aGps) > 1 Then
 					Local $fThisLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
@@ -14539,7 +14539,7 @@ Func _ExportKismetDB_Common($iFilter)
 
 			; Export History as Packets for this AP
 			Local $sHistQuery = "SELECT Hist.GpsID, Hist.Signal, Hist.RSSI, Hist.Date1, Hist.Time1, GPS.Latitude, GPS.Longitude, GPS.Alt FROM Hist LEFT JOIN GPS ON Hist.GpsID = GPS.GpsID WHERE Hist.ApID=" & $aGrpApIDs[$g]
-			Local Local $aHist, $aHist_iRows, $aHist_iColumns, $aHist_iRval
+			Local $aHist, $aHist_iRows, $aHist_iColumns, $aHist_iRval
 	$aHist_iRval = _SQLite_GetTable2d($DBhndl, $sHistQuery, $aHist, $aHist_iRows, $aHist_iColumns)
 
 			If IsArray($aHist) Then
@@ -14589,7 +14589,7 @@ Func _ExportKismetDB_Common($iFilter)
 			Local $iHighGpsID0 = $aAPs[$iGroupStart][16]
 			If $iHighGpsID0 <> 0 Then
 				Local $sGQ = "SELECT Date1, Time1 FROM GPS WHERE GpsID=" & $iHighGpsID0
-				Local Local $aGT, $aGT_iRows, $aGT_iColumns, $aGT_iRval
+				Local $aGT, $aGT_iRows, $aGT_iColumns, $aGT_iRval
 	$aGT_iRval = _SQLite_GetTable2d($DBhndl, $sGQ, $aGT, $aGT_iRows, $aGT_iColumns)
 				If UBound($aGT) > 1 Then
 					Local $sGD = StringReplace($aGT[1][1], "-", "/")
@@ -14634,7 +14634,7 @@ Func _ExportNetXML_Common($iFilter)
         $sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
     EndIf
     
-    Local Local $aAPs, $aAPs_iRows, $aAPs_iColumns, $aAPs_iRval
+	    Local $aAPs, $aAPs_iRows, $aAPs_iColumns, $aAPs_iRval
 	$aAPs_iRval = _SQLite_GetTable2d($DBhndl, $sQuery, $aAPs, $aAPs_iRows, $aAPs_iColumns)
     Local $iCount = UBound($aAPs) - 1
     
@@ -14686,7 +14686,7 @@ Func _ExportNetXML_Common($iFilter)
                 Local $iGpsID = $aHistGPS[1][0]
                 If $iGpsID <> 0 Then
                     Local $sGpsQuery = "SELECT Latitude, Longitude, Alt, SpeedInMPH FROM GPS WHERE GpsID=" & $iGpsID
-                    Local Local $aGps, $aGps_iRows, $aGps_iColumns, $aGps_iRval
+					Local $aGps, $aGps_iRows, $aGps_iColumns, $aGps_iRval
 	$aGps_iRval = _SQLite_GetTable2d($DBhndl, $sGpsQuery, $aGps, $aGps_iRows, $aGps_iColumns)
                     if UBound($aGps) > 1 Then
                         $fLat = _Format_GPS_DMM_to_DDD($aGps[1][1])
@@ -14745,7 +14745,7 @@ Func _ExportNS1Binary($Filter = 0)
 	Else
 		$query = "SELECT ApID, SSID, BSSID, Chan, AUTH, ENCR, NETTYPE, LABEL, HighGpsHistID FROM AP"
 	EndIf
-	Local Local $aAPsDB, $aAPsDB_iRows, $aAPsDB_iColumns, $aAPsDB_iRval
+	Local $aAPsDB, $aAPsDB_iRows, $aAPsDB_iColumns, $aAPsDB_iRval
 	$aAPsDB_iRval = _SQLite_GetTable2d($DBhndl, $query, $aAPsDB, $aAPsDB_iRows, $aAPsDB_iColumns)
 	
 	Local $iApCount = 0
@@ -14828,7 +14828,7 @@ Func _ExportNS1Binary($Filter = 0)
 
 		; Get History for data points
 		$query = "SELECT Signal, RSSI, Date1, Time1, GpsID, HistID FROM Hist WHERE ApID=" & $ApID & "  LIMIT 1"
-		Local Local $aHistDB, $aHistDB_iRows, $aHistDB_iColumns, $aHistDB_iRval
+		Local $aHistDB, $aHistDB_iRows, $aHistDB_iColumns, $aHistDB_iRval
 	$aHistDB_iRval = _SQLite_GetTable2d($DBhndl, $query, $aHistDB, $aHistDB_iRows, $aHistDB_iColumns)
 		
 		Local $iHistCount = 0
@@ -14875,7 +14875,7 @@ Func _ExportNS1Binary($Filter = 0)
 				If $GpsID > 0 Then
 					$aDP[3] = 1 ; GPS
 					$query = "SELECT Latitude, Longitude, Alt, SpeedInMPH, TrackAngle FROM GPS WHERE GpsID=" & $GpsID
-					Local Local $aGPSDB, $aGPSDB_iRows, $aGPSDB_iColumns, $aGPSDB_iRval
+					Local $aGPSDB, $aGPSDB_iRows, $aGPSDB_iColumns, $aGPSDB_iRval
 	$aGPSDB_iRval = _SQLite_GetTable2d($DBhndl, $query, $aGPSDB, $aGPSDB_iRows, $aGPSDB_iColumns)
 					
 					If IsArray($aGPSDB) And UBound($aGPSDB) >= 2 Then
@@ -15035,7 +15035,7 @@ Func _ImportNS1Binary($NS1file)
 		
 		Local $LoadGID = 0
 		Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "' And Date1 = '" & $sDate & "' And Time1 = '" & $sTime & "'"
-		Local Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
+		Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
 	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
 		Local $FoundGpsMatch = $GpsMatchArray_iRows
 		
@@ -15282,7 +15282,7 @@ Func _ImportKismetDB($sFile)
             $sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
         EndIf
         $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
-        Local Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
+	        Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
 	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
         Local $FoundGpsMatch = $GpsMatchArray_iRows
         If $FoundGpsMatch = 0 Then
@@ -15504,7 +15504,7 @@ Func _ImportKismetDB($sFile)
                 If $iCreatedAPs > 1 Then
                     ; Query the HIST records we just created for the first AP
                     Local $sHistDupQuery = "SELECT GpsID, Signal, RSSI, Date1, Time1 FROM HIST WHERE ApID=" & $aNewApIDs[0] & "  LIMIT 1"
-                    Local Local $aHistDup, $aHistDup_iRows, $aHistDup_iColumns, $aHistDup_iRval
+					Local $aHistDup, $aHistDup_iRows, $aHistDup_iColumns, $aHistDup_iRval
 	$aHistDup_iRval = _SQLite_GetTable2d($DBhndl, $sHistDupQuery, $aHistDup, $aHistDup_iRows, $aHistDup_iColumns)
                     If IsArray($aHistDup) Then
                         Local $iHistDupCount = UBound($aHistDup) - 1
@@ -15520,7 +15520,7 @@ Func _ImportKismetDB($sFile)
                             If $iDupFirstHist <> 0 Then
                                 ; Compute HighSignal, HighRSSI, HighGpsHistId from duplicated HIST records
                                 Local $sDupMaxQ = "SELECT MAX(Signal), MAX(RSSI) FROM HIST WHERE ApID=" & $aNewApIDs[$ea]
-                                Local Local $aDupMax, $aDupMax_iRows, $aDupMax_iColumns, $aDupMax_iRval
+								Local $aDupMax, $aDupMax_iRows, $aDupMax_iColumns, $aDupMax_iRval
 	$aDupMax_iRval = _SQLite_GetTable2d($DBhndl, $sDupMaxQ, $aDupMax, $aDupMax_iRows, $aDupMax_iColumns)
                                 Local $iDupHighSig = 0
                                 Local $iDupHighRSSI = -100
@@ -15530,7 +15530,7 @@ Func _ImportKismetDB($sFile)
                                 EndIf
                                 Local $iDupHighGps = 0
                                 Local $sDupGpsQ = "SELECT HIST.HistID FROM HIST INNER JOIN GPS ON HIST.GpsID = GPS.GPSID WHERE HIST.ApID=" & $aNewApIDs[$ea] & " AND GPS.Latitude <> 'N 0000.0000' AND GPS.Longitude <> 'E 0000.0000'  LIMIT 1"
-                                Local Local $aDupGps, $aDupGps_iRows, $aDupGps_iColumns, $aDupGps_iRval
+								Local $aDupGps, $aDupGps_iRows, $aDupGps_iColumns, $aDupGps_iRval
 	$aDupGps_iRval = _SQLite_GetTable2d($DBhndl, $sDupGpsQ, $aDupGps, $aDupGps_iRows, $aDupGps_iColumns)
                                 If IsArray($aDupGps) And (UBound($aDupGps) - 1) > 0 Then $iDupHighGps = $aDupGps[1][1]
                                 
@@ -15672,7 +15672,7 @@ Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
         EndIf
         
         Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sPktLatDMM & "' And Longitude = '" & $sPktLonDMM & "'"
-        Local Local $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns, $aPktGpsMatch_iRval
+	        Local $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns, $aPktGpsMatch_iRval
 	$aPktGpsMatch_iRval = _SQLite_GetTable2d($DBhndl, $query, $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns)
         Local $iPktGpsFound = UBound($aPktGpsMatch) - 1
         
@@ -15697,7 +15697,7 @@ Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
     If $iFirstPktHistID <> 0 Then
         ; Get the highest signal and RSSI from all HIST entries for this AP
         Local $query = "SELECT MAX(Signal), MAX(RSSI) FROM HIST WHERE ApID=" & $iApID
-        Local Local $aMaxSig, $aMaxSig_iRows, $aMaxSig_iColumns, $aMaxSig_iRval
+	        Local $aMaxSig, $aMaxSig_iRows, $aMaxSig_iColumns, $aMaxSig_iRval
 	$aMaxSig_iRval = _SQLite_GetTable2d($DBhndl, $query, $aMaxSig, $aMaxSig_iRows, $aMaxSig_iColumns)
         Local $iHighSignal = 0
         Local $iHighRSSI = -100
@@ -15709,7 +15709,7 @@ Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
         ; Find the HighGpsHistId � the HIST entry with the strongest RSSI that has valid GPS
         Local $iHighGpsHistId = 0
         $query = "SELECT HIST.HistID FROM HIST INNER JOIN GPS ON HIST.GpsID = GPS.GPSID WHERE HIST.ApID=" & $iApID & " AND GPS.Latitude <> 'N 0000.0000' AND GPS.Longitude <> 'E 0000.0000'  LIMIT 1"
-        Local Local $aHighGps, $aHighGps_iRows, $aHighGps_iColumns, $aHighGps_iRval
+	        Local $aHighGps, $aHighGps_iRows, $aHighGps_iColumns, $aHighGps_iRval
 	$aHighGps_iRval = _SQLite_GetTable2d($DBhndl, $query, $aHighGps, $aHighGps_iRows, $aHighGps_iColumns)
         If IsArray($aHighGps) And (UBound($aHighGps) - 1) > 0 Then
             $iHighGpsHistId = $aHighGps[1][1]
@@ -15879,7 +15879,7 @@ Local $qRes, $qRes_iRows, $qRes_iColumns, $qRes_iRval
         ; Deduplication Logic: Check for exact match on Lat/Lon/Date/Time
         ; Start broad (Lat/Lon) to avoid SQL Date format issues
             $query = "SELECT GPSID, Date1, Time1 FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
-            Local Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
+	            Local $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns, $GpsMatchArray_iRval
 	$GpsMatchArray_iRval = _SQLite_GetTable2d($DBhndl, $query, $GpsMatchArray, $GpsMatchArray_iRows, $GpsMatchArray_iColumns)
             Local $FoundGpsMatch = 0
             $LoadGID = 0
