@@ -14296,7 +14296,7 @@ Func _ExportKismetDB_Common($iFilter)
 					Local $sPacketBlob = _KismetDB_GenerateRadiotapBeacon($sGroupBSSID, $aGrpSSIDs[$g], $aGrpChannels[$g], $aGrpFreqs[$g] / 1000, $iSig, $aGrpBasicRates[$g] & "|" & $aGrpOtherRates[$g], $aGrpPrivacy[$g], $aGrpAuth[$g], $aGrpEncr[$g])
 					Local $iPacketLen = StringLen($sPacketBlob) / 2
 
-					_KismetDB_AddPacket($hDB, $hTs, 0, "IEEE802.11", $sGroupBSSID, "FF:FF:FF:FF:FF:FF", $sGroupBSSID, $aGrpFreqs[$g], $hLat, $hLon, $iSig, $sDatasourceUUID, 127, 0, $iPacketID, $sPacketBlob, $iPacketLen)
+					_KismetDB_AddPacket($hDB, $hTs, 0, "IEEE802.11", $sGroupBSSID, "FF:FF:FF:FF:FF:FF", $sGroupBSSID, $aGrpFreqs[$g], $hLat, $hLon, $iSig, $sDatasourceUUID, 127, 0, $iPacketID, $sPacketBlob, $iPacketLen, "VISTUMBLER_SIG=" & $hSignal)
 					$iPacketID += 1
 				Next
 			EndIf
@@ -15190,7 +15190,21 @@ Func _ImportKismetDB($sFile)
                                 $iDupLastHist = $HISTID
                             Next
                             If $iDupFirstHist <> 0 Then
-                                $query = "UPDATE AP SET FirstHistId=" & $iDupFirstHist & ", LastHistId=" & $iDupLastHist & " WHERE ApId=" & $aNewApIDs[$ea]
+                                ; Compute HighSignal, HighRSSI, HighGpsHistId from duplicated HIST records
+                                Local $sDupMaxQ = "SELECT MAX(Signal), MAX(RSSI) FROM HIST WHERE ApID=" & $aNewApIDs[$ea]
+                                Local $aDupMax = _RecordSearch($VistumblerDB, $sDupMaxQ, $DB_OBJ)
+                                Local $iDupHighSig = 0
+                                Local $iDupHighRSSI = -100
+                                If IsArray($aDupMax) And (UBound($aDupMax) - 1) > 0 Then
+                                    $iDupHighSig = Round(Number($aDupMax[1][1]))
+                                    $iDupHighRSSI = Round(Number($aDupMax[1][2]))
+                                EndIf
+                                Local $iDupHighGps = 0
+                                Local $sDupGpsQ = "SELECT TOP 1 HIST.HistID FROM HIST INNER JOIN GPS ON HIST.GpsID = GPS.GPSID WHERE HIST.ApID=" & $aNewApIDs[$ea] & " AND GPS.Latitude <> 'N 0000.0000' AND GPS.Longitude <> 'E 0000.0000' ORDER BY HIST.RSSI DESC"
+                                Local $aDupGps = _RecordSearch($VistumblerDB, $sDupGpsQ, $DB_OBJ)
+                                If IsArray($aDupGps) And (UBound($aDupGps) - 1) > 0 Then $iDupHighGps = $aDupGps[1][1]
+                                
+                                $query = "UPDATE AP SET FirstHistId=" & $iDupFirstHist & ", LastHistId=" & $iDupLastHist & ", HighSignal=" & $iDupHighSig & ", HighRSSI=" & $iDupHighRSSI & ", HighGpsHistId=" & $iDupHighGps & " WHERE ApId=" & $aNewApIDs[$ea]
                                 _ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
                             EndIf
                         Next
@@ -15261,7 +15275,7 @@ EndFunc
 
 ; Helper: Import packets from KismetDB for a given BSSID and associate with an AP
 Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
-    Local $sPktQuery = "SELECT ts_sec, signal, lat, lon FROM packets WHERE sourcemac='" & $sBSSID & "' ORDER BY ts_sec ASC"
+    Local $sPktQuery = "SELECT ts_sec, signal, lat, lon, tags FROM packets WHERE sourcemac='" & $sBSSID & "' ORDER BY ts_sec ASC"
     Local $aPkts, $iPktRows, $iPktCols
     _SQLite_GetTable2d($hDB, $sPktQuery, $aPkts, $iPktRows, $iPktCols)
     
@@ -15273,11 +15287,33 @@ Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
         Local $iPktSig = Number($aPkts[$p][1])
         Local $fPktLat = Number($aPkts[$p][2])
         Local $fPktLon = Number($aPkts[$p][3])
+        Local $sPktTags = $aPkts[$p][4]
         
-        ; Convert signal
+        ; Convert signal: use original signal% from tags if available, otherwise convert from RSSI
+        ; Kismet stores tags as space-separated labels; we look for VISTUMBLER_SIG=N
         Local $iPktSigPercent = 0
         Local $iPktRSSI = -100
-        If $iPktSig < 0 Then
+        Local $iTagSig = 0
+        
+        If $sPktTags <> "" Then
+            Local $aTagParts = StringSplit($sPktTags, " ")
+            For $t = 1 To $aTagParts[0]
+                If StringLeft($aTagParts[$t], 15) = "VISTUMBLER_SIG=" Then
+                    $iTagSig = Number(StringMid($aTagParts[$t], 16))
+                    ExitLoop
+                EndIf
+            Next
+        EndIf
+        
+        If $iTagSig > 0 Then
+            ; Tags contains original signal percentage from Vistumbler export (VISTUMBLER_SIG=N)
+            $iPktSigPercent = $iTagSig
+            If $iPktSig < 0 Then
+                $iPktRSSI = $iPktSig
+            Else
+                $iPktRSSI = _SignalPercentToDb($iPktSigPercent)
+            EndIf
+        ElseIf $iPktSig < 0 Then
             $iPktRSSI = $iPktSig
             $iPktSigPercent = _DbToSignalPercent($iPktRSSI)
         ElseIf $iPktSig > 0 Then
@@ -15326,9 +15362,27 @@ Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
         $iLastPktHistID = $HISTID
     Next
     
-    ; Update AP's FirstHistID and LastHistID
+    ; Update AP's FirstHistID, LastHistID, HighSignal, HighRSSI, and HighGpsHistId from HIST data
     If $iFirstPktHistID <> 0 Then
-        Local $query = "UPDATE AP SET FirstHistId=" & $iFirstPktHistID & ", LastHistId=" & $iLastPktHistID & " WHERE ApId=" & $iApID
+        ; Get the highest signal and RSSI from all HIST entries for this AP
+        Local $query = "SELECT MAX(Signal), MAX(RSSI) FROM HIST WHERE ApID=" & $iApID
+        Local $aMaxSig = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+        Local $iHighSignal = 0
+        Local $iHighRSSI = -100
+        If IsArray($aMaxSig) And (UBound($aMaxSig) - 1) > 0 Then
+            $iHighSignal = Round(Number($aMaxSig[1][1]))
+            $iHighRSSI = Round(Number($aMaxSig[1][2]))
+        EndIf
+        
+        ; Find the HighGpsHistId — the HIST entry with the strongest RSSI that has valid GPS
+        Local $iHighGpsHistId = 0
+        $query = "SELECT TOP 1 HIST.HistID FROM HIST INNER JOIN GPS ON HIST.GpsID = GPS.GPSID WHERE HIST.ApID=" & $iApID & " AND GPS.Latitude <> 'N 0000.0000' AND GPS.Longitude <> 'E 0000.0000' ORDER BY HIST.RSSI DESC"
+        Local $aHighGps = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
+        If IsArray($aHighGps) And (UBound($aHighGps) - 1) > 0 Then
+            $iHighGpsHistId = $aHighGps[1][1]
+        EndIf
+        
+        $query = "UPDATE AP SET FirstHistId=" & $iFirstPktHistID & ", LastHistId=" & $iLastPktHistID & ", HighSignal=" & $iHighSignal & ", HighRSSI=" & $iHighRSSI & ", HighGpsHistId=" & $iHighGpsHistId & " WHERE ApId=" & $iApID
         _ExecuteMDB($VistumblerDB, $DB_OBJ, $query)
     EndIf
 EndFunc

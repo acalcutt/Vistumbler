@@ -51,7 +51,7 @@ Func _KismetDB_Create($sFilePath)
 
     ; SNAPSHOTS table
     _SQLite_Exec($hDB, "CREATE TABLE snapshots (ts_sec INTEGER, ts_usec INTEGER, lat REAL, lon REAL, snaptype TEXT, json TEXT);")
-    
+
     _SQLite_Exec($hDB, "COMMIT;")
 
     Return $hDB
@@ -91,7 +91,7 @@ EndFunc
 ; Function Name:    _KismetDB_AddPacket
 ; Description:      Adds a packet to the KismetDB
 ; ===============================================================================================================================
-Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac, $transmac, $frequency, $lat, $lon, $signal, $datasource, $dlt, $error, $packetid, $packet_data, $packet_len)
+Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac, $transmac, $frequency, $lat, $lon, $signal, $datasource, $dlt, $error, $packetid, $packet_data, $packet_len, $tags = "")
     ; $packet_data should be a hex string like "0A0B0C..."
     Local $sBlob = "X''"
     If $packet_data <> "" Then
@@ -118,7 +118,7 @@ Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac
         $dlt & ", " & _
         $sBlob & ", " & _ ; Packet BLOB
         $error & ", " & _
-        "''" & ", " & _ ; tags
+        _SQLite_Escape($tags) & ", " & _ ; tags (used by Vistumbler for original signal%)
         0 & ", " & _ ; datarate
         0 & ", " & _ ; hash
         $packetid & ", " & _ 
