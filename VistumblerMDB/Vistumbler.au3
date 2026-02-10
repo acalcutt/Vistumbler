@@ -14174,6 +14174,14 @@ Func _ExportKismetDB_Common($iFilter)
 	EndIf
 
 	Local $aAPs = _RecordSearch($VistumblerDB, $sQuery, $DB_OBJ)
+	
+	; Validate that _RecordSearch returned an array
+	If @error Or Not IsArray($aAPs) Then
+		GUICtrlSetData($msgdisplay, "No APs found to export")
+		_KismetDB_Close($hDB)
+		Return SetError(1, 0, 0)
+	EndIf
+	
 	Local $iCount = UBound($aAPs) - 1
 	Local $iPacketID = 1
 	Local $sDatasourceUUID = "00000000-0000-0000-0000-000000000000"
@@ -14905,7 +14913,7 @@ Func _ImportKismetAuto($sFile)
     If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportKismetAuto()')
     
     If StringLower(StringRight($sFile, 7)) = ".kismet" Then
-    _ImportKismetDB($sFile)
+        _ImportKismetDB($sFile)
     ElseIf StringLower(StringRight($sFile, 7)) = ".netxml" Then
         _ImportNetXML($sFile)
     Else
@@ -15535,12 +15543,12 @@ Func _ImportNetXML($sFile)
              EndIf
         Else
             ; Fallback to standard detection
-            if StringInStr($sEncryption, "WEP") Then 
+            If StringInStr($sEncryption, "WEP") Then
                 $sEncr = "WEP"
             ElseIf StringInStr($sEncryption, "WPA") Then
                 $sAuth = "WPA"
                 $sEncr = "TKIP"
-                if StringInStr($sEncryption, "AES") Or StringInStr($sEncryption, "CCM") Then $sEncr = "CCMP"
+                If StringInStr($sEncryption, "AES") Or StringInStr($sEncryption, "CCM") Then $sEncr = "CCMP"
             EndIf
         EndIf
         

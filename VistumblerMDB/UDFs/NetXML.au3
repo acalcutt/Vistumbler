@@ -137,22 +137,7 @@ Func _NetXML_GetFreqFromChannel($iChannel)
         Return 5000 + ($iChannel * 5)
     EndIf
     
-    ; 6 GHz (HE/EHT)
-    If $iChannel >= 1 And $iChannel <= 233 Then
-         ; If it falls in 6GHz range ? 
-         ; Note: Channel 1 overlaps with 2.4GHz index if not careful. 
-         ; But Vistumbler typically inputs standard channel numbers. 
-         ; 6GHz starting Freq 5950 + 5*n
-         If $iChannel = 1 Or $iChannel = 5 Or $iChannel = 9 Then
-              ; This is ambiguous with 2.4GHz. 
-              ; Vistumbler usually tracks band. But here we only have channel.
-              ; Optimization: Assume it is 2.4GHz if < 14 unless explicitly indicated (which we can't tell).
-              ; So only return 6GHz if > 177 which is rare but possible? 
-              ; Actually standard 6GHz channels align with 5GHz numbering continuation conceptually or reuse low numbers.
-              ; 6GHz op class global operating classes.
-              ; For now, just handle 2.4 and 5 common.
-         EndIf
-    EndIf
+    ; Note: 6 GHz channels are currently not mapped; return 0 for unsupported channels.
     
     Return 0
 EndFunc
@@ -188,13 +173,22 @@ Func _NetXML_FormatDate($sDT)
     Local $sD = $aD[3]
     
     ; Day of Week (1=Sun)
-    Local $iDoW = _DateToDayOfWeek($sY, $sM, $sD) 
+    Local $iDoW = _DateToDayOfWeek($sY, $sM, $sD)
+    
+    ; Validate day-of-week index (expected range: 1-7)
+    If $iDoW < 1 Or $iDoW > 7 Then Return $sDT
+    
     Local $aDays = StringSplit("Sun,Mon,Tue,Wed,Thu,Fri,Sat", ",")
     Local $sDayName = $aDays[$iDoW]
     
     ; Month Name
     Local $aMons = StringSplit("Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec", ",")
-    Local $sMonName = $aMons[Number($sM)]
+    Local $iM = Number($sM)
+    
+    ; Validate month index (expected range: 1-12)
+    If $iM < 1 Or $iM > 12 Then Return $sDT
+    
+    Local $sMonName = $aMons[$iM]
     
     ; Output: Mon Dec 12 13:17:58 2016
     Return $sDayName & " " & $sMonName & " " & $sD & " " & $sTimePart & " " & $sY

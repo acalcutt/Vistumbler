@@ -89,10 +89,19 @@ EndFunc
 ; ===============================================================================================================================
 Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac, $transmac, $frequency, $lat, $lon, $signal, $datasource, $dlt, $error, $packetid, $packet_data, $packet_len, $tags = "")
     ; $packet_data should be a hex string like "0A0B0C..."
-    Local $sBlob = "X''"
+    Local $sSanitizedPacketData = ""
+    
     If $packet_data <> "" Then
-        $sBlob = "X'" & $packet_data & "'"
+        ; Ensure packet_data contains only valid hexadecimal characters to prevent SQL injection
+        If StringRegExp($packet_data, "^[0-9A-Fa-f]+$") = 0 Then
+            ; Invalid hex string: do not execute the SQL statement
+            SetError(1)
+            Return
+        EndIf
+        $sSanitizedPacketData = StringUpper($packet_data)
     EndIf
+    
+    Local $sBlob = "X'" & $sSanitizedPacketData & "'"
 
     Local $sQuery = "INSERT INTO packets (ts_sec, ts_usec, phyname, sourcemac, destmac, transmac, frequency, devkey, lat, lon, alt, speed, heading, packet_len, signal, datasource, dlt, packet, error, tags, datarate, hash, packetid, packet_full_len) VALUES (" & _
         $ts_sec & ", " & _
@@ -431,6 +440,10 @@ EndFunc
 Func _KismetDB_HexSwap($sHex)
     Local $sRet = ""
     Local $iLen = StringLen($sHex)
+    
+    ; Hex strings representing bytes must have even length
+    If Mod($iLen, 2) <> 0 Then Return $sHex
+    
     For $i = $iLen - 1 To 1 Step -2
         $sRet &= StringMid($sHex, $i, 2)
     Next
