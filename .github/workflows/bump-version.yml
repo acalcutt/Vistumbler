@@ -99,15 +99,6 @@ jobs:
           let pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           let newVersionFull = pkg.version; // may include prerelease
 
-          // Force pre-releases to start at .1 instead of .0 to avoid FileVersion collision (x.y.z.0)
-          // e.g. 10.9.5-pre.0 -> 10.9.5-pre.1
-          if (newVersionFull.includes('-') && newVersionFull.match(/\.0$/)) {
-             console.log('Detected pre-release ending in .0, bumping to .1');
-             newVersionFull = newVersionFull.replace(/\.0$/, '.1');
-             pkg.version = newVersionFull;
-             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-          }
-
           // numeric portion used for AU3 $version and fileversion
           const numeric = newVersionFull.split('-')[0];
           const parts = numeric.split('.').map(Number);
