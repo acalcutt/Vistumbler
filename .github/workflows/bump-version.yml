@@ -342,6 +342,9 @@ jobs:
            
            git commit -m "Bump version to v$ver and update binaries"
            
+           # Push this initial commit immediately so the Action can see it / fetch it
+           git push origin $branch --force
+           
            $hash = git log -n 1 --format=%H
            "commit_hash=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
            Write-Host "Bump Commit Hash: $hash"
@@ -391,38 +394,20 @@ jobs:
               Write-Host "No relevant files found in versions.ini to update."
            }
 
-      - name: Commit versions.ini and Push
-        shell: pwsh
-        env:
-           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-           $ver = "${{ steps.bump.outputs.version }}"
-           $branch = "release-v$ver"
-           
-           # Commit versions.ini
-           $toAdd = @()
-           if (Test-Path "VistumblerMDB/versions.ini") { $toAdd += "VistumblerMDB/versions.ini" }
-           
-           if ($toAdd.Count -gt 0) {
-              git add $toAdd
-              # Only commit if we actually added something grounded
-              if (git status --porcelain | Select-String "VistumblerMDB/") {
-                 git commit -m "Update versions.ini"
-              }
-           }
-           
-           git push origin $branch --force
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Update versions.ini"
+          branch: "release-v${{ steps.bump.outputs.version }}"
+          base: main
+          title: "Bump Vistumbler version to v${{ steps.bump.outputs.version }}"
+          body: |
+            Bump version, compile binaries, and update versions.ini.
 
-           # Create PR with robust string handling
-           $body = @"
-           Bump version, compile binaries, and update versions.ini.
-
-           - Updated #AutoIt3Wrapper_Res_Fileversion
-           - Updated `$version
-           "@
-           
-           try {
-             gh pr create --title "Bump Vistumbler version to v$ver" --body $body --base main --head $branch
-           } catch {
-             Write-Host "PR creation failed or already exists."
-           }
+            - Updated #AutoIt3Wrapper_Res_Fileversion
+            - Updated `$version`
+          signoff: false
+          delete-branch: false
+          signoff: false
+          delete-branch: false
