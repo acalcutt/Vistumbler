@@ -391,9 +391,15 @@ jobs:
                  
                  # Check if this file was changed
                  if ($changedFiles -contains $fullPath) {
-                    $newLines += "$fileKey=$hash"
-                    $updatedCount++
-                    Write-Host "Updated $fileKey to $hash"
+                    # Skip vistumbler_updater from automatic version bump updates to avoid constant re-downloading
+                    if ($fileKeyNorm -match 'vistumbler_updater\.(au3|exe)') {
+                        Write-Host "Skipping update for $fileKey (excluded from version bump)"
+                        $newLines += $line
+                    } else {
+                        $newLines += "$fileKey=$hash"
+                        $updatedCount++
+                        Write-Host "Updated $fileKey to $hash"
+                    }
                  } else {
                     $newLines += $line
                  }
