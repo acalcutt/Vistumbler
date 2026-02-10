@@ -189,3 +189,34 @@ Func _StringFormatTime($s_Format, $i_Timestamp = -1, $i_MaxLen = 255)
 		'ptr', $ptr_Time[0])
 	Return $av_StrfTime[1]
 EndFunc
+
+;===============================================================================
+;
+; Function Name:    _StringFormatTimeUTC
+; Description:      Format a UTC timestamp without local timezone conversion
+; Parameter(s):     $s_Format    - strftime format string
+;                   $i_Timestamp - Unix timestamp (UTC epoch seconds)
+;                   $i_MaxLen    - max output length
+; Return Value(s):  Formatted string in UTC
+; Author(s):        Based on _StringFormatTime by Rob Saunders
+;
+;===============================================================================
+Func _StringFormatTimeUTC($s_Format, $i_Timestamp = -1, $i_MaxLen = 255)
+	Local $ptr_Time, $av_StrfTime
+
+	If $i_Timestamp = default OR $i_Timestamp < 0 Then
+		$i_Timestamp = _TimeGetStamp()
+	EndIf
+	$ptr_Time = DllCall('CrtDll.dll', 'ptr:cdecl', 'gmtime', 'long*', $i_Timestamp)
+	If @error Then
+		SetError(99)
+		Return False
+	EndIf
+
+	$av_StrfTime = DllCall('CrtDll.dll', 'int:cdecl', 'strftime', _
+		'str', '', _
+		'int', $i_MaxLen, _
+		'str', $s_Format, _
+		'ptr', $ptr_Time[0])
+	Return $av_StrfTime[1]
+EndFunc
