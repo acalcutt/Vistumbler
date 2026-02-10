@@ -1,0 +1,243 @@
+name: Create bump version PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version bump type.
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+          - prepatch
+          - preminor
+          - premajor
+      preid:
+        description: Prerelease identifier (e.g., 'alpha', 'beta', 'rc'). Only used with prerelease version types.
+        required: false
+        type: string
+        default: 'pre'
+
+jobs:
+  bump-version-pr:
+    name: Bump version PR
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: master
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '18'
+
+      - name: Create bump script
+        run: |
+          cat > bump-version.mjs << 'EOF'
+          import { execSync } from 'child_process';
+          import * as fs from 'fs';
+
+          const args = process.argv.slice(2);
+          const versionType = args[0] || process.env.INPUT_VERSION || 'patch';
+          const preid = args[1] || process.env.INPUT_PREID || '';
+          const au3Path = 'VistumblerMDB/Vistumbler.au3';
+          const changelogPath = 'VistumblerMDB/CHANGELOG.md';
+
+          if (!fs.existsSync(au3Path)) {
+            console.error(`${au3Path} not found`);
+            process.exit(2);
+          }
+
+          let content = fs.readFileSync(au3Path, 'utf8');
+
+          // Extract existing semantic version (major.minor.patch) from $version or fileversion
+          let currentVersion = null;
+          const vMatch = content.match(/\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'/);
+          if (vMatch) { currentVersion = vMatch[1]; }
+          if (!currentVersion) {
+            const fMatch = content.match(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)/);
+            if (fMatch) {
+              const p = fMatch[1].split('.');
+              currentVersion = p.slice(0,3).join('.') || '0.0.0';
+            }
+          }
+          if (!currentVersion) { currentVersion = '0.0.0'; }
+
+          // Create temporary package.json to leverage npm version handling
+          const tmpPkg = { name: 'vistumbler-bump-temp', version: currentVersion };
+          fs.writeFileSync('package.json', JSON.stringify(tmpPkg, null, 2));
+
+          // Build npm version command
+          let versionCmd = `npm version --commit-hooks false --git-tag-version false ${versionType}`;
+          if (preid && preid.trim() !== '') { versionCmd += ` --preid=${preid}`; }
+
+          console.log('Running:', versionCmd);
+          execSync(versionCmd, { stdio: 'inherit' });
+
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          const newVersionFull = pkg.version; // may include prerelease
+
+          // numeric portion used for AU3 $version and fileversion
+          const numeric = newVersionFull.split('-')[0];
+          const parts = numeric.split('.');
+          while (parts.length < 4) parts.push('0');
+          const fileVer = parts.slice(0,4).join('.');
+
+          const today = new Date();
+          const yyyy = today.getUTCFullYear();
+          const mm = String(today.getUTCMonth()+1).padStart(2,'0');
+          const dd = String(today.getUTCDate()).padStart(2,'0');
+          const dateStr = `${yyyy}/${mm}/${dd}`;
+
+          // Replace the AutoIt file lines
+          content = content.replace(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*[0-9\.]+/, `#AutoIt3Wrapper_Res_Fileversion=${fileVer}`);
+          if (content.match(/\$version\s*=\s*'.*?'/)) {
+            // replace all existing $version assignments to avoid duplicates
+            content = content.replace(/\$version\s*=\s*'.*?'/g, `$version = 'v${numeric}'`);
+          } else {
+            // insert near top if missing
+            content = `$version = 'v${numeric}'\n` + content;
+          }
+          if (content.match(/\$last_modified\s*=\s*'.*?'/)) {
+            // replace all occurrences
+            content = content.replace(/\$last_modified\s*=\s*'.*?'/g, `$last_modified = '${dateStr}'`);
+          } else {
+            // best-effort: append if not present
+            content = content + `\n$last_modified = '${dateStr}'\n`;
+          }
+
+          fs.writeFileSync(au3Path, content, 'utf8');
+
+          // Update CHANGELOG.md in VistumblerMDB
+          let changelog = '';
+          if (!fs.existsSync(changelogPath)) {
+            changelog = '# Vistumbler changelog\n\n## master\n\n### ✨ Features and improvements\n- _...Add new stuff here..._\n\n### 🐞 Bug fixes\n- _...Add new stuff here..._\n\n';
+            fs.writeFileSync(changelogPath, changelog, 'utf8');
+          }
+          changelog = fs.readFileSync(changelogPath, 'utf8');
+
+          // Determine commits since last tag
+          let latestTag = '';
+          try {
+            latestTag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
+            console.log('Latest tag:', latestTag);
+          } catch (e) {
+            console.log('No previous tags found, using all commits');
+            latestTag = '';
+          }
+          const commitRange = latestTag ? `${latestTag}..HEAD` : 'HEAD';
+          let commits = '';
+          try { commits = execSync(`git log ${commitRange} --oneline`, { encoding: 'utf8' }); } catch (e) { commits = ''; }
+
+          // Extract PR numbers
+          const prRegex = /#(\d+)/g;
+          const prSet = new Set();
+          let m;
+          while ((m = prRegex.exec(commits)) !== null) { prSet.add(m[1]); }
+          const prNumbers = Array.from(prSet);
+          console.log('Found PR numbers:', prNumbers.join(', '));
+
+          // Find missing PRs not in changelog
+          const missingPrNumbers = prNumbers.filter(p => !changelog.includes(`#${p}`));
+          const missingEntries = [];
+          if (missingPrNumbers.length > 0) {
+            let repoFullName = null;
+            try {
+              const remoteUrl = execSync('git config --get remote.origin.url', { encoding: 'utf8' }).trim();
+              const repoMatch = remoteUrl.match(/github\.com[:/](.+?)(?:\.git)?$/);
+              repoFullName = repoMatch ? repoMatch[1] : null;
+            } catch (e) { repoFullName = null; }
+
+            for (const prNumber of missingPrNumbers) {
+              try {
+                const prJson = execSync(`gh pr view ${prNumber} --json title,author,number`, { encoding: 'utf8' });
+                const pr = JSON.parse(prJson);
+                if (pr.author && pr.author.login && pr.author.login.includes('dependabot')) { continue; }
+                const prUrl = repoFullName ? `https://github.com/${repoFullName}/pull/${pr.number}` : `#${pr.number}`;
+                const entry = `- ${pr.title} ([#${pr.number}](${prUrl})) (by [${pr.author.login}](https://github.com/${pr.author.login}))`;
+                missingEntries.push(entry);
+              } catch (e) {
+                // fallback: add a simple entry
+                missingEntries.push(`- PR #${prNumber}`);
+              }
+            }
+          }
+
+          // Replace first occurrence of '## master' with the new version heading and insert a fresh master template
+          const newVersionHeading = `## ${newVersionFull}`;
+          const masterSection = [
+            '## master',
+            '### ✨ Features and improvements',
+            '- _...Add new stuff here..._',
+            '',
+            '### 🐞 Bug fixes',
+            '- _...Add new stuff here..._',
+            '',
+            ''
+          ].join('\n');
+
+          // Preserve file title (first header block) if present
+          const titleMatch = changelog.match(/^(# .+?\n\n)/s);
+          let title = '';
+          let rest = changelog;
+          if (titleMatch) { title = titleMatch[1]; rest = changelog.slice(title.length); }
+
+          // Replace the first '## master' in rest with the new version heading
+          rest = rest.replace('## master', newVersionHeading);
+
+          // Insert missing entries under Bug fixes if any
+          if (missingEntries.length > 0) {
+            const bugPattern = /### 🐞 Bug fixes\n([\s\S]*?)(?=(\n## |$))/m;
+            const bugMatch = rest.match(bugPattern);
+            if (bugMatch) {
+              const insertPoint = bugMatch.index + bugMatch[0].indexOf('\n', 0) + 1 + bugMatch[1].length;
+              // fallback: append after match
+              rest = rest.replace(bugPattern, `### 🐞 Bug fixes\n${bugMatch[1]}\n${missingEntries.join('\n')}\n`);
+            } else {
+              rest = rest + '\n' + missingEntries.join('\n') + '\n';
+            }
+          }
+
+          const newChangelog = title + masterSection + rest;
+          fs.writeFileSync(changelogPath, newChangelog, 'utf8');
+
+          // cleanup package.json
+          try { fs.unlinkSync('package.json'); } catch (e) {}
+
+          // Commit changes locally on a new branch including changelog
+          const branch = `release-v${newVersionFull}`;
+          execSync(`git config user.name "github-actions[bot]"`);
+          execSync(`git config user.email "41898282+github-actions[bot]@users.noreply.github.com"`);
+          execSync(`git checkout -b ${branch}`);
+          execSync(`git add ${au3Path} ${changelogPath}`);
+          execSync(`git commit -m "Bump version to v${newVersionFull} and update changelog"`);
+
+          // Export output for the workflow
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${newVersionFull}\n`);
+          EOF
+
+      - name: Run bump script
+        id: bump
+        run: |
+          node bump-version.mjs "${{ inputs.version }}" "${{ inputs.preid }}"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          commit-message: Bump Vistumbler version to v${{ steps.bump.outputs.version }}
+          branch: release-v${{ steps.bump.outputs.version }}
+          title: Bump Vistumbler version to v${{ steps.bump.outputs.version }}
+          body: |
+            This PR bumps the version in `VistumblerMDB/Vistumbler.au3` and updates `$last_modified`.
+            
+            - Updated `#AutoIt3Wrapper_Res_Fileversion`
+            - Updated `$version`
+            - Updated `$last_modified`
