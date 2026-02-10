@@ -409,5 +409,3 @@ jobs:
             - Updated `$version`
           signoff: false
           delete-branch: false
-          signoff: false
-          delete-branch: false
