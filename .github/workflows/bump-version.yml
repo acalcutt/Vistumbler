@@ -123,7 +123,7 @@ jobs:
           // Update CHANGELOG.md in VistumblerMDB
           let changelog = '';
           if (!fs.existsSync(changelogPath)) {
-            changelog = '# Vistumbler changelog\n\n## master\n\n### ✨ Features and improvements\n- _...Add new stuff here..._\n\n### 🐞 Bug fixes\n- _...Add new stuff here..._\n\n';
+            changelog = '# Vistumbler changelog\n\n## main\n\n### ✨ Features and improvements\n- _...Add new stuff here..._\n\n### 🐞 Bug fixes\n- _...Add new stuff here..._\n\n';
             fs.writeFileSync(changelogPath, changelog, 'utf8');
           }
           changelog = fs.readFileSync(changelogPath, 'utf8');
@@ -236,6 +236,21 @@ jobs:
           node bump-version.mjs "${{ inputs.version }}" "${{ inputs.preid }}"
           rm bump-version.mjs
 
+      - name: Debug git state before PR
+        run: |
+          echo '--- git status ---'
+          git status --porcelain=2 --branch || true
+          echo '--- current branch ---'
+          git branch --show-current || true
+          echo '--- HEAD ---'
+          git rev-parse --abbrev-ref HEAD || true
+          echo '--- recent commits ---'
+          git log -n 5 --oneline || true
+          echo '--- show HEAD details ---'
+          git show --name-only --pretty=fuller HEAD || true
+          echo '--- ls repo root ---'
+          ls -la || true
+
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
@@ -248,16 +263,3 @@ jobs:
             - Updated `#AutoIt3Wrapper_Res_Fileversion`
             - Updated `$version`
             - Updated `$last_modified`
-
-      - name: Debug git state before PR
-        run: |
-          echo '--- git status ---'
-          git status --porcelain=2 --branch || true
-          echo '--- current branch ---'
-          git branch --show-current || true
-          echo '--- HEAD ---'
-          git rev-parse --abbrev-ref HEAD || true
-          echo '--- recent commits ---'
-          git log -n 5 --oneline || true
-          echo '--- remote ---'
-          git remote -v || true
