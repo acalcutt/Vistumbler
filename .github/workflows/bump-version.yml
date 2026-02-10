@@ -250,11 +250,14 @@ jobs:
 
       - name: Sign compiled EXEs
         shell: pwsh
-        if: secrets.SIG_PFX_B64 != ''
         env:
           SIG_PFX_B64: ${{ secrets.SIG_PFX_B64 }}
           SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
         run: |
+           if ([string]::IsNullOrWhiteSpace($env:SIG_PFX_B64)) {
+               Write-Warning "Skipping signing because SIG_PFX_B64 is empty."
+               exit 0
+           }
            # 1. Decode Cert
            $pfxPath = Join-Path $PWD 'temp_sign_cert.pfx'
            [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:SIG_PFX_B64))
