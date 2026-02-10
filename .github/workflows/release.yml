@@ -92,6 +92,16 @@ jobs:
           $content = $content -replace 'WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler" "DisplayVersion" "[^"]+"', $displayVer
           $content | Set-Content $nsiTarget
           Write-Host "Patched NSI -> $nsiTarget"
+          
+          # Stage files for NSIS
+          # The NSI script looks for "File /r vi_files\*.*" relative to itself
+          $viFiles = Join-Path $PWD 'Installer\vi_files'
+          if (Test-Path $viFiles) { Remove-Item -Recurse -Force $viFiles }
+          New-Item -ItemType Directory -Path $viFiles -Force | Out-Null
+          
+          Write-Host "Copying VistumblerMDB content to $viFiles ..."
+          Copy-Item -Path "VistumblerMDB\*" -Destination $viFiles -Recurse -Force
+          Write-Host "Staging complete."
 
       - name: Create ZIP of `VistumblerMDB` (versioned)
         shell: pwsh
