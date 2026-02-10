@@ -27,19 +27,20 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+    environment: signing
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: main
           persist-credentials: true
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
 
@@ -215,7 +216,7 @@ jobs:
 
           // cleanup package.json
           try { fs.unlinkSync('package.json'); } catch (e) {}
-
+          
           // Export output for the workflow
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${newVersionFull}\n`);
           EOF
@@ -228,30 +229,150 @@ jobs:
           node bump-version.mjs "${{ inputs.version }}" "${{ inputs.preid }}"
           rm bump-version.mjs
 
-      - name: Debug git state before PR
+      - name: Install AutoIt via Chocolatey
+        shell: pwsh
         run: |
-          echo '--- git status ---'
-          git status --porcelain=2 --branch || true
-          echo '--- current branch ---'
-          git branch --show-current || true
-          echo '--- HEAD ---'
-          git rev-parse --abbrev-ref HEAD || true
-          echo '--- recent commits ---'
-          git log -n 5 --oneline || true
-          echo '--- show HEAD details ---'
-          git show --name-only --pretty=fuller HEAD || true
-          echo '--- ls repo root ---'
-          ls -la || true
+          choco install autoit -y
+          refreshenv || true
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v8
-        with:
-          commit-message: Bump Vistumbler version to v${{ steps.bump.outputs.version }}
-          branch: release-v${{ steps.bump.outputs.version }}
-          title: Bump Vistumbler version to v${{ steps.bump.outputs.version }}
-          body: |
-            This PR bumps the version in `VistumblerMDB/Vistumbler.au3` and updates `$last_modified`.
-            
-            - Updated `#AutoIt3Wrapper_Res_Fileversion`
-            - Updated `$version`
-            - Updated `$last_modified`
+      - name: Compile AutoIt scripts (to VistumblerMDB)
+        shell: pwsh
+        run: |
+          # Use scripts/compile-autoit.ps1 effectively to update repo files
+          $script = Join-Path $PWD 'scripts\compile-autoit.ps1'
+          if (Test-Path $script) {
+             # Compile directly back to VistumblerMDB
+             & $script -SourceDir 'VistumblerMDB' -OutDir 'VistumblerMDB' -ForceX86
+          } else {
+             Write-Error "Compile script not found at $script"
+             exit 1
+          }
+
+      - name: Sign compiled EXEs
+        shell: pwsh
+        if: ${{ secrets.SIG_PFX_B64 != '' }}
+        env:
+          SIG_PFX_B64: ${{ secrets.SIG_PFX_B64 }}
+          SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
+        run: |
+           # 1. Decode Cert
+           $pfxPath = Join-Path $PWD 'temp_sign_cert.pfx'
+           [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:SIG_PFX_B64))
+           
+           # 2. Find Signtool
+           $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+           if (-not $signtool) {
+             $paths = @(
+               'C:\Program Files (x86)\Windows Kits\10\bin',
+               'C:\Program Files (x86)\Windows Kits\8.1\bin'
+             )
+             $candidates = @()
+             foreach ($p in $paths) { if (Test-Path $p) { $candidates += Get-ChildItem -Path $p -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue } }
+             $best = $candidates | Where-Object { $_.DirectoryName -match "\\\\x64\\\\" } | Select-Object -First 1
+             if (-not $best) { $best = $candidates | Select-Object -First 1 }
+             if ($best) { $signtool = $best; $env:PATH = "$env:PATH;$($best.DirectoryName)" }
+           }
+           if (-not $signtool) {
+              choco install windows-sdk-10.0 -y --no-progress
+              refreshenv || true
+              $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue
+           }
+           if (-not $signtool) { Write-Warning "Signtool not found, skipping signing"; exit 0 }
+
+           # 3. Sign
+           $files = Get-ChildItem -Path 'VistumblerMDB' -Filter *.exe -Recurse
+           foreach ($f in $files) {
+              Write-Host "Signing $($f.FullName)"
+              & $signtool.Path sign /f $pfxPath /p $env:SIG_PFX_PASS /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
+           }
+           Remove-Item -Path $pfxPath -Force -ErrorAction SilentlyContinue
+
+      - name: Commit Bump and Binaries
+        id: commit_bump
+        shell: pwsh
+        run: |
+           $ver = "${{ steps.bump.outputs.version }}"
+           $branch = "release-v$ver"
+           
+           git config user.name "github-actions[bot]"
+           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+           
+           # Create branch
+           git checkout -b $branch
+           
+           # Add all modified files (au3, changelog, exes)
+           git add VistumblerMDB
+           
+           git commit -m "Bump version to v$ver and update binaries"
+           
+           $hash = git log -n 1 --format=%H
+           "commit_hash=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+           Write-Host "Bump Commit Hash: $hash"
+
+      - name: Update versions.ini with new Commit Hash
+        shell: pwsh
+        env:
+           BUMP_HASH: ${{ steps.commit_bump.outputs.commit_hash }}
+        run: |
+           $hash = $env:BUMP_HASH
+           $iniPath = 'VistumblerMDB/versions.ini'
+           if (-not (Test-Path $iniPath)) { Write-Warning "versions.ini not found"; exit 0 }
+           
+           # Find files changed in the bump commit
+           $changedFiles = git diff-tree --no-commit-id --name-only -r $hash
+           Write-Host "Changed files in $hash :"
+           $changedFiles | ForEach-Object { Write-Host " - $_" }
+           
+           $lines = Get-Content $iniPath
+           $newLines = @()
+           $updatedCount = 0
+           
+           foreach ($line in $lines) {
+              if ($line -match '^([^=]+?)\s*=\s*([a-f0-9]{40})\s*$') {
+                 $fileKey = $matches[1]
+                 # Normalize fileKey to forward slashes for matching
+                 $fileKeyNorm = $fileKey -replace '\\', '/'
+                 $fullPath = "VistumblerMDB/$fileKeyNorm"
+                 
+                 # Check if this file was changed
+                 if ($changedFiles -contains $fullPath) {
+                    $newLines += "$fileKey=$hash"
+                    $updatedCount++
+                    Write-Host "Updated $fileKey to $hash"
+                 } else {
+                    $newLines += $line
+                 }
+              } else {
+                 $newLines += $line
+              }
+           }
+           
+           if ($updatedCount -gt 0) {
+              $newLines | Set-Content -Path $iniPath -Encoding UTF8
+              Write-Host "versions.ini updated."
+           } else {
+              Write-Host "No relevant files found in versions.ini to update."
+           }
+
+      - name: Commit versions.ini and Push
+        shell: pwsh
+        env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+           $ver = "${{ steps.bump.outputs.version }}"
+           $branch = "release-v$ver"
+           
+           # Check if versions.ini is modified
+           if (git status --porcelain | Select-String "versions.ini") {
+              git add VistumblerMDB/versions.ini
+              git commit -m "Update versions.ini to commit $env:BUMP_HASH"
+           }
+           
+           git push origin $branch --force
+
+           # Create PR
+           try {
+             gh pr create --title "Bump Vistumbler version to v$ver" --body "Bump version, compile binaries, and update versions.ini.`n`n- Updated #AutoIt3Wrapper_Res_Fileversion`n- Updated `$version`" --base main --head $branch
+           } catch {
+             Write-Host "PR creation failed or already exists."
+           }
