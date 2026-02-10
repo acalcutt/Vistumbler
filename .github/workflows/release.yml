@@ -48,6 +48,7 @@ jobs:
     needs: check_release
     if: needs.check_release.outputs.proceed == 'true'
     runs-on: windows-latest
+    environment: signing
     steps:
       - name: Checkout
         uses: actions/checkout@v4
