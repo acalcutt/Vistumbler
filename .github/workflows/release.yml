@@ -314,6 +314,37 @@ jobs:
           "version=$($out.version)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "version_dash=$($out.version_dash)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
+      - name: Extract Release Notes
+        shell: pwsh
+        env:
+          VERSION: ${{ steps.find_assets.outputs.version }}
+        run: |
+          $ver = $env:VERSION
+          $changelog = Join-Path $PWD 'VistumblerMDB\CHANGELOG.md'
+          if (-not (Test-Path $changelog)) { 
+            "No changelog found" | Set-Content release_notes.md
+            exit 0 
+          }
+          
+          $content = Get-Content $changelog -Raw
+          $verEsc = [Regex]::Escape($ver)
+          # Regex:
+          # (?sm) = Single-line (dot matches newline) + Multi-line (^ matches start of line)
+          # ^##\s+$verEsc = Line starting with "## " followed by version
+          # \s*$ = optional trailing whitespace to end of line
+          # (.*?) = Capture group 1: content (non-greedy)
+          # (?=^##|\Z) = Lookahead: stop at next "##" at start of line OR end of string
+          $pattern = "(?sm)^##\s+$verEsc\s*$(.*?)(?=^##|\Z)"
+          
+          if ($content -match $pattern) {
+             $notes = $matches[1].Trim()
+             $notes | Set-Content release_notes.md -Encoding utf8
+             Write-Host "Extracted notes for v$ver"
+          } else {
+             Write-Host "No notes found for v$ver in changelog"
+             "Release v$ver" | Set-Content release_notes.md -Encoding utf8
+          }
+
       - name: Create GitHub Release
         uses: actions/create-release@v1
         id: create_release
@@ -322,6 +353,7 @@ jobs:
         with:
           tag_name: v${{ steps.find_assets.outputs.version }}
           release_name: Vistumbler v${{ steps.find_assets.outputs.version }}
+          body_path: release_notes.md
           draft: false
           prerelease: false
 
