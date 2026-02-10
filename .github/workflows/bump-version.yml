@@ -366,9 +366,11 @@ jobs:
            foreach ($f in $rawChangedFiles) {
                if ($f -match '\.exe$') {
                    $au3 = $f -replace '\.exe$', '.au3'
-                   if ($changedFiles -notcontains $au3) {
-                       $changedFiles += $au3
-                       Write-Host "Implied update for: $au3 (because $f changed)"
+                   if (Test-Path $au3) {
+                       if ($changedFiles -notcontains $au3) {
+                           $changedFiles += $au3
+                           Write-Host "Implied update for: $au3 (because $f changed)"
+                       }
                    }
                }
            }
