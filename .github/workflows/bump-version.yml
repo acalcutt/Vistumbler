@@ -227,15 +227,14 @@ jobs:
       - name: Run bump script
         id: bump
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           node bump-version.mjs "${{ inputs.version }}" "${{ inputs.preid }}"
+          rm bump-version.mjs
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Bump Vistumbler version to v${{ steps.bump.outputs.version }}
           branch: release-v${{ steps.bump.outputs.version }}
           title: Bump Vistumbler version to v${{ steps.bump.outputs.version }}
