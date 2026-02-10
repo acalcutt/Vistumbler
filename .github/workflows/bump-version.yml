@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ github.ref_name }}
           persist-credentials: true
 
       - name: Setup Node
@@ -53,6 +53,7 @@ jobs:
           const args = process.argv.slice(2);
           const versionType = args[0] || process.env.INPUT_VERSION || 'patch';
           const preid = args[1] || process.env.INPUT_PREID || '';
+          const currentBranch = args[2] || 'main'; // Passed as argument
           const au3Path = 'VistumblerMDB/Vistumbler.au3';
           const changelogPath = 'VistumblerMDB/CHANGELOG.md';
 
@@ -87,14 +88,39 @@ jobs:
           console.log('Running:', versionCmd);
           execSync(versionCmd, { stdio: 'inherit' });
 
-          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-          const newVersionFull = pkg.version; // may include prerelease
+          let pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          let newVersionFull = pkg.version; // may include prerelease
+
+          // Force pre-releases to start at .1 instead of .0 to avoid FileVersion collision (x.y.z.0)
+          // e.g. 10.9.5-pre.0 -> 10.9.5-pre.1
+          if (newVersionFull.includes('-') && newVersionFull.match(/\.0$/)) {
+             console.log('Detected pre-release ending in .0, bumping to .1');
+             newVersionFull = newVersionFull.replace(/\.0$/, '.1');
+             pkg.version = newVersionFull;
+             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          }
 
           // numeric portion used for AU3 $version and fileversion
           const numeric = newVersionFull.split('-')[0];
           const parts = numeric.split('.');
-          while (parts.length < 4) parts.push('0');
-          const fileVer = parts.slice(0,4).join('.');
+          
+          // Handle 4th digit for prerelease
+          // logic: if prerelease, set 4th digit to 1 (or increment if we had logic for it, but for now simple indication) 
+          // Actually, let's try to extract the prerelease number if available. e.g. 10.9.5-pre.3 -> 10.9.5.3
+          let fourthDigit = '0';
+          if (newVersionFull.includes('-')) {
+             const prePart = newVersionFull.split('-')[1]; // e.g. pre.3 or alpha.1
+             const match = prePart.match(/\.(\d+)$/);
+             if (match) {
+                fourthDigit = match[1];
+             } else {
+                fourthDigit = '1'; // default to 1 if just -pre
+             }
+          }
+          
+          while (parts.length < 3) parts.push('0');
+          // Force 4th digit based on prerelease status
+          const fileVer = parts.slice(0,3).join('.') + '.' + fourthDigit;
 
           const today = new Date();
           const yyyy = today.getUTCFullYear();
@@ -178,8 +204,10 @@ jobs:
 
           // Replace first occurrence of '## main' with the new version heading and insert a fresh main template
           const newVersionHeading = `## ${newVersionFull}`;
+          const currentHeader = `## ${currentBranch}`;
+
           const masterSection = [
-            '## main',
+            currentHeader,
             '### ✨ Features and improvements',
             '- _...Add new stuff here..._',
             '',
@@ -203,10 +231,18 @@ jobs:
              body = '';
           }
 
-          // 2. Identify 'main' section
-          // Look for '## main' followed by content until next '## ' or end of string
-          const mainRegex = /## main\s*([\s\S]*?)(?=(^|\n)## |$)/;
-          const mainMatch = body.match(mainRegex);
+          // 2. Identify 'main' (or current branch) section
+          // Try finding section matching current branch name
+          // We look for '## [branchName]' followed by content until next '## ' or end of string
+          // Escape regex special chars in branch name just in case
+          const escBranch = currentBranch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const mainRegex = new RegExp(`## ${escBranch}\\s*([\\s\\S]*?)(?=(^|\\n)## |$)`);
+          let mainMatch = body.match(mainRegex);
+          
+          // Fallback: If not found, try looking for '## main' specifically if we are on a different branch but the CL has 'main'
+          if (!mainMatch && currentBranch !== 'main') {
+              mainMatch = body.match(/## main\s*([\s\S]*?)(?=(^|\n)## |$)/);
+          }
 
           let oldMainContent = '';
           let olderVersions = '';
@@ -259,7 +295,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          node bump-version.mjs "${{ inputs.version }}" "${{ inputs.preid }}"
+          node bump-version.mjs "${{ inputs.version }}" "${{ inputs.preid }}" "${{ github.ref_name }}"
           rm bump-version.mjs
 
       - name: Install AutoIt via Chocolatey
@@ -486,10 +522,10 @@ jobs:
            "@
            
            # Check if PR exists
-           $existingPr = gh pr list --head $branch --base main --json number --limit 1 | ConvertFrom-Json
+           $existingPr = gh pr list --head $branch --base ${{ github.ref_name }} --json number --limit 1 | ConvertFrom-Json
            if ($existingPr -and $existingPr.Count -gt 0) {
               Write-Host "PR already exists: #$($existingPr[0].number)"
            } else {
               Write-Host "Creating new PR..."
-              gh pr create --title "Bump Vistumbler version to v$ver" --body $body --base main --head $branch
+              gh pr create --title "Bump Vistumbler version to v$ver" --body $body --base ${{ github.ref_name }} --head $branch
            }
