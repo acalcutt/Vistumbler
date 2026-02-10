@@ -24,6 +24,9 @@ on:
 jobs:
   bump-version-pr:
     name: Bump version PR
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,6 +36,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
+          persist-credentials: true
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -244,3 +248,16 @@ jobs:
             - Updated `#AutoIt3Wrapper_Res_Fileversion`
             - Updated `$version`
             - Updated `$last_modified`
+
+      - name: Debug git state before PR
+        run: |
+          echo '--- git status ---'
+          git status --porcelain=2 --branch || true
+          echo '--- current branch ---'
+          git branch --show-current || true
+          echo '--- HEAD ---'
+          git rev-parse --abbrev-ref HEAD || true
+          echo '--- recent commits ---'
+          git log -n 5 --oneline || true
+          echo '--- remote ---'
+          git remote -v || true
