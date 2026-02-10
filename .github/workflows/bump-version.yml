@@ -359,8 +359,21 @@ jobs:
            if (-not (Test-Path $iniPath)) { Write-Warning "versions.ini not found"; exit 0 }
            
            # Find files changed in the bump commit
-           $changedFiles = git diff-tree --no-commit-id --name-only -r $hash
-           Write-Host "Changed files in $hash :"
+           $rawChangedFiles = @(git diff-tree --no-commit-id --name-only -r $hash)
+           
+           # Expand to include .au3 files corresponding to changed .exe files
+           $changedFiles = @($rawChangedFiles)
+           foreach ($f in $rawChangedFiles) {
+               if ($f -match '\.exe$') {
+                   $au3 = $f -replace '\.exe$', '.au3'
+                   if ($changedFiles -notcontains $au3) {
+                       $changedFiles += $au3
+                       Write-Host "Implied update for: $au3 (because $f changed)"
+                   }
+               }
+           }
+           
+           Write-Host "Changed files in $hash (including implied AU3):"
            $changedFiles | ForEach-Object { Write-Host " - $_" }
            
            $lines = Get-Content $iniPath
