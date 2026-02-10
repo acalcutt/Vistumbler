@@ -337,7 +337,7 @@ jobs:
            # Create branch
            git checkout -b $branch
            
-           # Add all modified files (au3, changelog, exes)
+           # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs)
            git add VistumblerMDB
            
            git commit -m "Bump version to v$ver and update binaries"
@@ -399,17 +399,30 @@ jobs:
            $ver = "${{ steps.bump.outputs.version }}"
            $branch = "release-v$ver"
            
-           # Check if versions.ini is modified
-           if (git status --porcelain | Select-String "versions.ini") {
-              git add VistumblerMDB/versions.ini
-              git commit -m "Update versions.ini to commit $env:BUMP_HASH"
+           # Commit versions.ini
+           $toAdd = @()
+           if (Test-Path "VistumblerMDB/versions.ini") { $toAdd += "VistumblerMDB/versions.ini" }
+           
+           if ($toAdd.Count -gt 0) {
+              git add $toAdd
+              # Only commit if we actually added something grounded
+              if (git status --porcelain | Select-String "VistumblerMDB/") {
+                 git commit -m "Update versions.ini"
+              }
            }
            
            git push origin $branch --force
 
-           # Create PR
+           # Create PR with robust string handling
+           $body = @"
+           Bump version, compile binaries, and update versions.ini.
+
+           - Updated #AutoIt3Wrapper_Res_Fileversion
+           - Updated `$version
+           "@
+           
            try {
-             gh pr create --title "Bump Vistumbler version to v$ver" --body "Bump version, compile binaries, and update versions.ini.`n`n- Updated #AutoIt3Wrapper_Res_Fileversion`n- Updated `$version`" --base main --head $branch
+             gh pr create --title "Bump Vistumbler version to v$ver" --body $body --base main --head $branch
            } catch {
              Write-Host "PR creation failed or already exists."
            }
