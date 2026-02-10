@@ -344,7 +344,8 @@ jobs:
           # \s*$ = optional trailing whitespace to end of line
           # (.*?) = Capture group 1: content (non-greedy)
           # (?=^##|\Z) = Lookahead: stop at next "##" at start of line OR end of string
-          $pattern = "(?sm)^##\s+$verEsc\s*$(.*?)(?=^##|\Z)"
+          # Note: We use string concatenation to safe-guard regex interpretation
+          $pattern = '(?sm)^##\s+' + $verEsc + '\s*$(.*?)(?=^##|\Z)'
           
           if ($content -match $pattern) {
              $notes = $matches[1].Trim()
