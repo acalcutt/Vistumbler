@@ -275,8 +275,13 @@ jobs:
              )
              $candidates = @()
              foreach ($p in $paths) { if (Test-Path $p) { $candidates += Get-ChildItem -Path $p -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue } }
-             $best = $candidates | Where-Object { $_.DirectoryName -match "\\\\x64\\\\" } | Select-Object -First 1
+             
+             # Priority: x64 -> x86 -> Anything not arm64 -> Anything
+             $best = $candidates | Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+             if (-not $best) { $best = $candidates | Where-Object { $_.FullName -match '\\x86\\' } | Select-Object -First 1 }
+             if (-not $best) { $best = $candidates | Where-Object { $_.FullName -notmatch 'arm64' } | Select-Object -First 1 }
              if (-not $best) { $best = $candidates | Select-Object -First 1 }
+             
              if ($best) {
                $signtoolPath = $best.FullName
              }
