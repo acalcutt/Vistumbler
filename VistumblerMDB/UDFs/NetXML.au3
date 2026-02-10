@@ -33,20 +33,20 @@ Func _NetXML_AddNetwork($bssid, $ssid, $manuf, $channel, $freq, $type, $encrypt,
     $first_time = _NetXML_FormatDate($first_time)
     $last_time = _NetXML_FormatDate($last_time)
 
-    Local $sNet = '<wireless-network number="0" type="' & $type & '" first-time="' & $first_time & '" last-time="' & $last_time & '">' & @CRLF
-    $sNet &= '  <SSID first-time="' & $first_time & '" last-time="' & $last_time & '">' & @CRLF
-    $sNet &= '    <type>' & $type & '</type>' & @CRLF
-    $sNet &= '    <max-rate>' & $max_rate & '</max-rate>' & @CRLF
+    Local $sNet = '<wireless-network number="0" type="' & _XMLEncode($type) & '" first-time="' & _XMLEncode($first_time) & '" last-time="' & _XMLEncode($last_time) & '">' & @CRLF
+    $sNet &= '  <SSID first-time="' & _XMLEncode($first_time) & '" last-time="' & _XMLEncode($last_time) & '">' & @CRLF
+    $sNet &= '    <type>' & _XMLEncode($type) & '</type>' & @CRLF
+    $sNet &= '    <max-rate>' & _XMLEncode($max_rate) & '</max-rate>' & @CRLF
     $sNet &= '    <packets>0</packets>' & @CRLF
     $sNet &= '    <beaconrate>10</beaconrate>' & @CRLF
-    $sNet &= '    <encryption>' & $encrypt & '</encryption>' & @CRLF
-    $sNet &= '    <essid cloaked="' & $essid_cloaked & '">' & _XMLEncode($ssid) & '</essid>' & @CRLF
+    $sNet &= '    <encryption>' & _XMLEncode($encrypt) & '</encryption>' & @CRLF
+    $sNet &= '    <essid cloaked="' & _XMLEncode($essid_cloaked) & '">' & _XMLEncode($ssid) & '</essid>' & @CRLF
     $sNet &= '  </SSID>' & @CRLF
-    $sNet &= '  <BSSID>' & $bssid & '</BSSID>' & @CRLF
+    $sNet &= '  <BSSID>' & _XMLEncode($bssid) & '</BSSID>' & @CRLF
     $sNet &= '  <manuf>' & _XMLEncode($manuf) & '</manuf>' & @CRLF
-    $sNet &= '  <channel>' & $channel & '</channel>' & @CRLF
-    $sNet &= '  <freqmhz>' & $freq & ' 0</freqmhz>' & @CRLF
-    $sNet &= '  <maxseenrate>' & $max_rate & '</maxseenrate>' & @CRLF
+    $sNet &= '  <channel>' & _XMLEncode($channel) & '</channel>' & @CRLF
+    $sNet &= '  <freqmhz>' & _XMLEncode($freq) & ' 0</freqmhz>' & @CRLF
+    $sNet &= '  <maxseenrate>' & _XMLEncode($max_rate) & '</maxseenrate>' & @CRLF
     $sNet &= '  <snr-info>' & @CRLF
     $sNet &= '    <last_signal_dbm>' & $last_rssi & '</last_signal_dbm>' & @CRLF
     $sNet &= '    <last_noise_dbm>0</last_noise_dbm>' & @CRLF
