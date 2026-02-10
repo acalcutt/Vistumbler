@@ -66,12 +66,20 @@ jobs:
 
           // Extract existing semantic version (major.minor.patch) from $version or fileversion
           let currentVersion = null;
+          
+          // Also capture old FileVersion to ensure increasing 4th digit on same-base bumps
+          let oldFileVerParts = [0,0,0,0];
+          const fMatchRaw = content.match(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)/);
+          if (fMatchRaw) {
+             const parts = fMatchRaw[1].split('.').map(Number);
+             for(let i=0; i<parts.length && i<4; i++) oldFileVerParts[i] = parts[i];
+          }
+
           const vMatch = content.match(/\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'/);
           if (vMatch) { currentVersion = vMatch[1]; }
           if (!currentVersion) {
-            const fMatch = content.match(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)/);
-            if (fMatch) {
-              const p = fMatch[1].split('.');
+            if (fMatchRaw) {
+              const p = fMatchRaw[1].split('.');
               currentVersion = p.slice(0,3).join('.') || '0.0.0';
             }
           }
@@ -102,25 +110,44 @@ jobs:
 
           // numeric portion used for AU3 $version and fileversion
           const numeric = newVersionFull.split('-')[0];
-          const parts = numeric.split('.');
+          const parts = numeric.split('.').map(Number);
+          while(parts.length < 3) parts.push(0);
+
+          // Calculate 4th digit
+          let fourthDigit = 0;
           
-          // Handle 4th digit for prerelease
-          // logic: if prerelease, set 4th digit to 1 (or increment if we had logic for it, but for now simple indication) 
-          // Actually, let's try to extract the prerelease number if available. e.g. 10.9.5-pre.3 -> 10.9.5.3
-          let fourthDigit = '0';
-          if (newVersionFull.includes('-')) {
-             const prePart = newVersionFull.split('-')[1]; // e.g. pre.3 or alpha.1
-             const match = prePart.match(/\.(\d+)$/);
-             if (match) {
-                fourthDigit = match[1];
+          // Compare Base A.B.C against Old A.B.C
+          const isSameBase = (parts[0] === oldFileVerParts[0] && parts[1] === oldFileVerParts[1] && parts[2] === oldFileVerParts[2]);
+
+          if (isSameBase) {
+             // If base matches, we must ensure continuity
+             if (newVersionFull.includes('-')) {
+                // Pre-release: use the prerelease number (e.g. .3)
+                const prePart = newVersionFull.split('-')[1]; 
+                const m = prePart.match(/\.(\d+)$/);
+                // If found, use it. If not (e.g. just -beta), assume it's next? But npm bumps usually append .0
+                if (m) fourthDigit = parseInt(m[1], 10);
+                else fourthDigit = 1; 
              } else {
-                fourthDigit = '1'; // default to 1 if just -pre
+                // Final Release of same base (e.g. 10.9.5-pre.3 -> 10.9.5)
+                // Must be higher than previous build number
+                fourthDigit = oldFileVerParts[3] + 1;
+             }
+          } else {
+             // Base changed (e.g. 10.9.4 -> 10.9.5)
+             if (newVersionFull.includes('-')) {
+                 // New Pre-release on new base?
+                 const prePart = newVersionFull.split('-')[1]; 
+                 const m = prePart.match(/\.(\d+)$/);
+                 if (m) fourthDigit = parseInt(m[1], 10);
+                 else fourthDigit = 1;
+             } else {
+                 // Final Release on new base -> .0
+                 fourthDigit = 0;
              }
           }
           
-          while (parts.length < 3) parts.push('0');
-          // Force 4th digit based on prerelease status
-          const fileVer = parts.slice(0,3).join('.') + '.' + fourthDigit;
+          const fileVer = `${parts[0]}.${parts[1]}.${parts[2]}.${fourthDigit}`;
 
           const today = new Date();
           const yyyy = today.getUTCFullYear();
@@ -132,10 +159,11 @@ jobs:
           content = content.replace(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*[0-9\.]+/, `#AutoIt3Wrapper_Res_Fileversion=${fileVer}`);
           if (content.match(/\$version\s*=\s*'.*?'/)) {
             // replace all existing $version assignments to avoid duplicates
-            content = content.replace(/\$version\s*=\s*'.*?'/g, `$version = 'v${numeric}'`);
+            // Use newVersionFull (including pre-release suffix) for the script variable
+            content = content.replace(/\$version\s*=\s*'.*?'/g, `$version = 'v${newVersionFull}'`);
           } else {
             // insert near top if missing
-            content = `$version = 'v${numeric}'\n` + content;
+            content = `$version = 'v${newVersionFull}'\n` + content;
           }
           if (content.match(/\$last_modified\s*=\s*'.*?'/)) {
             // replace all occurrences

@@ -27,14 +27,15 @@ jobs:
           script: |
             const fs = require('fs');
             const content = fs.readFileSync('VistumblerMDB/Vistumbler.au3','utf8');
-            let verMatch = content.match(/\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'/);
+            // Allow matching versions with hyphens (pre-releases) e.g. v10.9.5-pre.1
+            let verMatch = content.match(/\$version\s*=\s*'v?([^']+)'/);
             let ver = verMatch ? verMatch[1] : null;
             if (!ver) {
               const m2 = content.match(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)/);
               ver = m2 ? m2[1] : null;
             }
             if (!ver) { core.setOutput('proceed','true'); return; }
-            const tags = [`v${ver}`, `v${ver.replace(/\./g,'-')}`];
+            const tags = [`v${ver}`, `v${ver.replace(/[\.\-]/g,'-')}`];
             for (const tag of tags) {
               try {
                 const res = await github.rest.repos.getReleaseByTag({ owner: context.repo.owner, repo: context.repo.repo, tag });
@@ -63,19 +64,27 @@ jobs:
           $content = Get-Content $au3 -Raw
           $ver = ''
           # Use single quotes to prevent PowerShell variable interpolation of $version
-          if ($content -match '\$version\s*=\s*''v?([0-9]+(?:\.[0-9]+)*)''') { $ver = $matches[1] }
+          # Updated regex to support pre-release versions with hyphens (e.g. 10.9.5-pre.1)
+          if ($content -match '\$version\s*=\s*''v?([^'']+)''') { $ver = $matches[1] }
           if (-not $ver) {
             if ($content -match '#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)') { $ver = $matches[1] }
           }
           if (-not $ver) { Write-Error "Could not determine version"; exit 2 }
           Write-Host "Detected version: $ver"
           "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          
+          if ($ver -match '-') {
+              Write-Host "Pre-release version detected"
+              "prerelease=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          } else {
+              "prerelease=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          }
 
           # prepare NSI
           $nsiTemplate = Join-Path $PWD 'Installer\Vistumbler.nsi.template'
           $nsiTarget = Join-Path $PWD 'Installer\Vistumbler.nsi'
           Copy-Item -Path $nsiTemplate -Destination $nsiTarget -Force
-          $verDash = $ver -replace '\.','-'
+          $verDash = $ver -replace '[\.\-]','-'
           $outFileName = "OutFile `"Vistumbler_v$verDash.exe`""
           $displayVer = "WriteRegStr HKLM `"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler`" `"DisplayVersion`" `"$ver`""
           $content = Get-Content $nsiTarget
@@ -266,7 +275,7 @@ jobs:
         run: |
           $ver = $env:VERSION
           if (-not $ver) { Write-Error "Version not found in environment variables"; exit 2 }
-          $verDash = $ver -replace '\.', '-'
+          $verDash = $ver -replace '[\.\-]', '-'
           Write-Host "Looking for assets for version: $ver (dash: $verDash)"
 
           $out = @{ installer=''; zip=''; zip_portable=''; version=$ver; version_dash=$verDash }
@@ -356,7 +365,7 @@ jobs:
           release_name: Vistumbler v${{ steps.find_assets.outputs.version }}
           body_path: release_notes.md
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.determine_version.outputs.prerelease }}
 
       - name: Upload release assets
         uses: actions/upload-release-asset@v1
