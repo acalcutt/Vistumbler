@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          ref: master
+          ref: main
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -171,10 +171,10 @@ jobs:
             }
           }
 
-          // Replace first occurrence of '## master' with the new version heading and insert a fresh master template
+          // Replace first occurrence of '## main' with the new version heading and insert a fresh main template
           const newVersionHeading = `## ${newVersionFull}`;
           const masterSection = [
-            '## master',
+            '## main',
             '### ✨ Features and improvements',
             '- _...Add new stuff here..._',
             '',
@@ -190,8 +190,8 @@ jobs:
           let rest = changelog;
           if (titleMatch) { title = titleMatch[1]; rest = changelog.slice(title.length); }
 
-          // Replace the first '## master' in rest with the new version heading
-          rest = rest.replace('## master', newVersionHeading);
+          // Replace the first '## main' in rest with the new version heading
+          rest = rest.replace('## main', newVersionHeading);
 
           // Insert missing entries under Bug fixes if any
           if (missingEntries.length > 0) {

@@ -1,6 +1,6 @@
 # Vistumbler changelog
 
-## master
+## main
 
 ### ✨ Features and improvements
 - _...Add new stuff here..._
