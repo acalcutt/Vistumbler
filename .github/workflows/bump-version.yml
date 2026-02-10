@@ -24,6 +24,9 @@ on:
 jobs:
   bump-version-pr:
     name: Bump version PR
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -33,6 +36,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
+          persist-credentials: true
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -227,15 +231,14 @@ jobs:
       - name: Run bump script
         id: bump
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           node bump-version.mjs "${{ inputs.version }}" "${{ inputs.preid }}"
+          rm bump-version.mjs
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v8
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: Bump Vistumbler version to v${{ steps.bump.outputs.version }}
           branch: release-v${{ steps.bump.outputs.version }}
           title: Bump Vistumbler version to v${{ steps.bump.outputs.version }}
@@ -245,3 +248,16 @@ jobs:
             - Updated `#AutoIt3Wrapper_Res_Fileversion`
             - Updated `$version`
             - Updated `$last_modified`
+
+      - name: Debug git state before PR
+        run: |
+          echo '--- git status ---'
+          git status --porcelain=2 --branch || true
+          echo '--- current branch ---'
+          git branch --show-current || true
+          echo '--- HEAD ---'
+          git rev-parse --abbrev-ref HEAD || true
+          echo '--- recent commits ---'
+          git log -n 5 --oneline || true
+          echo '--- remote ---'
+          git remote -v || true
