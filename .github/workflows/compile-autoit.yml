@@ -2,6 +2,9 @@ name: Compile AutoIt scripts
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 concurrency:
   group: compile-autoit-${{ github.ref }}
