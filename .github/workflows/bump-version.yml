@@ -278,7 +278,8 @@ jobs:
           }
 
           // 3. Create new version block using oldMainContent + specific Commits/PRs
-          let versionBlock = `${newVersionHeading}${oldMainContent}`;
+          // Ensure a newline separates the header and the content
+          let versionBlock = `${newVersionHeading}\n${oldMainContent}`;
           
           // Append missing PRs to the end of the version block (or merge them, but appending is safer)
           if (missingEntries.length > 0) {
