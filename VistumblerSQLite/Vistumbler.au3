@@ -15674,15 +15674,25 @@ Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
 		Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sPktLatDMM & "' And Longitude = '" & $sPktLonDMM & "'"
 		Local $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns, $aPktGpsMatch_iRval
 		$aPktGpsMatch_iRval = _SQLite_GetTable2D($DBhndl, $query, $aPktGpsMatch, $aPktGpsMatch_iRows, $aPktGpsMatch_iColumns)
-		Local $iPktGpsFound = UBound($aPktGpsMatch) - 1
 
-		If $iPktGpsFound = 0 Then
+		; Protect against empty/non-array results from _SQLite_GetTable2D
+		Local $iPktGpsFound = 0
+		If IsArray($aPktGpsMatch) Then $iPktGpsFound = UBound($aPktGpsMatch) - 1
+
+		If IsArray($aPktGpsMatch) And $aPktGpsMatch_iRows >= 1 And $iPktGpsFound >= 1 Then
+			; use first matched GPS ID — handle both 2D and 1D array shapes
+			If IsArray($aPktGpsMatch[1]) Then
+				$iPktGID = Number($aPktGpsMatch[1][1])
+			Else
+				$iPktGID = Number($aPktGpsMatch[1])
+			EndIf
+			If Not IsNumber($iPktGID) Then $iPktGID = 0
+		Else
+			; no match — add new GPS record
 			$AddGID += 1
 			$GPS_ID += 1
 			_AddRecord($VistumblerDB, "GPS", $DBhndl, $GPS_ID & '|' & $sPktLatDMM & '|' & $sPktLonDMM & '|00|0|0|0|0|0|0|' & $sPktDate & '|' & $sPktTime)
 			$iPktGID = $GPS_ID
-		Else
-			$iPktGID = $aPktGpsMatch[1][1]
 		EndIf
 
 		; Add history entry
