@@ -1,0 +1,551 @@
+name: Create bump version PR
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version bump type.
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - prerelease
+          - prepatch
+          - preminor
+          - premajor
+      preid:
+        description: Prerelease identifier (e.g., 'alpha', 'beta', 'rc'). Only used with prerelease version types.
+        required: false
+        type: string
+        default: 'pre'
+
+jobs:
+  bump-version-pr:
+    name: Bump version PR
+    permissions:
+      contents: write
+      pull-requests: write
+    runs-on: windows-latest
+    environment: signing
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Create bump script
+        run: |
+          cat > bump-version.mjs << 'EOF'
+          import { execSync } from 'child_process';
+          import * as fs from 'fs';
+
+          const args = process.argv.slice(2);
+          const versionType = args[0] || process.env.INPUT_VERSION || 'patch';
+          const preid = args[1] || process.env.INPUT_PREID || '';
+          const currentBranch = args[2] || 'main'; // Passed as argument
+          const au3Path = 'VistumblerMDB/Vistumbler.au3';
+          const changelogPath = 'VistumblerMDB/CHANGELOG.md';
+
+          if (!fs.existsSync(au3Path)) {
+            console.error(`${au3Path} not found`);
+            process.exit(2);
+          }
+
+          let content = fs.readFileSync(au3Path, 'utf8');
+
+          // Extract existing semantic version (major.minor.patch) from $version or fileversion
+          let currentVersion = null;
+          
+          // Also capture old FileVersion to ensure increasing 4th digit on same-base bumps
+          let oldFileVerParts = [0,0,0,0];
+          const fMatchRaw = content.match(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)/);
+          if (fMatchRaw) {
+             const parts = fMatchRaw[1].split('.').map(Number);
+             for(let i=0; i<parts.length && i<4; i++) oldFileVerParts[i] = parts[i];
+          }
+
+          const vMatch = content.match(/\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'/);
+          if (vMatch) { currentVersion = vMatch[1]; }
+          if (!currentVersion) {
+            if (fMatchRaw) {
+              const p = fMatchRaw[1].split('.');
+              currentVersion = p.slice(0,3).join('.') || '0.0.0';
+            }
+          }
+          if (!currentVersion) { currentVersion = '0.0.0'; }
+
+          // Create temporary package.json to leverage npm version handling
+          const tmpPkg = { name: 'vistumbler-bump-temp', version: currentVersion };
+          fs.writeFileSync('package.json', JSON.stringify(tmpPkg, null, 2));
+
+          // Build npm version command
+          let versionCmd = `npm version --commit-hooks false --git-tag-version false ${versionType}`;
+          if (preid && preid.trim() !== '') { versionCmd += ` --preid=${preid}`; }
+
+          console.log('Running:', versionCmd);
+          execSync(versionCmd, { stdio: 'inherit' });
+
+          let pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          let newVersionFull = pkg.version; // may include prerelease
+
+          // numeric portion used for AU3 $version and fileversion
+          const numeric = newVersionFull.split('-')[0];
+          const parts = numeric.split('.').map(Number);
+          while(parts.length < 3) parts.push(0);
+
+          // Calculate 4th digit
+          let fourthDigit = 0;
+          
+          // Compare Base A.B.C against Old A.B.C
+          const isSameBase = (parts[0] === oldFileVerParts[0] && parts[1] === oldFileVerParts[1] && parts[2] === oldFileVerParts[2]);
+
+          if (isSameBase) {
+             // If base matches, we must ensure continuity
+             if (newVersionFull.includes('-')) {
+                // Pre-release: use the prerelease number (e.g. .3)
+                const prePart = newVersionFull.split('-')[1]; 
+                const m = prePart.match(/\.(\d+)$/);
+                // If found, use it. If not (e.g. just -beta), assume it's next? But npm bumps usually append .0
+                if (m) fourthDigit = parseInt(m[1], 10);
+                else fourthDigit = 1; 
+             } else {
+                // Final Release of same base (e.g. 10.9.5-pre.3 -> 10.9.5)
+                // Must be higher than previous build number
+                fourthDigit = oldFileVerParts[3] + 1;
+             }
+          } else {
+             // Base changed (e.g. 10.9.4 -> 10.9.5)
+             if (newVersionFull.includes('-')) {
+                 // New Pre-release on new base?
+                 const prePart = newVersionFull.split('-')[1]; 
+                 const m = prePart.match(/\.(\d+)$/);
+                 if (m) fourthDigit = parseInt(m[1], 10);
+                 else fourthDigit = 1;
+             } else {
+                 // Final Release on new base -> .0
+                 fourthDigit = 0;
+             }
+          }
+          
+          const fileVer = `${parts[0]}.${parts[1]}.${parts[2]}.${fourthDigit}`;
+
+          const today = new Date();
+          const yyyy = today.getUTCFullYear();
+          const mm = String(today.getUTCMonth()+1).padStart(2,'0');
+          const dd = String(today.getUTCDate()).padStart(2,'0');
+          const dateStr = `${yyyy}/${mm}/${dd}`;
+
+          // Replace the AutoIt file lines
+          content = content.replace(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*[0-9\.]+/, `#AutoIt3Wrapper_Res_Fileversion=${fileVer}`);
+          if (content.match(/\$version\s*=\s*'.*?'/)) {
+            // replace all existing $version assignments to avoid duplicates
+            // Use newVersionFull (including pre-release suffix) for the script variable
+            content = content.replace(/\$version\s*=\s*'.*?'/g, `$version = 'v${newVersionFull}'`);
+          } else {
+            // insert near top if missing
+            content = `$version = 'v${newVersionFull}'\n` + content;
+          }
+          if (content.match(/\$last_modified\s*=\s*'.*?'/)) {
+            // replace all occurrences
+            content = content.replace(/\$last_modified\s*=\s*'.*?'/g, `$last_modified = '${dateStr}'`);
+          } else {
+            // best-effort: append if not present
+            content = content + `\n$last_modified = '${dateStr}'\n`;
+          }
+
+          fs.writeFileSync(au3Path, content, 'utf8');
+
+          // Update CHANGELOG.md in VistumblerMDB
+          let changelog = '';
+          if (!fs.existsSync(changelogPath)) {
+            changelog = '# Vistumbler changelog\n\n## main\n\n### ✨ Features and improvements\n- _...Add new stuff here..._\n\n### 🐞 Bug fixes\n- _...Add new stuff here..._\n\n';
+            fs.writeFileSync(changelogPath, changelog, 'utf8');
+          }
+          changelog = fs.readFileSync(changelogPath, 'utf8');
+
+          // Determine commits since last tag
+          let latestTag = '';
+          try {
+            latestTag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
+            console.log('Latest tag:', latestTag);
+          } catch (e) {
+            console.log('No previous tags found, using all commits');
+            latestTag = '';
+          }
+          const commitRange = latestTag ? `${latestTag}..HEAD` : 'HEAD';
+          let commits = '';
+          try { commits = execSync(`git log ${commitRange} --oneline`, { encoding: 'utf8' }); } catch (e) { commits = ''; }
+
+          // Extract PR numbers
+          const prRegex = /#(\d+)/g;
+          const prSet = new Set();
+          let m;
+          while ((m = prRegex.exec(commits)) !== null) { prSet.add(m[1]); }
+          const prNumbers = Array.from(prSet);
+          console.log('Found PR numbers:', prNumbers.join(', '));
+
+          // Find missing PRs not in changelog
+          const missingPrNumbers = prNumbers.filter(p => !changelog.includes(`#${p}`));
+          const missingEntries = [];
+          if (missingPrNumbers.length > 0) {
+            let repoFullName = null;
+            try {
+              const remoteUrl = execSync('git config --get remote.origin.url', { encoding: 'utf8' }).trim();
+              const repoMatch = remoteUrl.match(/github\.com[:/](.+?)(?:\.git)?$/);
+              repoFullName = repoMatch ? repoMatch[1] : null;
+            } catch (e) { repoFullName = null; }
+
+            for (const prNumber of missingPrNumbers) {
+              try {
+                const prJson = execSync(`gh pr view ${prNumber} --json title,author,number`, { encoding: 'utf8' });
+                const pr = JSON.parse(prJson);
+                if (pr.author && pr.author.login && pr.author.login.includes('dependabot')) { continue; }
+                const prUrl = repoFullName ? `https://github.com/${repoFullName}/pull/${pr.number}` : `#${pr.number}`;
+                const entry = `- ${pr.title} ([#${pr.number}](${prUrl})) (by @${pr.author.login})`;
+                missingEntries.push(entry);
+              } catch (e) {
+                // fallback: add a simple entry
+                missingEntries.push(`- PR #${prNumber}`);
+              }
+            }
+          }
+
+          // Replace first occurrence of '## main' with the new version heading and insert a fresh main template
+          const newVersionHeading = `## ${newVersionFull}`;
+          const currentHeader = `## ${currentBranch}`;
+
+          const masterSection = [
+            currentHeader,
+            '### ✨ Features and improvements',
+            '- _...Add new stuff here..._',
+            '',
+            '### 🐞 Bug fixes',
+            '- _...Add new stuff here..._',
+            '',
+            ''
+          ].join('\n');
+
+          // Robust parsing of sections
+          // 1. Identify Title (anything before the first ##)
+          let title = '';
+          let body = changelog;
+          const firstSectionMatch = changelog.match(/^(.*?)(?=## )/s);
+          if (firstSectionMatch) {
+             title = firstSectionMatch[1];
+             body = changelog.slice(title.length);
+          } else if (!changelog.startsWith('##')) {
+             // Maybe empty or just title
+             title = changelog;
+             body = '';
+          }
+
+          // 2. Identify 'main' (or current branch) section
+          // Try finding section matching current branch name
+          // We look for '## [branchName]' followed by content until next '## ' or end of string
+          // Escape regex special chars in branch name just in case
+          const escBranch = currentBranch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const mainRegex = new RegExp(`## ${escBranch}\\s*([\\s\\S]*?)(?=(^|\\n)## |$)`);
+          let mainMatch = body.match(mainRegex);
+          
+          // Fallback: If not found, try looking for '## main' specifically if we are on a different branch but the CL has 'main'
+          if (!mainMatch && currentBranch !== 'main') {
+              mainMatch = body.match(/## main\s*([\s\S]*?)(?=(^|\n)## |$)/);
+          }
+
+          let oldMainContent = '';
+          let olderVersions = '';
+          
+          if (mainMatch) {
+             oldMainContent = mainMatch[1];
+             // The part of body after the main section
+             olderVersions = body.replace(mainMatch[0], '');
+          } else {
+             // specific 'main' section not found, treat whole body as older versions ?? 
+             // Or assume everything is older and we just start fresh
+             olderVersions = body;
+             oldMainContent = '\n### ✨ Features and improvements\n- _...Add new stuff here..._\n\n### 🐞 Bug fixes\n- _...Add new stuff here..._\n';
+          }
+
+          // 3. Create new version block using oldMainContent + specific Commits/PRs
+          // Ensure a newline separates the header and the content
+          let versionBlock = `${newVersionHeading}\n${oldMainContent}`;
+          
+          // Append missing PRs to the end of the version block (or merge them, but appending is safer)
+          if (missingEntries.length > 0) {
+             // remove any trailing whitespace
+             versionBlock = versionBlock.trimEnd();
+             versionBlock += '\n\n### 📜 Changes\n' + missingEntries.join('\n') + '\n\n';
+          }
+
+          // 4. Construct new changelog
+          // Ensure title ends with newline if not empty
+          if (title && !title.endsWith('\n')) title += '\n';
+          
+          // Ensure masterSection ends with newlines
+          const cleanMaster = masterSection.trim() + '\n\n';
+          
+          // Ensure versionBlock ends with newlines
+          const cleanVersion = versionBlock.trim() + '\n\n';
+
+          // Assemble: Title -> New Main -> New Version -> Older Versions
+          const newChangelog = title + cleanMaster + cleanVersion + olderVersions.trimStart();
+          
+          fs.writeFileSync(changelogPath, newChangelog, 'utf8');
+
+          // cleanup package.json
+          try { fs.unlinkSync('package.json'); } catch (e) {}
+          
+          // Export output for the workflow
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${newVersionFull}\n`);
+          EOF
+
+      - name: Run bump script
+        id: bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node bump-version.mjs "${{ inputs.version }}" "${{ inputs.preid }}" "${{ github.ref_name }}"
+          rm bump-version.mjs
+
+      - name: Install AutoIt via Chocolatey
+        shell: pwsh
+        run: |
+          choco install autoit -y
+          refreshenv || true
+
+      - name: Compile AutoIt scripts (to VistumblerMDB)
+        shell: pwsh
+        run: |
+          # Use scripts/compile-autoit.ps1 effectively to update repo files
+          $script = Join-Path $PWD 'scripts\compile-autoit.ps1'
+          if (Test-Path $script) {
+             # Compile directly back to VistumblerMDB
+             & $script -SourceDir 'VistumblerMDB' -OutDir 'VistumblerMDB' -ForceX86
+          } else {
+             Write-Error "Compile script not found at $script"
+             exit 1
+          }
+
+      - name: Sign compiled EXEs
+        shell: pwsh
+        env:
+          SIG_PFX_B64: ${{ secrets.SIG_PFX_B64 }}
+          SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
+        run: |
+           if ([string]::IsNullOrWhiteSpace($env:SIG_PFX_B64)) {
+               Write-Warning "Skipping signing because SIG_PFX_B64 is empty."
+               exit 0
+           }
+           # 1. Decode Cert
+           $pfxPath = Join-Path $PWD 'temp_sign_cert.pfx'
+           [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:SIG_PFX_B64))
+           
+           # 2. Find Signtool
+           $signtoolPath = ""
+           $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+           
+           if ($signtool) {
+             $signtoolPath = $signtool.Path
+           } else {
+             $paths = @(
+               'C:\Program Files (x86)\Windows Kits\10\bin',
+               'C:\Program Files (x86)\Windows Kits\8.1\bin'
+             )
+             $candidates = @()
+             foreach ($p in $paths) { if (Test-Path $p) { $candidates += Get-ChildItem -Path $p -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue } }
+             
+             $arch = $env:PROCESSOR_ARCHITECTURE
+             if ($arch -eq 'AMD64') { $archStr = 'x64' }
+             elseif ($arch -eq 'ARM64') { $archStr = 'arm64' }
+             else { $archStr = 'x86' }
+             
+             Write-Host "Detected Architecture: $arch (looking for $archStr)"
+             
+             # 1. Try exact match for architecture
+             $best = $candidates | Where-Object { $_.FullName -Like "*\$archStr\*" } | Select-Object -First 1
+             
+             # 2. Fallback for AMD64 (can run x86)
+             if (-not $best -and $archStr -eq 'x64') {
+                $best = $candidates | Where-Object { $_.FullName -Like "*\x86\*" } | Select-Object -First 1
+             }
+             
+             # 3. Fallback: avoid known incompatible
+             if (-not $best) {
+                if ($archStr -ne 'arm64') {
+                    # Avoid arm64 on non-arm machinery
+                    $best = $candidates | Where-Object { $_.FullName -notmatch 'arm64' } | Select-Object -First 1
+                }
+             }
+             
+             # 4. Final fallback
+             if (-not $best) { $best = $candidates | Select-Object -First 1 }
+             
+             if ($best) {
+               $signtoolPath = $best.FullName
+             }
+           }
+           
+           if (-not $signtoolPath) {
+              choco install windows-sdk-10.0 -y --no-progress
+              refreshenv || true
+              $cmd = Get-Command signtool.exe -ErrorAction SilentlyContinue
+              if ($cmd) { $signtoolPath = $cmd.Path }
+           }
+           
+           if (-not $signtoolPath) { Write-Warning "Signtool not found, skipping signing"; exit 0 }
+
+           # 3. Sign
+           $files = Get-ChildItem -Path 'VistumblerMDB' -Filter *.exe -Recurse
+           foreach ($f in $files) {
+              Write-Host "Signing $($f.FullName)"
+              & $signtoolPath sign /f $pfxPath /p $env:SIG_PFX_PASS /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
+           }
+           Remove-Item -Path $pfxPath -Force -ErrorAction SilentlyContinue
+
+      - name: Commit Bump and Binaries
+        id: commit_bump
+        shell: pwsh
+        run: |
+           $ver = "${{ steps.bump.outputs.version }}"
+           $branch = "release-v$ver"
+           
+           git config user.name "github-actions[bot]"
+           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+           
+           # Create branch
+           git checkout -b $branch
+           
+           # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs)
+           git add VistumblerMDB
+           
+           git commit -m "Bump version to v$ver and update binaries"
+           
+           # Push this initial commit immediately so the Action can see it / fetch it
+           git push origin $branch --force
+           
+           $hash = git log -n 1 --format=%H
+           "commit_hash=$hash" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+           Write-Host "Bump Commit Hash: $hash"
+
+      - name: Update versions.ini with new Commit Hash
+        shell: pwsh
+        env:
+           BUMP_HASH: ${{ steps.commit_bump.outputs.commit_hash }}
+        run: |
+           $hash = $env:BUMP_HASH
+           $iniPath = 'VistumblerMDB/versions.ini'
+           if (-not (Test-Path $iniPath)) { Write-Warning "versions.ini not found"; exit 0 }
+           
+           # Find files changed in the bump commit
+           $rawChangedFiles = @(git diff-tree --no-commit-id --name-only -r $hash)
+           
+           # Expand to include .au3 files corresponding to changed .exe files
+           $changedFiles = @($rawChangedFiles)
+           foreach ($f in $rawChangedFiles) {
+               if ($f -match '\.exe$') {
+                   $au3 = $f -replace '\.exe$', '.au3'
+                   if (Test-Path $au3) {
+                       if ($changedFiles -notcontains $au3) {
+                           $changedFiles += $au3
+                           Write-Host "Implied update for: $au3 (because $f changed)"
+                       }
+                   }
+               }
+           }
+           
+           Write-Host "Changed files in $hash (including implied AU3):"
+           $changedFiles | ForEach-Object { Write-Host " - $_" }
+           
+           $lines = Get-Content $iniPath
+           $newLines = @()
+           $updatedCount = 0
+           
+           foreach ($line in $lines) {
+              if ($line -match '^([^=]+?)\s*=\s*([a-f0-9]{40})\s*$') {
+                 $fileKey = $matches[1]
+                 # Normalize fileKey to forward slashes for matching
+                 $fileKeyNorm = $fileKey -replace '\\', '/'
+                 $fullPath = "VistumblerMDB/$fileKeyNorm"
+                 
+                 # Check if this file was changed
+                 if ($changedFiles -contains $fullPath) {
+                    # Skip vistumbler_updater from automatic version bump updates to avoid constant re-downloading
+                    if ($fileKeyNorm -match 'vistumbler_updater\.(au3|exe)') {
+                        Write-Host "Skipping update for $fileKey (excluded from version bump)"
+                        $newLines += $line
+                    } else {
+                        $newLines += "$fileKey=$hash"
+                        $updatedCount++
+                        Write-Host "Updated $fileKey to $hash"
+                    }
+                 } else {
+                    $newLines += $line
+                 }
+              } else {
+                 $newLines += $line
+              }
+           }
+           
+           if ($updatedCount -gt 0) {
+              $newLines | Set-Content -Path $iniPath -Encoding UTF8
+              Write-Host "versions.ini updated."
+           } else {
+              Write-Host "No relevant files found in versions.ini to update."
+           }
+
+      - name: Commit versions.ini and Push
+        shell: pwsh
+        env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+           $ver = "${{ steps.bump.outputs.version }}"
+           $branch = "release-v$ver"
+           
+           # Commit versions.ini
+           $toAdd = @()
+           if (Test-Path "VistumblerMDB/versions.ini") { $toAdd += "VistumblerMDB/versions.ini" }
+           
+           if ($toAdd.Count -gt 0) {
+              git add $toAdd
+              # Only commit if we actually added something grounded
+              if (git status --porcelain | Select-String "VistumblerMDB/") {
+                 git commit -m "Update versions.ini"
+              }
+           }
+           
+           git push origin $branch --force
+
+      - name: Create Pull Request
+        shell: pwsh
+        env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+           $ver = "${{ steps.bump.outputs.version }}"
+           $branch = "release-v$ver"
+           
+           $body = @"
+           Bump version, compile binaries, and update versions.ini.
+
+           - Updated #AutoIt3Wrapper_Res_Fileversion
+           - Updated `$version
+           "@
+           
+           # Check if PR exists
+           $existingPr = gh pr list --head $branch --base ${{ github.ref_name }} --json number --limit 1 | ConvertFrom-Json
+           if ($existingPr -and $existingPr.Count -gt 0) {
+              Write-Host "PR already exists: #$($existingPr[0].number)"
+           } else {
+              Write-Host "Creating new PR..."
+              gh pr create --title "Bump Vistumbler version to v$ver" --body $body --base ${{ github.ref_name }} --head $branch
+           }
