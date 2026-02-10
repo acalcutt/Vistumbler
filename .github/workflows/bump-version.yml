@@ -250,7 +250,7 @@ jobs:
 
       - name: Sign compiled EXEs
         shell: pwsh
-        if: ${{ secrets.SIG_PFX_B64 != '' }}
+        if: secrets.SIG_PFX_B64 != ''
         env:
           SIG_PFX_B64: ${{ secrets.SIG_PFX_B64 }}
           SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
