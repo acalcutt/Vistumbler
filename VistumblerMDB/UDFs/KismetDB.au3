@@ -87,10 +87,6 @@ EndFunc
 ; Function Name:    _KismetDB_AddPacket
 ; Description:      Adds a packet to the KismetDB
 ; ===============================================================================================================================
-; ===============================================================================================================================
-; Function Name:    _KismetDB_AddPacket
-; Description:      Adds a packet to the KismetDB
-; ===============================================================================================================================
 Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac, $transmac, $frequency, $lat, $lon, $signal, $datasource, $dlt, $error, $packetid, $packet_data, $packet_len, $tags = "")
     ; $packet_data should be a hex string like "0A0B0C..."
     Local $sBlob = "X''"
@@ -100,7 +96,7 @@ Func _KismetDB_AddPacket($hDB, $ts_sec, $ts_usec, $phyname, $sourcemac, $destmac
 
     Local $sQuery = "INSERT INTO packets (ts_sec, ts_usec, phyname, sourcemac, destmac, transmac, frequency, devkey, lat, lon, alt, speed, heading, packet_len, signal, datasource, dlt, packet, error, tags, datarate, hash, packetid, packet_full_len) VALUES (" & _
         $ts_sec & ", " & _
-        0 & ", " & _
+        $ts_usec & ", " & _
         _SQLite_Escape($phyname) & ", " & _
         _SQLite_Escape($sourcemac) & ", " & _
         _SQLite_Escape($destmac) & ", " & _

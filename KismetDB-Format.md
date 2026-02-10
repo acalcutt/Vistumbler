@@ -613,12 +613,12 @@ Vistumbler imports KismetDB files via the `_ImportKismetDB()` function. The impo
    - Parse cipher: Look for CCMP/AES, TKIP, GCMP keywords
    - Example: `"WPA2 WPA2-PSK AES-CCMP"` → Auth=`"WPA2-Personal"`, Encr=`"CCMP"`
 
-5. **Convert timestamps** — Unix epoch seconds are converted to local date/time strings using `_StringFormatTime()` from `UnixTime.au3` (the same method used by the Wardrive import):
+5. **Convert timestamps** — Kismet epoch seconds are converted to UTC date/time strings using `_StringFormatTimeUTC()` from `UnixTime.au3` to avoid timezone shifts:
    ```autoit
-   $sDate = _StringFormatTime("%Y", $iFirstTime) & "-" & _StringFormatTime("%m", $iFirstTime) & "-" & _StringFormatTime("%d", $iFirstTime)
-   $sTime = _StringFormatTime("%X", $iFirstTime) & ".000"
+   $sDate = _StringFormatTimeUTC("%Y", $iFirstTime) & "-" & _StringFormatTimeUTC("%m", $iFirstTime) & "-" & _StringFormatTimeUTC("%d", $iFirstTime)
+   $sTime = _StringFormatTimeUTC("%X", $iFirstTime) & ".000"
    ```
-   Both `first_time` and `last_time` are converted. The date format is `YYYY-MM-DD` and time format is `HH:MM:SS.000`, matching Vistumbler's internal GPS/HIST table conventions.
+   Both `first_time` and `last_time` are converted. The date format is `YYYY-MM-DD` and time format is `HH:MM:SS.000` in UTC, matching Vistumbler's internal GPS/HIST table conventions.
 
 6. **Convert GPS** — Decimal degrees are converted to Vistumbler's internal DMM format using `_Format_GPS_DDD_to_DMM()`.
 

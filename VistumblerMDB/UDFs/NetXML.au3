@@ -25,7 +25,7 @@ EndFunc
 ; Function Name:    _NetXML_AddNetwork
 ; Description:      Adds a wireless-network entry
 ; ===============================================================================================================================
-Func _NetXML_AddNetwork($bssid, $ssid, $manuf, $channel, $freq, $type, $encrypt, $essid_cloaked, $first_time, $last_time, $max_rate, $max_signal, $min_signal, $max_signal_history, $datasize, $gps_lat, $gps_lon, $gps_alt, $gps_speed)
+Func _NetXML_AddNetwork($bssid, $ssid, $manuf, $channel, $freq, $type, $encrypt, $essid_cloaked, $first_time, $last_time, $max_rate, $max_signal, $min_signal, $max_signal_history, $datasize, $gps_lat, $gps_lon, $gps_alt, $gps_speed, $last_rssi = 0, $min_rssi = 0, $max_rssi = 0)
     ; Calculate frequency if missing
     If Number($freq) <= 0 Then $freq = _NetXML_GetFreqFromChannel($channel)
     
@@ -48,17 +48,17 @@ Func _NetXML_AddNetwork($bssid, $ssid, $manuf, $channel, $freq, $type, $encrypt,
     $sNet &= '  <freqmhz>' & $freq & ' 0</freqmhz>' & @CRLF
     $sNet &= '  <maxseenrate>' & $max_rate & '</maxseenrate>' & @CRLF
     $sNet &= '  <snr-info>' & @CRLF
-    $sNet &= '    <last_signal_dbm>' & $max_signal & '</last_signal_dbm>' & @CRLF
+    $sNet &= '    <last_signal_dbm>' & $last_rssi & '</last_signal_dbm>' & @CRLF
     $sNet &= '    <last_noise_dbm>0</last_noise_dbm>' & @CRLF
-    $sNet &= '    <last_signal_rssi>' & $max_signal & '</last_signal_rssi>' & @CRLF
+    $sNet &= '    <last_signal_rssi>' & $last_rssi & '</last_signal_rssi>' & @CRLF
     $sNet &= '    <last_noise_rssi>0</last_noise_rssi>' & @CRLF
-    $sNet &= '    <min_signal_dbm>' & $min_signal & '</min_signal_dbm>' & @CRLF
+    $sNet &= '    <min_signal_dbm>' & $min_rssi & '</min_signal_dbm>' & @CRLF
     $sNet &= '    <min_noise_dbm>0</min_noise_dbm>' & @CRLF
-    $sNet &= '    <min_signal_rssi>' & $min_signal & '</min_signal_rssi>' & @CRLF
+    $sNet &= '    <min_signal_rssi>' & $min_rssi & '</min_signal_rssi>' & @CRLF
     $sNet &= '    <min_noise_rssi>0</min_noise_rssi>' & @CRLF
-    $sNet &= '    <max_signal_dbm>' & $max_signal_history & '</max_signal_dbm>' & @CRLF
+    $sNet &= '    <max_signal_dbm>' & $max_rssi & '</max_signal_dbm>' & @CRLF
     $sNet &= '    <max_noise_dbm>0</max_noise_dbm>' & @CRLF
-    $sNet &= '    <max_signal_rssi>' & $max_signal_history & '</max_signal_rssi>' & @CRLF
+    $sNet &= '    <max_signal_rssi>' & $max_rssi & '</max_signal_rssi>' & @CRLF
     $sNet &= '    <max_noise_rssi>0</max_noise_rssi>' & @CRLF
     $sNet &= '  </snr-info>' & @CRLF
     
@@ -96,8 +96,13 @@ EndFunc
 Func _NetXML_Save($sFilePath)
     $__sNetXML_Content &= '</detection-run>'
     Local $hFile = FileOpen($sFilePath, 2 + 8) ; Overwrite + Create Dir
+    If $hFile = -1 Then
+        SetError(1)
+        Return False
+    EndIf
     FileWrite($hFile, $__sNetXML_Content)
     FileClose($hFile)
+    Return True
 EndFunc
 
 ; ===============================================================================================================================

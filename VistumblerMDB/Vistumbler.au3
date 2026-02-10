@@ -14354,11 +14354,23 @@ Func _ExportNetXML_Common($iFilter)
     
     _NetXML_Create()
     
+    ; Build a base SELECT that defines the exact column order used below when indexing into $aAPs
+    Local $sBaseSelect = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+
     Local $sQuery
     If $iFilter = 1 Then
-        $sQuery = $AddQuery
+        ; When filtering, reuse the WHERE clause from $AddQuery but keep the same column order as $sBaseSelect
+        Local $iWherePos = StringInStr($AddQuery, " WHERE ", 2) ; case-insensitive search for " WHERE "
+        
+        If $iWherePos > 0 Then
+            Local $sWhere = StringMid($AddQuery, $iWherePos + 7) ; skip past " WHERE "
+            $sQuery = $sBaseSelect & " WHERE " & $sWhere
+        Else
+            ; If no WHERE is found in $AddQuery, fall back to the unfiltered base select
+            $sQuery = $sBaseSelect
+        EndIf
     Else
-        $sQuery = "SELECT ApID, SSID, BSSID, NETTYPE, RADTYPE, CHAN, AUTH, ENCR, SecType, BTX, OTX, HighSignal, HighRSSI, MANU, LABEL, HighGpsHistID, FirstHistID, LastHistID, LastGpsID, Active FROM AP"
+        $sQuery = $sBaseSelect
     EndIf
     
     Local $aAPs = _RecordSearch($VistumblerDB, $sQuery, $DB_OBJ)
@@ -14423,17 +14435,25 @@ Func _ExportNetXML_Common($iFilter)
         Local $iApID = $aAPs[$i][1]
         Local $iMinSig = $iHighSig
         Local $iLastSig = $iHighSig
+        Local $iMinRssi = -100
+        Local $iMaxRssi = -100
+        Local $iLastRssi = -100
         
         If $iApID <> 0 Then
-             Local $aSigStats = _RecordSearch($VistumblerDB, "SELECT Min(Signal), Max(Signal) FROM Hist WHERE ApID=" & $iApID, $DB_OBJ)
+             Local $aSigStats = _RecordSearch($VistumblerDB, "SELECT Min(Signal), Max(Signal), Min(RSSI), Max(RSSI) FROM Hist WHERE ApID=" & $iApID, $DB_OBJ)
              If UBound($aSigStats) > 1 Then
                  $iMinSig = Number($aSigStats[1][1])
                  $iHighSig = Number($aSigStats[1][2])
+                 $iMinRssi = Number($aSigStats[1][3])
+                 $iMaxRssi = Number($aSigStats[1][4])
              EndIf
              ; Get Last Signal from LastHistID
              If $iLastHistID <> 0 Then
-                  Local $aLastSig = _RecordSearch($VistumblerDB, "SELECT Signal FROM Hist WHERE HistID=" & $iLastHistID, $DB_OBJ)
-                  If UBound($aLastSig) > 1 Then $iLastSig = Number($aLastSig[1][1])
+                  Local $aLastSig = _RecordSearch($VistumblerDB, "SELECT Signal, RSSI FROM Hist WHERE HistID=" & $iLastHistID, $DB_OBJ)
+                  If UBound($aLastSig) > 1 Then
+                      $iLastSig = Number($aLastSig[1][1])
+                      $iLastRssi = Number($aLastSig[1][2])
+                  EndIf
              EndIf
         EndIf
         
@@ -14441,7 +14461,7 @@ Func _ExportNetXML_Common($iFilter)
         $fLat = Number(StringReplace(StringReplace(StringReplace($fLat, "N", ""), "S", "-"), " ", ""))
         $fLon = Number(StringReplace(StringReplace(StringReplace($fLon, "E", ""), "W", "-"), " ", ""))
         
-        _NetXML_AddNetwork($sBSSID, $sSSID, $sManuf, $iChannel, 0, $sType, $sAuth & "-" & $sEncr, "false", $sFirstTime, $sLastTime, 54, $iLastSig, $iMinSig, $iHighSig, 0, $fLat, $fLon, $fAlt, $fSpeed)
+        _NetXML_AddNetwork($sBSSID, $sSSID, $sManuf, $iChannel, 0, $sType, $sAuth & "-" & $sEncr, "false", $sFirstTime, $sLastTime, 54, $iLastSig, $iMinSig, $iHighSig, 0, $fLat, $fLon, $fAlt, $fSpeed, $iLastRssi, $iMinRssi, $iMaxRssi)
     Next
     
     _NetXML_Save($sFile)
@@ -14884,9 +14904,9 @@ EndFunc
 Func _ImportKismetAuto($sFile)
     If $Debug = 1 Then GUICtrlSetData($debugdisplay, '_ImportKismetAuto()')
     
-    If StringInStr($sFile, ".kismet") Then
-        _ImportKismetDB($sFile)
-    ElseIf StringInStr($sFile, ".netxml") Then
+    If StringLower(StringRight($sFile, 7)) = ".kismet" Then
+    _ImportKismetDB($sFile)
+    ElseIf StringLower(StringRight($sFile, 7)) = ".netxml" Then
         _ImportNetXML($sFile)
     Else
         MsgBox(16, "Error", "Unknown file type.")
@@ -15594,7 +15614,7 @@ Func _ImportNetXML($sFile)
             If UBound($GpsMatchArray) > 1 Then
                 ; Check results for matching Date/Time
                 For $g = 1 To UBound($GpsMatchArray) - 1
-                    If $GpsMatchArray[$g][1] = $sDate And $GpsMatchArray[$g][2] = $sTime Then
+                    If $GpsMatchArray[$g][2] = $sDate And $GpsMatchArray[$g][3] = $sTime Then
                         $LoadGID = $GpsMatchArray[$g][1]
                         $FoundGpsMatch = 1
                         ExitLoop
