@@ -1,0 +1,357 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: create-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check_release:
+    runs-on: ubuntu-latest
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for existing release
+        id: check
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const content = fs.readFileSync('VistumblerMDB/Vistumbler.au3','utf8');
+            let verMatch = content.match(/\$version\s*=\s*'v?([0-9]+(?:\.[0-9]+)*)'/);
+            let ver = verMatch ? verMatch[1] : null;
+            if (!ver) {
+              const m2 = content.match(/#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)/);
+              ver = m2 ? m2[1] : null;
+            }
+            if (!ver) { core.setOutput('proceed','true'); return; }
+            const tags = [`v${ver}`, `v${ver.replace(/\./g,'-')}`];
+            for (const tag of tags) {
+              try {
+                const res = await github.rest.repos.getReleaseByTag({ owner: context.repo.owner, repo: context.repo.repo, tag });
+                if (res && res.data && res.data.draft === false) { core.setOutput('proceed','false'); return; }
+              } catch (e) {
+                if (e.status === 404) { continue; } else { throw e; }
+              }
+            }
+            core.setOutput('proceed','true');
+
+  package_and_release:
+    needs: check_release
+    if: needs.check_release.outputs.proceed == 'true'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine version and patch NSI
+        shell: pwsh
+        id: determine_version
+        run: |
+          $au3 = Join-Path $PWD 'VistumblerMDB\Vistumbler.au3'
+          if (-not (Test-Path $au3)) { Write-Error "Vistumbler.au3 not found"; exit 2 }
+          $content = Get-Content $au3 -Raw
+          $ver = ''
+          # Use single quotes to prevent PowerShell variable interpolation of $version
+          if ($content -match '\$version\s*=\s*''v?([0-9]+(?:\.[0-9]+)*)''') { $ver = $matches[1] }
+          if (-not $ver) {
+            if ($content -match '#AutoIt3Wrapper_Res_Fileversion\s*=\s*([0-9\.]+)') { $ver = $matches[1] }
+          }
+          if (-not $ver) { Write-Error "Could not determine version"; exit 2 }
+          Write-Host "Detected version: $ver"
+          "version=$ver" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+          # prepare NSI
+          $nsiTemplate = Join-Path $PWD 'Installer\Vistumbler.nsi.template'
+          $nsiTarget = Join-Path $PWD 'Installer\Vistumbler.nsi'
+          Copy-Item -Path $nsiTemplate -Destination $nsiTarget -Force
+          $verDash = $ver -replace '\.','-'
+          $outFileName = "OutFile `"Vistumbler_v$verDash.exe`""
+          $displayVer = "WriteRegStr HKLM `"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler`" `"DisplayVersion`" `"$ver`""
+          $content = Get-Content $nsiTarget
+          $content = $content -replace 'OutFile\s+"[^"]+"', $outFileName
+          $content = $content -replace 'WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Vistumbler" "DisplayVersion" "[^"]+"', $displayVer
+          $content | Set-Content $nsiTarget
+          Write-Host "Patched NSI -> $nsiTarget"
+
+      - name: Create ZIP of `VistumblerMDB` (versioned)
+        shell: pwsh
+        run: |
+          $nsiTarget = Join-Path $PWD 'Installer\Vistumbler.nsi'
+          if (-not (Test-Path $nsiTarget)) { Write-Error "Patched NSI not found"; exit 2 }
+          $nsiText = Get-Content $nsiTarget -Raw
+          if ($nsiText -match 'OutFile\s+"Vistumbler_v([0-9\-]+)\.exe"') { $ver = ($matches[1] -replace '-', '.') } else { $ver = 'unknown' }
+          $zipOut = "builds\Vistumbler_v$ver.zip"
+          $zipPortable = "builds\Vistumbler_v${ver}_Portable.zip"
+          if (-not (Test-Path builds)) { New-Item -ItemType Directory -Path builds | Out-Null }
+          Write-Host "Creating zip $zipOut from VistumblerMDB"
+          Compress-Archive -Path 'VistumblerMDB\*' -DestinationPath $zipOut -Force
+          Write-Host "ZIP created: $zipOut"
+
+          # Create portable zip: copy tree, set PortableMode=1 in Settings\vistumbler_settings.ini, then zip
+          $portableTemp = Join-Path $PWD 'temp_portable'
+          if (Test-Path $portableTemp) { Remove-Item -Recurse -Force $portableTemp }
+          New-Item -ItemType Directory -Path $portableTemp -Force | Out-Null
+          Copy-Item -Path 'VistumblerMDB' -Destination $portableTemp -Recurse
+          $settingsPath = Join-Path $portableTemp 'VistumblerMDB\Settings\vistumbler_settings.ini'
+          if (Test-Path $settingsPath) {
+            $lines = @(Get-Content $settingsPath)
+            $newLines = @()
+            $inVistumbler = $false
+            $found = $false
+            $vistumblerFound = $false
+            foreach ($line in $lines) {
+              if ($line -match '^\s*\[Vistumbler\]') {
+                $inVistumbler = $true
+                $vistumblerFound = $true
+                $newLines += $line
+                continue
+              }
+              if ($line -match '^\s*\[') { $inVistumbler = $false }
+              if ($inVistumbler -and $line -match '^\s*PortableMode\s*=') {
+                $newLines += 'PortableMode=1'
+                $found = $true
+              } else {
+                $newLines += $line
+              }
+            }
+            if (-not $found) {
+              if ($vistumblerFound) {
+                 $final = @()
+                 foreach ($l in $newLines) {
+                   $final += $l
+                   if ($l -match '^\s*\[Vistumbler\]') { $final += 'PortableMode=1' }
+                 }
+                 $newLines = $final
+              } else {
+                 $newLines += ''
+                 $newLines += '[Vistumbler]'
+                 $newLines += 'PortableMode=1'
+              }
+            }
+            $newLines | Set-Content -Path $settingsPath -Encoding UTF8
+          } else {
+            New-Item -ItemType Directory -Path (Split-Path $settingsPath -Parent) -Force | Out-Null
+            "[Vistumbler]`r`nPortableMode=1" | Out-File -FilePath $settingsPath -Encoding utf8
+          }
+          Write-Host "Creating portable zip $zipPortable from modified copy"
+          Compress-Archive -Path (Join-Path $portableTemp 'VistumblerMDB\*') -DestinationPath $zipPortable -Force
+          Write-Host "Portable ZIP created: $zipPortable"
+          Remove-Item -Recurse -Force $portableTemp
+
+      - name: Install NSIS (use repo installer if present)
+        shell: pwsh
+        run: |
+          $localInst = Join-Path $PWD 'Installer\nsis-3.04-setup.exe'
+          if (Test-Path $localInst) {
+            Write-Host "Found local NSIS installer: $localInst. Installing silently..."
+            Start-Process -FilePath $localInst -ArgumentList '/S' -Wait -NoNewWindow
+          } else {
+            Write-Host "Local NSIS installer not found; installing via Chocolatey"
+            choco install nsis -y
+          }
+          # Add NSIS to PATH for subsequent steps
+          $nsisPath = 'C:\Program Files (x86)\NSIS'
+          if (Test-Path $nsisPath) {
+            Write-Host "Adding NSIS to GITHUB_PATH: $nsisPath"
+            Add-Content -Path $env:GITHUB_PATH -Value $nsisPath
+            # Also update PATH for this session
+            $env:PATH = "$env:PATH;$nsisPath"
+          }
+
+      - name: Build NSIS installer
+        shell: pwsh
+        run: |
+          # Try to find makensis.exe
+          $makensis = Get-Command makensis.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $makensis) {
+            # Search common NSIS installation paths
+            $nsisLocations = @(
+              'C:\Program Files (x86)\NSIS\makensis.exe',
+              'C:\Program Files\NSIS\makensis.exe'
+            )
+            foreach ($loc in $nsisLocations) {
+              if (Test-Path $loc) {
+                $makensis = Get-Item $loc
+                Write-Host "Found makensis at: $loc"
+                break
+              }
+            }
+          }
+          if (-not $makensis) { Write-Error 'makensis.exe not found'; exit 2 }
+          $nsi = 'Installer\Vistumbler.nsi'
+          if (-not (Test-Path $nsi)) { Write-Error "NSI script $nsi not found"; exit 2 }
+          Write-Host "Running makensis on $nsi"
+          & $makensis.Path /V2 $nsi
+          Write-Host "NSIS finished"
+
+      - name: Sign Installer
+        shell: pwsh
+        env:
+          SIG_PFX: ${{ secrets.SIG_PFX }}
+          SIG_PFX_PASS: ${{ secrets.SIG_PFX_PASS }}
+        run: |
+           if (-not $env:SIG_PFX) { Write-Warning "No SIG_PFX secret found, skipping signing."; exit 0 }
+           
+           # Decode PFX
+           $pfxPath = Join-Path $PWD 'cert.pfx'
+           [IO.File]::WriteAllBytes($pfxPath, [Convert]::FromBase64String($env:SIG_PFX))
+           
+           # Find Signtool
+           $signtoolPath = ""
+           $programFiles = ${env:ProgramFiles(x86)}
+           if (-not $programFiles) { $programFiles = $env:ProgramFiles }
+           
+           # Search common paths
+           $candidates = Get-ChildItem -Path "$programFiles\Windows Kits" -Include signtool.exe -Recurse -ErrorAction SilentlyContinue
+           if ($candidates) {
+             # Prioritize x64/x86, avoid arm64 if not on arm machine
+             $best = $null
+             # 1. Try x64
+             $best = $candidates | Where-Object { $_.FullName -match 'x64' } | Select-Object -First 1
+             
+             # 2. Try x86
+             if (-not $best) {
+                $best = $candidates | Where-Object { $_.FullName -match 'x86' } | Select-Object -First 1
+             }
+             
+             # 3. Try any non-arm
+             if (-not $best) {
+                $best = $candidates | Where-Object { $_.FullName -notmatch 'arm' } | Select-Object -First 1
+             }
+             
+             # 4. Final fallback
+             if (-not $best) { $best = $candidates | Select-Object -First 1 }
+             
+             if ($best) {
+               $signtoolPath = $best.FullName
+             }
+           }
+           
+           if (-not $signtoolPath) {
+              choco install windows-sdk-10.0 -y --no-progress
+              refreshenv || true
+              $cmd = Get-Command signtool.exe -ErrorAction SilentlyContinue
+              if ($cmd) { $signtoolPath = $cmd.Path }
+           }
+           
+           if (-not $signtoolPath) { Write-Warning "Signtool not found, skipping signing"; exit 0 }
+
+           # Sign installer
+           $inst = Get-ChildItem -Path $PWD -include 'Vistumbler_v*.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+           if ($inst) {
+              Write-Host "Signing $($inst.FullName)"
+              & $signtoolPath sign /f $pfxPath /p $env:SIG_PFX_PASS /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $inst.FullName
+           } else {
+              Write-Warning "No installer found to sign"
+           }
+           
+           Remove-Item -Path $pfxPath -Force -ErrorAction SilentlyContinue
+
+      - name: Find built installer and prepare release assets
+        shell: pwsh
+        id: find_assets
+        env:
+          VERSION: ${{ steps.determine_version.outputs.version }}
+        run: |
+          $ver = $env:VERSION
+          if (-not $ver) { Write-Error "Version not found in environment variables"; exit 2 }
+          $verDash = $ver -replace '\.', '-'
+          Write-Host "Looking for assets for version: $ver (dash: $verDash)"
+
+          $out = @{ installer=''; zip=''; zip_portable=''; version=$ver; version_dash=$verDash }
+          
+          # Look for the versioned installer (Vistumbler_v*.exe) specifically
+          $inst = Get-ChildItem -Path $PWD -include "Vistumbler_v$verDash.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($inst) { 
+             $out.installer = $inst.FullName 
+             Write-Host "Found installer: $($inst.FullName)"
+          } else {
+             # Fallback to wildcard search if specific version search fails but regex safety check later will catch mismatch
+             $inst = Get-ChildItem -Path $PWD -include 'Vistumbler_v*.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+             if ($inst) {
+                $out.installer = $inst.FullName
+                Write-Host "Found installer (wildcard): $($inst.FullName)"
+             } else {
+                Write-Host "No versioned installer found!"
+             }
+          }
+
+          $zip = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter "Vistumbler_v$ver.zip" -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch '_Portable' } | Select-Object -First 1
+          if ($zip) { $out.zip = $zip.FullName }
+          
+          $zipp = Get-ChildItem -Path (Join-Path $PWD 'builds') -Filter "Vistumbler_v${ver}_Portable.zip" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($zipp) { $out.zip_portable = $zipp.FullName }
+
+          # Verify found assets match expected version
+          if ($out.installer -and ($out.installer -notmatch "Vistumbler_v$verDash.exe")) {
+             Write-Warning "Found installer name $($out.installer) does not match expected version $verDash"
+          }
+
+          Write-Host "Installer: $($out.installer)"
+          Write-Host "Zip: $($out.zip)"
+          Write-Host "Portable Zip: $($out.zip_portable)"
+          Write-Host "Version: $($out.version) (dash: $($out.version_dash))"
+          
+          if (-not $out.installer -and -not $out.zip) {
+            Write-Error "Could not find expected assets for version $ver! Release will fail."
+            exit 1
+          }
+
+          # set outputs
+          "installer=$($out.installer)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "zip=$($out.zip)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "zip_portable=$($out.zip_portable)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "version=$($out.version)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "version_dash=$($out.version_dash)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.find_assets.outputs.version }}
+          release_name: Vistumbler v${{ steps.find_assets.outputs.version }}
+          draft: false
+          prerelease: false
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.find_assets.outputs.installer }}
+          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}.exe"
+          asset_content_type: application/octet-stream
+
+      - name: Upload zip asset
+        if: steps.find_assets.outputs.zip != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.find_assets.outputs.zip }}
+          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}.zip"
+          asset_content_type: application/zip
+
+      - name: Upload portable zip asset
+        if: steps.find_assets.outputs.zip_portable != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ steps.find_assets.outputs.zip_portable }}
+          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}_Portable.zip"
+          asset_content_type: application/zip
