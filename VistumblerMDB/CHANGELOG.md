@@ -1,11 +1,11 @@
+# Vistumbler changelog
+
 ## main
 ### ✨ Features and improvements
 - _...Add new stuff here..._
 
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
-
-# Vistumbler changelog
 
 ## 10.9.4
 ### 🐞 Bug fixes
