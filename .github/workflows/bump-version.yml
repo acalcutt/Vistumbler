@@ -276,10 +276,30 @@ jobs:
              $candidates = @()
              foreach ($p in $paths) { if (Test-Path $p) { $candidates += Get-ChildItem -Path $p -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue } }
              
-             # Priority: x64 -> x86 -> Anything not arm64 -> Anything
-             $best = $candidates | Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
-             if (-not $best) { $best = $candidates | Where-Object { $_.FullName -match '\\x86\\' } | Select-Object -First 1 }
-             if (-not $best) { $best = $candidates | Where-Object { $_.FullName -notmatch 'arm64' } | Select-Object -First 1 }
+             $arch = $env:PROCESSOR_ARCHITECTURE
+             if ($arch -eq 'AMD64') { $archStr = 'x64' }
+             elseif ($arch -eq 'ARM64') { $archStr = 'arm64' }
+             else { $archStr = 'x86' }
+             
+             Write-Host "Detected Architecture: $arch (looking for $archStr)"
+             
+             # 1. Try exact match for architecture
+             $best = $candidates | Where-Object { $_.FullName -Like "*\$archStr\*" } | Select-Object -First 1
+             
+             # 2. Fallback for AMD64 (can run x86)
+             if (-not $best -and $archStr -eq 'x64') {
+                $best = $candidates | Where-Object { $_.FullName -Like "*\x86\*" } | Select-Object -First 1
+             }
+             
+             # 3. Fallback: avoid known incompatible
+             if (-not $best) {
+                if ($archStr -ne 'arm64') {
+                    # Avoid arm64 on non-arm machinery
+                    $best = $candidates | Where-Object { $_.FullName -notmatch 'arm64' } | Select-Object -First 1
+                }
+             }
+             
+             # 4. Final fallback
              if (-not $best) { $best = $candidates | Select-Object -First 1 }
              
              if ($best) {
