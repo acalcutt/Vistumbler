@@ -394,18 +394,48 @@ jobs:
               Write-Host "No relevant files found in versions.ini to update."
            }
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Update versions.ini"
-          branch: "release-v${{ steps.bump.outputs.version }}"
-          base: main
-          title: "Bump Vistumbler version to v${{ steps.bump.outputs.version }}"
-          body: |
-            Bump version, compile binaries, and update versions.ini.
+      - name: Commit versions.ini and Push
+        shell: pwsh
+        env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+           $ver = "${{ steps.bump.outputs.version }}"
+           $branch = "release-v$ver"
+           
+           # Commit versions.ini
+           $toAdd = @()
+           if (Test-Path "VistumblerMDB/versions.ini") { $toAdd += "VistumblerMDB/versions.ini" }
+           
+           if ($toAdd.Count -gt 0) {
+              git add $toAdd
+              # Only commit if we actually added something grounded
+              if (git status --porcelain | Select-String "VistumblerMDB/") {
+                 git commit -m "Update versions.ini"
+              }
+           }
+           
+           git push origin $branch --force
 
-            - Updated #AutoIt3Wrapper_Res_Fileversion
-            - Updated `$version`
-          signoff: false
-          delete-branch: false
+      - name: Create Pull Request
+        shell: pwsh
+        env:
+           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+           $ver = "${{ steps.bump.outputs.version }}"
+           $branch = "release-v$ver"
+           
+           $body = @"
+           Bump version, compile binaries, and update versions.ini.
+
+           - Updated #AutoIt3Wrapper_Res_Fileversion
+           - Updated `$version
+           "@
+           
+           # Check if PR exists
+           $existingPr = gh pr list --head $branch --base main --json number --limit 1 | ConvertFrom-Json
+           if ($existingPr -and $existingPr.Count -gt 0) {
+              Write-Host "PR already exists: #$($existingPr[0].number)"
+           } else {
+              Write-Host "Creating new PR..."
+              gh pr create --title "Bump Vistumbler version to v$ver" --body $body --base main --head $branch
+           }
