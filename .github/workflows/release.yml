@@ -357,45 +357,13 @@ jobs:
           }
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: v${{ steps.find_assets.outputs.version }}
-          release_name: Vistumbler v${{ steps.find_assets.outputs.version }}
-          body_path: release_notes.md
+          tag: v${{ steps.find_assets.outputs.version }}
+          name: Vistumbler v${{ steps.find_assets.outputs.version }}
+          bodyFile: release_notes.md
           draft: false
           prerelease: ${{ steps.determine_version.outputs.prerelease }}
-
-      - name: Upload release assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.find_assets.outputs.installer }}
-          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}.exe"
-          asset_content_type: application/octet-stream
-
-      - name: Upload zip asset
-        if: steps.find_assets.outputs.zip != ''
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.find_assets.outputs.zip }}
-          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}.zip"
-          asset_content_type: application/zip
-
-      - name: Upload portable zip asset
-        if: steps.find_assets.outputs.zip_portable != ''
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ steps.find_assets.outputs.zip_portable }}
-          asset_name: "Vistumbler_v${{ steps.find_assets.outputs.version_dash }}_Portable.zip"
-          asset_content_type: application/zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          artifacts: "${{ steps.find_assets.outputs.installer }},${{ steps.find_assets.outputs.zip }},${{ steps.find_assets.outputs.zip_portable }}"
