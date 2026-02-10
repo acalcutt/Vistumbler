@@ -216,14 +216,6 @@ jobs:
           // cleanup package.json
           try { fs.unlinkSync('package.json'); } catch (e) {}
 
-          // Commit changes locally on a new branch including changelog
-          const branch = `release-v${newVersionFull}`;
-          execSync(`git config user.name "github-actions[bot]"`);
-          execSync(`git config user.email "41898282+github-actions[bot]@users.noreply.github.com"`);
-          execSync(`git checkout -b ${branch}`);
-          execSync(`git add ${au3Path} ${changelogPath}`);
-          execSync(`git commit -m "Bump version to v${newVersionFull} and update changelog"`);
-
           // Export output for the workflow
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `version=${newVersionFull}\n`);
           EOF
