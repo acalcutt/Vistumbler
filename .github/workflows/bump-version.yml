@@ -263,8 +263,12 @@ jobs:
            [System.IO.File]::WriteAllBytes($pfxPath, [System.Convert]::FromBase64String($env:SIG_PFX_B64))
            
            # 2. Find Signtool
+           $signtoolPath = ""
            $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue | Select-Object -First 1
-           if (-not $signtool) {
+           
+           if ($signtool) {
+             $signtoolPath = $signtool.Path
+           } else {
              $paths = @(
                'C:\Program Files (x86)\Windows Kits\10\bin',
                'C:\Program Files (x86)\Windows Kits\8.1\bin'
@@ -273,20 +277,25 @@ jobs:
              foreach ($p in $paths) { if (Test-Path $p) { $candidates += Get-ChildItem -Path $p -Recurse -Filter signtool.exe -ErrorAction SilentlyContinue } }
              $best = $candidates | Where-Object { $_.DirectoryName -match "\\\\x64\\\\" } | Select-Object -First 1
              if (-not $best) { $best = $candidates | Select-Object -First 1 }
-             if ($best) { $signtool = $best; $env:PATH = "$env:PATH;$($best.DirectoryName)" }
+             if ($best) {
+               $signtoolPath = $best.FullName
+             }
            }
-           if (-not $signtool) {
+           
+           if (-not $signtoolPath) {
               choco install windows-sdk-10.0 -y --no-progress
               refreshenv || true
-              $signtool = Get-Command signtool.exe -ErrorAction SilentlyContinue
+              $cmd = Get-Command signtool.exe -ErrorAction SilentlyContinue
+              if ($cmd) { $signtoolPath = $cmd.Path }
            }
-           if (-not $signtool) { Write-Warning "Signtool not found, skipping signing"; exit 0 }
+           
+           if (-not $signtoolPath) { Write-Warning "Signtool not found, skipping signing"; exit 0 }
 
            # 3. Sign
            $files = Get-ChildItem -Path 'VistumblerMDB' -Filter *.exe -Recurse
            foreach ($f in $files) {
               Write-Host "Signing $($f.FullName)"
-              & $signtool.Path sign /f $pfxPath /p $env:SIG_PFX_PASS /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
+              & $signtoolPath sign /f $pfxPath /p $env:SIG_PFX_PASS /fd SHA256 /tr http://timestamp.digicert.com /td SHA256 $f.FullName
            }
            Remove-Item -Path $pfxPath -Force -ErrorAction SilentlyContinue
 
