@@ -167,7 +167,7 @@ jobs:
                 const pr = JSON.parse(prJson);
                 if (pr.author && pr.author.login && pr.author.login.includes('dependabot')) { continue; }
                 const prUrl = repoFullName ? `https://github.com/${repoFullName}/pull/${pr.number}` : `#${pr.number}`;
-                const entry = `- ${pr.title} ([#${pr.number}](${prUrl})) (by [${pr.author.login}](https://github.com/${pr.author.login}))`;
+                const entry = `- ${pr.title} ([#${pr.number}](${prUrl})) (by @${pr.author.login})`;
                 missingEntries.push(entry);
               } catch (e) {
                 // fallback: add a simple entry
@@ -189,29 +189,62 @@ jobs:
             ''
           ].join('\n');
 
-          // Preserve file title (first header block) if present
-          const titleMatch = changelog.match(/^(# .+?\n\n)/s);
+          // Robust parsing of sections
+          // 1. Identify Title (anything before the first ##)
           let title = '';
-          let rest = changelog;
-          if (titleMatch) { title = titleMatch[1]; rest = changelog.slice(title.length); }
-
-          // Replace the first '## main' in rest with the new version heading
-          rest = rest.replace('## main', newVersionHeading);
-
-          // Insert missing entries under Bug fixes if any
-          if (missingEntries.length > 0) {
-            const bugPattern = /### 🐞 Bug fixes\n([\s\S]*?)(?=(\n## |$))/m;
-            const bugMatch = rest.match(bugPattern);
-            if (bugMatch) {
-              const insertPoint = bugMatch.index + bugMatch[0].indexOf('\n', 0) + 1 + bugMatch[1].length;
-              // fallback: append after match
-              rest = rest.replace(bugPattern, `### 🐞 Bug fixes\n${bugMatch[1]}\n${missingEntries.join('\n')}\n`);
-            } else {
-              rest = rest + '\n' + missingEntries.join('\n') + '\n';
-            }
+          let body = changelog;
+          const firstSectionMatch = changelog.match(/^(.*?)(?=## )/s);
+          if (firstSectionMatch) {
+             title = firstSectionMatch[1];
+             body = changelog.slice(title.length);
+          } else if (!changelog.startsWith('##')) {
+             // Maybe empty or just title
+             title = changelog;
+             body = '';
           }
 
-          const newChangelog = title + masterSection + rest;
+          // 2. Identify 'main' section
+          // Look for '## main' followed by content until next '## ' or end of string
+          const mainRegex = /## main\s*([\s\S]*?)(?=(^|\n)## |$)/;
+          const mainMatch = body.match(mainRegex);
+
+          let oldMainContent = '';
+          let olderVersions = '';
+          
+          if (mainMatch) {
+             oldMainContent = mainMatch[1];
+             // The part of body after the main section
+             olderVersions = body.replace(mainMatch[0], '');
+          } else {
+             // specific 'main' section not found, treat whole body as older versions ?? 
+             // Or assume everything is older and we just start fresh
+             olderVersions = body;
+             oldMainContent = '\n### ✨ Features and improvements\n- _...Add new stuff here..._\n\n### 🐞 Bug fixes\n- _...Add new stuff here..._\n';
+          }
+
+          // 3. Create new version block using oldMainContent + specific Commits/PRs
+          let versionBlock = `${newVersionHeading}${oldMainContent}`;
+          
+          // Append missing PRs to the end of the version block (or merge them, but appending is safer)
+          if (missingEntries.length > 0) {
+             // remove any trailing whitespace
+             versionBlock = versionBlock.trimEnd();
+             versionBlock += '\n\n### 📜 Changes\n' + missingEntries.join('\n') + '\n\n';
+          }
+
+          // 4. Construct new changelog
+          // Ensure title ends with newline if not empty
+          if (title && !title.endsWith('\n')) title += '\n';
+          
+          // Ensure masterSection ends with newlines
+          const cleanMaster = masterSection.trim() + '\n\n';
+          
+          // Ensure versionBlock ends with newlines
+          const cleanVersion = versionBlock.trim() + '\n\n';
+
+          // Assemble: Title -> New Main -> New Version -> Older Versions
+          const newChangelog = title + cleanMaster + cleanVersion + olderVersions.trimStart();
+          
           fs.writeFileSync(changelogPath, newChangelog, 'utf8');
 
           // cleanup package.json
