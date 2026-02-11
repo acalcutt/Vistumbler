@@ -24,33 +24,33 @@ Func _KismetDB_Create($sFilePath)
     _SQLite_Exec($hDB, "BEGIN TRANSACTION;")
 
     ; KISMET table
-    _SQLite_Exec($hDB, "CREATE TABLE KISMET (kismet_version TEXT, db_version INTEGER, db_module TEXT);")
-    _SQLite_Exec($hDB, "INSERT INTO KISMET (kismet_version, db_version, db_module) VALUES ('2023-07', 10, 'kismetlog');")
+    _SQLite_Exec($hDB, "CREATE TABLE IF NOT EXISTS KISMET (kismet_version TEXT, db_version INTEGER, db_module TEXT);")
+    _SQLite_Exec($hDB, "INSERT OR REPLACE INTO KISMET (kismet_version, db_version, db_module) VALUES ('2023-07', 10, 'kismetlog');")
 
     ; ALERTS table
-    _SQLite_Exec($hDB, "CREATE TABLE alerts (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, devmac TEXT, lat REAL, lon REAL, header TEXT, json BLOB);")
+    _SQLite_Exec($hDB, "CREATE TABLE IF NOT EXISTS alerts (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, devmac TEXT, lat REAL, lon REAL, header TEXT, json BLOB);")
 
     ; DATA table
-    _SQLite_Exec($hDB, "CREATE TABLE data (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, devmac TEXT, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, datasource TEXT, type TEXT, json BLOB, signal INTEGER);")
+    _SQLite_Exec($hDB, "CREATE TABLE IF NOT EXISTS data (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, devmac TEXT, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, datasource TEXT, type TEXT, json BLOB, signal INTEGER);")
 
     ; DATASOURCE table
-    _SQLite_Exec($hDB, "CREATE TABLE datasources (uuid TEXT, typestring TEXT, definition TEXT, name TEXT, interface TEXT, json BLOB, UNIQUE(uuid) ON CONFLICT REPLACE);")
-    _SQLite_Exec($hDB, "INSERT INTO datasources (uuid, typestring, definition, name, interface, json) VALUES ('00000000-0000-0000-0000-000000000000', 'vistumbler', 'vistumbler', 'vistumbler', 'vistumbler', '{}');")
+    _SQLite_Exec($hDB, "CREATE TABLE IF NOT EXISTS datasources (uuid TEXT, typestring TEXT, definition TEXT, name TEXT, interface TEXT, json BLOB, UNIQUE(uuid) ON CONFLICT REPLACE);")
+    _SQLite_Exec($hDB, "INSERT OR REPLACE INTO datasources (uuid, typestring, definition, name, interface, json) VALUES ('00000000-0000-0000-0000-000000000000', 'vistumbler', 'vistumbler', 'vistumbler', 'vistumbler', '{}');")
 
     ; DEVICES table
-    _SQLite_Exec($hDB, "CREATE TABLE devices (first_time INTEGER, last_time INTEGER, devkey TEXT, phyname TEXT, devmac TEXT, strongest_signal INTEGER, min_lat REAL, min_lon REAL, max_lat REAL, max_lon REAL, avg_lat REAL, avg_lon REAL, bytes_data INTEGER, type TEXT, device BLOB, UNIQUE(phyname, devmac) ON CONFLICT REPLACE);")
-    _SQLite_Exec($hDB, "CREATE INDEX idx_devices_devkey ON devices(devkey);")
-    _SQLite_Exec($hDB, "CREATE INDEX idx_devices_devmac ON devices(devmac);")
+    _SQLite_Exec($hDB, "CREATE TABLE IF NOT EXISTS devices (first_time INTEGER, last_time INTEGER, devkey TEXT, phyname TEXT, devmac TEXT, strongest_signal INTEGER, min_lat REAL, min_lon REAL, max_lat REAL, max_lon REAL, avg_lat REAL, avg_lon REAL, bytes_data INTEGER, type TEXT, device BLOB, UNIQUE(phyname, devmac) ON CONFLICT REPLACE);")
+    _SQLite_Exec($hDB, "CREATE INDEX IF NOT EXISTS idx_devices_devkey ON devices(devkey);")
+    _SQLite_Exec($hDB, "CREATE INDEX IF NOT EXISTS idx_devices_devmac ON devices(devmac);")
 
     ; MESSAGES table
-    _SQLite_Exec($hDB, "CREATE TABLE messages (ts_sec INTEGER, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, msgtype TEXT, message TEXT);")
+    _SQLite_Exec($hDB, "CREATE TABLE IF NOT EXISTS messages (ts_sec INTEGER, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, msgtype TEXT, message TEXT);")
 
     ; PACKETS table (Version 10)
-    _SQLite_Exec($hDB, "CREATE TABLE packets (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, sourcemac TEXT, destmac TEXT, transmac TEXT, frequency REAL, devkey TEXT, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, packet_len INTEGER, signal INTEGER, datasource TEXT, dlt INTEGER, packet BLOB, error INTEGER, tags TEXT, datarate REAL, hash INTEGER, packetid INTEGER, packet_full_len INTEGER);")
-    _SQLite_Exec($hDB, "CREATE INDEX idx_packets_sourcemac ON packets(sourcemac);")
+    _SQLite_Exec($hDB, "CREATE TABLE IF NOT EXISTS packets (ts_sec INTEGER, ts_usec INTEGER, phyname TEXT, sourcemac TEXT, destmac TEXT, transmac TEXT, frequency REAL, devkey TEXT, lat REAL, lon REAL, alt REAL, speed REAL, heading REAL, packet_len INTEGER, signal INTEGER, datasource TEXT, dlt INTEGER, packet BLOB, error INTEGER, tags TEXT, datarate REAL, hash INTEGER, packetid INTEGER, packet_full_len INTEGER);")
+    _SQLite_Exec($hDB, "CREATE INDEX IF NOT EXISTS idx_packets_sourcemac ON packets(sourcemac);")
 
     ; SNAPSHOTS table
-    _SQLite_Exec($hDB, "CREATE TABLE snapshots (ts_sec INTEGER, ts_usec INTEGER, lat REAL, lon REAL, snaptype TEXT, json TEXT);")
+    _SQLite_Exec($hDB, "CREATE TABLE IF NOT EXISTS snapshots (ts_sec INTEGER, ts_usec INTEGER, lat REAL, lon REAL, snaptype TEXT, json TEXT);")
 
     _SQLite_Exec($hDB, "COMMIT;")
 
