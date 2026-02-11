@@ -14921,9 +14921,9 @@ Func _ImportKismetDB($sFile)
 				If _JSONIsObject($oAvgLoc) Then
 					Local $oGeopoint = _JSONGet($oAvgLoc, "kismet.common.location.geopoint")
 					If _JSONIsArray($oGeopoint) Then
-						If UBound($oGeopoint) >= 3 Then
-							$fLon = Number($oGeopoint[1])
-							$fLat = Number($oGeopoint[2])
+						If UBound($oGeopoint) >= 2 Then
+							$fLon = Number($oGeopoint[0])
+							$fLat = Number($oGeopoint[1])
 						EndIf
 					EndIf
 				EndIf
@@ -14932,9 +14932,9 @@ Func _ImportKismetDB($sFile)
 					If _JSONIsObject($oLastLoc) Then
 						Local $oGeopoint2 = _JSONGet($oLastLoc, "kismet.common.location.geopoint")
 						If _JSONIsArray($oGeopoint2) Then
-							If UBound($oGeopoint2) >= 3 Then
-								$fLon = Number($oGeopoint2[1])
-								$fLat = Number($oGeopoint2[2])
+							If UBound($oGeopoint2) >= 2 Then
+								$fLon = Number($oGeopoint2[0])
+								$fLat = Number($oGeopoint2[1])
 							EndIf
 						EndIf
 					EndIf
@@ -14973,7 +14973,7 @@ Func _ImportKismetDB($sFile)
 			$sLatDMM = _Format_GPS_DDD_to_DMM($fLat, "N", "S")
 			$sLonDMM = _Format_GPS_DDD_to_DMM($fLon, "E", "W")
 		EndIf
-		$query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "'"
+		$query = "SELECT GPSID, Date1, Time1 FROM GPS WHERE Latitude = '" & $sLatDMM & "' And Longitude = '" & $sLonDMM & "' And Date1 = '" & $sDate & "' And Time1 = '" & $sTime & "'"
 		Local $GpsMatchArray = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		Local $FoundGpsMatch = UBound($GpsMatchArray) - 1
 		If $FoundGpsMatch = 0 Then
@@ -15359,7 +15359,7 @@ Func _ImportKismetPackets($hDB, $sBSSID, $iApID, ByRef $AddGID)
 			$sPktLonDMM = _Format_GPS_DDD_to_DMM($fPktLon, "E", "W")
 		EndIf
 
-		Local $query = "SELECT GPSID FROM GPS WHERE Latitude = '" & $sPktLatDMM & "' And Longitude = '" & $sPktLonDMM & "'"
+		Local $query = "SELECT GPSID, Date1, Time1 FROM GPS WHERE Latitude = '" & $sPktLatDMM & "' And Longitude = '" & $sPktLonDMM & "' And Date1 = '" & $sPktDate & "' And Time1 = '" & $sPktTime & "'"
 		Local $aPktGpsMatch = _RecordSearch($VistumblerDB, $query, $DB_OBJ)
 		Local $iPktGpsFound = UBound($aPktGpsMatch) - 1
 
