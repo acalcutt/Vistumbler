@@ -1,5 +1,6 @@
 #include-once
 #include <FileConstants.au3>
+#include <Date.au3>
 
 ; #INDEX# =======================================================================================================================
 ; Title .........: NS1 Library
@@ -81,6 +82,29 @@ Func _NS1_ReadFile($sFilePath)
 
         ; Data Points
         Local $iDataCount = __NS1_GetUInt32($bData, $iPos)
+        ; Validate count to avoid allocating excessively large arrays or reading corrupt data
+        If Not IsInt($iDataCount) Then
+            SetError(4, $iDataCount, 0)
+            Return 'ERROR 4: Non-integer datapoint count at AP=' & $i & ' raw=' & $iDataCount & ' pos=' & $iPos
+        EndIf
+        If $iDataCount < 0 Then
+            SetError(4, $iDataCount, 0)
+            Return 'ERROR 4: Negative datapoint count at AP=' & $i & ' count=' & $iDataCount & ' pos=' & $iPos
+        EndIf
+        ; Prevent unreasonable allocations (tunable limit)
+        Local $iMaxDataPoints = 200000 ; ~safety cap to avoid array maximum exceeded
+        If $iDataCount > $iMaxDataPoints Then
+            SetError(4, $iDataCount, 0)
+            Return 'ERROR 4: Datapoint count exceeds cap at AP=' & $i & ' count=' & $iDataCount & ' cap=' & $iMaxDataPoints
+        EndIf
+        ; Ensure there are at least enough bytes remaining for the minimal size of the datapoints
+        Local $iRemaining = $iLen - $iPos
+        ; Minimal bytes per datapoint: Time(8) + Signal(4) + Noise(4) + LocSource(4) = 20
+        If $iRemaining < ($iDataCount * 20) Then
+            SetError(5, $iDataCount, 0)
+            Return 'ERROR 5: Truncated file at AP=' & $i & ' claimed=' & $iDataCount & ' remaining_bytes=' & $iRemaining & ' pos=' & $iPos
+        EndIf
+
         Local $aDataPoints[$iDataCount]
         For $j = 0 To $iDataCount - 1
             Local $aDP[5]
@@ -142,6 +166,268 @@ Func _NS1_ReadFile($sFilePath)
 EndFunc
 
 ; ===============================================================================================================================
+; Function Name:    _NS1_DumpAPDataCountRaw
+; Description:      Dumps raw bytes around the datapoint-count field for a given AP index (useful for debugging corrupt counts)
+; Parameter(s):     $sFilePath - Path to the .ns1 file
+;                   $iAPIndex - zero-based AP index to inspect
+;                   $iContextBytes - optional number of bytes to show before/after (default 8)
+; Return Value(s):  Success - A hex string showing bytes around the datapoint-count and the interpreted uint32
+;                   Failure - Sets @error and returns a message
+; ===============================================================================================================================
+Func _NS1_DumpAPDataCountRaw($sFilePath, $iAPIndex, $iContextBytes = 8)
+    If Not FileExists($sFilePath) Then Return SetError(1, 0, 'File not found')
+    Local $hFile = FileOpen($sFilePath, 16)
+    If $hFile = -1 Then Return SetError(1, 0, 'File open failed')
+    Local $bData = FileRead($hFile)
+    FileClose($hFile)
+
+    Local $iLen = BinaryLen($bData)
+    Local $iPos = 1
+    Local $sSig = BinaryToString(BinaryMid($bData, $iPos, 4))
+    If $sSig <> 'NetS' Then Return SetError(2, 0, 'Invalid signature')
+    $iPos += 4
+    Local $iVer = __NS1_GetUInt32($bData, $iPos)
+    Local $iApCount = __NS1_GetUInt32($bData, $iPos)
+    If $iAPIndex < 0 Or $iAPIndex >= $iApCount Then Return SetError(6, $iAPIndex, 'AP index out of range')
+
+    For $i = 0 To $iApCount - 1
+        If $iPos > $iLen Then Return SetError(5, $i, 'Truncated while seeking AP')
+
+        ; SSID
+        Local $iSSIDLen = __NS1_GetUInt8($bData, $iPos)
+        $iPos += $iSSIDLen
+
+        ; BSSID
+        $iPos += 6
+
+        ; Metrics
+        $iPos += 4 ; MaxSignal
+        $iPos += 4 ; MinNoise
+        $iPos += 4 ; MaxSNR
+        If $iVer = 6 Then $iPos += 4
+
+        $iPos += 4 ; Flags
+        $iPos += 4 ; BeaconInterval
+        $iPos += 8 ; FirstSeen
+        $iPos += 8 ; LastSeen
+        $iPos += 8 ; BestLat
+        $iPos += 8 ; BestLong
+
+        ; We are about to read DataPoints count
+        If $i = $iAPIndex Then
+            Local $iDumpStart = 1
+            If ($iPos - $iContextBytes) > 1 Then $iDumpStart = $iPos - $iContextBytes
+            Local $iDumpLen = $iContextBytes * 2 + 4 ; before + uint32 + after
+            If ($iDumpStart + $iDumpLen - 1) > $iLen Then $iDumpLen = $iLen - $iDumpStart + 1
+            Local $bChunk = BinaryMid($bData, $iDumpStart, $iDumpLen)
+            Local $s = BinaryToString($bChunk)
+            Local $sHex = ''
+            For $k = 1 To StringLen($s)
+                $sHex &= StringFormat('%02X ', Asc(StringMid($s, $k, 1)))
+            Next
+            ; Interpret the 4 bytes at the correct offset as uint32 (little-endian)
+            Local $iOffsetInChunk = $iPos - $iDumpStart
+            Local $t = DllStructCreate('uint')
+            DllStructSetData($t, 1, BinaryMid($bChunk, $iOffsetInChunk + 1, 4))
+            Local $iInterpret = DllStructGetData($t, 1)
+            Return 'AP=' & $i & ' pos=' & $iPos & ' raw_hex(' & $iDumpStart & '-' & ($iDumpStart + $iDumpLen -1) & '): ' & $sHex & ' interpreted_uint32=' & $iInterpret
+        EndIf
+
+        ; Skip DataPoints (without parsing) to reach next fields
+        Local $iDataCount = __NS1_GetUInt32($bData, $iPos)
+        ; Advance past datapoints (if file truncated this may error later)
+        For $j = 0 To $iDataCount - 1
+            $iPos += 8 ; Time
+            $iPos += 4 ; Signal
+            $iPos += 4 ; Noise
+            Local $iLocSource = __NS1_GetInt32($bData, $iPos)
+            If $iLocSource = 1 Then
+                $iPos += 8*3 ; lat,long,alt (double x3)
+                $iPos += 4 ; sats
+                $iPos += 8*4 ; speed,track,magvar,hdop
+            EndIf
+        Next
+
+        ; Name
+        Local $iNameLen = __NS1_GetUInt8($bData, $iPos)
+        $iPos += $iNameLen
+
+        If $iVer >= 8 Then
+            $iPos += 8 ; Channels
+            $iPos += 4 ; LastChannel
+            $iPos += 4 ; IPAddress
+        EndIf
+        If $iVer >= 11 Then
+            $iPos += 4*5
+        EndIf
+        If $iVer >= 12 Then
+            $iPos += 4 ; ApFlags
+            Local $iIELen = __NS1_GetUInt32($bData, $iPos)
+            $iPos += $iIELen
+        EndIf
+    Next
+    Return SetError(7, 0, 'AP not found')
+EndFunc
+
+; ===============================================================================================================================
+; Function Name:    _NS1_FixDataCounts
+; Description:      Create a repaired copy of an .ns1 by clamping any absurd datapoint counts
+;                   to the maximum number that can fit in the file (using minimal datapoint size)
+; Parameter(s):     $sInPath  - input .ns1 file
+;                   $sOutPath - output repaired .ns1 file (overwrites if exists)
+                   ; $iMaxDataPoints - safety cap for datapoints per-AP (optional, default 200000)
+; Return Value(s):  Success - returns string 'OK' and @error = 0
+;                   Failure - returns descriptive string and sets @error
+; ===============================================================================================================================
+Func _NS1_FixDataCounts($sInPath, $sOutPath, $iMaxDataPoints = 200000)
+    If Not FileExists($sInPath) Then Return SetError(1, 0, 'Input file not found')
+    Local $hFile = FileOpen($sInPath, 16)
+    If $hFile = -1 Then Return SetError(1, 0, 'Unable to open input file')
+    Local $bData = FileRead($hFile)
+    FileClose($hFile)
+
+    Local $iLen = BinaryLen($bData)
+    Local $iPos = 1
+
+    ; Validate header
+    Local $sSig = BinaryToString(BinaryMid($bData, $iPos, 4))
+    $iPos += 4
+    If $sSig <> 'NetS' Then Return SetError(2, 0, 'Invalid signature')
+
+    Local $iVer = __NS1_GetUInt32($bData, $iPos)
+    Local $iApCount = __NS1_GetUInt32($bData, $iPos)
+
+    ; Work on a mutable copy of the binary buffer
+    Local $bOut = $bData
+
+    For $i = 0 To $iApCount - 1
+        If $iPos > $iLen Then Return SetError(5, $i, 'Truncated while parsing APs')
+
+        ; SSID
+        Local $iSSIDLen = __NS1_GetUInt8($bData, $iPos)
+        $iPos += $iSSIDLen
+
+        ; BSSID
+        $iPos += 6
+
+        ; Metrics
+        $iPos += 4 ; MaxSignal
+        $iPos += 4 ; MinNoise
+        $iPos += 4 ; MaxSNR
+        If $iVer = 6 Then $iPos += 4
+
+        $iPos += 4 ; Flags
+        $iPos += 4 ; BeaconInterval
+        $iPos += 8 ; FirstSeen
+        $iPos += 8 ; LastSeen
+        $iPos += 8 ; BestLat
+        $iPos += 8 ; BestLong
+
+        ; Data Points count position
+        Local $iCountPos = $iPos
+        Local $iDataCount = __NS1_GetUInt32($bData, $iPos)
+
+        ; Compute how many complete datapoints actually exist by scanning the buffer
+        ; (using a conservative scan prevents overestimating when many datapoints include GPS blocks)
+        Local $iPossible = 0
+        Local $tmpPos = $iPos
+        While True
+            If $tmpPos > $iLen Then ExitLoop
+            ; Need at least minimal bytes for a datapoint: Time(8)+Signal(4)+Noise(4)+LocSource(4) = 20
+            If ($iLen - $tmpPos + 1) < 20 Then ExitLoop
+            ; Advance past the fixed fields
+            __NS1_GetInt64($bData, $tmpPos) ; Time
+            __NS1_GetInt32($bData, $tmpPos) ; Signal
+            __NS1_GetInt32($bData, $tmpPos) ; Noise
+            Local $iLocTmp = __NS1_GetInt32($bData, $tmpPos) ; LocSource
+            If $iLocTmp = 1 Then
+                ; Ensure full GPS block is present: 3 doubles (24) + uint32 (4) + 4 doubles (32) = 60
+                If ($iLen - $tmpPos + 1) < (24 + 4 + 32) Then ExitLoop
+                __NS1_GetDouble($bData, $tmpPos) ; Lat
+                __NS1_GetDouble($bData, $tmpPos) ; Long
+                __NS1_GetDouble($bData, $tmpPos) ; Alt
+                __NS1_GetUInt32($bData, $tmpPos) ; Sats
+                __NS1_GetDouble($bData, $tmpPos) ; Speed
+                __NS1_GetDouble($bData, $tmpPos) ; Track
+                __NS1_GetDouble($bData, $tmpPos) ; MagVar
+                __NS1_GetDouble($bData, $tmpPos) ; Hdop
+            EndIf
+            $iPossible += 1
+        WEnd
+
+        Local $iCorrected = $iDataCount
+        If $iDataCount < 0 Or $iDataCount > $iMaxDataPoints Or $iDataCount > $iPossible Then
+            ; Clamp to the lesser of possible and safety cap (Min replacement)
+            If $iPossible < $iMaxDataPoints Then
+                $iCorrected = $iPossible
+            Else
+                $iCorrected = $iMaxDataPoints
+            EndIf
+            ; Overwrite the 4 bytes in the output binary at $iCountPos with corrected uint32
+            Local $bNewCount = __NS1_ToUInt32($iCorrected)
+            ; Rebuild bOut: before + replacement + after
+            Local $bBefore = BinaryMid($bOut, 1, $iCountPos - 1)
+            Local $bAfter = BinaryMid($bOut, $iCountPos + 4)
+            $bOut = $bBefore & $bNewCount & $bAfter
+            ; Adjust $bData also so subsequent parsing uses updated buffer
+            $bData = $bOut
+            $iLen = BinaryLen($bData)
+        EndIf
+
+        ; Now advance past the datapoints using the corrected count
+        For $j = 0 To $iCorrected - 1
+            If $iPos > $iLen Then Return SetError(5, $i, 'Truncated while advancing datapoints')
+            __NS1_GetInt64($bData, $iPos) ; Time
+            __NS1_GetInt32($bData, $iPos) ; Signal
+            __NS1_GetInt32($bData, $iPos) ; Noise
+            Local $iLocSource = __NS1_GetInt32($bData, $iPos)
+            If $iLocSource = 1 Then
+                __NS1_GetDouble($bData, $iPos) ; Lat
+                __NS1_GetDouble($bData, $iPos) ; Long
+                __NS1_GetDouble($bData, $iPos) ; Alt
+                __NS1_GetUInt32($bData, $iPos) ; Sats
+                __NS1_GetDouble($bData, $iPos) ; Speed
+                __NS1_GetDouble($bData, $iPos) ; Track
+                __NS1_GetDouble($bData, $iPos) ; MagVar
+                __NS1_GetDouble($bData, $iPos) ; Hdop
+            EndIf
+        Next
+
+        ; Name
+        Local $iNameLen = __NS1_GetUInt8($bData, $iPos)
+        $iPos += $iNameLen
+
+        ; Fields after Name depend on Version
+        If $iVer >= 8 Then
+            $iPos += 8 ; Channels
+            $iPos += 4 ; LastChannel
+            $iPos += 4 ; IPAddress
+        EndIf
+
+        If $iVer >= 11 Then
+             $iPos += 4 ; MinSignal
+             $iPos += 4 ; MaxNoise
+             $iPos += 4 ; DataRate
+             $iPos += 4 ; IPSubnet
+             $iPos += 4 ; IPMask
+        EndIf
+
+        If $iVer >= 12 Then
+             $iPos += 4 ; ApFlags
+             Local $iIELen = __NS1_GetUInt32($bData, $iPos)
+             $iPos += $iIELen
+        EndIf
+    Next
+
+    ; Write repaired binary to output
+    Local $hOut = FileOpen($sOutPath, 18)
+    If $hOut = -1 Then Return SetError(1, 0, 'Unable to open output file for writing')
+    FileWrite($hOut, $bOut)
+    FileClose($hOut)
+    Return 'OK'
+EndFunc
+
+; ===============================================================================================================================
 ; Function Name:    _NS1_WriteFile
 ; Description:      Writes an NS1 file from an array structure (Version 12)
 ; Parameter(s):     $sFilePath - Path to write the .ns1 file
@@ -150,24 +436,42 @@ EndFunc
 ;                   Failure - Sets @error
 ;                   @error 1 - File open failed
 ; ===============================================================================================================================
-Func _NS1_WriteFile($sFilePath, $aData)
+Func _NS1_WriteFile($sFilePath, $aData, $iMaxDataPointsWrite = 200000, $bKeepNewest = True, $sLogPath = '', $bSplitAPs = False)
     Local $hFile = FileOpen($sFilePath, 18) ; $FO_BINARY + $FO_OVERWRITE
     If $hFile = -1 Then Return SetError(1, 0, 0)
     
     Local $bData = Binary("")
-    
-    ; Header
+
+    ; Header - compute adjusted AP count if splitting is requested
     $bData &= StringToBinary("NetS")
     $bData &= __NS1_ToUInt32(12) ; Always write version 12
-    
+
     Local $aAPs = $aData[1]
-    Local $iApCount = UBound($aAPs)
-    $bData &= __NS1_ToUInt32($iApCount)
-    
+    Local $iApCountOrig = UBound($aAPs)
+    Local $iApCountAdjusted = 0
+    If $bSplitAPs Then
+        For $i = 0 To $iApCountOrig - 1
+            Local $aAPtmp = $aAPs[$i]
+            Local $iChunks = 1
+            If IsArray($aAPtmp[11]) Then
+                Local $iDP = UBound($aAPtmp[11])
+                If $iDP > 0 Then $iChunks = Int(( $iDP + $iMaxDataPointsWrite - 1) / $iMaxDataPointsWrite)
+            EndIf
+            If $iChunks < 1 Then
+                $iApCountAdjusted += 1
+            Else
+                $iApCountAdjusted += $iChunks
+            EndIf
+        Next
+    Else
+        $iApCountAdjusted = $iApCountOrig
+    EndIf
+
+    $bData &= __NS1_ToUInt32($iApCountAdjusted)
     FileWrite($hFile, $bData)
     $bData = Binary("") ; Clear buffer to save memory, will write APs one by one or in chunks
-    
-    For $i = 0 To $iApCount - 1
+
+    For $i = 0 To $iApCountOrig - 1
         Local $aAP = $aAPs[$i]
         Local $bAP = Binary("")
         
@@ -191,31 +495,197 @@ Func _NS1_WriteFile($sFilePath, $aData)
         $bAP &= __NS1_ToDouble($aAP[9]) ; BestLat
         $bAP &= __NS1_ToDouble($aAP[10]) ; BestLong
         
-        ; Data Points
+        ; Data Points handling: either write as one AP entry (possibly trimmed) or split into multiple AP entries
         Local $aDataPoints = $aAP[11]
         If IsArray($aDataPoints) Then
             Local $iDataCount = UBound($aDataPoints)
-            $bAP &= __NS1_ToUInt32($iDataCount)
-            For $j = 0 To $iDataCount - 1
-                Local $aDP = $aDataPoints[$j]
-                $bAP &= __NS1_ToInt64($aDP[0]) ; Time
-                $bAP &= __NS1_ToInt32($aDP[1]) ; Signal
-                $bAP &= __NS1_ToInt32($aDP[2]) ; Noise
-                Local $iLocSource = $aDP[3]
+            If Not IsInt($iDataCount) Or $iDataCount < 0 Then $iDataCount = 0
+            If $bSplitAPs And $iDataCount > $iMaxDataPointsWrite Then
+                ; Write multiple APINFO entries for this AP, each with a chunk of datapoints
+                Local $iChunks = Int(( $iDataCount + $iMaxDataPointsWrite - 1) / $iMaxDataPointsWrite)
+                For $part = 0 To $iChunks - 1
+                    Local $iStart = $part * $iMaxDataPointsWrite
+                    Local $iRemain = $iDataCount - $iStart
+                    Local $iThisCount
+                    If $iRemain > $iMaxDataPointsWrite Then
+                        $iThisCount = $iMaxDataPointsWrite
+                    Else
+                        $iThisCount = $iRemain
+                    EndIf
+                    Local $bAPchunk = Binary("")
+                    ; Recreate AP header fields for this chunk
+                    ; SSID
+                    Local $sSSID = $aAP[0]
+                    Local $iSSIDLen = StringLen($sSSID)
+                    $bAPchunk &= __NS1_ToUInt8($iSSIDLen)
+                    $bAPchunk &= StringToBinary($sSSID)
+                    ; BSSID
+                    $bAPchunk &= $aAP[1]
+                    ; Metrics
+                    $bAPchunk &= __NS1_ToInt32($aAP[2]) ; MaxSignal
+                    $bAPchunk &= __NS1_ToInt32($aAP[3]) ; MinNoise
+                    $bAPchunk &= __NS1_ToInt32($aAP[4]) ; MaxSNR
+                    $bAPchunk &= __NS1_ToUInt32($aAP[5]) ; Flags
+                    $bAPchunk &= __NS1_ToUInt32($aAP[6]) ; BeaconInterval
+                    $bAPchunk &= __NS1_ToInt64($aAP[7]) ; FirstSeen
+                    $bAPchunk &= __NS1_ToInt64($aAP[8]) ; LastSeen
+                    $bAPchunk &= __NS1_ToDouble($aAP[9]) ; BestLat
+                    $bAPchunk &= __NS1_ToDouble($aAP[10]) ; BestLong
+                    ; Data count for this chunk
+                    $bAPchunk &= __NS1_ToUInt32($iThisCount)
+                    ; Write datapoints for this chunk
+                    For $jj = $iStart To $iStart + $iThisCount - 1
+                        Local $aDP = $aDataPoints[$jj]
+                        If Not IsArray($aDP) Then
+                            $bAPchunk &= __NS1_ToInt64(0)
+                            $bAPchunk &= __NS1_ToInt32(0)
+                            $bAPchunk &= __NS1_ToInt32(0)
+                            $bAPchunk &= __NS1_ToInt32(0)
+                            ContinueLoop
+                        EndIf
+                        Local $iTime = 0, $iSignal = 0, $iNoise = 0, $iLocSource = 0
+                        If UBound($aDP) > 0 Then $iTime = $aDP[0]
+                        If UBound($aDP) > 1 Then $iSignal = $aDP[1]
+                        If UBound($aDP) > 2 Then $iNoise = $aDP[2]
+                        If UBound($aDP) > 3 Then $iLocSource = $aDP[3]
+                        $bAPchunk &= __NS1_ToInt64($iTime)
+                        $bAPchunk &= __NS1_ToInt32($iSignal)
+                        $bAPchunk &= __NS1_ToInt32($iNoise)
+                        $bAPchunk &= __NS1_ToInt32($iLocSource)
+                        If $iLocSource = 1 Then
+                            Local $aGPS = ''
+                            If UBound($aDP) > 4 And IsArray($aDP[4]) Then $aGPS = $aDP[4]
+                            If IsArray($aGPS) Then
+                                Local $d0 = 0, $d1 = 0, $d2 = 0, $d3 = 0, $d4 = 0, $d5 = 0, $d6 = 0, $d7 = 0
+                                If UBound($aGPS) > 0 Then $d0 = $aGPS[0]
+                                If UBound($aGPS) > 1 Then $d1 = $aGPS[1]
+                                If UBound($aGPS) > 2 Then $d2 = $aGPS[2]
+                                If UBound($aGPS) > 3 Then $d3 = $aGPS[3]
+                                If UBound($aGPS) > 4 Then $d4 = $aGPS[4]
+                                If UBound($aGPS) > 5 Then $d5 = $aGPS[5]
+                                If UBound($aGPS) > 6 Then $d6 = $aGPS[6]
+                                If UBound($aGPS) > 7 Then $d7 = $aGPS[7]
+                                $bAPchunk &= __NS1_ToDouble($d0)
+                                $bAPchunk &= __NS1_ToDouble($d1)
+                                $bAPchunk &= __NS1_ToDouble($d2)
+                                $bAPchunk &= __NS1_ToUInt32($d3)
+                                $bAPchunk &= __NS1_ToDouble($d4)
+                                $bAPchunk &= __NS1_ToDouble($d5)
+                                $bAPchunk &= __NS1_ToDouble($d6)
+                                $bAPchunk &= __NS1_ToDouble($d7)
+                            Else
+                                $bAPchunk &= __NS1_ToDouble(0)
+                                $bAPchunk &= __NS1_ToDouble(0)
+                                $bAPchunk &= __NS1_ToDouble(0)
+                                $bAPchunk &= __NS1_ToUInt32(0)
+                                $bAPchunk &= __NS1_ToDouble(0)
+                                $bAPchunk &= __NS1_ToDouble(0)
+                                $bAPchunk &= __NS1_ToDouble(0)
+                                $bAPchunk &= __NS1_ToDouble(0)
+                            EndIf
+                        EndIf
+                    Next
+                    ; Name and following fields (reuse existing metadata)
+                    Local $sName = $aAP[12]
+                    Local $iNameLen = StringLen($sName)
+                    $bAPchunk &= __NS1_ToUInt8($iNameLen)
+                    $bAPchunk &= StringToBinary($sName)
+                    $bAPchunk &= __NS1_ToUInt64($aAP[13]) ; Channels
+                    $bAPchunk &= __NS1_ToUInt32($aAP[14]) ; LastChannel
+                    $bAPchunk &= __NS1_ToUInt32($aAP[15]) ; IPAddress
+                    $bAPchunk &= __NS1_ToInt32($aAP[16]) ; MinSignal
+                    $bAPchunk &= __NS1_ToInt32($aAP[17]) ; MaxNoise
+                    $bAPchunk &= __NS1_ToUInt32($aAP[18]) ; DataRate
+                    $bAPchunk &= __NS1_ToUInt32($aAP[19]) ; IPSubnet
+                    $bAPchunk &= __NS1_ToUInt32($aAP[20]) ; IPMask
+                    $bAPchunk &= __NS1_ToUInt32($aAP[21]) ; ApFlags
+                    Local $bIEs = $aAP[22]
+                    Local $iIELen = BinaryLen($bIEs)
+                    $bAPchunk &= __NS1_ToUInt32($iIELen)
+                    $bAPchunk &= $bIEs
+                    FileWrite($hFile, $bAPchunk)
+                Next
+                ; Continue to next AP since we've emitted all chunks
+                ContinueLoop
+            Else
+                ; No splitting required - fall through to single-write below (may still trim)
+                Local $iWriteCount = $iDataCount
+                Local $iStartIndex = 0
+                If $iWriteCount > $iMaxDataPointsWrite Then
+                    If $bKeepNewest Then
+                        $iStartIndex = $iDataCount - $iMaxDataPointsWrite
+                        $iWriteCount = $iMaxDataPointsWrite
+                    Else
+                        $iWriteCount = $iMaxDataPointsWrite
+                        $iStartIndex = 0
+                    EndIf
+                    If $sLogPath <> '' Then
+                        Local $sMsg = @YEAR & '-' & @MON & '-' & @MDAY & ' ' & @HOUR & ':' & @MIN & ':' & @SEC & ' Truncated AP ' & $aAP[1] & ' from ' & $iDataCount & ' to ' & $iWriteCount & ' in ' & $sFilePath & @CRLF
+                        Local $hLog = FileOpen($sLogPath, 1)
+                        If $hLog <> -1 Then
+                            FileWrite($hLog, $sMsg)
+                            FileClose($hLog)
+                        EndIf
+                    EndIf
+                EndIf
+                $bAP &= __NS1_ToUInt32($iWriteCount)
+                For $j = $iStartIndex To ($iStartIndex + $iWriteCount - 1)
+                    Local $aDP = $aDataPoints[$j]
+                If Not IsArray($aDP) Then
+                    ; write a minimal empty datapoint to keep structure consistent
+                    $bAP &= __NS1_ToInt64(0)
+                    $bAP &= __NS1_ToInt32(0)
+                    $bAP &= __NS1_ToInt32(0)
+                    $bAP &= __NS1_ToInt32(0)
+                    ContinueLoop
+                EndIf
+                ; protect against missing indexes
+                Local $iTime = 0, $iSignal = 0, $iNoise = 0, $iLocSource = 0
+                If UBound($aDP) > 0 Then $iTime = $aDP[0]
+                If UBound($aDP) > 1 Then $iSignal = $aDP[1]
+                If UBound($aDP) > 2 Then $iNoise = $aDP[2]
+                If UBound($aDP) > 3 Then $iLocSource = $aDP[3]
+
+                $bAP &= __NS1_ToInt64($iTime) ; Time
+                $bAP &= __NS1_ToInt32($iSignal) ; Signal
+                $bAP &= __NS1_ToInt32($iNoise) ; Noise
                 $bAP &= __NS1_ToInt32($iLocSource)
-                
+
                 If $iLocSource = 1 Then
-                     Local $aGPS = $aDP[4]
-                     $bAP &= __NS1_ToDouble($aGPS[0]) ; Lat
-                     $bAP &= __NS1_ToDouble($aGPS[1]) ; Long
-                     $bAP &= __NS1_ToDouble($aGPS[2]) ; Alt
-                     $bAP &= __NS1_ToUInt32($aGPS[3]) ; Sats
-                     $bAP &= __NS1_ToDouble($aGPS[4]) ; Speed
-                     $bAP &= __NS1_ToDouble($aGPS[5]) ; Track
-                     $bAP &= __NS1_ToDouble($aGPS[6]) ; MagVar
-                     $bAP &= __NS1_ToDouble($aGPS[7]) ; Hdop
+                     Local $aGPS = ''
+                     If UBound($aDP) > 4 And IsArray($aDP[4]) Then $aGPS = $aDP[4]
+                     If IsArray($aGPS) Then
+                         Local $d0 = 0, $d1 = 0, $d2 = 0, $d3 = 0, $d4 = 0, $d5 = 0, $d6 = 0, $d7 = 0
+                         If UBound($aGPS) > 0 Then $d0 = $aGPS[0]
+                         If UBound($aGPS) > 1 Then $d1 = $aGPS[1]
+                         If UBound($aGPS) > 2 Then $d2 = $aGPS[2]
+                         If UBound($aGPS) > 3 Then $d3 = $aGPS[3]
+                         If UBound($aGPS) > 4 Then $d4 = $aGPS[4]
+                         If UBound($aGPS) > 5 Then $d5 = $aGPS[5]
+                         If UBound($aGPS) > 6 Then $d6 = $aGPS[6]
+                         If UBound($aGPS) > 7 Then $d7 = $aGPS[7]
+                         $bAP &= __NS1_ToDouble($d0) ; Lat
+                         $bAP &= __NS1_ToDouble($d1) ; Long
+                         $bAP &= __NS1_ToDouble($d2) ; Alt
+                         $bAP &= __NS1_ToUInt32($d3) ; Sats
+                         $bAP &= __NS1_ToDouble($d4) ; Speed
+                         $bAP &= __NS1_ToDouble($d5) ; Track
+                         $bAP &= __NS1_ToDouble($d6) ; MagVar
+                         $bAP &= __NS1_ToDouble($d7) ; Hdop
+                     Else
+                         ; write zeros for missing GPS block
+                         $bAP &= __NS1_ToDouble(0)
+                         $bAP &= __NS1_ToDouble(0)
+                         $bAP &= __NS1_ToDouble(0)
+                         $bAP &= __NS1_ToUInt32(0)
+                         $bAP &= __NS1_ToDouble(0)
+                         $bAP &= __NS1_ToDouble(0)
+                         $bAP &= __NS1_ToDouble(0)
+                         $bAP &= __NS1_ToDouble(0)
+                     EndIf
                 EndIf
             Next
+                EndIf
         Else
              $bAP &= __NS1_ToUInt32(0)
         EndIf
@@ -248,6 +718,121 @@ Func _NS1_WriteFile($sFilePath, $aData)
     FileClose($hFile)
     Return 1
 EndFunc
+
+    ; ===============================================================================================================================
+    ; Function Name:    _NS1_ScanFile
+    ; Description:      Lightweight scanner that summarizes a .ns1 file without allocating large arrays.
+    ;                   Useful for detecting huge datapoint counts or truncated files.
+    ; Parameter(s):     $sFilePath - Path to the .ns1 file
+    ; Return Value(s):  Success - A string summary of the file
+    ;                   Failure - Sets @error (same codes as _NS1_ReadFile plus 4/5 for bad counts/truncated)
+    ; ===============================================================================================================================
+    Func _NS1_ScanFile($sFilePath)
+        Local $hFile = FileOpen($sFilePath, 16)
+        If $hFile = -1 Then Return SetError(1, 0, 0)
+        Local $bData = FileRead($hFile)
+        FileClose($hFile)
+
+        Local $iLen = BinaryLen($bData)
+        Local $iPos = 1
+
+        Local $sSig = BinaryToString(BinaryMid($bData, $iPos, 4))
+        $iPos += 4
+        If $sSig <> "NetS" Then Return SetError(2, 0, 0)
+
+        Local $iVer = __NS1_GetUInt32($bData, $iPos)
+        Local $iApCount = __NS1_GetUInt32($bData, $iPos)
+
+        Local $iTotalDataPoints = 0
+        Local $sOut = 'Version: ' & $iVer & @CRLF & 'APCount: ' & $iApCount & @CRLF
+
+        For $i = 0 To $iApCount - 1
+            If $iPos > $iLen Then Return SetError(5, $i, 0)
+
+            ; SSID
+            Local $iSSIDLen = __NS1_GetUInt8($bData, $iPos)
+            $iPos += $iSSIDLen
+
+            ; BSSID
+            $iPos += 6
+
+            ; Metrics
+            $iPos += 4 ; MaxSignal
+            $iPos += 4 ; MinNoise
+            $iPos += 4 ; MaxSNR
+            If $iVer = 6 Then $iPos += 4 ; Channels32 for ver6
+
+            $iPos += 4 ; Flags
+            $iPos += 4 ; BeaconInterval
+            $iPos += 8 ; FirstSeen
+            $iPos += 8 ; LastSeen
+            $iPos += 8 ; BestLat
+            $iPos += 8 ; BestLong
+
+            ; Data Points - we'll iterate but not store them
+            Local $iDataCount = __NS1_GetUInt32($bData, $iPos)
+            If $iDataCount < 0 Then
+                SetError(4, $iDataCount, 0)
+                Return 'ERROR 4: Negative datapoint count at AP=' & $i & ' count=' & $iDataCount & ' pos=' & $iPos
+            EndIf
+            If $iDataCount > 1000000 Then
+                SetError(4, $iDataCount, 0)
+                Return 'ERROR 4: Datapoint count unreasonably large at AP=' & $i & ' count=' & $iDataCount
+            EndIf
+
+            Local $iAPPoints = 0
+            For $j = 0 To $iDataCount - 1
+                If $iPos > $iLen Then Return SetError(5, $i, 0)
+                ; Advance using getters so position stays correct
+                Local $iTime = __NS1_GetInt64($bData, $iPos)
+                Local $iSig = __NS1_GetInt32($bData, $iPos)
+                Local $iNoise = __NS1_GetInt32($bData, $iPos)
+                Local $iLocSource = __NS1_GetInt32($bData, $iPos)
+                If $iLocSource = 1 Then
+                    __NS1_GetDouble($bData, $iPos) ; Lat
+                    __NS1_GetDouble($bData, $iPos) ; Long
+                    __NS1_GetDouble($bData, $iPos) ; Alt
+                    __NS1_GetUInt32($bData, $iPos) ; Sats
+                    __NS1_GetDouble($bData, $iPos) ; Speed
+                    __NS1_GetDouble($bData, $iPos) ; Track
+                    __NS1_GetDouble($bData, $iPos) ; MagVar
+                    __NS1_GetDouble($bData, $iPos) ; Hdop
+                EndIf
+                $iAPPoints += 1
+            Next
+
+            $iTotalDataPoints += $iAPPoints
+            $sOut &= 'AP ' & $i & ': DataPoints=' & $iAPPoints & @CRLF
+
+            ; Name
+            Local $iNameLen = __NS1_GetUInt8($bData, $iPos)
+            $iPos += $iNameLen
+
+            ; Fields after Name depend on Version
+            If $iVer >= 8 Then
+                $iPos += 8 ; Channels
+                $iPos += 4 ; LastChannel
+                $iPos += 4 ; IPAddress
+            EndIf
+
+            If $iVer >= 11 Then
+                 $iPos += 4 ; MinSignal
+                 $iPos += 4 ; MaxNoise
+                 $iPos += 4 ; DataRate
+                 $iPos += 4 ; IPSubnet
+                 $iPos += 4 ; IPMask
+            EndIf
+
+            If $iVer >= 12 Then
+                 $iPos += 4 ; ApFlags
+                 Local $iIELen = __NS1_GetUInt32($bData, $iPos)
+                 $iPos += $iIELen
+            EndIf
+        Next
+
+        $sOut &= 'TotalDataPoints: ' & $iTotalDataPoints & @CRLF
+        Return $sOut
+    EndFunc
 
 
 ; ===============================================================================================================================
