@@ -1,0 +1,30 @@
+name: Update site index on Release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Update `index.html` with latest release
+        run: node .github/scripts/update-index.js
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Website/Vistumbler.net/index.html
+          git diff --cached --quiet || (git commit -m "chore(site): update latest release ${{ github.event.release.tag_name }}" && git push)

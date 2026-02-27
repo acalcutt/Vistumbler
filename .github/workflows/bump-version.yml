@@ -413,6 +413,16 @@ jobs:
            }
            Remove-Item -Path $pfxPath -Force -ErrorAction SilentlyContinue
 
+      - name: Update Website index.html
+        shell: pwsh
+        run: |
+           $ver = "${{ steps.bump.outputs.version }}"
+           Write-Host "Updating Website index.html for version $ver"
+           node .github/scripts/update-index.js $ver
+           # Show the changed file so the PR will include it
+           git add Website/Vistumbler.net/index.html || true
+           git status --porcelain
+
       - name: Commit Bump and Binaries
         id: commit_bump
         shell: pwsh
@@ -426,8 +436,8 @@ jobs:
            # Create branch
            git checkout -b $branch
            
-           # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs)
-           git add VistumblerMDB
+           # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs) and website changes
+           git add VistumblerMDB Website/Vistumbler.net
            
            git commit -m "Bump version to v$ver and update binaries"
            
