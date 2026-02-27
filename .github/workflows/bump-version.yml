@@ -416,28 +416,28 @@ jobs:
       - name: Update Website index.html
         shell: pwsh
         run: |
-           $ver = "${{ steps.bump.outputs.version }}"
-           Write-Host "Updating Website index.html for version $ver"
-           node .github/scripts/update-index.js $ver
-           # Show the changed file so the PR will include it
-           git add Website/Vistumbler.net/index.html || true
-           git status --porcelain
+          $ver = "${{ steps.bump.outputs.version }}"
+          Write-Host "Updating Website index.html for version $ver"
+          node .github/scripts/update-index.js $ver
+          # Show the changed file so the PR will include it
+          git add Website/Vistumbler.net/index.html || true
+          git status --porcelain
 
       - name: Commit Bump and Binaries
         id: commit_bump
         shell: pwsh
         run: |
-           $ver = "${{ steps.bump.outputs.version }}"
-           $branch = "release-v$ver"
-           
-           git config user.name "github-actions[bot]"
-           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-           
-           # Create branch
-           git checkout -b $branch
-           
-           # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs) and website changes
-           git add VistumblerMDB Website/Vistumbler.net
+          $ver = "${{ steps.bump.outputs.version }}"
+          $branch = "release-v$ver"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Create branch
+          git checkout -b $branch
+
+          # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs) and website changes
+          git add VistumblerMDB Website/Vistumbler.net
            
            git commit -m "Bump version to v$ver and update binaries"
            

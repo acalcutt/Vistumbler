@@ -97,9 +97,26 @@ async function main(){
   }
 
   // Build new hero section
-  const exeUrl = exe ? exe.browser_download_url : (release.html_url || 'https://github.com/acalcutt/Vistumbler/releases');
-  const zipUrl = zip ? zip.browser_download_url : (release.html_url || 'https://github.com/acalcutt/Vistumbler/releases');
-  const portableUrl = portable ? portable.browser_download_url : (release.html_url || 'https://github.com/acalcutt/Vistumbler/releases');
+  // Determine repository for constructing download URLs
+  const repo = process.env.GITHUB_REPOSITORY || (() => {
+    try {
+      const remote = require('child_process').execSync('git config --get remote.origin.url', { encoding: 'utf8' }).trim();
+      const m = remote.match(/github\.com[:/](.+?)(?:\.git)?$/);
+      return m ? m[1] : 'acalcutt/Vistumbler';
+    } catch (e) { return 'acalcutt/Vistumbler'; }
+  })();
+
+  const tagForUrl = (release.tag_name || '').startsWith('v') ? (release.tag_name || '') : `v${release.tag_name || ''}`;
+  const numericVer = (tagForUrl || '').replace(/^v/i, '');
+  const exeFilename = `Vistumbler_v${numericVer.replace(/\./g,'-')}.exe`;
+  const zipFilename = `Vistumbler_v${numericVer}.zip`;
+  const portableFilename = `Vistumbler_v${numericVer}_Portable.zip`;
+
+  const baseReleaseUrl = `https://github.com/${repo}/releases/download/${tagForUrl}`;
+
+  const exeUrl = exe ? exe.browser_download_url : `${baseReleaseUrl}/${exeFilename}`;
+  const zipUrl = zip ? zip.browser_download_url : `${baseReleaseUrl}/${zipFilename}`;
+  const portableUrl = portable ? portable.browser_download_url : `${baseReleaseUrl}/${portableFilename}`;
 
   const hero = `
                             <section class="hero feature">
