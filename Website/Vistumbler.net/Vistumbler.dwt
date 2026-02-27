@@ -43,7 +43,7 @@
 	<script type="text/javascript" src="js/adframe.js"></script>
 
 	<!-- Start Collapsible Menu Scripts: jQuery + main (deferred) -->
-	<script src="js/jquery-3.4.1.slim.js" integrity="sha256-BTlTdQO9/fascB1drekrDVkaKd9PkwBymMlHOiG+qLI=" crossorigin="anonymous"></script>
+	<script src="js/jquery-4.0.0.min.js"></script>
 	<script src="js/main.js" defer></script>
 	<!-- Cookie consent & consent-mode helper (loads before ad scripts in body) -->
 	<script src="js/cookie-consent.js"></script>
