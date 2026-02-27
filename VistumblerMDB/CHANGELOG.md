@@ -7,6 +7,13 @@
 ### 🐞 Bug fixes
 - _...Add new stuff here..._
 
+## 10.10.1
+### ✨ Features and improvements
+- _...Add new stuff here..._
+
+### 🐞 Bug fixes
+- _...Add new stuff here..._
+
 ## 10.10.0
 ### ✨ Features and improvements
 - Add start of kismet import/export support
