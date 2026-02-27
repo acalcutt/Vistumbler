@@ -9,10 +9,7 @@
 
 ## 10.10.0
 ### ✨ Features and improvements
-- _...Add new stuff here..._
-
-### 🐞 Bug fixes
-- _...Add new stuff here..._
+- Add start of kismet import/export support
 
 ## 10.9.7
 ### 🐞 Bug fixes
