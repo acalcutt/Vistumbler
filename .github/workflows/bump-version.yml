@@ -413,6 +413,16 @@ jobs:
            }
            Remove-Item -Path $pfxPath -Force -ErrorAction SilentlyContinue
 
+      - name: Update Website index.html
+        shell: pwsh
+        run: |
+          $ver = "${{ steps.bump.outputs.version }}"
+          Write-Host "Updating Website index.html for version $ver"
+          node .github/scripts/update-index.js $ver
+          # Show the changed file so the PR will include it
+          git add Website/Vistumbler.net/index.html || true
+          git status --porcelain
+
       - name: Commit Bump and Binaries
         id: commit_bump
         shell: pwsh
