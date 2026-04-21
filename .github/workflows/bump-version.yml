@@ -437,7 +437,8 @@ jobs:
            git checkout -b $branch
            
            # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs)
-           git add VistumblerMDB
+           # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs) and website changes
+           git add VistumblerMDB Website/Vistumbler.net
            
            git commit -m "Bump version to v$ver and update binaries"
            
