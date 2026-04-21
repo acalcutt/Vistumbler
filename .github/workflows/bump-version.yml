@@ -413,31 +413,21 @@ jobs:
            }
            Remove-Item -Path $pfxPath -Force -ErrorAction SilentlyContinue
 
-      - name: Update Website index.html
-        shell: pwsh
-        run: |
-          $ver = "${{ steps.bump.outputs.version }}"
-          Write-Host "Updating Website index.html for version $ver"
-          node .github/scripts/update-index.js $ver
-          # Show the changed file so the PR will include it
-          git add Website/Vistumbler.net/index.html || true
-          git status --porcelain
-
       - name: Commit Bump and Binaries
         id: commit_bump
         shell: pwsh
         run: |
-          $ver = "${{ steps.bump.outputs.version }}"
-          $branch = "release-v$ver"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          # Create branch
-          git checkout -b $branch
-
-          # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs) and website changes
-          git add VistumblerMDB Website/Vistumbler.net
+           $ver = "${{ steps.bump.outputs.version }}"
+           $branch = "release-v$ver"
+           
+           git config user.name "github-actions[bot]"
+           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+           
+           # Create branch
+           git checkout -b $branch
+           
+           # stage all files in VistumblerMDB (including CHANGELOG.md and EXEs)
+           git add VistumblerMDB
            
            git commit -m "Bump version to v$ver and update binaries"
            
@@ -477,7 +467,8 @@ jobs:
            Write-Host "Changed files in $hash (including implied AU3):"
            $changedFiles | ForEach-Object { Write-Host " - $_" }
            
-           $lines = Get-Content $iniPath
+           # Read as ASCII - versions.ini is always plain ASCII (hex hashes and file paths)
+           $lines = [System.IO.File]::ReadAllLines($iniPath, [System.Text.ASCIIEncoding]::new())
            $newLines = @()
            $updatedCount = 0
            
@@ -502,13 +493,14 @@ jobs:
                  } else {
                     $newLines += $line
                  }
-              } else {
+              } elseif ($line -ne '') {
                  $newLines += $line
               }
            }
            
            if ($updatedCount -gt 0) {
-              $newLines | Set-Content -Path $iniPath -Encoding UTF8
+              # Write as ASCII (no BOM) - all content is ASCII-safe (hex hashes and paths)
+              [System.IO.File]::WriteAllLines($iniPath, $newLines, [System.Text.ASCIIEncoding]::new())
               Write-Host "versions.ini updated."
            } else {
               Write-Host "No relevant files found in versions.ini to update."
